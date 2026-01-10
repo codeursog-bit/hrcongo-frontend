@@ -1,0 +1,1 @@
+// Ce composant est obsolète. La logique du formulaire est maintenant gérée directement dans app/employes/nouveau/page.tsx. Vous pouvez le supprimer.

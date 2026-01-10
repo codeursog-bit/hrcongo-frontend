@@ -1,0 +1,641 @@
+
+// 'use client';
+
+// import React, { useEffect, useState } from 'react';
+// import Link from 'next/link';
+// import { 
+//   Briefcase, Users, MessageSquare, Clock, Plus, Search, 
+//   MapPin, ChevronRight, BarChart3, Filter, MoreHorizontal, Loader2,
+//   Share2, Copy, ExternalLink, X, Check, Globe, Sparkles, Zap, TrendingUp, User
+// } from 'lucide-react';
+// import { motion, AnimatePresence } from 'framer-motion';
+// import { api } from '@/services/api';
+
+// interface JobOffer {
+//   id: string;
+//   title: string;
+//   department: { name: string };
+//   location: string;
+//   contractType: string;
+//   status: 'OPEN' | 'CLOSED' | 'DRAFT';
+//   _count: { candidates: number };
+// }
+
+// export default function RecruitmentPage() {
+//   const [jobs, setJobs] = useState<JobOffer[]>([]);
+//   const [candidates, setCandidates] = useState<any[]>([]);
+//   const [isLoading, setIsLoading] = useState(true);
+  
+//   // SHARE MODAL STATE
+//   const [shareJob, setShareJob] = useState<JobOffer | null>(null);
+//   const [isCopied, setIsCopied] = useState(false);
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//         try {
+//             const [jobsData, candidatesData] = await Promise.all([
+//                 api.get<JobOffer[]>('/recruitment/jobs'),
+//                 api.get<any[]>('/recruitment/candidates')
+//             ]);
+//             setJobs(jobsData);
+//             setCandidates(candidatesData);
+//         } catch (e) {
+//             console.error("Failed to load recruitment data", e);
+//         } finally {
+//             setIsLoading(false);
+//         }
+//     };
+//     fetchData();
+//   }, []);
+
+//   const openJobsCount = jobs.filter(j => j.status === 'OPEN').length;
+//   const totalCandidates = jobs.reduce((acc, curr) => acc + curr._count.candidates, 0);
+//   const interviewsCount = candidates.filter(c => c.status === 'INTERVIEW').length;
+//   const averageDays = candidates.length > 0 ? '14j' : '-';
+
+//   const STATS = [
+//     { label: 'Postes Ouverts', value: openJobsCount.toString(), icon: Briefcase, color: 'text-cyan-400', from: 'from-cyan-500/20', to: 'to-blue-600/20' },
+//     { label: 'Candidats', value: totalCandidates.toString(), icon: Users, color: 'text-emerald-400', from: 'from-emerald-500/20', to: 'to-teal-600/20' },
+//     { label: 'Entretiens', value: interviewsCount.toString(), icon: MessageSquare, color: 'text-purple-400', from: 'from-purple-500/20', to: 'to-indigo-600/20' },
+//     { label: 'Délai Moyen', value: averageDays, icon: Clock, color: 'text-orange-400', from: 'from-orange-500/20', to: 'to-red-600/20' },
+//   ];
+
+//   const handleCopyLink = () => {
+//       if (!shareJob) return;
+//       const url = `${window.location.origin}/jobs/${shareJob.id}`;
+//       navigator.clipboard.writeText(url);
+//       setIsCopied(true);
+//       setTimeout(() => setIsCopied(false), 2000);
+//   };
+
+//   return (
+//     <div className="max-w-[1600px] mx-auto pb-20 space-y-10 relative">
+      
+//       {/* Background Ambience */}
+//       <div className="fixed inset-0 z-0 pointer-events-none">
+//           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-600/5 rounded-full blur-[100px]"></div>
+//           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[100px]"></div>
+//       </div>
+
+//       {/* HEADER */}
+//       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+//         <div>
+//            <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+//               Recrutement <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">& Talents</span>
+//            </h1>
+//            <p className="text-gray-500 dark:text-gray-400 text-lg">Pilotez vos campagnes d'acquisition de talents.</p>
+//         </div>
+        
+//         <div className="flex items-center gap-4">
+//            <Link href="/recrutement/kanban" className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-white/10 font-bold text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-all flex items-center gap-2 backdrop-blur-md">
+//               <BarChart3 size={20} className="text-gray-400 dark:text-cyan-400" />
+//               <span className="hidden sm:inline">Vue Pipeline</span>
+//            </Link>
+//            <Link href="/recrutement/nouveau" className="group px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all flex items-center gap-2 overflow-hidden relative">
+//               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+//               <Plus size={20} className="relative z-10" /> 
+//               <span className="relative z-10">Nouvelle Offre</span>
+//            </Link>
+//         </div>
+//       </div>
+
+//       {/* STATS GRID */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+//          {STATS.map((stat, i) => (
+//             <motion.div 
+//                key={i} 
+//                initial={{ opacity: 0, y: 20 }}
+//                animate={{ opacity: 1, y: 0 }}
+//                transition={{ delay: i * 0.1 }}
+//                className="relative bg-white dark:bg-gray-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl dark:shadow-none overflow-hidden group"
+//             >
+//                <div className={`absolute inset-0 bg-gradient-to-br ${stat.from} ${stat.to} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+               
+//                <div className="relative z-10 flex justify-between items-start mb-4">
+//                   <div>
+//                      <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+//                      <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">{stat.value}</h3>
+//                   </div>
+//                   <div className={`p-3 rounded-2xl bg-gray-50 dark:bg-white/5 ${stat.color} shadow-inner`}>
+//                      <stat.icon size={24} />
+//                   </div>
+//                </div>
+               
+//                <div className="relative z-10 flex items-center gap-1 text-xs font-medium text-gray-400">
+//                   <TrendingUp size={14} className="text-emerald-500" />
+//                   <span className="text-emerald-500 font-bold">+12%</span>
+//                   <span>vs mois dernier</span>
+//                </div>
+//             </motion.div>
+//          ))}
+//       </div>
+
+//       {/* JOB LIST CONTAINER */}
+//       <div className="bg-white dark:bg-gray-900/40 backdrop-blur-xl rounded-[32px] border border-gray-100 dark:border-white/5 shadow-2xl overflow-hidden relative z-10">
+         
+//          {/* Toolbar */}
+//          <div className="p-8 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+//             <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+//                <Briefcase className="text-cyan-500" size={24} />
+//                Offres en cours
+//             </h2>
+            
+//             <div className="relative w-full md:w-80 group">
+//                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+//                   <Search className="text-gray-400 group-focus-within:text-cyan-500 transition-colors" size={18} />
+//                </div>
+//                <input 
+//                   type="text" 
+//                   placeholder="Rechercher une offre..."
+//                   className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-sm focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all placeholder:text-gray-500 text-gray-900 dark:text-white"
+//                />
+//             </div>
+//          </div>
+
+//          {isLoading ? (
+//             <div className="flex flex-col items-center justify-center py-32">
+//                <div className="relative">
+//                   <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+//                   <div className="absolute inset-0 flex items-center justify-center">
+//                      <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
+//                   </div>
+//                </div>
+//                <p className="mt-4 text-cyan-500 font-bold text-sm tracking-widest animate-pulse">CHARGEMENT</p>
+//             </div>
+//          ) : (
+//             <div className="divide-y divide-gray-100 dark:divide-white/5">
+//                 {jobs.map((job, index) => (
+//                 <motion.div 
+//                     key={job.id}
+//                     initial={{ opacity: 0, x: -20 }}
+//                     animate={{ opacity: 1, x: 0 }}
+//                     transition={{ delay: index * 0.05 }}
+//                     className="p-6 md:p-8 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-6 group cursor-pointer relative overflow-hidden"
+//                 >
+//                     {/* Hover Glow Line */}
+//                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+//                     <div className="flex-1">
+//                         <div className="flex items-center gap-3 mb-2">
+//                             <h3 className="font-bold text-gray-900 dark:text-white text-xl group-hover:text-cyan-400 transition-colors">{job.title}</h3>
+//                             {job.status === 'OPEN' ? (
+//                                 <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider rounded-lg flex items-center gap-1.5">
+//                                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Public
+//                                 </span>
+//                             ) : (
+//                                 <span className="px-2.5 py-1 bg-gray-500/10 text-gray-500 border border-gray-500/20 text-[10px] font-bold uppercase tracking-wider rounded-lg">
+//                                     Brouillon
+//                                 </span>
+//                             )}
+//                         </div>
+                        
+//                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+//                             <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg">
+//                                 <Briefcase size={14} className="text-purple-400"/> {job.department?.name}
+//                             </span>
+//                             <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg">
+//                                 <MapPin size={14} className="text-red-400"/> {job.location}
+//                             </span>
+//                             <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg">
+//                                 <Clock size={14} className="text-orange-400"/> {job.contractType}
+//                             </span>
+//                         </div>
+//                     </div>
+
+//                     <div className="flex items-center gap-8">
+//                         {/* Candidates Avatars Mock */}
+//                         <div className="hidden md:flex flex-col items-end">
+//                             <div className="flex -space-x-3">
+//                                 {[...Array(Math.min(3, job._count.candidates))].map((_, i) => (
+//                                     <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold shadow-sm">
+//                                         <User size={16} className="text-gray-500 dark:text-gray-400" />
+//                                     </div>
+//                                 ))}
+//                                 {job._count.candidates > 3 && (
+//                                     <div className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400 shadow-sm">
+//                                         +{job._count.candidates - 3}
+//                                     </div>
+//                                 )}
+//                                 {job._count.candidates === 0 && (
+//                                     <span className="text-xs text-gray-400 italic">Aucun candidat</span>
+//                                 )}
+//                             </div>
+//                             <span className="text-[10px] uppercase font-bold text-gray-400 mt-1 tracking-widest">Candidatures</span>
+//                         </div>
+                        
+//                         <div className="flex items-center gap-3">
+//                             <button 
+//                                 onClick={(e) => { e.stopPropagation(); setShareJob(job); }}
+//                                 className="w-12 h-12 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-500/50 hover:bg-cyan-500/10 text-gray-400 hover:text-cyan-500 transition-all flex items-center justify-center"
+//                                 title="Lien Public"
+//                             >
+//                                 <Share2 size={20} />
+//                             </button>
+
+//                             <Link 
+//                                 href="/recrutement/kanban" 
+//                                 className="px-6 py-3 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+//                             >
+//                                 Gérer <ChevronRight size={16} />
+//                             </Link>
+//                         </div>
+//                     </div>
+//                 </motion.div>
+//                 ))}
+                
+//                 {jobs.length === 0 && (
+//                     <div className="py-32 text-center flex flex-col items-center">
+//                         <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6 opacity-50">
+//                             <Briefcase size={40} className="text-gray-400" />
+//                         </div>
+//                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Aucune offre active</h3>
+//                         <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
+//                             Commencez par créer votre première offre d'emploi pour attirer les meilleurs talents.
+//                         </p>
+//                         <Link href="/recrutement/nouveau" className="px-8 py-4 bg-cyan-500 hover:bg-cyan-400 text-white font-bold rounded-2xl shadow-xl shadow-cyan-500/20 transition-all hover:scale-105">
+//                             Créer une offre maintenant
+//                         </Link>
+//                     </div>
+//                 )}
+//             </div>
+//          )}
+//       </div>
+
+//       {/* SHARE MODAL - PREMIUM STYLE */}
+//       <AnimatePresence>
+//         {shareJob && (
+//             <motion.div 
+//                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+//                 className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+//                 onClick={() => setShareJob(null)}
+//             >
+//                 <motion.div 
+//                     initial={{ scale: 0.9, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 50 }}
+//                     className="bg-gray-900 border border-white/10 rounded-[32px] p-8 w-full max-w-lg shadow-2xl relative overflow-hidden"
+//                     onClick={(e) => e.stopPropagation()}
+//                 >
+//                     {/* Background Glow */}
+//                     <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none"></div>
+
+//                     <div className="flex justify-between items-start mb-8 relative z-10">
+//                         <div>
+//                             <h3 className="text-2xl font-bold text-white mb-1">Partager l'offre</h3>
+//                             <p className="text-gray-400">Diffusez cette opportunité sur vos réseaux.</p>
+//                         </div>
+//                         <button onClick={() => setShareJob(null)} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"><X size={24}/></button>
+//                     </div>
+
+//                     <div className="p-6 bg-black/30 rounded-2xl border border-white/5 mb-8 relative z-10">
+//                         <div className="flex items-center gap-4 mb-6">
+//                             <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+//                                 <Sparkles size={20} />
+//                             </div>
+//                             <div>
+//                                 <p className="font-bold text-white text-lg">{shareJob.title}</p>
+//                                 <p className="text-sm text-gray-400">{shareJob.location} • {shareJob.contractType}</p>
+//                             </div>
+//                         </div>
+                        
+//                         <div className="flex items-center gap-3 bg-black/40 p-2 rounded-xl border border-white/10">
+//                             <div className="flex-1 px-3 font-mono text-sm text-cyan-400 truncate">
+//                                 {`${window.location.origin}/jobs/${shareJob.id}`}
+//                             </div>
+//                             <button 
+//                                 onClick={handleCopyLink}
+//                                 className="p-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
+//                                 title="Copier"
+//                             >
+//                                 {isCopied ? <Check size={18} className="text-emerald-400"/> : <Copy size={18}/>}
+//                             </button>
+//                         </div>
+//                     </div>
+
+//                     <div className="flex gap-4 relative z-10">
+//                         <a 
+//                             href={`/jobs/${shareJob.id}`} 
+//                             target="_blank" 
+//                             className="flex-1 py-4 border border-white/10 hover:bg-white/5 rounded-2xl font-bold text-white flex justify-center items-center gap-2 transition-colors"
+//                         >
+//                             <ExternalLink size={20} /> Voir la page
+//                         </a>
+//                         <button 
+//                             onClick={handleCopyLink}
+//                             className="flex-1 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-2xl shadow-lg shadow-cyan-500/20 flex justify-center items-center gap-2 transition-transform active:scale-95"
+//                         >
+//                             {isCopied ? 'Copié !' : 'Copier le lien'}
+//                         </button>
+//                     </div>
+//                 </motion.div>
+//             </motion.div>
+//         )}
+//       </AnimatePresence>
+
+//     </div>
+//   );
+// }
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { 
+  Briefcase, Users, MessageSquare, Clock, Plus, Search, 
+  MapPin, ChevronRight, BarChart3, Loader2,
+  Share2, Copy, ExternalLink, X, Check, Globe, TrendingUp, User, Trash2, Edit
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/services/api';
+
+interface JobOffer {
+  id: string;
+  title: string;
+  department: { name: string };
+  location: string;
+  type: string;
+  status: 'PUBLISHED' | 'CLOSED' | 'DRAFT';
+  _count: { candidates: number };
+}
+
+export default function RecruitmentPage() {
+  const [jobs, setJobs] = useState<JobOffer[]>([]);
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [shareJob, setShareJob] = useState<JobOffer | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [jobsData, candidatesData] = await Promise.all([
+        api.get<JobOffer[]>('/recruitment/jobs'),
+        api.get<any[]>('/recruitment/candidates')
+      ]);
+      setJobs(jobsData);
+      setCandidates(candidatesData);
+    } catch (e) {
+      console.error("Failed to load recruitment data", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Supprimer cette offre définitivement ?')) return;
+    try {
+      await api.delete(`/recruitment/jobs/${jobId}`);
+      setJobs(prev => prev.filter(j => j.id !== jobId));
+    } catch (e) {
+      alert("Erreur lors de la suppression");
+    }
+  };
+
+  const openJobsCount = jobs.filter(j => j.status === 'PUBLISHED').length;
+  const totalCandidates = jobs.reduce((acc, curr) => acc + curr._count.candidates, 0);
+  const interviewsCount = candidates.filter(c => c.status === 'INTERVIEW').length;
+  const averageDays = candidates.length > 0 ? '14j' : '-';
+
+  const STATS = [
+    { label: 'Postes Ouverts', value: openJobsCount.toString(), icon: Briefcase, color: 'text-cyan-400', from: 'from-cyan-500/20', to: 'to-blue-600/20' },
+    { label: 'Candidats', value: totalCandidates.toString(), icon: Users, color: 'text-emerald-400', from: 'from-emerald-500/20', to: 'to-teal-600/20' },
+    { label: 'Entretiens', value: interviewsCount.toString(), icon: MessageSquare, color: 'text-purple-400', from: 'from-purple-500/20', to: 'to-indigo-600/20' },
+    { label: 'Délai Moyen', value: averageDays, icon: Clock, color: 'text-orange-400', from: 'from-orange-500/20', to: 'to-red-600/20' },
+  ];
+
+  const handleCopyLink = () => {
+    if (!shareJob) return;
+    const url = `${window.location.origin}/jobs/${shareJob.id}`;
+    navigator.clipboard.writeText(url);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  return (
+    <div className="max-w-[1600px] mx-auto pb-20 space-y-10 relative">
+      
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-600/5 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[100px]"></div>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        <div>
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
+            Recrutement <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">& Talents</span>
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">Pilotez vos campagnes d'acquisition de talents.</p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <Link href="/recrutement/kanban" className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-white/10 font-bold text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-all flex items-center gap-2">
+            <BarChart3 size={20} className="text-gray-400 dark:text-cyan-400" />
+            <span className="hidden sm:inline">Vue Pipeline</span>
+          </Link>
+          <Link href="/recrutement/nouveau" className="group px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all flex items-center gap-2">
+            <Plus size={20} /> 
+            <span>Nouvelle Offre</span>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+        {STATS.map((stat, i) => (
+          <motion.div 
+            key={i} 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="relative bg-white dark:bg-gray-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl overflow-hidden group"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.from} ${stat.to} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+            
+            <div className="relative z-10 flex justify-between items-start mb-4">
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">{stat.value}</h3>
+              </div>
+              <div className={`p-3 rounded-2xl bg-gray-50 dark:bg-white/5 ${stat.color} shadow-inner`}>
+                <stat.icon size={24} />
+              </div>
+            </div>
+            
+            <div className="relative z-10 flex items-center gap-1 text-xs font-medium text-gray-400">
+              <TrendingUp size={14} className="text-emerald-500" />
+              <span className="text-emerald-500 font-bold">+12%</span>
+              <span>vs mois dernier</span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="bg-white dark:bg-gray-900/40 backdrop-blur-xl rounded-[32px] border border-gray-100 dark:border-white/5 shadow-2xl overflow-hidden relative z-10">
+        
+        <div className="p-8 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <Briefcase className="text-cyan-500" size={24} />
+            Offres en cours
+          </h2>
+          
+          <div className="relative w-full md:w-80 group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="text-gray-400 group-focus-within:text-cyan-500 transition-colors" size={18} />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Rechercher une offre..."
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl text-sm focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-32">
+            <Loader2 className="animate-spin text-cyan-500" size={48}/>
+            <p className="mt-4 text-cyan-500 font-bold text-sm">CHARGEMENT</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-100 dark:divide-white/5">
+            {jobs.map((job, index) => (
+              <motion.div 
+                key={job.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-6 md:p-8 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-6 group relative"
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-xl">{job.title}</h3>
+                    {job.status === 'PUBLISHED' ? (
+                      <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold uppercase rounded-lg flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Public
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-gray-500/10 text-gray-500 border border-gray-500/20 text-[10px] font-bold uppercase rounded-lg">
+                        Brouillon
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg">
+                      <Briefcase size={14} className="text-purple-400"/> {job.department?.name}
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg">
+                      <MapPin size={14} className="text-red-400"/> {job.location}
+                    </span>
+                    <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-white/5 px-3 py-1 rounded-lg">
+                      <Clock size={14} className="text-orange-400"/> {job.type}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setShareJob(job)}
+                    className="w-12 h-12 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-500/50 hover:bg-cyan-500/10 text-gray-400 hover:text-cyan-500 transition-all flex items-center justify-center"
+                  >
+                    <Share2 size={20} />
+                  </button>
+
+                  <Link 
+                    href={`/recrutement/offres/${job.id}/edit`}
+                    className="w-12 h-12 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 hover:bg-blue-500/10 text-gray-400 hover:text-blue-500 transition-all flex items-center justify-center"
+                  >
+                    <Edit size={20} />
+                  </Link>
+
+                  <button 
+                    onClick={() => handleDeleteJob(job.id)}
+                    className="w-12 h-12 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-red-500/50 hover:bg-red-500/10 text-gray-400 hover:text-red-500 transition-all flex items-center justify-center"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+
+                  <Link 
+                    href="/recrutement/kanban" 
+                    className="px-6 py-3 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+                  >
+                    Gérer <ChevronRight size={16} />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {shareJob && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            onClick={() => setShareJob(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }} animate={{ scale: 1 }}
+              className="bg-gray-900 rounded-[32px] p-8 w-full max-w-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-1">Partager l'offre</h3>
+                  <p className="text-gray-400">Diffusez cette opportunité.</p>
+                </div>
+                <button onClick={() => setShareJob(null)} className="p-2 hover:bg-white/10 rounded-full text-gray-400">
+                  <X size={24}/>
+                </button>
+              </div>
+
+              <div className="p-6 bg-black/30 rounded-2xl mb-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white">
+                    <Globe size={20} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white text-lg">{shareJob.title}</p>
+                    <p className="text-sm text-gray-400">{shareJob.location} • {shareJob.type}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 bg-black/40 p-2 rounded-xl">
+                  <div className="flex-1 px-3 font-mono text-sm text-cyan-400 truncate">
+                    {`${window.location.origin}/jobs/${shareJob.id}`}
+                  </div>
+                  <button 
+                    onClick={handleCopyLink}
+                    className="p-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-white"
+                  >
+                    {isCopied ? <Check size={18} className="text-emerald-400"/> : <Copy size={18}/>}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <a 
+                  href={`/jobs/${shareJob.id}`} 
+                  target="_blank" 
+                  className="flex-1 py-4 border border-white/10 hover:bg-white/5 rounded-2xl font-bold text-white flex justify-center items-center gap-2"
+                >
+                  <ExternalLink size={20} /> Voir
+                </a>
+                <button 
+                  onClick={handleCopyLink}
+                  className="flex-1 py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-2xl flex justify-center items-center gap-2"
+                >
+                  {isCopied ? 'Copié !' : 'Copier'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}
