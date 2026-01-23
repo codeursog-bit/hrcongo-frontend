@@ -30,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className={`${inter.variable} ${mono.variable} font-sans bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 antialiased overflow-hidden selection:bg-cyan-100 selection:text-cyan-900 dark:selection:bg-cyan-900/30 dark:selection:text-white transition-colors duration-500`}>
+      <body className={`${inter.variable} ${mono.variable} font-sans bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 antialiased  selection:bg-cyan-100 selection:text-cyan-900 dark:selection:bg-cyan-900/30 dark:selection:text-white transition-colors duration-500`}>
         <ThemeProvider>
           <AlertProvider>
             <NotificationProvider>

@@ -1,14 +1,52 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* --- BASE --- */
-html, body {
-  height: 100%;
+html {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+body {
+  min-height: 100vh;
   /* Mode sombre par défaut (futuriste), écrasé par les classes Tailwind pour le light */
   @apply bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-500;
   overflow-x: hidden;
+}
+
+/* ✨ SCROLLBAR INVISIBLE MAIS FONCTIONNELLE */
+::-webkit-scrollbar {
+  width: 0px; /* Largeur 0 pour masquer */
+  height: 0px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Firefox - Scrollbar invisible */
+* {
+  scrollbar-width: none; /* Masque la scrollbar sur Firefox */
+  scrollbar-color: transparent transparent;
+}
+
+/* Alternative pour tous les navigateurs */
+html {
+  -ms-overflow-style: none; /* IE et Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari et Opera */
 }
 
 /* Sélection de texte futuriste */
@@ -36,6 +74,35 @@ html, body {
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-slate-300 dark:bg-white/10 rounded-full hover:bg-slate-400 dark:hover:bg-white/20;
+  }
+
+  /* ✨ SCROLLBAR VISIBLE ET STYLÉE (pour pages spécifiques) */
+  .visible-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .visible-scrollbar::-webkit-scrollbar-track {
+    background: rgba(2, 6, 23, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .visible-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #06b6d4 0%, #3b82f6 100%);
+    border-radius: 10px;
+    border: 2px solid rgba(2, 6, 23, 0.5);
+    transition: all 0.3s ease;
+  }
+  
+  .visible-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #22d3ee 0%, #60a5fa 100%);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+  }
+  
+  /* Firefox */
+  .visible-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #06b6d4 rgba(2, 6, 23, 0.5);
   }
 
   /* Effets de Verre Premium (Light & Dark) */

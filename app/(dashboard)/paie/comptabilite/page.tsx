@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -20,7 +19,7 @@ interface JournalEntry {
 
 export default function AccountingExportPage() {
   const router = useRouter();
-  const [period, setPeriod] = useState({ month: 11, year: 2024 }); // Nov 2024 default
+  const [period, setPeriod] = useState({ month: 11, year: 2025 }); // Nov 2025 default
   const [copied, setCopied] = useState(false);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,9 +29,10 @@ export default function AccountingExportPage() {
       setIsLoading(true);
       try {
         const data = await api.get<JournalEntry[]>(`/payrolls/journal?month=${period.month}&year=${period.year}`);
-        setEntries(data);
+        setEntries(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error("Erreur chargement journal", e);
+        setEntries([]);
       } finally {
         setIsLoading(false);
       }

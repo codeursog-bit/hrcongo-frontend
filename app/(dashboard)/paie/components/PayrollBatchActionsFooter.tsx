@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, DollarSign, Ban, X } from 'lucide-react';
@@ -28,10 +27,11 @@ export function PayrollBatchActionsFooter({
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-0 left-0 right-0 z-50 p-6"
+        // ✅ CORRECTION : Positionnement relatif au contenu, pas à tout l'écran
+        className="sticky bottom-6 z-50 mt-6"
       >
-        {/* ✅ STYLE IDENTIQUE À "RÉSUMÉS DE PRÉSENCES" */}
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+        {/* ✅ Le conteneur respecte maintenant la largeur du contenu principal */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
           
           {/* Gauche : Info sélection */}
           <div className="flex items-center gap-3">
@@ -54,7 +54,7 @@ export function PayrollBatchActionsFooter({
               </div>
             ) : (
               <>
-                {/* ✅ Bouton Valider (vert comme dans Résumés) */}
+                {/* ✅ Bouton Valider (vert) */}
                 <button 
                   onClick={onValidate}
                   className="flex-1 md:flex-none px-6 py-3 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -63,7 +63,7 @@ export function PayrollBatchActionsFooter({
                   <span className="hidden sm:inline">Valider</span>
                 </button>
 
-                {/* ✅ Bouton Payer (bleu vif) */}
+                {/* ✅ Bouton Payer (bleu) */}
                 <button 
                   onClick={onPay}
                   className="flex-1 md:flex-none px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
