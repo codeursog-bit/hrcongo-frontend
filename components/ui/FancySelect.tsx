@@ -68,9 +68,13 @@ export const FancySelect: React.FC<FancySelectProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Fermer au scroll de la page
+  // Fermer au scroll de la page (mais pas au scroll du dropdown)
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (e: Event) => {
+      // Ne pas fermer si on scroll DANS le dropdown
+      if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) {
+        return;
+      }
       if (isOpen) setIsOpen(false);
     };
     
@@ -99,6 +103,10 @@ export const FancySelect: React.FC<FancySelectProps> = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.15 }}
+        onWheel={(e) => {
+          // Empêcher le scroll de la page quand on scroll dans le dropdown
+          e.stopPropagation();
+        }}
         style={{
           position: 'fixed',
           top: `${dropdownPosition.top}px`,
