@@ -155,17 +155,18 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
                   </button>
                 </div>
 
-                {/* Footnote */}
+             {/* Footnote */}
                 <p className="text-xs text-center text-slate-500 dark:text-slate-500 mt-4">
                   Vous pourrez toujours créer votre entreprise depuis le menu
                 </p>
-              </div>
-            </motion.div>
-          </div>
-        </>
-      )}
-    </AnimatePresence>
-  );
+              </div> {/* Ferme le div "relative z-10" */}
+            </div> {/* Ferme le div "glass-panel" */}
+          </motion.div>
+        </div> {/* Ferme le div "fixed inset-0" */}
+      </>
+    )}
+  </AnimatePresence>
+);
 };
 
 // ============================================================================
