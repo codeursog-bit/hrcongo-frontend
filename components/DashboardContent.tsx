@@ -371,25 +371,69 @@ export const DashboardContent = () => {
             </button>
           </motion.div>
         </div>
-             <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Répartition</h3>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Effectifs par département</p>
-          <div className="h-[250px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={charts.deptDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
-                  {charts.deptDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</span>
-              <span className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-widest">Total</span>
-            </div>
-          </div>
-        </motion.div>
+          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
+  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Répartition</h3>
+  <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Effectifs par département</p>
+  
+  {/* LOGIQUE TOP 5 + TRI RÉCENT */}
+  {(() => {
+    // 1. On trie par ID ou Date de création décroissante (plus récent en premier)
+    // Note: Si tes objets n'ont pas de 'createdAt', on utilise l'index ou l'ID
+    const sortedDepts = [...(charts.deptDistribution || [])].sort((a, b) => b.id - a.id);
+    
+    // 2. On sépare le Top 5 et le reste
+    const top5 = sortedDepts.slice(0, 5);
+    const others = sortedDepts.slice(5);
+    
+    // 3. On prépare la donnée finale pour Recharts
+    const finalData = [...top5];
+    if (others.length > 0) {
+      finalData.push({
+        name: 'Autres',
+        value: others.reduce((acc, curr) => acc + curr.value, 0),
+        color: '#64748b' // Un gris ardoise pour "Autres"
+      });
+    }
+
+    return (
+      <div className="h-[250px] relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie 
+              data={finalData} 
+              cx="50%" 
+              cy="50%" 
+              innerRadius={60} 
+              outerRadius={80} 
+              paddingAngle={5} 
+              dataKey="value" 
+              stroke="none"
+            >
+              {finalData.map((entry: any, index: number) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip 
+              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }} 
+              itemStyle={{ color: '#fff' }}
+            />
+            {/* Légende personnalisée pour gérer le overflow si besoin */}
+            <Legend 
+              verticalAlign="bottom" 
+              height={36} 
+              iconType="circle" 
+              wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+          <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</span>
+          <span className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-widest">Total</span>
+        </div>
+      </div>
+    );
+  })()}
+</motion.div>
       </div>
 
 
