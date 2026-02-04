@@ -25,8 +25,8 @@ export default function BatchPayrollPage() {
   const [settings, setSettings] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  const [month, setMonth] = useState('Novembre');
-  const [year, setYear] = useState(2024);
+  const [month, setMonth] = useState('Février');
+  const [year, setYear] = useState(2026);
   const [workDays, setWorkDays] = useState(26);
 
   const [isProcessing, setIsProcessing] = useState(false);

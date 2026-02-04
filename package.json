@@ -2,12 +2,13 @@
   "name": "hr-congo-frontend",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+ "scripts": {
+  "dev": "next dev",
+  "check-types": "tsc --noEmit",
+  "build": "npm run check-types && next build",
+  "start": "next start",
+  "lint": "next lint"
+},
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "framer-motion": "^11.0.8",

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase, Send, ArrowLeft, CheckCircle2, Copy, Check,
-  Globe, MapPin, Building2, Loader2, FileText
+  Globe, MapPin, Building2, Loader2, FileText, Upload, X, Image as ImageIcon,
+  Calendar, DollarSign, Eye, Share2, Zap
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { Department } from '@/types/recruitment';
+import Image from 'next/image';
 
 interface CreatedJob {
   id: string;
@@ -22,6 +23,8 @@ export default function CreateManualJobPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdJob, setCreatedJob] = useState<CreatedJob | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -30,29 +33,72 @@ export default function CreateManualJobPage() {
     departmentId: '',
     location: 'Brazzaville, Siège',
     contractType: 'CDI',
-    salaryRange: ''
+    salaryMin: '',
+    salaryMax: '',
+    salaryCurrency: 'XAF',
+    expirationDate: '',
+    showOnPortal: true,
+    isPremium: false // ✨ NOUVEAU
   });
 
   useEffect(() => {
     api.get<Department[]>('/departments').then(setDepartments).catch(console.error);
   }, []);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image trop volumineuse (max 2MB)');
+      return;
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      alert('Format non supporté (JPG, PNG, WEBP uniquement)');
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        requirements: formData.requirements,
-        departmentId: formData.departmentId,
-        location: formData.location,
-        contractType: formData.contractType,
-        processingMode: 'MANUAL'
-      };
+      const formDataToSend = new FormData();
+      
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('requirements', formData.requirements || '');
+      formDataToSend.append('departmentId', formData.departmentId);
+      formDataToSend.append('location', formData.location);
+      formDataToSend.append('contractType', formData.contractType);
+      formDataToSend.append('processingMode', 'MANUAL');
+      formDataToSend.append('status', 'PUBLISHED');
+      formDataToSend.append('showOnPortal', formData.showOnPortal.toString());
+      formDataToSend.append('isPremium', formData.isPremium.toString()); // ✨ AJOUT
+      
+      if (formData.salaryMin) formDataToSend.append('salaryMin', formData.salaryMin);
+      if (formData.salaryMax) formDataToSend.append('salaryMax', formData.salaryMax);
+      formDataToSend.append('salaryCurrency', formData.salaryCurrency);
+      
+      // ✅ Date en ISO 8601
+      if (formData.expirationDate) {
+        const isoDate = new Date(formData.expirationDate).toISOString();
+        formDataToSend.append('expirationDate', isoDate);
+      }
+      
+      if (imageFile) {
+        formDataToSend.append('image', imageFile);
+      }
 
-      const jobResponse = await api.post<CreatedJob>('/recruitment/jobs', payload);
+      // ✅ CORRECTION : Utiliser api.postFormData
+      const jobResponse = await api.postFormData<CreatedJob>('/recruitment/jobs', formDataToSend);
       setCreatedJob(jobResponse);
     } catch (error) {
       const err = error as Error;
@@ -64,7 +110,7 @@ export default function CreateManualJobPage() {
 
   const handleCopyLink = () => {
     if (!createdJob) return;
-    const url = `${window.location.origin}/jobs/manuel/${createdJob.id}`;
+    const url = `${window.location.origin}/jobs/${createdJob.id}`;
     navigator.clipboard.writeText(url);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
@@ -101,7 +147,7 @@ export default function CreateManualJobPage() {
                 <div className="flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-white/5">
                   <Globe className="text-blue-500 shrink-0" size={18} />
                   <p className="text-blue-400 font-mono text-sm truncate flex-1">
-                    {`${window.location.origin}/jobs/manuel/${createdJob.id}`}
+                    {`${window.location.origin}/jobs/${createdJob.id}`}
                   </p>
                 </div>
                 <button 
@@ -113,12 +159,20 @@ export default function CreateManualJobPage() {
                 </button>
               </div>
 
-              <button 
-                onClick={() => router.push('/recrutement/manuel/candidats')} 
-                className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl shadow-lg transition-transform hover:scale-[1.02] relative z-10"
-              >
-                Voir les Candidatures
-              </button>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => router.push('/recrutement/manuel/candidats')} 
+                  className="flex-1 py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl shadow-lg transition-all"
+                >
+                  Voir les Candidatures
+                </button>
+                <button 
+                  onClick={() => router.push('/recrutement')} 
+                  className="px-4 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold"
+                >
+                  <Eye size={20} />
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -141,6 +195,49 @@ export default function CreateManualJobPage() {
       {/* FORM */}
       <form onSubmit={handleSubmit} className="glass-panel rounded-3xl p-8 md:p-12 space-y-8 shadow-2xl">
         
+        {/* IMAGE UPLOAD */}
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <ImageIcon size={16}/> Image de l'offre (Optionnel)
+          </label>
+          
+          {imagePreview ? (
+            <div className="relative group">
+              <Image 
+                src={imagePreview} 
+                alt="Preview" 
+                width={400}
+                height={200}
+                className="w-full h-48 object-cover rounded-xl border border-white/10"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageFile(null);
+                }}
+                className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          ) : (
+            <label className="block w-full h-48 border-2 border-dashed border-white/20 hover:border-blue-500/50 rounded-xl cursor-pointer transition-colors">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-blue-400 transition-colors">
+                <Upload size={40} className="mb-3" />
+                <p className="font-medium">Cliquez pour uploader une image</p>
+                <p className="text-xs mt-1">JPG, PNG, WEBP (max 2MB)</p>
+              </div>
+            </label>
+          )}
+        </div>
+
         <div className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-300">Intitulé du Poste *</label>
@@ -191,6 +288,61 @@ export default function CreateManualJobPage() {
               </select>
             </div>
           </div>
+
+          {/* SALARY */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                <DollarSign size={16}/> Salaire Min
+              </label>
+              <input 
+                type="number" 
+                placeholder="Ex: 500000"
+                className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-slate-100" 
+                value={formData.salaryMin} 
+                onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                <DollarSign size={16}/> Salaire Max
+              </label>
+              <input 
+                type="number" 
+                placeholder="Ex: 800000"
+                className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-slate-100" 
+                value={formData.salaryMax} 
+                onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })} 
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-300">Devise</label>
+              <select 
+                className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-slate-100" 
+                value={formData.salaryCurrency} 
+                onChange={(e) => setFormData({ ...formData, salaryCurrency: e.target.value })}
+              >
+                <option value="XAF" className="bg-slate-900">XAF</option>
+                <option value="EUR" className="bg-slate-900">EUR</option>
+                <option value="USD" className="bg-slate-900">USD</option>
+              </select>
+            </div>
+          </div>
+
+          {/* EXPIRATION */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+              <Calendar size={16}/> Date d'expiration (Optionnel)
+            </label>
+            <input 
+              type="date" 
+              className="w-full bg-slate-950/40 border border-white/10 rounded-xl px-4 py-4 outline-none text-slate-100" 
+              value={formData.expirationDate} 
+              onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })} 
+            />
+          </div>
           
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-300">Description du Poste *</label>
@@ -211,6 +363,46 @@ export default function CreateManualJobPage() {
               onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} 
               placeholder="Expérience, diplômes, compétences techniques..."
             />
+          </div>
+
+          {/* PORTAL TOGGLE */}
+          <div className="flex items-center justify-between p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+            <div className="flex items-center gap-3">
+              <Globe className="text-blue-400" size={20} />
+              <div>
+                <p className="font-bold text-blue-400 text-sm">Publier sur le Portail</p>
+                <p className="text-xs text-slate-400">Visible par tous les visiteurs</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={formData.showOnPortal}
+                onChange={(e) => setFormData({ ...formData, showOnPortal: e.target.checked })}
+              />
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+          </div>
+
+          {/* ✨ BOUTON BOOSTER */}
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl">
+            <div className="flex items-center gap-3">
+              <Zap className="text-yellow-400" size={20} />
+              <div>
+                <p className="font-bold text-yellow-400 text-sm">Booster l'Offre (Premium)</p>
+                <p className="text-xs text-slate-400">Met l'offre en tête du portail (30 jours)</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={formData.isPremium}
+                onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
+              />
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-yellow-500 peer-checked:to-orange-500"></div>
+            </label>
           </div>
 
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
@@ -239,6 +431,7 @@ export default function CreateManualJobPage() {
     </div>
   );
 }
+
 // 'use client';
 
 // import React, { useState, useEffect } from 'react';
@@ -251,11 +444,16 @@ export default function CreateManualJobPage() {
 // import { api } from '@/services/api';
 // import { Department } from '@/types/recruitment';
 
+// interface CreatedJob {
+//   id: string;
+//   title: string;
+// }
+
 // export default function CreateManualJobPage() {
 //   const router = useRouter();
 //   const [departments, setDepartments] = useState<Department[]>([]);
 //   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [createdJob, setCreatedJob] = useState<any>(null);
+//   const [createdJob, setCreatedJob] = useState<CreatedJob | null>(null);
 //   const [isCopied, setIsCopied] = useState(false);
 
 //   const [formData, setFormData] = useState({
@@ -269,7 +467,7 @@ export default function CreateManualJobPage() {
 //   });
 
 //   useEffect(() => {
-//     api.get<Department[]>('/departments').then(setDepartments);
+//     api.get<Department[]>('/departments').then(setDepartments).catch(console.error);
 //   }, []);
 
 //   const handleSubmit = async (e: React.FormEvent) => {
@@ -287,10 +485,11 @@ export default function CreateManualJobPage() {
 //         processingMode: 'MANUAL'
 //       };
 
-//       const jobResponse = await api.post('/recruitment/jobs', payload);
+//       const jobResponse = await api.post<CreatedJob>('/recruitment/jobs', payload);
 //       setCreatedJob(jobResponse);
-//     } catch (e: any) {
-//       alert(`Erreur: ${e.message || 'Impossible de créer l\'offre'}`);
+//     } catch (error) {
+//       const err = error as Error;
+//       alert(`Erreur: ${err.message || 'Impossible de créer l\'offre'}`);
 //     } finally {
 //       setIsSubmitting(false);
 //     }

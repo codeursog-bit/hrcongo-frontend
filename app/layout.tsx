@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import { AlertProvider } from '@/components/providers/AlertProvider';
+import { CompanyReminderProvider } from '@/components/providers/CompanyReminderProvider';
 import './globals.css'; 
 
 const inter = Inter({ 
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${mono.variable} font-sans bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 antialiased  selection:bg-cyan-100 selection:text-cyan-900 dark:selection:bg-cyan-900/30 dark:selection:text-white transition-colors duration-500`}>
         <ThemeProvider>
           <AlertProvider>
+            <CompanyReminderProvider>
             <NotificationProvider>
               {/* --- DYNAMIC BACKGROUND MESH --- */}
               <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
@@ -55,6 +57,7 @@ export default function RootLayout({
               
               {children}
             </NotificationProvider>
+            </CompanyReminderProvider>
           </AlertProvider>
         </ThemeProvider>
       </body>

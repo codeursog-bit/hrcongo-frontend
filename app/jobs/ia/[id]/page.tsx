@@ -28,7 +28,7 @@ interface ApplicationResult {
   reasoning?: string;
   strengths?: string[];
   shouldTakeTest: boolean;
-  testUrl?: string;
+  candidateId?: string; // ✅ AJOUTÉ
 }
 
 export default function JobApplyIAPage({ params }: { params: { id: string } }) {
@@ -65,7 +65,7 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
     fetchJob();
   }, [params.id]);
 
-  // Countdown pour redirection
+  // ✅ Countdown pour redirection (CORRIGÉ)
   useEffect(() => {
     if (applicationResult?.shouldTakeTest && redirectCountdown > 0) {
       const timer = setTimeout(() => {
@@ -73,11 +73,12 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (applicationResult?.shouldTakeTest && redirectCountdown === 0) {
-      if (applicationResult.testUrl) {
-        router.push(applicationResult.testUrl);
+      // ✅ ROUTE CORRIGÉE
+      if (applicationResult.candidateId) {
+        router.push(`/jobs/ia/${params.id}/test/${applicationResult.candidateId}`);
       }
     }
-  }, [applicationResult, redirectCountdown, router]);
+  }, [applicationResult, redirectCountdown, router, params.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,8 +277,8 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
                   </div>
                 )}
 
-                {/* Redirection Test (si éligible) */}
-                {applicationResult.shouldTakeTest && (
+                {/* Redirection Test (si éligible) - ✅ CORRIGÉ */}
+                {applicationResult.shouldTakeTest && applicationResult.candidateId && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -310,11 +311,11 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
                 )}
               </div>
 
-              {/* Actions */}
+              {/* Actions - ✅ CORRIGÉ */}
               <div className="flex gap-4 relative z-10">
-                {applicationResult.shouldTakeTest ? (
+                {applicationResult.shouldTakeTest && applicationResult.candidateId ? (
                   <Link 
-                    href={applicationResult.testUrl || '/'} 
+                    href={`/jobs/ia/${params.id}/test/${applicationResult.candidateId}`}
                     className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl text-center transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
                     <Zap size={20}/> Commencer le Test Maintenant
@@ -554,6 +555,7 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
   );
 }
 
+
 // 'use client';
 
 // import React, { useState, useEffect } from 'react';
@@ -568,13 +570,32 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
 
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// interface JobOffer {
+//   id: string;
+//   title: string;
+//   location: string;
+//   type: string;
+//   description: string;
+//   requirements?: string;
+// }
+
+// interface ApplicationResult {
+//   isEligible: boolean;
+//   message: string;
+//   cvScore?: number;
+//   reasoning?: string;
+//   strengths?: string[];
+//   shouldTakeTest: boolean;
+//   testUrl?: string;
+// }
+
 // export default function JobApplyIAPage({ params }: { params: { id: string } }) {
 //   const router = useRouter();
-//   const [job, setJob] = useState<any>(null);
+//   const [job, setJob] = useState<JobOffer | null>(null);
 //   const [isLoading, setIsLoading] = useState(true);
 //   const [isApplying, setIsApplying] = useState(false);
   
-//   const [applicationResult, setApplicationResult] = useState<any>(null);
+//   const [applicationResult, setApplicationResult] = useState<ApplicationResult | null>(null);
 //   const [redirectCountdown, setRedirectCountdown] = useState(3);
   
 //   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -610,7 +631,9 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
 //       }, 1000);
 //       return () => clearTimeout(timer);
 //     } else if (applicationResult?.shouldTakeTest && redirectCountdown === 0) {
-//       router.push(applicationResult.testUrl);
+//       if (applicationResult.testUrl) {
+//         router.push(applicationResult.testUrl);
+//       }
 //     }
 //   }, [applicationResult, redirectCountdown, router]);
 
@@ -732,7 +755,7 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
 //             >
 //               {/* Glow effect */}
 //               <div 
-//                 className={`absolute top-0 right-0 w-80 h-80 rounded-full blur-[120px] -mr-20 -mt-20 pointer-events-none`}
+//                 className="absolute top-0 right-0 w-80 h-80 rounded-full blur-[120px] -mr-20 -mt-20 pointer-events-none"
 //                 style={{
 //                   backgroundColor: applicationResult.isEligible ? 'rgba(6, 182, 212, 0.2)' : 'rgba(239, 68, 68, 0.2)'
 //                 }}

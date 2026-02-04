@@ -318,99 +318,11 @@ export const DashboardContent = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div variants={itemVariants} className="lg:col-span-2 bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Évolution Salaires</h3>
-              <p className="text-sm text-gray-500 dark:text-slate-400">5 derniers mois (FCFA)</p>
-            </div>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={charts.salaryTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorSalary" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorMasse" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12 }} 
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
-                  tickFormatter={(value) => {
-                    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-                    if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                    return value;
-                  }}
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', borderRadius: '12px' }} 
-                  itemStyle={{ color: '#fff' }}
-                  formatter={(value: any) => value.toLocaleString() + ' F'}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="masseSalariale" 
-                  stroke="#10b981" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorMasse)" 
-                  name="Masse Salariale" 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#06b6d4" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorSalary)" 
-                  name="Salaire Net" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Répartition</h3>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Effectifs par département</p>
-          <div className="h-[250px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={charts.deptDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
-                  {charts.deptDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</span>
-              <span className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-widest">Total</span>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { label: 'Créer Paie', icon: Wallet, color: 'bg-emerald-500', action: '/paie/nouveau' },
               { label: 'Ajouter Employé', icon: UserPlus, color: 'bg-cyan-500', action: '/employes/nouveau' },
+              { label: 'Créer Paie', icon: Wallet, color: 'bg-emerald-500', action: '/paie/nouveau' },
               { label: 'Gérer Congés', icon: Calendar, color: 'bg-orange-500', action: '/conges' },
               { label: 'Rapports', icon: BarChart, color: 'bg-violet-500', action: '/rapports' },
             ].map((item, i) => (
@@ -499,6 +411,95 @@ export const DashboardContent = () => {
                 <p className="text-sm">Aucune activité récente (dernières 36h).</p>
               </div>
             )}
+          </div>
+        </motion.div>
+      </div>
+
+
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="lg:col-span-2 bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Évolution Salaires</h3>
+              <p className="text-sm text-gray-500 dark:text-slate-400">5 derniers mois (FCFA)</p>
+            </div>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={charts.salaryTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorSalary" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorMasse" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  tickFormatter={(value) => {
+                    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                    if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                    return value;
+                  }}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', borderRadius: '12px' }} 
+                  itemStyle={{ color: '#fff' }}
+                  formatter={(value: any) => value.toLocaleString() + ' F'}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="masseSalariale" 
+                  stroke="#10b981" 
+                  strokeWidth={2} 
+                  fillOpacity={1} 
+                  fill="url(#colorMasse)" 
+                  name="Masse Salariale" 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="#06b6d4" 
+                  strokeWidth={2} 
+                  fillOpacity={1} 
+                  fill="url(#colorSalary)" 
+                  name="Salaire Net" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Répartition</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Effectifs par département</p>
+          <div className="h-[250px] relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={charts.deptDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
+                  {charts.deptDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</span>
+              <span className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-widest">Total</span>
+            </div>
           </div>
         </motion.div>
       </div>
