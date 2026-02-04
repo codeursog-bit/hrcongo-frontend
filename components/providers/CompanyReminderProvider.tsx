@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, X, Sparkles, ArrowRight } from 'lucide-react';
@@ -50,6 +50,15 @@ const MESSAGES = [
 ];
 
 // ============================================================================
+// ⏱️ CONFIGURATION DES DÉLAIS
+// ============================================================================
+
+const TIMING = {
+  AFTER_PAGE_LOAD: 7000,     // 7 secondes après le chargement de la page
+  AFTER_MODAL_CLOSE: 120000, // 2 minutes après la fermeture du modal
+};
+
+// ============================================================================
 // 🎬 MODAL COMPOSANT
 // ============================================================================
 
@@ -81,14 +90,15 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
           />
 
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md z-[9999]"
-          >
+          {/* Modal Container - Perfectly Centered */}
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="w-full max-w-md pointer-events-auto"
+            >
             <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
               
               {/* Gradient Background */}
@@ -150,8 +160,8 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
                   Vous pourrez toujours créer votre entreprise depuis le menu
                 </p>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
@@ -169,7 +179,8 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   const [hasCompany, setHasCompany] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);
-  const [lastPathname, setLastPathname] = useState('');
+  const [modalWasClosed, setModalWasClosed] = useState(false);
+  const lastPathnameRef = useRef(pathname);
 
   // ============================================================================
   // ✅ VÉRIFIER SI L'UTILISATEUR A UNE ENTREPRISE
@@ -180,11 +191,9 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
       console.log('🔍 [CompanyReminder] Checking company...');
       const company = await api.get('/companies/mine');
       
-      // Le backend retourne null si pas d'entreprise
       const hasCompanyResult = company !== null && company !== undefined;
       
       console.log('🏢 [CompanyReminder] Result:', hasCompanyResult ? '✅ HAS COMPANY' : '❌ NO COMPANY');
-      console.log('🏢 [CompanyReminder] Company data:', company);
       
       setHasCompany(hasCompanyResult);
       return hasCompanyResult;
@@ -209,61 +218,59 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   // ============================================================================
 
   useEffect(() => {
-    console.log('⏱️ [CompanyReminder] Timer effect triggered', {
-      hasCompany,
-      pathname,
-      lastPathname,
-      showModal
-    });
-
     // Ignorer si l'utilisateur a déjà une entreprise
     if (hasCompany) {
-      console.log('✅ [CompanyReminder] Has company, skipping timer');
+      console.log('✅ [CompanyReminder] Has company, no reminder needed');
       return;
     }
 
     // Ignorer sur certaines pages
     const excludedPaths = ['/companies/create', '/auth/login', '/auth/register', '/auth/forgot-password'];
     if (excludedPaths.some(path => pathname.startsWith(path))) {
-      console.log('⏭️ [CompanyReminder] Excluded path, skipping timer:', pathname);
+      console.log('⏭️ [CompanyReminder] Excluded path:', pathname);
+      return;
+    }
+
+    // Ne pas afficher si le modal est déjà ouvert
+    if (showModal) {
+      console.log('⏭️ [CompanyReminder] Modal already open, skipping timer');
       return;
     }
 
     // Déterminer le délai
     let delay: number;
-    
-    if (lastPathname !== pathname) {
-      // Changement de page → 30 secondes
-      delay = 30000;
-      console.log('🔄 [CompanyReminder] Page changed, timer set to 30s');
-      setLastPathname(pathname);
-    } else if (!showModal) {
-      // Même page ET modal fermé → 3 minutes
-      delay = 180000;
-      console.log('⏱️ [CompanyReminder] Same page & modal closed, timer set to 3min');
-    } else {
-      // Modal ouvert, ne rien faire
-      console.log('⏭️ [CompanyReminder] Modal is open, skipping timer');
-      return;
+    let reason: string;
+
+    // Si le pathname a changé, c'est un nouveau chargement de page
+    if (lastPathnameRef.current !== pathname) {
+      delay = TIMING.AFTER_PAGE_LOAD;
+      reason = '7s after page load';
+      lastPathnameRef.current = pathname;
+      setModalWasClosed(false); // Reset le flag quand on change de page
+    } 
+    // Si le modal a été fermé, on attend 2 minutes
+    else if (modalWasClosed) {
+      delay = TIMING.AFTER_MODAL_CLOSE;
+      reason = '2min after modal close';
+    } 
+    // Sinon, premier affichage sur cette page
+    else {
+      delay = TIMING.AFTER_PAGE_LOAD;
+      reason = '7s after initial load';
     }
 
-    console.log(`⏰ [CompanyReminder] Timer started: ${delay / 1000}s`);
+    console.log(`⏰ [CompanyReminder] Timer started: ${reason} (${delay / 1000}s)`);
 
     const timer = setTimeout(() => {
       console.log('🎬 [CompanyReminder] Timer expired! Showing modal...');
       setShowModal(true);
-      setMessageIndex((prev) => {
-        const newIndex = prev + 1;
-        console.log('📝 [CompanyReminder] Message index:', newIndex % MESSAGES.length);
-        return newIndex;
-      });
+      setMessageIndex((prev) => prev + 1);
     }, delay);
 
     return () => {
-      console.log('🧹 [CompanyReminder] Cleaning up timer');
       clearTimeout(timer);
     };
-  }, [pathname, hasCompany, lastPathname, showModal]);
+  }, [pathname, hasCompany, showModal, modalWasClosed]);
 
   // ============================================================================
   // 🎬 HANDLERS
@@ -272,6 +279,8 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   const handleClose = () => {
     console.log('❌ [CompanyReminder] Modal closed by user');
     setShowModal(false);
+    setModalWasClosed(true); // Marquer que le modal a été fermé
+    // Le prochain timer sera de 2 minutes
   };
 
   const handleCreateCompany = () => {

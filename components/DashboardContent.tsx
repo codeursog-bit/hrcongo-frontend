@@ -371,46 +371,23 @@ export const DashboardContent = () => {
             </button>
           </motion.div>
         </div>
-
-        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl flex flex-col">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="p-2 bg-red-500/10 rounded-lg text-red-500 animate-pulse"><Radio size={18} /></div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">En direct (36h)</h3>
-          </div>
-          
-          <div className="flex-1 space-y-6 overflow-y-auto max-h-[400px] custom-scrollbar pr-2">
-            {stats.recentActivities?.length > 0 ? (
-              stats.recentActivities.map((act: any, i: number) => {
-                let icon = <CheckCircle size={16} />;
-                let color = "bg-gray-100 text-gray-500";
-                
-                if (act.type === 'LEAVE') { icon = <Calendar size={16} />; color = "bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"; }
-                if (act.type === 'HIRE') { icon = <User size={16} />; color = "bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"; }
-                if (act.type === 'ATTENDANCE') { icon = <Clock size={16} />; color = "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"; }
-
-                return (
-                  <div key={act.id} className="flex gap-4 relative">
-                    {i !== stats.recentActivities.length - 1 && (
-                      <div className="absolute left-[15px] top-8 bottom-[-24px] w-0.5 bg-gray-100 dark:bg-gray-800"></div>
-                    )}
-                    
-                    <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${color}`}>
-                      {icon}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{act.text}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{act.subText}</p>
-                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 font-mono">{new Date(act.time).toLocaleString()}</p>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-10 text-gray-400">
-                <Bell size={32} className="mx-auto mb-2 opacity-20" />
-                <p className="text-sm">Aucune activité récente (dernières 36h).</p>
-              </div>
-            )}
+             <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Répartition</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Effectifs par département</p>
+          <div className="h-[250px] relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={charts.deptDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
+                  {charts.deptDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</span>
+              <span className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-widest">Total</span>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -483,23 +460,45 @@ export const DashboardContent = () => {
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Répartition</h3>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Effectifs par département</p>
-          <div className="h-[250px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={charts.deptDistribution} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
-                  {charts.deptDistribution.map((entry: any, index: number) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#fff' }} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{stats.totalEmployees}</span>
-              <span className="text-xs text-gray-500 dark:text-slate-400 uppercase tracking-widest">Total</span>
-            </div>
+       <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl flex flex-col">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="p-2 bg-red-500/10 rounded-lg text-red-500 animate-pulse"><Radio size={18} /></div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">En direct (36h)</h3>
+          </div>
+          
+          <div className="flex-1 space-y-6 overflow-y-auto max-h-[400px] custom-scrollbar pr-2">
+            {stats.recentActivities?.length > 0 ? (
+              stats.recentActivities.map((act: any, i: number) => {
+                let icon = <CheckCircle size={16} />;
+                let color = "bg-gray-100 text-gray-500";
+                
+                if (act.type === 'LEAVE') { icon = <Calendar size={16} />; color = "bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400"; }
+                if (act.type === 'HIRE') { icon = <User size={16} />; color = "bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"; }
+                if (act.type === 'ATTENDANCE') { icon = <Clock size={16} />; color = "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"; }
+
+                return (
+                  <div key={act.id} className="flex gap-4 relative">
+                    {i !== stats.recentActivities.length - 1 && (
+                      <div className="absolute left-[15px] top-8 bottom-[-24px] w-0.5 bg-gray-100 dark:bg-gray-800"></div>
+                    )}
+                    
+                    <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${color}`}>
+                      {icon}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{act.text}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{act.subText}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 font-mono">{new Date(act.time).toLocaleString()}</p>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-10 text-gray-400">
+                <Bell size={32} className="mx-auto mb-2 opacity-20" />
+                <p className="text-sm">Aucune activité récente (dernières 36h).</p>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
