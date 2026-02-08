@@ -1,19 +1,22 @@
 // ============================================================================
-// ✅ PAGE DE SUCCÈS APRÈS PAIEMENT
+// ✅ PAGE DE SUCCÈS APRÈS PAIEMENT - CORRIGÉE AVEC SUSPENSE
 // ============================================================================
-// Fichier: app/(dashboard)/settings/subscription/success/page.tsx
+// Fichier: app/(dashboard)/success/page.tsx
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscription';
 import { CheckCircle, Crown, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function SubscriptionSuccessPage() {
+// ============================================================================
+// 🎯 COMPOSANT INTERNE AVEC useSearchParams
+// ============================================================================
+function SuccessContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // ✅ Utilisé à l'intérieur de Suspense
   const sessionId = searchParams.get('session_id');
   
   const { subscription, refetch, isLoading: subLoading } = useSubscription();
@@ -143,5 +146,25 @@ export default function SubscriptionSuccessPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// ============================================================================
+// 🎯 COMPOSANT PRINCIPAL AVEC SUSPENSE
+// ============================================================================
+export default function SubscriptionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600 dark:text-slate-400">
+            Chargement...
+          </p>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
