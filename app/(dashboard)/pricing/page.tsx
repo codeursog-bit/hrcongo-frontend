@@ -1,6 +1,5 @@
-
 // ============================================================================
-// 💎 PAGE PRICING - AVEC SUSPENSE POUR useSearchParams
+// 💎 PAGE PRICING - CORRIGÉE (Tous les problèmes résolus)
 // ============================================================================
 // Fichier: app/(dashboard)/pricing/page.tsx
 
@@ -10,7 +9,17 @@ import { useState, Suspense } from 'react';
 import { useSubscription, usePlans } from '@/hooks/useSubscription';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Check, Crown, Zap, Gift, Sparkles, AlertTriangle } from 'lucide-react';
+import { 
+  Check, 
+  Crown, 
+  Zap, 
+  Gift, 
+  Sparkles, 
+  AlertTriangle,
+  Rocket,
+  Building2,
+  Star
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 // ✅ TYPE POUR LA RÉPONSE
@@ -24,17 +33,17 @@ interface UpgradeResponse {
 // ============================================================================
 function PricingContent() {
   const router = useRouter();
-  const searchParams = useSearchParams(); // ✅ Utilisé à l'intérieur de Suspense
+  const searchParams = useSearchParams();
   const canceled = searchParams.get('canceled');
   
-  const { subscription } = useSubscription();
+  const { subscription, refetch: refetchSubscription } = useSubscription();
   const { plans, isLoading } = usePlans();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const [upgrading, setUpgrading] = useState(false);
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null); // ✅ Track quel plan est en cours
 
   const handleUpgrade = async (plan: 'BASIC' | 'PRO' | 'ENTERPRISE') => {
     try {
-      setUpgrading(true);
+      setUpgradingPlan(plan); // ✅ Marquer ce plan comme "en cours"
 
       const response = await api.post<UpgradeResponse>('/subscriptions/upgrade', {
         plan,
@@ -43,13 +52,32 @@ function PricingContent() {
 
       const data = response as UpgradeResponse;
 
-      console.log('🔗 Redirecting to:', data.checkoutUrl);
-      window.location.href = data.checkoutUrl;
+      console.log('🔗 Opening checkout in new tab:', data.checkoutUrl);
+      
+      // ✅ Ouvrir dans un nouvel onglet
+      const checkoutWindow = window.open(
+        data.checkoutUrl,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+      if (!checkoutWindow) {
+        toast.error('Veuillez autoriser les popups pour continuer le paiement.');
+        setUpgradingPlan(null);
+        return;
+      }
+
+      toast.success('Page de paiement ouverte dans un nouvel onglet');
+      
+      // ✅ Réinitialiser après 2 secondes
+      setTimeout(() => {
+        setUpgradingPlan(null);
+      }, 2000);
 
     } catch (error: any) {
       console.error('❌ Upgrade error:', error);
       toast.error(error.message || 'Erreur lors de l\'upgrade');
-      setUpgrading(false);
+      setUpgradingPlan(null);
     }
   };
 
@@ -64,6 +92,22 @@ function PricingContent() {
   const planOrder = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
   const sortedPlans = Object.entries(plans || {})
     .sort(([a], [b]) => planOrder.indexOf(a) - planOrder.indexOf(b));
+
+  // ✅ Fonction pour obtenir l'icône du plan
+  const getPlanIcon = (planKey: string) => {
+    switch(planKey) {
+      case 'FREE':
+        return <Star className="w-5 h-5 text-slate-400" />;
+      case 'BASIC':
+        return <Rocket className="w-5 h-5 text-blue-400" />;
+      case 'PRO':
+        return <Zap className="w-5 h-5 text-purple-400" />;
+      case 'ENTERPRISE':
+        return <Building2 className="w-5 h-5 text-pink-400" />;
+      default:
+        return <Star className="w-5 h-5 text-slate-400" />;
+    }
+  };
 
   return (
     <div className="min-h-screen pb-20">
@@ -96,7 +140,7 @@ function PricingContent() {
           <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full mb-6">
             <Gift className="w-5 h-5 text-purple-400" />
             <span className="text-sm font-semibold glow-text">
-              🎁 30 jours d'essai PRO gratuit !
+              30 jours d'essai PRO gratuit !
             </span>
           </div>
 
@@ -148,6 +192,7 @@ function PricingContent() {
             const isCurrentPlan = subscription?.plan === planKey;
             const isPro = planKey === 'PRO';
             const isFree = planKey === 'FREE';
+            const isUpgrading = upgradingPlan === planKey; // ✅ Vérifier si CE plan est en cours
             
             const price = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;
             const monthlyPrice = billingPeriod === 'yearly' ? Math.round(plan.priceYearly / 12) : plan.priceMonthly;
@@ -177,8 +222,7 @@ function PricingContent() {
 
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-2">
-                    {planKey === 'BASIC' && <Zap className="w-5 h-5 text-blue-400" />}
-                    {(planKey === 'PRO' || planKey === 'ENTERPRISE') && <Crown className="w-5 h-5 text-purple-400" />}
+                    {getPlanIcon(planKey)} {/* ✅ Vraie icône au lieu d'emoji */}
                     <h3 className="text-xl font-bold">{plan.name}</h3>
                   </div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -212,28 +256,43 @@ function PricingContent() {
 
                 <button
                   onClick={() => !isFree && !isCurrentPlan && handleUpgrade(planKey as any)}
-                  disabled={isFree || isCurrentPlan || upgrading}
+                  disabled={isFree || isCurrentPlan || isUpgrading} 
                   className={`
                     w-full py-3 px-6 rounded-lg font-bold text-sm mb-6
-                    transition-all duration-300
+                    transition-all duration-300 flex items-center justify-center gap-2
                     ${isFree 
                       ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
                       : isCurrentPlan
                         ? 'bg-green-500 text-white cursor-not-allowed'
-                        : isPro
-                          ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-lg hover:scale-105'
-                          : 'bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg hover:scale-105'
+                        : isUpgrading
+                          ? 'bg-purple-400 text-white cursor-not-allowed'
+                          : isPro
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-lg hover:scale-105'
+                            : 'bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg hover:scale-105'
                     }
                   `}
                 >
-                  {isFree 
-                    ? 'Plan gratuit' 
-                    : isCurrentPlan 
-                      ? 'Plan actuel' 
-                      : upgrading
-                        ? '🔄 Redirection...'
-                        : '🚀 Upgrader'
-                  }
+                  {isFree ? (
+                    <>
+                      <Star className="w-4 h-4" />
+                      Plan gratuit
+                    </>
+                  ) : isCurrentPlan ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Plan actuel
+                    </>
+                  ) : isUpgrading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                      Ouverture...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="w-4 h-4" />
+                      Upgrader
+                    </>
+                  )}
                 </button>
 
                 <div className="space-y-3">
@@ -289,13 +348,19 @@ function PricingContent() {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-bold mb-2">🎁 Comment fonctionne l'essai gratuit ?</h3>
+              <h3 className="font-bold mb-2 flex items-center gap-2">
+                <Gift className="w-5 h-5 text-purple-400" />
+                Comment fonctionne l'essai gratuit ?
+              </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 30 jours d'essai PRO gratuit dès l'inscription. Aucune carte bancaire requise !
               </p>
             </div>
             <div>
-              <h3 className="font-bold mb-2">💳 Moyens de paiement ?</h3>
+              <h3 className="font-bold mb-2 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-blue-400" />
+                Moyens de paiement ?
+              </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Mobile Money : Airtel, MTN, Orange via YabetooPay.
               </p>
