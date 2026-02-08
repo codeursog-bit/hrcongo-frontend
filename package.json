@@ -2,15 +2,16 @@
   "name": "hr-congo-frontend",
   "version": "1.0.0",
   "private": true,
- "scripts": {
-  "dev": "next dev",
-  "check-types": "tsc --noEmit",
-  "build": "npm run check-types && next build",
-  "start": "next start",
-  "lint": "next lint"
-},
+  "scripts": {
+    "dev": "next dev",
+    "check-types": "tsc --noEmit",
+    "build": "npm run check-types && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
+    "@tanstack/react-query": "^5.90.20",
     "framer-motion": "^11.0.8",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.4",
@@ -21,6 +22,7 @@
     "react-hook-form": "^7.68.0",
     "recharts": "^2.12.0",
     "socket.io-client": "^4.8.1",
+    "sonner": "^2.0.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {

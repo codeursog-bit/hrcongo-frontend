@@ -32,7 +32,7 @@ export function TrialBadge() {
             {isExpiringSoon ? (
               <AlertTriangle className="w-4 h-4 text-orange-400 animate-pulse" />
             ) : (
-              <Gift className="w-4 h-4 text-purple-400 animate-pulse" />
+              <Gift className="w-4 h-4 text-purple-400 animate-pulse" /> 
             )}
             
             <div className="flex items-center gap-2">
