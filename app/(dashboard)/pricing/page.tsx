@@ -331,7 +331,7 @@ function PricingContent() {
                     {plan.limits.hasAttendanceGPS && (
                       <div className="flex items-start gap-2 text-sm">
                         <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span>Pointage GPS</span>
+                        <span>Pointage avec GPS</span>
                       </div>
                     )}
                   </div>
