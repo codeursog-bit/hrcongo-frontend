@@ -12,12 +12,14 @@ import { api } from '@/services/api';
 
 interface CompanyReminderContextType {
   hasCompany: boolean;
-  checkCompany: () => Promise<boolean>;
+  setHasCompany: (value: boolean) => void; // 🆕 Exposé pour mise à jour manuelle
+  recheckCompany: () => Promise<void>; // 🆕 Pour forcer une nouvelle vérification
 }
 
 const CompanyReminderContext = createContext<CompanyReminderContextType>({
   hasCompany: true,
-  checkCompany: async () => true,
+  setHasCompany: () => {},
+  recheckCompany: async () => {},
 });
 
 export const useCompanyReminder = () => useContext(CompanyReminderContext);
@@ -54,7 +56,7 @@ const MESSAGES = [
 // ============================================================================
 
 const TIMING = {
-  AFTER_PAGE_LOAD: 10000,     // 7 secondes après le chargement de la page
+  AFTER_PAGE_LOAD: 7000,     // 7 secondes après le chargement de la page
   AFTER_MODAL_CLOSE: 120000, // 2 minutes après la fermeture du modal
 };
 
@@ -99,74 +101,74 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="w-full max-w-md pointer-events-auto"
             >
-            <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+              <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
               
-              {/* Gradient Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
-              
-              {/* Animated Circles */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-aurora-1" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-aurora-2" />
+                {/* Gradient Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+                
+                {/* Animated Circles */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-aurora-1" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-aurora-2" />
 
-              {/* Close Button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100/50 dark:bg-white/5 hover:bg-slate-200/50 dark:hover:bg-white/10 transition-colors z-10"
-              >
-                <X size={18} className="text-slate-600 dark:text-slate-400" />
-              </button>
+                {/* Close Button */}
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100/50 dark:bg-white/5 hover:bg-slate-200/50 dark:hover:bg-white/10 transition-colors z-10"
+                >
+                  <X size={18} className="text-slate-600 dark:text-slate-400" />
+                </button>
 
-              {/* Content */}
-              <div className="relative z-10">
-                {/* Icon */}
-                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                  <Building2 size={32} className="text-white" />
+                {/* Content */}
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <Building2 size={32} className="text-white" />
+                  </div>
+
+                  {/* Emoji */}
+                  <div className="text-center text-4xl mb-4">{message.emoji}</div>
+
+                  {/* Title */}
+                  <h3 className="text-xl sm:text-2xl font-bold text-center mb-3 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                    {message.title}
+                  </h3>
+
+                  {/* Message */}
+                  <p className="text-center text-slate-600 dark:text-slate-400 mb-6 text-sm sm:text-base">
+                    {message.message}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="space-y-3">
+                    <button
+                      onClick={onCreateCompany}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 text-sm sm:text-base"
+                    >
+                      <Sparkles size={18} />
+                      Créer mon entreprise
+                      <ArrowRight size={18} />
+                    </button>
+
+                    <button
+                      onClick={onClose}
+                      className="w-full py-3 px-4 bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 border border-white/40 dark:border-white/10 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-all text-sm"
+                    >
+                      Plus tard
+                    </button>
+                  </div>
+
+                  {/* Footnote */}
+                  <p className="text-xs text-center text-slate-500 dark:text-slate-500 mt-4">
+                    Vous pourrez toujours créer votre entreprise depuis le menu
+                  </p>
                 </div>
-
-                {/* Emoji */}
-                <div className="text-center text-4xl mb-4">{message.emoji}</div>
-
-                {/* Title */}
-                <h3 className="text-xl sm:text-2xl font-bold text-center mb-3 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                  {message.title}
-                </h3>
-
-                {/* Message */}
-                <p className="text-center text-slate-600 dark:text-slate-400 mb-6 text-sm sm:text-base">
-                  {message.message}
-                </p>
-
-                {/* Actions */}
-                <div className="space-y-3">
-                  <button
-                    onClick={onCreateCompany}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 text-sm sm:text-base"
-                  >
-                    <Sparkles size={18} />
-                    Créer mon entreprise
-                    <ArrowRight size={18} />
-                  </button>
-
-                  <button
-                    onClick={onClose}
-                    className="w-full py-3 px-4 bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 border border-white/40 dark:border-white/10 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-all text-sm"
-                  >
-                    Plus tard
-                  </button>
-                </div>
-
-                {/* Footnote */}
-                <p className="text-xs text-center text-slate-500 dark:text-slate-500 mt-4">
-                  Vous pourrez toujours créer votre entreprise depuis le menu
-                </p>
               </div>
-            </div>
-          </motion.div>
-        </div>
-      </>
-    )}
-  </AnimatePresence>
-);
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 };
 
 // ============================================================================
@@ -187,7 +189,7 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   // ✅ VÉRIFIER SI L'UTILISATEUR A UNE ENTREPRISE
   // ============================================================================
   
-  const checkCompany = async (): Promise<boolean> => {
+  const checkCompany = async () => {
     try {
       console.log('🔍 [CompanyReminder] Checking company...');
       const company = await api.get('/companies/mine');
@@ -197,19 +199,20 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
       console.log('🏢 [CompanyReminder] Result:', hasCompanyResult ? '✅ HAS COMPANY' : '❌ NO COMPANY');
       
       setHasCompany(hasCompanyResult);
-      
-      // 🆕 Si l'entreprise existe maintenant, fermer le modal
-      if (hasCompanyResult && showModal) {
-        console.log('✅ [CompanyReminder] Company created! Closing modal...');
-        setShowModal(false);
-      }
-      
-      return hasCompanyResult;
     } catch (error: any) {
-      console.log('⚠️ [CompanyReminder] API Error:', error?.response?.status, error?.message);
-      setHasCompany(false);
-      return false;
+      console.log('⚠️ [CompanyReminder] API Error:', error?.response?.status);
+      
+      // Si 404 = pas d'entreprise
+      if (error?.response?.status === 404) {
+        setHasCompany(false);
+      }
     }
+  };
+
+  // 🆕 Fonction pour forcer une nouvelle vérification
+  const recheckCompany = async () => {
+    console.log('🔄 [CompanyReminder] Force recheck...');
+    await checkCompany();
   };
 
   // ============================================================================
@@ -222,28 +225,11 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   }, []);
 
   // ============================================================================
-  // 🔄 RE-VÉRIFICATION QUAND ON REVIENT DE /companies/create
-  // ============================================================================
-
-  useEffect(() => {
-    const previousPath = lastPathnameRef.current;
-    
-    // Si on vient de quitter la page de création d'entreprise, re-vérifier
-    if (previousPath === '/companies/create' && pathname !== '/companies/create') {
-      console.log('🔄 [CompanyReminder] Returned from company creation, re-checking...');
-      checkCompany();
-    }
-    
-    // Mettre à jour la référence
-    lastPathnameRef.current = pathname;
-  }, [pathname]);
-
-  // ============================================================================
   // ⏱️ LOGIQUE DES TIMERS
   // ============================================================================
 
   useEffect(() => {
-    // Ignorer si l'utilisateur a déjà une entreprise
+    // 🎯 SI L'USER A UNE ENTREPRISE → PLUS JAMAIS DE MODAL
     if (hasCompany) {
       console.log('✅ [CompanyReminder] Has company, no reminder needed');
       return;
@@ -266,18 +252,16 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
     let delay: number;
     let reason: string;
 
-    // Si le pathname a changé, c'est un nouveau chargement de page
     if (lastPathnameRef.current !== pathname) {
       delay = TIMING.AFTER_PAGE_LOAD;
       reason = '7s after page load';
-      setModalWasClosed(false); // Reset le flag quand on change de page
+      lastPathnameRef.current = pathname;
+      setModalWasClosed(false);
     } 
-    // Si le modal a été fermé, on attend 2 minutes
     else if (modalWasClosed) {
       delay = TIMING.AFTER_MODAL_CLOSE;
       reason = '2min after modal close';
     } 
-    // Sinon, premier affichage sur cette page
     else {
       delay = TIMING.AFTER_PAGE_LOAD;
       reason = '7s after initial load';
@@ -303,8 +287,7 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   const handleClose = () => {
     console.log('❌ [CompanyReminder] Modal closed by user');
     setShowModal(false);
-    setModalWasClosed(true); // Marquer que le modal a été fermé
-    // Le prochain timer sera de 2 minutes
+    setModalWasClosed(true);
   };
 
   const handleCreateCompany = () => {
@@ -318,7 +301,7 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   // ============================================================================
 
   return (
-    <CompanyReminderContext.Provider value={{ hasCompany, checkCompany }}>
+    <CompanyReminderContext.Provider value={{ hasCompany, setHasCompany, recheckCompany }}>
       {children}
       <ReminderModal
         isOpen={showModal}
@@ -329,6 +312,8 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
     </CompanyReminderContext.Provider>
   );
 };
+
+
 // 'use client';
 
 // import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
@@ -385,7 +370,7 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
 // // ============================================================================
 
 // const TIMING = {
-//   AFTER_PAGE_LOAD: 7000,     // 7 secondes après le chargement de la page
+//   AFTER_PAGE_LOAD: 10000,     // 7 secondes après le chargement de la page
 //   AFTER_MODAL_CLOSE: 120000, // 2 minutes après la fermeture du modal
 // };
 
@@ -486,14 +471,14 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
 //                   </button>
 //                 </div>
 
-//              {/* Footnote */}
+//                 {/* Footnote */}
 //                 <p className="text-xs text-center text-slate-500 dark:text-slate-500 mt-4">
 //                   Vous pourrez toujours créer votre entreprise depuis le menu
 //                 </p>
-//               </div> {/* Ferme le div "relative z-10" */}
-//             </div> {/* Ferme le div "glass-panel" */}
+//               </div>
+//             </div>
 //           </motion.div>
-//         </div> {/* Ferme le div "fixed inset-0" */}
+//         </div>
 //       </>
 //     )}
 //   </AnimatePresence>
@@ -528,6 +513,13 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
 //       console.log('🏢 [CompanyReminder] Result:', hasCompanyResult ? '✅ HAS COMPANY' : '❌ NO COMPANY');
       
 //       setHasCompany(hasCompanyResult);
+      
+//       // 🆕 Si l'entreprise existe maintenant, fermer le modal
+//       if (hasCompanyResult && showModal) {
+//         console.log('✅ [CompanyReminder] Company created! Closing modal...');
+//         setShowModal(false);
+//       }
+      
 //       return hasCompanyResult;
 //     } catch (error: any) {
 //       console.log('⚠️ [CompanyReminder] API Error:', error?.response?.status, error?.message);
@@ -544,6 +536,23 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
 //     console.log('🚀 [CompanyReminder] Provider mounted');
 //     checkCompany();
 //   }, []);
+
+//   // ============================================================================
+//   // 🔄 RE-VÉRIFICATION QUAND ON REVIENT DE /companies/create
+//   // ============================================================================
+
+//   useEffect(() => {
+//     const previousPath = lastPathnameRef.current;
+    
+//     // Si on vient de quitter la page de création d'entreprise, re-vérifier
+//     if (previousPath === '/companies/create' && pathname !== '/companies/create') {
+//       console.log('🔄 [CompanyReminder] Returned from company creation, re-checking...');
+//       checkCompany();
+//     }
+    
+//     // Mettre à jour la référence
+//     lastPathnameRef.current = pathname;
+//   }, [pathname]);
 
 //   // ============================================================================
 //   // ⏱️ LOGIQUE DES TIMERS
@@ -577,7 +586,6 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
 //     if (lastPathnameRef.current !== pathname) {
 //       delay = TIMING.AFTER_PAGE_LOAD;
 //       reason = '7s after page load';
-//       lastPathnameRef.current = pathname;
 //       setModalWasClosed(false); // Reset le flag quand on change de page
 //     } 
 //     // Si le modal a été fermé, on attend 2 minutes

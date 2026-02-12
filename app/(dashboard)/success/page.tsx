@@ -1,5 +1,5 @@
 // ============================================================================
-// ✅ PAGE DE SUCCÈS APRÈS PAIEMENT - VERSION SÉCURISÉE
+// 🎉 PAGE DE SUCCÈS APRÈS PAIEMENT - VERSION SIMPLIFIÉE AVEC ANIMATIONS
 // ============================================================================
 // Fichier: app/(dashboard)/success/page.tsx
 
@@ -8,28 +8,50 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscription';
-import { api } from '@/lib/api';
 import { 
   CheckCircle, 
   Crown, 
   ArrowRight, 
   Loader2, 
   XCircle, 
-  AlertTriangle 
+  AlertTriangle,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 
 // ============================================================================
 // 📝 TYPES
 // ============================================================================
-type PaymentStatus = 'loading' | 'success' | 'error' | 'pending';
+type PageStatus = 'loading' | 'success' | 'processing' | 'error';
 
-interface VerificationResult {
-  status: string;
-  paid: boolean;
-  subscription?: any;
-  message: string;
+// ============================================================================
+// 🎨 COMPOSANT CONFETTI
+// ============================================================================
+function SuccessConfetti() {
+  const { width, height } = useWindowSize();
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    // Arrêter les confettis après 5 secondes
+    const timer = setTimeout(() => setShow(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <Confetti
+      width={width}
+      height={height}
+      recycle={false}
+      numberOfPieces={500}
+      gravity={0.3}
+    />
+  );
 }
 
 // ============================================================================
@@ -38,107 +60,103 @@ interface VerificationResult {
 function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
-  const paymentId = searchParams.get('payment_id');
   
-  const { subscription, refetch } = useSubscription();
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('loading');
-  const [message, setMessage] = useState('Vérification du paiement en cours...');
-  const [verifiedSubscription, setVerifiedSubscription] = useState<any>(null);
+  const { subscription, isLoading, refetch } = useSubscription();
+  const [pageStatus, setPageStatus] = useState<PageStatus>('loading');
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      // 🔒 SÉCURITÉ : Vérifier qu'on a bien un ID de session ou paiement
-      if (!sessionId && !paymentId) {
-        setPaymentStatus('error');
-        setMessage('Aucune session de paiement trouvée. Accès non autorisé.');
-        toast.error('Accès non autorisé à cette page');
-        
-        // Rediriger vers pricing après 3 secondes
-        setTimeout(() => router.push('/pricing'), 3000);
+    const checkSubscription = async () => {
+      // 🔒 SÉCURITÉ : Vérifier qu'on vient bien d'un paiement
+      const fromPayment = sessionStorage.getItem('payment_initiated');
+      
+      if (!fromPayment) {
+        // Accès direct sans passer par le paiement = SUSPECT
+        toast.error('Accès non autorisé');
+        router.push('/pricing');
         return;
       }
 
-      try {
-        // ✅ ÉTAPE 1 : Vérifier le paiement avec le backend
-        console.log('🔍 Vérification du paiement...', { sessionId, paymentId });
-        
-        // Construire l'URL avec les query params
-        const queryParams = new URLSearchParams();
-        if (sessionId) queryParams.append('sessionId', sessionId);
-        if (paymentId) queryParams.append('paymentId', paymentId);
-        
-        const response = await api.get<VerificationResult>(
-          `/subscriptions/verify-payment?${queryParams.toString()}`
-        );
-
-        console.log('📊 Réponse de vérification:', response);
-
-        // ✅ ÉTAPE 2 : Analyser le résultat
-        if (response.paid && response.status === 'succeeded') {
-          // 🎉 Paiement réussi !
-          setPaymentStatus('success');
-          setMessage('Paiement vérifié ! Votre abonnement a été activé avec succès.');
-          setVerifiedSubscription(response.subscription);
-          
-          // Rafraîchir les données de l'abonnement
-          await refetch();
-          
-          toast.success('Abonnement activé avec succès !');
-        } else if (response.status === 'pending' || response.status === 'processing') {
-          // ⏳ Paiement en cours
-          setPaymentStatus('pending');
-          setMessage('Votre paiement est en cours de traitement. Veuillez patienter...');
-          
-          // Réessayer après 3 secondes
-          setTimeout(() => {
-            window.location.reload();
-          }, 3000);
+      // Nettoyer le flag
+      sessionStorage.removeItem('payment_initiated');
+      
+      // Attendre 2 secondes pour laisser le webhook se traiter
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Rafraîchir les données de l'abonnement
+      await refetch();
+      
+      // Vérifier le statut de l'abonnement
+      if (subscription) {
+        if (subscription.status === 'ACTIVE' || subscription.status === 'TRIALING') {
+          setPageStatus('success');
+          toast.success('🎉 Abonnement activé avec succès !');
         } else {
-          // ❌ Paiement échoué
-          setPaymentStatus('error');
-          setMessage(response.message || 'Le paiement n\'a pas pu être vérifié.');
-          toast.error('Échec de la vérification du paiement');
+          setPageStatus('processing');
         }
-      } catch (error: any) {
-        console.error('❌ Erreur de vérification:', error);
-        setPaymentStatus('error');
-        setMessage(error.message || 'Une erreur est survenue lors de la vérification du paiement.');
-        toast.error('Erreur de vérification du paiement');
+      } else {
+        setPageStatus('processing');
       }
     };
 
-    verifyPayment();
-  }, [sessionId, paymentId, refetch, router]);
+    checkSubscription();
+  }, [subscription, refetch, router]);
+
+  // Countdown pour auto-redirect en cas de processing
+  useEffect(() => {
+    if (pageStatus === 'processing' && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (pageStatus === 'processing' && countdown === 0) {
+      window.location.reload();
+    }
+  }, [pageStatus, countdown]);
 
   // ============================================================================
   // 🎨 RENDU SELON LE STATUT
   // ============================================================================
 
   // ⏳ LOADING
-  if (paymentStatus === 'loading') {
+  if (pageStatus === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-900 dark:to-slate-800">
-        <div className="text-center glass-panel p-8 rounded-2xl max-w-md">
-          <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Vérification en cours...</h2>
-          <p className="text-slate-600 dark:text-slate-400">{message}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+        <div className="text-center glass-panel p-8 rounded-2xl max-w-md animate-pulse">
+          <div className="relative">
+            <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
+            <Sparkles className="w-6 h-6 text-yellow-400 absolute top-0 right-1/3 animate-bounce" />
+          </div>
+          <h2 className="text-xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Magie en cours...
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400">
+            Activation de votre abonnement
+          </p>
         </div>
       </div>
     );
   }
 
-  // ⏳ PENDING
-  if (paymentStatus === 'pending') {
+  // ⏳ PROCESSING (Webhook pas encore traité)
+  if (pageStatus === 'processing') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-slate-900 dark:to-slate-800">
         <div className="text-center glass-panel p-8 rounded-2xl max-w-md">
-          <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Paiement en cours</h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-4">{message}</p>
+          <div className="relative mb-4">
+            <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto" />
+            <Zap className="w-6 h-6 text-yellow-400 absolute top-0 right-1/3 animate-ping" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Traitement en cours</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">
+            Votre paiement est confirmé ! L'activation de votre abonnement est en cours...
+          </p>
+          <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-4 mb-4">
+            <p className="text-sm text-yellow-800 dark:text-yellow-400">
+              Actualisation automatique dans {countdown} seconde{countdown > 1 ? 's' : ''}...
+            </p>
+          </div>
           <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin" />
-            Actualisation automatique...
+            Veuillez patienter
           </div>
         </div>
       </div>
@@ -146,7 +164,7 @@ function SuccessContent() {
   }
 
   // ❌ ERROR
-  if (paymentStatus === 'error') {
+  if (pageStatus === 'error') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 dark:from-slate-900 dark:to-slate-800">
         <div className="glass-panel p-8 rounded-2xl max-w-md">
@@ -158,7 +176,7 @@ function SuccessContent() {
               Erreur
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
-              {message}
+              Une erreur est survenue. Veuillez contacter le support.
             </p>
           </div>
 
@@ -169,11 +187,6 @@ function SuccessContent() {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
-            <Link href="/dashboard" className="block">
-              <button className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-lg transition-all duration-300">
-                Tableau de bord
-              </button>
-            </Link>
           </div>
         </div>
       </div>
@@ -181,53 +194,72 @@ function SuccessContent() {
   }
 
   // ✅ SUCCESS
-  const currentSubscription = verifiedSubscription || subscription;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-6">
-      <div className="max-w-md w-full glass-panel p-8 rounded-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* 🎉 CONFETTI ANIMATION */}
+      <SuccessConfetti />
+      
+      {/* 🌟 BACKGROUND SPARKLES */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <Sparkles className="w-12 h-12 text-yellow-400 absolute top-10 left-10 animate-pulse" />
+        <Sparkles className="w-8 h-8 text-pink-400 absolute top-20 right-20 animate-bounce" />
+        <Sparkles className="w-10 h-10 text-purple-400 absolute bottom-20 left-1/4 animate-pulse" />
+        <Sparkles className="w-6 h-6 text-blue-400 absolute bottom-10 right-1/3 animate-bounce" />
+      </div>
+
+      <div className="max-w-md w-full glass-panel p-8 rounded-2xl relative z-10 shadow-2xl">
         {/* ✅ Icône de succès avec animation */}
         <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-            <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
+          <div className="relative inline-block">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce shadow-lg">
+              <CheckCircle className="w-14 h-14 text-white" strokeWidth={3} />
+            </div>
+            <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-ping">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
           </div>
           
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Paiement réussi !
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
+            Félicitations ! 🎉
           </h1>
           
-          <p className="text-slate-600 dark:text-slate-400">
-            {message}
+          <p className="text-lg text-slate-700 dark:text-slate-300 font-medium">
+            Votre abonnement est activé
           </p>
         </div>
 
         {/* ✅ Détails de l'abonnement */}
-        {currentSubscription && (
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6 mb-6 border border-purple-200 dark:border-purple-800">
+        {subscription && (
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 mb-6 border-2 border-purple-200 dark:border-purple-800 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
-              <Crown className="w-6 h-6 text-purple-500" />
-              <h2 className="font-semibold text-gray-900 dark:text-white">
-                Détails de l'abonnement
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                <Crown className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+                Votre nouveau plan
               </h2>
             </div>
             
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-600 dark:text-slate-400">Plan :</span>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  {currentSubscription.plan}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Plan</span>
+                <span className="font-bold text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {subscription.plan}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600 dark:text-slate-400">Statut :</span>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
-                  ✓ {currentSubscription.status === 'ACTIVE' ? 'Actif' : currentSubscription.status}
+              
+              <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Statut</span>
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md">
+                  <CheckCircle className="w-4 h-4" />
+                  Actif
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600 dark:text-slate-400">Valide jusqu'au :</span>
+              
+              <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">Valide jusqu'au</span>
                 <span className="font-semibold text-gray-900 dark:text-white">
-                  {new Date(currentSubscription.currentPeriodEnd).toLocaleDateString('fr-FR', {
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-FR', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric'
@@ -238,38 +270,36 @@ function SuccessContent() {
           </div>
         )}
 
-        {/* ✅ ID de session */}
-        {(sessionId || paymentId) && (
-          <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6 border border-slate-200 dark:border-slate-700">
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-              ID de transaction
-            </p>
-            <p className="text-xs font-mono text-slate-700 dark:text-slate-300 break-all">
-              {sessionId || paymentId}
-            </p>
-          </div>
-        )}
+        {/* ✅ Message de bienvenue */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-300 text-center">
+            🚀 Vous avez maintenant accès à toutes les fonctionnalités de votre plan !
+          </p>
+        </div>
 
         {/* ✅ Actions */}
         <div className="space-y-3">
           <Link href="/dashboard" className="block">
-            <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2">
-              Retour au tableau de bord
-              <ArrowRight className="w-4 h-4" />
+            <button className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 hover:from-purple-600 hover:via-pink-600 hover:to-purple-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center gap-2 group">
+              <span>Découvrir mon tableau de bord</span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </Link>
           
           <Link href="/settings/subscription" className="block">
-            <button className="w-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-lg transition-all duration-300">
+            <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-xl transition-all duration-300 border-2 border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700">
               Gérer mon abonnement
             </button>
           </Link>
         </div>
 
         {/* ✅ Note */}
-        <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-6">
-          Un email de confirmation vous a été envoyé.
-        </p>
+        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-xs text-center text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            Un email de confirmation vous a été envoyé
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -281,7 +311,7 @@ function SuccessContent() {
 export default function SubscriptionSuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900 dark:to-slate-800">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
           <p className="text-slate-600 dark:text-slate-400">
@@ -295,174 +325,3 @@ export default function SubscriptionSuccessPage() {
   );
 }
 
-
-// // ============================================================================
-// // ✅ PAGE DE SUCCÈS APRÈS PAIEMENT - CORRIGÉE AVEC SUSPENSE
-// // ============================================================================
-// // Fichier: app/(dashboard)/success/page.tsx
-
-// 'use client';
-
-// import { useEffect, useState, Suspense } from 'react';
-// import { useSearchParams, useRouter } from 'next/navigation';
-// import { useSubscription } from '@/hooks/useSubscription';
-// import { CheckCircle, Crown, ArrowRight, Loader2 } from 'lucide-react';
-// import Link from 'next/link';
-
-// // ============================================================================
-// // 🎯 COMPOSANT INTERNE AVEC useSearchParams
-// // ============================================================================
-// function SuccessContent() {
-//   const router = useRouter();
-//   const searchParams = useSearchParams(); // ✅ Utilisé à l'intérieur de Suspense
-//   const sessionId = searchParams.get('session_id');
-  
-//   const { subscription, refetch, isLoading: subLoading } = useSubscription();
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     // ✅ Rafraîchir l'abonnement après 2 secondes
-//     const timer = setTimeout(async () => {
-//       await refetch();
-//       setIsLoading(false);
-//     }, 2000);
-
-//     return () => clearTimeout(timer);
-//   }, [refetch]);
-
-//   if (isLoading || subLoading) {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-//         <div className="text-center">
-//           <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-//           <p className="text-slate-600 dark:text-slate-400">
-//             Activation de votre abonnement...
-//           </p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-6">
-//       <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8">
-//         {/* ✅ Icône de succès avec animation */}
-//         <div className="text-center mb-6">
-//           <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-//             <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
-//           </div>
-          
-//           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-//             🎉 Paiement réussi !
-//           </h1>
-          
-//           <p className="text-slate-600 dark:text-slate-400">
-//             Votre abonnement a été activé avec succès.
-//           </p>
-//         </div>
-
-//         {/* ✅ Détails de l'abonnement */}
-//         {subscription && (
-//           <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6 mb-6 border border-purple-200 dark:border-purple-800">
-//             <div className="flex items-center gap-3 mb-4">
-//               <Crown className="w-6 h-6 text-purple-500" />
-//               <h2 className="font-semibold text-gray-900 dark:text-white">
-//                 Détails de l'abonnement
-//               </h2>
-//             </div>
-            
-//             <div className="space-y-2 text-sm">
-//               <div className="flex justify-between">
-//                 <span className="text-slate-600 dark:text-slate-400">Plan :</span>
-//                 <span className="font-semibold text-gray-900 dark:text-white">
-//                   {subscription.planDetails?.name || subscription.plan}
-//                 </span>
-//               </div>
-//               <div className="flex justify-between">
-//                 <span className="text-slate-600 dark:text-slate-400">Statut :</span>
-//                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
-//                   {subscription.status === 'ACTIVE' ? '✓ Actif' : subscription.status}
-//                 </span>
-//               </div>
-//               <div className="flex justify-between">
-//                 <span className="text-slate-600 dark:text-slate-400">Fin de période :</span>
-//                 <span className="font-semibold text-gray-900 dark:text-white">
-//                   {new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-FR', {
-//                     day: 'numeric',
-//                     month: 'long',
-//                     year: 'numeric'
-//                   })}
-//                 </span>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//         {/* ✅ ID de session */}
-//         {sessionId && (
-//           <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 mb-6 border border-slate-200 dark:border-slate-700">
-//             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-//               ID de transaction
-//             </p>
-//             <p className="text-xs font-mono text-slate-700 dark:text-slate-300 break-all">
-//               {sessionId}
-//             </p>
-//           </div>
-//         )}
-
-//         {/* ✅ Actions */}
-//         <div className="space-y-3">
-//           <Link href="/dashboard" className="block">
-//             <button className="
-//               w-full bg-gradient-to-r from-purple-500 to-pink-500 
-//               hover:from-purple-600 hover:to-pink-600
-//               text-white font-semibold py-3 px-6 rounded-lg
-//               shadow-lg hover:shadow-xl
-//               transition-all duration-300
-//               flex items-center justify-center gap-2
-//             ">
-//               Retour au tableau de bord
-//               <ArrowRight className="w-4 h-4" />
-//             </button>
-//           </Link>
-          
-//           <Link href="/settings/subscription" className="block">
-//             <button className="
-//               w-full bg-slate-100 dark:bg-slate-700 
-//               hover:bg-slate-200 dark:hover:bg-slate-600
-//               text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-lg
-//               transition-all duration-300
-//             ">
-//               Gérer mon abonnement
-//             </button>
-//           </Link>
-//         </div>
-
-//         {/* ✅ Note */}
-//         <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-6">
-//           📧 Un email de confirmation vous a été envoyé.
-//         </p>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // ============================================================================
-// // 🎯 COMPOSANT PRINCIPAL AVEC SUSPENSE
-// // ============================================================================
-// export default function SubscriptionSuccessPage() {
-//   return (
-//     <Suspense fallback={
-//       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-//         <div className="text-center">
-//           <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-//           <p className="text-slate-600 dark:text-slate-400">
-//             Chargement...
-//           </p>
-//         </div>
-//       </div>
-//     }>
-//       <SuccessContent />
-//     </Suspense>
-//   );
-// }
