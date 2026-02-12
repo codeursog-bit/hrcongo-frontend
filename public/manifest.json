@@ -1,0 +1,47 @@
+{
+  "name": "Konza RH - Gestion RH Congo",
+  "short_name": "KonzaRH",
+  "description": "Application de gestion des ressources humaines - Fonctionne hors ligne",
+  "start_url": "/auth/login",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "fr-CG",
+  
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Pointage",
+      "short_name": "Pointer",
+      "description": "Pointer votre présence",
+      "url": "/presences/pointage",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mes Congés",
+      "short_name": "Congés",
+      "description": "Gérer vos congés",
+      "url": "/conges",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ],
+  
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false
+}
