@@ -1,3 +1,4 @@
+
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -58,9 +59,9 @@
 // }
 
 // // ============================================================================
-// // ✅ NOUVELLE FONCTION POUR FORMDATA (Upload de fichiers)
+// // ✅ FONCTION POUR FORMDATA (Upload de fichiers) - POST
 // // ============================================================================
-// async function requestFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+// async function requestFormData<T>(endpoint: string, formData: FormData, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
 //   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   
 //   const headers: HeadersInit = {};
@@ -72,7 +73,7 @@
 //   // ⚠️ PAS de Content-Type pour FormData (le navigateur le gère automatiquement)
 
 //   const config: RequestInit = {
-//     method: 'POST',
+//     method,
 //     headers,
 //     body: formData,
 //   };
@@ -112,7 +113,7 @@
 // }
 
 // // ============================================================================
-// // ✅ NOUVELLE FONCTION POUR TÉLÉCHARGER DES FICHIERS (Blob)
+// // ✅ FONCTION POUR TÉLÉCHARGER DES FICHIERS (Blob)
 // // ============================================================================
 // async function requestBlob(endpoint: string): Promise<Blob> {
 //   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -159,7 +160,7 @@
 // }
 
 // // ============================================================================
-// // ✅ EXPORT DE L'API AVEC TES MÉTHODES ORIGINALES + LES NOUVELLES
+// // ✅ EXPORT DE L'API AVEC TOUTES LES MÉTHODES
 // // ============================================================================
 // export const api = {
 //   get: <T>(endpoint: string) => request<T>(endpoint, 'GET'),
@@ -168,16 +169,22 @@
 //   patch: <T>(endpoint: string, body: any) => request<T>(endpoint, 'PATCH', body),
 //   delete: <T>(endpoint: string) => request<T>(endpoint, 'DELETE'),
   
-//   // ✅ NOUVELLES MÉTHODES POUR L'IMPORT EXCEL
-//   postFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData),
+//   // ✅ MÉTHODES POUR FORMDATA
+//   postFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'POST'),
+//   putFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'), // ✅ AJOUTÉ
+  
+//   // ✅ MÉTHODE POUR TÉLÉCHARGER DES FICHIERS
 //   getBlob: (endpoint: string) => requestBlob(endpoint),
 // };
+
+
+
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 async function request<T>(endpoint: string, method: RequestMethod = 'GET', body?: any): Promise<T> {
-  // On récupère le token stocké lors du login
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   
   const headers: HeadersInit = {
@@ -197,29 +204,34 @@ async function request<T>(endpoint: string, method: RequestMethod = 'GET', body?
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
     
-    // ✅ CORRECTION : Parse le JSON AVANT de vérifier le statut
     const data = await response.json();
 
-    // ✅ Si c'est un 401 et qu'on n'est PAS sur la page de login, rediriger
+    // ✅ CORRECTION : Gérer les routes admin ET user
     if (response.status === 401) {
-      // Si on est sur /auth/login, c'est une erreur de credentials, pas de session
-      const isLoginPage = typeof window !== 'undefined' && 
-                          (window.location.pathname.includes('/auth/login') || 
-                           window.location.pathname.includes('/auth/register'));
-      
-      if (!isLoginPage && typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/auth/login';
-        throw new Error('Session expirée');
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        
+        // ✅ Déterminer si on est sur une route admin ou user
+        const isAdminRoute = currentPath.startsWith('/admin');
+        const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
+        
+        // Si on n'est PAS sur une page de login
+        if (!isLoginPage) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          
+          // ✅ Rediriger vers la bonne page de login selon le contexte
+          window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
+          throw new Error('Session expirée');
+        }
       }
       
-      // ✅ Sur la page de login, on garde le vrai message d'erreur du backend
+      // Sur la page de login, on garde le vrai message d'erreur du backend
       throw new Error(data.message || 'Identifiants incorrects');
     }
 
-    // ✅ Gestion des autres erreurs HTTP
+    // Gestion des autres erreurs HTTP
     if (!response.ok) {
       throw new Error(data.message || `Erreur ${response.status}`);
     }
@@ -232,7 +244,7 @@ async function request<T>(endpoint: string, method: RequestMethod = 'GET', body?
 }
 
 // ============================================================================
-// ✅ FONCTION POUR FORMDATA (Upload de fichiers) - POST
+// ✅ FONCTION POUR FORMDATA (Upload de fichiers)
 // ============================================================================
 async function requestFormData<T>(endpoint: string, formData: FormData, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -243,8 +255,6 @@ async function requestFormData<T>(endpoint: string, formData: FormData, method: 
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // ⚠️ PAS de Content-Type pour FormData (le navigateur le gère automatiquement)
-
   const config: RequestInit = {
     method,
     headers,
@@ -253,22 +263,22 @@ async function requestFormData<T>(endpoint: string, formData: FormData, method: 
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
-    
-    // Parse le JSON avant de vérifier le statut
     const data = await response.json();
     
-    // Si non autorisé (Token expiré ou invalide)
+    // ✅ CORRECTION : Gérer les routes admin ET user
     if (response.status === 401) {
-      const isLoginPage = typeof window !== 'undefined' && 
-                          (window.location.pathname.includes('/auth/login') || 
-                           window.location.pathname.includes('/auth/register'));
-      
-      if (!isLoginPage && typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-        window.location.href = '/auth/login';
-        throw new Error('Session expirée');
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const isAdminRoute = currentPath.startsWith('/admin');
+        const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
+        
+        if (!isLoginPage) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
+          throw new Error('Session expirée');
+        }
       }
       
       throw new Error(data.message || 'Identifiants incorrects');
@@ -305,17 +315,18 @@ async function requestBlob(endpoint: string): Promise<Blob> {
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
     
-    // Si non autorisé (Token expiré ou invalide)
+    // ✅ CORRECTION : Gérer les routes admin ET user
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
-        const isLoginPage = window.location.pathname.includes('/auth/login') || 
-                           window.location.pathname.includes('/auth/register');
+        const currentPath = window.location.pathname;
+        const isAdminRoute = currentPath.startsWith('/admin');
+        const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
         
         if (!isLoginPage) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          window.location.href = '/auth/login';
+          window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
         }
       }
       throw new Error('Session expirée');
@@ -342,10 +353,8 @@ export const api = {
   patch: <T>(endpoint: string, body: any) => request<T>(endpoint, 'PATCH', body),
   delete: <T>(endpoint: string) => request<T>(endpoint, 'DELETE'),
   
-  // ✅ MÉTHODES POUR FORMDATA
   postFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'POST'),
-  putFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'), // ✅ AJOUTÉ
+  putFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'),
   
-  // ✅ MÉTHODE POUR TÉLÉCHARGER DES FICHIERS
   getBlob: (endpoint: string) => requestBlob(endpoint),
 };

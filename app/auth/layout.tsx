@@ -1,3 +1,5 @@
+//auth/layout
+
 'use client';
 
 import React from 'react';
