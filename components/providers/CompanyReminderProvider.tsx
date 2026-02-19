@@ -11,13 +11,13 @@ import { api } from '@/services/api';
 // ============================================================================
 
 interface CompanyReminderContextType {
-  hasCompany: boolean;
-  setHasCompany: (value: boolean) => void; // 🆕 Exposé pour mise à jour manuelle
-  recheckCompany: () => Promise<void>; // 🆕 Pour forcer une nouvelle vérification
+  hasCompany: boolean | null;
+  setHasCompany: (value: boolean) => void;
+  recheckCompany: () => Promise<void>;
 }
 
 const CompanyReminderContext = createContext<CompanyReminderContextType>({
-  hasCompany: true,
+  hasCompany: null,
   setHasCompany: () => {},
   recheckCompany: async () => {},
 });
@@ -56,8 +56,8 @@ const MESSAGES = [
 // ============================================================================
 
 const TIMING = {
-  AFTER_PAGE_LOAD: 7000,     // 7 secondes après le chargement de la page
-  AFTER_MODAL_CLOSE: 120000, // 2 minutes après la fermeture du modal
+  AFTER_PAGE_LOAD: 7000,      // 7 secondes après chargement de page
+  AFTER_MODAL_CLOSE: 120000,  // 2 minutes après fermeture du modal
 };
 
 // ============================================================================
@@ -71,11 +71,11 @@ interface ReminderModalProps {
   messageIndex: number;
 }
 
-const ReminderModal: React.FC<ReminderModalProps> = ({ 
-  isOpen, 
-  onClose, 
+const ReminderModal: React.FC<ReminderModalProps> = ({
+  isOpen,
+  onClose,
   onCreateCompany,
-  messageIndex 
+  messageIndex
 }) => {
   const message = MESSAGES[messageIndex % MESSAGES.length];
 
@@ -92,7 +92,7 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
           />
 
-          {/* Modal Container - Perfectly Centered */}
+          {/* Modal Container */}
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -102,10 +102,10 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
               className="w-full max-w-md pointer-events-auto"
             >
               <div className="glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden">
-              
+
                 {/* Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
-                
+
                 {/* Animated Circles */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl animate-aurora-1" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl animate-aurora-2" />
@@ -178,45 +178,81 @@ const ReminderModal: React.FC<ReminderModalProps> = ({
 export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
-  
-  const [hasCompany, setHasCompany] = useState(true);
+
+  // ⚠️ null = vérification en cours, true = a une entreprise, false = n'en a pas
+  const [hasCompany, setHasCompany] = useState<boolean | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [messageIndex, setMessageIndex] = useState(0);
   const [modalWasClosed, setModalWasClosed] = useState(false);
-  const lastPathnameRef = useRef(pathname);
+
+  // Initialiser à '' pour garantir la détection du premier pathname
+  const lastPathnameRef = useRef<string>('');
 
   // ============================================================================
   // ✅ VÉRIFIER SI L'UTILISATEUR A UNE ENTREPRISE
   // ============================================================================
-  
+
   const checkCompany = async () => {
     try {
       console.log('🔍 [CompanyReminder] Checking company...');
       const company = await api.get('/companies/mine');
-      
-      const hasCompanyResult = company !== null && company !== undefined;
-      
-      console.log('🏢 [CompanyReminder] Result:', hasCompanyResult ? '✅ HAS COMPANY' : '❌ NO COMPANY');
-      
+
+      // Le back peut retourner null, undefined, ou un objet vide {}
+      // On considère qu'il y a une entreprise seulement si on reçoit un objet avec un id
+      const hasCompanyResult =
+        company !== null &&
+        company !== undefined &&
+        typeof company === 'object' &&
+        'id' in company &&
+        !!company.id;
+
+      console.log('🏢 [CompanyReminder] Result:', hasCompanyResult ? '✅ HAS COMPANY' : '❌ NO COMPANY', company);
       setHasCompany(hasCompanyResult);
+
     } catch (error: any) {
-      console.log('⚠️ [CompanyReminder] API Error:', error?.response?.status);
-      
-      // Si 404 = pas d'entreprise
-      if (error?.response?.status === 404) {
-        setHasCompany(false);
+      console.log('⚠️ [CompanyReminder] Catch error:', error);
+
+      // CAS 1 : Erreur HTTP classique (404, 401, etc.)
+      const status = error?.response?.status ?? error?.status;
+      console.log('⚠️ [CompanyReminder] HTTP status:', status);
+
+      if (status === 401 || status === 403) {
+        // Non authentifié → on ne sait pas encore, on ne montre pas le modal
+        console.log('🔒 [CompanyReminder] Non authentifié, skip modal');
+        setHasCompany(null);
+        return;
       }
+
+      // CAS 2 : Le back retourne une réponse vide (204 / body vide)
+      // → SyntaxError "Unexpected end of JSON input"
+      // C'est le cas quand findByUser retourne null et le back envoie un body vide
+      // On interprète ça comme "pas d'entreprise"
+      if (
+        error instanceof SyntaxError ||
+        error?.message?.includes('Unexpected end of JSON') ||
+        error?.message?.includes('Failed to execute') ||
+        status === 404 ||
+        status === undefined // réponse vide sans status parsable
+      ) {
+        console.log('❌ [CompanyReminder] Pas d\'entreprise (réponse vide ou 404)');
+        setHasCompany(false);
+        return;
+      }
+
+      // CAS 3 : Autre erreur réseau → on ne montre pas le modal pour éviter le spam
+      console.log('🌐 [CompanyReminder] Erreur réseau inconnue, skip modal');
+      setHasCompany(null);
     }
   };
 
-  // 🆕 Fonction pour forcer une nouvelle vérification
+  // Fonction exposée pour forcer une re-vérification (utilisée après création d'entreprise)
   const recheckCompany = async () => {
     console.log('🔄 [CompanyReminder] Force recheck...');
     await checkCompany();
   };
 
   // ============================================================================
-  // 🔍 VÉRIFICATION INITIALE
+  // 🔍 VÉRIFICATION INITIALE AU MONTAGE
   // ============================================================================
 
   useEffect(() => {
@@ -229,8 +265,14 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   // ============================================================================
 
   useEffect(() => {
-    // 🎯 SI L'USER A UNE ENTREPRISE → PLUS JAMAIS DE MODAL
-    if (hasCompany) {
+    // Attendre que la vérification initiale soit terminée
+    if (hasCompany === null) {
+      console.log('⏳ [CompanyReminder] Vérification en cours, attente...');
+      return;
+    }
+
+    // L'user a une entreprise → on ne montre jamais le modal
+    if (hasCompany === true) {
       console.log('✅ [CompanyReminder] Has company, no reminder needed');
       return;
     }
@@ -242,56 +284,64 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
       return;
     }
 
-    // Ne pas afficher si le modal est déjà ouvert
+    // Ne pas empiler les timers si le modal est déjà ouvert
     if (showModal) {
       console.log('⏭️ [CompanyReminder] Modal already open, skipping timer');
       return;
     }
 
-    // Déterminer le délai
-    let delay: number;
-    let reason: string;
+    // Détecter si c'est un changement de page
+    const isNewPage = lastPathnameRef.current !== pathname;
 
-    if (lastPathnameRef.current !== pathname) {
-      delay = TIMING.AFTER_PAGE_LOAD;
-      reason = '7s after page load';
-      lastPathnameRef.current = pathname;
+    // Mettre à jour la ref AVANT de lancer le timer (pas dedans)
+    lastPathnameRef.current = pathname;
+
+    if (isNewPage) {
+      // Reset le flag "fermé" à chaque changement de page
       setModalWasClosed(false);
-    } 
-    else if (modalWasClosed) {
-      delay = TIMING.AFTER_MODAL_CLOSE;
-      reason = '2min after modal close';
-    } 
-    else {
-      delay = TIMING.AFTER_PAGE_LOAD;
-      reason = '7s after initial load';
     }
 
-    console.log(`⏰ [CompanyReminder] Timer started: ${reason} (${delay / 1000}s)`);
+    // Choisir le délai
+    const delay = (!isNewPage && modalWasClosed)
+      ? TIMING.AFTER_MODAL_CLOSE
+      : TIMING.AFTER_PAGE_LOAD;
+
+    const reason = (!isNewPage && modalWasClosed)
+      ? `2min après fermeture du modal`
+      : isNewPage
+        ? `7s après changement de page (${pathname})`
+        : `7s après chargement initial`;
+
+    console.log(`⏰ [CompanyReminder] Timer démarré: ${reason} (${delay / 1000}s)`);
 
     const timer = setTimeout(() => {
-      console.log('🎬 [CompanyReminder] Timer expired! Showing modal...');
+      console.log('🎬 [CompanyReminder] Timer expiré ! Affichage du modal...');
       setShowModal(true);
       setMessageIndex((prev) => prev + 1);
     }, delay);
 
     return () => {
+      console.log('🧹 [CompanyReminder] Timer annulé (cleanup)');
       clearTimeout(timer);
     };
-  }, [pathname, hasCompany, showModal, modalWasClosed]);
+
+  // ⚠️ On n'inclut PAS modalWasClosed dans les deps pour éviter
+  // de relancer le useEffect quand il change (setModalWasClosed dans le même effet)
+  // On le lit via closure, ce qui est suffisant ici.
+  }, [pathname, hasCompany, showModal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ============================================================================
   // 🎬 HANDLERS
   // ============================================================================
 
   const handleClose = () => {
-    console.log('❌ [CompanyReminder] Modal closed by user');
+    console.log('❌ [CompanyReminder] Modal fermé par l\'utilisateur');
     setShowModal(false);
     setModalWasClosed(true);
   };
 
   const handleCreateCompany = () => {
-    console.log('✨ [CompanyReminder] Redirecting to company creation...');
+    console.log('✨ [CompanyReminder] Redirection vers création d\'entreprise...');
     setShowModal(false);
     router.push('/companies/create');
   };
