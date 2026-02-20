@@ -162,7 +162,7 @@ export default function AttendanceCheckInPage() {
                 latitude: geoState.latitude || undefined,
                 longitude: geoState.longitude || undefined,
                 notes: (geoState.isMockedSuspect && !geoState.allowed) ? 'SUSPICIOUS_LOCATION' : undefined,
-            }, attendanceApi);
+            });
 
             if (result.success) {
                 setStatus('working');
