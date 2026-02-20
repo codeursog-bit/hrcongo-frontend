@@ -458,15 +458,25 @@ export const attendanceApi = {
   /**
    * ✅ CORRIGER : Modifier un pointage (Admin/RH)
    */
+  // correctAttendance: async (
+  //   attendanceId: string,
+  //   data: {
+  //     status?: string;
+  //     checkIn?: Date;
+  //     checkOut?: Date;
+  //     totalHours?: number;
+  //     reason: string;
+  //   }
+
   correctAttendance: async (
-    attendanceId: string,
-    data: {
-      status?: string;
-      checkIn?: Date;
-      checkOut?: Date;
-      totalHours?: number;
-      reason: string;
-    }
+  attendanceId: string,
+  data: {
+    status?: string;
+    checkIn?: string;   // ← Date → string
+    checkOut?: string;  // ← Date → string
+    totalHours?: number;
+    reason: string;
+  }
   ): Promise<{
     success: boolean;
     attendance: AttendanceRecord;
