@@ -164,17 +164,16 @@ export default function PointageManuelPage() {
       // 2️⃣ Préparer les timestamps
       // ✅ Après — tu envoies des strings ISO
 const checkInDateTime = checkInTime 
-  ? new Date(`${selectedDate}T${checkInTime}:00`).toISOString()
+  ? new Date(`${selectedDate}T${checkInTime}:00`)
   : undefined;
 
 const checkOutDateTime = checkOutTime 
-  ? new Date(`${selectedDate}T${checkOutTime}:00`).toISOString()
+  ? new Date(`${selectedDate}T${checkOutTime}:00`)
   : undefined;
 
-      // 3️⃣ Calculer les heures totales si les deux sont présentes
-   let totalHours = undefined;
+let totalHours = undefined;
 if (checkInDateTime && checkOutDateTime) {
-  const durationMs = new Date(checkOutDateTime).getTime() - new Date(checkInDateTime).getTime();
+  const durationMs = checkOutDateTime.getTime() - checkOutDateTime.getTime();
   totalHours = parseFloat((durationMs / (1000 * 60 * 60)).toFixed(2));
 }
       // 4️⃣ Appeler l'endpoint de CORRECTION avec les heures personnalisées
