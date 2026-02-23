@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Save, Loader2, AlertCircle, DollarSign,
-  Calendar, Clock, Gift, Minus, Plus, Check
+  Calendar, Clock, Gift, Minus, Plus, Check, RefreshCw,
+  TrendingUp, TrendingDown, Minus as MinusIcon,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
@@ -39,14 +40,25 @@ interface PayrollEditData {
 interface EmployeeBonus {
   id: string;
   bonusType: string;
-  fixedAmount: number | null;
+  amount: number | null;
+  fixedAmount?: number | null;
   percentage: number | null;
-  calculationType: 'FIXED_AMOUNT' | 'PERCENTAGE';
-  frequency: string;
-  isActive: boolean;
-  // ✅ Flags fiscaux — lus depuis la BDD
+  calculationType?: 'FIXED_AMOUNT' | 'PERCENTAGE';
+  isRecurring?: boolean;
+  frequency?: string;
+  isActive?: boolean;
   isTaxable: boolean;
   isCnss: boolean;
+}
+
+// Résultat de simulation (aperçu recalcul)
+interface SimPreview {
+  grossSalary: number;
+  netSalary: number;
+  cnssSalarial: number;
+  its: number;
+  totalBonuses: number;
+  totalOvertimeAmount: number;
 }
 
 const MONTHS = [
@@ -56,48 +68,72 @@ const MONTHS = [
 
 const fmt = (v: number) => Math.round(v ?? 0).toLocaleString('fr-FR');
 
-// ✅ Badge fiscal non modifiable — juste pour affichage
-const FiscalBadge = ({ label, active, color }: { label: string; active: boolean; color: 'cyan' | 'emerald' }) => {
-  if (!active) return null;
+// ─── Flèche de variation ──────────────────────────────────────────────────────
+const Delta = ({ before, after }: { before: number; after: number }) => {
+  const diff = after - before;
+  if (Math.abs(diff) < 1) return null;
+  const positive = diff > 0;
   return (
-    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ml-1 ${
-      color === 'cyan'
-        ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-700'
-        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700'
-    }`}>
-      {label}
+    <span className={`text-xs font-bold flex items-center gap-0.5 ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
+      {positive ? <TrendingUp size={11}/> : <TrendingDown size={11}/>}
+      {positive ? '+' : ''}{fmt(diff)} F
     </span>
   );
 };
 
-// ✅ Badge si prime NON imposable → versée directement au net
-const NetBadge = () => (
-  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full border ml-1
-                   bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700">
-    Net direct
-  </span>
+// ─── Ligne heures sup ─────────────────────────────────────────────────────────
+const OtRow = ({ label, sub, value, onChange }: {
+  label: string; sub: string; value: number; onChange: (v: number) => void;
+}) => (
+  <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-500/5 dark:bg-orange-900/10 rounded-xl mb-1.5">
+    <div className="w-14 shrink-0">
+      <span className="font-black text-orange-500 text-sm">{label}</span>
+      <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{sub}</p>
+    </div>
+    <button onClick={() => onChange(Math.max(0, +(value - 0.5).toFixed(1)))}
+      className="w-7 h-7 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700
+                 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+      <Minus size={11} />
+    </button>
+    <span className="w-12 text-center font-bold font-mono text-sm text-gray-900 dark:text-white">
+      {value.toFixed(1)}
+    </span>
+    <button onClick={() => onChange(+(value + 0.5).toFixed(1))}
+      className="w-7 h-7 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700
+                 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+      <Plus size={11} />
+    </button>
+    <span className="text-xs text-gray-400">h</span>
+  </div>
 );
 
+// ─── Page principale ──────────────────────────────────────────────────────────
 export default function EditPayrollPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const alert  = useAlert();
 
-  const [payroll, setPayroll]     = useState<PayrollEditData | null>(null);
-  const [bonuses, setBonuses]     = useState<EmployeeBonus[]>([]);
+  const [payroll,   setPayroll]   = useState<PayrollEditData | null>(null);
+  const [bonuses,   setBonuses]   = useState<EmployeeBonus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving]   = useState(false);
-  const [saved, setSaved]         = useState(false);
+  const [isSaving,  setIsSaving]  = useState(false);
+  const [saved,     setSaved]     = useState(false);
 
+  // Champs modifiables
   const [baseSalary, setBaseSalary] = useState(0);
   const [workedDays, setWorkedDays] = useState(0);
-  const [ot10,  setOt10]            = useState(0);
-  const [ot25,  setOt25]            = useState(0);
-  const [ot50,  setOt50]            = useState(0);
-  const [ot100, setOt100]           = useState(0);
-
-  const [bonusEdits, setBonusEdits]     = useState<Record<string, number>>({});
+  const [ot10,  setOt10]  = useState(0);
+  const [ot25,  setOt25]  = useState(0);
+  const [ot50,  setOt50]  = useState(0);
+  const [ot100, setOt100] = useState(0);
+  const [bonusEdits,   setBonusEdits]   = useState<Record<string, number>>({});
   const [dirtyBonuses, setDirtyBonuses] = useState<Set<string>>(new Set());
 
+  // ✅ Aperçu recalcul temps réel
+  const [preview,     setPreview]     = useState<SimPreview | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewTimer, setPreviewTimer] = useState<NodeJS.Timeout | null>(null);
+
+  // ── Chargement ────────────────────────────────────────────────────────────
   useEffect(() => { loadPayroll(); }, [params.id]);
 
   const loadPayroll = async () => {
@@ -123,24 +159,18 @@ export default function EditPayrollPage({ params }: { params: { id: string } }) 
           const bonusData: any = await api.get(
             `/employee-bonuses?employeeId=${(data as any).employee.id}`
           );
-          const list: EmployeeBonus[] = Array.isArray(bonusData)
-            ? bonusData
-            : bonusData?.data || [];
-
-          // Seules les primes à montant fixe sont modifiables ici
-          const fixedBonuses = list.filter(
-            b => b.isActive && b.calculationType === 'FIXED_AMOUNT'
+          const list: EmployeeBonus[] = Array.isArray(bonusData) ? bonusData : bonusData?.data || [];
+          const fixedBonuses = list.filter(b =>
+            (b.isActive !== false) &&
+            (b.calculationType === 'FIXED_AMOUNT' || (b.amount != null && b.percentage == null))
           );
           setBonuses(fixedBonuses);
-
           const initEdits: Record<string, number> = {};
           fixedBonuses.forEach(b => {
-            initEdits[b.id] = Number(b.fixedAmount ?? 0);
+            initEdits[b.id] = Number(b.amount ?? b.fixedAmount ?? 0);
           });
           setBonusEdits(initEdits);
-        } catch {
-          // Non bloquant
-        }
+        } catch { /* non bloquant */ }
       }
     } catch {
       alert.error('Erreur', 'Impossible de charger le bulletin.');
@@ -150,21 +180,80 @@ export default function EditPayrollPage({ params }: { params: { id: string } }) 
     }
   };
 
+  // ── Recalcul en temps réel via /payrolls/simulate ─────────────────────────
+  const triggerPreview = useCallback((
+    newBaseSalary: number,
+    newWorkedDays: number,
+    newOt10: number, newOt25: number, newOt50: number, newOt100: number,
+  ) => {
+    if (!payroll?.employee?.id) return;
+
+    // Debounce 600ms — évite un appel à chaque clic
+    if (previewTimer) clearTimeout(previewTimer);
+
+    const timer = setTimeout(async () => {
+      if (newBaseSalary < 70400) return;
+      setIsPreviewLoading(true);
+      try {
+        const result: any = await api.post('/payrolls/simulate', {
+          employeeId:       payroll.employee!.id,
+          month:            payroll.month,
+          year:             payroll.year,
+          baseSalary:       newBaseSalary,
+          workedDays:       newWorkedDays,
+          overtimeHours10:  newOt10,
+          overtimeHours25:  newOt25,
+          overtimeHours50:  newOt50,
+          overtimeHours100: newOt100,
+        });
+        setPreview({
+          grossSalary:         result.grossSalary,
+          netSalary:           result.netSalary,
+          cnssSalarial:        result.cnssSalarial,
+          its:                 result.its,
+          totalBonuses:        result.totalBonuses ?? 0,
+          totalOvertimeAmount: result.overtime?.total ?? 0,
+        });
+      } catch {
+        setPreview(null);
+      } finally {
+        setIsPreviewLoading(false);
+      }
+    }, 600);
+
+    setPreviewTimer(timer);
+  }, [payroll, previewTimer]);
+
+  // Déclencher l'aperçu à chaque changement de valeur
+  const handleBaseSalaryChange = (v: number) => {
+    setBaseSalary(v);
+    triggerPreview(v, workedDays, ot10, ot25, ot50, ot100);
+  };
+  const handleWorkedDaysChange = (v: number) => {
+    setWorkedDays(v);
+    triggerPreview(baseSalary, v, ot10, ot25, ot50, ot100);
+  };
+  const handleOt10Change  = (v: number) => { setOt10(v);  triggerPreview(baseSalary, workedDays, v,    ot25, ot50, ot100); };
+  const handleOt25Change  = (v: number) => { setOt25(v);  triggerPreview(baseSalary, workedDays, ot10, v,    ot50, ot100); };
+  const handleOt50Change  = (v: number) => { setOt50(v);  triggerPreview(baseSalary, workedDays, ot10, ot25, v,    ot100); };
+  const handleOt100Change = (v: number) => { setOt100(v); triggerPreview(baseSalary, workedDays, ot10, ot25, ot50, v); };
+
+  // ── Détection de changements ──────────────────────────────────────────────
   const hasChanges = payroll ? (
-    baseSalary !== Number(payroll.baseSalary)                        ||
-    workedDays !== (payroll.workedDays ?? payroll.workDays ?? 26)    ||
-    ot10       !== Number(payroll.overtimeHours10  ?? 0)             ||
-    ot25       !== Number(payroll.overtimeHours25  ?? 0)             ||
-    ot50       !== Number(payroll.overtimeHours50  ?? 0)             ||
-    ot100      !== Number(payroll.overtimeHours100 ?? 0)             ||
+    baseSalary !== Number(payroll.baseSalary)                     ||
+    workedDays !== (payroll.workedDays ?? payroll.workDays ?? 26) ||
+    ot10       !== Number(payroll.overtimeHours10  ?? 0)          ||
+    ot25       !== Number(payroll.overtimeHours25  ?? 0)          ||
+    ot50       !== Number(payroll.overtimeHours50  ?? 0)          ||
+    ot100      !== Number(payroll.overtimeHours100 ?? 0)          ||
     dirtyBonuses.size > 0
   ) : false;
 
+  // ── Sauvegarde ────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!payroll) return;
 
     const workDays = payroll.workDays ?? 26;
-
     if (workedDays < 0 || workedDays > workDays) {
       alert.error('Valeur invalide', `Les jours travaillés doivent être entre 0 et ${workDays}.`);
       return;
@@ -192,342 +281,275 @@ export default function EditPayrollPage({ params }: { params: { id: string } }) 
           Array.from(dirtyBonuses).map(async (bonusId) => {
             try {
               await api.patch(`/employee-bonuses/${bonusId}`, {
+                amount:      bonusEdits[bonusId],
                 fixedAmount: bonusEdits[bonusId],
               });
             } catch {
-              bonusErrors.push(
-                bonuses.find(b => b.id === bonusId)?.bonusType ?? bonusId
-              );
+              bonusErrors.push(bonuses.find(b => b.id === bonusId)?.bonusType ?? bonusId);
             }
           })
         );
       }
 
       if (bonusErrors.length > 0) {
-        alert.error(
-          'Bulletin sauvegardé',
-          `${bonusErrors.length} prime(s) n'ont pas pu être modifiées : ${bonusErrors.join(', ')}.`
-        );
+        alert.error('Bulletin sauvegardé', `${bonusErrors.length} prime(s) non modifiées : ${bonusErrors.join(', ')}.`);
       } else {
         setSaved(true);
         setTimeout(() => router.push(`/paie/${params.id}`), 800);
       }
     } catch (e: any) {
-      alert.error(
-        'Erreur de sauvegarde',
-        e?.response?.data?.message || e?.message || 'Impossible de sauvegarder.'
-      );
+      alert.error('Erreur de sauvegarde', e?.response?.data?.message || e?.message || 'Impossible de sauvegarder.');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const OtRow = ({
-    label, sub, value, onChange,
-  }: { label: string; sub: string; value: number; onChange: (v: number) => void }) => (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 12,
-      padding: '10px 14px', background: 'rgba(251,146,60,0.06)',
-      borderRadius: 10, marginBottom: 6,
-    }}>
-      <div style={{ width: 54, flexShrink: 0 }}>
-        <span style={{ fontWeight: 800, color: '#f97316', fontSize: 13 }}>{label}</span>
-        <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0', lineHeight: 1.3 }}>{sub}</p>
-      </div>
-      <button
-        onClick={() => onChange(Math.max(0, +(value - 0.5).toFixed(1)))}
-        style={{
-          width: 28, height: 28, borderRadius: 6,
-          border: '1px solid #e5e7eb', background: 'white',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-        <Minus size={12} />
-      </button>
-      <span style={{
-        minWidth: 44, textAlign: 'center', fontWeight: 700,
-        fontFamily: 'monospace', fontSize: 15,
-      }}>
-        {value.toFixed(1)}
-      </span>
-      <button
-        onClick={() => onChange(+(value + 0.5).toFixed(1))}
-        style={{
-          width: 28, height: 28, borderRadius: 6,
-          border: '1px solid #e5e7eb', background: 'white',
-          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-        <Plus size={12} />
-      </button>
-      <span style={{ fontSize: 11, color: '#9ca3af' }}>h</span>
-    </div>
-  );
-
+  // ── Guards ────────────────────────────────────────────────────────────────
   if (isLoading) return (
-    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Loader2 size={32} color="#6366f1" className="animate-spin" />
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <Loader2 size={32} className="animate-spin text-indigo-500" />
     </div>
   );
-
   if (!payroll) return null;
 
   const workDays    = payroll.workDays ?? 26;
   const absenceDays = Math.max(0, workDays - workedDays);
 
-  return (
-    <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px 16px 60px', fontFamily: 'system-ui, sans-serif' }}>
+  // Valeurs affichées (aperçu si disponible, sinon valeurs BDD)
+  const displayGross = preview?.grossSalary  ?? payroll.grossSalary;
+  const displayNet   = preview?.netSalary    ?? payroll.netSalary;
+  const displayCnss  = preview?.cnssSalarial ?? payroll.cnssSalarial;
+  const displayIts   = preview?.its          ?? payroll.its;
 
-      {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            width: 38, height: 38, borderRadius: 10, border: '1px solid #e5e7eb',
-            background: 'white', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-          <ArrowLeft size={18} color="#6b7280" />
+  return (
+    <div className="max-w-[680px] mx-auto px-4 py-6 pb-20">
+
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => router.back()}
+          className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700
+                     bg-white dark:bg-gray-800 flex items-center justify-center
+                     hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+          <ArrowLeft size={17} className="text-gray-500 dark:text-gray-400" />
         </button>
         <div>
-          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#111827' }}>
-            Modifier le bulletin
-          </h1>
-          <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
+          <h1 className="text-xl font-black text-gray-900 dark:text-white">Modifier le bulletin</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {payroll.employee?.firstName} {payroll.employee?.lastName}
             {' · '}{MONTHS[payroll.month - 1]} {payroll.year}
           </p>
         </div>
-        <div style={{
-          marginLeft: 'auto', padding: '4px 10px',
-          background: '#fef9c3', border: '1px solid #fde047',
-          borderRadius: 8, fontSize: 11, fontWeight: 700, color: '#854d0e',
-        }}>
+        <span className="ml-auto text-[10px] font-bold px-2.5 py-1 rounded-lg
+                         bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400
+                         border border-amber-200 dark:border-amber-700">
           DRAFT
-        </div>
+        </span>
       </div>
 
-      {/* ── Notice ── */}
-      <div style={{
-        display: 'flex', gap: 8, padding: '12px 16px',
-        background: '#f0f9ff', border: '1px solid #bae6fd',
-        borderRadius: 12, marginBottom: 20,
-      }}>
-        <AlertCircle size={15} color="#0284c7" style={{ marginTop: 1, flexShrink: 0 }} />
-        <p style={{ margin: 0, fontSize: 12, color: '#0369a1', lineHeight: 1.6 }}>
-          Après sauvegarde, le bulletin sera <strong>recalculé automatiquement</strong> par le
-          backend — CNSS, ITS et net à payer seront mis à jour.
+      {/* ── Notice ────────────────────────────────────────────────────────── */}
+      <div className="flex items-start gap-2.5 p-3 mb-5 rounded-xl
+                      bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+        <AlertCircle size={13} className="text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+          <strong>Recalcul automatique</strong> — L'aperçu ci-dessous se met à jour en temps réel.
+          Après sauvegarde, le backend recalcule CNSS, ITS et net à payer.
         </p>
       </div>
 
-      {/* ── Valeurs actuelles ── */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
-        <h3 style={{
-          margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: '#9ca3af',
-          textTransform: 'uppercase', letterSpacing: '.6px',
-        }}>
-          Valeurs actuelles (avant modification)
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-          {[
-            { label: 'Brut',    value: fmt(payroll.grossSalary)  + ' F', color: '#10b981' },
-            { label: 'CNSS',    value: fmt(payroll.cnssSalarial) + ' F', color: '#ef4444' },
-            { label: 'Net',     value: fmt(payroll.netSalary)    + ' F', color: '#6366f1' },
-          ].map(({ label, value, color }) => (
-            <div key={label} style={{ padding: '10px 12px', background: '#f9fafb', borderRadius: 10 }}>
-              <p style={{ margin: 0, fontSize: 11, color: '#9ca3af', fontWeight: 700 }}>{label}</p>
-              <p style={{ margin: '4px 0 0', fontFamily: 'monospace', fontWeight: 800, fontSize: 14, color }}>{value}</p>
+      {/* ── Aperçu résultat (recalcul temps réel) ─────────────────────────── */}
+      <div className="bg-gray-900 dark:bg-black rounded-2xl p-5 mb-5 relative overflow-hidden">
+        {isPreviewLoading && (
+          <div className="absolute inset-0 bg-gray-900/60 dark:bg-black/60 flex items-center justify-center rounded-2xl z-10">
+            <RefreshCw size={18} className="animate-spin text-white" />
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+            {preview ? '⚡ Aperçu recalculé' : 'Valeurs actuelles'}
+          </p>
+          {preview && (
+            <span className="text-[10px] text-violet-400 font-semibold bg-violet-900/30 px-2 py-0.5 rounded-full">
+              Simulation live
+            </span>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {/* Net à payer — le plus important */}
+          <div className="col-span-2 bg-white/5 rounded-xl p-4">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Net à payer</p>
+            <div className="flex items-end gap-3">
+              <p className="text-2xl font-black font-mono text-white tracking-tight">
+                {fmt(displayNet)}
+                <span className="text-sm font-normal text-gray-400 ml-1.5">FCFA</span>
+              </p>
+              {preview && <Delta before={payroll.netSalary} after={displayNet} />}
             </div>
-          ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Brut</p>
+            <p className="font-bold font-mono text-emerald-400 text-sm">{fmt(displayGross)} F</p>
+            {preview && <Delta before={payroll.grossSalary} after={displayGross} />}
+          </div>
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">CNSS</p>
+            <p className="font-bold font-mono text-red-400 text-sm">{fmt(displayCnss)} F</p>
+            {preview && <Delta before={payroll.cnssSalarial} after={displayCnss} />}
+          </div>
+          <div className="bg-white/5 rounded-xl p-3">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">ITS</p>
+            <p className="font-bold font-mono text-red-400 text-sm">{fmt(displayIts)} F</p>
+            {preview && <Delta before={payroll.its} after={displayIts} />}
+          </div>
         </div>
       </div>
 
-      {/* ── Salaire de base ── */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <DollarSign size={16} color="#10b981" />
-          <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>Salaire de base</h3>
+      {/* ── Salaire de base ───────────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <DollarSign size={15} className="text-emerald-500" />
+          <h3 className="font-bold text-sm text-gray-900 dark:text-white">Salaire de base</h3>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="flex items-center gap-2">
           <input
             type="number"
             value={baseSalary}
-            onChange={e => setBaseSalary(Number(e.target.value))}
-            style={{
-              flex: 1, padding: '11px 14px',
-              border: `1px solid ${baseSalary < 70400 ? '#fca5a5' : baseSalary !== Number(payroll.baseSalary) ? '#86efac' : '#e5e7eb'}`,
-              borderRadius: 10, fontSize: 16, fontWeight: 700,
-              fontFamily: 'monospace', outline: 'none',
-              background: baseSalary !== Number(payroll.baseSalary) ? '#f0fdf4' : 'white',
-              transition: 'border-color .2s',
-            }}
+            onChange={e => handleBaseSalaryChange(Number(e.target.value))}
+            className={`flex-1 px-3 py-2.5 rounded-xl border text-base font-bold font-mono outline-none
+                        transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                        focus:ring-2 focus:ring-violet-500/20
+                        ${baseSalary < 70400
+                          ? 'border-red-300 dark:border-red-700'
+                          : baseSalary !== Number(payroll.baseSalary)
+                            ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/10'
+                            : 'border-gray-200 dark:border-gray-600'}`}
           />
-          <span style={{ fontSize: 13, color: '#9ca3af', whiteSpace: 'nowrap' }}>FCFA</span>
+          <span className="text-sm text-gray-400 whitespace-nowrap">FCFA</span>
         </div>
-
         {baseSalary < 70400 ? (
-          <p style={{ margin: '6px 0 0', fontSize: 11, color: '#ef4444' }}>
-            ⚠️ Inférieur au SMIG (70 400 FCFA)
-          </p>
+          <p className="text-xs text-red-500 mt-1.5">⚠ Inférieur au SMIG (70 400 FCFA)</p>
         ) : baseSalary !== Number(payroll.baseSalary) ? (
-          <p style={{ margin: '6px 0 0', fontSize: 11, color: '#10b981' }}>
-            ✓ {fmt(payroll.baseSalary)} → {fmt(baseSalary)} FCFA
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1.5">
+            {fmt(payroll.baseSalary)} → {fmt(baseSalary)} FCFA
           </p>
         ) : null}
       </div>
 
-      {/* ── Présence ── */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <Calendar size={16} color="#6366f1" />
-          <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>Présence</h3>
-          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>
-            Base : {workDays} jours ouvrables
-          </span>
+      {/* ── Présence ──────────────────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar size={15} className="text-violet-500" />
+          <h3 className="font-bold text-sm text-gray-900 dark:text-white">Présence</h3>
+          <span className="ml-auto text-[10px] text-gray-400">Base : {workDays} jours ouvrables</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <button
-            onClick={() => setWorkedDays(d => Math.max(0, d - 1))}
-            style={{
-              width: 34, height: 34, borderRadius: 8, border: '1px solid #e5e7eb',
-              background: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-            <Minus size={14} />
+        <div className="flex items-center gap-2.5 mb-2">
+          <button onClick={() => handleWorkedDaysChange(Math.max(0, workedDays - 1))}
+            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700
+                       flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+            <Minus size={13} className="text-gray-600 dark:text-gray-300" />
           </button>
           <input
             type="number" min={0} max={workDays} value={workedDays}
-            onChange={e => setWorkedDays(Math.min(workDays, Math.max(0, Number(e.target.value))))}
-            style={{
-              width: 64, padding: '9px', border: '1px solid #e5e7eb',
-              borderRadius: 8, textAlign: 'center', fontWeight: 800,
-              fontSize: 18, outline: 'none', fontFamily: 'monospace',
-            }}
+            onChange={e => handleWorkedDaysChange(Math.min(workDays, Math.max(0, Number(e.target.value))))}
+            className="w-16 text-center font-black text-lg font-mono border border-gray-200 dark:border-gray-600
+                       rounded-xl py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none"
           />
-          <button
-            onClick={() => setWorkedDays(d => Math.min(workDays, d + 1))}
-            style={{
-              width: 34, height: 34, borderRadius: 8, border: '1px solid #e5e7eb',
-              background: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-            <Plus size={14} />
+          <button onClick={() => handleWorkedDaysChange(Math.min(workDays, workedDays + 1))}
+            className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700
+                       flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+            <Plus size={13} className="text-gray-600 dark:text-gray-300" />
           </button>
-
-          {absenceDays > 0 ? (
-            <span style={{ fontSize: 13, color: '#f97316', fontWeight: 600 }}>
-              → {absenceDays} jour{absenceDays > 1 ? 's' : ''} d'absence
-            </span>
-          ) : (
-            <span style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>✓ Mois complet</span>
-          )}
+          {absenceDays > 0
+            ? <span className="text-xs font-bold text-orange-500">→ {absenceDays}j d'absence</span>
+            : <span className="text-xs font-bold text-emerald-500">✓ Mois complet</span>
+          }
         </div>
 
-        <div style={{ height: 7, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', borderRadius: 99, transition: 'width .3s, background .3s',
-            width: `${(workedDays / workDays) * 100}%`,
-            background: absenceDays === 0 ? '#10b981' : '#f97316',
-          }} />
+        <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${(workedDays / workDays) * 100}%`,
+              background: absenceDays === 0 ? '#10b981' : '#f97316',
+            }} />
         </div>
       </div>
 
-      {/* ── Heures supplémentaires ── */}
-      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-          <Clock size={16} color="#f97316" />
-          <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>
-            Heures supplémentaires
-          </h3>
-          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>Décret 78-360</span>
+      {/* ── Heures supplémentaires ────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Clock size={15} className="text-orange-500" />
+          <h3 className="font-bold text-sm text-gray-900 dark:text-white">Heures supplémentaires</h3>
+          <span className="ml-auto text-[10px] text-gray-400">Décret 78-360</span>
         </div>
-        <OtRow label="+10%"  sub="5 premières heures"   value={ot10}  onChange={setOt10} />
-        <OtRow label="+25%"  sub="Heures suivantes"     value={ot25}  onChange={setOt25} />
-        <OtRow label="+50%"  sub="Nuit / repos / férié" value={ot50}  onChange={setOt50} />
-        <OtRow label="+100%" sub="Nuit dim. / férié"    value={ot100} onChange={setOt100} />
+        <OtRow label="+10%"  sub="5 premières heures"   value={ot10}  onChange={handleOt10Change} />
+        <OtRow label="+25%"  sub="Heures suivantes"     value={ot25}  onChange={handleOt25Change} />
+        <OtRow label="+50%"  sub="Nuit / repos / férié" value={ot50}  onChange={handleOt50Change} />
+        <OtRow label="+100%" sub="Nuit dim. / férié"    value={ot100} onChange={handleOt100Change} />
 
         {(ot10 + ot25 + ot50 + ot100) > 0 && (
-          <div style={{
-            marginTop: 8, padding: '8px 12px',
-            background: 'rgba(249,115,22,.08)', borderRadius: 8,
-          }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#f97316' }}>
+          <div className="mt-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/10 rounded-xl">
+            <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
               Total : {(ot10 + ot25 + ot50 + ot100).toFixed(1)} h sup
+              {preview?.totalOvertimeAmount ? ` → +${fmt(preview.totalOvertimeAmount)} FCFA` : ''}
             </span>
           </div>
         )}
       </div>
 
-      {/* ✅ Primes — avec badges isTaxable et isCnss ── */}
+      {/* ── Primes ────────────────────────────────────────────────────────── */}
       {bonuses.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <Gift size={16} color="#06b6d4" />
-            <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>
-              Primes de l'employé
-            </h3>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Gift size={15} className="text-cyan-500" />
+            <h3 className="font-bold text-sm text-gray-900 dark:text-white">Primes de l'employé</h3>
           </div>
-          <p style={{ margin: '0 0 14px', fontSize: 11, color: '#9ca3af' }}>
-            Seules les primes à montant fixe sont modifiables ici.
-          </p>
+          <p className="text-[10px] text-gray-400 mb-3">Seules les primes à montant fixe sont modifiables ici.</p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="space-y-2">
             {bonuses.map(b => {
-              const currentVal = bonusEdits[b.id] ?? Number(b.fixedAmount ?? 0);
-              const isDirty    = dirtyBonuses.has(b.id);
-              const origVal    = Number(b.fixedAmount ?? 0);
-
-              // ✅ Détecter le type de prime pour afficher le bon badge
+              const currentVal  = bonusEdits[b.id] ?? Number(b.amount ?? b.fixedAmount ?? 0);
+              const isDirty     = dirtyBonuses.has(b.id);
+              const origVal     = Number(b.amount ?? b.fixedAmount ?? 0);
               const isNonTaxable = b.isTaxable === false;
-              const taxableOnly  = b.isTaxable && b.isCnss === false;
+              const taxableOnly  = b.isTaxable === true && b.isCnss === false;
 
               return (
-                <div key={b.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 14px',
-                  background: isDirty ? '#f0fdf4' : '#f9fafb',
-                  border: `1px solid ${isDirty ? '#86efac' : '#f3f4f6'}`,
-                  borderRadius: 10,
-                  transition: 'background .2s, border-color .2s',
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
-                      {b.bonusType}
+                <div key={b.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all
+                    ${isDirty
+                      ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800'
+                      : 'bg-gray-50 dark:bg-gray-700/30 border-gray-100 dark:border-gray-700'
+                    }`}>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{b.bonusType}</span>
+                    <span className="ml-2 text-[10px] text-gray-400">
+                      {(b.isRecurring !== false || b.frequency === 'MONTHLY') ? 'mensuelle' : 'ponctuelle'}
                     </span>
-                    <span style={{ marginLeft: 8, fontSize: 11, color: '#9ca3af' }}>
-                      {b.frequency === 'MONTHLY' ? 'mensuelle' : 'ponctuelle'}
-                    </span>
-                    {/* ✅ Badges fiscaux — lecture seule dans l'éditeur de bulletin */}
-                    <span style={{ display: 'inline-flex', gap: 4, marginLeft: 6, verticalAlign: 'middle' }}>
+                    <span className="inline-flex gap-1 ml-2 align-middle">
                       {!isNonTaxable && (
-                        <>
-                          <span style={{
-                            fontSize: 9, fontWeight: 700, padding: '1px 6px',
-                            borderRadius: 99, border: '1px solid #a5f3fc',
-                            background: '#cffafe', color: '#0e7490',
-                          }}>ITS</span>
-                          {!taxableOnly && (
-                            <span style={{
-                              fontSize: 9, fontWeight: 700, padding: '1px 6px',
-                              borderRadius: 99, border: '1px solid #6ee7b7',
-                              background: '#d1fae5', color: '#065f46',
-                            }}>CNSS</span>
-                          )}
-                        </>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full
+                                         bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300
+                                         border border-cyan-200 dark:border-cyan-700">ITS</span>
+                      )}
+                      {!isNonTaxable && !taxableOnly && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full
+                                         bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300
+                                         border border-emerald-200 dark:border-emerald-700">CNSS</span>
                       )}
                       {isNonTaxable && (
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, padding: '1px 6px',
-                          borderRadius: 99, border: '1px solid #fcd34d',
-                          background: '#fef3c7', color: '#92400e',
-                        }}>Net direct</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full
+                                         bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300
+                                         border border-amber-200 dark:border-amber-700">Net direct</span>
                       )}
                       {taxableOnly && !isNonTaxable && (
-                        <span style={{
-                          fontSize: 9, fontWeight: 700, padding: '1px 6px',
-                          borderRadius: 99, border: '1px solid #c7d2fe',
-                          background: '#e0e7ff', color: '#3730a3',
-                        }}>ITS seulement</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full
+                                         bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300
+                                         border border-indigo-200 dark:border-indigo-700">ITS seul</span>
                       )}
                     </span>
                   </div>
@@ -544,64 +566,49 @@ export default function EditPayrollPage({ params }: { params: { id: string } }) 
                         return next;
                       });
                     }}
-                    style={{
-                      width: 120, padding: '7px 10px', border: '1px solid #e5e7eb',
-                      borderRadius: 8, fontSize: 13, fontFamily: 'monospace',
-                      fontWeight: 700, textAlign: 'right', outline: 'none', background: 'white',
-                    }}
+                    className="w-28 px-2.5 py-1.5 border border-gray-200 dark:border-gray-600
+                               rounded-lg text-sm font-mono font-bold text-right outline-none
+                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
-                  <span style={{ fontSize: 12, color: '#9ca3af' }}>F</span>
-
-                  {isDirty && (
-                    <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                      ✓ modifiée
-                    </span>
-                  )}
+                  <span className="text-xs text-gray-400">F</span>
+                  {isDirty && <span className="text-xs font-bold text-emerald-500 whitespace-nowrap">✓</span>}
                 </div>
               );
             })}
           </div>
-
-          <p style={{ margin: '10px 0 0', fontSize: 11, color: '#f97316' }}>
-            ⚠️ Modifier une prime ici change sa valeur permanente pour les prochains bulletins.
+          <p className="text-[10px] text-orange-500 dark:text-orange-400 mt-3">
+            ⚠ Modifier une prime ici change sa valeur permanente pour les prochains bulletins.
           </p>
         </div>
       )}
 
-      {/* ── Boutons d'action ── */}
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            flex: 1, padding: '13px', background: '#f3f4f6', border: 'none',
-            borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: 'pointer', color: '#6b7280',
-          }}>
+      {/* ── Boutons d'action ──────────────────────────────────────────────── */}
+      <div className="flex gap-3">
+        <button onClick={() => router.back()}
+          className="flex-1 py-3 rounded-xl font-bold text-sm cursor-pointer transition-colors
+                     bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300
+                     hover:bg-gray-200 dark:hover:bg-gray-600 border border-transparent">
           Annuler
         </button>
 
         <button
           onClick={handleSave}
           disabled={isSaving || !hasChanges || saved}
-          style={{
-            flex: 2, padding: '13px', border: 'none', borderRadius: 12,
-            fontWeight: 800, fontSize: 15,
-            cursor: (!hasChanges || isSaving || saved) ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            background: saved
-              ? '#10b981'
-              : !hasChanges || isSaving
-                ? '#e5e7eb'
-                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-            color: (!hasChanges && !saved) ? '#9ca3af' : 'white',
-            transition: 'all .2s',
-          }}>
+          className={`flex-[2] py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2
+                      transition-all duration-200
+                      ${saved
+                        ? 'bg-emerald-500 text-white cursor-not-allowed'
+                        : !hasChanges || isSaving
+                          ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-violet-500/25 cursor-pointer'
+                      }`}>
           {isSaving ? (
-            <><Loader2 size={18} className="animate-spin" /> Sauvegarde...</>
+            <><Loader2 size={17} className="animate-spin" /> Sauvegarde...</>
           ) : saved ? (
-            <><Check size={18} /> Sauvegardé !</>
+            <><Check size={17} /> Sauvegardé !</>
           ) : (
             <>
-              <Save size={18} />
+              <Save size={17} />
               Enregistrer
               {dirtyBonuses.size > 0 ? ` + ${dirtyBonuses.size} prime${dirtyBonuses.size > 1 ? 's' : ''}` : ''}
             </>
@@ -610,7 +617,7 @@ export default function EditPayrollPage({ params }: { params: { id: string } }) 
       </div>
 
       {!hasChanges && !saved && (
-        <p style={{ textAlign: 'center', fontSize: 11, color: '#9ca3af', marginTop: 10 }}>
+        <p className="text-center text-xs text-gray-400 mt-3">
           Aucune modification — modifiez au moins un champ pour activer la sauvegarde
         </p>
       )}
