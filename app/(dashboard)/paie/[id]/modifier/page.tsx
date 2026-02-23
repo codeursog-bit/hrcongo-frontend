@@ -1,26 +1,16 @@
 'use client';
 
-/**
- * ─────────────────────────────────────────────────────────────
- * VERSION PRODUCTION — src/app/paie/[id]/modifier/page.tsx
- * ─────────────────────────────────────────────────────────────
- * Modification d'un bulletin DRAFT existant.
- * Champs modifiables : salaire de base, primes, jours, heures sup.
- * Recalcul côté backend via PATCH /payrolls/:id
- * ─────────────────────────────────────────────────────────────
- */
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Save, Loader2, AlertCircle, RefreshCw,
-  Clock, Calendar, DollarSign, Gift, ChevronRight,
-  CheckCircle2, XCircle, Info
+  ArrowLeft, Save, Loader2, AlertCircle, DollarSign,
+  Calendar, Clock, Gift, Minus, Plus, Check
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { useAlert } from '@/components/providers/AlertProvider';
 
-// ─── Types ───────────────────────────────────────────────────
-interface PayrollData {
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface PayrollEditData {
   id: string;
   status: string;
   month: number;
@@ -28,439 +18,602 @@ interface PayrollData {
   baseSalary: number;
   grossSalary: number;
   netSalary: number;
-  cnssSalarial: number;
-  its: number;
-  totalDeductions: number;
-  totalEmployerCost: number;
   workDays: number;
   workedDays: number;
   absenceDays: number;
+  cnssSalarial: number;
+  its: number;
   overtimeHours10?: number;
   overtimeHours25?: number;
   overtimeHours50?: number;
   overtimeHours100?: number;
   employee?: {
-    id?: string;
+    id: string;
     firstName?: string;
     lastName?: string;
     employeeNumber?: string;
     position?: string;
-    baseSalary?: number;
   };
-  bonuses?: BonusItem[];
 }
 
-interface BonusItem {
+interface EmployeeBonus {
   id: string;
-  label: string;
-  amount: number;
-  isRecurring: boolean;
+  bonusType: string;
+  fixedAmount: number | null;
+  percentage: number | null;
+  calculationType: 'FIXED_AMOUNT' | 'PERCENTAGE';
+  frequency: string;
+  isActive: boolean;
+  // ✅ Flags fiscaux — lus depuis la BDD
   isTaxable: boolean;
   isCnss: boolean;
 }
 
-interface SimResult {
-  grossSalary: number;
-  netSalary: number;
-  cnssSalarial: number;
-  its: number;
-  totalDeductions: number;
-  totalEmployerCost: number;
-  absenceDeduction: number;
-  totalOvertimeAmount: number;
-  totalBonuses: number;
-}
+const MONTHS = [
+  'Janvier','Février','Mars','Avril','Mai','Juin',
+  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
+];
 
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const fmt = (v: number) => Math.round(v ?? 0).toLocaleString('fr-FR');
 
-// ─── Composant ───────────────────────────────────────────────
+// ✅ Badge fiscal non modifiable — juste pour affichage
+const FiscalBadge = ({ label, active, color }: { label: string; active: boolean; color: 'cyan' | 'emerald' }) => {
+  if (!active) return null;
+  return (
+    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ml-1 ${
+      color === 'cyan'
+        ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-700'
+        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700'
+    }`}>
+      {label}
+    </span>
+  );
+};
+
+// ✅ Badge si prime NON imposable → versée directement au net
+const NetBadge = () => (
+  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full border ml-1
+                   bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700">
+    Net direct
+  </span>
+);
+
 export default function EditPayrollPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const alert  = useAlert();
 
-  const [payroll, setPayroll]       = useState<PayrollData | null>(null);
-  const [isLoading, setIsLoading]   = useState(true);
-  const [isSaving, setIsSaving]     = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [simulation, setSimulation] = useState<SimResult | null>(null);
-  const [saved, setSaved]           = useState(false);
+  const [payroll, setPayroll]     = useState<PayrollEditData | null>(null);
+  const [bonuses, setBonuses]     = useState<EmployeeBonus[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving]   = useState(false);
+  const [saved, setSaved]         = useState(false);
 
-  // ── Champs modifiables ──
-  const [baseSalary,  setBaseSalary]  = useState(0);
-  const [workedDays,  setWorkedDays]  = useState(0);
-  const [overtime10,  setOvertime10]  = useState(0);
-  const [overtime25,  setOvertime25]  = useState(0);
-  const [overtime50,  setOvertime50]  = useState(0);
-  const [overtime100, setOvertime100] = useState(0);
-  const [bonuses,     setBonuses]     = useState<BonusItem[]>([]);
+  const [baseSalary, setBaseSalary] = useState(0);
+  const [workedDays, setWorkedDays] = useState(0);
+  const [ot10,  setOt10]            = useState(0);
+  const [ot25,  setOt25]            = useState(0);
+  const [ot50,  setOt50]            = useState(0);
+  const [ot100, setOt100]           = useState(0);
 
-  useEffect(() => { load(); }, [params.id]);
+  const [bonusEdits, setBonusEdits]     = useState<Record<string, number>>({});
+  const [dirtyBonuses, setDirtyBonuses] = useState<Set<string>>(new Set());
 
-  const load = async () => {
+  useEffect(() => { loadPayroll(); }, [params.id]);
+
+  const loadPayroll = async () => {
     try {
-      const data = await api.get<PayrollData>(`/payrolls/${params.id}`);
+      const data = await api.get<PayrollEditData>(`/payrolls/${params.id}`);
+
       if (data.status !== 'DRAFT') {
-        alert(`Ce bulletin est "${data.status}" et ne peut pas être modifié.`);
+        alert.error('Non modifiable', `Un bulletin "${data.status}" ne peut pas être modifié.`);
         router.push(`/paie/${params.id}`);
         return;
       }
+
       setPayroll(data);
-      setBaseSalary(data.baseSalary ?? data.employee?.baseSalary ?? 0);
+      setBaseSalary(Number(data.baseSalary));
       setWorkedDays(data.workedDays ?? data.workDays ?? 26);
-      setOvertime10(data.overtimeHours10  ?? 0);
-      setOvertime25(data.overtimeHours25  ?? 0);
-      setOvertime50(data.overtimeHours50  ?? 0);
-      setOvertime100(data.overtimeHours100 ?? 0);
-      setBonuses(data.bonuses ?? []);
+      setOt10(Number(data.overtimeHours10  ?? 0));
+      setOt25(Number(data.overtimeHours25  ?? 0));
+      setOt50(Number(data.overtimeHours50  ?? 0));
+      setOt100(Number(data.overtimeHours100 ?? 0));
+
+      if ((data as any).employee?.id) {
+        try {
+          const bonusData: any = await api.get(
+            `/employee-bonuses?employeeId=${(data as any).employee.id}`
+          );
+          const list: EmployeeBonus[] = Array.isArray(bonusData)
+            ? bonusData
+            : bonusData?.data || [];
+
+          // Seules les primes à montant fixe sont modifiables ici
+          const fixedBonuses = list.filter(
+            b => b.isActive && b.calculationType === 'FIXED_AMOUNT'
+          );
+          setBonuses(fixedBonuses);
+
+          const initEdits: Record<string, number> = {};
+          fixedBonuses.forEach(b => {
+            initEdits[b.id] = Number(b.fixedAmount ?? 0);
+          });
+          setBonusEdits(initEdits);
+        } catch {
+          // Non bloquant
+        }
+      }
     } catch {
-      alert('Impossible de charger le bulletin.');
+      alert.error('Erreur', 'Impossible de charger le bulletin.');
       router.push('/paie');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // ── Simulation (preview avant sauvegarde) ──
-  const simulate = useCallback(async () => {
-    if (!payroll) return;
-    setIsSimulating(true);
-    setSimulation(null);
-    try {
-      const result = await api.post<SimResult>('/payrolls/simulate', {
-        employeeId:       payroll.employee?.id,
-        baseSalary,
-        workedDays,
-        workDays:         payroll.workDays,
-        month:            payroll.month,
-        year:             payroll.year,
-        overtimeHours10:  overtime10,
-        overtimeHours25:  overtime25,
-        overtimeHours50:  overtime50,
-        overtimeHours100: overtime100,
-        bonuses:          bonuses.map(b => ({ id: b.id, amount: b.amount })),
-      });
-      setSimulation(result);
-    } catch (e: any) {
-      alert(`Simulation échouée : ${e.message}`);
-    } finally { setIsSimulating(false); }
-  }, [payroll, baseSalary, workedDays, overtime10, overtime25, overtime50, overtime100, bonuses]);
+  const hasChanges = payroll ? (
+    baseSalary !== Number(payroll.baseSalary)                        ||
+    workedDays !== (payroll.workedDays ?? payroll.workDays ?? 26)    ||
+    ot10       !== Number(payroll.overtimeHours10  ?? 0)             ||
+    ot25       !== Number(payroll.overtimeHours25  ?? 0)             ||
+    ot50       !== Number(payroll.overtimeHours50  ?? 0)             ||
+    ot100      !== Number(payroll.overtimeHours100 ?? 0)             ||
+    dirtyBonuses.size > 0
+  ) : false;
 
-  // ── Sauvegarde ──
-  const save = async () => {
+  const handleSave = async () => {
     if (!payroll) return;
-    if (workedDays < 0 || workedDays > payroll.workDays) {
-      alert(`Jours travaillés : entre 0 et ${payroll.workDays}.`);
+
+    const workDays = payroll.workDays ?? 26;
+
+    if (workedDays < 0 || workedDays > workDays) {
+      alert.error('Valeur invalide', `Les jours travaillés doivent être entre 0 et ${workDays}.`);
       return;
     }
+    if (baseSalary < 70400) {
+      alert.error('Salaire invalide', 'Le salaire ne peut pas être inférieur au SMIG (70 400 FCFA).');
+      return;
+    }
+
     setIsSaving(true);
+    const bonusErrors: string[] = [];
+
     try {
       await api.patch(`/payrolls/${params.id}`, {
         baseSalary,
         workedDays,
-        overtimeHours10:  overtime10,
-        overtimeHours25:  overtime25,
-        overtimeHours50:  overtime50,
-        overtimeHours100: overtime100,
-        bonuses: bonuses.map(b => ({ id: b.id, amount: b.amount })),
+        overtimeHours10:  ot10,
+        overtimeHours25:  ot25,
+        overtimeHours50:  ot50,
+        overtimeHours100: ot100,
       });
-      setSaved(true);
-      setTimeout(() => router.push(`/paie/${params.id}`), 1200);
+
+      if (dirtyBonuses.size > 0) {
+        await Promise.all(
+          Array.from(dirtyBonuses).map(async (bonusId) => {
+            try {
+              await api.patch(`/employee-bonuses/${bonusId}`, {
+                fixedAmount: bonusEdits[bonusId],
+              });
+            } catch {
+              bonusErrors.push(
+                bonuses.find(b => b.id === bonusId)?.bonusType ?? bonusId
+              );
+            }
+          })
+        );
+      }
+
+      if (bonusErrors.length > 0) {
+        alert.error(
+          'Bulletin sauvegardé',
+          `${bonusErrors.length} prime(s) n'ont pas pu être modifiées : ${bonusErrors.join(', ')}.`
+        );
+      } else {
+        setSaved(true);
+        setTimeout(() => router.push(`/paie/${params.id}`), 800);
+      }
     } catch (e: any) {
-      alert(`Erreur : ${e.message}`);
-    } finally { setIsSaving(false); }
+      alert.error(
+        'Erreur de sauvegarde',
+        e?.response?.data?.message || e?.message || 'Impossible de sauvegarder.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-sky-500" size={32} />
+  const OtRow = ({
+    label, sub, value, onChange,
+  }: { label: string; sub: string; value: number; onChange: (v: number) => void }) => (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '10px 14px', background: 'rgba(251,146,60,0.06)',
+      borderRadius: 10, marginBottom: 6,
+    }}>
+      <div style={{ width: 54, flexShrink: 0 }}>
+        <span style={{ fontWeight: 800, color: '#f97316', fontSize: 13 }}>{label}</span>
+        <p style={{ fontSize: 10, color: '#9ca3af', margin: '2px 0 0', lineHeight: 1.3 }}>{sub}</p>
+      </div>
+      <button
+        onClick={() => onChange(Math.max(0, +(value - 0.5).toFixed(1)))}
+        style={{
+          width: 28, height: 28, borderRadius: 6,
+          border: '1px solid #e5e7eb', background: 'white',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+        <Minus size={12} />
+      </button>
+      <span style={{
+        minWidth: 44, textAlign: 'center', fontWeight: 700,
+        fontFamily: 'monospace', fontSize: 15,
+      }}>
+        {value.toFixed(1)}
+      </span>
+      <button
+        onClick={() => onChange(+(value + 0.5).toFixed(1))}
+        style={{
+          width: 28, height: 28, borderRadius: 6,
+          border: '1px solid #e5e7eb', background: 'white',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+        <Plus size={12} />
+      </button>
+      <span style={{ fontSize: 11, color: '#9ca3af' }}>h</span>
     </div>
   );
+
+  if (isLoading) return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Loader2 size={32} color="#6366f1" className="animate-spin" />
+    </div>
+  );
+
   if (!payroll) return null;
 
-  const absenceDays = Math.max(0, payroll.workDays - workedDays);
-  const totalOT     = overtime10 + overtime25 + overtime50 + overtime100;
-  const hasChanges  = baseSalary !== payroll.baseSalary
-    || workedDays !== payroll.workedDays
-    || overtime10 !== (payroll.overtimeHours10 ?? 0)
-    || overtime25 !== (payroll.overtimeHours25 ?? 0)
-    || overtime50 !== (payroll.overtimeHours50 ?? 0)
-    || overtime100 !== (payroll.overtimeHours100 ?? 0);
+  const workDays    = payroll.workDays ?? 26;
+  const absenceDays = Math.max(0, workDays - workedDays);
 
   return (
-    <div className="max-w-2xl mx-auto pb-24 space-y-5 px-4">
+    <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px 16px 60px', fontFamily: 'system-ui, sans-serif' }}>
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 pt-2">
-        <button onClick={() => router.back()}
-          className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0">
-          <ArrowLeft size={18} className="text-gray-500" />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button
+          onClick={() => router.back()}
+          style={{
+            width: 38, height: 38, borderRadius: 10, border: '1px solid #e5e7eb',
+            background: 'white', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+          <ArrowLeft size={18} color="#6b7280" />
         </button>
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Modifier le bulletin</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+        <div>
+          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#111827' }}>
+            Modifier le bulletin
+          </h1>
+          <p style={{ margin: 0, fontSize: 13, color: '#6b7280' }}>
             {payroll.employee?.firstName} {payroll.employee?.lastName}
             {' · '}{MONTHS[payroll.month - 1]} {payroll.year}
           </p>
         </div>
-        <span className="ml-auto px-3 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 flex-shrink-0">
-          BROUILLON
-        </span>
+        <div style={{
+          marginLeft: 'auto', padding: '4px 10px',
+          background: '#fef9c3', border: '1px solid #fde047',
+          borderRadius: 8, fontSize: 11, fontWeight: 700, color: '#854d0e',
+        }}>
+          DRAFT
+        </div>
       </div>
 
       {/* ── Notice ── */}
-      <div className="flex gap-3 p-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl">
-        <Info size={15} className="text-sky-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-sky-700 dark:text-sky-300">
-          Modifiez les valeurs puis cliquez sur <strong>Simuler</strong> pour voir le résultat avant d'enregistrer.
-          Les montants CNSS et ITS seront recalculés automatiquement.
+      <div style={{
+        display: 'flex', gap: 8, padding: '12px 16px',
+        background: '#f0f9ff', border: '1px solid #bae6fd',
+        borderRadius: 12, marginBottom: 20,
+      }}>
+        <AlertCircle size={15} color="#0284c7" style={{ marginTop: 1, flexShrink: 0 }} />
+        <p style={{ margin: 0, fontSize: 12, color: '#0369a1', lineHeight: 1.6 }}>
+          Après sauvegarde, le bulletin sera <strong>recalculé automatiquement</strong> par le
+          backend — CNSS, ITS et net à payer seront mis à jour.
         </p>
       </div>
 
-      {/* ── SALAIRE DE BASE ── */}
-      <Card icon={<DollarSign size={16} className="text-emerald-500" />} title="Salaire de base">
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-              Salaire mensuel brut de base
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="number" min={70400} step={1000}
-                value={baseSalary}
-                onChange={e => setBaseSalary(Math.max(0, Number(e.target.value)))}
-                className="flex-1 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-lg text-gray-900 dark:text-white text-right outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-mono"
-              />
-              <span className="text-sm text-gray-400 font-mono flex-shrink-0">FCFA</span>
-            </div>
-            {baseSalary < 70400 && baseSalary > 0 && (
-              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                <XCircle size={11} /> En dessous du SMIG (70 400 FCFA)
-              </p>
-            )}
-          </div>
-          <ReadonlyRow label="Valeur actuelle" value={`${fmt(payroll.baseSalary)} FCFA`} />
-        </div>
-      </Card>
-
-      {/* ── PRÉSENCE ── */}
-      <Card icon={<Calendar size={16} className="text-sky-500" />} title="Présence">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-              Jours travaillés{' '}
-              <span className="normal-case font-normal text-gray-400">
-                (sur {payroll.workDays} jours ouvrables)
-              </span>
-            </label>
-            <div className="flex items-center gap-3">
-              <button onClick={() => setWorkedDays(d => Math.max(0, d - 1))}
-                className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 font-bold text-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0">
-                −
-              </button>
-              <input
-                type="number" min={0} max={payroll.workDays}
-                value={workedDays}
-                onChange={e => setWorkedDays(Math.min(payroll.workDays, Math.max(0, Number(e.target.value))))}
-                className="flex-1 p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-2xl text-gray-900 dark:text-white text-center outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500"
-              />
-              <button onClick={() => setWorkedDays(d => Math.min(payroll.workDays, d + 1))}
-                className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 font-bold text-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0">
-                +
-              </button>
-            </div>
-          </div>
-
-          {/* Barre visuelle */}
-          <div>
-            <div className="flex justify-between text-xs text-gray-400 mb-1">
-              <span>0</span>
-              <span>{payroll.workDays} jours</span>
-            </div>
-            <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${(workedDays / payroll.workDays) * 100}%`,
-                  background: absenceDays > 0 ? 'linear-gradient(90deg, #f97316, #ef4444)' : 'linear-gradient(90deg, #10b981, #0ea5e9)',
-                }}
-              />
-            </div>
-            <div className="flex justify-between text-xs mt-1">
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{workedDays}j présent</span>
-              {absenceDays > 0 && (
-                <span className="text-red-500 font-bold">−{absenceDays}j absence</span>
-              )}
-              {absenceDays === 0 && (
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Mois complet</span>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* ── HEURES SUPPLÉMENTAIRES ── */}
-      <Card icon={<Clock size={16} className="text-orange-500" />} title="Heures supplémentaires"
-        badge="Décret n°78-360">
-        <div className="space-y-2">
+      {/* ── Valeurs actuelles ── */}
+      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
+        <h3 style={{
+          margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: '#9ca3af',
+          textTransform: 'uppercase', letterSpacing: '.6px',
+        }}>
+          Valeurs actuelles (avant modification)
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           {[
-            { label: '+10%',  sub: '5 premières heures suppl.',        val: overtime10,  set: setOvertime10,  color: '#f97316' },
-            { label: '+25%',  sub: 'Heures suivantes (jours ouvr.)',   val: overtime25,  set: setOvertime25,  color: '#ea580c' },
-            { label: '+50%',  sub: 'Nuit, repos légal, jour férié',    val: overtime50,  set: setOvertime50,  color: '#c2410c' },
-            { label: '+100%', sub: 'Nuit dimanche / jours fériés',     val: overtime100, set: setOvertime100, color: '#9a3412' },
-          ].map(({ label, sub, val, set, color }) => (
-            <div key={label}
-              className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-100 dark:border-gray-700">
-              <div className="w-14 flex-shrink-0 text-center">
-                <span className="font-black text-sm" style={{ color }}>{label}</span>
-                <p className="text-[9px] text-gray-400 leading-tight mt-0.5 text-center">{sub}</p>
-              </div>
-              <div className="flex items-center gap-2 flex-1">
-                <button onClick={() => set(v => Math.max(0, v - 0.5))}
-                  className="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold text-sm hover:bg-gray-100 transition-colors flex-shrink-0">
-                  −
-                </button>
-                <input
-                  type="number" min={0} step={0.5} value={val}
-                  onChange={e => set(Math.max(0, Number(e.target.value)))}
-                  className="flex-1 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg font-bold text-gray-900 dark:text-white text-center outline-none focus:ring-2 focus:border-orange-500"
-                  style={{ fontSize: 15 }}
-                />
-                <button onClick={() => set(v => v + 0.5)}
-                  className="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 font-bold text-sm hover:bg-gray-100 transition-colors flex-shrink-0">
-                  +
-                </button>
-              </div>
-              <span className="text-xs text-gray-400 w-10 text-right flex-shrink-0">h</span>
+            { label: 'Brut',    value: fmt(payroll.grossSalary)  + ' F', color: '#10b981' },
+            { label: 'CNSS',    value: fmt(payroll.cnssSalarial) + ' F', color: '#ef4444' },
+            { label: 'Net',     value: fmt(payroll.netSalary)    + ' F', color: '#6366f1' },
+          ].map(({ label, value, color }) => (
+            <div key={label} style={{ padding: '10px 12px', background: '#f9fafb', borderRadius: 10 }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#9ca3af', fontWeight: 700 }}>{label}</p>
+              <p style={{ margin: '4px 0 0', fontFamily: 'monospace', fontWeight: 800, fontSize: 14, color }}>{value}</p>
             </div>
           ))}
         </div>
-        {totalOT > 0 && (
-          <div className="mt-3 p-2.5 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800">
-            <p className="text-xs font-bold text-orange-700 dark:text-orange-300 text-center">
-              Total HS : {totalOT.toFixed(1)} heure{totalOT > 1 ? 's' : ''}
-            </p>
-          </div>
-        )}
-      </Card>
+      </div>
 
-      {/* ── PRIMES ── */}
-      {bonuses.length > 0 && (
-        <Card icon={<Gift size={16} className="text-cyan-500" />} title="Primes & Accessoires">
-          <div className="space-y-3">
-            {bonuses.map((b, i) => (
-              <div key={b.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-100 dark:border-gray-700">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{b.label}</p>
-                  <div className="flex gap-2 mt-0.5">
-                    {b.isTaxable && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 font-bold">ITS</span>}
-                    {b.isCnss    && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-50 text-sky-600 font-bold">CNSS</span>}
-                    {b.isRecurring && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-bold">Récurrente</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <input
-                    type="number" min={0} step={500}
-                    value={b.amount}
-                    onChange={e => {
-                      const updated = [...bonuses];
-                      updated[i] = { ...b, amount: Math.max(0, Number(e.target.value)) };
-                      setBonuses(updated);
-                    }}
-                    className="w-32 p-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg font-bold text-right text-gray-900 dark:text-white outline-none focus:ring-2 focus:border-cyan-500 font-mono"
-                    style={{ fontSize: 13 }}
-                  />
-                  <span className="text-xs text-gray-400">F</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      {/* ── Salaire de base ── */}
+      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <DollarSign size={16} color="#10b981" />
+          <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>Salaire de base</h3>
+        </div>
 
-      {/* ── RÉSULTAT SIMULATION ── */}
-      {simulation && (
-        <div className="rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 overflow-hidden">
-          <div className="bg-emerald-600 px-4 py-2.5 flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-white" />
-            <span className="text-sm font-bold text-white">Résultat de la simulation</span>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-800 grid grid-cols-2 gap-3">
-            {[
-              { label: 'Salaire brut',     val: fmt(simulation.grossSalary),      color: '#059669' },
-              { label: 'Net à payer',      val: fmt(simulation.netSalary),        color: '#0369a1' },
-              { label: 'CNSS salarié',     val: `−${fmt(simulation.cnssSalarial)}`,color: '#dc2626' },
-              { label: 'ITS',              val: `−${fmt(simulation.its)}`,         color: '#dc2626' },
-              { label: 'Déd. absences',    val: `−${fmt(simulation.absenceDeduction)}`, color: '#f97316' },
-              { label: 'Total HS',         val: `+${fmt(simulation.totalOvertimeAmount)}`, color: '#d97706' },
-            ].map(r => (
-              <div key={r.label} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">{r.label}</p>
-                <p className="font-black font-mono text-base" style={{ color: r.color }}>{r.val}</p>
-                <p className="text-[10px] text-gray-400 font-mono">FCFA</p>
-              </div>
-            ))}
-          </div>
-          <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-between">
-            <span className="text-xs text-emerald-700 dark:text-emerald-300 font-bold">Net à payer :</span>
-            <span className="font-black font-mono text-lg text-emerald-700 dark:text-emerald-300">
-              {fmt(simulation.netSalary)} FCFA
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input
+            type="number"
+            value={baseSalary}
+            onChange={e => setBaseSalary(Number(e.target.value))}
+            style={{
+              flex: 1, padding: '11px 14px',
+              border: `1px solid ${baseSalary < 70400 ? '#fca5a5' : baseSalary !== Number(payroll.baseSalary) ? '#86efac' : '#e5e7eb'}`,
+              borderRadius: 10, fontSize: 16, fontWeight: 700,
+              fontFamily: 'monospace', outline: 'none',
+              background: baseSalary !== Number(payroll.baseSalary) ? '#f0fdf4' : 'white',
+              transition: 'border-color .2s',
+            }}
+          />
+          <span style={{ fontSize: 13, color: '#9ca3af', whiteSpace: 'nowrap' }}>FCFA</span>
+        </div>
+
+        {baseSalary < 70400 ? (
+          <p style={{ margin: '6px 0 0', fontSize: 11, color: '#ef4444' }}>
+            ⚠️ Inférieur au SMIG (70 400 FCFA)
+          </p>
+        ) : baseSalary !== Number(payroll.baseSalary) ? (
+          <p style={{ margin: '6px 0 0', fontSize: 11, color: '#10b981' }}>
+            ✓ {fmt(payroll.baseSalary)} → {fmt(baseSalary)} FCFA
+          </p>
+        ) : null}
+      </div>
+
+      {/* ── Présence ── */}
+      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <Calendar size={16} color="#6366f1" />
+          <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>Présence</h3>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>
+            Base : {workDays} jours ouvrables
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <button
+            onClick={() => setWorkedDays(d => Math.max(0, d - 1))}
+            style={{
+              width: 34, height: 34, borderRadius: 8, border: '1px solid #e5e7eb',
+              background: 'white', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <Minus size={14} />
+          </button>
+          <input
+            type="number" min={0} max={workDays} value={workedDays}
+            onChange={e => setWorkedDays(Math.min(workDays, Math.max(0, Number(e.target.value))))}
+            style={{
+              width: 64, padding: '9px', border: '1px solid #e5e7eb',
+              borderRadius: 8, textAlign: 'center', fontWeight: 800,
+              fontSize: 18, outline: 'none', fontFamily: 'monospace',
+            }}
+          />
+          <button
+            onClick={() => setWorkedDays(d => Math.min(workDays, d + 1))}
+            style={{
+              width: 34, height: 34, borderRadius: 8, border: '1px solid #e5e7eb',
+              background: 'white', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <Plus size={14} />
+          </button>
+
+          {absenceDays > 0 ? (
+            <span style={{ fontSize: 13, color: '#f97316', fontWeight: 600 }}>
+              → {absenceDays} jour{absenceDays > 1 ? 's' : ''} d'absence
+            </span>
+          ) : (
+            <span style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>✓ Mois complet</span>
+          )}
+        </div>
+
+        <div style={{ height: 7, borderRadius: 99, background: '#f3f4f6', overflow: 'hidden' }}>
+          <div style={{
+            height: '100%', borderRadius: 99, transition: 'width .3s, background .3s',
+            width: `${(workedDays / workDays) * 100}%`,
+            background: absenceDays === 0 ? '#10b981' : '#f97316',
+          }} />
+        </div>
+      </div>
+
+      {/* ── Heures supplémentaires ── */}
+      <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <Clock size={16} color="#f97316" />
+          <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>
+            Heures supplémentaires
+          </h3>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af' }}>Décret 78-360</span>
+        </div>
+        <OtRow label="+10%"  sub="5 premières heures"   value={ot10}  onChange={setOt10} />
+        <OtRow label="+25%"  sub="Heures suivantes"     value={ot25}  onChange={setOt25} />
+        <OtRow label="+50%"  sub="Nuit / repos / férié" value={ot50}  onChange={setOt50} />
+        <OtRow label="+100%" sub="Nuit dim. / férié"    value={ot100} onChange={setOt100} />
+
+        {(ot10 + ot25 + ot50 + ot100) > 0 && (
+          <div style={{
+            marginTop: 8, padding: '8px 12px',
+            background: 'rgba(249,115,22,.08)', borderRadius: 8,
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#f97316' }}>
+              Total : {(ot10 + ot25 + ot50 + ot100).toFixed(1)} h sup
             </span>
           </div>
+        )}
+      </div>
+
+      {/* ✅ Primes — avec badges isTaxable et isCnss ── */}
+      {bonuses.length > 0 && (
+        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <Gift size={16} color="#06b6d4" />
+            <h3 style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>
+              Primes de l'employé
+            </h3>
+          </div>
+          <p style={{ margin: '0 0 14px', fontSize: 11, color: '#9ca3af' }}>
+            Seules les primes à montant fixe sont modifiables ici.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {bonuses.map(b => {
+              const currentVal = bonusEdits[b.id] ?? Number(b.fixedAmount ?? 0);
+              const isDirty    = dirtyBonuses.has(b.id);
+              const origVal    = Number(b.fixedAmount ?? 0);
+
+              // ✅ Détecter le type de prime pour afficher le bon badge
+              const isNonTaxable = b.isTaxable === false;
+              const taxableOnly  = b.isTaxable && b.isCnss === false;
+
+              return (
+                <div key={b.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px',
+                  background: isDirty ? '#f0fdf4' : '#f9fafb',
+                  border: `1px solid ${isDirty ? '#86efac' : '#f3f4f6'}`,
+                  borderRadius: 10,
+                  transition: 'background .2s, border-color .2s',
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                      {b.bonusType}
+                    </span>
+                    <span style={{ marginLeft: 8, fontSize: 11, color: '#9ca3af' }}>
+                      {b.frequency === 'MONTHLY' ? 'mensuelle' : 'ponctuelle'}
+                    </span>
+                    {/* ✅ Badges fiscaux — lecture seule dans l'éditeur de bulletin */}
+                    <span style={{ display: 'inline-flex', gap: 4, marginLeft: 6, verticalAlign: 'middle' }}>
+                      {!isNonTaxable && (
+                        <>
+                          <span style={{
+                            fontSize: 9, fontWeight: 700, padding: '1px 6px',
+                            borderRadius: 99, border: '1px solid #a5f3fc',
+                            background: '#cffafe', color: '#0e7490',
+                          }}>ITS</span>
+                          {!taxableOnly && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700, padding: '1px 6px',
+                              borderRadius: 99, border: '1px solid #6ee7b7',
+                              background: '#d1fae5', color: '#065f46',
+                            }}>CNSS</span>
+                          )}
+                        </>
+                      )}
+                      {isNonTaxable && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '1px 6px',
+                          borderRadius: 99, border: '1px solid #fcd34d',
+                          background: '#fef3c7', color: '#92400e',
+                        }}>Net direct</span>
+                      )}
+                      {taxableOnly && !isNonTaxable && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '1px 6px',
+                          borderRadius: 99, border: '1px solid #c7d2fe',
+                          background: '#e0e7ff', color: '#3730a3',
+                        }}>ITS seulement</span>
+                      )}
+                    </span>
+                  </div>
+
+                  <input
+                    type="number"
+                    value={currentVal}
+                    onChange={e => {
+                      const v = Number(e.target.value);
+                      setBonusEdits(prev => ({ ...prev, [b.id]: v }));
+                      setDirtyBonuses(prev => {
+                        const next = new Set(prev);
+                        v !== origVal ? next.add(b.id) : next.delete(b.id);
+                        return next;
+                      });
+                    }}
+                    style={{
+                      width: 120, padding: '7px 10px', border: '1px solid #e5e7eb',
+                      borderRadius: 8, fontSize: 13, fontFamily: 'monospace',
+                      fontWeight: 700, textAlign: 'right', outline: 'none', background: 'white',
+                    }}
+                  />
+                  <span style={{ fontSize: 12, color: '#9ca3af' }}>F</span>
+
+                  {isDirty && (
+                    <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      ✓ modifiée
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <p style={{ margin: '10px 0 0', fontSize: 11, color: '#f97316' }}>
+            ⚠️ Modifier une prime ici change sa valeur permanente pour les prochains bulletins.
+          </p>
         </div>
       )}
 
-      {/* ── ACTIONS ── */}
-      <div className="space-y-3 pt-2">
-        {/* Simuler */}
-        <button onClick={simulate} disabled={isSimulating}
-          className="w-full py-3.5 border-2 border-sky-400 text-sky-600 dark:text-sky-400 font-bold rounded-xl hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-all flex justify-center items-center gap-2 disabled:opacity-50">
-          {isSimulating ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
-          {isSimulating ? 'Calcul en cours…' : 'Simuler avant enregistrement'}
-        </button>
-
-        {/* Enregistrer */}
-        <button onClick={save} disabled={isSaving || !hasChanges}
-          className="w-full py-4 font-bold rounded-xl shadow-lg flex justify-center items-center gap-2 disabled:opacity-50 transition-all text-white"
-          style={{ background: hasChanges ? 'linear-gradient(135deg, #10b981, #0ea5e9)' : '#9ca3af' }}>
-          {isSaving ? <Loader2 className="animate-spin" size={20} /> : saved ? <CheckCircle2 size={20} /> : <Save size={20} />}
-          {isSaving ? 'Enregistrement…' : saved ? 'Sauvegardé !' : hasChanges ? 'Enregistrer les modifications' : 'Aucune modification'}
-        </button>
-
-        <button onClick={() => router.back()}
-          className="w-full py-3 text-gray-500 dark:text-gray-400 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm">
+      {/* ── Boutons d'action ── */}
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={() => router.back()}
+          style={{
+            flex: 1, padding: '13px', background: '#f3f4f6', border: 'none',
+            borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: 'pointer', color: '#6b7280',
+          }}>
           Annuler
         </button>
+
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !hasChanges || saved}
+          style={{
+            flex: 2, padding: '13px', border: 'none', borderRadius: 12,
+            fontWeight: 800, fontSize: 15,
+            cursor: (!hasChanges || isSaving || saved) ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            background: saved
+              ? '#10b981'
+              : !hasChanges || isSaving
+                ? '#e5e7eb'
+                : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: (!hasChanges && !saved) ? '#9ca3af' : 'white',
+            transition: 'all .2s',
+          }}>
+          {isSaving ? (
+            <><Loader2 size={18} className="animate-spin" /> Sauvegarde...</>
+          ) : saved ? (
+            <><Check size={18} /> Sauvegardé !</>
+          ) : (
+            <>
+              <Save size={18} />
+              Enregistrer
+              {dirtyBonuses.size > 0 ? ` + ${dirtyBonuses.size} prime${dirtyBonuses.size > 1 ? 's' : ''}` : ''}
+            </>
+          )}
+        </button>
       </div>
 
-      <p className="text-xs text-center text-gray-400 pb-4">
-        Après enregistrement, le bulletin sera recalculé avec les nouvelles valeurs. Vérifiez avant de valider.
-      </p>
-    </div>
-  );
-}
-
-// ── Composant Card ──
-function Card({
-  icon, title, badge, children,
-}: { icon: React.ReactNode; title: string; badge?: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-        {icon}
-        <h2 className="font-bold text-gray-900 dark:text-white text-sm">{title}</h2>
-        {badge && (
-          <span className="ml-auto text-xs text-gray-400 font-mono">{badge}</span>
-        )}
-      </div>
-      <div className="p-5">{children}</div>
-    </div>
-  );
-}
-
-// ── Ligne lecture seule ──
-function ReadonlyRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-center py-1.5">
-      <span className="text-xs text-gray-400 dark:text-gray-500">{label}</span>
-      <span className="text-xs font-mono font-bold text-gray-500 dark:text-gray-400">{value}</span>
+      {!hasChanges && !saved && (
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#9ca3af', marginTop: 10 }}>
+          Aucune modification — modifiez au moins un champ pour activer la sauvegarde
+        </p>
+      )}
     </div>
   );
 }

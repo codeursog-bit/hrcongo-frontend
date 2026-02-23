@@ -1,710 +1,716 @@
 'use client';
 
-/**
- * ─────────────────────────────────────────────────────────────
- * VERSION TEST — src/app/paie/simulateur/page.tsx
- * ─────────────────────────────────────────────────────────────
- * Simulateur LIBRE de bulletin de paie.
- * ✅ Aucun bulletin existant requis — tout est saisi manuellement.
- * ✅ Peut reproduire un bulletin déjà payé pour vérifier les calculs.
- * ✅ Affiche le bulletin détaillé complet côte à côte.
- * ✅ Jamais sauvegardé en BDD — simulation pure.
- * ─────────────────────────────────────────────────────────────
- * Route : /paie/simulateur
- * Ajouter dans le menu : lien vers /paie/simulateur (icône FlaskConical)
- * ─────────────────────────────────────────────────────────────
- */
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  FlaskConical, RefreshCw, Loader2, ChevronDown, ChevronUp,
-  AlertCircle, CheckCircle2, ArrowLeft, Info, Copy, Check
+  FlaskConical, Play, Plus, Trash2, ChevronDown, ChevronUp,
+  Copy, Check, Loader2, AlertCircle, Info,
+  Clock, Gift, Minus, User, Calculator, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { api } from '@/services/api';
 
-// ─── Types ───────────────────────────────────────────────────
-interface SimInput {
-  // Identité (optionnel — pour comparaison avec bulletin réel)
-  employeeName: string;
-  month: number;
-  year: number;
-  // Rémunération
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
   baseSalary: number;
-  workedDays: number;
-  workDays: number;
-  // Heures sup
-  overtime10: number;
-  overtime25: number;
-  overtime50: number;
-  overtime100: number;
-  // Primes libres
-  bonuses: { label: string; amount: number; isTaxable: boolean; isCnss: boolean }[];
-  // Déductions libres (prêts, avances)
-  deductions: { label: string; amount: number }[];
+}
+
+interface ManualBonus {
+  localId: string;
+  bonusType: string;
+  amount: number;
+  // ✅ Flags fiscaux — envoyés au backend pour la catégorisation
+  isTaxable: boolean;
+  isCnss: boolean;
 }
 
 interface SimResult {
-  // Rémunérations
-  baseSalary: number;
+  employee: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    baseSalary: number;
+    effectiveBaseSalary: number;
+    isSubjectToCnss: boolean;
+    isSubjectToIrpp: boolean;
+  };
+  month: number;
+  year: number;
+  daysToPay: number;
+  workDays: number;
+  overtime: {
+    hours10: number; amount10: number;
+    hours25: number; amount25: number;
+    hours50: number; amount50: number;
+    hours100: number; amount100: number;
+    total: number;
+  };
+  bonuses: Array<{
+    id: string;
+    bonusType: string;
+    amount: number;
+    source: string;
+    isTaxable: boolean;
+    isCnss: boolean;
+  }>;
+  totalBonuses: number;
   adjustedBaseSalary: number;
   absenceDeduction: number;
-  totalOvertimeAmount: number;
-  overtimeAmount10: number;
-  overtimeAmount25: number;
-  overtimeAmount50: number;
-  overtimeAmount100: number;
-  totalBonuses: number;
   grossSalary: number;
-  // Cotisations
   cnssSalarial: number;
   cnssEmployer: number;
   its: number;
-  tus: number;
-  // Totaux
+  irppDetails: any;
+  totalLoanDeduction: number;
+  totalAdvanceDeduction: number;
   totalDeductions: number;
   netSalary: number;
   totalEmployerCost: number;
-  // Détails ITS
-  irppDetails?: {
-    rniMensuel: number;
-    rniAnnuel: number;
-    itsAnnuel: number;
-    effectiveRate: number;
-    abattement: number;
-  };
+  simulationMode: string;
 }
 
-// ─── Calcul FISCAL LOCAL (miroir exact du backend) ───────────
-// Permet de simuler SANS appel API (mode hors-ligne)
-function calcLocal(input: SimInput): SimResult {
-  const { baseSalary, workedDays, workDays } = input;
+const MONTHS = [
+  'Janvier','Février','Mars','Avril','Mai','Juin',
+  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
+];
 
-  // 1. Absences
-  const absenceDays      = Math.max(0, workDays - workedDays);
-  const absenceDeduction = Math.floor((baseSalary / workDays) * absenceDays);
-  const adjustedBase     = baseSalary - absenceDeduction;
+const fmt = (v: number) => Math.round(v ?? 0).toLocaleString('fr-FR');
+const uid = () => Math.random().toString(36).slice(2, 9);
 
-  // 2. Heures sup (taux horaire = base ajustée / 173.33h)
-  const hourly    = adjustedBase / 173.33;
-  const ot10Amt   = Math.floor(input.overtime10  * hourly * 1.10);
-  const ot25Amt   = Math.floor(input.overtime25  * hourly * 1.25);
-  const ot50Amt   = Math.floor(input.overtime50  * hourly * 1.50);
-  const ot100Amt  = Math.floor(input.overtime100 * hourly * 2.00);
-  const totalOT   = ot10Amt + ot25Amt + ot50Amt + ot100Amt;
+// ─── Composant toggle fiscal d'une prime ─────────────────────────────────────
+const BonusFiscalBadge = ({
+  label, active, onChange, color,
+}: { label: string; active: boolean; onChange: () => void; color: string }) => (
+  <button
+    onClick={onChange}
+    title={active ? `${label} : oui` : `${label} : non`}
+    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all cursor-pointer select-none ${
+      active
+        ? color === 'cyan'
+          ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-600'
+          : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600'
+        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 border-gray-200 dark:border-gray-600 line-through opacity-60'
+    }`}
+  >
+    {label}
+  </button>
+);
 
-  // 3. Primes
-  const totalBonuses = input.bonuses.reduce((s, b) => s + b.amount, 0);
-
-  // 4. Brut
-  const grossSalary = adjustedBase + totalOT + totalBonuses;
-
-  // 5. CNSS salarié (4%, plafond 1 200 000)
-  const cnssSalarial = Math.round(Math.min(grossSalary, 1_200_000) * 0.04);
-
-  // 6. CNSS patronal (3 branches)
-  const cnssPatronPension  = Math.round(Math.min(grossSalary, 1_200_000) * 0.08);
-  const cnssPatronFamille  = Math.round(Math.min(grossSalary,   600_000) * 0.10);
-  const cnssPatronAT       = Math.round(Math.min(grossSalary,   600_000) * 0.0225);
-  const cnssEmployer       = cnssPatronPension + cnssPatronFamille + cnssPatronAT;
-
-  // 7. TUS 2%
-  const tus = Math.round(grossSalary * 0.02);
-
-  // 8. ITS barème progressif 2026 — abattement 20%, pas de parts fiscales
-  const brutImposable = grossSalary - cnssSalarial;
-  const abattement    = Math.round(brutImposable * 0.20);
-  const rniMensuel    = brutImposable - abattement;
-  const rniAnnuel     = rniMensuel * 12;
-
-  const brackets = [
-    { min: 0,         max: 464_000,   rate: 0.01 },
-    { min: 464_000,   max: 1_000_000, rate: 0.10 },
-    { min: 1_000_000, max: 3_000_000, rate: 0.25 },
-    { min: 3_000_000, max: Infinity,  rate: 0.40 },
-  ];
-  let itsAnnuel = 0;
-  for (const b of brackets) {
-    if (rniAnnuel <= b.min) break;
-    itsAnnuel += (Math.min(rniAnnuel, b.max) - b.min) * b.rate;
-  }
-  const its = Math.ceil(itsAnnuel / 12);
-  const effectiveRate = grossSalary > 0 ? +((its / grossSalary) * 100).toFixed(2) : 0;
-
-  // 9. Autres déductions (prêts, avances)
-  const otherDed = input.deductions.reduce((s, d) => s + d.amount, 0);
-
-  // 10. Totaux
-  const totalDeductions   = cnssSalarial + its + otherDed;
-  const netSalary         = Math.floor(grossSalary - totalDeductions);
-  const totalEmployerCost = grossSalary + cnssEmployer + tus;
-
-  return {
-    baseSalary, adjustedBaseSalary: adjustedBase, absenceDeduction,
-    totalOvertimeAmount: totalOT,
-    overtimeAmount10: ot10Amt, overtimeAmount25: ot25Amt,
-    overtimeAmount50: ot50Amt, overtimeAmount100: ot100Amt,
-    totalBonuses, grossSalary,
-    cnssSalarial, cnssEmployer, its, tus,
-    totalDeductions, netSalary, totalEmployerCost,
-    irppDetails: { rniMensuel, rniAnnuel, itsAnnuel: Math.ceil(itsAnnuel), effectiveRate, abattement },
-  };
-}
-
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const fmt    = (v: number) => Math.round(v ?? 0).toLocaleString('fr-FR');
-const now    = new Date();
-
-const DEFAULT_INPUT: SimInput = {
-  employeeName: '',
-  month: now.getMonth() + 1,
-  year:  now.getFullYear(),
-  baseSalary: 500_000,
-  workedDays: 26,
-  workDays:   26,
-  overtime10: 0, overtime25: 0, overtime50: 0, overtime100: 0,
-  bonuses:    [],
-  deductions: [],
-};
-
-// ─── Page ────────────────────────────────────────────────────
 export default function SimulateurPage() {
-  const [input, setInput]           = useState<SimInput>(DEFAULT_INPUT);
-  const [result, setResult]         = useState<SimResult | null>(null);
-  const [isLoading, setIsLoading]   = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [copied, setCopied]         = useState(false);
-  const [useAPI, setUseAPI]         = useState(false); // true = appel backend, false = calcul local
+  const [employees,    setEmployees]    = useState<Employee[]>([]);
+  const [selectedEmp,  setSelectedEmp]  = useState<Employee | null>(null);
+  const [empSearch,    setEmpSearch]    = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const set = (field: keyof SimInput, value: any) =>
-    setInput(prev => ({ ...prev, [field]: value }));
+  const [month,      setMonth]      = useState(new Date().getMonth() + 1);
+  const [year,       setYear]       = useState(new Date().getFullYear());
+  const [baseSalary, setBaseSalary] = useState('');
+  const [workedDays, setWorkedDays] = useState(26);
+  const workDays = 26;
 
-  // ── Simuler ──
-  const simulate = useCallback(async () => {
-    setIsLoading(true);
+  const [ot10,  setOt10]  = useState(0);
+  const [ot25,  setOt25]  = useState(0);
+  const [ot50,  setOt50]  = useState(0);
+  const [ot100, setOt100] = useState(0);
+
+  // ✅ ManualBonus inclut maintenant isTaxable et isCnss
+  const [manualBonuses, setManualBonuses] = useState<ManualBonus[]>([]);
+
+  const [isSimulating,  setIsSimulating]  = useState(false);
+  const [result,        setResult]        = useState<SimResult | null>(null);
+  const [error,         setError]         = useState('');
+  const [showItsDetail, setShowItsDetail] = useState(false);
+  const [copied,        setCopied]        = useState(false);
+
+  useEffect(() => {
+    api.get('/employees?limit=500')
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : data?.data || data?.employees || [];
+        setEmployees(list);
+      })
+      .catch(() => setError('Impossible de charger les employés.'));
+  }, []);
+
+  const filteredEmps = empSearch.length >= 2
+    ? employees.filter(e =>
+        `${e.firstName} ${e.lastName}`.toLowerCase().includes(empSearch.toLowerCase())
+      ).slice(0, 8)
+    : [];
+
+  const handleSelectEmployee = (emp: Employee) => {
+    setSelectedEmp(emp);
+    setEmpSearch(`${emp.firstName} ${emp.lastName}`);
+    setBaseSalary(String(emp.baseSalary));
+    setShowDropdown(false);
     setResult(null);
-    try {
-      if (useAPI) {
-        // Appel backend (même moteur que la prod)
-        const r = await api.post<SimResult>('/payrolls/simulate', {
-          baseSalary:       input.baseSalary,
-          workedDays:       input.workedDays,
-          workDays:         input.workDays,
-          month:            input.month,
-          year:             input.year,
-          overtimeHours10:  input.overtime10,
-          overtimeHours25:  input.overtime25,
-          overtimeHours50:  input.overtime50,
-          overtimeHours100: input.overtime100,
-          bonuses:          input.bonuses,
-          deductions:       input.deductions,
-        });
-        setResult(r);
-      } else {
-        // Calcul local — identique au backend, instantané
-        await new Promise(r => setTimeout(r, 300)); // petite pause UX
-        setResult(calcLocal(input));
-      }
-    } catch (e: any) {
-      alert(`Erreur simulation : ${e.message}`);
-    } finally { setIsLoading(false); }
-  }, [input, useAPI]);
-
-  // ── Reset ──
-  const reset = () => { setInput(DEFAULT_INPUT); setResult(null); };
-
-  // ── Copier résultat ──
-  const copyResult = () => {
-    if (!result) return;
-    const text = [
-      `Simulation paie — ${input.employeeName || 'Employé'} — ${MONTHS[input.month - 1]} ${input.year}`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `Salaire base    : ${fmt(input.baseSalary)} FCFA`,
-      `Jours travaillés: ${input.workedDays}/${input.workDays}`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `Salaire brut    : ${fmt(result.grossSalary)} FCFA`,
-      `CNSS salarié    : −${fmt(result.cnssSalarial)} FCFA`,
-      `ITS             : −${fmt(result.its)} FCFA`,
-      `Net à payer     : ${fmt(result.netSalary)} FCFA`,
-      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `Coût employeur  : ${fmt(result.totalEmployerCost)} FCFA`,
-    ].join('\n');
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setError('');
   };
 
-  const absenceDays = Math.max(0, input.workDays - input.workedDays);
-  const totalOT     = input.overtime10 + input.overtime25 + input.overtime50 + input.overtime100;
+  // ✅ Ajouter une prime avec isTaxable=true isCnss=true par défaut (modifiable par le RH)
+  const addBonus = () => setManualBonuses(b => [
+    ...b,
+    { localId: uid(), bonusType: '', amount: 0, isTaxable: true, isCnss: true },
+  ]);
+
+  const updateBonus = (localId: string, patch: Partial<ManualBonus>) => {
+    setManualBonuses(prev => prev.map(b => b.localId === localId ? { ...b, ...patch } : b));
+  };
+
+  // ✅ Simuler — envoie isTaxable + isCnss au backend
+  const handleSimulate = async () => {
+    if (!selectedEmp) { setError('Sélectionne un employé.'); return; }
+    setIsSimulating(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const payload: Record<string, any> = {
+        employeeId:  selectedEmp.id,
+        month,
+        year,
+        baseSalary:  Number(baseSalary) || selectedEmp.baseSalary,
+        workedDays,
+        overtimeHours10:  ot10,
+        overtimeHours25:  ot25,
+        overtimeHours50:  ot50,
+        overtimeHours100: ot100,
+      };
+
+      const validBonuses = manualBonuses.filter(b => b.bonusType.trim() && b.amount > 0);
+      if (validBonuses.length > 0) {
+        // ✅ On envoie isTaxable et isCnss pour chaque prime
+        payload.manualBonuses = validBonuses.map(b => ({
+          bonusType: b.bonusType,
+          amount:    b.amount,
+          isTaxable: b.isTaxable,
+          isCnss:    b.isCnss,
+        }));
+      }
+
+      const data = await api.post<SimResult>('/payrolls/simulate', payload);
+      setResult(data);
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Erreur lors de la simulation.');
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (!result) return;
+    const lines = [
+      `Simulation — ${result.employee.firstName} ${result.employee.lastName} — ${MONTHS[result.month-1]} ${result.year}`,
+      '─'.repeat(50),
+      `Base             : ${fmt(result.employee.effectiveBaseSalary)} FCFA`,
+      `Jours travaillés : ${result.daysToPay}/${result.workDays}`,
+      result.overtime.total > 0 ? `Total HS         : +${fmt(result.overtime.total)} FCFA` : null,
+      result.totalBonuses > 0   ? `Total primes     : +${fmt(result.totalBonuses)} FCFA`   : null,
+      '─'.repeat(50),
+      `Brut             : ${fmt(result.grossSalary)} FCFA`,
+      `CNSS salarié     : −${fmt(result.cnssSalarial)} FCFA`,
+      `ITS              : −${fmt(result.its)} FCFA`,
+      '─'.repeat(50),
+      `NET À PAYER      : ${fmt(result.netSalary)} FCFA`,
+      `Coût employeur   : ${fmt(result.totalEmployerCost)} FCFA`,
+    ].filter(Boolean).join('\n');
+
+    navigator.clipboard.writeText(lines).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    });
+  };
+
+  const absenceDays = Math.max(0, workDays - workedDays);
+
+  const OtRow = ({ label, sub, value, onChange }: {
+    label: string; sub: string; value: number; onChange: (v: number) => void;
+  }) => (
+    <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-50 dark:bg-orange-900/10 rounded-xl mb-1.5">
+      <div className="w-14 shrink-0">
+        <span className="font-black text-orange-600 dark:text-orange-400 text-sm">{label}</span>
+        <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{sub}</p>
+      </div>
+      <button onClick={() => onChange(Math.max(0, +(value - 0.5).toFixed(1)))}
+        className="w-7 h-7 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800
+                   flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+        <Minus size={11} />
+      </button>
+      <span className="w-12 text-center font-bold font-mono text-sm">{value.toFixed(1)}</span>
+      <button onClick={() => onChange(+(value + 0.5).toFixed(1))}
+        className="w-7 h-7 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800
+                   flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+        <Plus size={11} />
+      </button>
+      <span className="text-xs text-gray-400">h</span>
+    </div>
+  );
+
+  // ✅ Détecter le mode fiscal pour l'affichage de l'abattement
+  const isLegacyMode = result?.irppDetails?.fiscalMode === 'IRPP_LEGACY';
+  const abattementLabel = isLegacyMode ? 'Abattement 30% (plafonné 75 000/mois)' : 'Abattement 20%';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pb-24 pt-2">
+    <div className="max-w-[1080px] mx-auto px-4 py-6 pb-20">
 
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-          <FlaskConical size={20} className="text-white" />
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600
+                        flex items-center justify-center shadow-lg shadow-violet-500/25">
+          <FlaskConical size={18} color="white" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Simulateur de Paie</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Testez librement — aucune donnée enregistrée en base
+          <h1 className="text-xl font-black text-gray-900 dark:text-white">Simulateur de paie</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Calcul 100% backend · Identique à la production
           </p>
-        </div>
-        {/* Toggle API vs Local */}
-        <div className="ml-auto flex items-center gap-2 text-xs">
-          <span className="text-gray-400">Mode :</span>
-          <button
-            onClick={() => setUseAPI(!useAPI)}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-              useAPI
-                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-            }`}>
-            {useAPI ? '🔌 API backend' : '⚡ Calcul local'}
-          </button>
         </div>
       </div>
 
-      {/* Notice mode */}
-      <div className="mb-5 flex gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl">
-        <Info size={14} className="text-purple-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-purple-700 dark:text-purple-300">
-          {useAPI
-            ? '🔌 Mode API : les calculs passent par le moteur backend (même résultat que les bulletins réels).'
-            : '⚡ Mode local : calcul instantané dans le navigateur — identique au moteur backend Congo 2026. Fonctionne hors connexion.'}
-          {' '}Utilisez ce simulateur pour <strong>vérifier des bulletins déjà payés</strong> et confirmer que les montants sont corrects.
+      {/* Notice */}
+      <div className="flex items-start gap-2.5 p-3 mb-5 rounded-xl
+                      bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+        <Info size={13} className="text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+        <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
+          <strong>Vérification de bulletins</strong> — Entrez les valeurs exactes d'un bulletin pour confirmer
+          que CNSS et ITS sont corrects. Pour les primes manuelles, configurez les flags fiscaux (ITS / CNSS)
+          selon la nature de la prime.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
-        {/* ════════════════════════════════════
-            COLONNE GAUCHE — FORMULAIRE
-        ════════════════════════════════════ */}
+        {/* ─── FORMULAIRE ─────────────────────────────────────────────── */}
         <div className="space-y-4">
 
-          {/* Identité */}
-          <Section title="Identification" color="#6366f1">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="label">Nom de l'employé (optionnel)</label>
-                <input type="text" placeholder="Ex : Nathan Sogoya"
-                  value={input.employeeName}
-                  onChange={e => set('employeeName', e.target.value)}
-                  className="input w-full" />
-              </div>
-              <div>
-                <label className="label">Mois</label>
-                <select value={input.month} onChange={e => set('month', Number(e.target.value))} className="input w-full">
-                  {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="label">Année</label>
-                <input type="number" min={2020} max={2030} value={input.year}
-                  onChange={e => set('year', Number(e.target.value))}
-                  className="input w-full" />
-              </div>
+          {/* Employé */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <User size={14} className="text-violet-500" />
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white">Employé</h3>
             </div>
-          </Section>
-
-          {/* Rémunération */}
-          <Section title="Rémunération" color="#10b981">
-            <div className="space-y-3">
-              <div>
-                <label className="label">Salaire de base (FCFA)</label>
-                <div className="relative">
-                  <input type="number" min={0} step={1000}
-                    value={input.baseSalary}
-                    onChange={e => set('baseSalary', Math.max(0, Number(e.target.value)))}
-                    className="input w-full pr-14 text-right font-mono font-bold text-lg" />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">FCFA</span>
-                </div>
-                {input.baseSalary < 70400 && input.baseSalary > 0 && (
-                  <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                    <AlertCircle size={11} /> Sous le SMIG (70 400 FCFA)
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Jours travaillés</label>
-                  <input type="number" min={0} max={input.workDays}
-                    value={input.workedDays}
-                    onChange={e => set('workedDays', Math.min(input.workDays, Math.max(0, Number(e.target.value))))}
-                    className="input w-full text-center font-bold text-xl" />
-                </div>
-                <div>
-                  <label className="label">Jours ouvrables</label>
-                  <input type="number" min={1} max={31}
-                    value={input.workDays}
-                    onChange={e => set('workDays', Math.max(1, Number(e.target.value)))}
-                    className="input w-full text-center font-bold text-xl" />
-                </div>
-              </div>
-
-              {/* Mini barre présence */}
-              <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${Math.min(100, (input.workedDays / input.workDays) * 100)}%`,
-                    background: absenceDays > 0 ? '#f97316' : '#10b981',
-                  }} />
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-emerald-600 font-bold">{input.workedDays}j présent</span>
-                {absenceDays > 0 && <span className="text-orange-500 font-bold">−{absenceDays}j absent</span>}
-              </div>
-            </div>
-          </Section>
-
-          {/* Heures sup */}
-          <Section title="Heures supplémentaires" color="#f97316" badge="Décret n°78-360">
-            <div className="space-y-2">
-              {[
-                { label: '+10%',  sub: '5 premières heures',       field: 'overtime10'  as const },
-                { label: '+25%',  sub: 'Heures suivantes',          field: 'overtime25'  as const },
-                { label: '+50%',  sub: 'Nuit / repos / férié',      field: 'overtime50'  as const },
-                { label: '+100%', sub: 'Nuit dimanche / fériés',    field: 'overtime100' as const },
-              ].map(({ label, sub, field }) => (
-                <div key={field} className="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
-                  <div className="w-12 text-center flex-shrink-0">
-                    <span className="text-xs font-black text-orange-500">{label}</span>
-                    <p className="text-[9px] text-gray-400 leading-tight">{sub}</p>
-                  </div>
-                  <input type="number" min={0} step={0.5}
-                    value={input[field]}
-                    onChange={e => set(field, Math.max(0, Number(e.target.value)))}
-                    className="flex-1 input text-center font-bold" />
-                  <span className="text-xs text-gray-400 flex-shrink-0">h</span>
-                </div>
-              ))}
-            </div>
-            {totalOT > 0 && (
-              <p className="text-xs text-center font-bold text-orange-500 mt-2">
-                Total : {totalOT.toFixed(1)}h supplémentaire{totalOT > 1 ? 's' : ''}
-              </p>
-            )}
-          </Section>
-
-          {/* Primes libres */}
-          <Section title="Primes & Accessoires" color="#0891b2">
-            <div className="space-y-2">
-              {input.bonuses.map((b, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
-                  <input type="text" placeholder="Libellé prime"
-                    value={b.label}
-                    onChange={e => {
-                      const updated = [...input.bonuses];
-                      updated[i] = { ...b, label: e.target.value };
-                      set('bonuses', updated);
-                    }}
-                    className="input flex-1 text-sm min-w-0" />
-                  <input type="number" min={0} step={500}
-                    value={b.amount}
-                    onChange={e => {
-                      const updated = [...input.bonuses];
-                      updated[i] = { ...b, amount: Math.max(0, Number(e.target.value)) };
-                      set('bonuses', updated);
-                    }}
-                    className="input w-28 text-right font-mono font-bold text-sm flex-shrink-0" />
-                  <span className="text-xs text-gray-400">F</span>
-                  <button
-                    onClick={() => set('bonuses', input.bonuses.filter((_, j) => j !== i))}
-                    className="text-red-400 hover:text-red-600 text-lg font-bold leading-none flex-shrink-0">×</button>
-                </div>
-              ))}
-              <button
-                onClick={() => set('bonuses', [...input.bonuses, { label: '', amount: 0, isTaxable: true, isCnss: true }])}
-                className="w-full py-2 border-2 border-dashed border-cyan-300 dark:border-cyan-700 text-cyan-600 dark:text-cyan-400 rounded-xl text-sm font-bold hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors">
-                + Ajouter une prime
-              </button>
-            </div>
-          </Section>
-
-          {/* Retenues facultatives (prêts/avances) */}
-          <Section title="Retenues facultatives" color="#7c3aed">
-            <div className="space-y-2">
-              {input.deductions.map((d, i) => (
-                <div key={i} className="flex items-center gap-2 p-2.5 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
-                  <input type="text" placeholder="Ex : Remboursement prêt"
-                    value={d.label}
-                    onChange={e => {
-                      const updated = [...input.deductions];
-                      updated[i] = { ...d, label: e.target.value };
-                      set('deductions', updated);
-                    }}
-                    className="input flex-1 text-sm min-w-0" />
-                  <input type="number" min={0} step={500}
-                    value={d.amount}
-                    onChange={e => {
-                      const updated = [...input.deductions];
-                      updated[i] = { ...d, amount: Math.max(0, Number(e.target.value)) };
-                      set('deductions', updated);
-                    }}
-                    className="input w-28 text-right font-mono font-bold text-sm flex-shrink-0" />
-                  <span className="text-xs text-gray-400">F</span>
-                  <button
-                    onClick={() => set('deductions', input.deductions.filter((_, j) => j !== i))}
-                    className="text-red-400 hover:text-red-600 text-lg font-bold leading-none flex-shrink-0">×</button>
-                </div>
-              ))}
-              <button
-                onClick={() => set('deductions', [...input.deductions, { label: '', amount: 0 }])}
-                className="w-full py-2 border-2 border-dashed border-purple-300 dark:border-purple-700 text-purple-600 dark:text-purple-400 rounded-xl text-sm font-bold hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
-                + Ajouter une retenue
-              </button>
-            </div>
-          </Section>
-
-          {/* Boutons */}
-          <div className="flex gap-3 pt-1">
-            <button onClick={reset}
-              className="flex items-center gap-2 px-4 py-3 border border-gray-200 dark:border-gray-700 text-gray-500 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm">
-              <RefreshCw size={14} /> Réinitialiser
-            </button>
-            <button onClick={simulate} disabled={isLoading}
-              className="flex-1 py-3 text-white font-bold rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 transition-all shadow-lg text-sm"
-              style={{ background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-              {isLoading
-                ? <><Loader2 className="animate-spin" size={16} /> Calcul…</>
-                : <><FlaskConical size={16} /> Simuler</>}
-            </button>
-          </div>
-        </div>
-
-        {/* ════════════════════════════════════
-            COLONNE DROITE — RÉSULTAT
-        ════════════════════════════════════ */}
-        <div className="space-y-4">
-          {!result && (
-            <div className="flex flex-col items-center justify-center h-64 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 text-gray-400">
-              <FlaskConical size={40} className="mb-3 opacity-30" />
-              <p className="font-bold text-sm">Remplissez le formulaire</p>
-              <p className="text-xs">puis cliquez sur Simuler</p>
-            </div>
-          )}
-
-          {result && (
-            <>
-              {/* Titre résultat + copier */}
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
-                  <CheckCircle2 size={15} className="text-emerald-500" />
-                  Résultat — {input.employeeName || 'Simulation'}
-                  <span className="text-gray-400 font-normal">{MONTHS[input.month - 1]} {input.year}</span>
-                </h2>
-                <button onClick={copyResult}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors">
-                  {copied ? <><Check size={12} className="text-emerald-500" /> Copié !</> : <><Copy size={12} /> Copier</>}
-                </button>
-              </div>
-
-              {/* NET — mise en avant */}
-              <div className="rounded-2xl overflow-hidden" style={{ background: '#111827' }}>
-                <div className="px-5 py-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-0.5">Net à Payer</p>
-                    <p className="text-xs text-gray-500">
-                      {input.employeeName || 'Simulation'} · {MONTHS[input.month - 1]} {input.year}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-black font-mono text-white" style={{ fontSize: 28 }}>
-                      {fmt(result.netSalary)}
-                    </span>
-                    <span className="text-gray-400 ml-2 text-sm">FCFA</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tableau détaillé */}
-              <div className="rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                {/* Rémunérations */}
-                <ResultSection label="Rémunérations" color="#15803d" rows={[
-                  { label: 'Salaire de base',        val: fmt(result.baseSalary),            sign: '+', color: '#15803d' },
-                  ...(result.absenceDeduction > 0 ? [
-                    { label: `Déd. absences (${absenceDays}j)`, val: fmt(result.absenceDeduction), sign: '−', color: '#f97316' },
-                    { label: 'Base ajustée',          val: fmt(result.adjustedBaseSalary),   sign: '=', color: '#0f172a' },
-                  ] : []),
-                  ...(result.totalOvertimeAmount > 0 ? [
-                    { label: 'Heures supplémentaires', val: fmt(result.totalOvertimeAmount), sign: '+', color: '#d97706' },
-                  ] : []),
-                  ...(result.totalBonuses > 0 ? [
-                    { label: 'Primes & accessoires',  val: fmt(result.totalBonuses),         sign: '+', color: '#0891b2' },
-                  ] : []),
-                ]} />
-
-                {/* Total brut */}
-                <div style={{ background: '#15803d' }} className="px-4 py-2.5 flex justify-between items-center">
-                  <span className="text-xs font-black uppercase tracking-widest text-white">Total Brut</span>
-                  <span className="font-black font-mono text-white text-base">{fmt(result.grossSalary)} FCFA</span>
-                </div>
-
-                {/* Cotisations */}
-                <ResultSection label="Cotisations Salariales" color="#b91c1c" rows={[
-                  { label: `CNSS (4% × ${fmt(Math.min(result.grossSalary, 1_200_000))})`, val: fmt(result.cnssSalarial), sign: '−', color: '#b91c1c' },
-                  { label: 'ITS — barème progressif 2026', val: fmt(result.its), sign: '−', color: '#b91c1c' },
-                ]} />
-
-                {/* Total retenues */}
-                <div style={{ background: '#fef2f2', borderTop: '2px solid #fecaca' }} className="px-4 py-2 flex justify-between items-center">
-                  <span className="text-xs font-bold uppercase tracking-wide text-red-700">Total Retenues</span>
-                  <span className="font-bold font-mono text-red-700">−{fmt(result.totalDeductions)} FCFA</span>
-                </div>
-              </div>
-
-              {/* Détails ITS */}
-              {result.irppDetails && (
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 transition-colors">
-                  <span>Détail calcul ITS 2026</span>
-                  {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
-              )}
-              {showDetails && result.irppDetails && (
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl space-y-2 text-xs">
-                  {[
-                    ['Brut imposable (brut − CNSS)',   `${fmt(result.grossSalary - result.cnssSalarial)} FCFA`],
-                    ['Abattement 20%',                 `−${fmt(result.irppDetails.abattement)} FCFA`],
-                    ['RNI mensuel',                    `${fmt(result.irppDetails.rniMensuel)} FCFA`],
-                    ['RNI annuel (×12)',                `${fmt(result.irppDetails.rniAnnuel)} FCFA`],
-                    ['ITS annuel calculé',             `${fmt(result.irppDetails.itsAnnuel)} FCFA`],
-                    ['ITS mensuel (÷12)',              `${fmt(result.its)} FCFA`],
-                    ['Taux effectif',                  `${result.irppDetails.effectiveRate}%`],
-                  ].map(([label, val]) => (
-                    <div key={label} className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">{label}</span>
-                      <span className="font-mono font-bold text-gray-900 dark:text-white">{val}</span>
-                    </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Rechercher un employé..."
+                value={empSearch}
+                onChange={e => { setEmpSearch(e.target.value); setShowDropdown(true); if (!e.target.value) setSelectedEmp(null); }}
+                onFocus={() => setShowDropdown(true)}
+                className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none transition-colors
+                  focus:ring-2 focus:ring-violet-500/20
+                  ${selectedEmp
+                    ? 'border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20'
+                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700'}`}
+              />
+              {showDropdown && filteredEmps.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-gray-800
+                                border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-52 overflow-y-auto">
+                  {filteredEmps.map(e => (
+                    <button key={e.id} onMouseDown={() => handleSelectEmployee(e)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors
+                                 flex justify-between items-center border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+                      <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                        {e.firstName} {e.lastName}
+                      </span>
+                      <span className="text-xs text-gray-400 font-mono">{fmt(e.baseSalary)} F</span>
+                    </button>
                   ))}
                 </div>
               )}
+            </div>
+          </div>
 
-              {/* Récapitulatif 2 colonnes */}
+          {/* Rémunération */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Calculator size={14} className="text-emerald-500" />
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white">Rémunération</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Mois</label>
+                <select value={month} onChange={e => setMonth(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm
+                             bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none">
+                  {MONTHS.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Année</label>
+                <input type="number" value={year} onChange={e => setYear(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl text-sm
+                             bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none" />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                Salaire de base (FCFA)
+              </label>
+              <input type="number" value={baseSalary}
+                onChange={e => setBaseSalary(e.target.value)}
+                placeholder="Ex: 500 000"
+                className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl
+                           text-sm font-bold font-mono bg-white dark:bg-gray-700
+                           text-gray-900 dark:text-white outline-none
+                           focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400" />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                Jours travaillés (sur {workDays})
+              </label>
+              <div className="flex items-center gap-2.5 mb-2">
+                <button onClick={() => setWorkedDays(d => Math.max(0, d-1))}
+                  className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700
+                             flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                  <Minus size={12} className="text-gray-600 dark:text-gray-300" />
+                </button>
+                <input type="number" min={0} max={workDays} value={workedDays}
+                  onChange={e => setWorkedDays(Math.min(workDays, Math.max(0, Number(e.target.value))))}
+                  className="w-16 text-center font-black text-lg font-mono border border-gray-200 dark:border-gray-600
+                             rounded-xl py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none" />
+                <button onClick={() => setWorkedDays(d => Math.min(workDays, d+1))}
+                  className="w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700
+                             flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                  <Plus size={12} className="text-gray-600 dark:text-gray-300" />
+                </button>
+                {absenceDays > 0
+                  ? <span className="text-xs font-bold text-orange-500">→ {absenceDays}j absence</span>
+                  : <span className="text-xs font-bold text-emerald-500">✓ Mois complet</span>
+                }
+              </div>
+              <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${(workedDays / workDays) * 100}%`,
+                    background: absenceDays === 0 ? '#10b981' : '#f97316'
+                  }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Heures sup */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock size={14} className="text-orange-500" />
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white">Heures supplémentaires</h3>
+              <span className="ml-auto text-[10px] text-gray-400">Décret 78-360</span>
+            </div>
+            <OtRow label="+10%"  sub="5 premières heures"   value={ot10}  onChange={setOt10} />
+            <OtRow label="+25%"  sub="Heures suivantes"     value={ot25}  onChange={setOt25} />
+            <OtRow label="+50%"  sub="Nuit / repos / férié" value={ot50}  onChange={setOt50} />
+            <OtRow label="+100%" sub="Nuit dim. / férié"    value={ot100} onChange={setOt100} />
+          </div>
+
+          {/* ✅ Primes manuelles avec flags isTaxable et isCnss ─────────── */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Gift size={14} className="text-cyan-500" />
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white">Primes manuelles</h3>
+              <button onClick={addBonus}
+                className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-cyan-50 dark:bg-cyan-900/20
+                           border border-cyan-200 dark:border-cyan-800 rounded-lg text-xs font-bold
+                           text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100 transition-colors cursor-pointer">
+                <Plus size={10} /> Ajouter
+              </button>
+            </div>
+
+            {manualBonuses.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-3">
+                Vide → le backend utilisera les primes configurées pour cet employé
+              </p>
+            ) : (
+              <>
+                {/* Légende */}
+                <p className="text-[10px] text-gray-400 mb-2 flex items-center gap-2">
+                  <span className="inline-flex h-px flex-1 bg-gray-100 dark:bg-gray-700" />
+                  Cliquez les badges pour activer/désactiver
+                  <span className="inline-flex h-px flex-1 bg-gray-100 dark:bg-gray-700" />
+                </p>
+                <div className="space-y-2.5">
+                  {manualBonuses.map(b => (
+                    <div key={b.localId} className="flex flex-col gap-1.5">
+                      <div className="flex gap-2 items-center">
+                        <input
+                          placeholder="Libellé de la prime"
+                          value={b.bonusType}
+                          onChange={e => updateBonus(b.localId, { bonusType: e.target.value })}
+                          className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg
+                                     text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Montant"
+                          value={b.amount || ''}
+                          onChange={e => updateBonus(b.localId, { amount: Number(e.target.value) })}
+                          className="w-28 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg
+                                     text-sm font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none"
+                        />
+                        <button
+                          onClick={() => setManualBonuses(prev => prev.filter(x => x.localId !== b.localId))}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-red-200 dark:border-red-800
+                                     bg-red-50 dark:bg-red-900/20 hover:bg-red-100 transition-colors cursor-pointer">
+                          <Trash2 size={12} className="text-red-500" />
+                        </button>
+                      </div>
+
+                      {/* ✅ Toggles fiscaux de la prime */}
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[10px] text-gray-400">Fiscal :</span>
+                        <BonusFiscalBadge
+                          label="ITS"
+                          active={b.isTaxable}
+                          onChange={() => updateBonus(b.localId, { isTaxable: !b.isTaxable })}
+                          color="cyan"
+                        />
+                        <BonusFiscalBadge
+                          label="CNSS"
+                          active={b.isCnss}
+                          onChange={() => updateBonus(b.localId, { isCnss: !b.isCnss })}
+                          color="emerald"
+                        />
+                        {!b.isTaxable && !b.isCnss && (
+                          <span className="text-[10px] text-amber-500 font-semibold">→ versée au net</span>
+                        )}
+                        {b.isTaxable && !b.isCnss && (
+                          <span className="text-[10px] text-blue-400">→ ITS seulement</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Erreur */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20
+                            border border-red-200 dark:border-red-800 rounded-xl">
+              <AlertCircle size={14} className="text-red-500 shrink-0" />
+              <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
+            </div>
+          )}
+
+          {/* Bouton simuler */}
+          <button
+            onClick={handleSimulate}
+            disabled={isSimulating || !selectedEmp}
+            className={`w-full py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2
+                        transition-all duration-200
+                        ${(!selectedEmp || isSimulating)
+                          ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-violet-500/25 cursor-pointer'
+                        }`}>
+            {isSimulating
+              ? <><Loader2 size={16} className="animate-spin" /> Calcul backend en cours...</>
+              : <><Play size={16} /> Simuler</>
+            }
+          </button>
+        </div>
+
+        {/* ─── RÉSULTAT ───────────────────────────────────────────────── */}
+        <div>
+          {!result ? (
+            <div className="bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-200 dark:border-gray-700
+                            rounded-2xl p-16 text-center">
+              <FlaskConical size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+              <p className="text-sm text-gray-400">Renseignez les paramètres et cliquez sur Simuler</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+
+              {/* Net à payer */}
+              <div className="bg-gray-900 dark:bg-black rounded-2xl p-5 text-white">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Net à payer</p>
+                    <p className="text-3xl font-black font-mono tracking-tight">
+                      {fmt(result.netSalary)}
+                      <span className="text-base font-normal text-gray-400 ml-2">FCFA</span>
+                    </p>
+                  </div>
+                  <button onClick={handleCopy}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors cursor-pointer
+                      ${copied
+                        ? 'border-emerald-500 text-emerald-400 bg-emerald-500/10'
+                        : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'
+                      }`}>
+                    {copied ? <><Check size={12} /> Copié !</> : <><Copy size={12} /> Copier</>}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {result.employee.firstName} {result.employee.lastName}
+                  {' · '}{MONTHS[result.month-1]} {result.year}
+                  {' · '}{result.daysToPay}/{result.workDays} jours
+                </p>
+              </div>
+
+              {/* Rémunérations */}
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+                <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider
+                              border-b border-gray-100 dark:border-gray-700">
+                  Rémunérations
+                </p>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                      <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">Salaire de base</td>
+                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-gray-900 dark:text-white">
+                        {fmt(result.employee.effectiveBaseSalary)} F
+                      </td>
+                    </tr>
+                    {result.absenceDeduction > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5 text-orange-500">
+                          Déduction absences ({result.workDays - result.daysToPay}j)
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-orange-500">
+                          −{fmt(result.absenceDeduction)} F
+                        </td>
+                      </tr>
+                    )}
+                    {result.overtime?.amount10 > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">HS +10% ({result.overtime.hours10}h)</td>
+                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-emerald-600">+{fmt(result.overtime.amount10)} F</td>
+                      </tr>
+                    )}
+                    {result.overtime?.amount25 > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">HS +25% ({result.overtime.hours25}h)</td>
+                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-emerald-600">+{fmt(result.overtime.amount25)} F</td>
+                      </tr>
+                    )}
+                    {result.overtime?.amount50 > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">HS +50% ({result.overtime.hours50}h)</td>
+                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-emerald-600">+{fmt(result.overtime.amount50)} F</td>
+                      </tr>
+                    )}
+                    {result.overtime?.amount100 > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">HS +100% ({result.overtime.hours100}h)</td>
+                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-emerald-600">+{fmt(result.overtime.amount100)} F</td>
+                      </tr>
+                    )}
+                    {result.bonuses?.map(b => (
+                      <tr key={b.id} className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5">
+                          <span className="text-gray-500 dark:text-gray-400">{b.bonusType}</span>
+                          {/* ✅ Badges fiscaux sur les primes dans le résultat */}
+                          <span className="ml-2 inline-flex gap-1">
+                            {b.isTaxable !== false && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-700 font-bold">ITS</span>
+                            )}
+                            {b.isCnss !== false && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-700 font-bold">CNSS</span>
+                            )}
+                            {b.isTaxable === false && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-700 font-bold">Net</span>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-cyan-600">
+                          +{fmt(b.amount)} F
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-emerald-50 dark:bg-emerald-900/20">
+                      <td className="px-4 py-3 font-bold text-emerald-700 dark:text-emerald-400">Salaire brut</td>
+                      <td className="px-4 py-3 text-right font-black font-mono text-emerald-600 dark:text-emerald-400">
+                        {fmt(result.grossSalary)} F
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Cotisations */}
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+                <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider
+                              border-b border-gray-100 dark:border-gray-700">
+                  Cotisations & retenues
+                </p>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                      <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">CNSS salarié (4%)</td>
+                      <td className="px-4 py-2.5 text-right font-mono text-red-500">−{fmt(result.cnssSalarial)} F</td>
+                    </tr>
+                    <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                      <td className="px-4 py-2.5">
+                        <button onClick={() => setShowItsDetail(d => !d)}
+                          className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors cursor-pointer">
+                          ITS {showItsDetail ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        </button>
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-mono text-red-500">−{fmt(result.its)} F</td>
+                    </tr>
+                    {showItsDetail && result.irppDetails && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-900/50">
+                        <td colSpan={2} className="px-4 py-3">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                            {/* ✅ Libellé d'abattement dynamique selon le mode fiscal */}
+                            <p>{abattementLabel} : −{fmt(result.irppDetails.abattement)} F</p>
+                            <p>RNI mensuel : {fmt(result.irppDetails.revenuNetImposable)} F</p>
+                            <p>Parts fiscales : {result.irppDetails.fiscalParts}</p>
+                            <p>Taux effectif : {result.irppDetails.effectiveRate}% (sur base imposable)</p>
+                            {/* ✅ Affichage du mode fiscal */}
+                            <p className={`font-semibold ${isLegacyMode ? 'text-amber-500' : 'text-violet-500'}`}>
+                              Mode : {isLegacyMode ? 'IRPP legacy (avant 2026)' : 'ITS 2026'}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {(result.totalLoanDeduction + result.totalAdvanceDeduction) > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">Prêts / avances</td>
+                        <td className="px-4 py-2.5 text-right font-mono text-red-500">
+                          −{fmt(result.totalLoanDeduction + result.totalAdvanceDeduction)} F
+                        </td>
+                      </tr>
+                    )}
+                    <tr className="bg-red-50 dark:bg-red-900/20">
+                      <td className="px-4 py-3 font-bold text-red-700 dark:text-red-400">Total retenues</td>
+                      <td className="px-4 py-3 text-right font-black font-mono text-red-600 dark:text-red-400">
+                        −{fmt(result.totalDeductions)} F
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Coûts employeur */}
               <div className="grid grid-cols-2 gap-3">
-                <MiniCard title="Salarié" color="#0369a1" rows={[
-                  { label: 'CNSS 4%',    val: `${fmt(result.cnssSalarial)} F` },
-                  { label: 'ITS',        val: `${fmt(result.its)} F` },
-                  { label: 'Total ded.', val: `${fmt(result.totalDeductions)} F`, bold: true },
-                ]} />
-                <MiniCard title="Employeur" color="#7e22ce" rows={[
-                  { label: 'Brut',      val: `${fmt(result.grossSalary)} F` },
-                  { label: 'CNSS pat.', val: `${fmt(result.cnssEmployer)} F` },
-                  { label: 'TUS 2%',    val: `${fmt(result.tus)} F` },
-                  { label: 'Coût total',val: `${fmt(result.totalEmployerCost)} F`, bold: true },
-                ]} />
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CNSS patronal</p>
+                  <p className="font-black font-mono text-base text-emerald-600">{fmt(result.cnssEmployer)} F</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Coût employeur</p>
+                  <p className="font-black font-mono text-base text-amber-600">{fmt(result.totalEmployerCost)} F</p>
+                </div>
               </div>
 
-              {/* Comparaison si voulu */}
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl">
-                <p className="text-xs font-bold text-indigo-700 dark:text-indigo-300 mb-1">
-                  💡 Pour comparer avec un bulletin réel payé
-                </p>
-                <p className="text-xs text-indigo-600 dark:text-indigo-400">
-                  Saisissez exactement les mêmes valeurs (base, jours, primes) que le bulletin réel.
-                  Les résultats doivent être identiques. Si différent → vérifiez les primes exonérées ou les paramètres CNSS.
-                </p>
+              {/* Badge mode simulation */}
+              <div className={`text-center py-2 px-4 rounded-xl text-xs font-medium border
+                ${result.simulationMode === 'MANUAL_OVERRIDE'
+                  ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800'
+                  : 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                }`}>
+                {result.simulationMode === 'MANUAL_OVERRIDE'
+                  ? '⚡ Valeurs manuelles · calcul 100% backend'
+                  : '📊 Depuis pointage BDD · calcul 100% backend'
+                }
               </div>
-            </>
+
+            </div>
           )}
         </div>
-      </div>
-
-      {/* CSS inline pour réutilisation */}
-      <style jsx>{`
-        .input {
-          padding: 10px 12px;
-          background: #f8fafc;
-          border: 1.5px solid #e2e8f0;
-          border-radius: 10px;
-          font-size: 13px;
-          color: #0f172a;
-          outline: none;
-          transition: border-color .15s, box-shadow .15s;
-          width: 100%;
-        }
-        .input:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-        }
-        .label {
-          display: block;
-          font-size: 10.5px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #94a3b8;
-          margin-bottom: 6px;
-        }
-        @media (prefers-color-scheme: dark) {
-          .input { background: #1e293b; border-color: #334155; color: #f1f5f9; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-// ── Sous-composants ──────────────────────────────────────────
-
-function Section({
-  title, color, badge, children,
-}: { title: string; color: string; badge?: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-      <div style={{ background: color }} className="px-4 py-2.5 flex items-center justify-between">
-        <span className="text-xs font-black uppercase tracking-widest text-white">{title}</span>
-        {badge && <span className="text-[10px] text-white/70 font-mono">{badge}</span>}
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
-}
-
-function ResultSection({ label, color, rows }: {
-  label: string;
-  color: string;
-  rows: { label: string; val: string; sign: string; color: string }[];
-}) {
-  return (
-    <>
-      <div style={{ background: color }} className="px-4 py-1.5">
-        <span className="text-[9.5px] font-black uppercase tracking-widest text-white">{label}</span>
-      </div>
-      {rows.map((r, i) => (
-        <div key={i}
-          className="flex justify-between items-center px-4 py-2"
-          style={{ background: i % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
-          <span style={{ fontSize: 11, color: '#475569' }}>{r.label}</span>
-          <span style={{ fontSize: 11.5, fontFamily: 'monospace', fontWeight: 700, color: r.color }}>
-            {r.sign}{r.val}
-          </span>
-        </div>
-      ))}
-    </>
-  );
-}
-
-function MiniCard({ title, color, rows }: {
-  title: string;
-  color: string;
-  rows: { label: string; val: string; bold?: boolean }[];
-}) {
-  return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-      <div style={{ background: color }} className="px-3 py-1.5">
-        <span className="text-[9.5px] font-black uppercase tracking-widest text-white">{title}</span>
-      </div>
-      <div className="bg-white dark:bg-gray-800 p-3 space-y-1.5">
-        {rows.map(r => (
-          <div key={r.label} className={`flex justify-between text-[10.5px] ${r.bold ? 'pt-1.5 border-t border-gray-100 dark:border-gray-700' : ''}`}>
-            <span className={r.bold ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}>{r.label}</span>
-            <span className={`font-mono font-bold ${r.bold ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>{r.val}</span>
-          </div>
-        ))}
       </div>
     </div>
   );
