@@ -4,7 +4,6 @@
 // type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 // async function request<T>(endpoint: string, method: RequestMethod = 'GET', body?: any): Promise<T> {
-//   // On récupère le token stocké lors du login
 //   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   
 //   const headers: HeadersInit = {
@@ -24,29 +23,34 @@
 //   try {
 //     const response = await fetch(`${API_URL}${endpoint}`, config);
     
-//     // ✅ CORRECTION : Parse le JSON AVANT de vérifier le statut
 //     const data = await response.json();
 
-//     // ✅ Si c'est un 401 et qu'on n'est PAS sur la page de login, rediriger
+//     // ✅ CORRECTION : Gérer les routes admin ET user
 //     if (response.status === 401) {
-//       // Si on est sur /auth/login, c'est une erreur de credentials, pas de session
-//       const isLoginPage = typeof window !== 'undefined' && 
-//                           (window.location.pathname.includes('/auth/login') || 
-//                            window.location.pathname.includes('/auth/register'));
-      
-//       if (!isLoginPage && typeof window !== 'undefined') {
-//         localStorage.removeItem('accessToken');
-//         localStorage.removeItem('refreshToken');
-//         localStorage.removeItem('user');
-//         window.location.href = '/auth/login';
-//         throw new Error('Session expirée');
+//       if (typeof window !== 'undefined') {
+//         const currentPath = window.location.pathname;
+        
+//         // ✅ Déterminer si on est sur une route admin ou user
+//         const isAdminRoute = currentPath.startsWith('/admin');
+//         const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
+        
+//         // Si on n'est PAS sur une page de login
+//         if (!isLoginPage) {
+//           localStorage.removeItem('accessToken');
+//           localStorage.removeItem('refreshToken');
+//           localStorage.removeItem('user');
+          
+//           // ✅ Rediriger vers la bonne page de login selon le contexte
+//           window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
+//           throw new Error('Session expirée');
+//         }
 //       }
       
-//       // ✅ Sur la page de login, on garde le vrai message d'erreur du backend
+//       // Sur la page de login, on garde le vrai message d'erreur du backend
 //       throw new Error(data.message || 'Identifiants incorrects');
 //     }
 
-//     // ✅ Gestion des autres erreurs HTTP
+//     // Gestion des autres erreurs HTTP
 //     if (!response.ok) {
 //       throw new Error(data.message || `Erreur ${response.status}`);
 //     }
@@ -59,7 +63,7 @@
 // }
 
 // // ============================================================================
-// // ✅ FONCTION POUR FORMDATA (Upload de fichiers) - POST
+// // ✅ FONCTION POUR FORMDATA (Upload de fichiers)
 // // ============================================================================
 // async function requestFormData<T>(endpoint: string, formData: FormData, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
 //   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
@@ -70,8 +74,6 @@
 //     headers['Authorization'] = `Bearer ${token}`;
 //   }
 
-//   // ⚠️ PAS de Content-Type pour FormData (le navigateur le gère automatiquement)
-
 //   const config: RequestInit = {
 //     method,
 //     headers,
@@ -80,22 +82,22 @@
 
 //   try {
 //     const response = await fetch(`${API_URL}${endpoint}`, config);
-    
-//     // Parse le JSON avant de vérifier le statut
 //     const data = await response.json();
     
-//     // Si non autorisé (Token expiré ou invalide)
+//     // ✅ CORRECTION : Gérer les routes admin ET user
 //     if (response.status === 401) {
-//       const isLoginPage = typeof window !== 'undefined' && 
-//                           (window.location.pathname.includes('/auth/login') || 
-//                            window.location.pathname.includes('/auth/register'));
-      
-//       if (!isLoginPage && typeof window !== 'undefined') {
-//         localStorage.removeItem('accessToken');
-//         localStorage.removeItem('refreshToken');
-//         localStorage.removeItem('user');
-//         window.location.href = '/auth/login';
-//         throw new Error('Session expirée');
+//       if (typeof window !== 'undefined') {
+//         const currentPath = window.location.pathname;
+//         const isAdminRoute = currentPath.startsWith('/admin');
+//         const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
+        
+//         if (!isLoginPage) {
+//           localStorage.removeItem('accessToken');
+//           localStorage.removeItem('refreshToken');
+//           localStorage.removeItem('user');
+//           window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
+//           throw new Error('Session expirée');
+//         }
 //       }
       
 //       throw new Error(data.message || 'Identifiants incorrects');
@@ -132,17 +134,18 @@
 //   try {
 //     const response = await fetch(`${API_URL}${endpoint}`, config);
     
-//     // Si non autorisé (Token expiré ou invalide)
+//     // ✅ CORRECTION : Gérer les routes admin ET user
 //     if (response.status === 401) {
 //       if (typeof window !== 'undefined') {
-//         const isLoginPage = window.location.pathname.includes('/auth/login') || 
-//                            window.location.pathname.includes('/auth/register');
+//         const currentPath = window.location.pathname;
+//         const isAdminRoute = currentPath.startsWith('/admin');
+//         const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
         
 //         if (!isLoginPage) {
 //           localStorage.removeItem('accessToken');
 //           localStorage.removeItem('refreshToken');
 //           localStorage.removeItem('user');
-//           window.location.href = '/auth/login';
+//           window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
 //         }
 //       }
 //       throw new Error('Session expirée');
@@ -169,14 +172,12 @@
 //   patch: <T>(endpoint: string, body: any) => request<T>(endpoint, 'PATCH', body),
 //   delete: <T>(endpoint: string) => request<T>(endpoint, 'DELETE'),
   
-//   // ✅ MÉTHODES POUR FORMDATA
 //   postFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'POST'),
-//   putFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'), // ✅ AJOUTÉ
+//   putFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'),
   
-//   // ✅ MÉTHODE POUR TÉLÉCHARGER DES FICHIERS
 //   getBlob: (endpoint: string) => requestBlob(endpoint),
+  
 // };
-
 
 
 
@@ -206,32 +207,23 @@ async function request<T>(endpoint: string, method: RequestMethod = 'GET', body?
     
     const data = await response.json();
 
-    // ✅ CORRECTION : Gérer les routes admin ET user
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
-        
-        // ✅ Déterminer si on est sur une route admin ou user
         const isAdminRoute = currentPath.startsWith('/admin');
         const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
         
-        // Si on n'est PAS sur une page de login
         if (!isLoginPage) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          
-          // ✅ Rediriger vers la bonne page de login selon le contexte
           window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
           throw new Error('Session expirée');
         }
       }
-      
-      // Sur la page de login, on garde le vrai message d'erreur du backend
       throw new Error(data.message || 'Identifiants incorrects');
     }
 
-    // Gestion des autres erreurs HTTP
     if (!response.ok) {
       throw new Error(data.message || `Erreur ${response.status}`);
     }
@@ -244,28 +236,20 @@ async function request<T>(endpoint: string, method: RequestMethod = 'GET', body?
 }
 
 // ============================================================================
-// ✅ FONCTION POUR FORMDATA (Upload de fichiers)
+// FORMDATA (Upload de fichiers)
 // ============================================================================
 async function requestFormData<T>(endpoint: string, formData: FormData, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   
   const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const config: RequestInit = {
-    method,
-    headers,
-    body: formData,
-  };
+  const config: RequestInit = { method, headers, body: formData };
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
     const data = await response.json();
     
-    // ✅ CORRECTION : Gérer les routes admin ET user
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
@@ -280,14 +264,10 @@ async function requestFormData<T>(endpoint: string, formData: FormData, method: 
           throw new Error('Session expirée');
         }
       }
-      
       throw new Error(data.message || 'Identifiants incorrects');
     }
 
-    if (!response.ok) {
-      throw new Error(data.message || `Erreur ${response.status}`);
-    }
-
+    if (!response.ok) throw new Error(data.message || `Erreur ${response.status}`);
     return data;
   } catch (error: any) {
     console.error(`API Error (${endpoint}):`, error);
@@ -296,32 +276,21 @@ async function requestFormData<T>(endpoint: string, formData: FormData, method: 
 }
 
 // ============================================================================
-// ✅ FONCTION POUR TÉLÉCHARGER DES FICHIERS (Blob)
+// BLOB (Téléchargement de fichiers binaires — Excel, PDF...)
 // ============================================================================
 async function requestBlob(endpoint: string): Promise<Blob> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-  
   const headers: HeadersInit = {};
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const config: RequestInit = {
-    method: 'GET',
-    headers,
-  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, config);
+    const response = await fetch(`${API_URL}${endpoint}`, { method: 'GET', headers });
     
-    // ✅ CORRECTION : Gérer les routes admin ET user
     if (response.status === 401) {
       if (typeof window !== 'undefined') {
         const currentPath = window.location.pathname;
         const isAdminRoute = currentPath.startsWith('/admin');
         const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
-        
         if (!isLoginPage) {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
@@ -332,10 +301,7 @@ async function requestBlob(endpoint: string): Promise<Blob> {
       throw new Error('Session expirée');
     }
 
-    if (!response.ok) {
-      throw new Error('Erreur lors du téléchargement du fichier');
-    }
-
+    if (!response.ok) throw new Error('Erreur lors du téléchargement du fichier');
     return await response.blob();
   } catch (error: any) {
     console.error(`API Error (${endpoint}):`, error);
@@ -344,17 +310,55 @@ async function requestBlob(endpoint: string): Promise<Blob> {
 }
 
 // ============================================================================
-// ✅ EXPORT DE L'API AVEC TOUTES LES MÉTHODES
+// ✅ NOUVEAU — TEXT (Export Sage .TXT, eTax .CSV — réponse texte brute)
+// ============================================================================
+async function requestText(endpoint: string): Promise<string> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, { method: 'GET', headers });
+
+    if (response.status === 401) {
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        const isAdminRoute = currentPath.startsWith('/admin');
+        const isLoginPage = currentPath.includes('/login') || currentPath.includes('/register');
+        if (!isLoginPage) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
+        }
+      }
+      throw new Error('Session expirée');
+    }
+
+    if (!response.ok) throw new Error(`Erreur ${response.status}`);
+    return await response.text();
+  } catch (error: any) {
+    console.error(`API Error (${endpoint}):`, error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// EXPORT API — TOUTES LES MÉTHODES
 // ============================================================================
 export const api = {
-  get: <T>(endpoint: string) => request<T>(endpoint, 'GET'),
-  post: <T>(endpoint: string, body: any) => request<T>(endpoint, 'POST', body),
-  put: <T>(endpoint: string, body: any) => request<T>(endpoint, 'PUT', body),
-  patch: <T>(endpoint: string, body: any) => request<T>(endpoint, 'PATCH', body),
-  delete: <T>(endpoint: string) => request<T>(endpoint, 'DELETE'),
-  
+  // ── Méthodes JSON standard ───────────────────────────────────────────────
+  get:    <T>(endpoint: string)              => request<T>(endpoint, 'GET'),
+  post:   <T>(endpoint: string, body: any)   => request<T>(endpoint, 'POST', body),
+  put:    <T>(endpoint: string, body: any)   => request<T>(endpoint, 'PUT', body),
+  patch:  <T>(endpoint: string, body: any)   => request<T>(endpoint, 'PATCH', body),
+  delete: <T>(endpoint: string)              => request<T>(endpoint, 'DELETE'),
+
+  // ── FormData (upload fichiers) ───────────────────────────────────────────
   postFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'POST'),
-  putFormData: <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'),
-  
-  getBlob: (endpoint: string) => requestBlob(endpoint),
+  putFormData:  <T>(endpoint: string, formData: FormData) => requestFormData<T>(endpoint, formData, 'PUT'),
+
+  // ── Téléchargements ──────────────────────────────────────────────────────
+  getBlob: (endpoint: string) => requestBlob(endpoint),   // Excel, PDF...
+  getText: (endpoint: string) => requestText(endpoint),   // ✅ Sage .TXT, eTax .CSV
 };
