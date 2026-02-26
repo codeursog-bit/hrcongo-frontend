@@ -5,19 +5,35 @@ import {
   FlaskConical, Play, Plus, Trash2, ChevronDown, ChevronUp,
   Copy, Check, Loader2, AlertCircle, Info,
   Clock, Gift, Minus, User, Calculator, Users, UserPlus,
-  Percent, Lock, Unlock
+  Percent, Lock, Unlock, Building2
 } from 'lucide-react';
 import { api } from '@/services/api';
 
 interface Employee { id: string; firstName: string; lastName: string; baseSalary: number; }
 interface ManualBonus { localId: string; bonusType: string; amount: number; isTaxable: boolean; isCnss: boolean; }
 interface SimResult {
-  employee: { id?: string; firstName: string; lastName: string; baseSalary: number; effectiveBaseSalary: number; isSubjectToCnss: boolean; isSubjectToIrpp: boolean; };
+  employee: {
+    id?: string; firstName: string; lastName: string;
+    baseSalary: number; effectiveBaseSalary: number;
+    isSubjectToCnss: boolean; isSubjectToIrpp: boolean;
+  };
   month: number; year: number; daysToPay: number; workDays: number;
-  overtime: { hours10: number; amount10: number; hours25: number; amount25: number; hours50: number; amount50: number; hours100: number; amount100: number; total: number; };
+  overtime: {
+    hours10: number; amount10: number; hours25: number; amount25: number;
+    hours50: number; amount50: number; hours100: number; amount100: number; total: number;
+  };
   bonuses: Array<{ id: string; bonusType: string; amount: number; source: string; isTaxable: boolean; isCnss: boolean; }>;
-  totalBonuses: number; adjustedBaseSalary: number; absenceDeduction: number; grossSalary: number;
-  cnssSalarial: number; cnssEmployer: number; its: number; irppDetails: any;
+  totalBonuses: number; adjustedBaseSalary: number; absenceDeduction: number;
+  grossSalary: number;
+  cnssSalarial: number;
+  cnssEmployer: number;
+  cnssEmployerPension: number;
+  cnssEmployerFamily: number;
+  cnssEmployerAccident: number;
+  tusAmount: number;
+  tusDgiAmount: number;
+  its: number;
+  irppDetails: any;
   totalLoanDeduction: number; totalAdvanceDeduction: number; totalDeductions: number;
   netSalary: number; totalEmployerCost: number; simulationMode: string;
 }
@@ -28,7 +44,7 @@ const FISCAL_MODES: { value: FiscalMode; label: string; sub: string; color: stri
   { value: 'AUTO',        label: 'Auto',        sub: "Selon l'année",        color: 'gray'   },
   { value: 'ITS_2026',    label: 'ITS 2026',    sub: 'Barème progressif',    color: 'violet' },
   { value: 'IRPP_LEGACY', label: 'IRPP Ancien', sub: 'Avant 2026 / parts',   color: 'amber'  },
-  { value: 'FORFAIT',     label: 'Forfait',      sub: 'Taux fixe (6/8/10%)', color: 'cyan'   },
+  { value: 'FORFAIT',     label: 'Forfait',     sub: 'Taux fixe (6/8/10%)',  color: 'cyan'   },
 ];
 const fmt = (v: number) => Math.round(v ?? 0).toLocaleString('fr-FR');
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -40,6 +56,32 @@ const BonusFiscalBadge = ({ label, active, onChange, color }: { label: string; a
     : 'bg-gray-100 dark:bg-gray-700 text-gray-400 border-gray-200 dark:border-gray-600 line-through opacity-60'}`}>
     {label}
   </button>
+);
+
+// ── Ligne de détail dans les tableaux résultat ─────────────────────────────
+const ResultRow = ({ label, sub, value, valueColor, bold }: {
+  label: string; sub?: string; value: string;
+  valueColor?: string; bold?: boolean;
+}) => (
+  <tr className="border-b border-gray-50 dark:border-gray-700/50">
+    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400">
+      <span className={bold ? 'font-semibold text-gray-700 dark:text-gray-200 text-sm' : 'text-sm'}>{label}</span>
+      {sub && <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{sub}</p>}
+    </td>
+    <td className={`px-4 py-2.5 text-right font-mono font-semibold text-sm ${valueColor ?? 'text-gray-700 dark:text-gray-200'}`}>
+      {value}
+    </td>
+  </tr>
+);
+
+// ── Ligne sous-total ────────────────────────────────────────────────────────
+const TotalRow = ({ label, value, bgClass, textClass }: {
+  label: string; value: string; bgClass: string; textClass: string;
+}) => (
+  <tr className={bgClass}>
+    <td className={`px-4 py-3 font-black text-sm ${textClass}`}>{label}</td>
+    <td className={`px-4 py-3 text-right font-black font-mono text-base ${textClass}`}>{value}</td>
+  </tr>
 );
 
 export default function SimulateurPage() {
@@ -70,6 +112,7 @@ export default function SimulateurPage() {
   const [result, setResult] = useState<SimResult | null>(null);
   const [error, setError] = useState('');
   const [showItsDetail, setShowItsDetail] = useState(false);
+  const [showEmpDetail, setShowEmpDetail] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -88,15 +131,18 @@ export default function SimulateurPage() {
   };
 
   const switchMode = (m: 'existing' | 'free') => {
-    setMode(m); setResult(null); setError(''); setSelectedEmp(null); setEmpSearch(''); setBaseSalary('');
-    setManualBonuses([]); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
+    setMode(m); setResult(null); setError(''); setSelectedEmp(null);
+    setEmpSearch(''); setBaseSalary(''); setManualBonuses([]);
+    setOt10(0); setOt25(0); setOt50(0); setOt100(0);
   };
 
   const addBonus = () => setManualBonuses(b => [...b, { localId: uid(), bonusType: '', amount: 0, isTaxable: true, isCnss: true }]);
   const updateBonus = (localId: string, patch: Partial<ManualBonus>) =>
     setManualBonuses(prev => prev.map(b => b.localId === localId ? { ...b, ...patch } : b));
 
-  const canSimulate = mode === 'existing' ? !!selectedEmp && !!baseSalary : !!baseSalary && Number(baseSalary) >= 70400;
+  const canSimulate = mode === 'existing'
+    ? !!selectedEmp && !!baseSalary
+    : !!baseSalary && Number(baseSalary) >= 70400;
 
   const handleSimulate = async () => {
     if (!canSimulate) { setError(mode === 'existing' ? 'Sélectionne un employé.' : 'Salaire de base requis (min. 70 400 FCFA).'); return; }
@@ -133,28 +179,40 @@ export default function SimulateurPage() {
   const handleCopy = () => {
     if (!result) return;
     const name = [result.employee.firstName, result.employee.lastName].filter(Boolean).join(' ');
+    const cnssPatTotal = (result.cnssEmployerPension ?? 0) + (result.cnssEmployerFamily ?? 0) + (result.cnssEmployerAccident ?? 0);
     const lines = [
       `Simulation — ${name || 'Anonyme'} — ${MONTHS[result.month-1]} ${result.year}`,
-      '─'.repeat(50),
-      `Base             : ${fmt(result.employee.effectiveBaseSalary)} FCFA`,
-      `Jours travaillés : ${result.daysToPay}/${result.workDays}`,
-      result.overtime.total > 0 ? `Total HS         : +${fmt(result.overtime.total)} FCFA` : null,
-      result.totalBonuses > 0   ? `Total primes     : +${fmt(result.totalBonuses)} FCFA`   : null,
-      '─'.repeat(50),
-      `Brut             : ${fmt(result.grossSalary)} FCFA`,
-      `CNSS salarié     : −${fmt(result.cnssSalarial)} FCFA`,
-      `ITS              : −${fmt(result.its)} FCFA`,
-      '─'.repeat(50),
-      `NET À PAYER      : ${fmt(result.netSalary)} FCFA`,
-      `Coût employeur   : ${fmt(result.totalEmployerCost)} FCFA`,
-    ].filter(Boolean).join('\n');
+      '─'.repeat(55),
+      `Salaire brut           : ${fmt(result.grossSalary)} FCFA`,
+      `CNSS salarié (4%)      : −${fmt(result.cnssSalarial)} FCFA`,
+      `ITS                    : −${fmt(result.its)} FCFA`,
+      `─`.repeat(55),
+      `NET À PAYER            : ${fmt(result.netSalary)} FCFA`,
+      `─`.repeat(55),
+      `PART PATRONALE`,
+      `  CNSS Pensions (8%)   : +${fmt(result.cnssEmployerPension ?? 0)} FCFA`,
+      `  CNSS Famille (10,03%): +${fmt(result.cnssEmployerFamily ?? 0)} FCFA`,
+      `  CNSS Accident (2,25%): +${fmt(result.cnssEmployerAccident ?? 0)} FCFA`,
+      `  TUS (2%)             : +${fmt(result.tusAmount ?? 0)} FCFA`,
+      `  Total charges patron : +${fmt(cnssPatTotal + (result.tusAmount ?? 0))} FCFA`,
+      `─`.repeat(55),
+      `COÛT TOTAL EMPLOYEUR   : ${fmt(result.totalEmployerCost)} FCFA`,
+    ].join('\n');
     navigator.clipboard.writeText(lines).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200); });
   };
 
   const absenceDays  = Math.max(0, workDays - workedDays);
-  const isLegacyMode = result?.irppDetails?.fiscalMode === 'IRPP_LEGACY';
-  const isForfait    = result?.irppDetails?.fiscalMode === 'FORFAIT';
+  const isLegacyMode = result?.irppDetails?.fiscalMode === 'IRPP_LEGACY' || result?.irppDetails?.mode === 'IRPP_LEGACY';
+  const isForfait    = result?.irppDetails?.fiscalMode === 'FORFAIT' || result?.irppDetails?.mode === 'FORFAIT';
   const abattementLabel = isLegacyMode ? 'Abattement 30% (plafonné 75 000/mois)' : 'Abattement 20%';
+
+  // Charges patronales depuis le backend (jamais recalculées ici)
+  const cnssPatPension  = result?.cnssEmployerPension  ?? 0;
+  const cnssPatFamily   = result?.cnssEmployerFamily   ?? 0;
+  const cnssPatAccident = result?.cnssEmployerAccident ?? 0;
+  const cnssPatTus      = result?.tusAmount            ?? 0;
+  const cnssPatTotal    = cnssPatPension + cnssPatFamily + cnssPatAccident;
+  const totalChargesEmp = cnssPatTotal + cnssPatTus;
 
   const OtRow = ({ label, sub, value, onChange }: { label: string; sub: string; value: number; onChange: (v: number) => void }) => (
     <div className="flex items-center gap-3 px-4 py-2.5 bg-orange-50 dark:bg-orange-900/10 rounded-xl mb-1.5">
@@ -170,7 +228,7 @@ export default function SimulateurPage() {
   );
 
   return (
-    <div className="max-w-[1080px] mx-auto px-4 py-6 pb-20">
+    <div className="max-w-[1100px] mx-auto px-4 py-6 pb-20">
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-5">
@@ -179,7 +237,7 @@ export default function SimulateurPage() {
         </div>
         <div>
           <h1 className="text-xl font-black text-gray-900 dark:text-white">Simulateur de paie</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Calcul 100% backend · Conforme droit congolais · Ouvert à tous</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Calcul 100% backend · Conforme droit congolais · CNSS 3 branches</p>
         </div>
       </div>
 
@@ -208,19 +266,9 @@ export default function SimulateurPage() {
         </button>
       </div>
 
-      {/* Notice */}
-      <div className={`flex items-start gap-2.5 p-3 mb-5 rounded-xl border ${mode === 'free' ? 'bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-800' : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'}`}>
-        <Info size={13} className={`mt-0.5 shrink-0 ${mode === 'free' ? 'text-cyan-600' : 'text-emerald-600'}`} />
-        <p className={`text-xs leading-relaxed ${mode === 'free' ? 'text-cyan-700 dark:text-cyan-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
-          {mode === 'free'
-            ? <><strong>Vérification de bulletins</strong> — Entrez les valeurs exactes d'un bulletin (salaire, heures sup, primes, mode fiscal) pour confirmer que les calculs CNSS et ITS correspondent à votre situation réelle. Aucun compte requis.</>
-            : <><strong>Simulation depuis l'entreprise</strong> — Sélectionnez un employé pour pré-remplir son salaire. Modifiez les paramètres pour tester différents scénarios.</>
-          }
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-        {/* ── FORMULAIRE ─────────────────────────────────────────────────── */}
+
+        {/* ══ FORMULAIRE ═══════════════════════════════════════════════════ */}
         <div className="space-y-4">
 
           {/* Identité */}
@@ -306,8 +354,6 @@ export default function SimulateurPage() {
           {mode === 'free' && (
             <div className="bg-white dark:bg-gray-800 border border-cyan-200 dark:border-cyan-800/50 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3"><Percent size={14} className="text-cyan-500" /><h3 className="font-bold text-sm text-gray-900 dark:text-white">Mode fiscal & cotisations</h3></div>
-
-              {/* Assujettissements */}
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <button onClick={() => setIsSubjectCnss(v => !v)}
                   className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${isSubjectCnss ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-gray-200 dark:border-gray-700'}`}>
@@ -326,9 +372,7 @@ export default function SimulateurPage() {
                   </div>
                 </button>
               </div>
-
-              {/* Choix du mode */}
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Mode de calcul</label>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Mode de calcul ITS</label>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 {FISCAL_MODES.map(fm => {
                   const isActive = fiscalMode === fm.value;
@@ -343,8 +387,6 @@ export default function SimulateurPage() {
                   );
                 })}
               </div>
-
-              {/* Taux forfaitaire */}
               {fiscalMode === 'FORFAIT' && (
                 <div className="p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-200 dark:border-cyan-800">
                   <label className="block text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider mb-2">Taux forfaitaire ITS</label>
@@ -360,12 +402,9 @@ export default function SimulateurPage() {
                     <input type="number" min={1} max={40} step={0.5} value={Math.round(forfaitRate * 100 * 10) / 10} onChange={e => setForfaitRate(Number(e.target.value) / 100)}
                       className="w-20 px-2 py-1.5 border border-cyan-200 dark:border-cyan-700 rounded-lg text-sm font-mono font-bold bg-white dark:bg-gray-700 text-cyan-700 dark:text-cyan-300 outline-none" />
                     <span className="text-sm text-gray-500">%</span>
-                    <span className="text-xs text-gray-400">sur le brut fiscal</span>
                   </div>
                 </div>
               )}
-
-              {/* Situation familiale — IRPP Legacy */}
               {fiscalMode === 'IRPP_LEGACY' && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 mt-3">
                   <label className="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2">Situation familiale (parts fiscales)</label>
@@ -410,7 +449,7 @@ export default function SimulateurPage() {
               <button onClick={addBonus} className="ml-auto flex items-center gap-1 px-2.5 py-1 bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-100 cursor-pointer"><Plus size={10} /> Ajouter</button>
             </div>
             {manualBonuses.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-3">{mode === 'existing' ? 'Vide → le backend utilisera les primes configurées' : 'Ajoutez les primes de votre bulletin'}</p>
+              <p className="text-xs text-gray-400 text-center py-3">{mode === 'existing' ? 'Vide → backend utilisera les primes configurées' : 'Ajoutez les primes de votre bulletin'}</p>
             ) : (
               <div className="space-y-2.5 mt-2">
                 {manualBonuses.map(b => (
@@ -442,7 +481,7 @@ export default function SimulateurPage() {
             </div>
           )}
 
-          {/* Bouton */}
+          {/* Bouton simuler */}
           <button onClick={handleSimulate} disabled={isSimulating || !canSimulate}
             className={`w-full py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all duration-200
               ${(!canSimulate || isSimulating) ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
@@ -453,7 +492,7 @@ export default function SimulateurPage() {
           </button>
         </div>
 
-        {/* ── RÉSULTAT ───────────────────────────────────────────────────── */}
+        {/* ══ RÉSULTATS ════════════════════════════════════════════════════ */}
         <div>
           {!result ? (
             <div className="bg-gray-50 dark:bg-gray-800/50 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-16 text-center">
@@ -462,7 +501,8 @@ export default function SimulateurPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Net */}
+
+              {/* ── NET À PAYER ─────────────────────────────────────────── */}
               <div className="bg-gray-900 dark:bg-black rounded-2xl p-5 text-white">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -478,92 +518,244 @@ export default function SimulateurPage() {
                 </p>
               </div>
 
-              {/* Rémunérations */}
+              {/* ── RÉMUNÉRATIONS ─────────────────────────────────────── */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-                <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">Rémunérations</p>
-                <table className="w-full text-sm"><tbody>
-                  <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-gray-500">Salaire de base</td><td className="px-4 py-2.5 text-right font-mono font-semibold">{fmt(result.employee.effectiveBaseSalary)} F</td></tr>
-                  {result.absenceDeduction > 0 && <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-orange-500">Déduction absences ({result.workDays - result.daysToPay}j)</td><td className="px-4 py-2.5 text-right font-mono text-orange-500">−{fmt(result.absenceDeduction)} F</td></tr>}
-                  {result.overtime?.amount10  > 0 && <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-gray-500">HS +10% ({result.overtime.hours10}h)</td><td className="px-4 py-2.5 text-right font-mono text-emerald-600">+{fmt(result.overtime.amount10)} F</td></tr>}
-                  {result.overtime?.amount25  > 0 && <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-gray-500">HS +25% ({result.overtime.hours25}h)</td><td className="px-4 py-2.5 text-right font-mono text-emerald-600">+{fmt(result.overtime.amount25)} F</td></tr>}
-                  {result.overtime?.amount50  > 0 && <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-gray-500">HS +50% ({result.overtime.hours50}h)</td><td className="px-4 py-2.5 text-right font-mono text-emerald-600">+{fmt(result.overtime.amount50)} F</td></tr>}
-                  {result.overtime?.amount100 > 0 && <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-gray-500">HS +100% ({result.overtime.hours100}h)</td><td className="px-4 py-2.5 text-right font-mono text-emerald-600">+{fmt(result.overtime.amount100)} F</td></tr>}
+                <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/10">Rémunérations</p>
+                <table className="w-full"><tbody>
+                  <ResultRow label="Salaire de base" value={`+${fmt(result.employee.effectiveBaseSalary)} F`} valueColor="text-emerald-600 dark:text-emerald-400" />
+                  {result.absenceDeduction > 0 && <ResultRow label={`Absences (${result.workDays - result.daysToPay}j)`} value={`−${fmt(result.absenceDeduction)} F`} valueColor="text-orange-500" />}
+                  {result.overtime?.amount10  > 0 && <ResultRow label={`HS +10% (${result.overtime.hours10}h)`} value={`+${fmt(result.overtime.amount10)} F`} valueColor="text-amber-600 dark:text-amber-400" />}
+                  {result.overtime?.amount25  > 0 && <ResultRow label={`HS +25% (${result.overtime.hours25}h)`} value={`+${fmt(result.overtime.amount25)} F`} valueColor="text-amber-600 dark:text-amber-400" />}
+                  {result.overtime?.amount50  > 0 && <ResultRow label={`HS +50% (${result.overtime.hours50}h)`} value={`+${fmt(result.overtime.amount50)} F`} valueColor="text-amber-600 dark:text-amber-400" />}
+                  {result.overtime?.amount100 > 0 && <ResultRow label={`HS +100% (${result.overtime.hours100}h)`} value={`+${fmt(result.overtime.amount100)} F`} valueColor="text-amber-600 dark:text-amber-400" />}
                   {result.bonuses?.map(b => (
                     <tr key={b.id} className="border-b border-gray-50 dark:border-gray-700/50">
-                      <td className="px-4 py-2.5">
-                        <span className="text-gray-500">{b.bonusType}</span>
+                      <td className="px-4 py-2.5 text-sm text-gray-500">
+                        {b.bonusType}
                         <span className="ml-2 inline-flex gap-1">
                           {b.isTaxable && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-600 border border-cyan-200 font-bold">ITS</span>}
                           {b.isCnss    && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200 font-bold">CNSS</span>}
                           {!b.isTaxable && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200 font-bold">Net</span>}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right font-mono text-cyan-600">+{fmt(b.amount)} F</td>
+                      <td className="px-4 py-2.5 text-right font-mono font-semibold text-sm text-cyan-600 dark:text-cyan-400">+{fmt(b.amount)} F</td>
                     </tr>
                   ))}
-                  <tr className="bg-emerald-50 dark:bg-emerald-900/20"><td className="px-4 py-3 font-bold text-emerald-700 dark:text-emerald-400">Salaire brut</td><td className="px-4 py-3 text-right font-black font-mono text-emerald-600">{fmt(result.grossSalary)} F</td></tr>
+                  <TotalRow label="Salaire brut" value={`${fmt(result.grossSalary)} F`} bgClass="bg-emerald-50 dark:bg-emerald-900/20" textClass="text-emerald-700 dark:text-emerald-400" />
                 </tbody></table>
               </div>
 
-              {/* Cotisations */}
+              {/* ── COTISATIONS SALARIALES ────────────────────────────── */}
               <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-                <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">Cotisations & retenues</p>
-                <table className="w-full text-sm"><tbody>
-                  <tr className="border-b border-gray-50 dark:border-gray-700/50">
-                    <td className="px-4 py-2.5 text-gray-500">CNSS salarié (4%)</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-red-500">{result.cnssSalarial > 0 ? `−${fmt(result.cnssSalarial)} F` : <span className="text-xs text-gray-400">Exonéré</span>}</td>
-                  </tr>
+                <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-red-50/50 dark:bg-red-900/10">Cotisations & Retenues Salariales</p>
+                <table className="w-full"><tbody>
+                  <ResultRow
+                    label="CNSS salariale (4%)"
+                    sub="Branche pension · plafond 1 200 000 FCFA"
+                    value={result.cnssSalarial > 0 ? `−${fmt(result.cnssSalarial)} F` : '0 F (Exonéré)'}
+                    valueColor={result.cnssSalarial > 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400'}
+                  />
                   <tr className="border-b border-gray-50 dark:border-gray-700/50">
                     <td className="px-4 py-2.5">
-                      <button onClick={() => setShowItsDetail(d => !d)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
-                        ITS {showItsDetail ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                      <button onClick={() => setShowItsDetail(d => !d)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors cursor-pointer text-sm">
+                        ITS — barème progressif {showItsDetail ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                       </button>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-red-500">{result.its > 0 ? `−${fmt(result.its)} F` : <span className="text-xs text-gray-400">Exonéré</span>}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-semibold text-sm ${result.its > 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400'}`}>
+                      {result.its > 0 ? `−${fmt(result.its)} F` : '0 F (Exonéré)'}
+                    </td>
                   </tr>
                   {showItsDetail && result.irppDetails && (
                     <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-900/50">
                       <td colSpan={2} className="px-4 py-3">
-                        <div className="text-xs text-gray-500 space-y-1">
-                          {!isForfait && <p>{abattementLabel} : −{fmt(result.irppDetails.abattement)} F</p>}
-                          {!isForfait && <p>RNI mensuel : {fmt(result.irppDetails.revenuNetImposable)} F</p>}
-                          <p>Parts fiscales : {result.irppDetails.fiscalParts}</p>
-                          <p>Taux effectif : {result.irppDetails.effectiveRate}%</p>
+                        <div className="text-xs text-gray-500 space-y-1.5">
+                          {!isForfait && <p>{abattementLabel} : <span className="font-mono font-bold">−{fmt(result.irppDetails.abattement)} F</span></p>}
+                          {!isForfait && <p>Revenu net imposable : <span className="font-mono font-bold">{fmt(result.irppDetails.revenuNetImposable)} F</span></p>}
+                          <p>Parts fiscales : <span className="font-bold">{result.irppDetails.fiscalParts}</span></p>
+                          <p>Taux effectif : <span className="font-bold">{result.irppDetails.effectiveRate}%</span></p>
                           <p className={`font-semibold ${isForfait ? 'text-cyan-500' : isLegacyMode ? 'text-amber-500' : 'text-violet-500'}`}>
-                            Mode : {isForfait ? `Forfait ${Math.round((result.irppDetails.forfaitRate ?? forfaitRate) * 100)}%` : isLegacyMode ? 'IRPP legacy (avant 2026)' : 'ITS 2026'}
+                            Mode : {isForfait ? `Forfait ${Math.round((result.irppDetails.forfaitRate ?? forfaitRate) * 100)}%` : isLegacyMode ? 'IRPP legacy (avant 2026)' : 'ITS 2026 · 1%/10%/25%/40%'}
                           </p>
                         </div>
                       </td>
                     </tr>
                   )}
                   {(result.totalLoanDeduction + result.totalAdvanceDeduction) > 0 && (
-                    <tr className="border-b border-gray-50 dark:border-gray-700/50"><td className="px-4 py-2.5 text-gray-500">Prêts / avances</td><td className="px-4 py-2.5 text-right font-mono text-red-500">−{fmt(result.totalLoanDeduction + result.totalAdvanceDeduction)} F</td></tr>
+                    <ResultRow label="Prêts & avances" value={`−${fmt(result.totalLoanDeduction + result.totalAdvanceDeduction)} F`} valueColor="text-purple-500 dark:text-purple-400" />
                   )}
-                  <tr className="bg-red-50 dark:bg-red-900/20"><td className="px-4 py-3 font-bold text-red-700 dark:text-red-400">Total retenues</td><td className="px-4 py-3 text-right font-black font-mono text-red-600">−{fmt(result.totalDeductions)} F</td></tr>
+                  <TotalRow label="Total retenues salariales" value={`−${fmt(result.totalDeductions)} F`} bgClass="bg-red-50 dark:bg-red-900/20" textClass="text-red-700 dark:text-red-400" />
                 </tbody></table>
               </div>
 
-              {/* Coûts employeur */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CNSS patronal</p>
-                  <p className="font-black font-mono text-base text-emerald-600">{fmt(result.cnssEmployer)} F</p>
+              {/* ══ PART PATRONALE — SECTION COMPLÈTE ═══════════════════ */}
+              <div className="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800/50 rounded-2xl overflow-hidden">
+                <button
+                  onClick={() => setShowEmpDetail(d => !d)}
+                  className="w-full flex items-center gap-2 px-4 py-3 border-b border-orange-100 dark:border-orange-900/30 bg-orange-50/70 dark:bg-orange-900/20 hover:bg-orange-100/50 dark:hover:bg-orange-900/30 transition-colors cursor-pointer text-left"
+                >
+                  <Building2 size={13} className="text-orange-500 shrink-0" />
+                  <p className="text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wider flex-1">
+                    Part Patronale — Charges Sociales Employeur
+                  </p>
+                  <span className="font-mono font-black text-sm text-orange-600 dark:text-orange-400 mr-2">
+                    +{fmt(totalChargesEmp)} F
+                  </span>
+                  {showEmpDetail ? <ChevronUp size={14} className="text-orange-400" /> : <ChevronDown size={14} className="text-orange-400" />}
+                </button>
+
+                {showEmpDetail && (
+                  <table className="w-full"><tbody>
+
+                    {/* CNSS — 3 branches */}
+                    <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-orange-50/30 dark:bg-orange-900/10">
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">CNSS Patronale — Décret n°99-284</p>
+                      </td>
+                    </tr>
+
+                    <ResultRow
+                      label="Pensions / Vieillesse / Invalidité"
+                      sub="8,00% × min(brut, 1 200 000 FCFA)"
+                      value={`+${fmt(cnssPatPension)} F`}
+                      valueColor="text-orange-600 dark:text-orange-400"
+                    />
+                    <ResultRow
+                      label="Prestations Familiales"
+                      sub="10,03% × min(brut, 600 000 FCFA)"
+                      value={`+${fmt(cnssPatFamily)} F`}
+                      valueColor="text-orange-600 dark:text-orange-400"
+                    />
+                    <ResultRow
+                      label="Accidents du Travail"
+                      sub="2,25% × min(brut, 600 000 FCFA)"
+                      value={`+${fmt(cnssPatAccident)} F`}
+                      valueColor="text-orange-600 dark:text-orange-400"
+                    />
+
+                    {/* Sous-total CNSS patronale */}
+                    <tr className="border-b border-orange-200/50 dark:border-orange-800/30 bg-orange-50/50 dark:bg-orange-900/15">
+                      <td className="px-4 py-2 text-xs font-semibold text-orange-600 dark:text-orange-400">
+                        Sous-total CNSS patronale
+                        <span className="ml-2 text-[10px] font-normal text-gray-400">~20,28% (taux effectif variable)</span>
+                      </td>
+                      <td className="px-4 py-2 text-right font-mono font-bold text-sm text-orange-600 dark:text-orange-400">
+                        +{fmt(cnssPatTotal)} F
+                      </td>
+                    </tr>
+
+                    {/* TUS */}
+                    <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-orange-50/20 dark:bg-orange-900/5">
+                      <td colSpan={2} className="px-4 pt-3 pb-1">
+                        <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">TUS — Taxe Unique sur les Salaires</p>
+                      </td>
+                    </tr>
+                    <ResultRow
+                      label="TUS patronale (2% déplafonné)"
+                      sub={`Base = ${fmt(result.grossSalary)} F (brut total sans plafond)`}
+                      value={`+${fmt(cnssPatTus)} F`}
+                      valueColor="text-orange-600 dark:text-orange-400"
+                    />
+                    {(result.tusDgiAmount ?? 0) > 0 && (
+                      <tr className="border-b border-gray-50 dark:border-gray-700/50">
+                        <td className="px-4 py-2 text-xs text-gray-400">
+                          TUS total DGI (5%) — pour déclaration eTax
+                        </td>
+                        <td className="px-4 py-2 text-right font-mono text-xs text-gray-400">
+                          {fmt(result.tusDgiAmount)} F
+                        </td>
+                      </tr>
+                    )}
+
+                    {/* TOTAL CHARGES PATRONALES */}
+                    <TotalRow
+                      label="Total charges patronales"
+                      value={`+${fmt(totalChargesEmp)} F`}
+                      bgClass="bg-orange-50 dark:bg-orange-900/20"
+                      textClass="text-orange-700 dark:text-orange-400"
+                    />
+                  </tbody></table>
+                )}
+              </div>
+
+              {/* ── RÉCAPITULATIF 3 COLONNES ─────────────────────────── */}
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800/50 rounded-xl p-3">
+                  <p className="text-[9px] font-bold text-sky-500 uppercase tracking-widest mb-2">Salarié</p>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-500">CNSS 4%</span>
+                      <span className="font-mono font-bold text-red-500">−{fmt(result.cnssSalarial)} F</span>
+                    </div>
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-500">ITS</span>
+                      <span className="font-mono font-bold text-red-500">−{fmt(result.its)} F</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] pt-1.5 border-t border-sky-200 dark:border-sky-700">
+                      <span className="font-bold text-gray-600 dark:text-gray-300">Total</span>
+                      <span className="font-mono font-black text-sky-600 dark:text-sky-400">{fmt(result.totalDeductions)} F</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Coût employeur</p>
-                  <p className="font-black font-mono text-base text-amber-600">{fmt(result.totalEmployerCost)} F</p>
+
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-xl p-3">
+                  <p className="text-[9px] font-bold text-orange-500 uppercase tracking-widest mb-2">Employeur</p>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-500">CNSS pat.</span>
+                      <span className="font-mono font-bold text-orange-500">+{fmt(cnssPatTotal)} F</span>
+                    </div>
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-500">TUS 2%</span>
+                      <span className="font-mono font-bold text-orange-500">+{fmt(cnssPatTus)} F</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] pt-1.5 border-t border-orange-200 dark:border-orange-700">
+                      <span className="font-bold text-gray-600 dark:text-gray-300">Total</span>
+                      <span className="font-mono font-black text-orange-600 dark:text-orange-400">{fmt(totalChargesEmp)} F</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800/50 rounded-xl p-3">
+                  <p className="text-[9px] font-bold text-purple-500 uppercase tracking-widest mb-2">Récap</p>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-500">Brut</span>
+                      <span className="font-mono font-bold text-emerald-600">+{fmt(result.grossSalary)} F</span>
+                    </div>
+                    <div className="flex justify-between text-[10px]">
+                      <span className="text-gray-500">Charges</span>
+                      <span className="font-mono font-bold text-orange-500">+{fmt(totalChargesEmp)} F</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] pt-1.5 border-t border-purple-200 dark:border-purple-700">
+                      <span className="font-bold text-gray-600 dark:text-gray-300">Coût total</span>
+                      <span className="font-mono font-black text-purple-600 dark:text-purple-400">{fmt(result.totalEmployerCost)} F</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Badge mode */}
+              {/* ── BANDE NET / COÛT ─────────────────────────────────── */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-900 dark:bg-black rounded-xl p-4">
+                  <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Net à payer</p>
+                  <p className="font-black font-mono text-xl text-white">{fmt(result.netSalary)} <span className="text-sm font-normal text-gray-400">F</span></p>
+                </div>
+                <div className="bg-orange-600 dark:bg-orange-700 rounded-xl p-4">
+                  <p className="text-[9px] text-orange-200 uppercase tracking-widest mb-1">Coût employeur</p>
+                  <p className="font-black font-mono text-xl text-white">{fmt(result.totalEmployerCost)} <span className="text-sm font-normal text-orange-200">F</span></p>
+                </div>
+              </div>
+
+              {/* ── BADGE MODE ─────────────────────────────────────────── */}
               <div className={`text-center py-2 px-4 rounded-xl text-xs font-medium border
-                ${result.simulationMode === 'FREE' ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 border-cyan-200 dark:border-cyan-800'
+                ${result.simulationMode === 'FREE_SIMULATION' ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-600 border-cyan-200 dark:border-cyan-800'
                   : result.simulationMode === 'MANUAL_OVERRIDE' ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 border-violet-200'
                   : 'bg-gray-50 dark:bg-gray-800 text-gray-500 border-gray-200'}`}>
-                {result.simulationMode === 'FREE' ? '🆓 Simulation libre · calcul 100% backend'
+                {result.simulationMode === 'FREE_SIMULATION' ? '🆓 Simulation libre · calcul 100% backend'
                   : result.simulationMode === 'MANUAL_OVERRIDE' ? '⚡ Valeurs manuelles · calcul 100% backend'
                   : '📊 Depuis pointage BDD · calcul 100% backend'}
               </div>
+
             </div>
           )}
         </div>
@@ -571,9 +763,3 @@ export default function SimulateurPage() {
     </div>
   );
 }
-
-
-
-
-
-
