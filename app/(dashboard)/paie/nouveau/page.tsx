@@ -448,16 +448,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Calculator, CheckCircle2, Loader2, Gift,
-  AlertCircle, Clock, Moon, DollarSign, CreditCard, Wallet
+  ArrowLeft, CheckCircle2, Loader2, Gift,
+  AlertCircle, Clock, Moon, DollarSign, CreditCard, Wallet, Calculator
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import EmployeeSelector from './components/EmployeeSelector';
 
-// ============================================================================
-// Types — ce que le back retourne depuis /payrolls/simulate
-// ============================================================================
+// ── Types (ce que /payrolls/simulate retourne) ────────────────────────────────
 interface SimulationResult {
   employee: {
     id: string;
@@ -473,39 +471,27 @@ interface SimulationResult {
   daysToPay: number;
   workDays: number;
   overtime: {
-    hours10: number; amount10: number;
-    hours25: number; amount25: number;
-    hours50: number; amount50: number;
+    hours10: number;  amount10: number;
+    hours25: number;  amount25: number;
+    hours50: number;  amount50: number;
     hours100: number; amount100: number;
     total: number;
   };
-  bonuses: Array<{
-    id: string;
-    bonusType: string;
-    amount: number;
-    isAutomatic: boolean;
-    source: string;
-    details?: string;
-  }>;
+  bonuses: Array<{ id: string; bonusType: string; amount: number; source: string; details?: string }>;
   totalBonuses: number;
   adjustedBaseSalary: number;
   absenceDeduction: number;
   grossSalary: number;
   cnssSalarial: number;
-  cnssEmployer: number;
   its: number;
-  irppDetails?: any;
   loans: Array<{ id: string; monthlyRepayment: number; remainingBalance: number }>;
   advances: Array<{ id: string; amount: number; createdAt: string }>;
   totalLoanDeduction: number;
   totalAdvanceDeduction: number;
   totalDeductions: number;
   netSalary: number;
-  totalEmployerCost: number;
   settings: {
     cnssSalarialRate: number;
-    cnssEmployerRate: number;
-    cnssCeiling: number;
     overtimeRate10: number;
     overtimeRate25: number;
     overtimeRate50: number;
@@ -514,67 +500,70 @@ interface SimulationResult {
 }
 
 const MONTHS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  'Janvier','Février','Mars','Avril','Mai','Juin',
+  'Juillet','Août','Septembre','Octobre','Novembre','Décembre'
 ];
 
 export default function CreatePayrollPage() {
   const router = useRouter();
 
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  // ── État ──────────────────────────────────────────────────────────────────
+  const [employees, setEmployees]           = useState<any[]>([]);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
+  const [selectedEmployee, setSelectedEmployee]     = useState<any>(null);
 
   const now = new Date();
   const [month, setMonth] = useState(MONTHS[now.getMonth()]);
-  const [year, setYear] = useState(now.getFullYear());
+  const [year, setYear]   = useState(now.getFullYear());
 
-  // ✅ Heures sup corrigées par le RH (override du pointage)
+  // Heures sup — initialisées depuis la simulation, modifiables par le RH
   const [overtime10, setOvertime10]   = useState(0);
   const [overtime25, setOvertime25]   = useState(0);
   const [overtime50, setOvertime50]   = useState(0);
   const [overtime100, setOvertime100] = useState(0);
-  const [overtimeOverridden, setOvertimeOverridden] = useState(false);
+  const [overtimeEdited, setOvertimeEdited] = useState(false);
 
-  // ✅ Résultat de la simulation — vient entièrement du back
-  const [simulation, setSimulation] = useState<SimulationResult | null>(null);
-  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulation, setSimulation]         = useState<SimulationResult | null>(null);
+  const [isSimulating, setIsSimulating]     = useState(false);
   const [simulationError, setSimulationError] = useState<string | null>(null);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting]     = useState(false);
+  const [showSuccess, setShowSuccess]       = useState(false);
   const [createdPayrollId, setCreatedPayrollId] = useState<string | null>(null);
 
-  // Chargement liste employés
+  // ── Chargement employés ──────────────────────────────────────────────────
   useEffect(() => {
-    api.get('/employees')
-      .then((data: any) => setEmployees(Array.isArray(data) ? data : []))
+    api.get<any>('/employees/simple')
+      .then(raw => {
+        const list = Array.isArray(raw) ? raw : (raw?.data ?? []);
+        setEmployees(list);
+      })
       .catch(() => setEmployees([]))
-      .finally(() => setIsLoadingData(false));
+      .finally(() => setIsLoadingEmployees(false));
   }, []);
 
-  // Relancer la simulation quand on change d'employé ou de période
+  // ── Lancer la simulation dès qu'on a un employé ou qu'on change de période ─
   useEffect(() => {
     if (!selectedEmployee) {
       setSimulation(null);
-      setOvertimeOverridden(false);
+      setSimulationError(null);
+      setOvertimeEdited(false);
       return;
     }
     runSimulation();
   }, [selectedEmployee, month, year]);
 
-  // Si le RH modifie les heures sup, relancer la simulation avec les nouvelles valeurs
+  // ── Relancer la simulation si le RH modifie les heures sup (debounce 700ms) ─
   useEffect(() => {
-    if (!selectedEmployee || !overtimeOverridden) return;
-    runSimulation(true);
+    if (!selectedEmployee || !overtimeEdited) return;
+    const t = setTimeout(() => runSimulation(true), 700);
+    return () => clearTimeout(t);
   }, [overtime10, overtime25, overtime50, overtime100]);
 
   const getMonthNumber = (m: string) =>
     MONTHS.findIndex(x => x.toLowerCase() === m.toLowerCase()) + 1;
 
-  // ============================================================================
-  // 🔮 APPEL SIMULATE — LE BACK CALCULE TOUT
-  // ============================================================================
+  // ── POST /payrolls/simulate — LE BACK CALCULE TOUT ────────────────────────
   const runSimulation = async (withOvertimeOverride = false) => {
     if (!selectedEmployee) return;
     setIsSimulating(true);
@@ -587,44 +576,45 @@ export default function CreatePayrollPage() {
         year,
       };
 
-      // Si le RH a modifié les heures sup, les envoyer pour que le back recalcule
+      // Si le RH a corrigé les heures sup, les envoyer pour recalcul
       if (withOvertimeOverride) {
-        body.overtime10  = overtime10;
-        body.overtime25  = overtime25;
-        body.overtime50  = overtime50;
-        body.overtime100 = overtime100;
+        body.overtimeHours10  = overtime10;
+        body.overtimeHours25  = overtime25;
+        body.overtimeHours50  = overtime50;
+        body.overtimeHours100 = overtime100;
       }
 
       const result = await api.post<SimulationResult>('/payrolls/simulate', body);
       setSimulation(result);
 
-      // Initialiser les heures sup depuis la simulation (pointage du back)
+      // Initialiser les heures sup depuis ce que le back a calculé (pointage)
       if (!withOvertimeOverride) {
         setOvertime10(result.overtime.hours10);
         setOvertime25(result.overtime.hours25);
         setOvertime50(result.overtime.hours50);
         setOvertime100(result.overtime.hours100);
+        setOvertimeEdited(false);
       }
     } catch (e: any) {
-      setSimulationError(e?.response?.data?.message || e?.message || 'Erreur de simulation');
+      setSimulationError(
+        e?.response?.data?.message || e?.message || 'Erreur de simulation'
+      );
       setSimulation(null);
     } finally {
       setIsSimulating(false);
     }
   };
 
-  // ============================================================================
-  // ✅ CONFIRMER — Envoyer au back pour créer le bulletin
-  // ============================================================================
+  // ── POST /payrolls — CRÉER LE BULLETIN EN BDD ─────────────────────────────
   const submitPayroll = async () => {
     if (!selectedEmployee || !simulation) return;
     setIsSubmitting(true);
     try {
       const result: any = await api.post('/payrolls', {
         employeeId: selectedEmployee.id,
-        month: getMonthNumber(month),
+        month:      getMonthNumber(month),
         year,
-        // Heures sup (potentiellement corrigées par le RH)
+        // Heures sup potentiellement corrigées par le RH
         overtime10,
         overtime25,
         overtime50,
@@ -639,9 +629,10 @@ export default function CreatePayrollPage() {
     }
   };
 
-  const fmt = (val: number) => (val || 0).toLocaleString('fr-FR');
+  const fmt = (v: number) => (v || 0).toLocaleString('fr-FR');
 
-  if (isLoadingData) return (
+  // ── Loading initial ───────────────────────────────────────────────────────
+  if (isLoadingEmployees) return (
     <div className="min-h-screen flex items-center justify-center">
       <Loader2 className="animate-spin text-sky-500" size={32} />
     </div>
@@ -653,12 +644,12 @@ export default function CreatePayrollPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button onClick={() => router.back()}
-          className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50">
+          className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
           <ArrowLeft size={20} className="text-gray-500" />
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Créer une fiche de paie</h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             Période : <span className="text-sky-500 font-bold capitalize">{month} {year}</span>
           </p>
         </div>
@@ -666,24 +657,26 @@ export default function CreatePayrollPage() {
 
       <div className="grid lg:grid-cols-5 gap-8 items-start">
 
-        {/* ── COLONNE GAUCHE : Formulaire ── */}
+        {/* ══ COLONNE GAUCHE ══ */}
         <div className="lg:col-span-3 space-y-6">
 
-          {/* Sélecteur période */}
+          {/* Période */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">Période de paie</h3>
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-4">Période de paie</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Mois</label>
-                <select value={month} onChange={e => { setMonth(e.target.value); setOvertimeOverridden(false); }}
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold focus:ring-2 focus:ring-sky-500/20 outline-none">
+                <select value={month}
+                  onChange={e => { setMonth(e.target.value); setOvertimeEdited(false); }}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none">
                   {MONTHS.map(m => <option key={m}>{m}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Année</label>
-                <select value={year} onChange={e => { setYear(Number(e.target.value)); setOvertimeOverridden(false); }}
-                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold focus:ring-2 focus:ring-sky-500/20 outline-none">
+                <select value={year}
+                  onChange={e => { setYear(Number(e.target.value)); setOvertimeEdited(false); }}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none">
                   <option>2024</option><option>2025</option><option>2026</option>
                 </select>
               </div>
@@ -701,7 +694,7 @@ export default function CreatePayrollPage() {
           {/* Erreur simulation */}
           {simulationError && (
             <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
-              <AlertCircle size={18} className="text-red-500 mt-0.5" />
+              <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-red-800 dark:text-red-200 text-sm">Simulation impossible</p>
                 <p className="text-red-600 dark:text-red-400 text-xs mt-1">{simulationError}</p>
@@ -709,18 +702,18 @@ export default function CreatePayrollPage() {
             </div>
           )}
 
-          {/* Simulation en cours */}
+          {/* Calcul en cours */}
           {isSimulating && (
-            <div className="p-4 bg-sky-50 dark:bg-sky-900/10 border border-sky-200 rounded-xl flex items-center gap-3">
-              <Loader2 size={18} className="text-sky-500 animate-spin" />
-              <p className="text-sm text-sky-700 dark:text-sky-300 font-medium">Calcul en cours depuis le serveur...</p>
+            <div className="p-4 bg-sky-50 dark:bg-sky-900/10 border border-sky-200 dark:border-sky-800 rounded-xl flex items-center gap-3">
+              <Loader2 size={16} className="text-sky-500 animate-spin shrink-0" />
+              <p className="text-sm text-sky-700 dark:text-sky-300">Calcul en cours depuis le serveur...</p>
             </div>
           )}
 
           {/* Exemptions fiscales */}
           {simulation && (!simulation.employee.isSubjectToCnss || !simulation.employee.isSubjectToIrpp) && (
             <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl flex items-start gap-3">
-              <AlertCircle size={18} className="text-amber-500 mt-0.5" />
+              <AlertCircle size={18} className="text-amber-500 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-amber-800 dark:text-amber-200 text-sm">Exemptions fiscales détectées</p>
                 <p className="text-amber-600 dark:text-amber-400 text-xs mt-1">
@@ -731,65 +724,58 @@ export default function CreatePayrollPage() {
             </div>
           )}
 
-          {/* Heures supplémentaires — affichées depuis la simulation, corrigeables */}
+          {/* Heures supplémentaires — depuis le back, corrigeables */}
           {simulation && (
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/10 dark:to-amber-900/10 rounded-2xl border border-orange-200 dark:border-orange-800 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-orange-900 dark:text-orange-200 flex items-center gap-2">
-                  <Clock size={20} /> Heures Supplémentaires
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-orange-900 dark:text-orange-200 flex items-center gap-2">
+                  <Clock size={18} /> Heures Supplémentaires
                 </h3>
-                {overtimeOverridden && (
-                  <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 px-2 py-1 rounded-full font-bold">
-                    ✏️ Modifié manuellement
-                  </span>
-                )}
-                {!overtimeOverridden && (overtime10 + overtime25 + overtime50 + overtime100) > 0 && (
-                  <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 px-2 py-1 rounded-full font-bold">
-                    Depuis le pointage
-                  </span>
-                )}
+                {overtimeEdited
+                  ? <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full font-bold">✏️ Modifié</span>
+                  : <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded-full">Depuis le pointage</span>
+                }
               </div>
-
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Ces valeurs viennent du pointage. Vous pouvez les corriger — le calcul sera relancé automatiquement.
+                Valeurs calculées automatiquement depuis le pointage. Vous pouvez les corriger — l'aperçu se met à jour.
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-xs font-bold text-amber-700 dark:text-amber-300 mb-1">
-                    HS +{simulation.settings.overtimeRate10}% — 5 premières heures
+                    HS +{simulation.settings.overtimeRate10}% — 5 premières h.
                   </label>
                   <input type="number" step="0.5" min="0" value={overtime10}
-                    onChange={e => { setOvertime10(Number(e.target.value) || 0); setOvertimeOverridden(true); }}
-                    className="w-full p-3 border border-orange-200 dark:border-orange-800 rounded-xl bg-white dark:bg-gray-800 font-mono text-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20" />
+                    onChange={e => { setOvertime10(Number(e.target.value) || 0); setOvertimeEdited(true); }}
+                    className="w-full p-3 border border-orange-200 dark:border-orange-800 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-orange-400/30" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-orange-700 dark:text-orange-300 mb-1">
                     HS +{simulation.settings.overtimeRate25}% — heures suivantes
                   </label>
                   <input type="number" step="0.5" min="0" value={overtime25}
-                    onChange={e => { setOvertime25(Number(e.target.value) || 0); setOvertimeOverridden(true); }}
-                    className="w-full p-3 border border-orange-200 dark:border-orange-800 rounded-xl bg-white dark:bg-gray-800 font-mono text-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20" />
+                    onChange={e => { setOvertime25(Number(e.target.value) || 0); setOvertimeEdited(true); }}
+                    className="w-full p-3 border border-orange-200 dark:border-orange-800 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-orange-400/30" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-orange-200 dark:border-orange-800">
                 <div>
                   <label className="block text-xs font-bold text-purple-700 dark:text-purple-300 mb-1 flex items-center gap-1">
-                    <Moon size={12} /> HS +{simulation.settings.overtimeRate50}% — nuit repos/férié
+                    <Moon size={11} /> HS +{simulation.settings.overtimeRate50}% — nuit repos/férié
                   </label>
                   <input type="number" step="0.5" min="0" value={overtime50}
-                    onChange={e => { setOvertime50(Number(e.target.value) || 0); setOvertimeOverridden(true); }}
-                    className="w-full p-3 border border-purple-200 dark:border-purple-800 rounded-xl bg-white dark:bg-gray-800 font-mono text-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20" />
+                    onChange={e => { setOvertime50(Number(e.target.value) || 0); setOvertimeEdited(true); }}
+                    className="w-full p-3 border border-purple-200 dark:border-purple-800 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-purple-400/30" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-red-700 dark:text-red-300 mb-1 flex items-center gap-1">
-                    <Moon size={12} /> HS +{simulation.settings.overtimeRate100}% — nuit dimanche/JF
+                    <Moon size={11} /> HS +{simulation.settings.overtimeRate100}% — nuit dim./JF
                   </label>
                   <input type="number" step="0.5" min="0" value={overtime100}
-                    onChange={e => { setOvertime100(Number(e.target.value) || 0); setOvertimeOverridden(true); }}
-                    className="w-full p-3 border border-red-200 dark:border-red-800 rounded-xl bg-white dark:bg-gray-800 font-mono text-lg focus:outline-none focus:ring-2 focus:ring-red-500/20" />
+                    onChange={e => { setOvertime100(Number(e.target.value) || 0); setOvertimeEdited(true); }}
+                    className="w-full p-3 border border-red-200 dark:border-red-800 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-red-400/30" />
                 </div>
               </div>
             </motion.section>
@@ -797,10 +783,10 @@ export default function CreatePayrollPage() {
 
           {/* Primes */}
           {simulation && simulation.bonuses.length > 0 && (
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-cyan-900/10 dark:to-sky-900/10 rounded-2xl border border-cyan-200 dark:border-cyan-800 p-6">
-              <h3 className="text-lg font-bold text-cyan-900 dark:text-cyan-200 mb-4 flex items-center gap-2">
-                <Gift size={20} /> Primes applicables — {month} {year}
+              <h3 className="text-base font-bold text-cyan-900 dark:text-cyan-200 mb-4 flex items-center gap-2">
+                <Gift size={18} /> Primes applicables — {month} {year}
               </h3>
               <div className="space-y-2">
                 {simulation.bonuses.map(b => (
@@ -812,12 +798,10 @@ export default function CreatePayrollPage() {
                         {b.details && ` · ${b.details}`}
                       </p>
                     </div>
-                    <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">
-                      +{fmt(b.amount)} FCFA
-                    </span>
+                    <span className="font-mono font-bold text-cyan-600 dark:text-cyan-400">+{fmt(b.amount)} FCFA</span>
                   </div>
                 ))}
-                <div className="flex justify-between items-center pt-2 border-t border-cyan-200 dark:border-cyan-800">
+                <div className="flex justify-between pt-2 border-t border-cyan-200 dark:border-cyan-800">
                   <span className="text-sm font-bold text-cyan-800 dark:text-cyan-200">Total primes</span>
                   <span className="font-mono font-bold text-cyan-700 dark:text-cyan-300">+{fmt(simulation.totalBonuses)} FCFA</span>
                 </div>
@@ -825,18 +809,18 @@ export default function CreatePayrollPage() {
             </motion.section>
           )}
 
-          {/* Déductions */}
+          {/* Déductions prêts & avances */}
           {simulation && (simulation.totalLoanDeduction > 0 || simulation.totalAdvanceDeduction > 0) && (
-            <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/10 dark:to-pink-900/10 rounded-2xl border border-red-200 dark:border-red-800 p-6">
-              <h3 className="text-lg font-bold text-red-900 dark:text-red-200 mb-4 flex items-center gap-2">
-                <DollarSign size={20} /> Déductions programmées
+              <h3 className="text-base font-bold text-red-900 dark:text-red-200 mb-4 flex items-center gap-2">
+                <DollarSign size={18} /> Déductions programmées
               </h3>
               <div className="space-y-2">
                 {simulation.loans.map(loan => (
                   <div key={loan.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-red-100 dark:border-red-900/30">
                     <div className="flex items-center gap-3">
-                      <CreditCard size={16} className="text-red-500" />
+                      <CreditCard size={15} className="text-red-500" />
                       <div>
                         <p className="text-sm font-bold text-gray-900 dark:text-white">Prêt #{loan.id.substring(0, 8)}</p>
                         <p className="text-xs text-gray-500">Solde : {fmt(loan.remainingBalance)} FCFA</p>
@@ -848,7 +832,7 @@ export default function CreatePayrollPage() {
                 {simulation.advances.map(adv => (
                   <div key={adv.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-red-100 dark:border-red-900/30">
                     <div className="flex items-center gap-3">
-                      <Wallet size={16} className="text-red-500" />
+                      <Wallet size={15} className="text-red-500" />
                       <div>
                         <p className="text-sm font-bold text-gray-900 dark:text-white">Avance #{adv.id.substring(0, 8)}</p>
                         <p className="text-xs text-gray-500">{new Date(adv.createdAt).toLocaleDateString('fr-FR')}</p>
@@ -862,34 +846,42 @@ export default function CreatePayrollPage() {
           )}
         </div>
 
-        {/* ── COLONNE DROITE : Aperçu — 100% données du back ── */}
-        <div className="lg:col-span-2">
+        {/* ══ COLONNE DROITE : Aperçu du back ══ */}
+        <div className="lg:col-span-2 sticky top-6">
           <AnimatePresence mode="wait">
             {simulation ? (
-              <motion.div key="preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden sticky top-6">
+              <motion.div key="preview"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
 
-                {/* Header bulletin */}
+                {/* Header */}
                 <div className="bg-gradient-to-r from-gray-900 to-slate-800 text-white p-6">
-                  <h3 className="font-bold text-lg">Aperçu du Bulletin</h3>
-                  <p className="text-gray-400 text-sm capitalize">{month} {year}</p>
-                  {isSimulating && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Loader2 size={14} className="animate-spin text-sky-400" />
-                      <span className="text-xs text-sky-400">Recalcul en cours...</span>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg">Aperçu du Bulletin</h3>
+                      <p className="text-gray-400 text-sm capitalize">{month} {year}</p>
                     </div>
-                  )}
+                    {isSimulating && (
+                      <div className="flex items-center gap-2">
+                        <Loader2 size={14} className="animate-spin text-sky-400" />
+                        <span className="text-xs text-sky-400">Recalcul...</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-bold text-white/80 mt-2">
+                    {simulation.employee.firstName} {simulation.employee.lastName}
+                  </p>
                 </div>
 
-                <div className="p-6 space-y-3 text-sm">
+                <div className="p-6 space-y-2 text-sm">
 
                   {/* Salaire de base */}
                   <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500">Salaire de base</span>
+                    <span className="text-gray-500 dark:text-gray-400">Salaire de base</span>
                     <span className="font-mono font-bold text-gray-900 dark:text-white">{fmt(simulation.employee.baseSalary)} F</span>
                   </div>
 
-                  {/* Déduction absences */}
+                  {/* Absence */}
                   {simulation.absenceDeduction > 0 && (
                     <div className="flex justify-between py-1.5 text-red-500">
                       <span>Absence ({simulation.workDays - simulation.daysToPay}j)</span>
@@ -897,34 +889,34 @@ export default function CreatePayrollPage() {
                     </div>
                   )}
 
-                  {/* Heures sup (montants calculés par le back) */}
-                  {simulation.overtime.amount10 > 0 && (
+                  {/* Heures sup */}
+                  {simulation.overtime.amount10  > 0 && (
                     <div className="flex justify-between py-1.5">
-                      <span className="text-gray-500">HS +{simulation.settings.overtimeRate10}% ({simulation.overtime.hours10}h)</span>
+                      <span className="text-gray-500 dark:text-gray-400">HS +{simulation.settings.overtimeRate10}% ({simulation.overtime.hours10}h)</span>
                       <span className="font-mono font-bold text-amber-600">+{fmt(simulation.overtime.amount10)} F</span>
                     </div>
                   )}
-                  {simulation.overtime.amount25 > 0 && (
+                  {simulation.overtime.amount25  > 0 && (
                     <div className="flex justify-between py-1.5">
-                      <span className="text-gray-500">HS +{simulation.settings.overtimeRate25}% ({simulation.overtime.hours25}h)</span>
+                      <span className="text-gray-500 dark:text-gray-400">HS +{simulation.settings.overtimeRate25}% ({simulation.overtime.hours25}h)</span>
                       <span className="font-mono font-bold text-orange-600">+{fmt(simulation.overtime.amount25)} F</span>
                     </div>
                   )}
-                  {simulation.overtime.amount50 > 0 && (
+                  {simulation.overtime.amount50  > 0 && (
                     <div className="flex justify-between py-1.5">
-                      <span className="text-gray-500 flex items-center gap-1"><Moon size={11} className="text-purple-400"/>HS +{simulation.settings.overtimeRate50}% ({simulation.overtime.hours50}h)</span>
+                      <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1"><Moon size={11} className="text-purple-400"/>HS +{simulation.settings.overtimeRate50}% ({simulation.overtime.hours50}h)</span>
                       <span className="font-mono font-bold text-purple-600">+{fmt(simulation.overtime.amount50)} F</span>
                     </div>
                   )}
                   {simulation.overtime.amount100 > 0 && (
                     <div className="flex justify-between py-1.5">
-                      <span className="text-gray-500 flex items-center gap-1"><Moon size={11} className="text-red-400"/>HS +{simulation.settings.overtimeRate100}% ({simulation.overtime.hours100}h)</span>
+                      <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1"><Moon size={11} className="text-red-400"/>HS +{simulation.settings.overtimeRate100}% ({simulation.overtime.hours100}h)</span>
                       <span className="font-mono font-bold text-red-600">+{fmt(simulation.overtime.amount100)} F</span>
                     </div>
                   )}
                   {simulation.overtime.total > 0 && (
                     <div className="flex justify-between text-xs text-gray-400 border-b border-gray-100 dark:border-gray-700 pb-2">
-                      <span>Sous-total heures sup.</span>
+                      <span>Sous-total HS</span>
                       <span className="font-mono font-bold text-emerald-600">+{fmt(simulation.overtime.total)} F</span>
                     </div>
                   )}
@@ -933,7 +925,7 @@ export default function CreatePayrollPage() {
                   {simulation.totalBonuses > 0 && (
                     <div className="py-2 border-b border-gray-100 dark:border-gray-700">
                       <div className="flex justify-between mb-1">
-                        <span className="text-gray-500 flex items-center gap-1"><Gift size={13} className="text-cyan-500"/>Primes</span>
+                        <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1"><Gift size={12} className="text-cyan-500"/>Primes</span>
                         <span className="font-mono font-bold text-cyan-600">+{fmt(simulation.totalBonuses)} F</span>
                       </div>
                       {simulation.bonuses.map(b => (
@@ -945,7 +937,7 @@ export default function CreatePayrollPage() {
                     </div>
                   )}
 
-                  {/* Salaire BRUT */}
+                  {/* Brut */}
                   <div className="flex justify-between py-2 bg-gray-50 dark:bg-gray-900/50 px-3 rounded-lg">
                     <span className="font-bold text-gray-800 dark:text-gray-200">Salaire Brut</span>
                     <span className="font-mono font-bold text-gray-900 dark:text-white">{fmt(simulation.grossSalary)} F</span>
@@ -962,9 +954,7 @@ export default function CreatePayrollPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className={simulation.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'}>
-                      IRPP / ITS
-                    </span>
+                    <span className={simulation.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'}>IRPP / ITS</span>
                     <span className={`font-mono ${simulation.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'}`}>
                       {simulation.employee.isSubjectToIrpp ? `-${fmt(simulation.its)} F` : '0 F (exempté)'}
                     </span>
@@ -987,33 +977,47 @@ export default function CreatePayrollPage() {
                     <div className="flex justify-between items-end">
                       <span className="text-xs font-bold text-gray-500 uppercase">Net à Payer</span>
                       <span className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-                        {fmt(simulation.netSalary)} <span className="text-sm text-gray-400 font-normal">FCFA</span>
+                        {fmt(simulation.netSalary)}{' '}
+                        <span className="text-sm text-gray-400 font-normal">FCFA</span>
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Bouton confirmer */}
+                {/* Bouton confirmer → crée en BDD */}
                 <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
                   <button onClick={submitPayroll} disabled={isSubmitting || isSimulating}
-                    className="w-full py-3 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed">
-                    {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                    {isSubmitting ? 'Enregistrement...' : 'Confirmer & Enregistrer'}
+                    className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed">
+                    {isSubmitting
+                      ? <Loader2 size={18} className="animate-spin" />
+                      : <CheckCircle2 size={18} />}
+                    {isSubmitting ? 'Enregistrement...' : 'Confirmer & Créer le Bulletin'}
                   </button>
+                  <p className="text-center text-xs text-gray-400 mt-2">
+                    Cette action crée le bulletin en base de données
+                  </p>
                 </div>
               </motion.div>
+
             ) : (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-8 text-center">
                 <Calculator size={48} className="mb-4 opacity-20" />
-                <p className="text-sm">Sélectionnez un employé pour voir l'aperçu calculé par le serveur.</p>
+                <p className="text-sm font-medium">
+                  {selectedEmployee && isSimulating
+                    ? 'Calcul en cours...'
+                    : 'Sélectionnez un employé pour voir l\'aperçu'}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  L'aperçu est calculé automatiquement par le serveur
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Modal succès */}
+      {/* ── Modal succès ── */}
       <AnimatePresence>
         {showSuccess && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
@@ -1021,20 +1025,23 @@ export default function CreatePayrollPage() {
             <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md w-full text-center">
               <CheckCircle2 size={64} className="mx-auto text-emerald-500 mb-6" />
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Bulletin Créé !</h2>
-              <p className="text-gray-500 mb-8">La fiche de paie a été générée avec succès.</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-8">
+                La fiche de paie a été enregistrée avec succès en base de données.
+              </p>
               <div className="flex gap-3">
-                <button onClick={() => { setShowSuccess(false); setSimulation(null); setSelectedEmployee(null); }}
-                  className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">
+                <button
+                  onClick={() => { setShowSuccess(false); setSimulation(null); setSelectedEmployee(null); }}
+                  className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                   Nouveau
                 </button>
                 {createdPayrollId && (
                   <button onClick={() => router.push(`/paie/bulletins/${createdPayrollId}`)}
-                    className="flex-1 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600 shadow-lg">
+                    className="flex-1 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600 shadow-lg transition-colors">
                     Voir bulletin
                   </button>
                 )}
                 <button onClick={() => router.push('/paie')}
-                  className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 shadow-lg">
+                  className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 shadow-lg transition-colors">
                   Liste paie
                 </button>
               </div>
