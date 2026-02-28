@@ -18,10 +18,8 @@ interface Employee {
     position: string;
     photoUrl?: string;
     baseSalary?: number;
-    salary?: number;
-    contract?: {
-        baseSalary?: number;
-    };
+    departmentId?: string;
+    department?: { id: string; name: string };
 }
 
 interface LoanData {
@@ -43,7 +41,7 @@ interface AdvanceData {
 
 type FormType = 'LOAN' | 'ADVANCE';
 
-// --- Components UI de base ---
+// --- Input ---
 interface InputProps {
     icon?: React.ElementType;
     label: string;
@@ -98,7 +96,7 @@ const Input = ({ icon: Icon, label, name, type = 'text', value, onChange, placeh
     </div>
 );
 
-// ✅ Composant EmployeeSelect moderne avec recherche
+// --- EmployeeSelect avec recherche ---
 interface EmployeeSelectProps {
     label: string;
     name: string;
@@ -109,7 +107,7 @@ interface EmployeeSelectProps {
     required?: boolean;
 }
 
-const EmployeeSelect = ({ label, name, value, onChange, employees, loading, required }: EmployeeSelectProps) => {
+const EmployeeSelect = ({ label, value, onChange, employees, loading, required }: EmployeeSelectProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -118,11 +116,11 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
     const filteredEmployees = useMemo(() => {
         if (!searchQuery) return employees;
         const query = searchQuery.toLowerCase();
-        return employees.filter(e => 
+        return employees.filter(e =>
             e.firstName.toLowerCase().includes(query) ||
             e.lastName.toLowerCase().includes(query) ||
-            e.employeeNumber.toLowerCase().includes(query) ||
-            e.position.toLowerCase().includes(query)
+            (e.employeeNumber || '').toLowerCase().includes(query) ||
+            (e.position || '').toLowerCase().includes(query)
         );
     }, [employees, searchQuery]);
 
@@ -137,8 +135,7 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                 {label} {required && <span className="text-red-500">*</span>}
             </label>
-            
-            {/* Bouton de sélection */}
+
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -147,18 +144,19 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
             >
                 <UserCheck size={18} className="text-gray-400 flex-shrink-0" />
                 {loading ? (
-                    <span className="text-gray-400">Chargement...</span>
+                    <span className="text-gray-400 flex-1">Chargement...</span>
                 ) : selectedEmployee ? (
-                    <div className="flex items-center gap-3 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                             {selectedEmployee.firstName[0]}{selectedEmployee.lastName[0]}
                         </div>
-                        <div className="flex-1">
-                            <p className="font-bold text-gray-900 dark:text-white">
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-gray-900 dark:text-white truncate">
                                 {selectedEmployee.firstName} {selectedEmployee.lastName}
                             </p>
-                            <p className="text-xs text-gray-500">
-                                {selectedEmployee.employeeNumber} • {selectedEmployee.position}
+                            <p className="text-xs text-gray-500 truncate">
+                                {selectedEmployee.employeeNumber && `${selectedEmployee.employeeNumber} · `}{selectedEmployee.position}
+                                {selectedEmployee.department?.name && ` · ${selectedEmployee.department.name}`}
                             </p>
                         </div>
                     </div>
@@ -168,7 +166,6 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
                 <ChevronDown size={18} className={`text-gray-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Dropdown */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -192,7 +189,7 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
                             </div>
                         </div>
 
-                        {/* Liste des employés */}
+                        {/* Liste */}
                         <div className="overflow-y-auto max-h-64">
                             {filteredEmployees.length === 0 ? (
                                 <div className="p-6 text-center text-gray-500">
@@ -209,15 +206,16 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
                                             value === emp.id ? 'bg-cyan-50 dark:bg-cyan-900/20' : ''
                                         }`}
                                     >
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0 text-sm">
                                             {emp.firstName[0]}{emp.lastName[0]}
                                         </div>
-                                        <div className="flex-1 text-left">
-                                            <p className="font-bold text-gray-900 dark:text-white text-sm">
+                                        <div className="flex-1 text-left min-w-0">
+                                            <p className="font-bold text-gray-900 dark:text-white text-sm truncate">
                                                 {emp.firstName} {emp.lastName}
                                             </p>
-                                            <p className="text-xs text-gray-500">
-                                                {emp.employeeNumber} • {emp.position}
+                                            <p className="text-xs text-gray-500 truncate">
+                                                {emp.employeeNumber && `${emp.employeeNumber} · `}{emp.position}
+                                                {emp.department?.name && ` · ${emp.department.name}`}
                                             </p>
                                         </div>
                                         {value === emp.id && (
@@ -231,17 +229,14 @@ const EmployeeSelect = ({ label, name, value, onChange, employees, loading, requ
                 )}
             </AnimatePresence>
 
-            {/* Overlay pour fermer */}
             {isOpen && (
-                <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsOpen(false)}
-                />
+                <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
             )}
         </div>
     );
 };
 
+// --- Button ---
 interface ButtonProps {
     children: React.ReactNode;
     type?: 'button' | 'submit';
@@ -257,19 +252,14 @@ const Button = ({ children, type = 'button', variant = 'primary', className = ''
         primary: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 shadow-lg hover:scale-105",
         secondary: "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
     };
-    
     return (
-        <button
-            type={type}
-            onClick={onClick}
-            disabled={disabled}
-            className={`${baseStyles} ${variants[variant]} ${className}`}
-        >
+        <button type={type} onClick={onClick} disabled={disabled} className={`${baseStyles} ${variants[variant]} ${className}`}>
             {children}
         </button>
     );
 };
 
+// --- Notification ---
 interface NotificationProps {
     type: 'success' | 'error';
     message: string;
@@ -282,7 +272,6 @@ const Notification = ({ type, message, onClose, className = '' }: NotificationPr
         success: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300',
         error: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
     };
-    
     return (
         <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -301,9 +290,9 @@ const Notification = ({ type, message, onClose, className = '' }: NotificationPr
     );
 };
 
-// --- Glass Card ---
-const GlassCard = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
-    <motion.div 
+// --- GlassCard ---
+const GlassCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+    <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
@@ -314,36 +303,28 @@ const GlassCard = ({ children, className = '' }: { children: React.ReactNode, cl
     </motion.div>
 );
 
-// --- Composant Principal ---
+// ============================================================
+// 🏦 COMPOSANT PRINCIPAL
+// ============================================================
 export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void }) => {
     const [formType, setFormType] = useState<FormType>('LOAN');
     const [formData, setFormData] = useState<any>({});
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-    
-    // État pour les employés
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loadingEmployees, setLoadingEmployees] = useState(true);
 
-    // ✅ CORRECTION : Charger tous les employés (sans filtre par status)
     useEffect(() => {
         const fetchEmployees = async () => {
             setLoadingEmployees(true);
             try {
-                const data = await api.get('/employees');
-                console.log('📥 Employés chargés:', data);
-                
-                // ✅ Cast et vérification du type
-                const employeesData = data as Employee[];
-                
-                // ✅ Ne pas filtrer par status, juste vérifier qu'ils ont un salaire valide
-                const validEmployees = employeesData.filter((e: Employee) => {
-                    const salary = e.baseSalary || e.salary || e.contract?.baseSalary || 0;
-                    return salary > 0; // Garde uniquement ceux avec un salaire
-                });
-                
-                console.log('✅ Employés valides avec salaire:', validEmployees);
-                setEmployees(validEmployees);
+                // ✅ /employees/simple — liste légère déjà filtrée par entreprise
+                // Pas d'objet paginé, pas de filtre baseSalary côté front
+                // La validation métier (salaire suffisant) est faite côté backend
+                const data = await api.get<Employee[]>('/employees/simple');
+                const list = Array.isArray(data) ? data : [];
+                console.log(`✅ ${list.length} employés chargés pour le formulaire prêts`);
+                setEmployees(list);
             } catch (error) {
                 console.error('❌ Erreur chargement employés:', error);
                 setEmployees([]);
@@ -358,69 +339,55 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
         const { name, value } = e.target;
         setFormData((prev: any) => ({
             ...prev,
-            [name]: name === 'amount' || name === 'monthlyRepayment' || name === 'deductMonth' || name === 'deductYear' 
-                ? parseFloat(value) || 0 
+            [name]: ['amount', 'monthlyRepayment', 'deductMonth', 'deductYear'].includes(name)
+                ? parseFloat(value) || 0
                 : value,
         }));
     }, []);
 
-    // Handler pour l'employé
     const handleEmployeeChange = useCallback((employeeId: string) => {
-        setFormData((prev: any) => ({
-            ...prev,
-            employeeId
-        }));
+        setFormData((prev: any) => ({ ...prev, employeeId }));
     }, []);
 
     const validateForm = useCallback((data: any) => {
         const errors: string[] = [];
-        
-        const selectedEmployee = employees.find(e => e.id === data.employeeId);
 
-        if (!selectedEmployee) {
+        if (!data.employeeId) {
             errors.push("Veuillez sélectionner un employé.");
             return errors;
         }
 
-        const baseSalary = selectedEmployee.baseSalary || 0;
-
         if (formType === 'LOAN') {
             const { amount, monthlyRepayment, startDate, endDate } = data as LoanData;
-
-            if (amount <= 0 || monthlyRepayment <= 0) {
+            if (!amount || amount <= 0 || !monthlyRepayment || monthlyRepayment <= 0) {
                 errors.push("Le montant et le remboursement mensuel doivent être positifs.");
             }
             if (!startDate || !endDate || new Date(startDate) >= new Date(endDate)) {
                 errors.push("Les dates de début et fin de prêt sont invalides.");
             }
-            if (monthlyRepayment > baseSalary * 0.3) {
-                errors.push(`Remboursement (${monthlyRepayment} F) dépasse 30% du salaire de base (${baseSalary} F).`);
-            }
-        } else if (formType === 'ADVANCE') {
+            // ⚠️ Validation métier (30% salaire, SMIC, durée 24 mois) → backend uniquement
+        } else {
             const { amount, deductMonth, deductYear } = data as AdvanceData;
-
-            if (amount <= 0) {
+            if (!amount || amount <= 0) {
                 errors.push("Le montant de l'avance doit être positif.");
             }
-            if (deductMonth < 1 || deductMonth > 12 || deductYear < 2024) {
+            if (!deductMonth || deductMonth < 1 || deductMonth > 12 || !deductYear || deductYear < 2024) {
                 errors.push("Mois ou année de déduction invalide.");
             }
-            if (amount > baseSalary * 0.5) {
-                errors.push(`Avance (${amount} F) dépasse 50% du salaire de base (${baseSalary} F).`);
-            }
+            // ⚠️ Validation métier (50% salaire) → backend uniquement
         }
-        
-        if (!data.reason || data.reason.length < 5) {
+
+        if (!data.reason || data.reason.trim().length < 5) {
             errors.push("Une raison d'au moins 5 caractères est requise.");
         }
 
         return errors;
-    }, [formType, employees]);
+    }, [formType]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null);
-        
+
         const errors = validateForm(formData);
         if (errors.length > 0) {
             setMessage({ type: 'error', text: errors.join(' / ') });
@@ -428,27 +395,23 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
         }
 
         setLoading(true);
-
         const endpoint = formType === 'LOAN' ? '/loans' : '/loans/advances';
-        const method = formType === 'LOAN' ? 'Prêt' : 'Avance';
-        
-        const payload = {
-            ...formData,
-            amount: Number(formData.amount),
-            monthlyRepayment: formType === 'LOAN' ? Number(formData.monthlyRepayment) : undefined,
-        };
+        const label    = formType === 'LOAN' ? 'Prêt' : 'Avance';
 
         try {
-            await api.post(endpoint, payload);
-            setMessage({ type: 'success', text: `${method} créé et approuvé avec succès !` });
+            await api.post(endpoint, {
+                ...formData,
+                amount: Number(formData.amount),
+                ...(formType === 'LOAN' && { monthlyRepayment: Number(formData.monthlyRepayment) }),
+            });
+            setMessage({ type: 'success', text: `${label} créé et approuvé avec succès !` });
             setFormData({});
-            setTimeout(() => {
-                onCreationSuccess();
-            }, 1500);
+            setTimeout(() => onCreationSuccess(), 1500);
         } catch (error: any) {
             console.error(error);
-            const errorMsg = error.response?.data?.message || `Erreur lors de la création du ${method}.`;
-            setMessage({ type: 'error', text: errorMsg });
+            // Afficher le message d'erreur métier du backend (30%, SMIC, durée...)
+            const msg = error?.response?.data?.message || error?.message || `Erreur lors de la création du ${label}.`;
+            setMessage({ type: 'error', text: msg });
         } finally {
             setLoading(false);
         }
@@ -464,13 +427,13 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                     Créer Financement
                 </h2>
                 <div className="flex bg-gray-100 dark:bg-slate-800 rounded-full p-1 shadow-inner">
-                    <button 
+                    <button
                         onClick={() => setFormType('LOAN')}
                         className={`px-4 py-2 text-sm font-semibold rounded-full transition-all flex items-center ${isLoan ? 'bg-cyan-600 text-white shadow-md' : 'text-gray-600 dark:text-slate-400 hover:bg-white/10'}`}
                     >
                         {isLoan && <ArrowLeft size={16} className="mr-2" />} Prêt
                     </button>
-                    <button 
+                    <button
                         onClick={() => setFormType('ADVANCE')}
                         className={`px-4 py-2 text-sm font-semibold rounded-full transition-all flex items-center ${!isLoan ? 'bg-cyan-600 text-white shadow-md' : 'text-gray-600 dark:text-slate-400 hover:bg-white/10'}`}
                     >
@@ -478,10 +441,9 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                     </button>
                 </div>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    {/* Sélecteur moderne avec recherche */}
                     <EmployeeSelect
                         label="Employé Concerné"
                         name="employeeId"
@@ -491,7 +453,6 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                         loading={loadingEmployees}
                         required
                     />
-                    
                     <Input
                         icon={DollarSign}
                         label={isLoan ? "Montant Total du Prêt (FCFA)" : "Montant de l'Avance (FCFA)"}
@@ -507,118 +468,46 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
 
                 <AnimatePresence mode="wait">
                     {isLoan ? (
-                        <motion.div 
+                        <motion.div
                             key="loan"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 overflow-hidden"
                         >
-                            <Input
-                                icon={Wallet}
-                                label="Remboursement Mensuel (FCFA)"
-                                name="monthlyRepayment"
-                                type="number"
-                                value={formData.monthlyRepayment || ''}
-                                onChange={handleChange}
-                                placeholder="Ex: 25000"
-                                min={1}
-                                required
-                            />
-                            <Input
-                                icon={Calendar}
-                                label="Date de Début"
-                                name="startDate"
-                                type="date"
-                                value={formData.startDate || ''}
-                                onChange={handleChange}
-                                required
-                            />
-                            <Input
-                                icon={Clock}
-                                label="Date de Fin Estimée"
-                                name="endDate"
-                                type="date"
-                                value={formData.endDate || ''}
-                                onChange={handleChange}
-                                required
-                            />
+                            <Input icon={Wallet} label="Remboursement Mensuel (FCFA)" name="monthlyRepayment" type="number" value={formData.monthlyRepayment || ''} onChange={handleChange} placeholder="Ex: 25000" min={1} required />
+                            <Input icon={Calendar} label="Date de Début" name="startDate" type="date" value={formData.startDate || ''} onChange={handleChange} required />
+                            <Input icon={Clock} label="Date de Fin Estimée" name="endDate" type="date" value={formData.endDate || ''} onChange={handleChange} required />
                         </motion.div>
                     ) : (
-                        <motion.div 
+                        <motion.div
                             key="advance"
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 overflow-hidden"
                         >
-                            <Input
-                                icon={Calendar}
-                                label="Mois de Déduction (1-12)"
-                                name="deductMonth"
-                                type="number"
-                                value={formData.deductMonth || ''}
-                                onChange={handleChange}
-                                min={1}
-                                max={12}
-                                placeholder="Ex: 10 (Octobre)"
-                                required
-                            />
-                            <Input
-                                icon={Clock}
-                                label="Année de Déduction"
-                                name="deductYear"
-                                type="number"
-                                value={formData.deductYear || ''}
-                                onChange={handleChange}
-                                min={new Date().getFullYear()}
-                                placeholder="Ex: 2026"
-                                required
-                            />
+                            <Input icon={Calendar} label="Mois de Déduction (1-12)" name="deductMonth" type="number" value={formData.deductMonth || ''} onChange={handleChange} min={1} max={12} placeholder="Ex: 10 (Octobre)" required />
+                            <Input icon={Clock} label="Année de Déduction" name="deductYear" type="number" value={formData.deductYear || ''} onChange={handleChange} min={new Date().getFullYear()} placeholder="Ex: 2026" required />
                         </motion.div>
                     )}
                 </AnimatePresence>
-                
+
                 <div className="mb-6">
-                    <Input
-                        icon={List}
-                        label="Raison du Financement / Avance"
-                        name="reason"
-                        type="textarea"
-                        value={formData.reason || ''}
-                        onChange={handleChange}
-                        placeholder="Détaillez la raison (achat immobilier, dépense imprévue, etc.)"
-                        required
-                    />
+                    <Input icon={List} label="Raison du Financement / Avance" name="reason" type="textarea" value={formData.reason || ''} onChange={handleChange} placeholder="Détaillez la raison (achat immobilier, dépense imprévue, etc.)" required />
                 </div>
-                
+
                 <AnimatePresence>
                     {message && (
-                        <Notification 
-                            type={message.type} 
-                            message={message.text} 
-                            onClose={() => setMessage(null)} 
-                            className="mb-4"
-                        />
+                        <Notification type={message.type} message={message.text} onClose={() => setMessage(null)} className="mb-4" />
                     )}
                 </AnimatePresence>
 
-                <Button
-                    type="submit"
-                    variant="primary"
-                    className="w-full flex items-center justify-center"
-                    disabled={loading}
-                >
+                <Button type="submit" variant="primary" className="w-full flex items-center justify-center" disabled={loading}>
                     {loading ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Traitement...
-                        </>
+                        <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Traitement...</>
                     ) : (
-                        <>
-                            <Save className="mr-2 h-5 w-5" />
-                            {isLoan ? "Approuver et Enregistrer le Prêt" : "Approuver et Enregistrer l'Avance"}
-                        </>
+                        <><Save className="mr-2 h-5 w-5" />{isLoan ? "Approuver et Enregistrer le Prêt" : "Approuver et Enregistrer l'Avance"}</>
                     )}
                 </Button>
             </form>

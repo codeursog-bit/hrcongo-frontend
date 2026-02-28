@@ -1322,39 +1322,6 @@ const StatusDot = ({ status }: { status: string }) => {
   return <span className={`inline-block w-2 h-2 rounded-full ${map[status] || 'bg-gray-400'}`} />;
 };
 
-// ─── Mini carte stat équipe ───────────────────────────────────────────────────
-const TeamStatCard = ({
-  label, value, sub, color, icon: Icon
-}: {
-  label: string; value: number | string; sub?: string;
-  color: string; icon: React.ElementType;
-}) => (
-  <div className={`relative overflow-hidden rounded-2xl p-5 border ${color} flex flex-col gap-2`}>
-    <div className="flex items-center justify-between">
-      <p className="text-xs font-bold uppercase tracking-wider opacity-70">{label}</p>
-      <Icon size={18} className="opacity-60" />
-    </div>
-    <p className="text-3xl font-bold">{value}</p>
-    {sub && <p className="text-xs opacity-60">{sub}</p>}
-  </div>
-);
-
-// ─── Barre de présence visuelle ───────────────────────────────────────────────
-const PresenceBar = ({ present, late, absent, total }: {
-  present: number; late: number; absent: number; total: number;
-}) => {
-  if (total === 0) return null;
-  const pPct = (present / total) * 100;
-  const lPct = (late / total) * 100;
-  const aPct = (absent / total) * 100;
-  return (
-    <div className="w-full h-3 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex">
-      <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${pPct}%` }} title={`${present} présents`} />
-      <div className="bg-orange-400 transition-all duration-700" style={{ width: `${lPct}%` }} title={`${late} retards`} />
-      <div className="bg-red-400 transition-all duration-700" style={{ width: `${aPct}%` }} title={`${absent} absents`} />
-    </div>
-  );
-};
 
 export const DashboardContent = () => {
   const router = useRouter();
@@ -1489,7 +1456,7 @@ export const DashboardContent = () => {
   if (loading) return <GlobalLoader />;
 
   // ══════════════════════════════════════════════════════════════
-  // 👔 VUE MANAGER
+  // 👔 VUE MANAGER — même niveau visuel que l'ADMIN
   // ══════════════════════════════════════════════════════════════
   if (userRole === 'MANAGER') {
     const m = managerStats;
@@ -1501,7 +1468,7 @@ export const DashboardContent = () => {
     return (
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8">
 
-        {/* ── HEADER ── */}
+        {/* ── HEADER — identique admin ── */}
         <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -1520,110 +1487,113 @@ export const DashboardContent = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={() => router.push('/presences')}
-              className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20 text-sm"
-            >
+            <button onClick={() => router.push('/presences')}
+              className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20 text-sm">
               <Activity size={16} /> Présences équipe
             </button>
-            <button
-              onClick={() => router.push('/conges')}
-              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 text-gray-700 dark:text-white font-bold rounded-xl transition-all flex items-center gap-2 text-sm"
-            >
+            <button onClick={() => router.push('/conges')}
+              className="px-4 py-2 bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-white font-bold rounded-xl transition-all flex items-center gap-2 text-sm backdrop-blur-xl">
               <Calendar size={16} /> Congés
               {m.pendingLeaves > 0 && (
-                <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {m.pendingLeaves}
-                </span>
+                <span className="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{m.pendingLeaves}</span>
               )}
             </button>
           </div>
         </motion.div>
 
-        {/* ── STATS ÉQUIPE — 4 CARDS ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* ── STATS ÉQUIPE — 4 StatCard identiques admin ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <motion.div variants={itemVariants}>
-            <TeamStatCard
-              label="Membres" value={m.teamSize || 0}
-              sub="Actifs dans l'équipe"
-              color="bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800 text-sky-900 dark:text-sky-100"
-              icon={Users}
+            <StatCard
+              label="Membres Équipe" value={(m.teamSize || 0).toString()}
+              trend={m.departmentName || 'Département'} isPositive={true}
+              icon={Users} gradientFrom="from-cyan-500" gradientTo="to-blue-600"
             />
           </motion.div>
           <motion.div variants={itemVariants}>
-            <TeamStatCard
-              label="Présents" value={m.presentCount || 0}
-              sub={`${presenceRate}% de l'équipe`}
-              color="bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100"
-              icon={UserCheck}
+            <StatCard
+              label="Présents" value={(m.presentCount || 0).toString()}
+              trend={`${presenceRate}% de l'équipe`} isPositive={presenceRate >= 70}
+              icon={UserCheck} gradientFrom="from-emerald-400" gradientTo="to-teal-600"
             />
           </motion.div>
           <motion.div variants={itemVariants}>
-            <TeamStatCard
-              label="Absents" value={m.absentCount || 0}
-              sub={m.lateCount > 0 ? `dont ${m.lateCount} retard${m.lateCount > 1 ? 's' : ''}` : 'Aujourd\'hui'}
-              color="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100"
-              icon={UserX}
+            <StatCard
+              label="Absents" value={(m.absentCount || 0).toString()}
+              trend={m.lateCount > 0 ? `dont ${m.lateCount} retard${m.lateCount > 1 ? 's' : ''}` : "Aujourd'hui"}
+              isPositive={m.absentCount === 0}
+              icon={UserX} gradientFrom="from-orange-400" gradientTo="to-red-500"
             />
           </motion.div>
           <motion.div variants={itemVariants}>
-            <TeamStatCard
-              label="Congés" value={m.onLeaveCount || 0}
-              sub={`${m.pendingLeaves || 0} en attente`}
-              color="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-100"
-              icon={Umbrella}
+            <StatCard
+              label="Congés en cours" value={(m.onLeaveCount || 0).toString()}
+              trend={`${m.pendingLeaves || 0} en attente`} isPositive={m.pendingLeaves === 0}
+              icon={Umbrella} gradientFrom="from-violet-500" gradientTo="to-purple-600"
             />
           </motion.div>
         </div>
 
-        {/* ── BARRE PRÉSENCE + TAUX ── */}
-        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        {/* ── BARRE PRÉSENCE — même style carte admin ── */}
+        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-900 dark:text-white">Présence aujourd'hui</h3>
-            <span className={`text-3xl font-bold ${rateColor}`}>{presenceRate}%</span>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Présence aujourd'hui</h3>
+              <p className="text-sm text-gray-500 dark:text-slate-400">{m.teamSize || 0} membres dans l'équipe</p>
+            </div>
+            <span className={`text-4xl font-extrabold ${rateColor}`}>{presenceRate}%</span>
           </div>
-          <PresenceBar
-            present={m.presentCount || 0}
-            late={m.lateCount || 0}
-            absent={m.absentCount || 0}
-            total={m.teamSize || 1}
-          />
-          <div className="flex gap-6 mt-3 text-xs text-gray-500 dark:text-gray-400">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />Présent ({m.presentCount || 0})</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400" />Retard ({m.lateCount || 0})</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400" />Absent ({m.absentCount || 0})</span>
-          </div>
+          {/* Barre visuelle */}
+          {(() => {
+            const total = m.teamSize || 1;
+            const pPct  = ((m.presentCount || 0) / total) * 100;
+            const lPct  = ((m.lateCount    || 0) / total) * 100;
+            const aPct  = ((m.absentCount  || 0) / total) * 100;
+            return (
+              <>
+                <div className="w-full h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-white/10 flex">
+                  <div className="bg-emerald-500 transition-all duration-700 rounded-l-full" style={{ width: `${pPct}%` }} />
+                  <div className="bg-orange-400 transition-all duration-700" style={{ width: `${lPct}%` }} />
+                  <div className="bg-red-400 transition-all duration-700 rounded-r-full" style={{ width: `${aPct}%` }} />
+                </div>
+                <div className="flex gap-6 mt-3 text-xs text-gray-500 dark:text-slate-400">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />Présent ({m.presentCount || 0})</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400" />Retard ({m.lateCount || 0})</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-red-400" />Absent ({m.absentCount || 0})</span>
+                </div>
+              </>
+            );
+          })()}
         </motion.div>
 
+        {/* ── GRILLE 3 COLONNES — même style panneaux admin ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* ── ABSENTS DU JOUR ── */}
-          <motion.div variants={itemVariants} className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          {/* Absents du jour */}
+          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-white/10 shadow-xl overflow-hidden">
+            <div className="p-5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
               <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <UserX size={18} className="text-red-400" /> Absents du jour
               </h3>
-              <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-full font-bold">
+              <span className="text-xs bg-red-500/10 text-red-500 px-2.5 py-1 rounded-full font-bold border border-red-500/20">
                 {(m.absentMembers || []).length}
               </span>
             </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-72 overflow-y-auto">
+            <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-72 overflow-y-auto">
               {(m.absentMembers || []).length === 0 ? (
                 <div className="p-8 text-center">
                   <CheckCircle size={32} className="mx-auto text-emerald-400 mb-2" />
-                  <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Tout le monde est là !</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-slate-300">Tout le monde est là !</p>
                 </div>
               ) : (
                 m.absentMembers.map((emp: any) => (
-                  <div key={emp.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 font-bold text-sm shrink-0">
+                  <div key={emp.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 font-bold text-sm shrink-0">
                       {emp.firstName[0]}{emp.lastName[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                        {emp.firstName} {emp.lastName}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">{emp.position}</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{emp.firstName} {emp.lastName}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{emp.position}</p>
                     </div>
                     <StatusDot status={emp.status} />
                   </div>
@@ -1632,34 +1602,30 @@ export const DashboardContent = () => {
             </div>
           </motion.div>
 
-          {/* ── MEMBRES DE L'ÉQUIPE ── */}
-          <motion.div variants={itemVariants} className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          {/* Mon équipe */}
+          <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-white/10 shadow-xl overflow-hidden">
+            <div className="p-5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
               <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Users size={18} className="text-sky-400" /> Mon équipe
               </h3>
-              <button
-                onClick={() => router.push('/employes')}
-                className="text-xs text-sky-500 font-bold hover:text-sky-600 flex items-center gap-1"
-              >
+              <button onClick={() => router.push('/employes')}
+                className="text-xs text-sky-500 font-bold hover:text-sky-400 flex items-center gap-1 transition-colors">
                 Voir tout <ChevronRight size={14} />
               </button>
             </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-72 overflow-y-auto">
+            <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-72 overflow-y-auto">
               {(m.teamMembers || []).slice(0, 8).map((emp: any) => (
-                <div key={emp.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                <div key={emp.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                   <img
                     src={emp.photoUrl || `https://ui-avatars.com/api/?name=${emp.firstName}+${emp.lastName}&background=random`}
-                    className="w-9 h-9 rounded-full object-cover shrink-0"
+                    className="w-9 h-9 rounded-full object-cover shrink-0 border border-gray-200 dark:border-white/10"
                     alt=""
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                      {emp.firstName} {emp.lastName}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">{emp.position}</p>
+                    <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{emp.firstName} {emp.lastName}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 truncate">{emp.position}</p>
                   </div>
-                  <span className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded font-mono">
+                  <span className="text-[10px] bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-slate-400 px-2 py-0.5 rounded font-mono border border-gray-200 dark:border-white/10">
                     {emp.contractType}
                   </span>
                 </div>
@@ -1667,37 +1633,35 @@ export const DashboardContent = () => {
             </div>
           </motion.div>
 
-          {/* ── ACTIVITÉ RÉCENTE + DEMANDES CONGÉS ── */}
-          <motion.div variants={itemVariants} className="lg:col-span-1 space-y-4">
+          {/* Congés récents + Derniers pointages */}
+          <motion.div variants={itemVariants} className="space-y-4">
 
-            {/* Demandes de congé récentes */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            {/* Congés */}
+            <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-white/10 shadow-xl overflow-hidden">
+              <div className="p-4 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <Calendar size={16} className="text-orange-400" /> Congés récents
                 </h3>
                 {m.pendingLeaves > 0 && (
-                  <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-xs bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded-full font-bold border border-orange-500/20">
                     {m.pendingLeaves} en attente
                   </span>
                 )}
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-40 overflow-y-auto">
+              <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-40 overflow-y-auto">
                 {(m.recentLeaveRequests || []).length === 0 ? (
-                  <p className="p-4 text-xs text-gray-400 text-center">Aucune demande récente</p>
+                  <p className="p-4 text-xs text-gray-400 dark:text-slate-500 text-center italic">Aucune demande récente</p>
                 ) : (
                   m.recentLeaveRequests.map((l: any) => (
-                    <div key={l.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <div key={l.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                          {l.employee.firstName} {l.employee.lastName}
-                        </p>
-                        <p className="text-[10px] text-gray-400">{l.type} · {l.daysCount}j</p>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{l.employee.firstName} {l.employee.lastName}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-slate-500">{l.type} · {l.daysCount}j</p>
                       </div>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                        l.status === 'PENDING'  ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' :
-                        l.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                        'bg-red-100 text-red-600'
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold border ${
+                        l.status === 'PENDING'  ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' :
+                        l.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                        'bg-red-500/10 text-red-500 border-red-500/20'
                       }`}>
                         {l.status === 'PENDING' ? 'Attente' : l.status === 'APPROVED' ? 'OK' : 'Refusé'}
                       </span>
@@ -1707,25 +1671,25 @@ export const DashboardContent = () => {
               </div>
             </div>
 
-            {/* Activité pointage */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+            {/* Derniers pointages */}
+            <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-gray-200 dark:border-white/10 shadow-xl overflow-hidden">
+              <div className="p-4 border-b border-gray-100 dark:border-white/5">
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <Timer size={16} className="text-emerald-400" /> Derniers pointages
                 </h3>
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-40 overflow-y-auto">
+              <div className="divide-y divide-gray-100 dark:divide-white/5 max-h-40 overflow-y-auto">
                 {(m.recentActivity || []).length === 0 ? (
-                  <p className="p-4 text-xs text-gray-400 text-center">Aucune activité</p>
+                  <p className="p-4 text-xs text-gray-400 dark:text-slate-500 text-center italic">Aucune activité</p>
                 ) : (
                   m.recentActivity.slice(0, 5).map((act: any) => (
-                    <div key={act.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-750">
+                    <div key={act.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
                       <StatusDot status={act.checkOut ? 'REMOTE' : 'PRESENT'} />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{act.text}</p>
-                        <p className="text-[10px] text-gray-400">{act.subText}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-slate-500">{act.subText}</p>
                       </div>
-                      <p className="text-[10px] font-mono text-gray-400 shrink-0">
+                      <p className="text-[10px] font-mono text-cyan-600 dark:text-cyan-500 shrink-0">
                         {act.time ? new Date(act.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'}
                       </p>
                     </div>
@@ -1736,59 +1700,57 @@ export const DashboardContent = () => {
           </motion.div>
         </div>
 
-        {/* ── PERSO MANAGER : son salaire + son pointage ── */}
-        <motion.div variants={itemVariants}>
-          <div className="bg-gradient-to-r from-sky-50 to-indigo-50 dark:from-sky-900/20 dark:to-indigo-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl p-5">
-            <h3 className="text-sm font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <User size={14} /> Mon espace personnel
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-sky-100 dark:border-sky-800">
-                <p className="text-xs text-gray-500 mb-1">Congés en attente</p>
-                <p className="text-2xl font-bold text-orange-500">{myStats.pendingLeaves || 0}</p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-sky-100 dark:border-sky-800 cursor-pointer" onClick={() => setShowSalary(!showSalary)}>
-                <p className="text-xs text-gray-500 mb-1">Dernier salaire</p>
-                {showSalary
-                  ? <p className="text-xl font-bold text-emerald-600">{myStats.lastSalary || '—'}</p>
-                  : <p className="text-xl font-bold text-gray-400 tracking-widest">••••••</p>
-                }
-                <p className="text-[10px] text-gray-400 mt-0.5">{myStats.lastSalaryMonth || '—'}</p>
-              </div>
-              <div
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-sky-100 dark:border-sky-800 cursor-pointer hover:bg-gray-50"
-                onClick={() => router.push('/presences/pointage')}
-              >
-                <p className="text-xs text-gray-500 mb-1">Mon pointage</p>
-                {myStats.checkIn ? (
-                  <>
-                    <p className="text-sm font-bold text-emerald-600">
-                      {myStats.checkOut ? '✓ Journée finie' : '⏳ En cours'}
-                    </p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">
-                      Entrée {new Date(myStats.checkIn).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm font-bold text-gray-400">Non pointé</p>
-                )}
-              </div>
-              <div
-                className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-sky-100 dark:border-sky-800 cursor-pointer hover:bg-gray-50"
-                onClick={() => router.push('/conges/nouveau')}
-              >
-                <p className="text-xs text-gray-500 mb-1">Actions rapides</p>
-                <div className="flex gap-2 mt-1">
-                  <span className="text-[10px] bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 px-2 py-1 rounded-lg font-bold cursor-pointer hover:bg-sky-200 transition-colors">
-                    + Congé
-                  </span>
-                  <span
-                    className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-lg font-bold cursor-pointer hover:bg-emerald-200 transition-colors"
-                    onClick={e => { e.stopPropagation(); router.push('/presences/pointage-manuel'); }}
-                  >
-                    Pointer équipe
-                  </span>
-                </div>
+        {/* ── ESPACE PERSO — même style panneaux admin ── */}
+        <motion.div variants={itemVariants} className="bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 dark:border-white/10 shadow-xl">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="p-2 bg-sky-500/10 rounded-xl"><User size={16} className="text-sky-500" /></div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Mon espace personnel</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* Congés */}
+            <div onClick={() => router.push('/conges/nouveau')} className="group cursor-pointer bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-2xl p-4 border border-gray-100 dark:border-white/5 transition-all hover:-translate-y-0.5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full bg-orange-500" />
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">Congés en attente</p>
+              <p className="text-2xl font-extrabold text-orange-500">{myStats.pendingLeaves || 0}</p>
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1 flex items-center gap-1"><ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />Demander congé</p>
+            </div>
+            {/* Salaire */}
+            <div onClick={() => setShowSalary(!showSalary)} className="cursor-pointer bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-2xl p-4 border border-gray-100 dark:border-white/5 transition-all hover:-translate-y-0.5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full bg-emerald-500" />
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">Dernier salaire</p>
+              {showSalary
+                ? <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 truncate">{myStats.lastSalary || '—'}</p>
+                : <p className="text-xl font-extrabold text-gray-300 dark:text-slate-600 tracking-widest">••••••</p>
+              }
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">{myStats.lastSalaryMonth || '—'}</p>
+            </div>
+            {/* Pointage */}
+            <div onClick={() => router.push('/presences/pointage')} className="cursor-pointer bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 rounded-2xl p-4 border border-gray-100 dark:border-white/5 transition-all hover:-translate-y-0.5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 opacity-10 rounded-bl-full bg-sky-500" />
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">Mon pointage</p>
+              {myStats.checkIn ? (
+                <>
+                  <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{myStats.checkOut ? '✓ Journée finie' : '⏳ En cours'}</p>
+                  <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">
+                    Entrée {new Date(myStats.checkIn).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm font-bold text-gray-400 dark:text-slate-500">Non pointé</p>
+              )}
+            </div>
+            {/* Actions */}
+            <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5">
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-3">Actions rapides</p>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => router.push('/conges/nouveau')}
+                  className="w-full text-[11px] bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 px-2 py-1.5 rounded-lg font-bold transition-colors border border-sky-500/20 text-left flex items-center gap-1.5">
+                  <Calendar size={12} /> + Congé
+                </button>
+                <button onClick={() => router.push('/presences/pointage-manuel')}
+                  className="w-full text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1.5 rounded-lg font-bold transition-colors border border-emerald-500/20 text-left flex items-center gap-1.5">
+                  <Fingerprint size={12} /> Pointer équipe
+                </button>
               </div>
             </div>
           </div>
