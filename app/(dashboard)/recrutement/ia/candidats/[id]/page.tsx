@@ -227,10 +227,11 @@ export default function DetailCandidatIAPage({ params }: { params: { id: string 
               </div>
 
               {/* Download CV */}
-              <a 
-                href={candidate.resumeUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
+             <a 
+  href={candidate.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')} 
+  target="_blank" 
+  rel="noopener noreferrer"
+  download
                 className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-xl transition-all flex items-center justify-center gap-2"
               >
                 <Download size={20} />
