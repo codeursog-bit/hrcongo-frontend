@@ -429,7 +429,6 @@
 
 
 
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -563,7 +562,7 @@ export default function JobDetailPage() {
   const salary = getSalary();
   const daysLeft = getDaysRemaining();
   const applyHref = job.processingMode === 'AI_ASSISTED' ? `/jobs/ia/${job.id}` : `/jobs/manuel/${job.id}`;
-  const companyHref = `/companies/${job.company.slug || job.company.id}`;
+  const companyHref = `/entreprises/${job.company.slug || job.company.id}`;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">

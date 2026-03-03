@@ -773,7 +773,7 @@ export default function JobPortalPage() {
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-sm">
               <Link href="/jobs/portal" className="text-white font-semibold border-b-2 border-cyan-400 pb-0.5">Offres</Link>
-              <Link href="/companies" className="text-slate-400 hover:text-white transition-colors">Entreprises</Link>
+              <Link href="/entreprises" className="text-slate-400 hover:text-white transition-colors">Entreprises</Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -1026,7 +1026,7 @@ export default function JobPortalPage() {
               <p className="text-slate-600 text-xs leading-relaxed">Plateforme de recrutement pour l'Afrique centrale.</p>
             </div>
             {[
-              { title: 'Candidats', links: [['Offres', '/jobs/portal'], ['Entreprises', '/companies'], ['Créer un profil', '/register']] },
+              { title: 'Candidats', links: [['Offres', '/jobs/portal'], ['Entreprises', '/entreprises'], ['Créer un profil', '/register']] },
               { title: 'Recruteurs', links: [['Publier une offre', '/recrutement/nouveau'], ['Solution SIRH', '/sirh'], ['Contact', '/contact']] },
               { title: 'À propos', links: [['Qui sommes-nous', '/about'], ['CGU', '/cgu'], ['Confidentialité', '/privacy']] },
             ].map(col => (
