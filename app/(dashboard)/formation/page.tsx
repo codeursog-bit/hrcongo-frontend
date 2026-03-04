@@ -8,7 +8,7 @@ import {
   BarChart3, Target, Zap, ArrowUpRight, Bell, ClipboardList,
   Ban, ChevronRight, Info, Briefcase, BadgeCheck, ScrollText,
   Send, ShieldCheck, PlayCircle, Check, AlertCircle, Flame,
-  Trophy, BookMarked, RotateCcw, UserCheck, Edit3
+  Trophy, BookMarked, RotateCcw, UserCheck, Edit3, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -17,7 +17,7 @@ import { api } from '@/services/api';
 
 type CourseFormat    = 'ONLINE' | 'IN_PERSON' | 'HYBRID';
 type ProviderType    = 'INTERNAL' | 'EXTERNAL_VENDOR' | 'ONLINE_PLATFORM';
-type TrainingStatus  = 'REQUESTED' | 'APPROVED' | 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NOT_STARTED';
+type TrainingStatus  = 'REQUESTED' | 'APPROVED' | 'PLANNED' | 'IN_PROGRESS' | 'COMPLETION_REQUESTED' | 'COMPLETED' | 'CANCELLED' | 'NOT_STARTED';
 type ActiveView      = 'dashboard' | 'catalog' | 'my-learning' | 'requests' | 'pfa';
 
 interface Course {
@@ -86,10 +86,34 @@ interface PfaData {
 }
 
 interface MyTrainings {
-  assigned:   any[];
-  inProgress: any[];
-  completed:  any[];
-  requested:  any[];
+  assigned:            any[];
+  inProgress:          any[];
+  completionRequested: any[];
+  completed:           any[];
+  requested:           any[];
+}
+
+interface CertificateData {
+  ref: string;
+  employeeName: string;
+  position?: string;
+  department?: string;
+  courseTitle: string;
+  durationHours?: number;
+  providerName?: string;
+  mention: string;
+  validationNote?: string;
+  validatedBy: string;
+  validatedAt: string;
+  year: number;
+}
+
+interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  department?: { name: string };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -110,6 +134,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
   IN_PROGRESS: { label: 'En cours',    color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20',      icon: <PlayCircle size={11} /> },
   COMPLETED:   { label: 'Certifiée',   color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: <CheckCircle2 size={11} /> },
   CANCELLED:   { label: 'Annulée',     color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20',        icon: <Ban size={11} /> },
+  COMPLETION_REQUESTED: { label: 'Validation en attente', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20', icon: <Clock size={11} /> },
   NOT_STARTED: { label: 'Non démarrée', color: 'text-slate-400',  bg: 'bg-slate-500/10 border-slate-500/20',   icon: <Clock size={11} /> },
 };
 
@@ -195,17 +220,18 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
       className="group relative bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-white/8 rounded-2xl overflow-hidden cursor-pointer hover:border-sky-300 dark:hover:border-sky-500/40 hover:shadow-xl hover:shadow-sky-500/10 transition-all duration-300 flex flex-col"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden bg-slate-100 dark:bg-slate-900">
+      <div className="relative aspect-video overflow-hidden bg-slate-100 dark:bg-slate-900 shrink-0">
         {course.thumbnailUrl ? (
           <img src={course.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={course.title} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900">
             <div className="w-14 h-14 rounded-2xl bg-slate-200 dark:bg-white/5 flex items-center justify-center">
               {course.format === 'IN_PERSON' ? <Ticket size={28} className="text-slate-400" /> : <BookOpen size={28} className="text-slate-400" />}
             </div>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        {/* Gradient permanent pour protéger le contenu */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
 
         {/* Status badges */}
         <div className="absolute top-2.5 left-2.5 flex gap-1.5">
@@ -292,6 +318,12 @@ export default function FormationPage() {
   const [showCourseModal, setShowCourseModal]   = useState<Course | null>(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal]   = useState<DeptBudget | null>(null);
+  const [showAssignModal, setShowAssignModal]   = useState<Course | null>(null);
+  const [validateModal, setValidateModal]       = useState<{ sessionId: string; employeeName: string; courseTitle: string } | null>(null);
+  const [validateForm, setValidateForm]         = useState({ mention: '', note: '' });
+  const [employees, setEmployees]               = useState<Employee[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
 
   // Actions
   const [isJoining, setIsJoining]       = useState(false);
@@ -327,7 +359,10 @@ export default function FormationPage() {
   useEffect(() => {
     if (!currentUser) return;
     loadCourses();
-    if (isRH || isManager) loadDashboard();
+    if (isRH || isManager) {
+      loadDashboard();
+      loadRequests();
+    }
     loadMyTrainings();
   }, [currentUser]);
 
@@ -419,18 +454,35 @@ export default function FormationPage() {
     finally { setIsJoining(false); }
   };
 
-  const handleComplete = async (course: Course) => {
-    // Trouver la session via myTrainings
-    const session = myTrainings?.inProgress.find((s: any) => s.courseId === course.id || s.course?.id === course.id);
+  // Employé demande validation
+  const handleRequestCompletion = async (course: Course) => {
+    const session = myTrainings?.inProgress.find((s: any) => s.course?.id === course.id);
     if (!session) return;
     setActionId(session.id);
     try {
-      await api.patch(`/training/complete/${session.id}`, {});
+      await api.patch(`/training/request-completion/${session.id}`, {});
       await loadCourses();
       await loadMyTrainings();
       setShowCourseModal(null);
-    } catch { alert('Erreur lors de la clôture.'); }
+    } catch (e: any) { alert(e?.message ?? 'Erreur.'); }
     finally { setActionId(null); }
+  };
+
+  // RH valide avec mention
+  const handleValidateCompletion = async () => {
+    if (!validateModal || !validateForm.mention) return;
+    setIsSubmitting(true);
+    try {
+      await api.patch(`/training/validate/${validateModal.sessionId}`, {
+        mention: validateForm.mention,
+        validationNote: validateForm.note || undefined,
+      });
+      await loadRequests();
+      await loadDashboard();
+      setValidateModal(null);
+      setValidateForm({ mention: '', note: '' });
+    } catch (e: any) { alert(e?.message ?? 'Erreur lors de la validation.'); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleSendRequest = async () => {
@@ -458,6 +510,253 @@ export default function FormationPage() {
     finally { setActionId(null); }
   };
 
+  const generateCertificate = (data: CertificateData) => {
+    const canvas = document.createElement('canvas');
+    canvas.width  = 1122;
+    canvas.height = 794;
+    const ctx = canvas.getContext('2d')!;
+
+    // ── Fond ────────────────────────────────────────────────────────────────
+    const bg = ctx.createLinearGradient(0, 0, 1122, 794);
+    bg.addColorStop(0,   '#0c1426');
+    bg.addColorStop(0.5, '#0f1e3d');
+    bg.addColorStop(1,   '#0c1426');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 1122, 794);
+
+    // ── Motif géométrique fond ───────────────────────────────────────────────
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    ctx.lineWidth   = 1;
+    for (let i = 0; i < 1122; i += 40) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 794); ctx.stroke();
+    }
+    for (let j = 0; j < 794; j += 40) {
+      ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(1122, j); ctx.stroke();
+    }
+
+    // ── Bordure extérieure or ────────────────────────────────────────────────
+    const borderGrad = ctx.createLinearGradient(0, 0, 1122, 0);
+    borderGrad.addColorStop(0,   '#b8860b');
+    borderGrad.addColorStop(0.5, '#ffd700');
+    borderGrad.addColorStop(1,   '#b8860b');
+    ctx.strokeStyle = borderGrad;
+    ctx.lineWidth   = 8;
+    ctx.strokeRect(24, 24, 1074, 746);
+
+    // ── Bordure intérieure fine ──────────────────────────────────────────────
+    ctx.strokeStyle = 'rgba(255,215,0,0.25)';
+    ctx.lineWidth   = 1.5;
+    ctx.strokeRect(36, 36, 1050, 722);
+
+    // ── Coins décoratifs ─────────────────────────────────────────────────────
+    const corners = [[50,50],[1072,50],[50,744],[1072,744]];
+    corners.forEach(([cx, cy]) => {
+      ctx.strokeStyle = 'rgba(255,215,0,0.6)';
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,215,0,0.15)';
+      ctx.fill();
+    });
+
+    // ── En-tête : République du Congo + entreprise ───────────────────────────
+    ctx.fillStyle   = 'rgba(255,215,0,0.12)';
+    ctx.fillRect(0, 60, 1122, 70);
+
+    ctx.fillStyle   = 'rgba(255,215,0,0.8)';
+    ctx.font        = 'bold 11px sans-serif';
+    ctx.textAlign   = 'center';
+    ctx.letterSpacing = '4px';
+    ctx.fillText('RÉPUBLIQUE DU CONGO  •  CERTIFICAT OFFICIEL DE FORMATION PROFESSIONNELLE', 561, 100);
+    ctx.letterSpacing = '0px';
+
+    // ── Ligne décorative ─────────────────────────────────────────────────────
+    const lineGrad = ctx.createLinearGradient(100, 0, 1022, 0);
+    lineGrad.addColorStop(0,   'transparent');
+    lineGrad.addColorStop(0.3, 'rgba(255,215,0,0.8)');
+    lineGrad.addColorStop(0.7, 'rgba(255,215,0,0.8)');
+    lineGrad.addColorStop(1,   'transparent');
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(100, 142); ctx.lineTo(1022, 142); ctx.stroke();
+
+    // ── Sceau central (cercle) ───────────────────────────────────────────────
+    const sealGrad = ctx.createRadialGradient(561, 390, 20, 561, 390, 70);
+    sealGrad.addColorStop(0,   'rgba(255,215,0,0.25)');
+    sealGrad.addColorStop(1,   'rgba(255,215,0,0.03)');
+    ctx.fillStyle = sealGrad;
+    ctx.beginPath(); ctx.arc(561, 390, 70, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,215,0,0.35)';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath(); ctx.arc(561, 390, 70, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,215,0,0.15)';
+    ctx.beginPath(); ctx.arc(561, 390, 80, 0, Math.PI*2); ctx.stroke();
+    // Étoile au centre
+    ctx.fillStyle = 'rgba(255,215,0,0.6)';
+    ctx.font      = '32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('★', 561, 403);
+
+    // ── Texte principal ──────────────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(200,220,255,0.55)';
+    ctx.font      = '13px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Ce certificat est décerné à', 561, 178);
+
+    // Nom employé
+    ctx.fillStyle = '#ffffff';
+    ctx.font      = 'bold 46px serif';
+    ctx.fillText(data.employeeName, 561, 240);
+
+    // Poste + département
+    ctx.fillStyle = 'rgba(200,220,255,0.5)';
+    ctx.font      = 'italic 14px serif';
+    const posInfo = [data.position, data.department].filter(Boolean).join(' — ');
+    if (posInfo) ctx.fillText(posInfo, 561, 268);
+
+    // Ligne sous nom
+    ctx.strokeStyle = 'rgba(255,215,0,0.3)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(200, 284); ctx.lineTo(922, 284); ctx.stroke();
+
+    ctx.fillStyle = 'rgba(200,220,255,0.45)';
+    ctx.font      = '13px serif';
+    ctx.fillText('pour avoir complété avec succès la formation', 561, 318);
+
+    // Titre formation
+    ctx.fillStyle = '#7dd3fc';
+    ctx.font      = 'bold 26px serif';
+    let title = data.courseTitle;
+    while (ctx.measureText(title).width > 860 && title.length > 10)
+      title = title.slice(0,-4)+'...';
+    ctx.fillText(title, 561, 362);
+
+    // Durée + organisme
+    const details = [
+      data.durationHours ? `Durée : ${data.durationHours}h` : '',
+      data.providerName  ? `Organisme : ${data.providerName}` : '',
+    ].filter(Boolean).join('   •   ');
+    if (details) {
+      ctx.fillStyle = 'rgba(200,220,255,0.4)';
+      ctx.font      = '12px serif';
+      ctx.fillText(details, 561, 420);
+    }
+
+    // ── Mention (badge central) ──────────────────────────────────────────────
+    const mentionColors: Record<string,string> = {
+      'Satisfaisant': '#94a3b8',
+      'Bien':         '#34d399',
+      'Très Bien':    '#60a5fa',
+      'Excellent':    '#fbbf24',
+    };
+    const mc = mentionColors[data.mention] ?? '#fbbf24';
+    // Badge
+    ctx.strokeStyle = mc;
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    const bw = 200, bh = 38, bx = 561 - bw/2, by = 460;
+    ctx.roundRect(bx, by, bw, bh, 8);
+    ctx.stroke();
+    ctx.fillStyle = mc + '18';
+    ctx.fill();
+    ctx.fillStyle = mc;
+    ctx.font      = 'bold 15px sans-serif';
+    ctx.fillText(`Mention : ${data.mention.toUpperCase()}`, 561, 484);
+
+    // Note du valideur (si présente)
+    if (data.validationNote) {
+      ctx.fillStyle = 'rgba(200,220,255,0.35)';
+      ctx.font      = 'italic 11px serif';
+      ctx.fillText(`"${data.validationNote}"`, 561, 518);
+    }
+
+    // ── Ligne séparation bas ─────────────────────────────────────────────────
+    ctx.strokeStyle = lineGrad;
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(100, 548); ctx.lineTo(1022, 548); ctx.stroke();
+
+    // ── Zone bas : date gauche | référence centre | signature droite ─────────
+
+    // Date
+    const dateStr = new Date(data.validatedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    ctx.fillStyle = 'rgba(200,220,255,0.4)';
+    ctx.font      = '11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Brazzaville, le ' + dateStr, 80, 620);
+
+    // Référence
+    ctx.textAlign   = 'center';
+    ctx.fillStyle   = 'rgba(255,215,0,0.5)';
+    ctx.font        = 'bold 10px monospace';
+    ctx.fillText('Réf. ' + data.ref, 561, 600);
+    // QR-like placeholder
+    ctx.strokeStyle = 'rgba(255,215,0,0.2)';
+    ctx.lineWidth   = 1;
+    ctx.strokeRect(524, 608, 74, 74);
+    ctx.fillStyle   = 'rgba(255,215,0,0.06)';
+    ctx.fillRect(524, 608, 74, 74);
+    ctx.fillStyle   = 'rgba(255,215,0,0.25)';
+    ctx.font        = '8px monospace';
+    ctx.fillText('VÉRIFIABLE', 561, 650);
+    ctx.fillText('HRCONGO.COM', 561, 664);
+    ctx.fillText(data.ref.slice(-8), 561, 678);
+
+    // Signature RH
+    ctx.textAlign   = 'right';
+    ctx.fillStyle   = '#ffffff';
+    ctx.font        = 'bold 13px serif';
+    ctx.fillText(data.validatedBy, 1042, 620);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(900, 628); ctx.lineTo(1042, 628); ctx.stroke();
+    ctx.fillStyle   = 'rgba(200,220,255,0.4)';
+    ctx.font        = '10px sans-serif';
+    ctx.fillText('Responsable Ressources Humaines', 1042, 645);
+
+    // ── Pied de page ─────────────────────────────────────────────────────────
+    ctx.fillStyle   = 'rgba(255,215,0,0.2)';
+    ctx.fillRect(0, 718, 1122, 52);
+    ctx.fillStyle   = 'rgba(255,215,0,0.45)';
+    ctx.font        = '9px monospace';
+    ctx.textAlign   = 'center';
+    ctx.fillText('Document officiel généré par HRCongo | Académie Formation | Loi 45-75 Code du Travail — République du Congo', 561, 738);
+    ctx.fillText('Ce certificat est vérifiable en ligne sur hrcongo.com/verify/' + data.ref, 561, 754);
+
+    // ── Téléchargement ───────────────────────────────────────────────────────
+    const link = document.createElement('a');
+    link.download = `certificat-${data.employeeName.replace(/\s+/g,'-').toLowerCase()}-${data.year}.png`;
+    link.href     = canvas.toDataURL('image/png', 1.0);
+    link.click();
+  };
+
+  const openAssignModal = async (course: Course) => {
+    setShowAssignModal(course);
+    setSelectedEmployeeId('');
+    setLoadingEmployees(true);
+    try {
+      const data = await api.get<Employee[]>('/employees');
+      setEmployees(data ?? []);
+    } catch { setEmployees([]); }
+    finally { setLoadingEmployees(false); }
+  };
+
+  const handleAssign = async () => {
+    if (!showAssignModal || !selectedEmployeeId) return;
+    setIsSubmitting(true);
+    try {
+      await api.post('/training/assign', {
+        courseId:   showAssignModal.id,
+        employeeId: selectedEmployeeId,
+      });
+      await loadDashboard();
+      setShowAssignModal(null);
+      setSelectedEmployeeId('');
+    } catch (e: any) {
+      alert(e?.message ?? 'Erreur lors de l\'assignation.');
+    } finally { setIsSubmitting(false); }
+  };
+
   const handleUpdateBudget = async () => {
     if (!showBudgetModal || !budgetForm) return;
     setIsSubmitting(true);
@@ -473,7 +772,12 @@ export default function FormationPage() {
 
   // ── Données filtrées ────────────────────────────────────────────────────────
   const categories = ['Tout', ...Array.from(new Set(courses.map(c => c.category).filter(Boolean) as string[]))];
-  const filteredCourses = courses.filter(c => {
+
+  const visibleCourses = isManager
+    ? courses
+    : courses;
+
+  const filteredCourses = visibleCourses.filter(c => {
     const matchSearch = !searchQuery || c.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat    = selectedCategory === 'Tout' || c.category === selectedCategory;
     return matchSearch && matchCat;
@@ -605,13 +909,13 @@ export default function FormationPage() {
                   </div>
                   <div className="space-y-2">
                     {requests.slice(0, 4).length > 0 ? requests.slice(0, 4).map(req => (
-                      <div key={req.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/3 rounded-xl border border-slate-100 dark:border-white/5">
+                      <div key={req.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-white/8">
                         <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
                           {req.employee.firstName[0]}{req.employee.lastName[0]}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{req.employee.firstName} {req.employee.lastName}</p>
-                          <p className="text-[11px] text-slate-400 truncate">{req.course.title}</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{req.employee.firstName} {req.employee.lastName}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{req.course.title}</p>
                         </div>
                         <StatusBadge status={req.status} />
                       </div>
@@ -759,7 +1063,20 @@ export default function FormationPage() {
                       </p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-xs font-bold flex items-center gap-2 transition-colors shrink-0">
+                  <button
+                    onClick={() => {
+                      myTrainings.completed.forEach((s: any, i: number) => {
+                        if (s.certificateUrl) {
+                          setTimeout(() => {
+                            try {
+                              const data: CertificateData = JSON.parse(atob(s.certificateUrl));
+                              generateCertificate(data);
+                            } catch {}
+                          }, i * 400);
+                        }
+                      });
+                    }}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-xs font-bold flex items-center gap-2 transition-colors shrink-0">
                     <Download size={13}/> Télécharger PDF
                   </button>
                 </div>
@@ -806,6 +1123,20 @@ export default function FormationPage() {
                   )}
                 </div>
               </div>
+
+              {/* En attente de validation */}
+              {myTrainings.completionRequested?.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Clock size={13} className="text-orange-400"/> En attente de validation RH
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {myTrainings.completionRequested.map((s: any) => (
+                      <CourseCard key={s.id} course={{ ...s.course, status: 'COMPLETION_REQUESTED' }} onOpen={() => setShowCourseModal({ ...s.course, status: 'COMPLETION_REQUESTED' })} isRH={false}/>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Terminées */}
               {myTrainings.completed.length > 0 && (
@@ -909,6 +1240,14 @@ export default function FormationPage() {
                             <X size={15}/>
                           </button>
                         </>
+                      )}
+                      {req.status === 'COMPLETION_REQUESTED' && (
+                        <button
+                          onClick={() => setValidateModal({ sessionId: req.id, employeeName: `${req.employee.firstName} ${req.employee.lastName}`, courseTitle: req.course.title })}
+                          className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                        >
+                          <Award size={13}/> Certifier
+                        </button>
                       )}
                       {req.reviewedBy && (
                         <span className="text-[10px] text-slate-400">
@@ -1196,26 +1535,43 @@ export default function FormationPage() {
                 <div className="p-5 border-t border-white/8 space-y-2">
                   {showCourseModal.status === 'IN_PROGRESS' && (
                     <button
-                      onClick={() => handleComplete(showCourseModal)}
+                      onClick={() => handleRequestCompletion(showCourseModal)}
                       disabled={!!actionId}
                       className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {actionId ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
-                      Marquer comme terminée
+                      J'ai terminé cette formation
                     </button>
+                  )}
+                  {showCourseModal.status === 'COMPLETION_REQUESTED' && (
+                    <div className="w-full py-3 bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2 text-sm">
+                      <Clock size={15}/> En attente de validation RH
+                    </div>
                   )}
                   {showCourseModal.status === 'COMPLETED' && (
                     <>
                       <div className="w-full py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black rounded-xl flex items-center justify-center gap-2">
                         <BadgeCheck size={16}/> Certification obtenue
                       </div>
-                      <button className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
+                      <button
+                        onClick={() => {
+                          const s = myTrainings?.completed.find((s: any) => s.course?.id === showCourseModal.id);
+                          if (s?.certificateUrl) {
+                            try {
+                              const data: CertificateData = JSON.parse(atob(s.certificateUrl));
+                              generateCertificate(data);
+                            } catch { alert('Certificat introuvable.'); }
+                          } else { alert('Certificat non encore généré.'); }
+                        }}
+                        className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
                         <Download size={13}/> Télécharger l'attestation
                       </button>
                     </>
                   )}
                   {isRH && (
-                    <button className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
+                    <button
+                      onClick={() => { setShowCourseModal(null); openAssignModal(showCourseModal); }}
+                      className="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-colors">
                       <UserCheck size={13}/> Assigner à des employés
                     </button>
                   )}
@@ -1454,6 +1810,196 @@ export default function FormationPage() {
         )}
       </AnimatePresence>
 
+      {/* ══ MODAL — VALIDER FORMATION + MENTION ════════════════════════════════ */}
+      <AnimatePresence>
+        {validateModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Certifier la formation</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">{validateModal.employeeName}</p>
+                </div>
+                <button onClick={() => setValidateModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
+                  <X size={16} className="text-slate-500"/>
+                </button>
+              </div>
+
+              {/* Info formation */}
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <Award size={18} className="text-amber-500"/>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{validateModal.courseTitle}</p>
+                  <p className="text-[11px] text-slate-400">Demande de validation reçue</p>
+                </div>
+              </div>
+
+              {/* Mention */}
+              <div className="mb-4">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  Mention *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'SATISFAISANT', label: 'Satisfaisant',  color: 'border-slate-400 text-slate-500 dark:text-slate-400',  active: 'border-slate-400 bg-slate-50 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300', emoji: '✓' },
+                    { value: 'BIEN',         label: 'Bien',          color: 'border-emerald-400 text-emerald-500',                   active: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', emoji: '★' },
+                    { value: 'TRES_BIEN',    label: 'Très Bien',     color: 'border-sky-400 text-sky-500',                          active: 'border-sky-400 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300', emoji: '★★' },
+                    { value: 'EXCELLENT',    label: 'Excellent',     color: 'border-amber-400 text-amber-500',                      active: 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', emoji: '★★★' },
+                  ].map(m => (
+                    <button
+                      key={m.value}
+                      onClick={() => setValidateForm({ ...validateForm, mention: m.value })}
+                      className={`p-3 rounded-xl border-2 transition-all text-left ${
+                        validateForm.mention === m.value ? m.active : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-black">{m.label}</span>
+                        <span className="text-[10px] opacity-70">{m.emoji}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Note courte optionnelle */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  Observation (optionnel)
+                </label>
+                <input
+                  type="text"
+                  maxLength={120}
+                  value={validateForm.note}
+                  onChange={e => setValidateForm({ ...validateForm, note: e.target.value })}
+                  placeholder="Ex: Très bonne participation, assidu les 3 jours"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Apparaîtra sur le certificat. {validateForm.note.length}/120</p>
+              </div>
+
+              {/* Preview mention */}
+              {validateForm.mention && (
+                <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
+                  <Star size={16} className="text-amber-400 shrink-0"/>
+                  <div>
+                    <p className="text-xs font-bold text-amber-400">Aperçu du certificat</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-300">
+                      {validateModal.employeeName} — {validateModal.courseTitle}
+                      {' '}· Mention : <strong>{validateForm.mention === 'TRES_BIEN' ? 'Très Bien' : validateForm.mention.charAt(0) + validateForm.mention.slice(1).toLowerCase()}</strong>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setValidateModal(null)}
+                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  Annuler
+                </button>
+                <button onClick={handleValidateCompletion} disabled={isSubmitting || !validateForm.mention}
+                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-black rounded-xl text-sm shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <Award size={15}/>}
+                  Émettre le certificat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ MODAL — ASSIGNER À UN EMPLOYÉ ═══════════════════════════════════ */}
+      <AnimatePresence>
+        {showAssignModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Assigner la formation</h2>
+                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{showAssignModal.title}</p>
+                </div>
+                <button onClick={() => setShowAssignModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
+                  <X size={16} className="text-slate-500"/>
+                </button>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
+                  <GraduationCap size={18} className="text-sky-500"/>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{showAssignModal.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <FormatBadge format={showAssignModal.format}/>
+                    {showAssignModal.durationHours && <span className="text-[10px] text-slate-400">{showAssignModal.durationHours}h</span>}
+                    {showAssignModal.cost && <span className="text-[10px] text-amber-500 font-bold">{fmtCFA(showAssignModal.cost)}</span>}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Choisir l'employé *</label>
+                {loadingEmployees ? (
+                  <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-sky-500"/></div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                    {employees.length === 0 ? (
+                      <p className="text-sm text-slate-400 text-center py-4">Aucun employé trouvé</p>
+                    ) : employees.map((emp: Employee) => (
+                      <button key={emp.id} onClick={() => setSelectedEmployeeId(emp.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                          selectedEmployeeId === emp.id
+                            ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/40'
+                            : 'bg-slate-50 dark:bg-white/3 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                        }`}
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
+                          {emp.firstName[0]}{emp.lastName[0]}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{emp.position}{emp.department && ` • ${emp.department.name}`}</p>
+                        </div>
+                        {selectedEmployeeId === emp.id && <CheckCircle2 size={16} className="text-sky-500 shrink-0"/>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setShowAssignModal(null)}
+                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  Annuler
+                </button>
+                <button onClick={handleAssign} disabled={isSubmitting || !selectedEmployeeId}
+                  className="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black rounded-xl text-sm shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <UserCheck size={15}/>}
+                  Assigner
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
+
+
+
+
+
+
