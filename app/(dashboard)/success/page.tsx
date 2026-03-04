@@ -278,7 +278,7 @@ function SuccessContent() {
             </button>
           </Link>
           
-          <Link href="/settings/subscription" className="block">
+          <Link href="//subscription" className="block">
             <button className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-xl transition-all duration-300 border-2 border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-700">
               Gérer mon abonnement
             </button>
