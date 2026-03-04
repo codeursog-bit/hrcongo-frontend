@@ -381,6 +381,12 @@ const navItems: NavItem[] = [
     path: '/rapports',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
+  { id: 'formation',
+     label: 'Formation',
+     icon: GraduationCap,
+    path: '/formation',
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'EMPLOYEE'] 
+  },
   {
     id: 'parametres',
     label: 'Paramètres',
@@ -388,11 +394,7 @@ const navItems: NavItem[] = [
     path: '/parametres',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
-   { id: 'formation',
-     label: 'Formation',
-     icon: GraduationCap,
-    path: '/formation',
-    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'EMPLOYEE'] },
+   
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
