@@ -1,5 +1,5 @@
 // ============================================================================
-// 🎉 PAGE DE SUCCÈS APRÈS PAIEMENT - VERSION SIMPLIFIÉE AVEC ANIMATIONS
+// 🎉 PAGE DE SUCCÈS APRÈS PAIEMENT
 // ============================================================================
 // Fichier: app/(dashboard)/success/page.tsx
 
@@ -36,7 +36,6 @@ function SuccessConfetti() {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    // Arrêter les confettis après 5 secondes
     const timer = setTimeout(() => setShow(false), 5000);
     return () => clearTimeout(timer);
   }, []);
@@ -58,59 +57,53 @@ function SuccessConfetti() {
 // 🎯 COMPOSANT INTERNE AVEC useSearchParams
 // ============================================================================
 function SuccessContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
   const { subscription, isLoading, refetch } = useSubscription();
   const [pageStatus, setPageStatus] = useState<PageStatus>('loading');
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
+  const [attempts, setAttempts] = useState(0);
 
   useEffect(() => {
     const checkSubscription = async () => {
-      // 🔒 SÉCURITÉ : Vérifier qu'on vient bien d'un paiement
-      const fromPayment = sessionStorage.getItem('payment_initiated');
-      
-      if (!fromPayment) {
-        // Accès direct sans passer par le paiement = SUSPECT
-        toast.error('Accès non autorisé');
-        router.push('/pricing');
-        return;
-      }
+      // ✅ Attendre 3 secondes pour laisser le webhook se traiter côté backend
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Nettoyer le flag
-      sessionStorage.removeItem('payment_initiated');
-      
-      // Attendre 2 secondes pour laisser le webhook se traiter
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Rafraîchir les données de l'abonnement
+      // ✅ Rafraîchir les données depuis le serveur
       await refetch();
-      
-      // Vérifier le statut de l'abonnement
-      if (subscription) {
-        if (subscription.status === 'ACTIVE' || subscription.status === 'TRIALING') {
-          setPageStatus('success');
-          toast.success('🎉 Abonnement activé avec succès !');
-        } else {
-          setPageStatus('processing');
-        }
-      } else {
-        setPageStatus('processing');
-      }
     };
 
     checkSubscription();
-  }, [subscription, refetch, router]);
+  }, []); // ← une seule fois au montage, pas de dépendances
 
-  // Countdown pour auto-redirect en cas de processing
+  // ✅ Surveiller subscription SÉPARÉMENT après le refetch
   useEffect(() => {
-    if (pageStatus === 'processing' && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (pageStatus === 'processing' && countdown === 0) {
-      window.location.reload();
+    if (isLoading) return; // Attendre la fin du chargement
+
+    if (subscription?.status === 'ACTIVE') {
+      setPageStatus('success');
+      toast.success('🎉 Abonnement activé avec succès !');
+    } else if (subscription?.status === 'TRIALING') {
+      setPageStatus('success');
+    } else if (attempts > 0) {
+      // On a déjà attendu et refetch, mais le plan n'est pas encore actif
+      setPageStatus('processing');
     }
-  }, [pageStatus, countdown]);
+  }, [subscription, isLoading, attempts]);
+
+  // ✅ Countdown pour auto-reload en cas de processing
+  useEffect(() => {
+    if (pageStatus !== 'processing') return;
+
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      // Recharger et retenter
+      setAttempts(a => a + 1);
+      setCountdown(5);
+      setPageStatus('loading');
+      refetch();
+    }
+  }, [pageStatus, countdown, refetch]);
 
   // ============================================================================
   // 🎨 RENDU SELON LE STATUT
@@ -120,23 +113,23 @@ function SuccessContent() {
   if (pageStatus === 'loading' || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-        <div className="text-center glass-panel p-8 rounded-2xl max-w-md animate-pulse">
+        <div className="text-center glass-panel p-8 rounded-2xl max-w-md">
           <div className="relative">
             <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-4" />
             <Sparkles className="w-6 h-6 text-yellow-400 absolute top-0 right-1/3 animate-bounce" />
           </div>
           <h2 className="text-xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Magie en cours...
+            Activation en cours...
           </h2>
           <p className="text-slate-600 dark:text-slate-400">
-            Activation de votre abonnement
+            Vérification de votre paiement
           </p>
         </div>
       </div>
     );
   }
 
-  // ⏳ PROCESSING (Webhook pas encore traité)
+  // ⏳ PROCESSING (webhook pas encore traité)
   if (pageStatus === 'processing') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-slate-900 dark:to-slate-800">
@@ -151,7 +144,7 @@ function SuccessContent() {
           </p>
           <div className="bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-4 mb-4">
             <p className="text-sm text-yellow-800 dark:text-yellow-400">
-              Actualisation automatique dans {countdown} seconde{countdown > 1 ? 's' : ''}...
+              Nouvelle vérification dans {countdown} seconde{countdown > 1 ? 's' : ''}...
             </p>
           </div>
           <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
@@ -179,7 +172,6 @@ function SuccessContent() {
               Une erreur est survenue. Veuillez contacter le support.
             </p>
           </div>
-
           <div className="space-y-3">
             <Link href="/pricing" className="block">
               <button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2">
@@ -196,7 +188,7 @@ function SuccessContent() {
   // ✅ SUCCESS
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* 🎉 CONFETTI ANIMATION */}
+      {/* 🎉 CONFETTI */}
       <SuccessConfetti />
       
       {/* 🌟 BACKGROUND SPARKLES */}
@@ -208,7 +200,7 @@ function SuccessContent() {
       </div>
 
       <div className="max-w-md w-full glass-panel p-8 rounded-2xl relative z-10 shadow-2xl">
-        {/* ✅ Icône de succès avec animation */}
+        {/* ✅ Icône succès */}
         <div className="text-center mb-6">
           <div className="relative inline-block">
             <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce shadow-lg">
@@ -228,7 +220,7 @@ function SuccessContent() {
           </p>
         </div>
 
-        {/* ✅ Détails de l'abonnement */}
+        {/* ✅ Détails abonnement */}
         {subscription && (
           <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 mb-6 border-2 border-purple-200 dark:border-purple-800 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
@@ -270,7 +262,7 @@ function SuccessContent() {
           </div>
         )}
 
-        {/* ✅ Message de bienvenue */}
+        {/* ✅ Message bienvenue */}
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 border border-blue-200 dark:border-blue-800">
           <p className="text-sm text-blue-800 dark:text-blue-300 text-center">
             🚀 Vous avez maintenant accès à toutes les fonctionnalités de votre plan !
@@ -314,9 +306,7 @@ export default function SubscriptionSuccessPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900 dark:to-slate-800">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">
-            Chargement...
-          </p>
+          <p className="text-slate-600 dark:text-slate-400">Chargement...</p>
         </div>
       </div>
     }>
@@ -324,4 +314,3 @@ export default function SubscriptionSuccessPage() {
     </Suspense>
   );
 }
-

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Settings, Wallet, Users, Lock, ChevronRight, Building2, Network, Gift, Receipt } from 'lucide-react';
+import { Settings, Wallet, Users, Lock, ChevronRight, Building2, Network, Gift, Receipt,Crown } from 'lucide-react';
 
 export default function ParametresPage() {
   const modules = [
@@ -48,6 +48,13 @@ export default function ParametresPage() {
       color: 'bg-sky-500',
       path: '/parametres/users',
     },
+    {
+  title: 'Abonnement',
+  desc: 'Plan actuel, utilisation et facturation.',
+  icon: Crown,
+  color: 'bg-amber-500',
+  path: '/parametres/subscription',
+},
     {
       title: 'Sécurité',
       desc: 'Double authentification, mot de passe.',
