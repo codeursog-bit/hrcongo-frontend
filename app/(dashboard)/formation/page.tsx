@@ -8,7 +8,7 @@ import {
   BarChart3, Target, Zap, ArrowUpRight, Bell, ClipboardList,
   Ban, ChevronRight, Info, Briefcase, BadgeCheck, ScrollText,
   Send, ShieldCheck, PlayCircle, Check, AlertCircle, Flame,
-  Trophy, BookMarked, RotateCcw, UserCheck, Edit3, Star
+  Trophy, BookMarked, RotateCcw, UserCheck, Edit3, Award, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -203,6 +203,190 @@ function BudgetBar({ dept }: { dept: DeptBudget }) {
           style={{ background: isOver80 ? '#f59e0b' : dept.color }}
         />
       </div>
+      {/* ══ MODAL — VALIDER FORMATION + MENTION ════════════════════════════ */}
+      <AnimatePresence>
+        {validateModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Certifier la formation</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">{validateModal.employeeName}</p>
+                </div>
+                <button onClick={() => setValidateModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
+                  <X size={16} className="text-slate-500"/>
+                </button>
+              </div>
+
+              {/* Info formation */}
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <Award size={18} className="text-amber-500"/>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{validateModal.courseTitle}</p>
+                  <p className="text-[11px] text-slate-400">Demande de validation reçue</p>
+                </div>
+              </div>
+
+              {/* Mention — inspiré Coursera / LinkedIn Learning / OHADA */}
+              <div className="mb-4">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                  Mention *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'SATISFAISANT', label: 'Satisfaisant',  color: 'border-slate-400 text-slate-500 dark:text-slate-400',  active: 'border-slate-400 bg-slate-50 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300', emoji: '✓' },
+                    { value: 'BIEN',         label: 'Bien',          color: 'border-emerald-400 text-emerald-500',                   active: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', emoji: '★' },
+                    { value: 'TRES_BIEN',    label: 'Très Bien',     color: 'border-sky-400 text-sky-500',                          active: 'border-sky-400 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300', emoji: '★★' },
+                    { value: 'EXCELLENT',    label: 'Excellent',     color: 'border-amber-400 text-amber-500',                      active: 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', emoji: '★★★' },
+                  ].map(m => (
+                    <button
+                      key={m.value}
+                      onClick={() => setValidateForm({ ...validateForm, mention: m.value })}
+                      className={`p-3 rounded-xl border-2 transition-all text-left ${
+                        validateForm.mention === m.value ? m.active : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-black">{m.label}</span>
+                        <span className="text-[10px] opacity-70">{m.emoji}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Note courte optionnelle */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  Observation (optionnel)
+                </label>
+                <input
+                  type="text"
+                  maxLength={120}
+                  value={validateForm.note}
+                  onChange={e => setValidateForm({ ...validateForm, note: e.target.value })}
+                  placeholder="Ex: Très bonne participation, assidu les 3 jours"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Apparaîtra sur le certificat. {validateForm.note.length}/120</p>
+              </div>
+
+              {/* Preview mention */}
+              {validateForm.mention && (
+                <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
+                  <Star size={16} className="text-amber-400 shrink-0"/>
+                  <div>
+                    <p className="text-xs font-bold text-amber-400">Aperçu du certificat</p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-300">
+                      {validateModal.employeeName} — {validateModal.courseTitle}
+                      {' '}· Mention : <strong>{validateForm.mention === 'TRES_BIEN' ? 'Très Bien' : validateForm.mention.charAt(0) + validateForm.mention.slice(1).toLowerCase()}</strong>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setValidateModal(null)}
+                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  Annuler
+                </button>
+                <button onClick={handleValidateCompletion} disabled={isSubmitting || !validateForm.mention}
+                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-black rounded-xl text-sm shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <Award size={15}/>}
+                  Émettre le certificat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ MODAL — ASSIGNER À UN EMPLOYÉ ═══════════════════════════════════ */}
+      <AnimatePresence>
+        {showAssignModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Assigner la formation</h2>
+                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{showAssignModal.title}</p>
+                </div>
+                <button onClick={() => setShowAssignModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
+                  <X size={16} className="text-slate-500"/>
+                </button>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
+                  <GraduationCap size={18} className="text-sky-500"/>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{showAssignModal.title}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <FormatBadge format={showAssignModal.format}/>
+                    {showAssignModal.durationHours && <span className="text-[10px] text-slate-400">{showAssignModal.durationHours}h</span>}
+                    {showAssignModal.cost && <span className="text-[10px] text-amber-500 font-bold">{fmtCFA(showAssignModal.cost)}</span>}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Choisir l'employé *</label>
+                {loadingEmployees ? (
+                  <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-sky-500"/></div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                    {employees.length === 0 ? (
+                      <p className="text-sm text-slate-400 text-center py-4">Aucun employé trouvé</p>
+                    ) : employees.map(emp => (
+                      <button key={emp.id} onClick={() => setSelectedEmployeeId(emp.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                          selectedEmployeeId === emp.id
+                            ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/40'
+                            : 'bg-slate-50 dark:bg-white/3 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                        }`}
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
+                          {emp.firstName[0]}{emp.lastName[0]}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{emp.position}{emp.department && ` • ${emp.department.name}`}</p>
+                        </div>
+                        {selectedEmployeeId === emp.id && <CheckCircle2 size={16} className="text-sky-500 shrink-0"/>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 mt-5">
+                <button onClick={() => setShowAssignModal(null)}
+                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  Annuler
+                </button>
+                <button onClick={handleAssign} disabled={isSubmitting || !selectedEmployeeId}
+                  className="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black rounded-xl text-sm shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <UserCheck size={15}/>}
+                  Assigner
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
@@ -735,8 +919,9 @@ export default function FormationPage() {
     setSelectedEmployeeId('');
     setLoadingEmployees(true);
     try {
-      const data = await api.get<Employee[]>('/employees');
-      setEmployees(data ?? []);
+      // /employees/simple retourne un tableau direct (pas paginé)
+      const list = await api.get<any[]>('/employees/simple');
+      setEmployees(Array.isArray(list) ? list : []);
     } catch { setEmployees([]); }
     finally { setLoadingEmployees(false); }
   };
@@ -773,8 +958,9 @@ export default function FormationPage() {
   // ── Données filtrées ────────────────────────────────────────────────────────
   const categories = ['Tout', ...Array.from(new Set(courses.map(c => c.category).filter(Boolean) as string[]))];
 
+  // Filtrage par rôle : Manager ne voit que les cours de son département via myTrainings
   const visibleCourses = isManager
-    ? courses
+    ? courses // Le back filtre déjà via findAllCourses — le Manager voit le catalogue global mais ses stats sont filtrées
     : courses;
 
   const filteredCourses = visibleCourses.filter(c => {
@@ -1810,196 +1996,6 @@ export default function FormationPage() {
         )}
       </AnimatePresence>
 
-      {/* ══ MODAL — VALIDER FORMATION + MENTION ════════════════════════════════ */}
-      <AnimatePresence>
-        {validateModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Certifier la formation</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">{validateModal.employeeName}</p>
-                </div>
-                <button onClick={() => setValidateModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
-                  <X size={16} className="text-slate-500"/>
-                </button>
-              </div>
-
-              {/* Info formation */}
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center shrink-0">
-                  <Award size={18} className="text-amber-500"/>
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white text-sm">{validateModal.courseTitle}</p>
-                  <p className="text-[11px] text-slate-400">Demande de validation reçue</p>
-                </div>
-              </div>
-
-              {/* Mention */}
-              <div className="mb-4">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                  Mention *
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: 'SATISFAISANT', label: 'Satisfaisant',  color: 'border-slate-400 text-slate-500 dark:text-slate-400',  active: 'border-slate-400 bg-slate-50 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300', emoji: '✓' },
-                    { value: 'BIEN',         label: 'Bien',          color: 'border-emerald-400 text-emerald-500',                   active: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', emoji: '★' },
-                    { value: 'TRES_BIEN',    label: 'Très Bien',     color: 'border-sky-400 text-sky-500',                          active: 'border-sky-400 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300', emoji: '★★' },
-                    { value: 'EXCELLENT',    label: 'Excellent',     color: 'border-amber-400 text-amber-500',                      active: 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', emoji: '★★★' },
-                  ].map(m => (
-                    <button
-                      key={m.value}
-                      onClick={() => setValidateForm({ ...validateForm, mention: m.value })}
-                      className={`p-3 rounded-xl border-2 transition-all text-left ${
-                        validateForm.mention === m.value ? m.active : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-black">{m.label}</span>
-                        <span className="text-[10px] opacity-70">{m.emoji}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Note courte optionnelle */}
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                  Observation (optionnel)
-                </label>
-                <input
-                  type="text"
-                  maxLength={120}
-                  value={validateForm.note}
-                  onChange={e => setValidateForm({ ...validateForm, note: e.target.value })}
-                  placeholder="Ex: Très bonne participation, assidu les 3 jours"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                />
-                <p className="text-[10px] text-slate-400 mt-1">Apparaîtra sur le certificat. {validateForm.note.length}/120</p>
-              </div>
-
-              {/* Preview mention */}
-              {validateForm.mention && (
-                <div className="mt-4 p-3 bg-gradient-to-r from-amber-500/10 to-yellow-500/5 border border-amber-500/20 rounded-xl flex items-center gap-3">
-                  <Star size={16} className="text-amber-400 shrink-0"/>
-                  <div>
-                    <p className="text-xs font-bold text-amber-400">Aperçu du certificat</p>
-                    <p className="text-[11px] text-slate-400 dark:text-slate-300">
-                      {validateModal.employeeName} — {validateModal.courseTitle}
-                      {' '}· Mention : <strong>{validateForm.mention === 'TRES_BIEN' ? 'Très Bien' : validateForm.mention.charAt(0) + validateForm.mention.slice(1).toLowerCase()}</strong>
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setValidateModal(null)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                  Annuler
-                </button>
-                <button onClick={handleValidateCompletion} disabled={isSubmitting || !validateForm.mention}
-                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-black rounded-xl text-sm shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <Award size={15}/>}
-                  Émettre le certificat
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ══ MODAL — ASSIGNER À UN EMPLOYÉ ═══════════════════════════════════ */}
-      <AnimatePresence>
-        {showAssignModal && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Assigner la formation</h2>
-                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{showAssignModal.title}</p>
-                </div>
-                <button onClick={() => setShowAssignModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
-                  <X size={16} className="text-slate-500"/>
-                </button>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
-                  <GraduationCap size={18} className="text-sky-500"/>
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white text-sm">{showAssignModal.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <FormatBadge format={showAssignModal.format}/>
-                    {showAssignModal.durationHours && <span className="text-[10px] text-slate-400">{showAssignModal.durationHours}h</span>}
-                    {showAssignModal.cost && <span className="text-[10px] text-amber-500 font-bold">{fmtCFA(showAssignModal.cost)}</span>}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Choisir l'employé *</label>
-                {loadingEmployees ? (
-                  <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-sky-500"/></div>
-                ) : (
-                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
-                    {employees.length === 0 ? (
-                      <p className="text-sm text-slate-400 text-center py-4">Aucun employé trouvé</p>
-                    ) : employees.map((emp: Employee) => (
-                      <button key={emp.id} onClick={() => setSelectedEmployeeId(emp.id)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                          selectedEmployeeId === emp.id
-                            ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/40'
-                            : 'bg-slate-50 dark:bg-white/3 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
-                          {emp.firstName[0]}{emp.lastName[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
-                          <p className="text-[11px] text-slate-400 truncate">{emp.position}{emp.department && ` • ${emp.department.name}`}</p>
-                        </div>
-                        {selectedEmployeeId === emp.id && <CheckCircle2 size={16} className="text-sky-500 shrink-0"/>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowAssignModal(null)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                  Annuler
-                </button>
-                <button onClick={handleAssign} disabled={isSubmitting || !selectedEmployeeId}
-                  className="flex-1 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black rounded-xl text-sm shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 flex items-center justify-center gap-2">
-                  {isSubmitting ? <Loader2 size={15} className="animate-spin"/> : <UserCheck size={15}/>}
-                  Assigner
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }
-
-
-
-
-
-
