@@ -238,29 +238,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Glow Line Top */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 dark:opacity-50"></div>
 
-        {/* Logo Section */}
-        <div className="h-24 flex items-center px-6">
-          <Link href="/dashboard" className="flex items-center gap-3 group w-full">
-            {/* Logo image — fond transparent, pas de wrapper coloré */}
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-0 group-hover:opacity-30 dark:group-hover:opacity-50 transition-opacity duration-500 rounded-xl"></div>
-              <Image
-                src="/logos/konza_logo_transparent.png"
-                alt="Konza RH Logo"
-                width={120}
-                height={48}
-                priority
-                style={{ width: 'auto', height: '48px', objectFit: 'contain' }}
-              />
-            </div>
+   {/* Logo Section */}
+<div className="h-24 flex items-center px-6">
+  <Link href="/dashboard" className="flex items-center gap-3 group w-full">
+    <div className="relative shrink-0">
+      <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-0 group-hover:opacity-30 dark:group-hover:opacity-50 transition-opacity duration-500 rounded-xl"></div>
 
-            {/* Point Online uniquement */}
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]"></span>
-              <span className="text-[10px] text-slate-500 dark:text-cyan-400 font-bold tracking-widest uppercase">Online</span>
-            </div>
-          </Link>
-        </div>
+      {/* Light mode → logo couleur, Dark mode → logo blanc */}
+      <Image
+        src="/logos/konza_logo_transparent.png"
+        alt="Konza RH Logo"
+        width={160}
+        height={64}
+        priority
+        className="block dark:hidden"
+        style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
+      />
+      <Image
+        src="/logos/konza_logo_white.png"
+        alt="Konza RH Logo"
+        width={160}
+        height={64}
+        priority
+        className="hidden dark:block"
+        style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
+      />
+    </div>
+
+    {/* Point Online */}
+    <div className="flex items-center gap-1.5">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]"></span>
+      <span className="text-[10px] text-slate-500 dark:text-cyan-400 font-bold tracking-widest uppercase">Online</span>
+    </div>
+  </Link>
+</div>
 
         {/* User Profile Card */}
         <div className="px-4 pb-6">
