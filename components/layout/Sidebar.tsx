@@ -245,24 +245,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-0 group-hover:opacity-30 dark:group-hover:opacity-50 transition-opacity duration-500 rounded-xl"></div>
 
       {/* Light mode → logo couleur, Dark mode → logo blanc */}
-      <Image
-        src="/logos/konza_logo_transparent.png"
-        alt="Konza RH Logo"
-        width={160}
-        height={64}
-        priority
-        className="block dark:hidden"
-        style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
-      />
-      <Image
-        src="/logos/konza_logo_white.png"
-        alt="Konza RH Logo"
-        width={160}
-        height={64}
-        priority
-        className="hidden dark:block"
-        style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
-      />
+    {/* Light mode → logo couleur */}
+<Image
+  src="/logos/konza_logo_transparent.png"
+  alt="Konza RH Logo"
+  width={200}
+  height={120}
+  priority
+  className="block dark:hidden"
+  style={{ width: 'auto', height: '110px', objectFit: 'contain' }}
+/>
+{/* Dark mode → logo blanc */}
+<Image
+  src="/logos/konza_logo_white.png"
+  alt="Konza RH Logo"
+  width={200}
+  height={120}
+  priority
+  className="hidden dark:block"
+  style={{ width: 'auto', height: '110px', objectFit: 'contain' }}
+/>
     </div>
 
     {/* Point Online */}
