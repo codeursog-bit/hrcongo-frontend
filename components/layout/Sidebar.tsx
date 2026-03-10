@@ -226,6 +226,8 @@ import {
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
+import Image from 'next/image'
+
 
 interface SidebarProps {
   isOpen: boolean;
@@ -469,7 +471,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="relative">
               <div className="absolute inset-0 bg-cyan-500 blur-md opacity-20 dark:opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
               <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg border border-white/20 group-hover:scale-105 transition-transform duration-300">
-                <Hexagon size={24} fill="currentColor" className="text-white" />
+                <Image
+        src="/logos/konza_logo_transparent.png"
+        alt="Konza RH Logo"
+        width={150}
+        height={60}
+        priority
+      />
               </div>
             </div>
             <div>
