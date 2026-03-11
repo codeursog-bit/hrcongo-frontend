@@ -848,10 +848,6 @@ import { Step2Family } from '@/components/employees/create/Step2Family';
 import { Step3Contract } from '@/components/employees/create/Step3Contract';
 import { Step4Validation } from '@/components/employees/create/Step4Validation';
 
-// ─────────────────────────────────────────────
-// CONFIG — 4 étapes (Step4UserAccount supprimé)
-// ─────────────────────────────────────────────
-
 const STEPS = [
   { id: 1, label: 'Identité',   icon: User },
   { id: 2, label: 'Famille',    icon: Heart },
@@ -860,40 +856,18 @@ const STEPS = [
 ];
 
 const STEP_CELEBRATIONS = [
-  {
-    step: 1,
-    headline: 'Identité enregistrée',
-    sub: 'Les bases sont posées.',
-    accent: 'from-cyan-400 to-sky-500',
-    particle: '✦',
-  },
-  {
-    step: 2,
-    headline: 'Situation familiale OK',
-    sub: 'Fiscalité configurée avec soin.',
-    accent: 'from-violet-400 to-purple-500',
-    particle: '◆',
-  },
-  {
-    step: 3,
-    headline: 'Contrat défini',
-    sub: 'Les conditions d\'emploi sont claires.',
-    accent: 'from-emerald-400 to-teal-500',
-    particle: '▲',
-  },
+  { step: 1, headline: 'Identité enregistrée',     sub: 'Les bases sont posées.',               accent: 'from-cyan-400 to-sky-500',     particle: '✦' },
+  { step: 2, headline: 'Situation familiale OK',    sub: 'Fiscalité configurée avec soin.',      accent: 'from-violet-400 to-purple-500', particle: '◆' },
+  { step: 3, headline: 'Contrat défini',            sub: "Les conditions d'emploi sont claires.", accent: 'from-emerald-400 to-teal-500',  particle: '▲' },
 ];
 
-// ─────────────────────────────────────────────
-// HELPER — génération mot de passe
-// ─────────────────────────────────────────────
-
+// ─── Génération mot de passe aléatoire sécurisé ───────────────────────────────
 function generatePassword(length = 10): string {
-  const upper  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lower  = 'abcdefghijklmnopqrstuvwxyz';
-  const digits = '0123456789';
+  const upper   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lower   = 'abcdefghijklmnopqrstuvwxyz';
+  const digits  = '0123456789';
   const special = '@#$!';
   const all = upper + lower + digits + special;
-  // Garantir au moins 1 de chaque catégorie
   const pwd = [
     upper[Math.floor(Math.random() * upper.length)],
     lower[Math.floor(Math.random() * lower.length)],
@@ -901,14 +875,33 @@ function generatePassword(length = 10): string {
     special[Math.floor(Math.random() * special.length)],
     ...Array.from({ length: length - 4 }, () => all[Math.floor(Math.random() * all.length)]),
   ];
-  // Mélanger
   return pwd.sort(() => Math.random() - 0.5).join('');
 }
 
-// ─────────────────────────────────────────────
-// COMPOSANT PARTICLE FLOTTANT (identique)
-// ─────────────────────────────────────────────
+// ─── Copier texte — fallback si clipboard API indisponible (HTTP) ──────────────
+function copyToClipboard(text: string): boolean {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+      return true;
+    }
+    // Fallback pour HTTP / navigateurs anciens
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.setAttribute('readonly', '');
+    el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(el);
+    return ok;
+  } catch {
+    return false;
+  }
+}
 
+// ─── Particle flottant ────────────────────────────────────────────────────────
 function FloatingParticle({ char, delay, x, accent }: { char: string; delay: number; x: number; accent: string }) {
   return (
     <motion.span
@@ -923,16 +916,11 @@ function FloatingParticle({ char, delay, x, accent }: { char: string; delay: num
   );
 }
 
-// ─────────────────────────────────────────────
-// MOTIVATION OVERLAY (identique)
-// ─────────────────────────────────────────────
-
+// ─── Motivation overlay ───────────────────────────────────────────────────────
 function MotivationOverlay({ show, step }: { show: boolean; step: number }) {
   const data = STEP_CELEBRATIONS.find((s) => s.step === step);
   if (!data) return null;
-
   const particles = Array.from({ length: 12 }, (_, i) => ({ x: 5 + i * 8, delay: i * 0.07 }));
-
   return (
     <AnimatePresence>
       {show && (
@@ -988,24 +976,30 @@ function MotivationOverlay({ show, step }: { show: boolean; step: number }) {
   );
 }
 
-// ─────────────────────────────────────────────
-// SUCCESS MODAL — avec mot de passe généré
-// ─────────────────────────────────────────────
-
+// ─── SUCCESS MODAL ─────────────────────────────────────────────────────────────
 function SuccessModal({
-  show, firstName, lastName, email, generatedPassword, fromCandidate, onGoToList, onAddAnother,
+  show, firstName, lastName, email, generatedPassword, fromCandidate, onGoToEmployee, onAddAnother,
 }: {
   show: boolean; firstName: string; lastName: string; email: string;
   generatedPassword: string; fromCandidate: boolean;
-  onGoToList: () => void; onAddAnother: () => void;
+  onGoToEmployee: () => void; onAddAnother: () => void;
 }) {
   const [showPwd, setShowPwd] = useState(false);
   const [copied, setCopied]   = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
-  const copyCredentials = () => {
-    navigator.clipboard.writeText(`Email : ${email}\nMot de passe : ${generatedPassword}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = () => {
+    const text = `Email : ${email}\nMot de passe : ${generatedPassword}`;
+    const ok = copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setCopyFailed(false);
+      setTimeout(() => setCopied(false), 2500);
+    } else {
+      // Si clipboard échoue → affiche le mdp pour copie manuelle
+      setCopyFailed(true);
+      setShowPwd(true);
+    }
   };
 
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
@@ -1022,12 +1016,11 @@ function SuccessModal({
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26, delay: 0.05 }}
-            className="bg-white dark:bg-slate-900 rounded-[2rem] p-10 max-w-md w-full relative overflow-hidden"
+            className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full relative overflow-hidden"
             style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)' }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-sky-500/5" />
             <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-cyan-400/10 to-sky-500/10" />
-            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400/15 to-sky-500/15" />
 
             {/* Confetti */}
             {Array.from({ length: 20 }).map((_, i) => (
@@ -1036,80 +1029,96 @@ function SuccessModal({
                 animate={{ x: `${10 + Math.random() * 80}%`, y: `${10 + Math.random() * 80}%`, scale: [0, 1, 0], opacity: [1, 1, 0] }}
                 transition={{ duration: 1.2 + Math.random() * 0.6, delay: i * 0.04, ease: 'easeOut' }}
                 className="absolute pointer-events-none">
-                <div className="rounded-full" style={{ width: 4 + Math.random() * 6, height: 4 + Math.random() * 6, background: ['#06b6d4', '#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b'][i % 5] }} />
+                <div className="rounded-full" style={{ width: 4 + Math.random() * 6, height: 4 + Math.random() * 6, background: ['#06b6d4','#0ea5e9','#8b5cf6','#10b981','#f59e0b'][i % 5] }} />
               </motion.div>
             ))}
 
             {/* Avatar */}
-            <div className="flex justify-center mb-6 relative">
+            <div className="flex justify-center mb-5 relative">
               <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-cyan-500/30">
-                  {initials || <User size={40} />}
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white text-2xl font-black shadow-2xl shadow-cyan-500/30">
+                  {initials || <User size={36} />}
                 </div>
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.45, stiffness: 400, damping: 20 }}
-                  className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
-                  <Check size={18} strokeWidth={3} className="text-white" />
+                  className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
+                  <Check size={16} strokeWidth={3} className="text-white" />
                 </motion.div>
               </motion.div>
             </div>
 
-            {/* Texte */}
+            {/* Titre */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="text-center mb-6">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">
+              className="text-center mb-5">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">
                 {firstName} {lastName}
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-3">
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
                 Dossier RH créé — accès système activé
               </p>
               {fromCandidate && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 rounded-xl text-xs font-bold text-cyan-700 dark:text-cyan-400">
+                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 rounded-xl text-xs font-bold text-cyan-700 dark:text-cyan-400">
                   <Star size={12} /> Candidat converti en employé
                 </div>
               )}
             </motion.div>
 
-            {/* Credentials générés — encart principal */}
+            {/* Identifiants */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}
-              className="mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              className="mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <KeyRound size={14} className="text-cyan-500" />
                 <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Accès généré automatiquement</span>
               </div>
 
-              {/* Email */}
-              <div className="flex items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
-                <div>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase">Email</p>
-                  <p className="text-sm font-mono text-slate-800 dark:text-slate-200 truncate">{email}</p>
-                </div>
+              {/* Email — sélectionnable */}
+              <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
+                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Email</p>
+                <p className="text-sm font-mono text-slate-800 dark:text-slate-200 select-all break-all">{email}</p>
               </div>
 
-              {/* Mot de passe */}
-              <div className="flex items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
+              {/* Mot de passe — sélectionnable + bouton œil */}
+              <div className="flex items-center gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase">Mot de passe provisoire</p>
-                  <p className="text-sm font-mono text-slate-800 dark:text-slate-200 tracking-wider">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Mot de passe provisoire</p>
+                  <p className="text-sm font-mono text-slate-800 dark:text-slate-200 tracking-wider select-all">
                     {showPwd ? generatedPassword : '••••••••••'}
                   </p>
                 </div>
-                <button onClick={() => setShowPwd((v) => !v)}
-                  className="flex-shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                  {showPwd ? <EyeOff size={14} /> : <Eye size={14} />}
+                <button
+                  onClick={() => setShowPwd((v) => !v)}
+                  className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title={showPwd ? 'Masquer' : 'Afficher'}
+                >
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
 
-              {/* Copier */}
-              <button onClick={copyCredentials}
+              {/* Bouton copier */}
+              <button
+                onClick={handleCopy}
                 className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-all ${
                   copied
                     ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                    : copyFailed
+                    ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}>
-                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier les identifiants</>}
+                }`}
+              >
+                {copied
+                  ? <><Check size={14} /> Copié !</>
+                  : copyFailed
+                  ? <><Eye size={14} /> Mot de passe affiché — copiez manuellement</>
+                  : <><Copy size={14} /> Copier les identifiants</>
+                }
               </button>
+
+              {copyFailed && (
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 text-center">
+                  La copie automatique n'est pas disponible ici. Sélectionnez et copiez le mot de passe manuellement.
+                </p>
+              )}
 
               <p className="text-[10px] text-slate-400 text-center leading-relaxed">
                 Transmettez ces identifiants à l'employé. Il pourra changer son mot de passe à la première connexion.
@@ -1119,13 +1128,17 @@ function SuccessModal({
             {/* Boutons */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
               className="space-y-3">
-              <button onClick={onGoToList}
-                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 group">
+              <button
+                onClick={onGoToEmployee}
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 group"
+              >
                 Voir le dossier employé
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <button onClick={onAddAnother}
-                className="w-full py-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-colors border border-slate-200 dark:border-slate-700">
+              <button
+                onClick={onAddAnother}
+                className="w-full py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-colors border border-slate-200 dark:border-slate-700"
+              >
                 Créer un autre employé
               </button>
             </motion.div>
@@ -1136,40 +1149,33 @@ function SuccessModal({
   );
 }
 
-// ─────────────────────────────────────────────
-// INNER COMPONENT
-// ─────────────────────────────────────────────
-
+// ─── FORMULAIRE PRINCIPAL ─────────────────────────────────────────────────────
 function CreateEmployeeFormInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const alert        = useAlert();
   const imageUpload  = useImageUpload();
 
-  const [currentStep, setCurrentStep]       = useState(1);
-  const [direction, setDirection]           = useState(0);
-  const [showSuccess, setShowSuccess]       = useState(false);
-  const [showMotivation, setShowMotivation] = useState(false);
+  const [currentStep, setCurrentStep]         = useState(1);
+  const [direction, setDirection]             = useState(0);
+  const [showSuccess, setShowSuccess]         = useState(false);
+  const [showMotivation, setShowMotivation]   = useState(false);
   const [celebrationStep, setCelebrationStep] = useState(0);
-  const [isLoading, setIsLoading]           = useState(false);
-  const [departments, setDepartments]       = useState<any[]>([]);
-
-  // Mot de passe généré stocké pour affichage dans la modal
+  const [isLoading, setIsLoading]             = useState(false);
+  const [departments, setDepartments]         = useState<any[]>([]);
   const [generatedPassword, setGeneratedPassword] = useState('');
-  // ID employé créé pour la redirection
   const [createdEmployeeId, setCreatedEmployeeId] = useState('');
 
   const fromCandidate = searchParams.get('fromCandidate') || '';
   const prefill = {
-    firstName: searchParams.get('firstName')  || '',
-    lastName:  searchParams.get('lastName')   || '',
-    email:     searchParams.get('email')      || '',
-    phone:     searchParams.get('phone')      || '',
-    position:  searchParams.get('jobTitle')   || '',
+    firstName: searchParams.get('firstName') || '',
+    lastName:  searchParams.get('lastName')  || '',
+    email:     searchParams.get('email')     || '',
+    phone:     searchParams.get('phone')     || '',
+    position:  searchParams.get('jobTitle')  || '',
   };
 
   const [formData, setFormData] = useState({
-    // IDENTITÉ
     firstName:        prefill.firstName,
     lastName:         prefill.lastName,
     dateOfBirth:      '',
@@ -1181,13 +1187,11 @@ function CreateEmployeeFormInner() {
     city:             'Brazzaville',
     nationalIdNumber: '',
     cnssNumber:       '',
-    // FAMILLE
     maritalStatus:      'SINGLE',
     numberOfChildren:   0,
     isSubjectToIrpp:    true,
     isSubjectToCnss:    true,
     taxExemptionReason: '',
-    // CONTRAT
     hireDate:            new Date().toISOString().split('T')[0],
     contractType:        'CDI',
     contractEndDate:     '',
@@ -1228,16 +1232,15 @@ function CreateEmployeeFormInner() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ── Validations (identiques à l'original)
   const validateStep1 = () => {
     const missing: string[] = [];
-    if (!formData.firstName.trim())  missing.push('Prénom');
-    if (!formData.lastName.trim())   missing.push('Nom');
-    if (!formData.dateOfBirth)       missing.push('Date de naissance');
+    if (!formData.firstName.trim())    missing.push('Prénom');
+    if (!formData.lastName.trim())     missing.push('Nom');
+    if (!formData.dateOfBirth)         missing.push('Date de naissance');
     if (!formData.placeOfBirth.trim()) missing.push('Lieu de naissance');
-    if (!formData.phone.trim())      missing.push('Téléphone');
-    if (!formData.email.trim())      missing.push('Email');
-    if (!formData.address.trim())    missing.push('Adresse');
+    if (!formData.phone.trim())        missing.push('Téléphone');
+    if (!formData.email.trim())        missing.push('Email');
+    if (!formData.address.trim())      missing.push('Adresse');
     if (missing.length > 0) { alert.error('Champs manquants', `Veuillez remplir : ${missing.join(', ')}`); return false; }
     return true;
   };
@@ -1251,10 +1254,9 @@ function CreateEmployeeFormInner() {
 
   const validateStep3 = () => {
     const missing: string[] = [];
-    if (!formData.position.trim()) missing.push('Poste');
-    if (!formData.departmentId)    missing.push('Département');
+    if (!formData.position.trim())  missing.push('Poste');
+    if (!formData.departmentId)     missing.push('Département');
     if (!formData.baseSalary || parseFloat(formData.baseSalary) <= 0) missing.push('Salaire valide');
-    // Date de fin obligatoire pour les contrats temporaires
     const needsEnd = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'].includes(formData.contractType);
     if (needsEnd && !formData.contractEndDate) missing.push('Date de fin de contrat');
     if (missing.length > 0) { alert.error('Champs manquants', `Veuillez remplir : ${missing.join(', ')}`); return false; }
@@ -1322,25 +1324,26 @@ function CreateEmployeeFormInner() {
       const createdEmployee = await api.post<any>('/employees', payload);
       setCreatedEmployeeId(createdEmployee?.id || '');
 
-      // 2️⃣ Générer le mot de passe et créer l'accès automatiquement
+      // 2️⃣ Générer le mot de passe (random, unique par employé)
       const pwd = generatePassword(10);
       setGeneratedPassword(pwd);
 
+      // 3️⃣ Créer le compte utilisateur
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000));
       try {
         await Promise.race([
           api.post('/users/invite', {
-            email:        formData.email,
-            firstName:    formData.firstName,
-            lastName:     formData.lastName,
-            role:         'EMPLOYEE', // rôle de base, modifiable ensuite
-            password:     pwd,
+            email:     formData.email,
+            firstName: formData.firstName,
+            lastName:  formData.lastName,
+            role:      'EMPLOYEE',
+            password:  pwd,
           }),
           timeout,
         ]);
       } catch (e: any) {
         if (e.message === 'timeout') {
-          alert.warning('Email différé', "L'employé est créé mais l'envoi de l'email a échoué. Transmettez les identifiants manuellement.");
+          alert.warning('Email différé', "L'employé est créé mais l'envoi a échoué. Transmettez les identifiants manuellement.");
         }
       }
 
@@ -1374,11 +1377,10 @@ function CreateEmployeeFormInner() {
         email={formData.email}
         generatedPassword={generatedPassword}
         fromCandidate={!!fromCandidate}
-        onGoToList={() => router.push(createdEmployeeId ? `/employes/${createdEmployeeId}` : '/employes')}
+        onGoToEmployee={() => router.push(createdEmployeeId ? `/employes/${createdEmployeeId}` : '/employes')}
         onAddAnother={() => window.location.reload()}
       />
 
-      {/* Bannière candidat */}
       {fromCandidate && (
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           className="fixed top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-5 py-2.5 bg-cyan-600 text-white rounded-2xl shadow-xl shadow-cyan-500/30 text-sm font-bold">
@@ -1389,15 +1391,13 @@ function CreateEmployeeFormInner() {
 
       <div className="w-full max-w-5xl glass-panel rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[600px]">
 
-        {/* ── STEPPER HEADER (4 étapes) ── */}
+        {/* STEPPER */}
         <div className="sticky top-0 z-20 glass-panel border-b border-white/10">
           <div className="flex items-center justify-between px-6 sm:px-12 py-6 relative max-w-4xl mx-auto">
             <div className="absolute top-1/2 left-8 right-8 h-px bg-slate-200 dark:bg-white/10 -z-10 -translate-y-1/2" />
-
             {STEPS.map((step) => {
               const isActive    = step.id === currentStep;
               const isCompleted = step.id < currentStep;
-
               return (
                 <div key={step.id} className="flex flex-col items-center bg-slate-50 dark:bg-slate-900 px-3 rounded-full py-1 transition-all">
                   <motion.div
@@ -1422,8 +1422,6 @@ function CreateEmployeeFormInner() {
               );
             })}
           </div>
-
-          {/* Barre de progression */}
           <div className="h-0.5 bg-slate-100 dark:bg-slate-800">
             <motion.div
               className="h-full bg-gradient-to-r from-cyan-400 to-sky-500"
@@ -1434,7 +1432,7 @@ function CreateEmployeeFormInner() {
           </div>
         </div>
 
-        {/* ── CONTENT ── */}
+        {/* CONTENU */}
         <div className="flex-1 p-6 sm:p-10 overflow-x-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
@@ -1463,9 +1461,8 @@ function CreateEmployeeFormInner() {
           </AnimatePresence>
         </div>
 
-        {/* ── FOOTER ── */}
+        {/* FOOTER */}
         <div className="p-6 glass-panel border-t border-white/10 flex justify-between items-center">
-          {/* Bouton retour */}
           <button
             onClick={currentStep === 1 ? () => router.back() : prevStep}
             className="px-6 py-3 rounded-xl text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-2 text-sm"
@@ -1473,7 +1470,6 @@ function CreateEmployeeFormInner() {
             {currentStep === 1 ? 'Annuler' : <><ChevronLeft size={17} />Précédent</>}
           </button>
 
-          {/* Dots — 4 étapes */}
           <div className="flex gap-1.5 items-center">
             {[1, 2, 3, 4].map((s) => (
               <motion.div key={s}
@@ -1484,7 +1480,6 @@ function CreateEmployeeFormInner() {
             ))}
           </div>
 
-          {/* Bouton suivant / confirmer */}
           <button
             onClick={currentStep === 4 ? handleSubmit : nextStep}
             disabled={isLoading || (currentStep === 1 && imageUpload.uploading)}
@@ -1507,10 +1502,6 @@ function CreateEmployeeFormInner() {
     </div>
   );
 }
-
-// ─────────────────────────────────────────────
-// EXPORT
-// ─────────────────────────────────────────────
 
 export default function CreateEmployeePage() {
   return (

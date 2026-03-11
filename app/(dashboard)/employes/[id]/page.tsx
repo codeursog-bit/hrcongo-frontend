@@ -48,6 +48,18 @@
 //   paymentMethod: string;
 // }
 
+// // ─── Lire le rôle depuis le localStorage ──────────────────────────────────────
+// function getRoleFromStorage(): string {
+//   try {
+//     const raw = localStorage.getItem('user');
+//     if (!raw) return 'EMPLOYEE';
+//     const u = JSON.parse(raw);
+//     return u?.role || 'EMPLOYEE';
+//   } catch {
+//     return 'EMPLOYEE';
+//   }
+// }
+
 // export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
 //   const router = useRouter();
 //   const [activeTab, setActiveTab] = useState<TabType>('info');
@@ -56,9 +68,21 @@
 //   const [isLoading, setIsLoading] = useState(true);
 //   const [companyConvention, setCompanyConvention] = useState<string | null>(null);
 
+//   // 🆕 Rôle utilisateur pour affichage conditionnel du bouton supprimer
+//   const [userRole, setUserRole] = useState('EMPLOYEE');
+//   const canDelete = ['SUPER_ADMIN', 'ADMIN'].includes(userRole);
+
+//   // 🆕 États modal de suppression
+//   const [showDeleteModal, setShowDeleteModal] = useState(false);
+//   const [isDeleting, setIsDeleting] = useState(false);
+
 //   // Tab Data
 //   const [tabData, setTabData] = useState<any>(null);
 //   const [tabLoading, setTabLoading] = useState(false);
+
+//   useEffect(() => {
+//     setUserRole(getRoleFromStorage());
+//   }, []);
 
 //   useEffect(() => {
 //     const fetchEmployee = async () => {
@@ -99,6 +123,20 @@
 //     };
 //     fetchTabData();
 //   }, [activeTab, employee]);
+
+//   // 🆕 Logique de suppression avec redirection
+//   const handleDelete = async () => {
+//     if (!employee) return;
+//     setIsDeleting(true);
+//     try {
+//       await api.delete(`/employees/${params.id}`);
+//       router.push('/employes');
+//     } catch (err: any) {
+//       alert(err?.message || 'Erreur lors de la suppression');
+//       setIsDeleting(false);
+//       setShowDeleteModal(false);
+//     }
+//   };
 
 //   const getAnciennete = () => {
 //     if (!employee?.hireDate) return '';
@@ -347,6 +385,22 @@
 //                   </div>
 //                   <ChevronRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
 //                 </button>
+
+//                 {/* 🆕 Bouton Supprimer dans les actions rapides — visible seulement ADMIN/SUPER_ADMIN */}
+//                 {canDelete && (
+//                   <button
+//                     onClick={() => setShowDeleteModal(true)}
+//                     className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all group"
+//                   >
+//                     <div className="flex items-center gap-3">
+//                       <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+//                         <Trash2 size={16} className="text-red-500" />
+//                       </div>
+//                       <span className="font-bold text-sm text-red-600 dark:text-red-400">Supprimer l'employé</span>
+//                     </div>
+//                     <ChevronRight size={16} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+//                   </button>
+//                 )}
 //               </div>
 //             </section>
 //           </div>
@@ -454,6 +508,119 @@
 
 //   return (
 //     <div className="max-w-7xl mx-auto pb-20 space-y-6">
+
+//       {/* 🆕 MODAL DE SUPPRESSION ── */}
+//       <AnimatePresence>
+//         {showDeleteModal && (
+//           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+//             {/* Overlay sombre */}
+//             <motion.div
+//               initial={{ opacity: 0 }}
+//               animate={{ opacity: 1 }}
+//               exit={{ opacity: 0 }}
+//               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+//               onClick={() => !isDeleting && setShowDeleteModal(false)}
+//             />
+
+//             {/* Carte de confirmation */}
+//             <motion.div
+//               initial={{ opacity: 0, scale: 0.92, y: 20 }}
+//               animate={{ opacity: 1, scale: 1, y: 0 }}
+//               exit={{ opacity: 0, scale: 0.92, y: 20 }}
+//               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+//               className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-2xl max-w-md w-full border-2 border-red-200 dark:border-red-800 z-10 overflow-hidden"
+//             >
+//               {/* Décoration de fond */}
+//               <div className="absolute top-0 right-0 w-40 h-40 bg-red-50 dark:bg-red-900/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
+
+//               {/* Bouton fermer */}
+//               {!isDeleting && (
+//                 <button
+//                   onClick={() => setShowDeleteModal(false)}
+//                   className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors z-10"
+//                 >
+//                   <X size={18} />
+//                 </button>
+//               )}
+
+//               {/* Icône danger */}
+//               <div className="relative flex justify-center mb-5">
+//                 <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+//                   <div className="w-14 h-14 bg-red-200 dark:bg-red-800/40 rounded-full flex items-center justify-center">
+//                     <Trash2 size={26} className="text-red-600 dark:text-red-400" />
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Titre */}
+//               <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">
+//                 Supprimer cet employé ?
+//               </h2>
+//               <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-1">
+//                 Vous êtes sur le point de désactiver le dossier de
+//               </p>
+//               <p className="text-center font-extrabold text-gray-900 dark:text-white text-lg mb-5">
+//                 {employee.firstName} {employee.lastName}
+//               </p>
+
+//               {/* Bloc d'avertissements */}
+//               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-2xl p-4 mb-6">
+//                 <p className="text-red-700 dark:text-red-300 text-sm font-bold flex items-center gap-2 mb-3">
+//                   <AlertCircle size={16} className="shrink-0" />
+//                   Cette action est irréversible
+//                 </p>
+//                 <ul className="space-y-2">
+//                   <li className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
+//                     <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+//                     Le statut de l'employé passera à <strong className="ml-1">TERMINÉ</strong>
+//                   </li>
+//                   <li className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
+//                     <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+//                     Le compte utilisateur associé sera <strong className="ml-1">définitivement supprimé</strong>
+//                   </li>
+//                   <li className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
+//                     <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
+//                     L'adresse email sera à nouveau <strong className="ml-1">disponible</strong>
+//                   </li>
+//                   <li className="flex items-start gap-2 text-emerald-600 dark:text-emerald-400 text-xs">
+//                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
+//                     L'historique de paie et les congés seront <strong className="ml-1">conservés</strong>
+//                   </li>
+//                 </ul>
+//               </div>
+
+//               {/* Boutons d'action */}
+//               <div className="flex gap-3">
+//                 <button
+//                   onClick={() => setShowDeleteModal(false)}
+//                   disabled={isDeleting}
+//                   className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+//                 >
+//                   Annuler
+//                 </button>
+//                 <button
+//                   onClick={handleDelete}
+//                   disabled={isDeleting}
+//                   className="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-500/25"
+//                 >
+//                   {isDeleting ? (
+//                     <>
+//                       <Loader2 size={16} className="animate-spin" />
+//                       Suppression...
+//                     </>
+//                   ) : (
+//                     <>
+//                       <Trash2 size={16} />
+//                       Supprimer
+//                     </>
+//                   )}
+//                 </button>
+//               </div>
+//             </motion.div>
+//           </div>
+//         )}
+//       </AnimatePresence>
+
 //       <Link href="/employes" className="inline-flex items-center text-sm text-gray-500 hover:text-sky-500 transition-colors">
 //         <ArrowLeft size={16} className="mr-2" /> Retour à la liste
 //       </Link>
@@ -499,6 +666,8 @@
 //                   )}
 //                 </div>
 //               </div>
+
+//               {/* Boutons d'action dans le header */}
 //               <div className="flex items-center gap-2 shrink-0">
 //                 <Link href={`/employes/${params.id}/primes`}
 //                   className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 transition-colors border border-purple-200 dark:border-purple-800"
@@ -510,6 +679,16 @@
 //                   title="Modifier">
 //                   <Edit size={20} />
 //                 </button>
+//                 {/* 🆕 Bouton supprimer dans le header — visible seulement ADMIN/SUPER_ADMIN */}
+//                 {canDelete && (
+//                   <button
+//                     onClick={() => setShowDeleteModal(true)}
+//                     className="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors border border-red-200 dark:border-red-800"
+//                     title="Supprimer l'employé"
+//                   >
+//                     <Trash2 size={20} />
+//                   </button>
+//                 )}
 //               </div>
 //             </div>
 //           </div>
@@ -559,9 +738,6 @@
 //     </div>
 //   );
 // }
-
-
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -574,12 +750,15 @@ import {
   Briefcase, BadgeCheck, X,
   Laptop, Plus, Loader2, Shield, Award,
   BookOpen, Hash, CreditCard, ChevronRight,
-  Gift, TrendingUp, Star
+  Gift, TrendingUp, Star, CalendarDays,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { differenceInDays } from 'date-fns';
 import { api } from '@/services/api';
 
 type TabType = 'info' | 'docs' | 'paie' | 'conges' | 'materiel';
+
+const TEMP_CONTRACTS = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'];
 
 interface EmployeeDetail {
   id: string;
@@ -597,6 +776,7 @@ interface EmployeeDetail {
   employeeNumber: string;
   hireDate: string;
   contractType: string;
+  contractEndDate?: string | null; // 🆕
   position: string;
   baseSalary: number;
   department: { name: string };
@@ -611,7 +791,6 @@ interface EmployeeDetail {
   paymentMethod: string;
 }
 
-// ─── Lire le rôle depuis le localStorage ──────────────────────────────────────
 function getRoleFromStorage(): string {
   try {
     const raw = localStorage.getItem('user');
@@ -623,6 +802,96 @@ function getRoleFromStorage(): string {
   }
 }
 
+// 🆕 Composant durée + jours restants pour contrats temporaires
+function ContractCountdown({ contractType, hireDate, contractEndDate }: {
+  contractType: string;
+  hireDate: string;
+  contractEndDate?: string | null;
+}) {
+  if (!TEMP_CONTRACTS.includes(contractType) || !contractEndDate) return null;
+
+  const today    = new Date();
+  const endDate  = new Date(contractEndDate);
+  const start    = new Date(hireDate);
+  const totalDays = differenceInDays(endDate, start);
+  const daysLeft  = differenceInDays(endDate, today);
+  const isExpired = daysLeft < 0;
+  const pctElapsed = Math.min(100, Math.round(((totalDays - Math.max(daysLeft, 0)) / totalDays) * 100));
+
+  const urgencyColor = isExpired
+    ? 'text-gray-500'
+    : daysLeft <= 7  ? 'text-red-600 dark:text-red-400'
+    : daysLeft <= 14 ? 'text-orange-600 dark:text-orange-400'
+    : daysLeft <= 30 ? 'text-yellow-600 dark:text-yellow-500'
+    : 'text-emerald-600 dark:text-emerald-400';
+
+  const barColor = isExpired
+    ? 'bg-gray-400'
+    : daysLeft <= 7  ? 'bg-red-500'
+    : daysLeft <= 14 ? 'bg-orange-500'
+    : daysLeft <= 30 ? 'bg-yellow-500'
+    : 'bg-emerald-500';
+
+  const durationLabel = totalDays < 30
+    ? `${totalDays}j`
+    : totalDays < 365
+    ? `${Math.floor(totalDays / 30)} mois`
+    : `${Math.floor(totalDays / 365)} an${Math.floor(totalDays / 365) > 1 ? 's' : ''}`;
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-3">
+      {/* Date de fin */}
+      <div>
+        <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+          <CalendarDays size={11} /> Date de fin de contrat
+        </p>
+        <p className={`font-bold ${urgencyColor}`}>
+          {endDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+        </p>
+      </div>
+
+      {/* Barre progression */}
+      <div>
+        <div className="flex justify-between text-xs text-gray-400 mb-1">
+          <span>Durée totale : {durationLabel}</span>
+          <span>{pctElapsed}% écoulé</span>
+        </div>
+        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${barColor}`}
+            style={{ width: `${pctElapsed}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Jours restants */}
+      {isExpired ? (
+        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <span className="text-xs font-bold text-gray-500">⚠️ Contrat expiré</span>
+        </div>
+      ) : (
+        <div className={`flex items-center gap-2 p-2.5 rounded-lg ${
+          daysLeft <= 7
+            ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+            : daysLeft <= 30
+            ? 'bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800'
+            : 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+        }`}>
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${barColor} ${daysLeft <= 7 ? 'animate-pulse' : ''}`} />
+          <span className={`text-xs font-bold ${urgencyColor}`}>
+            {daysLeft <= 7
+              ? `🔴 Expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''} !`
+              : daysLeft <= 30
+              ? `🟠 ${daysLeft} jours restants`
+              : `✅ ${daysLeft} jours restants`
+            }
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('info');
@@ -631,15 +900,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   const [isLoading, setIsLoading] = useState(true);
   const [companyConvention, setCompanyConvention] = useState<string | null>(null);
 
-  // 🆕 Rôle utilisateur pour affichage conditionnel du bouton supprimer
   const [userRole, setUserRole] = useState('EMPLOYEE');
   const canDelete = ['SUPER_ADMIN', 'ADMIN'].includes(userRole);
 
-  // 🆕 États modal de suppression
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Tab Data
   const [tabData, setTabData] = useState<any>(null);
   const [tabLoading, setTabLoading] = useState(false);
 
@@ -652,7 +918,6 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       try {
         const data = await api.get<EmployeeDetail>(`/employees/${params.id}`);
         setEmployee(data);
-        // Charger convention de l'entreprise
         try {
           const company: any = await api.get('/companies/mine');
           if (company?.collectiveAgreement) setCompanyConvention(company.collectiveAgreement);
@@ -673,9 +938,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       setTabData(null);
       try {
         let data;
-        if (activeTab === 'docs') data = await api.get(`/documents/employee/${employee.id}`);
-        if (activeTab === 'paie') data = await api.get(`/payrolls?employeeId=${employee.id}`);
-        if (activeTab === 'conges') data = await api.get(`/leaves?employeeId=${employee.id}`);
+        if (activeTab === 'docs')     data = await api.get(`/documents/employee/${employee.id}`);
+        if (activeTab === 'paie')     data = await api.get(`/payrolls?employeeId=${employee.id}`);
+        if (activeTab === 'conges')   data = await api.get(`/leaves?employeeId=${employee.id}`);
         if (activeTab === 'materiel') data = await api.get(`/assets/employee/${employee.id}`);
         setTabData(data);
       } catch (e) {
@@ -687,7 +952,6 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     fetchTabData();
   }, [activeTab, employee]);
 
-  // 🆕 Logique de suppression avec redirection
   const handleDelete = async () => {
     if (!employee) return;
     setIsDeleting(true);
@@ -793,7 +1057,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               </div>
             </section>
 
-            {/* Convention collective + catégorie */}
+            {/* Convention collective */}
             {(companyConvention || employee.professionalCategory) && (
               <section>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -867,7 +1131,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
 
           {/* Colonne droite */}
           <div className="space-y-6">
-            {/* Emploi */}
+            {/* EMPLOI — 🆕 avec durée contrat */}
             <section>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <Briefcase size={20} className="text-purple-500" /> Emploi
@@ -898,11 +1162,29 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     {employee.paymentMethod === 'CASH' ? 'Espèces' : employee.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Mobile Money'}
                   </p>
                 </div>
+
+                {/* 🆕 Durée contrat pour CDD/STAGE/INTERIM/CONSULTANT */}
+                <ContractCountdown
+                  contractType={employee.contractType}
+                  hireDate={employee.hireDate}
+                  contractEndDate={employee.contractEndDate}
+                />
+
+                {/* CDI — badge durée indéterminée */}
+                {employee.contractType === 'CDI' && (
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                      <CheckCircle size={13} className="text-emerald-500" />
+                      <span className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">CDI — Durée indéterminée</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                   <p className="text-xs text-gray-400 uppercase font-bold mb-1">Salaire de base</p>
                   <div className="flex items-center justify-between">
                     <p className="text-xl font-bold text-gray-900 dark:text-white font-mono">
-                      {showSalary ? `${employee.baseSalary.toLocaleString('fr-FR')} FCFA` : '• • • • • • •'}
+                      {showSalary ? `${employee.baseSalary?.toLocaleString('fr-FR')} FCFA` : '• • • • • • •'}
                     </p>
                     <button onClick={() => setShowSalary(!showSalary)} className="text-gray-400 hover:text-sky-500 transition-colors p-1">
                       {showSalary ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -948,8 +1230,6 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   </div>
                   <ChevronRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
                 </button>
-
-                {/* 🆕 Bouton Supprimer dans les actions rapides — visible seulement ADMIN/SUPER_ADMIN */}
                 {canDelete && (
                   <button
                     onClick={() => setShowDeleteModal(true)}
@@ -1072,20 +1352,15 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   return (
     <div className="max-w-7xl mx-auto pb-20 space-y-6">
 
-      {/* 🆕 MODAL DE SUPPRESSION ── */}
+      {/* MODAL SUPPRESSION */}
       <AnimatePresence>
         {showDeleteModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Overlay sombre */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => !isDeleting && setShowDeleteModal(false)}
             />
-
-            {/* Carte de confirmation */}
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1093,20 +1368,13 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="relative bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-2xl max-w-md w-full border-2 border-red-200 dark:border-red-800 z-10 overflow-hidden"
             >
-              {/* Décoration de fond */}
               <div className="absolute top-0 right-0 w-40 h-40 bg-red-50 dark:bg-red-900/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
-
-              {/* Bouton fermer */}
               {!isDeleting && (
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors z-10"
-                >
+                <button onClick={() => setShowDeleteModal(false)}
+                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors z-10">
                   <X size={18} />
                 </button>
               )}
-
-              {/* Icône danger */}
               <div className="relative flex justify-center mb-5">
                 <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
                   <div className="w-14 h-14 bg-red-200 dark:bg-red-800/40 rounded-full flex items-center justify-center">
@@ -1114,69 +1382,35 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   </div>
                 </div>
               </div>
-
-              {/* Titre */}
-              <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">
-                Supprimer cet employé ?
-              </h2>
-              <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-1">
-                Vous êtes sur le point de désactiver le dossier de
-              </p>
-              <p className="text-center font-extrabold text-gray-900 dark:text-white text-lg mb-5">
-                {employee.firstName} {employee.lastName}
-              </p>
-
-              {/* Bloc d'avertissements */}
+              <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">Supprimer cet employé ?</h2>
+              <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-1">Vous êtes sur le point de désactiver le dossier de</p>
+              <p className="text-center font-extrabold text-gray-900 dark:text-white text-lg mb-5">{employee.firstName} {employee.lastName}</p>
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-2xl p-4 mb-6">
                 <p className="text-red-700 dark:text-red-300 text-sm font-bold flex items-center gap-2 mb-3">
-                  <AlertCircle size={16} className="shrink-0" />
-                  Cette action est irréversible
+                  <AlertCircle size={16} className="shrink-0" /> Cette action est irréversible
                 </p>
                 <ul className="space-y-2">
-                  <li className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                    Le statut de l'employé passera à <strong className="ml-1">TERMINÉ</strong>
-                  </li>
-                  <li className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                    Le compte utilisateur associé sera <strong className="ml-1">définitivement supprimé</strong>
-                  </li>
-                  <li className="flex items-start gap-2 text-red-600 dark:text-red-400 text-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0" />
-                    L'adresse email sera à nouveau <strong className="ml-1">disponible</strong>
-                  </li>
-                  <li className="flex items-start gap-2 text-emerald-600 dark:text-emerald-400 text-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
-                    L'historique de paie et les congés seront <strong className="ml-1">conservés</strong>
-                  </li>
+                  {[
+                    { text: <>Le statut passera à <strong>TERMINÉ</strong></>, color: 'red' },
+                    { text: <>Le compte utilisateur sera <strong>définitivement supprimé</strong></>, color: 'red' },
+                    { text: <>L'email sera à nouveau <strong>disponible</strong></>, color: 'red' },
+                    { text: <>L'historique de paie et congés seront <strong>conservés</strong></>, color: 'emerald' },
+                  ].map((item, i) => (
+                    <li key={i} className={`flex items-start gap-2 text-${item.color}-600 dark:text-${item.color}-400 text-xs`}>
+                      <span className={`w-1.5 h-1.5 rounded-full bg-${item.color}-400 mt-1.5 shrink-0`} />
+                      {item.text}
+                    </li>
+                  ))}
                 </ul>
               </div>
-
-              {/* Boutons d'action */}
               <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors disabled:opacity-50">
                   Annuler
                 </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-500/25"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      Suppression...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 size={16} />
-                      Supprimer
-                    </>
-                  )}
+                <button onClick={handleDelete} disabled={isDeleting}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg shadow-red-500/25">
+                  {isDeleting ? <><Loader2 size={16} className="animate-spin" />Suppression...</> : <><Trash2 size={16} />Supprimer</>}
                 </button>
               </div>
             </motion.div>
@@ -1188,10 +1422,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         <ArrowLeft size={16} className="mr-2" /> Retour à la liste
       </Link>
 
-      {/* CARTE HEADER */}
+      {/* HEADER */}
       <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-sky-50 to-transparent dark:from-sky-900/10 rounded-bl-full -mr-16 -mt-16 pointer-events-none" />
-
         <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
           <div className="relative shrink-0">
             <img
@@ -1203,13 +1436,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               <CheckCircle size={14} className="text-white" />
             </div>
           </div>
-
           <div className="flex-1 min-w-0">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {employee.firstName} {employee.lastName}
-                </h1>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{employee.firstName} {employee.lastName}</h1>
                 <p className="text-lg text-gray-500 dark:text-gray-400 font-medium flex items-center gap-2 flex-wrap mt-1">
                   <span>{employee.position}</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -1222,6 +1452,25 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-50 dark:bg-gray-750 text-sm text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
                     <Briefcase size={14} /> {employee.contractType}
                   </span>
+                  {/* 🆕 Badge jours restants dans le header si contrat temporaire */}
+                  {TEMP_CONTRACTS.includes(employee.contractType) && employee.contractEndDate && (() => {
+                    const daysLeft = differenceInDays(new Date(employee.contractEndDate), new Date());
+                    if (daysLeft < 0) return (
+                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gray-100 text-gray-500 text-sm font-bold border border-gray-300">
+                        ⚠️ Expiré
+                      </span>
+                    );
+                    if (daysLeft <= 30) return (
+                      <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold border ${
+                        daysLeft <= 7
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
+                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+                      }`}>
+                        <CalendarDays size={13} /> J-{daysLeft}
+                      </span>
+                    );
+                    return null;
+                  })()}
                   {companyConvention && (
                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-sm font-bold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                       <BookOpen size={13} /> {companyConvention}
@@ -1229,8 +1478,6 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   )}
                 </div>
               </div>
-
-              {/* Boutons d'action dans le header */}
               <div className="flex items-center gap-2 shrink-0">
                 <Link href={`/employes/${params.id}/primes`}
                   className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 transition-colors border border-purple-200 dark:border-purple-800"
@@ -1242,13 +1489,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   title="Modifier">
                   <Edit size={20} />
                 </button>
-                {/* 🆕 Bouton supprimer dans le header — visible seulement ADMIN/SUPER_ADMIN */}
                 {canDelete && (
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
+                  <button onClick={() => setShowDeleteModal(true)}
                     className="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors border border-red-200 dark:border-red-800"
-                    title="Supprimer l'employé"
-                  >
+                    title="Supprimer l'employé">
                     <Trash2 size={20} />
                   </button>
                 )}
@@ -1262,15 +1506,13 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="flex overflow-x-auto no-scrollbar border-b border-gray-100 dark:border-gray-700">
           {[
-            { id: 'info', label: 'Informations' },
-            { id: 'docs', label: 'Documents' },
-            { id: 'paie', label: 'Historique Paie' },
-            { id: 'conges', label: 'Congés' },
+            { id: 'info',     label: 'Informations' },
+            { id: 'docs',     label: 'Documents' },
+            { id: 'paie',     label: 'Historique Paie' },
+            { id: 'conges',   label: 'Congés' },
             { id: 'materiel', label: 'Matériel' },
           ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as TabType)}
               className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all relative ${
                 activeTab === tab.id
                   ? 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/10'
@@ -1286,13 +1528,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         </div>
         <div className="p-6 md:p-8 min-h-[400px]">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-            >
+            <motion.div key={activeTab}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}>
               {renderTabContent()}
             </motion.div>
           </AnimatePresence>
