@@ -1007,16 +1007,15 @@ function SuccessModal({
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4"
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay séparé — ne bloque pas les clics sur le modal */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
           <motion.div
             initial={{ scale: 0.75, y: 40, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26, delay: 0.05 }}
-            className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full relative overflow-hidden"
+            className="relative z-10 bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full overflow-hidden"
             style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)' }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-sky-500/5" />
@@ -1143,7 +1142,7 @@ function SuccessModal({
               </button>
             </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
