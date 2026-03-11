@@ -986,20 +986,25 @@ function SuccessModal({
 }) {
   const [showPwd, setShowPwd] = useState(false);
   const [copied, setCopied]   = useState(false);
-  const [copyFailed, setCopyFailed] = useState(false);
 
   const handleCopy = () => {
     const text = `Email : ${email}\nMot de passe : ${generatedPassword}`;
-    const ok = copyToClipboard(text);
-    if (ok) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = text;
+        el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
       setCopied(true);
-      setCopyFailed(false);
       setTimeout(() => setCopied(false), 2500);
-    } else {
-      // Si clipboard échoue → affiche le mdp pour copie manuelle
-      setCopyFailed(true);
-      setShowPwd(true);
-    }
+    } catch { setCopied(false); }
   };
 
   const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
@@ -1007,19 +1012,23 @@ function SuccessModal({
   return (
     <AnimatePresence>
       {show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay séparé — ne bloque pas les clics sur le modal */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4"
+        >
           <motion.div
             initial={{ scale: 0.75, y: 40, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26, delay: 0.05 }}
-            className="relative z-10 bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full overflow-hidden"
-            style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)' }}
+            className="bg-white dark:bg-slate-900 rounded-[2rem] p-10 max-w-md w-full relative overflow-hidden"
+            style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)', zIndex: 60 }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-sky-500/5" />
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-cyan-400/10 to-sky-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-sky-500/5 pointer-events-none" />
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-cyan-400/10 to-sky-500/10 pointer-events-none" />
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400/15 to-sky-500/15 pointer-events-none" />
 
             {/* Confetti */}
             {Array.from({ length: 20 }).map((_, i) => (
@@ -1033,51 +1042,47 @@ function SuccessModal({
             ))}
 
             {/* Avatar */}
-            <div className="flex justify-center mb-5 relative">
+            <div className="flex justify-center mb-7 relative">
               <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white text-2xl font-black shadow-2xl shadow-cyan-500/30">
-                  {initials || <User size={36} />}
+                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-cyan-500/30">
+                  {initials || <User size={40} />}
                 </div>
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.45, stiffness: 400, damping: 20 }}
-                  className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
-                  <Check size={16} strokeWidth={3} className="text-white" />
+                  className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
+                  <Check size={18} strokeWidth={3} className="text-white" />
                 </motion.div>
               </motion.div>
             </div>
 
-            {/* Titre */}
+            {/* Texte */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="text-center mb-5">
-              <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">
+              className="text-center mb-6">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">
                 {firstName} {lastName}
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-3">
                 Dossier RH créé — accès système activé
               </p>
               {fromCandidate && (
-                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 rounded-xl text-xs font-bold text-cyan-700 dark:text-cyan-400">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 rounded-xl text-xs font-bold text-cyan-700 dark:text-cyan-400">
                   <Star size={12} /> Candidat converti en employé
                 </div>
               )}
             </motion.div>
 
-            {/* Identifiants */}
+            {/* Credentials */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}
-              className="mb-5 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+              className="mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <KeyRound size={14} className="text-cyan-500" />
                 <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Accès généré automatiquement</span>
               </div>
-
-              {/* Email — sélectionnable */}
               <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
                 <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Email</p>
                 <p className="text-sm font-mono text-slate-800 dark:text-slate-200 select-all break-all">{email}</p>
               </div>
-
-              {/* Mot de passe — sélectionnable + bouton œil */}
               <div className="flex items-center gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Mot de passe provisoire</p>
@@ -1085,41 +1090,20 @@ function SuccessModal({
                     {showPwd ? generatedPassword : '••••••••••'}
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowPwd((v) => !v)}
-                  className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  title={showPwd ? 'Masquer' : 'Afficher'}
-                >
+                <button type="button" onClick={() => setShowPwd(v => !v)}
+                  className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                   {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-
-              {/* Bouton copier */}
-              <button
-                onClick={handleCopy}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-all ${
+              <button type="button" onClick={handleCopy}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
                   copied
                     ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
-                    : copyFailed
-                    ? 'border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400'
                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {copied
-                  ? <><Check size={14} /> Copié !</>
-                  : copyFailed
-                  ? <><Eye size={14} /> Mot de passe affiché — copiez manuellement</>
-                  : <><Copy size={14} /> Copier les identifiants</>
-                }
+                }`}>
+                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier les identifiants</>}
               </button>
-
-              {copyFailed && (
-                <p className="text-[10px] text-amber-600 dark:text-amber-400 text-center">
-                  La copie automatique n'est pas disponible ici. Sélectionnez et copiez le mot de passe manuellement.
-                </p>
-              )}
-
-              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+              <p className="text-[10px] text-slate-400 text-center">
                 Transmettez ces identifiants à l'employé. Il pourra changer son mot de passe à la première connexion.
               </p>
             </motion.div>
@@ -1127,22 +1111,18 @@ function SuccessModal({
             {/* Boutons */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
               className="space-y-3">
-              <button
-                onClick={onGoToEmployee}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 group"
-              >
+              <button type="button" onClick={onGoToEmployee}
+                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 group cursor-pointer">
                 Voir le dossier employé
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
-              <button
-                onClick={onAddAnother}
-                className="w-full py-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-colors border border-slate-200 dark:border-slate-700"
-              >
+              <button type="button" onClick={onAddAnother}
+                className="w-full py-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer">
                 Créer un autre employé
               </button>
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
