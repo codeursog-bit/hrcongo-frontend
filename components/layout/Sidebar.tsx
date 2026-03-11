@@ -255,7 +255,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   className="block dark:hidden"
   style={{ width: 'auto', height: '110px', objectFit: 'contain' }}
 />
-{/* Dark mode → logo blanc */}
+{/* Dark mode → logo blanck */}
 <Image
   src="/logos/konza_logo_white.png"
   alt="Konza RH Logo"
