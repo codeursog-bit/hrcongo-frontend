@@ -239,32 +239,32 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 dark:opacity-50"></div>
 
    {/* Logo Section */}
-<div className="h-24 flex items-center px-6">
+<div className="h-28 flex items-center px-6">
   <Link href="/dashboard" className="flex flex-col items-start group">
     
     {/* Light mode */}
     <Image
-      src="/logos/konza_logo_transparent.png"
+      src="/logos/konza_logo_horizontal.png"
       alt="Konza RH Logo"
-      width={240}
-      height={72}
+      width={280}
+      height={80}
       priority
       className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80"
-      style={{ width: 'auto', height: '72px', objectFit: 'contain' }}
+      style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
     />
     {/* Dark mode */}
     <Image
-      src="/logos/konza_logo_transparent.png"
+      src="/logos/konza_logo_horizontal_white.png"
       alt="Konza RH Logo"
-      width={240}
-      height={72}
+      width={280}
+      height={80}
       priority
       className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80"
-      style={{ width: 'auto', height: '72px', objectFit: 'contain' }}
+      style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
     />
 
-    {/* Point Online — en dessous du logo */}
-    <div className="flex items-center gap-1.5 mt-1 ml-1">
+    {/* Point Online — juste en dessous, même axe */}
+    <div className="flex items-center gap-1.5 mt-2">
       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]"></span>
       <span className="text-[10px] text-slate-500 dark:text-cyan-400 font-bold tracking-widest uppercase">Online</span>
     </div>
