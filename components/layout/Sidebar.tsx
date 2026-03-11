@@ -238,42 +238,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Glow Line Top */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 dark:opacity-50"></div>
 
-   {/* Logo Section */}
-<div className="h-28 flex items-center px-6">
-  <Link href="/dashboard" className="flex flex-col items-start group">
-    
-    {/* Light mode */}
-    <Image
-      src="/logos/konza_logo_horizontal.png"
-      alt="Konza RH Logo"
-      width={280}
-      height={80}
-      priority
-      className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80"
-      style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
-    />
-    {/* Dark mode */}
-    <Image
-      src="/logos/konza_logo_horizontal_white.png"
-      alt="Konza RH Logo"
-      width={280}
-      height={80}
-      priority
-      className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80"
-      style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
-    />
+        {/* ── Logo Section ── */}
+        <div className="pt-6 pb-3 px-6">
+          <Link href="/dashboard" className="inline-flex flex-col items-start group">
 
-    {/* Point Online — juste en dessous, même axe */}
-    <div className="flex items-center gap-1.5 mt-2">
-      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]"></span>
-      <span className="text-[10px] text-slate-500 dark:text-cyan-400 font-bold tracking-widest uppercase">Online</span>
-    </div>
+            {/* Light mode → logo couleur */}
+            <Image
+              src="/logos/konza_logo_horizontal.png"
+              alt="Konza RH Logo"
+              width={280}
+              height={80}
+              priority
+              className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80"
+              style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
+            />
 
-  </Link>
-</div>
+            {/* Dark mode → logo blanc */}
+            <Image
+              src="/logos/konza_logo_horizontal_white.png"
+              alt="Konza RH Logo"
+              width={280}
+              height={80}
+              priority
+              className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80"
+              style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
+            />
 
-        {/* User Profile Card */}
-        <div className="px-4 pb-6">
+            {/* Point Online — collé juste sous le logo */}
+            <div className="flex items-center gap-1.5 mt-2 pl-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]"></span>
+              <span className="text-[10px] text-slate-500 dark:text-cyan-400 font-bold tracking-widest uppercase">Online</span>
+            </div>
+
+          </Link>
+        </div>
+
+        {/* ── User Profile Card ── */}
+        <div className="px-4 pb-4 pt-2">
           <div className="bg-slate-50/80 dark:bg-white/5 rounded-2xl p-3 flex items-center gap-3 border border-slate-100 dark:border-white/5 hover:border-sky-200 dark:hover:border-white/10 transition-colors group">
             <div className="relative shrink-0">
               {user ? (
@@ -297,7 +298,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* Navigation Menu */}
+        {/* ── Navigation Menu ── */}
         <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-1 custom-scrollbar">
           {navItems
             .filter(item => user && item.allowedRoles.includes(user.role))
@@ -335,7 +336,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           })}
         </nav>
 
-        {/* Footer / Logout */}
+        {/* ── Footer / Logout ── */}
         <div className="p-4 border-t border-slate-100 dark:border-white/5">
           <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-500/20 group">
             <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
