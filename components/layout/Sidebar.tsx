@@ -244,7 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     
     {/* Light mode */}
     <Image
-      src="/logos/konza_logo_horizontal.png"
+      src="/logos/konza_logo_transparent.png"
       alt="Konza RH Logo"
       width={240}
       height={72}
@@ -254,7 +254,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     />
     {/* Dark mode */}
     <Image
-      src="/logos/konza_logo_horizontal_white.png"
+      src="/logos/konza_logo_transparent.png"
       alt="Konza RH Logo"
       width={240}
       height={72}
