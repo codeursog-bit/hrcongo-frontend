@@ -41,7 +41,7 @@ export default function NotFound() {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Link href="/" className="flex items-center justify-center gap-2 px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 hover:scale-105">
+          <Link href="/dashoard" className="flex items-center justify-center gap-2 px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 hover:scale-105">
             <Home size={18} /> Retour à l'accueil
           </Link>
           <Link href="/employes" className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
