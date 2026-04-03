@@ -4,34 +4,32 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Building2, Users, Clock, ChevronRight, Plus,
-  TrendingUp, AlertCircle, Loader2,
-  LogOut, Settings, Briefcase, Crown,
+  TrendingUp, AlertCircle, Loader2, Crown,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
+import CabinetSidebar from '../CabinetSidebar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LastPayroll {
-  id:       string;
-  month:    number;
-  year:     number;
-  // Le backend envoie DRAFT | VALIDATED | PAID (pas PENDING)
-  status:   'DRAFT' | 'VALIDATED' | 'PAID';
-  // Le backend envoie netSalary (pas totalNet)
+  id:        string;
+  month:     number;
+  year:      number;
+  status:    'DRAFT' | 'VALIDATED' | 'PAID';
   netSalary: number;
 }
 
 interface CompanyCard {
-  linkId:               string;
-  companyId:            string;
-  legalName:            string;
-  tradeName:            string | null;
-  city:                 string;
-  employeeCount:        number;
-  pmePortalEnabled:     boolean;
-  employeeAccessEnabled:boolean;
-  lastPayroll:          LastPayroll | null;
+  linkId:                string;
+  companyId:             string;
+  legalName:             string;
+  tradeName:             string | null;
+  city:                  string;
+  employeeCount:         number;
+  pmePortalEnabled:      boolean;
+  employeeAccessEnabled: boolean;
+  lastPayroll:           LastPayroll | null;
 }
 
 interface DashboardData {
@@ -55,7 +53,6 @@ interface Subscription {
 
 const MONTHS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-// DRAFT = en cours de saisie, VALIDATED = validée, PAID = payée
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   DRAFT:     { label: 'En cours',  color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/30' },
   VALIDATED: { label: 'Validée',   color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/30' },
@@ -214,11 +211,6 @@ export default function CabinetDashboardPage() {
     router.push(`/cabinet/${cabinetId}/entreprise/${companyId}/paie`);
   };
 
-  const logout = () => {
-    localStorage.clear();
-    router.push('/auth/login');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
@@ -247,51 +239,8 @@ export default function CabinetDashboardPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-white">
 
-      {/* Sidebar fixe */}
-      <aside className="fixed left-0 top-0 h-full w-56 bg-black/30 border-r border-white/10 flex flex-col z-20">
-        <div className="p-5 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <Briefcase size={14} className="text-white" />
-            </div>
-            <span className="font-bold text-sm text-white truncate">Cabinet</span>
-          </div>
-          {user && <p className="text-xs text-gray-500 mt-2 truncate">{user.email}</p>}
-        </div>
-
-        <nav className="flex-1 p-3 space-y-1">
-          <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-purple-500/20 text-purple-400 text-sm font-semibold">
-            <Building2 size={16} /> Mes PME clientes
-          </button>
-          <button
-            onClick={() => router.push(`/cabinet/${cabinetId}/cloture`)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            <Clock size={16} /> Clôture & Import
-          </button>
-          <button
-            onClick={() => router.push(`/cabinet/${cabinetId}/abonnement`)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            <Crown size={16} /> Abonnement
-          </button>
-          <button
-            onClick={() => router.push(`/cabinet/${cabinetId}/parametres`)}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            <Settings size={16} /> Paramètres
-          </button>
-        </nav>
-
-        <div className="p-3 border-t border-white/10">
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-gray-500 hover:text-red-400 text-sm transition-colors"
-          >
-            <LogOut size={16} /> Déconnexion
-          </button>
-        </div>
-      </aside>
+      {/* ← Sidebar partagée (remplace l'aside inline) */}
+      <CabinetSidebar cabinetId={cabinetId} userEmail={user?.email} />
 
       {/* Contenu principal */}
       <main className="ml-56 p-8">

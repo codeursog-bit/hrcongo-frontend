@@ -7,6 +7,7 @@ import {
   Loader2, ArrowRight, X, FileText, Link2, RefreshCw,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import CabinetSidebar from '../CabinetSidebar';
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -222,7 +223,7 @@ export default function ClotureImportPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6 space-y-6">
-
+       <CabinetSidebar cabinetId={cabinetId} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -12,6 +12,7 @@ import {
   Loader2, ArrowRight, Clock, TrendingUp,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import CabinetSidebar from '../CabinetSidebar';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n);
@@ -116,7 +117,7 @@ export default function AbonnementPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6 space-y-6 max-w-4xl mx-auto">
-
+           <CabinetSidebar cabinetId={cabinetId} />
       <div>
         <h1 className="text-xl font-bold flex items-center gap-2">
           <Wallet size={20} className="text-purple-400" /> Abonnement & bulletins
