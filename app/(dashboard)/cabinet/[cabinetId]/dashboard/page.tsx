@@ -1,15 +1,10 @@
-// =============================================================================
-// FICHIER : app/(dashboard)/cabinet/[cabinetId]/dashboard/page.tsx
-// ACTION  : CRÉER (nouveau fichier — le dossier cabinet/ est vide dans votre projet)
-// =============================================================================
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Building2, Users, Clock, ChevronRight, Plus,
-  TrendingUp, AlertCircle, CheckCircle2, Loader2,
+  TrendingUp, AlertCircle, Loader2,
   LogOut, Settings, Briefcase, Crown,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -18,54 +13,54 @@ import { api } from '@/services/api';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LastPayroll {
-  id: string;
-  month: number;
-  year: number;
-  status: 'PENDING' | 'VALIDATED' | 'PAID';
-  totalNet: number;
+  id:       string;
+  month:    number;
+  year:     number;
+  // Le backend envoie DRAFT | VALIDATED | PAID (pas PENDING)
+  status:   'DRAFT' | 'VALIDATED' | 'PAID';
+  // Le backend envoie netSalary (pas totalNet)
+  netSalary: number;
 }
 
 interface CompanyCard {
-  linkId: string;
-  companyId: string;
-  legalName: string;
-  tradeName: string | null;
-  city: string;
-  employeeCount: number;
-  pmePortalEnabled: boolean;
-  employeeAccessEnabled: boolean;
-  lastPayroll: LastPayroll | null;
+  linkId:               string;
+  companyId:            string;
+  legalName:            string;
+  tradeName:            string | null;
+  city:                 string;
+  employeeCount:        number;
+  pmePortalEnabled:     boolean;
+  employeeAccessEnabled:boolean;
+  lastPayroll:          LastPayroll | null;
 }
 
 interface DashboardData {
-  totalCompanies: number;
+  totalCompanies:  number;
   pendingPayrolls: number;
-  companies: CompanyCard[];
+  companies:       CompanyCard[];
 }
 
 interface Subscription {
-  planLabel: string;
-  status: string;
-  isTrial: boolean;
-  trialEndsAt: string | null;
+  planLabel:        string;
+  status:           string;
+  isTrial:          boolean;
+  trialEndsAt:      string | null;
   currentCompanies: number;
-  maxCompanies: number | null;
-  remainingSlots: number | null;
-  usagePercent: number;
+  maxCompanies:     number | null;
+  remainingSlots:   number | null;
+  usagePercent:     number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const MONTHS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-const statusConfig = {
-  PENDING:   { label: 'En cours',  color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/30' },
+// DRAFT = en cours de saisie, VALIDATED = validée, PAID = payée
+const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
+  DRAFT:     { label: 'En cours',  color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/30' },
   VALIDATED: { label: 'Validée',   color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/30' },
   PAID:      { label: 'Payée',     color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' },
 };
-
-const formatFCFA = (n: number) =>
-  new Intl.NumberFormat('fr-CG', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(n);
 
 // ─── Composants ───────────────────────────────────────────────────────────────
 
@@ -100,7 +95,7 @@ function SubscriptionBanner({ sub, cabinetId }: { sub: Subscription; cabinetId: 
         <div>
           <p className="text-sm font-semibold text-white">Essai gratuit — {sub.planLabel}</p>
           <p className="text-xs text-gray-400 mt-0.5">
-            {daysLeft !== null ? `${daysLeft} jours restants` : ''} ·{' '}
+            {daysLeft !== null ? `${daysLeft} jours restants` : ''}{' · '}
             {sub.currentCompanies}/{sub.maxCompanies ?? '∞'} PME utilisées
           </p>
         </div>
@@ -118,8 +113,8 @@ function SubscriptionBanner({ sub, cabinetId }: { sub: Subscription; cabinetId: 
 function CompanyCardItem({ company, cabinetId, onOpen }: {
   company: CompanyCard; cabinetId: string; onOpen: (id: string) => void;
 }) {
-  const lp = company.lastPayroll;
-  const status = lp ? statusConfig[lp.status] : null;
+  const lp     = company.lastPayroll;
+  const status = lp ? (statusConfig[lp.status] ?? statusConfig['DRAFT']) : null;
 
   return (
     <motion.div
@@ -192,7 +187,9 @@ export default function CabinetDashboardPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
-    if (stored) setUser(JSON.parse(stored));
+    if (stored) {
+      try { setUser(JSON.parse(stored)); } catch {}
+    }
 
     const load = async () => {
       try {
@@ -232,8 +229,17 @@ export default function CabinetDashboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center text-red-400 gap-2">
-        <AlertCircle size={20} /> {error}
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle size={32} className="text-red-400 mx-auto mb-3" />
+          <p className="text-red-400 text-sm">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-300 transition-colors"
+          >
+            Réessayer
+          </button>
+        </div>
       </div>
     );
   }
@@ -256,6 +262,12 @@ export default function CabinetDashboardPage() {
         <nav className="flex-1 p-3 space-y-1">
           <button className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-purple-500/20 text-purple-400 text-sm font-semibold">
             <Building2 size={16} /> Mes PME clientes
+          </button>
+          <button
+            onClick={() => router.push(`/cabinet/${cabinetId}/cloture`)}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white text-sm transition-colors"
+          >
+            <Clock size={16} /> Clôture & Import
           </button>
           <button
             onClick={() => router.push(`/cabinet/${cabinetId}/abonnement`)}
@@ -302,14 +314,24 @@ export default function CabinetDashboardPage() {
 
         {dashboard && (
           <div className="grid grid-cols-3 gap-4 mb-8">
-            <StatCard label="PME clientes" value={dashboard.totalCompanies} icon={Building2} color="bg-purple-500/20 text-purple-400" />
+            <StatCard
+              label="PME clientes"
+              value={dashboard.totalCompanies}
+              icon={Building2}
+              color="bg-purple-500/20 text-purple-400"
+            />
             <StatCard
               label="Paies en attente"
               value={dashboard.pendingPayrolls}
               icon={Clock}
               color={dashboard.pendingPayrolls > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}
             />
-            <StatCard label="Slots restants" value={sub?.remainingSlots ?? '∞'} icon={TrendingUp} color="bg-blue-500/20 text-blue-400" />
+            <StatCard
+              label="Bulletins restants"
+              value={sub?.remainingSlots ?? '∞'}
+              icon={TrendingUp}
+              color="bg-blue-500/20 text-blue-400"
+            />
           </div>
         )}
 
