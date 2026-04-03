@@ -30,17 +30,10 @@
 // }
 
 
-// =============================================================================
-// FICHIER : app/(dashboard)/layout.tsx
-// ACTION  : REMPLACER le fichier existant app/(dashboard)/layout.tsx
-// CHANGES : Ajout d'un guard qui redirige les rôles cabinet vers leur espace
-//           (ils ne doivent pas accéder au dashboard entreprise)
-// =============================================================================
-
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PWAProvider } from '@/contexts/PWAContext';
 import { OfflineBanner } from '@/components/pwa/OfflineBanner';
@@ -52,12 +45,14 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { userRole } = useAuth();
-  const router = useRouter();
+  const router   = useRouter();
+  const pathname = usePathname();
 
-  // ── AJOUT : Guard cabinet ─────────────────────────────────────────────────
-  // Si un CABINET_ADMIN ou CABINET_GESTIONNAIRE atterrit sur le dashboard
-  // entreprise par erreur, on le redirige vers son espace cabinet.
+  // Les routes /cabinet/... ont leur propre layout — ne pas les intercepter
+  const isCabinetRoute = pathname?.startsWith('/cabinet/') ?? false;
+
   useEffect(() => {
+    if (isCabinetRoute) return; // ← ne jamais rediriger si déjà sur /cabinet/
     if (userRole === 'CABINET_ADMIN' || userRole === 'CABINET_GESTIONNAIRE') {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user.cabinetId) {
@@ -66,23 +61,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.replace('/auth/login');
       }
     }
-  }, [userRole, router]);
+  }, [userRole, router, isCabinetRoute]);
 
-  // Pendant la redirection, ne rien afficher
-  if (userRole === 'CABINET_ADMIN' || userRole === 'CABINET_GESTIONNAIRE') {
+  // Écran blanc pendant redirection (uniquement hors routes cabinet)
+  if (!isCabinetRoute &&
+      (userRole === 'CABINET_ADMIN' || userRole === 'CABINET_GESTIONNAIRE')) {
     return null;
   }
-  // ── FIN AJOUT ─────────────────────────────────────────────────────────────
 
+  // Routes cabinet : pas de DashboardShell, juste les children
+  if (isCabinetRoute) {
+    return <>{children}</>;
+  }
+
+  // Routes dashboard normales
   return (
     <PWAProvider apiClient={attendanceApi}>
       <OfflineBanner />
       <InstallPrompt />
       <PendingActions />
-
-      {/* Alertes contrats expirants — bas droite, Admin/HR uniquement */}
       <ContractExpiryToast userRole={userRole ?? ''} />
-
       <DashboardShell>
         {children}
       </DashboardShell>
