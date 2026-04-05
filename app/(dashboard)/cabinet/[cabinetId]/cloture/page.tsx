@@ -1,3 +1,8 @@
+// =============================================================================
+// FICHIER : app/(dashboard)/cabinet/[cabinetId]/cloture/page.tsx
+// ACTION  : CRÉER (nouveau fichier)
+// =============================================================================
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -7,7 +12,6 @@ import {
   Loader2, ArrowRight, X, FileText, Link2, RefreshCw,
 } from 'lucide-react';
 import { api } from '@/services/api';
-import CabinetSidebar from '../CabinetSidebar';
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -67,9 +71,6 @@ export default function ClotureImportPage() {
   const router    = useRouter();
   const cabinetId = params.cabinetId as string;
 
-  // URL de base du backend (sans /api/ — c'est le chemin Next.js qu'on évite)
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth());
   const [year,  setYear]  = useState(now.getFullYear());
@@ -108,19 +109,16 @@ export default function ClotureImportPage() {
         companyIds: selected,
       });
 
-      // ── CORRIGÉ : utiliser API_BASE, pas /api/ ────────────────────────────
-      const token = localStorage.getItem('accessToken') ?? '';
-      const sseUrl = `${API_BASE}/cabinet/${cabinetId}/batch-closure/${init.batchId}/run`;
-
-      // EventSource ne supporte pas les headers custom nativement.
-      // On passe le token en query param (le back doit l'accepter).
-      const es = new EventSource(`${sseUrl}?token=${token}`, { withCredentials: true });
+      const es = new EventSource(
+        `/api/cabinet/${cabinetId}/batch-closure/${init.batchId}/run`,
+        { withCredentials: true },
+      );
       evtRef.current = es;
 
       es.onmessage = (evt) => {
         const progress: BatchProgress = JSON.parse(evt.data);
         setBatch(progress);
-        if (['COMPLETED', 'FAILED', 'PARTIAL'].includes(progress.status)) {
+        if (['COMPLETED','FAILED','PARTIAL'].includes(progress.status)) {
           es.close();
           setBatchLoading(false);
         }
@@ -134,9 +132,9 @@ export default function ClotureImportPage() {
   };
 
   const downloadTemplate = async (companyId: string) => {
-    const blob: any = await api.get(
-      `/cabinet/${cabinetId}/import/template?companyId=${companyId}`,
-    );
+   const blob: any = await api.get(
+  `/cabinet/${cabinetId}/import/template?companyId=${companyId}`,
+);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -223,7 +221,7 @@ export default function ClotureImportPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6 space-y-6">
-       <CabinetSidebar cabinetId={cabinetId} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
