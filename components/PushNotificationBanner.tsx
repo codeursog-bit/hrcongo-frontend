@@ -1,32 +1,38 @@
 'use client';
 
 // ============================================================================
-// 📁 components/PushNotificationBanner.tsx — CORRIGÉ
+// 📁 components/PushNotificationBanner.tsx — PROD READY
 // ============================================================================
-// ✅ CORRECTIONS :
-//   - Tous les imports lucide-react présents (Bell, BellOff, X, Smartphone, Check)
-//   - usePushNotifications importé depuis le bon chemin
-//   - export default PushNotificationBanner  ← pour le layout/pages
-//   - export named { PushToggleButton }      ← pour /mon-profil
-//
-// USAGE :
-//   import PushNotificationBanner from '@/components/PushNotificationBanner';
-//   import PushNotificationBanner, { PushToggleButton } from '@/components/PushNotificationBanner';
+// CORRECTIFS :
+//   1. Affiche swError si le SW a un problème (message clair à l'utilisateur)
+//   2. Bouton "Recharger" automatique si swError → l'utilisateur n'a pas
+//      à savoir ce qu'est un cache ou DevTools
+//   3. Export default + export named { PushToggleButton } conservés
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Bell, BellOff, X, Smartphone, Check } from 'lucide-react';
+import { Bell, BellOff, X, Smartphone, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 // ─── Bannière principale ──────────────────────────────────────────────────────
 export default function PushNotificationBanner({ userName }: { userName?: string }) {
-  const { isSupported, isSubscribed, isLoading, permission, subscribe } = usePushNotifications();
+  const { isSupported, isSubscribed, isLoading, permission, swError, subscribe } =
+    usePushNotifications();
+
   const [dismissed, setDismissed] = useState(false);
   const [success, setSuccess]     = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (localStorage.getItem('push-banner-dismissed')) setDismissed(true);
+    if (typeof window !== 'undefined' && localStorage.getItem('push-banner-dismissed')) {
+      setDismissed(true);
+    }
   }, []);
+
+  // Synchroniser les erreurs SW dans l'état local
+  useEffect(() => {
+    if (swError) setLocalError(swError);
+  }, [swError]);
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -34,6 +40,7 @@ export default function PushNotificationBanner({ userName }: { userName?: string
   };
 
   const handleSubscribe = async () => {
+    setLocalError(null);
     const ok = await subscribe();
     if (ok) {
       setSuccess(true);
@@ -41,8 +48,10 @@ export default function PushNotificationBanner({ userName }: { userName?: string
     }
   };
 
+  // ── Cas : pas supporté, déjà abonné, fermé par l'utilisateur, ou bloqué ──
   if (!isSupported || isSubscribed || dismissed || permission === 'denied') return null;
 
+  // ── Cas : succès ──────────────────────────────────────────────────────────
   if (success) {
     return (
       <div className="mx-4 mt-3 flex items-center gap-3 px-5 py-3.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
@@ -56,6 +65,38 @@ export default function PushNotificationBanner({ userName }: { userName?: string
     );
   }
 
+  // ── Cas : erreur SW (message clair + bouton rechargement auto) ────────────
+  if (localError) {
+    return (
+      <div className="mx-4 mt-3 flex items-start gap-3 px-5 py-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl shadow-sm">
+        <div className="p-2.5 bg-amber-500 rounded-xl flex-shrink-0 mt-0.5">
+          <AlertTriangle size={18} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
+            Notifications temporairement indisponibles
+          </p>
+          <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">
+            Une mise à jour de l'application est disponible. Rechargez pour activer les notifications.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+          >
+            <RefreshCw size={13} />
+            Recharger
+          </button>
+          <button onClick={handleDismiss} className="p-2 text-amber-400 hover:text-amber-600 rounded-xl transition-all">
+            <X size={15} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Cas : bannière normale ─────────────────────────────────────────────────
   return (
     <div className="mx-4 mt-3 flex items-start gap-3 px-5 py-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl shadow-sm">
       <div className="p-2.5 bg-sky-500 rounded-xl flex-shrink-0 mt-0.5">
@@ -91,7 +132,23 @@ export default function PushNotificationBanner({ userName }: { userName?: string
 
 // ─── Bouton toggle pour /mon-profil et /parametres ────────────────────────────
 export function PushToggleButton() {
-  const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe, permission } = usePushNotifications();
+  const { isSupported, isSubscribed, isLoading, permission, swError, subscribe, unsubscribe } =
+    usePushNotifications();
+
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (swError) setLocalError(swError);
+  }, [swError]);
+
+  const handleClick = async () => {
+    setLocalError(null);
+    if (isSubscribed) {
+      await unsubscribe();
+    } else {
+      await subscribe();
+    }
+  };
 
   if (!isSupported) {
     return (
@@ -111,9 +168,28 @@ export function PushToggleButton() {
     );
   }
 
+  // Erreur SW → bouton rechargement
+  if (localError) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+          <AlertTriangle size={16} />
+          <span>Mise à jour requise pour activer les notifications</span>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-2 border-amber-200 dark:border-amber-800 hover:bg-amber-100 transition-all"
+        >
+          <RefreshCw size={16} />
+          Recharger la page
+        </button>
+      </div>
+    );
+  }
+
   return (
     <button
-      onClick={isSubscribed ? unsubscribe : subscribe}
+      onClick={handleClick}
       disabled={isLoading}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 ${
         isSubscribed
