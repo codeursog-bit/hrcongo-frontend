@@ -10,6 +10,7 @@ import {
   BarChart3, AlarmClock, Palmtree
 } from 'lucide-react';
 import { api } from '@/services/api';
+import PushNotificationBanner, { PushToggleButton } from '@/components/PushNotificationBanner';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -233,7 +234,7 @@ export default function MonProfilPage() {
   // ── Rendu ────────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a0f1e] text-white">
-
+     <PushToggleButton />
       {/* ── Fond décoratif ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-sky-600/10 rounded-full blur-[120px]" />

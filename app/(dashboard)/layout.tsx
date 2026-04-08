@@ -41,6 +41,7 @@ import { attendanceApi } from '@/services/attendance-api';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { PendingActions } from '@/components/pwa/PendingActions';
 import { ContractExpiryToast } from '@/components/contracts/ContractExpiryToast';
+import PushNotificationBanner from '@/components/PushNotificationBanner';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -73,6 +74,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (isCabinetRoute) {
     return <>{children}</>;
   }
+  
+  // Récupérer le prénom de l'utilisateur connecté pour personnaliser le message
+  let userName: string | undefined;
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const user = JSON.parse(stored);
+        userName = user.firstName;
+      }
+    } catch { /* silencieux */ }
+  }
 
   // Routes dashboard normales
   return (
@@ -81,6 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <InstallPrompt />
       <PendingActions />
       <ContractExpiryToast userRole={userRole ?? ''} />
+      <PushNotificationBanner userName={userName} />
       <DashboardShell>
         {children}
       </DashboardShell>

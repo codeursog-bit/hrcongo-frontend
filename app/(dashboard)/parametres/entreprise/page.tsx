@@ -1331,15 +1331,57 @@ export default function CompanySettingsPage() {
         </div>
       </div>
 
-      {/* TABS */}
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar">
-        <TabButton id="general"          label="Général"             icon={Building2}   />
-        <TabButton id="fiscal"           label="Fiscalité"           icon={ShieldCheck} />
-        <TabButton id="convention"       label="Convention"          icon={BookOpen}    />
-        <TabButton id="payroll_calendar" label="Calendrier de paie"  icon={Banknote}    />
-        <TabButton id="location"         label="Localisation"        icon={MapPin}      />
-        <TabButton id="attendance"       label="Horaires & Pointage" icon={Clock}       />
-        <TabButton id="contact"          label="Coordonnées"         icon={Phone}       />
+      {/* ══════════════════════════════════════════════
+          TABS — 4 principaux en haut (centrés, grands)
+                 3 secondaires en bas (plus discrets)
+      ══════════════════════════════════════════════ */}
+
+      {/* Ligne 1 — 4 onglets principaux, centrés */}
+      <div className="flex justify-center gap-2 mb-2">
+        {([
+          { id: 'general',    label: 'Général',        icon: Building2,   desc: 'Identité légale' },
+          { id: 'fiscal',     label: 'Fiscalité',      icon: ShieldCheck, desc: 'CNSS & Impôts'   },
+          { id: 'convention', label: 'Convention',     icon: BookOpen,    desc: 'Barème collectif' },
+          { id: 'attendance', label: 'Pointage',       icon: Clock,       desc: 'Horaires & GPS'  },
+        ] as { id: TabId; label: string; icon: React.ElementType; desc: string }[]).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex flex-col items-center gap-1 px-5 py-3 rounded-2xl font-bold text-sm transition-all min-w-[110px] ${
+              activeTab === tab.id
+                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg scale-[1.03]'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-[1.01]'
+            }`}
+          >
+            <tab.icon size={20} />
+            <span className="font-black">{tab.label}</span>
+            <span className={`text-[10px] font-normal ${activeTab === tab.id ? 'opacity-70' : 'text-gray-400'}`}>
+              {tab.desc}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Ligne 2 — 3 onglets secondaires, centrés, plus petits */}
+      <div className="flex justify-center gap-2 mb-6">
+        {([
+          { id: 'payroll_calendar', label: 'Calendrier de paie', icon: Banknote },
+          { id: 'location',         label: 'Localisation GPS',   icon: MapPin   },
+          { id: 'contact',          label: 'Coordonnées',        icon: Phone    },
+        ] as { id: TabId; label: string; icon: React.ElementType }[]).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs transition-all whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <tab.icon size={14} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
