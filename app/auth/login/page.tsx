@@ -579,9 +579,14 @@
 //   Tout le reste est IDENTIQUE à ton fichier original.
 // =============================================================================
 
+// =============================================================================
+// FICHIER : app/auth/login/page.tsx
+// FIX : useSearchParams() wrappé dans Suspense (Next.js 14 requirement)
+// =============================================================================
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -893,21 +898,20 @@ function ChangePasswordModal({
 }
 
 // =============================================================================
-// PAGE LOGIN PRINCIPALE
+// INNER LOGIN CONTENT — contient useSearchParams, doit être dans <Suspense>
 // =============================================================================
 
-export default function LoginPage() {
+function LoginContent() {
   const router       = useRouter();
-  // ── 🆕 Lire le callbackUrl venant d'une notification push ─────────────────
   const searchParams = useSearchParams();
-  const callbackUrl  = searchParams.get('callbackUrl'); // ex: /presences/pointage
+  const callbackUrl  = searchParams.get('callbackUrl');
 
-  const [isLoading, setIsLoading]             = useState(false);
-  const [showPassword, setShowPassword]       = useState(false);
-  const [serverError, setServerError]         = useState('');
+  const [isLoading, setIsLoading]                 = useState(false);
+  const [showPassword, setShowPassword]           = useState(false);
+  const [serverError, setServerError]             = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [tempToken, setTempToken]             = useState('');
-  const [userInfo, setUserInfo]               = useState({ firstName: '', lastName: '' });
+  const [tempToken, setTempToken]                 = useState('');
+  const [userInfo, setUserInfo]                   = useState({ firstName: '', lastName: '' });
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -945,8 +949,6 @@ export default function LoginPage() {
         localStorage.setItem('accessToken', response.access_token);
         localStorage.setItem('refreshToken', response.refresh_token);
         localStorage.setItem('user', JSON.stringify(response.user));
-
-        // ── 🆕 Si notif push → destination précise, sinon redirection par rôle ──
         router.push(callbackUrl ?? getRedirectUrl(response.user as any));
       } else {
         throw new Error('Réponse du serveur invalide');
@@ -972,7 +974,6 @@ export default function LoginPage() {
 
   const handlePasswordChangeSuccess = (user: PasswordChangeResponse['user']) => {
     setShowPasswordModal(false);
-    // ── 🆕 Même logique : callbackUrl prioritaire après changement de mdp ────
     router.push(callbackUrl ?? getRedirectUrl(user as any));
   };
 
@@ -1136,5 +1137,21 @@ export default function LoginPage() {
         onCancel={handlePasswordChangeCancel}
       />
     </div>
+  );
+}
+
+// =============================================================================
+// PAGE EXPORT — wrapping LoginContent dans Suspense (fix Next.js 14)
+// =============================================================================
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full bg-[#020617] items-center justify-center">
+        <Loader2 className="animate-spin text-cyan-400" size={32} />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
