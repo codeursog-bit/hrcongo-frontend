@@ -1,10 +1,13 @@
 'use client';
 
+// app/auth/accept-invitation/[token]/page.tsx
+// Logo cabinet (si disponible) à la place de Konza — même style que login
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Lock, Eye, EyeOff, Loader2, CheckCircle2,
-  AlertCircle, Building2, User, ArrowRight,
+  AlertCircle, Hexagon, ArrowRight, Building2, User,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -12,18 +15,27 @@ import { api } from '@/services/api';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface InvitationInfo {
-  email:        string;
-  cabinetName:  string | null;
-  cabinetLogo:  string | null;
-  cabinetColor: string | null;
-  companyName:  string | null;
+  email:         string;
+  cabinetName:   string | null;
+  cabinetLogo:   string | null;
+  cabinetColor:  string | null;
+  cabinetColor2: string | null;
+  companyName:   string | null;
 }
 
-interface AcceptResponse {
-  success:   boolean;
-  userId:    string;
-  companyId: string;
-  cabinetId: string | null;
+interface LoginResponse {
+  access_token:  string;
+  refresh_token: string;
+  user: {
+    id:               string;
+    email:            string;
+    firstName:        string;
+    lastName:         string;
+    role:             string;
+    companyId:        string | null;
+    cabinetId:        string | null;
+    managedByCabinet: boolean;
+  };
 }
 
 // ─── Critère mot de passe ─────────────────────────────────────────────────────
@@ -41,66 +53,33 @@ function PasswordCriteria({ met, text }: { met: boolean; text: string }) {
   );
 }
 
-// ─── Calcul force mot de passe ────────────────────────────────────────────────
+// ─── Force mot de passe ───────────────────────────────────────────────────────
 
-function getStrength(pwd: string): { strength: number; label: string; color: string } {
+function getStrength(pwd: string) {
   if (!pwd) return { strength: 0, label: '', color: '' };
   let s = 0;
-  if (pwd.length >= 8)          s += 25;
-  if (/[A-Z]/.test(pwd))        s += 25;
-  if (/[a-z]/.test(pwd))        s += 25;
-  if (/[0-9]/.test(pwd))        s += 25;
+  if (pwd.length >= 8)   s += 25;
+  if (/[A-Z]/.test(pwd)) s += 25;
+  if (/[a-z]/.test(pwd)) s += 25;
+  if (/[0-9]/.test(pwd)) s += 25;
   if (s <= 25)  return { strength: s,   label: 'Faible',   color: 'bg-red-500'    };
   if (s <= 50)  return { strength: s,   label: 'Moyen',    color: 'bg-orange-500' };
   if (s <= 75)  return { strength: s,   label: 'Bon',      color: 'bg-yellow-500' };
-  return         { strength: 100,       label: 'Excellent', color: 'bg-green-500'  };
+  return               { strength: 100, label: 'Excellent', color: 'bg-green-500' };
 }
 
-// ─── Logo cabinet (ou fallback icône) ─────────────────────────────────────────
+// ─── Page ────────────────────────────────────────────────────────────────────
 
-function CabinetLogo({
-  logo, name, color, size = 'lg',
-}: {
-  logo:  string | null;
-  name:  string | null;
-  color: string;
-  size?: 'sm' | 'lg';
-}) {
-  const dim = size === 'lg' ? 'w-24 h-24' : 'w-14 h-14';
-  const iconSize = size === 'lg' ? 48 : 26;
-  const rounded  = size === 'lg' ? 'rounded-3xl' : 'rounded-2xl';
-
-  if (logo) {
-    return (
-      <img
-        src={logo}
-        alt={name ?? 'Cabinet'}
-        className={`${size === 'lg' ? 'h-24' : 'h-14'} w-auto object-contain`}
-      />
-    );
-  }
-
-  return (
-    <div
-      className={`${dim} ${rounded} flex items-center justify-center shadow-lg`}
-      style={{ background: `linear-gradient(135deg, ${color}, ${color}99)` }}
-    >
-      <Building2 size={iconSize} className="text-white" />
-    </div>
-  );
-}
-
-// ─── Page principale ──────────────────────────────────────────────────────────
+type Step = 'loading' | 'form' | 'success' | 'error';
 
 export default function AcceptInvitationPage() {
   const params = useParams();
   const router = useRouter();
   const token  = params.token as string;
 
-  type Step = 'loading' | 'form' | 'success' | 'error';
-  const [step,     setStep]     = useState<Step>('loading');
-  const [info,     setInfo]     = useState<InvitationInfo | null>(null);
-  const [loadErr,  setLoadErr]  = useState('');
+  const [step,    setStep]    = useState<Step>('loading');
+  const [info,    setInfo]    = useState<InvitationInfo | null>(null);
+  const [loadErr, setLoadErr] = useState('');
 
   const [firstName,  setFirstName]  = useState('');
   const [lastName,   setLastName]   = useState('');
@@ -108,7 +87,6 @@ export default function AcceptInvitationPage() {
   const [confirm,    setConfirm]    = useState('');
   const [showPwd,    setShowPwd]    = useState(false);
   const [showCfm,    setShowCfm]    = useState(false);
-
   const [submitting, setSubmitting] = useState(false);
   const [submitErr,  setSubmitErr]  = useState('');
 
@@ -130,8 +108,16 @@ export default function AcceptInvitationPage() {
   // ── Validation ──────────────────────────────────────────────────────────────
   const strength      = getStrength(password);
   const passwordMatch = confirm.length > 0 && password === confirm;
-  const passwordOk    = password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
-  const formOk        = firstName.trim().length > 0 && lastName.trim().length > 0 && passwordOk && passwordMatch;
+  const passwordOk    =
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password);
+  const formOk =
+    firstName.trim().length > 0 &&
+    lastName.trim().length > 0 &&
+    passwordOk &&
+    passwordMatch;
 
   // ── Soumission ──────────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -142,21 +128,18 @@ export default function AcceptInvitationPage() {
     setSubmitErr('');
 
     try {
-      await api.post<AcceptResponse>(`/cabinet/accept-invitation/${token}`, {
+      // 1. Créer le compte via accept-invitation
+      await api.post(`/cabinet/accept-invitation/${token}`, {
         password,
         firstName: firstName.trim(),
         lastName:  lastName.trim(),
       });
 
-      const loginRes = await api.post<{
-        access_token:  string;
-        refresh_token: string;
-        user: {
-          id: string; email: string; firstName: string; lastName: string;
-          role: string; companyId: string | null; cabinetId: string | null;
-          managedByCabinet: boolean;
-        };
-      }>('/auth/login', { email: info!.email, password });
+      // 2. Auto-login avec les credentials
+      const loginRes = await api.post<LoginResponse>('/auth/login', {
+        email:    info!.email,
+        password,
+      });
 
       localStorage.setItem('accessToken',  loginRes.access_token);
       localStorage.setItem('refreshToken', loginRes.refresh_token);
@@ -164,12 +147,15 @@ export default function AcceptInvitationPage() {
 
       setStep('success');
 
+      // 3. Redirection
       setTimeout(() => {
         const { companyId, managedByCabinet, role } = loginRes.user;
         if (managedByCabinet && companyId) {
-          router.push(role === 'EMPLOYEE'
-            ? `/pme/${companyId}/conges/mon-espace`
-            : `/pme/${companyId}/dashboard`);
+          router.push(
+            role === 'EMPLOYEE'
+              ? `/pme/${companyId}/conges/mon-espace`
+              : `/pme/${companyId}/dashboard`,
+          );
         } else {
           router.push('/dashboard');
         }
@@ -181,20 +167,22 @@ export default function AcceptInvitationPage() {
     }
   };
 
-  const brandColor = info?.cabinetColor || '#06b6d4';
+  // ── Couleur branding ────────────────────────────────────────────────────────
+  const brandColor  = info?.cabinetColor  || '#06b6d4'; // cyan par défaut
+  const brandColor2 = info?.cabinetColor2 || '#3b82f6'; // blue par défaut
+  const hasCabinet  = !!(info?.cabinetName || info?.cabinetLogo);
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDU — Loading
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  // Loading
+  // ══════════════════════════════════════════════════════════════════════════
   if (step === 'loading') {
     return (
       <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white items-center justify-center">
         <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
         <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] animate-pulse" />
         <div className="flex flex-col items-center gap-4">
-          {/* Placeholder logo pendant le chargement */}
           <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Building2 size={28} className="text-white" />
+            <Hexagon size={28} fill="currentColor" className="text-white" />
           </div>
           <Loader2 size={22} className="animate-spin text-cyan-400" />
           <p className="text-sm text-gray-400">Vérification de votre invitation...</p>
@@ -203,9 +191,9 @@ export default function AcceptInvitationPage() {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDU — Erreur
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  // Erreur
+  // ══════════════════════════════════════════════════════════════════════════
   if (step === 'error') {
     return (
       <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white">
@@ -234,9 +222,9 @@ export default function AcceptInvitationPage() {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDU — Succès
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  // Succès
+  // ══════════════════════════════════════════════════════════════════════════
   if (step === 'success') {
     return (
       <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white">
@@ -273,37 +261,69 @@ export default function AcceptInvitationPage() {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDU — Formulaire principal
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════════
+  // Formulaire
+  // ══════════════════════════════════════════════════════════════════════════
   return (
     <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white font-sans overflow-x-hidden">
 
       {/* Background FX */}
       <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-      <div className="fixed top-0 right-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] bg-cyan-600/10 rounded-full blur-[80px] lg:blur-[120px] animate-pulse" />
-      <div className="fixed bottom-0 left-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] bg-blue-600/10 rounded-full blur-[80px] lg:blur-[120px]" />
+      <div className="fixed top-0 right-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] animate-pulse"
+           style={{ background: `${brandColor}18` }} />
+      <div className="fixed bottom-0 left-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px]"
+           style={{ background: `${brandColor2}12` }} />
 
-      {/* ── GAUCHE — Branding cabinet (desktop) ─────────────────────────────── */}
+      {/* ── GAUCHE — Branding cabinet ou Konza ──────────────────────────────── */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12 z-10">
         <div className="relative z-10 text-center max-w-lg">
 
+          {/* Logo */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="mb-10 flex justify-center"
           >
-            <CabinetLogo logo={info?.cabinetLogo ?? null} name={info?.cabinetName ?? null} color={brandColor} size="lg" />
+            {info?.cabinetLogo ? (
+              /* Logo cabinet personnalisé */
+              <div
+                className="p-6 rounded-3xl shadow-2xl"
+                style={{ background: `${brandColor}18`, border: `1px solid ${brandColor}30` }}
+              >
+                <img
+                  src={info.cabinetLogo}
+                  alt={info.cabinetName ?? 'Cabinet'}
+                  className="h-20 w-auto object-contain"
+                />
+              </div>
+            ) : hasCabinet ? (
+              /* Icône cabinet avec couleur branding */
+              <div
+                className="w-24 h-24 rounded-3xl flex items-center justify-center"
+                style={{
+                  background:  `linear-gradient(135deg, ${brandColor}, ${brandColor2})`,
+                  boxShadow:   `0 0 40px ${brandColor}40`,
+                }}
+              >
+                <Building2 size={48} className="text-white" />
+              </div>
+            ) : (
+              /* Fallback Konza si pas de cabinet */
+              <div className="w-24 h-24 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center text-white shadow-[0_0_40px_rgba(6,182,212,0.4)]">
+                <Hexagon size={56} fill="currentColor" />
+              </div>
+            )}
           </motion.div>
 
+          {/* Titre */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight"
           >
-            {info?.cabinetName ?? 'Votre cabinet'}
+            {info?.cabinetName ?? 'Konza RH'}
           </motion.h1>
 
           <motion.p
@@ -314,16 +334,21 @@ export default function AcceptInvitationPage() {
           >
             {info?.companyName
               ? `Accédez à l'espace RH de\u00a0${info.companyName}`
-              : 'Créez votre accès à la plateforme RH'}
+              : 'Complétez votre inscription pour accéder à la plateforme'}
           </motion.p>
 
+          {/* Badge entreprise */}
           {info?.companyName && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="mt-8 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl border text-sm font-medium"
-              style={{ borderColor: `${brandColor}40`, background: `${brandColor}15`, color: brandColor }}
+              style={{
+                borderColor: `${brandColor}40`,
+                background:  `${brandColor}15`,
+                color:        brandColor,
+              }}
             >
               <Building2 size={15} />
               {info.companyName}
@@ -338,26 +363,43 @@ export default function AcceptInvitationPage() {
 
           {/* Logo mobile */}
           <div className="lg:hidden mb-6 flex justify-center">
-            <CabinetLogo logo={info?.cabinetLogo ?? null} name={info?.cabinetName ?? null} color={brandColor} size="sm" />
+            {info?.cabinetLogo ? (
+              <img
+                src={info.cabinetLogo}
+                alt={info.cabinetName ?? ''}
+                className="h-14 w-auto object-contain"
+              />
+            ) : hasCabinet ? (
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
+                style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor2})` }}
+              >
+                <Building2 size={26} className="text-white" />
+              </div>
+            ) : (
+              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Hexagon size={28} fill="currentColor" className="text-white" />
+              </div>
+            )}
           </div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
 
-            {/* Titre */}
             <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Créez votre accès
             </h2>
             <p className="mt-1.5 text-xs sm:text-sm text-gray-400">
               {info?.companyName
                 ? `Espace RH — ${info.companyName}`
-                : 'Complétez votre inscription'}
+                : 'Finalisez votre inscription'}
             </p>
 
-            {/* Info email */}
+            {/* Badge email invité */}
             {info?.email && (
               <div className="mt-4 flex items-center gap-2.5 p-3 bg-white/5 border border-white/10 rounded-xl">
-                <div className="w-7 h-7 bg-cyan-500/15 border border-cyan-500/20 rounded-lg flex items-center justify-center shrink-0">
-                  <User size={13} className="text-cyan-400" />
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                     style={{ background: `${brandColor}20`, border: `1px solid ${brandColor}30` }}>
+                  <User size={13} style={{ color: brandColor }} />
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-500 uppercase tracking-wider">Compte invité</p>
@@ -366,7 +408,7 @@ export default function AcceptInvitationPage() {
               </div>
             )}
 
-            {/* Erreur soumission */}
+            {/* Erreur */}
             <AnimatePresence>
               {submitErr && (
                 <motion.div
@@ -426,13 +468,16 @@ export default function AcceptInvitationPage() {
                     required
                     className="block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   />
-                  <button type="button" onClick={() => setShowPwd(v => !v)}
-                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => setShowPwd(v => !v)}
+                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
+                  >
                     {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
 
-                {/* Barre de force */}
+                {/* Barre force */}
                 {password && (
                   <div className="mt-2">
                     <div className="flex justify-between text-xs mb-1">
@@ -453,14 +498,14 @@ export default function AcceptInvitationPage() {
 
                 {/* Critères */}
                 <div className="mt-3 space-y-1">
-                  <PasswordCriteria met={password.length >= 8}   text="Au moins 8 caractères" />
-                  <PasswordCriteria met={/[A-Z]/.test(password)} text="Une majuscule" />
-                  <PasswordCriteria met={/[a-z]/.test(password)} text="Une minuscule" />
-                  <PasswordCriteria met={/[0-9]/.test(password)} text="Un chiffre" />
+                  <PasswordCriteria met={password.length >= 8}    text="Au moins 8 caractères" />
+                  <PasswordCriteria met={/[A-Z]/.test(password)}  text="Une majuscule"          />
+                  <PasswordCriteria met={/[a-z]/.test(password)}  text="Une minuscule"          />
+                  <PasswordCriteria met={/[0-9]/.test(password)}  text="Un chiffre"             />
                 </div>
               </div>
 
-              {/* Confirmation mot de passe */}
+              {/* Confirmation */}
               <div>
                 <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-1.5">Confirmer le mot de passe *</label>
                 <div className="relative group">
@@ -479,8 +524,11 @@ export default function AcceptInvitationPage() {
                         : 'border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/50'
                     }`}
                   />
-                  <button type="button" onClick={() => setShowCfm(v => !v)}
-                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => setShowCfm(v => !v)}
+                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
+                  >
                     {showCfm ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -494,16 +542,21 @@ export default function AcceptInvitationPage() {
                 )}
               </div>
 
-              {/* Bouton soumettre */}
+              {/* CTA */}
               <button
                 type="submit"
                 disabled={submitting || !formOk}
-                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 border border-transparent rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-blue-500 hover:to-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
+                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 border border-transparent rounded-xl text-sm font-bold text-black disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
+                style={{
+                  background:  `linear-gradient(to right, ${brandColor}, ${brandColor2})`,
+                  boxShadow:   `0 0 20px ${brandColor}40`,
+                }}
               >
-                {submitting
-                  ? <Loader2 className="animate-spin" size={18} />
-                  : <>Créer mon accès <ArrowRight size={16} /></>
-                }
+                {submitting ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <>Créer mon accès <ArrowRight size={16} /></>
+                )}
               </button>
             </form>
 
@@ -511,8 +564,12 @@ export default function AcceptInvitationPage() {
             <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-white/10 text-center">
               <p className="text-xs sm:text-sm text-gray-400">
                 Vous avez déjà un compte ?{' '}
-                <button type="button" onClick={() => router.push('/auth/login')}
-                  className="font-bold text-cyan-400 hover:text-white transition-colors">
+                <button
+                  type="button"
+                  onClick={() => router.push('/auth/login')}
+                  className="font-bold transition-colors hover:text-white"
+                  style={{ color: brandColor }}
+                >
                   Se connecter
                 </button>
               </p>

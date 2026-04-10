@@ -1,22 +1,21 @@
-// =============================================================================
-// FICHIER : app/(dashboard)/cabinet/[cabinetId]/cloture/page.tsx
-// ACTION  : CRÉER (nouveau fichier)
-// =============================================================================
-
 'use client';
+
+// ============================================================================
+// app/(dashboard)/cabinet/[cabinetId]/cloture/page.tsx
+// REFONTE UX — Clôture & Import batch, design cabinet-ui
+// ============================================================================
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Play, Upload, Download, CheckCircle2, AlertCircle,
-  Loader2, ArrowRight, X, FileText, Link2, RefreshCw,
-} from 'lucide-react';
 import { api } from '@/services/api';
+import CabinetSidebar from '../CabinetSidebar';
+import {
+  C, Ico, TopBar, Card, SectionHeader, Badge,
+  Avatar, Btn, LoadingScreen, Banner,
+} from '@/components/cabinet/cabinet-ui';
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
                 'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface BatchItem {
   companyId:          string;
@@ -27,17 +26,10 @@ interface BatchItem {
 }
 
 interface BatchProgress {
-  batchId:        string;
-  status:         string;
-  totalCompanies: number;
-  processedCount: number;
-  successCount:   number;
-  failedCount:    number;
-  currentCompany: string | null;
-  items:          BatchItem[];
+  batchId: string; status: string; totalCompanies: number;
+  processedCount: number; successCount: number; failedCount: number;
+  currentCompany: string | null; items: BatchItem[];
 }
-
-interface ImportMapping { [sourceCol: string]: string }
 
 const KONZA_FIELDS = [
   { key: 'employeeNumber', label: 'Matricule' },
@@ -56,428 +48,309 @@ const KONZA_FIELDS = [
   { key: 'ignore',         label: '— Ignorer —' },
 ];
 
-const statusIcon = (s: BatchItem['status']) => {
-  if (s === 'SUCCESS') return <CheckCircle2 size={14} className="text-emerald-400" />;
-  if (s === 'FAILED')  return <AlertCircle  size={14} className="text-red-400" />;
-  if (s === 'RUNNING') return <Loader2      size={14} className="text-cyan-400 animate-spin" />;
-  if (s === 'SKIPPED') return <AlertCircle  size={14} className="text-amber-400" />;
-  return <div className="w-3.5 h-3.5 rounded-full border border-white/20" />;
-};
+function statusVariant(s: BatchItem['status']): any {
+  if (s === 'SUCCESS') return 'success';
+  if (s === 'FAILED')  return 'danger';
+  if (s === 'RUNNING') return 'warning';
+  if (s === 'SKIPPED') return 'default';
+  return 'default';
+}
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+function statusLabel(s: BatchItem['status']): string {
+  if (s === 'SUCCESS') return 'Réussi';
+  if (s === 'FAILED')  return 'Échoué';
+  if (s === 'RUNNING') return 'En cours';
+  if (s === 'SKIPPED') return 'Ignoré';
+  return 'En attente';
+}
 
-export default function ClotureImportPage() {
+export default function CloturePage() {
   const params    = useParams();
   const router    = useRouter();
   const cabinetId = params.cabinetId as string;
 
-  const now = new Date();
-  const [month, setMonth] = useState(now.getMonth());
+  const now     = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
   const [year,  setYear]  = useState(now.getFullYear());
 
-  // Clôture groupée
-  const [batch,        setBatch]        = useState<BatchProgress | null>(null);
-  const [batchLoading, setBatchLoading] = useState(false);
-  const [companies,    setCompanies]    = useState<{ companyId: string; companyName: string }[]>([]);
-  const [selected,     setSelected]     = useState<string[]>([]);
-  const evtRef = useRef<EventSource | null>(null);
+  const [batchRunning, setBatchRunning] = useState(false);
+  const [progress,     setProgress]     = useState<BatchProgress | null>(null);
+  const [error,        setError]        = useState('');
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Import
-  const [importStep,      setImportStep]      = useState<'idle' | 'mapping' | 'preview' | 'done'>('idle');
-  const [importCompanyId, setImportCompanyId] = useState('');
-  const [fileHeaders,     setFileHeaders]     = useState<string[]>([]);
-  const [mapping,         setMapping]         = useState<ImportMapping>({});
-  const [previewData,     setPreviewData]     = useState<any>(null);
-  const [importLoading,   setImportLoading]   = useState(false);
-  const fileRef        = useRef<HTMLInputElement>(null);
-  const pendingFileRef = useRef<File | null>(null);
+  // Import CSV
+  const [companies,    setCompanies]    = useState<any[]>([]);
+  const [selectedComp, setSelectedComp] = useState('');
+  const [csvHeaders,   setCsvHeaders]   = useState<string[]>([]);
+  const [csvRows,      setCsvRows]      = useState<string[][]>([]);
+  const [mapping,      setMapping]      = useState<Record<string, string>>({});
+  const [importing,    setImporting]    = useState(false);
+  const [importResult, setImportResult] = useState<any>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     api.get(`/cabinet/${cabinetId}/dashboard`)
-      .then((r: any) => {
-        setCompanies(r.companies ?? []);
-        setSelected((r.companies ?? []).map((c: any) => c.companyId));
-      })
+      .then((r: any) => setCompanies(r.companies ?? []))
       .catch(console.error);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [cabinetId]);
 
+  // Lancer clôture batch
   const launchBatch = async () => {
-    setBatchLoading(true);
+    setError(''); setBatchRunning(true); setProgress(null);
     try {
-      const init: any = await api.post(`/cabinet/${cabinetId}/batch-closure/init`, {
-        month: month + 1, year,
-        companyIds: selected,
-      });
-
-      const es = new EventSource(
-        `/api/cabinet/${cabinetId}/batch-closure/${init.batchId}/run`,
-        { withCredentials: true },
-      );
-      evtRef.current = es;
-
-      es.onmessage = (evt) => {
-        const progress: BatchProgress = JSON.parse(evt.data);
-        setBatch(progress);
-        if (['COMPLETED','FAILED','PARTIAL'].includes(progress.status)) {
-          es.close();
-          setBatchLoading(false);
-        }
-      };
-
-      es.onerror = () => { es.close(); setBatchLoading(false); };
-    } catch (e: any) {
-      alert(`Erreur : ${e.message}`);
-      setBatchLoading(false);
-    }
+      const res: any = await api.post(`/cabinet/${cabinetId}/payrolls/batch-generate`, { month, year });
+      const batchId  = res.batchId;
+      pollRef.current = setInterval(async () => {
+        try {
+          const p: any = await api.get(`/cabinet/${cabinetId}/payrolls/batch-status/${batchId}`);
+          setProgress(p);
+          if (['COMPLETED','FAILED','PARTIAL'].includes(p.status)) {
+            clearInterval(pollRef.current!);
+            setBatchRunning(false);
+          }
+        } catch { clearInterval(pollRef.current!); setBatchRunning(false); }
+      }, 2000);
+    } catch (e: any) { setError(e.message); setBatchRunning(false); }
   };
 
-  const downloadTemplate = async (companyId: string) => {
-   const blob: any = await api.get(
-  `/cabinet/${cabinetId}/import/template?companyId=${companyId}`,
-);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'template-variables-paie.xlsx';
-    a.click();
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Parse CSV
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !importCompanyId) return;
-    pendingFileRef.current = file;
-    setImportLoading(true);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const text   = ev.target?.result as string;
+      const lines  = text.split('\n').filter(l => l.trim());
+      const sep    = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
+      const rows    = lines.slice(1).map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g, '')));
+      setCsvHeaders(headers); setCsvRows(rows);
+      const auto: Record<string, string> = {};
+      headers.forEach(h => {
+        const match = KONZA_FIELDS.find(f => f.label.toLowerCase() === h.toLowerCase() || f.key.toLowerCase() === h.toLowerCase());
+        auto[h] = match?.key ?? 'ignore';
+      });
+      setMapping(auto);
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('companyId', importCompanyId);
-
+  const submitImport = async () => {
+    if (!selectedComp) { setError('Sélectionnez une PME'); return; }
+    setImporting(true); setError('');
     try {
-      const res: any = await api.post(`/cabinet/${cabinetId}/import/parse`, formData);
-      setFileHeaders(res.headers ?? []);
-
-      const isKonzaTemplate = res.headers?.some((h: string) =>
-        h === 'Jours travaillés' || h === 'H.Sup ×1.10',
+      const result: any = await api.post(
+        `/cabinet/${cabinetId}/entreprise/${selectedComp}/payrolls/import-csv`,
+        { headers: csvHeaders, rows: csvRows, mapping, month, year }
       );
-
-      if (isKonzaTemplate) {
-        setMapping({});
-        const preview: any = await api.post(`/cabinet/${cabinetId}/import/preview`, {
-          companyId: importCompanyId, rows: res.rows, mapping: {}, month: month + 1, year,
-        });
-        setPreviewData(preview);
-        setImportStep('preview');
-      } else {
-        const autoMapping: ImportMapping = {};
-        res.headers.forEach((h: string) => { autoMapping[h] = 'ignore'; });
-        setMapping(autoMapping);
-        setImportStep('mapping');
-      }
-    } catch (e: any) {
-      alert(`Erreur lecture fichier : ${e.message}`);
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  const applyMapping = async () => {
-    if (!pendingFileRef.current || !importCompanyId) return;
-    setImportLoading(true);
-    const formData = new FormData();
-    formData.append('file', pendingFileRef.current);
-    formData.append('companyId', importCompanyId);
-    formData.append('mapping', JSON.stringify(mapping));
-    try {
-      const res: any = await api.post(`/cabinet/${cabinetId}/import/parse`, formData);
-      const preview: any = await api.post(`/cabinet/${cabinetId}/import/preview`, {
-        companyId: importCompanyId, rows: res.rows, mapping, month: month + 1, year,
-      });
-      setPreviewData(preview);
-      setImportStep('preview');
-    } catch (e: any) {
-      alert(`Erreur : ${e.message}`);
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  const confirmImport = async () => {
-    if (!previewData) return;
-    setImportLoading(true);
-    try {
-      const res: any = await api.post(`/cabinet/${cabinetId}/import/apply`, {
-        companyId: importCompanyId, month: month + 1, year,
-        preview: previewData, mapping,
-        saveMappingName: pendingFileRef.current?.name ?? 'Import',
-      });
-      setImportStep('done');
-      setPreviewData({ ...previewData, applied: res.applied, skipped: res.skipped });
-    } catch (e: any) {
-      alert(`Erreur : ${e.message}`);
-    } finally {
-      setImportLoading(false);
-    }
+      setImportResult(result);
+    } catch (e: any) { setError(e.message); }
+    finally { setImporting(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6 space-y-6">
+    <div className="min-h-screen" style={{ background: C.pageBg }}>
+      <CabinetSidebar cabinetId={cabinetId} />
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Clôture & Import</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <select value={month} onChange={e => setMonth(Number(e.target.value))}
-              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300 outline-none">
-              {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-            </select>
-            <select value={year} onChange={e => setYear(Number(e.target.value))}
-              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-sm text-gray-300 outline-none">
-              {[year - 1, year, year + 1].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
+      <div className="ml-56">
+        <TopBar title="Clôture & Import" subtitle="Génération batch et import CSV" breadcrumb="Cabinet" />
 
-      {/* Section 1 : Clôture groupée */}
-      <div className="bg-white/3 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-white">Clôture groupée multi-PME</h2>
-            <p className="text-gray-500 text-xs mt-0.5">Lance la validation de toutes les paies en une seule opération</p>
-          </div>
-          {!batch && (
-            <button onClick={launchBatch} disabled={batchLoading || selected.length === 0}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors">
-              {batchLoading ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-              Lancer la clôture ({selected.length} PME)
-            </button>
-          )}
-          {batch?.status === 'COMPLETED' && (
-            <button onClick={() => setBatch(null)} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors">
-              <RefreshCw size={13} /> Nouvelle clôture
-            </button>
-          )}
-        </div>
+        <div className="p-8 space-y-6">
 
-        <div className="p-5">
-          {!batch ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-gray-500">Sélectionner les PME à clôturer</p>
-                <button onClick={() =>
-                  setSelected(selected.length === companies.length ? [] : companies.map(c => c.companyId))
-                } className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
-                  {selected.length === companies.length ? 'Tout déselectionner' : 'Tout sélectionner'}
-                </button>
-              </div>
-              {companies.map(c => (
-                <label key={c.companyId}
-                  className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl cursor-pointer hover:bg-white/5 transition-colors">
-                  <input type="checkbox"
-                    checked={selected.includes(c.companyId)}
-                    onChange={e => setSelected(prev =>
-                      e.target.checked ? [...prev, c.companyId] : prev.filter(x => x !== c.companyId),
-                    )}
-                    className="rounded" />
-                  <span className="text-sm text-white">{c.companyName}</span>
-                </label>
-              ))}
+          {error && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
+                 style={{ background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.2)`, color: '#f87171' }}>
+              <Ico.Alert size={14} color="#f87171" /> {error}
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                <span>{batch.processedCount} / {batch.totalCompanies} traitées</span>
-                <span className="flex items-center gap-3">
-                  <span className="text-emerald-400">{batch.successCount} réussies</span>
-                  {batch.failedCount > 0 && <span className="text-red-400">{batch.failedCount} échouées</span>}
-                </span>
+          )}
+
+          {/* ── Sélecteur mois/année ─────────────────────────────────────── */}
+          <Card accentColor={C.cyan} className="p-5">
+            <p className="text-sm font-semibold mb-4" style={{ color: C.textPrimary }}>Période de traitement</p>
+            <div className="flex items-center gap-4">
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: C.textSecondary }}>Mois</label>
+                <select
+                  value={month}
+                  onChange={e => setMonth(Number(e.target.value))}
+                  className="px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
+                >
+                  {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                </select>
               </div>
-              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                  style={{ width: `${batch.totalCompanies > 0 ? (batch.processedCount / batch.totalCompanies) * 100 : 0}%` }}
-                />
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: C.textSecondary }}>Année</label>
+                <select
+                  value={year}
+                  onChange={e => setYear(Number(e.target.value))}
+                  className="px-3 py-2.5 rounded-xl text-sm outline-none"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
+                >
+                  {[2023,2024,2025,2026].map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
               </div>
-              <div className="space-y-1.5 mt-4">
-                {batch.items.map(item => (
-                  <div key={item.companyId} className="flex items-center justify-between px-3 py-2.5 bg-white/3 rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      {statusIcon(item.status)}
-                      <span className="text-sm text-white">{item.companyName}</span>
-                      {item.errorMessage && <span className="text-xs text-amber-400">{item.errorMessage}</span>}
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-5">
+
+            {/* ── Clôture batch ────────────────────────────────────────── */}
+            <Card>
+              <SectionHeader
+                title="Clôture batch"
+                sub="Générer tous les bulletins d'un coup"
+                action={
+                  <Btn
+                    variant="primary"
+                    size="sm"
+                    icon={
+                      batchRunning
+                        ? <Ico.Loader size={14} color="#fff" />
+                        : (
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M3 2l9 5-9 5V2z" fill="white"/>
+                          </svg>
+                        )
+                    }
+                    onClick={launchBatch}
+                  >
+                    {batchRunning ? 'En cours…' : 'Lancer'}
+                  </Btn>
+                }
+              />
+              <div className="p-5">
+                {!progress ? (
+                  <div className="py-8 text-center text-sm" style={{ color: C.textMuted }}>
+                    Cliquez sur "Lancer" pour générer les bulletins de {MONTHS[month - 1]} {year} pour toutes vos PME.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Progress bar globale */}
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span style={{ color: C.textSecondary }}>
+                          {progress.processedCount} / {progress.totalCompanies} PME
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: C.emerald }}>✓ {progress.successCount}</span>
+                          {progress.failedCount > 0 && <span style={{ color: C.red }}>✗ {progress.failedCount}</span>}
+                        </div>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${progress.totalCompanies > 0 ? (progress.processedCount / progress.totalCompanies) * 100 : 0}%`,
+                            background: C.indigo,
+                          }}
+                        />
+                      </div>
                     </div>
-                    {item.status === 'SUCCESS' && (
-                      <span className="text-xs text-emerald-400">{item.bulletinsGenerated} bulletins validés</span>
-                    )}
-                    {item.status === 'SKIPPED' && (
-                      <span className="text-xs text-amber-400">Variables manquantes</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {batch.status === 'COMPLETED' && (
-                <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl mt-2">
-                  <CheckCircle2 size={16} className="text-emerald-400" />
-                  <p className="text-sm text-emerald-400 font-medium">
-                    Clôture terminée — {batch.successCount} PME traitées avec succès
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Section 2 : Import variables */}
-      <div className="bg-white/3 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/10">
-          <h2 className="font-semibold text-white">Import variables depuis Excel / CSV</h2>
-          <p className="text-gray-500 text-xs mt-0.5">Importez les variables d'une PME depuis son fichier mensuel</p>
-        </div>
-
-        <div className="p-5">
-          <div className="flex items-center gap-3 mb-5">
-            <select value={importCompanyId} onChange={e => {
-              setImportCompanyId(e.target.value);
-              setImportStep('idle');
-              setPreviewData(null);
-              setFileHeaders([]);
-            }}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:ring-1 focus:ring-cyan-500/50">
-              <option value="">— Sélectionner une PME —</option>
-              {companies.map(c => (
-                <option key={c.companyId} value={c.companyId}>{c.companyName}</option>
-              ))}
-            </select>
-            {importCompanyId && (
-              <button onClick={() => downloadTemplate(importCompanyId)}
-                className="flex items-center gap-2 px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-300 hover:text-white transition-colors whitespace-nowrap">
-                <Download size={14} /> Template Konza
-              </button>
-            )}
-          </div>
-
-          {importCompanyId && importStep === 'idle' && (
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-white/10 hover:border-cyan-500/30 rounded-2xl p-10 text-center cursor-pointer transition-colors group">
-              <Upload size={24} className="text-gray-600 group-hover:text-cyan-400 mx-auto mb-3 transition-colors" />
-              <p className="text-gray-400 text-sm">Glissez votre fichier ici ou cliquez pour parcourir</p>
-              <p className="text-gray-600 text-xs mt-1">.xlsx, .xls, .csv acceptés</p>
-              <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
-            </div>
-          )}
-
-          {importLoading && (
-            <div className="flex items-center justify-center gap-2 py-8">
-              <Loader2 size={20} className="animate-spin text-cyan-400" />
-              <span className="text-gray-400 text-sm">Traitement en cours...</span>
-            </div>
-          )}
-
-          {importStep === 'mapping' && !importLoading && (
-            <div>
-              <p className="text-sm text-gray-400 mb-4">
-                Faites correspondre les colonnes de votre fichier aux champs Konza.
-                Ce mapping sera mémorisé pour les prochains imports.
-              </p>
-              <div className="space-y-2 mb-5">
-                {fileHeaders.map(header => (
-                  <div key={header} className="flex items-center gap-3">
-                    <div className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 truncate">{header}</div>
-                    <Link2 size={14} className="text-gray-600 shrink-0" />
-                    <select
-                      value={mapping[header] ?? 'ignore'}
-                      onChange={e => setMapping(prev => ({ ...prev, [header]: e.target.value }))}
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-sm text-white outline-none focus:ring-1 focus:ring-cyan-500/50">
-                      {KONZA_FIELDS.map(f => (
-                        <option key={f.key} value={f.key}>{f.label}</option>
+                    {/* Items */}
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {progress.items.map((item, i) => (
+                        <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg"
+                             style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <Avatar name={item.companyName.slice(0, 2)} size={26} index={i} />
+                          <p className="flex-1 text-xs font-medium truncate" style={{ color: C.textPrimary }}>
+                            {item.companyName}
+                          </p>
+                          <Badge label={statusLabel(item.status)} variant={statusVariant(item.status)} />
+                        </div>
                       ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-              <button onClick={applyMapping} disabled={importLoading}
-                className="flex items-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-xl text-sm transition-colors disabled:opacity-50">
-                Aperçu de l'import <ArrowRight size={14} />
-              </button>
-            </div>
-          )}
-
-          {importStep === 'preview' && previewData && !importLoading && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-emerald-400 text-sm">
-                    <CheckCircle2 size={14} /> {previewData.matchedCount} employés reconnus
-                  </div>
-                  {previewData.unmatchedCount > 0 && (
-                    <div className="flex items-center gap-1.5 text-amber-400 text-sm">
-                      <AlertCircle size={14} /> {previewData.unmatchedCount} non reconnus
                     </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setImportStep('mapping')} className="text-xs text-gray-500 hover:text-white transition-colors">
-                    ← Modifier mapping
-                  </button>
-                  <button onClick={confirmImport} disabled={importLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold rounded-xl text-sm transition-colors disabled:opacity-50">
-                    Confirmer l'import
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white/3 border border-white/10 rounded-xl overflow-hidden">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      {['Employé','Jours','Abs.','H.sup ×1.10','H.sup ×1.25','Avance','Statut'].map(h => (
-                        <th key={h} className="px-3 py-2 text-left text-gray-500 font-medium">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {(previewData.rows ?? []).slice(0, 10).map((row: any, i: number) => (
-                      <tr key={i} className={row.matchError ? 'bg-amber-500/5' : ''}>
-                        <td className="px-3 py-2 text-white">{row.firstName} {row.lastName}</td>
-                        <td className="px-3 py-2 text-gray-400">{row.workedDays}</td>
-                        <td className="px-3 py-2 text-gray-400">{row.absentDays || '—'}</td>
-                        <td className="px-3 py-2 text-gray-400">{row.overtime10 || '—'}</td>
-                        <td className="px-3 py-2 text-gray-400">{row.overtime25 || '—'}</td>
-                        <td className="px-3 py-2 text-gray-400">{row.advance || '—'}</td>
-                        <td className="px-3 py-2">
-                          {row.matchError
-                            ? <span className="text-amber-400 flex items-center gap-1"><AlertCircle size={11} /> Non trouvé</span>
-                            : <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 size={11} /> OK</span>
-                          }
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {(previewData.rows?.length ?? 0) > 10 && (
-                  <p className="text-center text-xs text-gray-600 py-2">+ {previewData.rows.length - 10} autres lignes</p>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            </Card>
 
-          {importStep === 'done' && (
-            <div className="text-center py-8">
-              <CheckCircle2 size={40} className="text-emerald-400 mx-auto mb-3" />
-              <p className="text-white font-semibold">Import réussi</p>
-              <p className="text-gray-400 text-sm mt-1">
-                {previewData?.applied} lignes importées · {previewData?.skipped} ignorées
-              </p>
-              <button
-                onClick={() => router.push(`/cabinet/${cabinetId}/entreprise/${importCompanyId}/paie`)}
-                className="mt-4 flex items-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-semibold rounded-xl text-sm transition-colors mx-auto">
-                Saisir les variables <ArrowRight size={14} />
-              </button>
-            </div>
-          )}
+            {/* ── Import CSV ───────────────────────────────────────────── */}
+            <Card>
+              <SectionHeader title="Import CSV" sub="Variables de paie par fichier" />
+              <div className="p-5 space-y-4">
+
+                {/* Sélection PME */}
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: C.textSecondary }}>PME cible</label>
+                  <select
+                    value={selectedComp}
+                    onChange={e => setSelectedComp(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
+                  >
+                    <option value="">Sélectionner…</option>
+                    {companies.map(c => (
+                      <option key={c.companyId} value={c.companyId}>
+                        {c.tradeName || c.legalName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Upload zone */}
+                <div
+                  className="flex flex-col items-center gap-2 py-6 rounded-xl cursor-pointer transition-all"
+                  style={{
+                    border: `1.5px dashed ${C.border}`,
+                    background: 'rgba(255,255,255,0.02)',
+                  }}
+                  onClick={() => fileRef.current?.click()}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = C.indigo)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}
+                >
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M4 20v2a2 2 0 002 2h16a2 2 0 002-2v-2M14 4v14M8 10l6-6 6 6" stroke={C.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <p className="text-xs" style={{ color: C.textMuted }}>
+                    {csvHeaders.length > 0 ? `${csvRows.length} lignes chargées` : 'Cliquer pour sélectionner un CSV'}
+                  </p>
+                  <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFile} />
+                </div>
+
+                {/* Mapping colonnes */}
+                {csvHeaders.length > 0 && (
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <p className="text-xs font-medium" style={{ color: C.textSecondary }}>Correspondance colonnes</p>
+                    {csvHeaders.map(h => (
+                      <div key={h} className="flex items-center gap-2">
+                        <span className="text-xs flex-1 truncate" style={{ color: C.textMuted }}>{h}</span>
+                        <select
+                          value={mapping[h] ?? 'ignore'}
+                          onChange={e => setMapping(prev => ({ ...prev, [h]: e.target.value }))}
+                          className="text-xs px-2 py-1.5 rounded-lg outline-none"
+                          style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
+                        >
+                          {KONZA_FIELDS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
+                        </select>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {csvHeaders.length > 0 && (
+                  <Btn
+                    variant="primary"
+                    icon={<Ico.FileText size={14} color="#fff" />}
+                    onClick={submitImport}
+                  >
+                    {importing ? 'Import en cours…' : 'Importer'}
+                  </Btn>
+                )}
+
+                {importResult && (
+                  <div className="px-3 py-2 rounded-xl text-xs"
+                       style={{ background: 'rgba(16,185,129,0.1)', border: `1px solid rgba(16,185,129,0.2)`, color: '#34d399' }}>
+                    Import réussi · {importResult.updatedCount ?? importResult.count ?? 0} employé(s) mis à jour
+                  </div>
+                )}
+              </div>
+            </Card>
+
+          </div>
+
         </div>
       </div>
     </div>
