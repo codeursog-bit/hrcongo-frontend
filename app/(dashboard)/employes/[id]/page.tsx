@@ -1,4 +1,3 @@
-
 // 'use client';
 
 // import React, { useState, useEffect } from 'react';
@@ -758,7 +757,8 @@ import { api } from '@/services/api';
 
 type TabType = 'info' | 'docs' | 'paie' | 'conges' | 'materiel';
 
-const TEMP_CONTRACTS = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'];
+const TEMP_CONTRACTS = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
+const BNC_CONTRACTS  = ['CONSULTANT', 'PRESTATAIRE'];
 
 interface EmployeeDetail {
   id: string;
@@ -776,7 +776,7 @@ interface EmployeeDetail {
   employeeNumber: string;
   hireDate: string;
   contractType: string;
-  contractEndDate?: string | null; // 🆕
+  contractEndDate?: string | null;
   position: string;
   baseSalary: number;
   department: { name: string };
@@ -789,6 +789,14 @@ interface EmployeeDetail {
   professionalCategory: string;
   echelon: string;
   paymentMethod: string;
+  // Période d'essai
+  trialPeriodDays?: number | null;
+  trialEndDate?: string | null;
+  trialConfirmedAt?: string | null;
+  trialStatus?: string;
+  // BNC
+  isResident?: boolean;
+  nationality?: string | null;
 }
 
 function getRoleFromStorage(): string {
@@ -1144,8 +1152,22 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Type de contrat</p>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 text-sm font-bold">
-                    <Briefcase size={12} /> {employee.contractType}
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold ${
+                    employee.contractType === 'CDI'         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                    employee.contractType === 'CDD'         ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                    employee.contractType === 'STAGE'       ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' :
+                    employee.contractType === 'CONSULTANT'  ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300' :
+                    employee.contractType === 'PRESTATAIRE' ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' :
+                    'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                  }`}>
+                    <Briefcase size={12} />
+                    {employee.contractType === 'CDI' ? '♾️ CDI' :
+                     employee.contractType === 'CDD' ? '📅 CDD' :
+                     employee.contractType === 'STAGE' ? '🎓 Stage' :
+                     employee.contractType === 'CONSULTANT' ? '💼 Consultant' :
+                     employee.contractType === 'PRESTATAIRE' ? '🤝 Prestataire' :
+                     employee.contractType === 'INTERIM' ? '🔄 Intérim' :
+                     employee.contractType}
                   </span>
                 </div>
                 <div>
@@ -1176,6 +1198,99 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     <div className="flex items-center gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                       <CheckCircle size={13} className="text-emerald-500" />
                       <span className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">CDI — Durée indéterminée</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Période d'essai */}
+                {employee.trialPeriodDays && employee.trialPeriodDays > 0 && (
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-500 mb-2 flex items-center gap-1.5">
+                      <Clock size={11} /> Période d'essai
+                    </p>
+                    {employee.trialStatus === 'IN_PROGRESS' && employee.trialEndDate && (
+                      <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">⏱️ Essai en cours</span>
+                          <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                            {Math.max(0, Math.ceil((new Date(employee.trialEndDate).getTime() - Date.now()) / 86400000))} jours restants
+                          </span>
+                        </div>
+                        <p className="text-xs text-indigo-600 dark:text-indigo-500">
+                          Fin le {new Date(employee.trialEndDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </p>
+                        <p className="text-xs text-indigo-500 mt-1">Rupture sans préavis ni indemnités possible.</p>
+                      </div>
+                    )}
+                    {employee.trialStatus === 'CONFIRMED' && (
+                      <div className="flex items-center gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
+                        <CheckCircle size={13} className="text-emerald-500" />
+                        <span className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
+                          Essai confirmé {employee.trialConfirmedAt ? `— le ${new Date(employee.trialConfirmedAt).toLocaleDateString('fr-FR')}` : ''}
+                        </span>
+                      </div>
+                    )}
+                    {employee.trialStatus === 'EXPIRED' && (
+                      <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
+                        <AlertCircle size={13} className="text-amber-500" />
+                        <span className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
+                          Essai expiré — à régulariser (confirmation ou rupture)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* BNC — Consultant / Prestataire */}
+                {BNC_CONTRACTS.includes(employee.contractType) && (
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-500 mb-2">Régime fiscal BNC</p>
+                    <div className="p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl border border-teal-200 dark:border-teal-700 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-teal-700 dark:text-teal-400">Résidence</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${employee.isResident !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400'}`}>
+                          {employee.isResident !== false ? '🇨🇬 Résident' : '🌍 Non-résident'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-teal-700 dark:text-teal-400">Taux BNC</span>
+                        <span className="text-xs font-black text-teal-800 dark:text-teal-300">
+                          {employee.isResident !== false ? '10%' : '20%'}
+                        </span>
+                      </div>
+                      {employee.nationality && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-teal-700 dark:text-teal-400">Nationalité</span>
+                          <span className="text-xs font-semibold text-teal-800 dark:text-teal-300">{employee.nationality}</span>
+                        </div>
+                      )}
+                      <p className="text-[11px] text-teal-600 dark:text-teal-500 pt-1">
+                        ⚠️ Pas de bulletin — FACTURE HT. BNC reversé DGI avant le 15.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* INTERIM — info agence */}
+                {employee.contractType === 'INTERIM' && (
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-700">
+                      <p className="text-xs font-bold text-orange-700 dark:text-orange-400 mb-1">🔄 Intérimaire</p>
+                      <p className="text-xs text-orange-600 dark:text-orange-500">
+                        Salarié de l'agence d'intérim. Aucun bulletin généré côté entreprise. Suivi de mission uniquement.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* STAGE — info convention */}
+                {employee.contractType === 'STAGE' && (
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
+                      <p className="text-xs font-bold text-purple-700 dark:text-purple-400 mb-1">🎓 Stage</p>
+                      <p className="text-xs text-purple-600 dark:text-purple-500">
+                        Gratification. CNSS patronale AT 2,25% uniquement. ITS seulement si gratification &gt; SMIG (50 400 FCFA).
+                      </p>
                     </div>
                   </div>
                 )}

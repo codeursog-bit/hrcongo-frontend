@@ -603,14 +603,37 @@ interface CompanyData {
 }
 
 // Contrats qui nécessitent une date de fin
-const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'];
+const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
 
 // Durées suggérées selon le type
 const SUGGESTED_DURATIONS: Record<string, { label: string; months: number }[]> = {
-  STAGE:      [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
-  CDD:        [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
-  INTERIM:    [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
-  CONSULTANT: [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
+  STAGE:       [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
+  CDD:         [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
+  INTERIM:     [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
+  CONSULTANT:  [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
+  PRESTATAIRE: [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
+};
+
+// Contrats qui peuvent avoir une période d'essai
+const CAN_HAVE_TRIAL = ['CDI', 'CDD'];
+
+// Durées max légales période d'essai (Code Travail Congo)
+const TRIAL_MAX_DAYS: Record<string, number> = {
+  CDI: 90,  // 3 mois max — cadres / agents de maîtrise
+  CDD: 30,  // 1 mois max
+};
+
+// Contrats BNC (pas de bulletin, facture + retenue à la source)
+const BNC_CONTRACTS = ['CONSULTANT', 'PRESTATAIRE'];
+
+// Infos par type de contrat
+const CONTRACT_INFO: Record<string, { icon: string; desc: string; bulletin: boolean; cnss: string; impot: string; tus: string; alertes: string[] }> = {
+  CDI:         { icon: '♾️',  desc: 'Permanent', bulletin: true,  cnss: 'CNSS 4% sal. + 20,28% pat.',  impot: 'ITS barème',     tus: 'TUS 7,5%', alertes: [] },
+  CDD:         { icon: '📅',  desc: 'Temporaire', bulletin: true, cnss: 'CNSS identique CDI',           impot: 'ITS barème',     tus: 'TUS 7,5%', alertes: ['Max 2 ans renouvellement inclus'] },
+  STAGE:       { icon: '🎓',  desc: 'Formation', bulletin: true,  cnss: 'AT patronale 2,25% seulement', impot: 'ITS si > SMIG',  tus: 'Aucun',    alertes: ['Convention tripartite obligatoire', 'Max 6 mois'] },
+  CONSULTANT:  { icon: '💼',  desc: 'Prestation', bulletin: false, cnss: 'Aucune CNSS',                 impot: 'BNC à la source',tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  PRESTATAIRE: { icon: '🤝',  desc: 'Service',   bulletin: false, cnss: 'Aucune CNSS',                  impot: 'BNC à la source',tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  INTERIM:     { icon: '🔄',  desc: 'Agence',    bulletin: false, cnss: 'Géré par l\'agence',           impot: 'Géré par l\'agence', tus: 'Géré par l\'agence', alertes: ['Pas de bulletin — suivi mission uniquement'] },
 };
 
 // ─── HELPER durée en texte lisible ──────────────────────────────────────────
@@ -717,8 +740,28 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
   const [conventionCategories, setConventionCategories] = useState<ConventionCategory[]>([]);
   const [isLoadingConvention, setIsLoadingConvention]   = useState(true);
 
-  const needsEndDate = REQUIRES_END_DATE.includes(formData.contractType);
-  const suggestions  = SUGGESTED_DURATIONS[formData.contractType] ?? [];
+  const needsEndDate  = REQUIRES_END_DATE.includes(formData.contractType);
+  const canHaveTrial  = CAN_HAVE_TRIAL.includes(formData.contractType);
+  const isBncContract = BNC_CONTRACTS.includes(formData.contractType);
+  const contractMeta  = CONTRACT_INFO[formData.contractType] ?? CONTRACT_INFO['CDI'];
+  const suggestions   = SUGGESTED_DURATIONS[formData.contractType] ?? [];
+  const maxTrialDays  = TRIAL_MAX_DAYS[formData.contractType] ?? 90;
+
+  // Valeurs dérivées
+  const trialDays = parseInt(formData.trialPeriodDays as string || '0') || 0;
+  const trialEndDate = (canHaveTrial && trialDays > 0 && formData.hireDate)
+    ? (() => {
+        const d = new Date(formData.hireDate);
+        d.setDate(d.getDate() + trialDays);
+        return d;
+      })()
+    : null;
+
+  const montantHT = parseFloat(formData.baseSalary as string) || 0;
+  const isResident = formData.isResident !== false; // default true
+  const bncTaux = isResident ? 0.10 : 0.20;
+  const bncMontant = isBncContract ? Math.round(montantHT * bncTaux) : 0;
+  const bncNet = montantHT - bncMontant;
 
   // Charger la convention de l'entreprise
   useEffect(() => {
@@ -736,11 +779,21 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     load();
   }, []);
 
-  // Quand on passe en CDI → effacer la date de fin
+  // Quand on change le type de contrat → reset champs liés
   const handleContractTypeChange = (type: string) => {
     onSelectChange('contractType', type);
+    // CDI → effacer date de fin
     if (type === 'CDI') {
       onSelectChange('contractEndDate', '');
+    }
+    // Pas d'essai pour ces types
+    if (!CAN_HAVE_TRIAL.includes(type)) {
+      onSelectChange('trialPeriodDays', '0');
+      onSelectChange('trialEndDate', '');
+    }
+    // BNC → reset isResident si pas encore défini
+    if (BNC_CONTRACTS.includes(type) && formData.isResident === undefined) {
+      onSelectChange('isResident', 'true');
     }
   };
 
@@ -867,27 +920,72 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
                 Type de Contrat <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-3 gap-3">
-                {['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'INTERIM'].map((type) => (
-                  <motion.div key={type} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    onClick={() => handleContractTypeChange(type)}
-                    className={`cursor-pointer p-3 rounded-xl border-2 text-center text-sm font-bold transition-all ${
-                      formData.contractType === type
-                        ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-lg shadow-cyan-500/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-cyan-300 text-slate-600 dark:text-slate-400'
-                    }`}>
-                    {type}
-                  </motion.div>
-                ))}
+              <div className="grid grid-cols-3 gap-2.5">
+                {['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'].map((type) => {
+                  const meta = CONTRACT_INFO[type];
+                  const isSelected = formData.contractType === type;
+                  return (
+                    <motion.div key={type} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                      onClick={() => handleContractTypeChange(type)}
+                      className={`cursor-pointer p-3 rounded-xl border-2 text-center transition-all ${
+                        isSelected
+                          ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-lg shadow-cyan-500/20'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-cyan-300 text-slate-600 dark:text-slate-400'
+                      }`}>
+                      <div className="text-lg mb-0.5">{meta?.icon}</div>
+                      <div className="text-xs font-bold">{type}</div>
+                      <div className="text-[10px] opacity-60 mt-0.5">{meta?.desc}</div>
+                    </motion.div>
+                  );
+                })}
               </div>
 
-              {/* Badge CDI = pas de date de fin */}
+              {/* Résumé fiscal du contrat choisi */}
               <AnimatePresence>
-                {formData.contractType === 'CDI' && (
-                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <Check size={12} className="text-emerald-500" /> Contrat indéterminé — pas de date de fin
-                  </motion.p>
+                {formData.contractType && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className={`mt-3 p-3 rounded-xl border-2 space-y-1.5 ${
+                      isBncContract
+                        ? 'bg-teal-50 dark:bg-teal-900/10 border-teal-200 dark:border-teal-700'
+                        : formData.contractType === 'INTERIM'
+                          ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-700'
+                          : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <div className="grid grid-cols-3 gap-2 text-[11px]">
+                      <div>
+                        <p className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">CNSS</p>
+                        <p className={`font-semibold ${isBncContract || formData.contractType === 'INTERIM' ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                          {contractMeta?.cnss}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Impôt</p>
+                        <p className={`font-semibold ${isBncContract ? 'text-teal-700 dark:text-teal-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                          {contractMeta?.impot}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">TUS</p>
+                        <p className={`font-semibold ${!contractMeta?.bulletin ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                          {contractMeta?.tus}
+                        </p>
+                      </div>
+                    </div>
+                    {contractMeta?.alertes.map((a, i) => (
+                      <p key={i} className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                        <AlertCircle size={11} className="shrink-0" /> {a}
+                      </p>
+                    ))}
+                    {formData.contractType === 'CDI' && (
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                        <Check size={11} /> Contrat indéterminé — pas de date de fin requise
+                      </p>
+                    )}
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
@@ -943,23 +1041,200 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               )}
             </AnimatePresence>
 
-            {/* Salaire */}
+            {/* Salaire / Montant HT */}
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <DollarSign size={16} className="text-cyan-500" /> Salaire de Base Mensuel <span className="text-red-500">*</span>
+                <DollarSign size={16} className="text-cyan-500" />
+                {isBncContract ? 'Montant HT de la prestation' : formData.contractType === 'STAGE' ? 'Gratification mensuelle' : 'Salaire de Base Mensuel'}
+                <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input type="number" name="baseSalary" value={formData.baseSalary} onChange={onInputChange} placeholder="0"
                   className="w-full px-4 py-4 pr-20 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none font-bold text-2xl transition-all" />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">FCFA</span>
               </div>
-              {formData.baseSalary && parseFloat(formData.baseSalary) > 0 && (
+              {formData.baseSalary && parseFloat(formData.baseSalary as string) > 0 && !isBncContract && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="text-xs text-cyan-600 dark:text-cyan-400 mt-2 font-medium">
-                  ≈ {(parseFloat(formData.baseSalary) / 26).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA par jour ouvré
+                  ≈ {(parseFloat(formData.baseSalary as string) / 26).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA par jour ouvré
                 </motion.p>
               )}
             </div>
+
+            {/* ── NATIONALITÉ / RÉSIDENCE — BNC (Consultant / Prestataire) ── */}
+            <AnimatePresence>
+              {isBncContract && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="p-5 bg-teal-50 dark:bg-teal-900/10 border-2 border-teal-200 dark:border-teal-700 rounded-2xl space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📋</span>
+                      <span className="text-sm font-bold text-teal-900 dark:text-teal-100">
+                        Retenue BNC — Résidence fiscale
+                      </span>
+                    </div>
+                    <p className="text-xs text-teal-700 dark:text-teal-400">
+                      Le taux de retenue à la source dépend du statut de résidence du prestataire (CGI Congo art. 47 ter &amp; art. 44).
+                    </p>
+
+                    {/* Résidence */}
+                    <div>
+                      <label className="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider mb-2">
+                        Statut de résidence
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { value: true,  label: '🇨🇬 Résident / Congolais', sub: 'BNC 10%', color: isResident ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 shadow-lg' : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300' },
+                          { value: false, label: '🌍 Étranger non résident', sub: 'BNC 20%', color: !isResident ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 shadow-lg' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300' },
+                        ].map(({ value, label, sub, color }) => (
+                          <motion.div key={String(value)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                            onClick={() => onSelectChange('isResident', String(value))}
+                            className={`cursor-pointer p-3 rounded-xl border-2 transition-all text-center ${color}`}
+                          >
+                            <p className="text-xs font-bold">{label}</p>
+                            <p className={`text-lg font-black mt-1 ${value === true ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}`}>{sub}</p>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Nationalité libre */}
+                    <div>
+                      <label className="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider mb-2">
+                        Nationalité (optionnel)
+                      </label>
+                      <input name="nationality" value={formData.nationality as string || ''} onChange={onInputChange}
+                        placeholder="Ex: CG, FR, US, CM…"
+                        className="w-full px-3 py-2.5 border-2 border-teal-300 dark:border-teal-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-teal-500 outline-none" />
+                    </div>
+
+                    {/* Preview BNC */}
+                    {montantHT > 0 && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-teal-200 dark:border-teal-700 space-y-1.5 text-xs">
+                        <p className="font-bold text-slate-700 dark:text-slate-300">📊 Calcul BNC</p>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Montant HT</span>
+                          <span className="font-bold">{montantHT.toLocaleString('fr-FR')} FCFA</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">BNC retenu ({bncTaux * 100}%)</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-1.5 border-teal-100 dark:border-teal-800">
+                          <span className="font-bold text-slate-700 dark:text-slate-300">Net versé au prestataire</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
+                        </div>
+                        <p className="text-teal-600 dark:text-teal-400 pt-0.5">
+                          Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois suivant.
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ── PÉRIODE D'ESSAI (CDI / CDD uniquement) ────────────────── */}
+            <AnimatePresence>
+              {canHaveTrial && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="p-5 bg-indigo-50 dark:bg-indigo-900/10 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-indigo-500" />
+                        <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
+                          Période d'essai <span className="font-normal text-indigo-500">(optionnel)</span>
+                        </span>
+                      </div>
+                      <span className="text-xs text-indigo-500 font-semibold">Max légal : {maxTrialDays} jours</span>
+                    </div>
+                    <p className="text-xs text-indigo-700 dark:text-indigo-400">
+                      Pendant l'essai : paie normale avec toutes les charges. Rupture possible sans préavis ni indemnités.
+                    </p>
+
+                    {/* Durées suggérées */}
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: 'Sans essai', days: 0 },
+                        { label: '15 jours', days: 15 },
+                        { label: '30 jours', days: 30 },
+                        ...(formData.contractType === 'CDI' ? [{ label: '60 jours', days: 60 }, { label: '90 jours', days: 90 }] : []),
+                      ].map(({ label, days }) => (
+                        <button key={days} type="button"
+                          onClick={() => { onSelectChange('trialPeriodDays', String(days)); if (days === 0) onSelectChange('trialEndDate', ''); }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                            trialDays === days
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-white dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/40'
+                          }`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Input jours libre */}
+                    <div>
+                      <label className="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1.5">
+                        Ou saisir manuellement (jours)
+                      </label>
+                      <input type="number" name="trialPeriodDays" min={0} max={maxTrialDays}
+                        value={formData.trialPeriodDays as string || '0'}
+                        onChange={onInputChange}
+                        className="w-full px-3 py-2.5 border-2 border-indigo-300 dark:border-indigo-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-indigo-500 outline-none" />
+                      {trialDays > maxTrialDays && (
+                        <p className="text-xs text-red-500 mt-1 font-semibold">⚠️ Dépasse le maximum légal de {maxTrialDays} jours</p>
+                      )}
+                    </div>
+
+                    {/* Aperçu date de fin d'essai */}
+                    {trialDays > 0 && trialEndDate && formData.hireDate && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-indigo-200 dark:border-indigo-700 space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Début essai</span>
+                          <span className="font-bold">{format(new Date(formData.hireDate), 'd MMMM yyyy', { locale: fr })}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Fin essai ({trialDays} jours)</span>
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                            {format(trialEndDate, 'd MMMM yyyy', { locale: fr })}
+                          </span>
+                        </div>
+                        <p className="text-indigo-600 dark:text-indigo-400 pt-0.5 font-medium">
+                          ℹ️ Pendant l'essai : salaire normal + charges habituelles. Rupture libre.
+                        </p>
+                        <p className="text-slate-500">
+                          Après l'essai : confirmation automatique → l'employé passe en statut confirmé.
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ── INFO INTERIM ─────────────────────────────────────────── */}
+            <AnimatePresence>
+              {formData.contractType === 'INTERIM' && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                  className="p-4 bg-orange-50 dark:bg-orange-900/10 border-2 border-orange-200 dark:border-orange-700 rounded-xl">
+                  <p className="text-xs font-bold text-orange-700 dark:text-orange-400 mb-1">🔄 Intérimaire — suivi de mission uniquement</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-500">
+                    Cet employé est salarié de son agence d'intérim. L'application gère son suivi RH (présences, missions) mais <strong>aucun bulletin de paie ne sera généré</strong> côté entreprise. Vous payez la facture de l'agence.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* ── COLONNE DROITE : PAIEMENT (inchangée) ──────────────────────── */}

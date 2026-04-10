@@ -1,41 +1,34 @@
 'use client';
 
-// =============================================================================
-// FICHIER : app/(dashboard)/cabinet/[cabinetId]/CabinetSidebar.tsx
-// ACTION  : CRÉER (nouveau fichier)
-// RÔLE    : Sidebar partagée pour toutes les pages du cabinet
-//           À importer dans dashboard, abonnement, cloture, parametres,
-//           gestionnaires, ajouter-pme — partout où la sidebar doit apparaître.
-// =============================================================================
+// app/(dashboard)/cabinet/[cabinetId]/CabinetSidebar.tsx
+// MISE À JOUR — Ajouter "Mes PME" comme item de nav séparé du Dashboard
 
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
-  Building2, Clock, Crown, Settings, LogOut,
-  Briefcase, Users,
+  LayoutDashboard, Building2, Clock, Crown, Settings,
+  LogOut, Briefcase, Users,
 } from 'lucide-react';
 
 interface CabinetSidebarProps {
-  cabinetId: string;
+  cabinetId:  string;
   userEmail?: string;
 }
 
 const NAV = [
-  { slug: 'dashboard',     label: 'Mes PME clientes', icon: Building2 },
-  { slug: 'cloture',       label: 'Clôture & Import',  icon: Clock     },
-  { slug: 'abonnement',    label: 'Abonnement',         icon: Crown     },
-  { slug: 'gestionnaires', label: 'Gestionnaires',      icon: Users     },
-  { slug: 'parametres',    label: 'Paramètres',         icon: Settings  },
+  { slug: 'dashboard',     label: 'Tableau de bord', icon: LayoutDashboard },
+  { slug: 'mes-pme',       label: 'Mes PME',          icon: Building2       },  // ← NOUVEAU
+  { slug: 'cloture',       label: 'Clôture & Import', icon: Clock           },
+  { slug: 'abonnement',    label: 'Abonnement',        icon: Crown           },
+  { slug: 'gestionnaires', label: 'Gestionnaires',     icon: Users           },
+  { slug: 'parametres',    label: 'Paramètres',        icon: Settings        },
 ];
 
 export default function CabinetSidebar({ cabinetId, userEmail }: CabinetSidebarProps) {
   const router   = useRouter();
   const pathname = usePathname();
 
-  const logout = () => {
-    localStorage.clear();
-    router.push('/auth/login');
-  };
+  const logout = () => { localStorage.clear(); router.push('/auth/login'); };
 
   const isActive = (slug: string) =>
     pathname === `/cabinet/${cabinetId}/${slug}` ||
@@ -43,6 +36,7 @@ export default function CabinetSidebar({ cabinetId, userEmail }: CabinetSidebarP
 
   return (
     <aside className="fixed left-0 top-0 h-full w-56 bg-black/30 border-r border-white/10 flex flex-col z-20">
+
       {/* Logo */}
       <div className="p-5 border-b border-white/10">
         <div className="flex items-center gap-2">
@@ -57,12 +51,11 @@ export default function CabinetSidebar({ cabinetId, userEmail }: CabinetSidebarP
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV.map(({ slug, label, icon: Icon }) => {
           const active = isActive(slug);
           return (
-            <button
-              key={slug}
+            <button key={slug}
               onClick={() => router.push(`/cabinet/${cabinetId}/${slug}`)}
               className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-colors ${
                 active
@@ -72,6 +65,10 @@ export default function CabinetSidebar({ cabinetId, userEmail }: CabinetSidebarP
             >
               <Icon size={16} />
               {label}
+              {/* Badge "Mes PME" pour distinguer visuellement */}
+              {slug === 'mes-pme' && !active && (
+                <span className="ml-auto text-[9px] px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 text-purple-500 rounded-full">Gérer</span>
+              )}
             </button>
           );
         })}
@@ -79,10 +76,8 @@ export default function CabinetSidebar({ cabinetId, userEmail }: CabinetSidebarP
 
       {/* Logout */}
       <div className="p-3 border-t border-white/10">
-        <button
-          onClick={logout}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-gray-500 hover:text-red-400 text-sm transition-colors"
-        >
+        <button onClick={logout}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-gray-500 hover:text-red-400 text-sm transition-colors">
           <LogOut size={16} />
           Déconnexion
         </button>

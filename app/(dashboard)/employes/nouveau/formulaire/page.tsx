@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User, Briefcase, Check, ChevronRight, ChevronLeft, Loader2, BadgeCheck,
@@ -43,29 +43,6 @@ function generatePassword(length = 10): string {
     ...Array.from({ length: length - 4 }, () => all[Math.floor(Math.random() * all.length)]),
   ];
   return pwd.sort(() => Math.random() - 0.5).join('');
-}
-
-// ─── Copier texte — fallback si clipboard API indisponible (HTTP) ──────────────
-function copyToClipboard(text: string): boolean {
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text);
-      return true;
-    }
-    // Fallback pour HTTP / navigateurs anciens
-    const el = document.createElement('textarea');
-    el.value = text;
-    el.setAttribute('readonly', '');
-    el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
-    document.body.appendChild(el);
-    el.focus();
-    el.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(el);
-    return ok;
-  } catch {
-    return false;
-  }
 }
 
 // ─── Particle flottant ────────────────────────────────────────────────────────
@@ -344,6 +321,10 @@ function CreateEmployeeFormInner() {
     position:            prefill.position,
     departmentId:        '',
     baseSalary:          '',
+    trialPeriodDays:     '0',
+    trialEndDate:        '',
+    isResident:          true,   // ✅ toujours boolean
+    nationality:         '',
     paymentMethod:       'CASH',
     bankName:            '',
     bankAccountNumber:   '',
@@ -455,6 +436,10 @@ function CreateEmployeeFormInner() {
         position:            formData.position,
         departmentId:        formData.departmentId,
         baseSalary:          parseFloat(formData.baseSalary),
+        trialPeriodDays:     parseInt(formData.trialPeriodDays as string) || 0,
+        // ✅ isResident est boolean dans le state — pas besoin de comparer à 'false'
+        isResident:          formData.isResident,
+        nationality:         (formData.nationality as string) || null,
         paymentMethod:       formData.paymentMethod,
         bankName:            formData.bankName,
         bankAccountNumber:   formData.bankAccountNumber,
@@ -466,15 +451,12 @@ function CreateEmployeeFormInner() {
         taxExemptionReason:  formData.taxExemptionReason || null,
       };
 
-      // 1️⃣ Créer l'employé
       const createdEmployee = await api.post<any>('/employees', payload);
       setCreatedEmployeeId(createdEmployee?.id || '');
 
-      // 2️⃣ Générer le mot de passe (random, unique par employé)
       const pwd = generatePassword(10);
       setGeneratedPassword(pwd);
 
-      // 3️⃣ Créer le compte utilisateur (toujours, automatiquement)
       try {
         const invitePromise = api.post('/users/invite', {
           email:        formData.email,
@@ -485,20 +467,15 @@ function CreateEmployeeFormInner() {
           departmentId: formData.departmentId,
         });
         const timeout = new Promise((_, rej) =>
-          setTimeout(() => rej(new Error('timeout')), 15000)
+          setTimeout(() => rej(new Error('timeout')), 15000),
         );
         await Promise.race([invitePromise, timeout]);
       } catch (e: any) {
-        // Timeout → compte probablement créé, juste l'email qui a mis du temps
         if (e.message === 'timeout') {
           alert.warning('Email différé', "L'employé est créé. L'email d'invitation sera envoyé ultérieurement.");
-        }
-        // Conflit → compte déjà existant, pas bloquant
-        else if (e?.response?.status === 409) {
-          // silencieux : l'utilisateur a déjà un compte
-        }
-        // Autre erreur → on log mais on n'empêche pas le succès
-        else {
+        } else if (e?.response?.status === 409) {
+          // silencieux : compte déjà existant
+        } else {
           console.error('[invite] Erreur création compte utilisateur:', e?.response?.data || e.message);
           alert.warning('Compte non créé', e?.response?.data?.message || "Le compte utilisateur n'a pas pu être créé. Vous pouvez le recréer depuis Paramètres > Utilisateurs.");
         }
@@ -671,3 +648,4 @@ export default function CreateEmployeePage() {
     </Suspense>
   );
 }
+ 
