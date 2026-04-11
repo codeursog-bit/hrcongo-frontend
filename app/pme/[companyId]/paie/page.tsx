@@ -167,16 +167,6 @@ export default function PayrollPage() {
             className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             <Settings size={20} />
           </Link>
-          <Link href="/paie/masse"
-            className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
-            <Users size={18} />
-            <span className="hidden sm:inline">Paie en Masse</span>
-          </Link>
-          <Link href="/paie/nouveau"
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2">
-            <Wallet size={18} />
-            <span className="hidden sm:inline">Créer Paie</span>
-          </Link>
         </div>
       </div>
 
