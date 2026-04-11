@@ -1,19 +1,18 @@
 'use client';
 
 // app/(dashboard)/cabinet/[cabinetId]/entreprise/[companyId]/parametres/page.tsx
-// Le cabinet configure la PME : géoloc, primes, départements, infos de base
+// API INCHANGÉE — UX améliorée
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import {
-  Settings, Loader2, Save, CheckCircle2, AlertCircle,
-  MapPin, Tag, Network, Building2,
-} from 'lucide-react';
 import { api } from '@/services/api';
+import {
+  C, Ico, Card, Badge, Btn,
+  PageHeader, SectionHeader, TabBar, InputField,
+  LoadingInline, Banner,
+} from '@/components/cabinet/cabinet-ui';
 
 type Tab = 'entreprise' | 'geoloc' | 'primes' | 'departements' | 'paie';
-
-const inputClass = "w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-600 outline-none focus:border-white/30 transition-colors";
 
 export default function CabinetEntrepriseParametresPage() {
   const params    = useParams();
@@ -24,38 +23,30 @@ export default function CabinetEntrepriseParametresPage() {
   const [saved,  setSaved]  = useState(false);
   const [error,  setError]  = useState('');
 
-  // Entreprise
-  const [company, setCompany] = useState<any>(null);
-  // Géoloc
-  const [geo, setGeo] = useState({ latitude: 0, longitude: 0, allowedRadius: 100 });
-  // Primes
-  const [primes,     setPrimes]    = useState<any[]>([]);
-  const [showPrime,  setShowPrime] = useState(false);
-  const [primeForm,  setPrimeForm] = useState({ name: '', value: 0, isTaxable: true, isCnss: true });
-  // Départements
-  const [depts,    setDepts]   = useState<any[]>([]);
-  const [deptName, setDeptName] = useState('');
-  // Paie
-  const [payrollSettings, setPayrollSettings] = useState<any>(null);
+  const [company,          setCompany]          = useState<any>(null);
+  const [geo,              setGeo]              = useState({ latitude: 0, longitude: 0, allowedRadius: 100 });
+  const [primes,           setPrimes]           = useState<any[]>([]);
+  const [showPrimeForm,    setShowPrimeForm]    = useState(false);
+  const [primeForm,        setPrimeForm]        = useState({ name: '', value: 0, isTaxable: true, isCnss: true });
+  const [depts,            setDepts]            = useState<any[]>([]);
+  const [deptName,         setDeptName]         = useState('');
+  const [payrollSettings,  setPayrollSettings]  = useState<any>(null);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [comp, primesRes, deptsRes] = await Promise.all([
-          api.get(`/companies/${companyId}`) as Promise<any>,
-          api.get(`/bonus-templates?companyId=${companyId}`) as Promise<any>,
-          api.get(`/departments?companyId=${companyId}`) as Promise<any>,
-        ]);
-        setCompany(comp);
-        setGeo({ latitude: comp.latitude ?? 0, longitude: comp.longitude ?? 0, allowedRadius: comp.allowedRadius ?? 100 });
-        setPrimes(Array.isArray(primesRes) ? primesRes : primesRes?.data ?? []);
-        setDepts(Array.isArray(deptsRes) ? deptsRes : deptsRes?.data ?? []);
+    Promise.all([
+      api.get(`/companies/${companyId}`) as Promise<any>,
+      api.get(`/bonus-templates?companyId=${companyId}`) as Promise<any>,
+      api.get(`/departments?companyId=${companyId}`) as Promise<any>,
+    ]).then(([comp, primesRes, deptsRes]) => {
+      setCompany(comp);
+      setGeo({ latitude: comp.latitude ?? 0, longitude: comp.longitude ?? 0, allowedRadius: comp.allowedRadius ?? 100 });
+      setPrimes(Array.isArray(primesRes) ? primesRes : primesRes?.data ?? []);
+      setDepts(Array.isArray(deptsRes) ? deptsRes : deptsRes?.data ?? []);
+    }).catch(() => null);
 
-        const ps: any = await api.get(`/payroll-settings?companyId=${companyId}`);
-        setPayrollSettings(ps);
-      } catch {}
-    };
-    load();
+    api.get(`/payroll-settings?companyId=${companyId}`)
+      .then((ps: any) => setPayrollSettings(ps))
+      .catch(() => null);
   }, [companyId]);
 
   const flash = (ok: boolean) => {
@@ -96,7 +87,7 @@ export default function CabinetEntrepriseParametresPage() {
     try {
       const res: any = await api.post(`/bonus-templates?companyId=${companyId}`, primeForm);
       setPrimes(p => [...p, res]);
-      setShowPrime(false);
+      setShowPrimeForm(false);
       setPrimeForm({ name: '', value: 0, isTaxable: true, isCnss: true });
     } catch { setError('Erreur création prime'); }
   };
@@ -117,216 +108,299 @@ export default function CabinetEntrepriseParametresPage() {
     } catch { setError('Erreur création département'); }
   };
 
-  const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
-    { key: 'entreprise',   label: 'Entreprise',      icon: Building2 },
-    { key: 'geoloc',       label: 'Géolocalisation', icon: MapPin    },
-    { key: 'primes',       label: 'Primes',          icon: Tag       },
-    { key: 'departements', label: 'Départements',    icon: Network   },
-    { key: 'paie',         label: 'Paramètres paie', icon: Settings  },
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'entreprise',   label: 'Entreprise'       },
+    { key: 'geoloc',       label: 'Géolocalisation'  },
+    { key: 'primes',       label: 'Primes'           },
+    { key: 'departements', label: 'Départements'     },
+    { key: 'paie',         label: 'Paramètres paie'  },
   ];
 
-  if (!company) return <div className="flex justify-center py-20"><Loader2 size={24} className="animate-spin text-gray-600" /></div>;
+  if (!company) return <LoadingInline />;
 
   return (
-    <div className="p-6 space-y-5">
-      <div>
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Settings size={20} className="text-cyan-400" /> Paramètres PME
-        </h1>
-        <p className="text-gray-500 text-sm mt-0.5">Configuration de l'entreprise cliente</p>
-      </div>
+    <div className="p-6 space-y-5" style={{ minHeight: '100vh', background: C.pageBg }}>
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1 bg-white/3 border border-white/8 rounded-xl p-1 w-fit">
-        {tabs.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              tab === t.key ? 'bg-white/10 text-white font-medium' : 'text-gray-500 hover:text-white'
-            }`}>
-            <t.icon size={13} />{t.label}
-          </button>
-        ))}
-      </div>
+      <PageHeader
+        title="Paramètres PME"
+        sub="Configuration de l'entreprise cliente"
+        icon={<Ico.Settings size={18} color={C.cyan} />}
+      />
+
+      <TabBar tabs={TABS} active={tab} onChange={setTab} />
 
       {/* Feedback */}
       {saved && (
-        <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl w-fit">
-          <CheckCircle2 size={14} className="text-emerald-400" /><span className="text-emerald-400 text-sm">Sauvegardé</span>
-        </div>
+        <Banner
+          icon={<Ico.Check size={16} color={C.emerald} />}
+          title="Modifications sauvegardées"
+          color={C.emerald}
+        />
       )}
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl w-fit">
-          <AlertCircle size={14} className="text-red-400" /><span className="text-red-400 text-sm">{error}</span>
-        </div>
+        <Banner
+          icon={<Ico.Alert size={16} color={C.red} />}
+          title={error}
+          color={C.red}
+        />
       )}
 
-      {/* Entreprise */}
+      {/* ── Entreprise ── */}
       {tab === 'entreprise' && (
-        <div className="bg-white/3 border border-white/8 rounded-2xl p-5 space-y-4 max-w-2xl">
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Raison sociale *', key: 'legalName' },
-              { label: 'Nom commercial',   key: 'tradeName'  },
-              { label: 'Téléphone',        key: 'phone'      },
-              { label: 'Email',            key: 'email'      },
-              { label: 'Adresse',          key: 'address'    },
-              { label: 'Ville',            key: 'city'       },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="block text-xs text-gray-400 mb-1.5">{f.label}</label>
-                <input value={company[f.key] || ''} onChange={e => setCompany({ ...company, [f.key]: e.target.value })} className={inputClass} />
-              </div>
-            ))}
+        <Card className="p-5 max-w-2xl">
+          <SectionHeader title="Informations générales" sub="Raison sociale, coordonnées de la PME" />
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Raison sociale *', key: 'legalName' },
+                { label: 'Nom commercial',   key: 'tradeName'  },
+                { label: 'Téléphone',        key: 'phone'      },
+                { label: 'Email',            key: 'email'      },
+                { label: 'Adresse',          key: 'address'    },
+                { label: 'Ville',            key: 'city'       },
+              ].map(f => (
+                <InputField
+                  key={f.key}
+                  label={f.label}
+                  value={company[f.key] || ''}
+                  onChange={e => setCompany({ ...company, [f.key]: e.target.value })}
+                />
+              ))}
+            </div>
+            <Btn
+              variant="primary"
+              icon={saving ? <Ico.Loader size={13} color="#fff" /> : <Ico.Check size={13} color="#fff" />}
+              onClick={saveCompany}
+              disabled={saving}
+            >
+              Sauvegarder
+            </Btn>
           </div>
-          <button onClick={saveCompany} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors">
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Sauvegarder
-          </button>
-        </div>
+        </Card>
       )}
 
-      {/* Géolocalisation */}
+      {/* ── Géolocalisation ── */}
       {tab === 'geoloc' && (
-        <div className="bg-white/3 border border-white/8 rounded-2xl p-5 space-y-4 max-w-2xl">
-          <p className="text-gray-400 text-sm">Zone de pointage GPS pour les employés de la PME</p>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Latitude',        key: 'latitude',       type: 'number', step: '0.000001' },
-              { label: 'Longitude',       key: 'longitude',      type: 'number', step: '0.000001' },
-              { label: 'Rayon (mètres)', key: 'allowedRadius',  type: 'number' },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="block text-xs text-gray-400 mb-1.5">{f.label}</label>
-                <input type={f.type} step={f.step} value={(geo as any)[f.key]}
+        <Card className="p-5 max-w-2xl">
+          <SectionHeader title="Zone de pointage GPS" sub="Rayon autorisé pour le pointage des employés" />
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Latitude',       key: 'latitude',      type: 'number', step: '0.000001' },
+                { label: 'Longitude',      key: 'longitude',     type: 'number', step: '0.000001' },
+                { label: 'Rayon (mètres)', key: 'allowedRadius', type: 'number' },
+              ].map(f => (
+                <InputField
+                  key={f.key}
+                  label={f.label}
+                  type={f.type}
+                  step={f.step}
+                  value={(geo as any)[f.key]}
                   onChange={e => setGeo({ ...geo, [f.key]: parseFloat(e.target.value) || 0 })}
-                  className={inputClass} />
-              </div>
-            ))}
+                />
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Btn
+                variant="ghost"
+                icon={<Ico.MapPin size={13} color={C.textSecondary} />}
+                onClick={() => {
+                  if (!navigator.geolocation) return;
+                  navigator.geolocation.getCurrentPosition(p => setGeo(g => ({
+                    ...g, latitude: p.coords.latitude, longitude: p.coords.longitude,
+                  })));
+                }}
+              >
+                Ma position
+              </Btn>
+              <Btn
+                variant="primary"
+                icon={saving ? <Ico.Loader size={13} color="#fff" /> : <Ico.Check size={13} color="#fff" />}
+                onClick={saveGeo}
+                disabled={saving}
+              >
+                Sauvegarder
+              </Btn>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => {
-              if (!navigator.geolocation) return;
-              navigator.geolocation.getCurrentPosition(p => setGeo(g => ({ ...g, latitude: p.coords.latitude, longitude: p.coords.longitude })));
-            }} className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-gray-300 hover:text-white transition-colors">
-              <MapPin size={14} /> Ma position
-            </button>
-            <button onClick={saveGeo} disabled={saving}
-              className="flex items-center gap-2 px-5 py-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors">
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Sauvegarder
-            </button>
-          </div>
-        </div>
+        </Card>
       )}
 
-      {/* Primes */}
+      {/* ── Primes ── */}
       {tab === 'primes' && (
         <div className="space-y-4 max-w-2xl">
-          <div className="flex justify-between items-center">
-            <p className="text-gray-400 text-sm">Templates de primes récurrentes</p>
-            <button onClick={() => setShowPrime(!showPrime)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-gray-300 hover:text-white transition-colors">
-              <Tag size={12} /> Ajouter
-            </button>
+          <div className="flex items-center justify-between">
+            <p className="text-sm" style={{ color: C.textSecondary }}>Templates de primes récurrentes</p>
+            <Btn
+              variant="ghost"
+              size="sm"
+              icon={<Ico.Plus size={12} color={C.textSecondary} />}
+              onClick={() => setShowPrimeForm(!showPrimeForm)}
+            >
+              Ajouter
+            </Btn>
           </div>
-          {showPrime && (
-            <div className="bg-white/3 border border-white/10 rounded-2xl p-4 space-y-3">
+
+          {showPrimeForm && (
+            <Card className="p-5 space-y-4">
+              <p className="text-sm font-semibold" style={{ color: C.textPrimary }}>Nouveau template</p>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs text-gray-400 mb-1.5">Libellé *</label>
-                  <input value={primeForm.name} onChange={e => setPrimeForm({ ...primeForm, name: e.target.value })} placeholder="Prime transport" className={inputClass} /></div>
-                <div><label className="block text-xs text-gray-400 mb-1.5">Montant (F)</label>
-                  <input type="number" value={primeForm.value} onChange={e => setPrimeForm({ ...primeForm, value: parseFloat(e.target.value) || 0 })} className={inputClass} /></div>
+                <InputField
+                  label="Libellé *"
+                  value={primeForm.name}
+                  onChange={e => setPrimeForm({ ...primeForm, name: e.target.value })}
+                  placeholder="Prime transport"
+                />
+                <InputField
+                  label="Montant (F)"
+                  type="number"
+                  value={primeForm.value}
+                  onChange={e => setPrimeForm({ ...primeForm, value: parseFloat(e.target.value) || 0 })}
+                />
               </div>
-              <div className="flex gap-4 text-sm">
-                <label className="flex items-center gap-2 cursor-pointer text-gray-400">
-                  <input type="checkbox" checked={primeForm.isTaxable} onChange={e => setPrimeForm({ ...primeForm, isTaxable: e.target.checked })} className="rounded" /> Imposable (ITS)
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-gray-400">
-                  <input type="checkbox" checked={primeForm.isCnss} onChange={e => setPrimeForm({ ...primeForm, isCnss: e.target.checked })} className="rounded" /> CNSS
-                </label>
+              <div className="flex gap-5">
+                {[
+                  { key: 'isTaxable', label: 'Imposable (ITS)' },
+                  { key: 'isCnss',    label: 'CNSS' },
+                ].map(ck => (
+                  <label key={ck.key} className="flex items-center gap-2 cursor-pointer text-sm" style={{ color: C.textSecondary }}>
+                    <input
+                      type="checkbox"
+                      checked={(primeForm as any)[ck.key]}
+                      onChange={e => setPrimeForm({ ...primeForm, [ck.key]: e.target.checked })}
+                      className="rounded"
+                    />
+                    {ck.label}
+                  </label>
+                ))}
               </div>
               <div className="flex gap-2">
-                <button onClick={addPrime} className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl text-sm font-semibold transition-colors">Ajouter</button>
-                <button onClick={() => setShowPrime(false)} className="px-4 py-2 bg-white/5 text-gray-400 rounded-xl text-sm transition-colors">Annuler</button>
+                <Btn variant="primary" size="sm" onClick={addPrime}>Ajouter</Btn>
+                <Btn variant="ghost" size="sm" onClick={() => setShowPrimeForm(false)}>Annuler</Btn>
               </div>
-            </div>
+            </Card>
           )}
-          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-            {primes.length === 0
-              ? <div className="py-8 text-center text-gray-500 text-sm">Aucun template de prime</div>
-              : <div className="divide-y divide-white/5">
-                  {primes.map(p => (
-                    <div key={p.id} className="px-5 py-3.5 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-white font-medium">{p.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {p.value > 0 ? `${p.value.toLocaleString('fr-FR')} F` : 'Variable'} ·
-                          {p.isTaxable ? ' Imposable' : ' Non imposable'} · {p.isCnss ? 'CNSS' : 'Hors CNSS'}
-                        </p>
-                      </div>
-                      <button onClick={() => deletePrime(p.id)} className="text-xs text-gray-600 hover:text-red-400 transition-colors px-2 py-1">Supprimer</button>
+
+          <Card>
+            {primes.length === 0 ? (
+              <div className="py-10 text-center text-sm" style={{ color: C.textMuted }}>
+                Aucun template de prime
+              </div>
+            ) : (
+              <div>
+                {primes.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: i < primes.length - 1 ? `1px solid ${C.border}` : 'none' }}
+                  >
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: C.textPrimary }}>{p.name}</p>
+                      <p className="text-xs mt-0.5 flex items-center gap-2" style={{ color: C.textMuted }}>
+                        <span>{p.value > 0 ? `${p.value.toLocaleString('fr-FR')} F` : 'Variable'}</span>
+                        <Badge label={p.isTaxable ? 'ITS' : 'Non imposable'} variant={p.isTaxable ? 'warning' : 'default'} />
+                        <Badge label={p.isCnss ? 'CNSS' : 'Hors CNSS'} variant={p.isCnss ? 'info' : 'default'} />
+                      </p>
                     </div>
-                  ))}
-                </div>
-            }
-          </div>
+                    <button
+                      onClick={() => deletePrime(p.id)}
+                      className="p-1.5 rounded-lg transition-colors"
+                      style={{ color: C.textMuted }}
+                      onMouseEnter={e => (e.currentTarget.style.color = C.red)}
+                      onMouseLeave={e => (e.currentTarget.style.color = C.textMuted)}
+                    >
+                      <Ico.Trash size={13} color="currentColor" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
 
-      {/* Départements */}
+      {/* ── Départements ── */}
       {tab === 'departements' && (
         <div className="space-y-4 max-w-2xl">
           <div className="flex gap-2">
-            <input value={deptName} onChange={e => setDeptName(e.target.value)}
+            <InputField
+              placeholder="Nom du département"
+              value={deptName}
+              onChange={e => setDeptName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addDept()}
-              placeholder="Nom du département" className={`flex-1 ${inputClass}`} />
-            <button onClick={addDept} disabled={!deptName.trim()}
-              className="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black rounded-xl text-sm font-semibold transition-colors">
+              className="flex-1"
+            />
+            <Btn variant="primary" onClick={addDept} disabled={!deptName.trim()}>
               Ajouter
-            </button>
+            </Btn>
           </div>
-          <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-            {depts.length === 0
-              ? <div className="py-8 text-center text-gray-500 text-sm">Aucun département</div>
-              : <div className="divide-y divide-white/5">
-                  {depts.map(d => (
-                    <div key={d.id} className="px-5 py-3.5 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <Network size={14} className="text-gray-500" />
-                        <span className="text-sm text-white">{d.name}</span>
+
+          <Card>
+            {depts.length === 0 ? (
+              <div className="py-10 text-center text-sm" style={{ color: C.textMuted }}>
+                Aucun département
+              </div>
+            ) : (
+              <div>
+                {depts.map((d, i) => (
+                  <div
+                    key={d.id}
+                    className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: i < depts.length - 1 ? `1px solid ${C.border}` : 'none' }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center"
+                        style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}
+                      >
+                        <Ico.Network size={12} color={C.indigoL} />
                       </div>
-                      <span className="text-xs text-gray-600">{d._count?.employees ?? 0} employé(s)</span>
+                      <span className="text-sm font-medium" style={{ color: C.textPrimary }}>{d.name}</span>
                     </div>
-                  ))}
-                </div>
-            }
-          </div>
+                    <span className="text-xs" style={{ color: C.textMuted }}>
+                      {d._count?.employees ?? 0} employé{(d._count?.employees ?? 0) > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
 
-      {/* Paie */}
+      {/* ── Paramètres paie ── */}
       {tab === 'paie' && payrollSettings && (
-        <div className="bg-white/3 border border-white/8 rounded-2xl p-5 space-y-4 max-w-2xl">
-          <p className="text-gray-400 text-sm">Paramètres de paie (taux CNSS, heures sup, etc.)</p>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Taux CNSS salarial (%)',    key: 'cnssSalarialRate' },
-              { label: 'Taux CNSS patronal (%)',    key: 'cnssEmployerRate' },
-              { label: 'H.Sup ×10% — taux (%)',    key: 'overtimeRate10'   },
-              { label: 'H.Sup ×25% — taux (%)',    key: 'overtimeRate25'   },
-              { label: 'H.Sup ×50% — taux (%)',    key: 'overtimeRate50'   },
-              { label: 'Jours ouvrés / mois',      key: 'workDaysPerMonth' },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="block text-xs text-gray-400 mb-1.5">{f.label}</label>
-                <input type="number" value={payrollSettings[f.key] ?? ''} onChange={e => setPayrollSettings({ ...payrollSettings, [f.key]: parseFloat(e.target.value) || 0 })} className={inputClass} />
-              </div>
-            ))}
+        <Card className="p-5 max-w-2xl">
+          <SectionHeader title="Paramètres de paie" sub="Taux CNSS, heures supplémentaires, jours ouvrés" />
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Taux CNSS salarial (%)',  key: 'cnssSalarialRate' },
+                { label: 'Taux CNSS patronal (%)',  key: 'cnssEmployerRate' },
+                { label: 'H.Sup ×10% — taux (%)',  key: 'overtimeRate10'   },
+                { label: 'H.Sup ×25% — taux (%)',  key: 'overtimeRate25'   },
+                { label: 'H.Sup ×50% — taux (%)',  key: 'overtimeRate50'   },
+                { label: 'Jours ouvrés / mois',     key: 'workDaysPerMonth' },
+              ].map(f => (
+                <InputField
+                  key={f.key}
+                  label={f.label}
+                  type="number"
+                  value={payrollSettings[f.key] ?? ''}
+                  onChange={e => setPayrollSettings({ ...payrollSettings, [f.key]: parseFloat(e.target.value) || 0 })}
+                />
+              ))}
+            </div>
+            <Btn
+              variant="primary"
+              icon={saving ? <Ico.Loader size={13} color="#fff" /> : <Ico.Check size={13} color="#fff" />}
+              onClick={savePayroll}
+              disabled={saving}
+            >
+              Sauvegarder
+            </Btn>
           </div>
-          <button onClick={savePayroll} disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-semibold rounded-xl text-sm transition-colors">
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Sauvegarder
-          </button>
-        </div>
+        </Card>
       )}
     </div>
   );

@@ -1,19 +1,24 @@
 'use client';
 
 // app/(dashboard)/cabinet/[cabinetId]/entreprise/[companyId]/materiel/page.tsx
+// API INCHANGÉE — UX améliorée
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Package, Loader2, Search, Tag } from 'lucide-react';
 import { api } from '@/services/api';
+import {
+  C, Ico, Card, Badge, KpiCard,
+  PageHeader, SearchBar, TableShell, Th, Tr, Td,
+  EmptyState, LoadingInline,
+} from '@/components/cabinet/cabinet-ui';
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-CG', { maximumFractionDigits: 0 }).format(n);
 
-const ASSET_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  ACTIVE:       { label: 'Actif',     color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  IN_REPAIR:    { label: 'En réparation', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-  RETIRED:      { label: 'Retraité', color: 'text-gray-400',    bg: 'bg-gray-500/10 border-gray-500/20' },
-  LOST:         { label: 'Perdu',    color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20' },
+const ASSET_STATUS: Record<string, { label: string; variant: any }> = {
+  ACTIVE:    { label: 'Actif',          variant: 'success' },
+  IN_REPAIR: { label: 'En réparation',  variant: 'warning' },
+  RETIRED:   { label: 'Retraité',       variant: 'default' },
+  LOST:      { label: 'Perdu',          variant: 'danger'  },
 };
 
 export default function CabinetMaterielPage() {
@@ -33,93 +38,113 @@ export default function CabinetMaterielPage() {
 
   const filtered = assets.filter(a => {
     const q = search.toLowerCase();
-    return !search || a.name?.toLowerCase().includes(q) || a.category?.toLowerCase().includes(q) ||
-      a.assignedEmployee?.firstName?.toLowerCase().includes(q) || a.assignedEmployee?.lastName?.toLowerCase().includes(q);
+    return !search
+      || a.name?.toLowerCase().includes(q)
+      || a.category?.toLowerCase().includes(q)
+      || a.assignedEmployee?.firstName?.toLowerCase().includes(q)
+      || a.assignedEmployee?.lastName?.toLowerCase().includes(q);
   });
 
   const totalValue = assets.reduce((s, a) => s + (a.purchasePrice ?? 0), 0);
-
-  if (loading) return <div className="flex justify-center py-20"><Loader2 size={24} className="animate-spin text-gray-600" /></div>;
+  const stats = {
+    active:   assets.filter(a => a.status === 'ACTIVE').length,
+    repair:   assets.filter(a => a.status === 'IN_REPAIR').length,
+    retired:  assets.filter(a => a.status === 'RETIRED').length,
+  };
 
   return (
-    <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Package size={20} className="text-cyan-400" /> Matériel
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            {assets.length} actif{assets.length > 1 ? 's' : ''} · Valeur totale : {fmt(totalValue)} F
-          </p>
+    <div className="p-6 space-y-5" style={{ minHeight: '100vh', background: C.pageBg }}>
+
+      <PageHeader
+        title="Matériel"
+        sub={`${assets.length} actif${assets.length > 1 ? 's' : ''} · Valeur totale : ${fmt(totalValue)} F`}
+        icon={<Ico.Package size={18} color={C.cyan} />}
+      />
+
+      {assets.length > 0 && (
+        <div className="grid grid-cols-4 gap-3">
+          <KpiCard label="Actifs"          value={stats.active}  icon={<Ico.Check   size={16} color={C.emerald} />} accentColor={C.emerald} />
+          <KpiCard label="En réparation"   value={stats.repair}  icon={<Ico.Alert   size={16} color={C.amber}   />} accentColor={C.amber}   />
+          <KpiCard label="Retraités"       value={stats.retired} icon={<Ico.Package size={16} color={C.textMuted}/>} accentColor={C.textMuted} />
+          <KpiCard label="Valeur totale"   value={`${fmt(totalValue)} F`} icon={<Ico.Wallet size={16} color={C.cyan} />} accentColor={C.cyan} />
         </div>
+      )}
+
+      <div className="max-w-sm">
+        <SearchBar value={search} onChange={setSearch} placeholder="Rechercher un actif..." />
       </div>
 
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher un actif..."
-          className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-600 outline-none focus:border-white/30" />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
-          <Package size={36} className="mx-auto mb-3 text-gray-700" />
-          <p>{search ? 'Aucun résultat' : 'Aucun actif enregistré'}</p>
-        </div>
+      {loading ? <LoadingInline /> : filtered.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<Ico.Package size={22} color={C.textMuted} />}
+            title={search ? 'Aucun résultat' : 'Aucun actif enregistré'}
+            sub={search ? undefined : 'Le matériel de la PME apparaîtra ici'}
+          />
+        </Card>
       ) : (
-        <div className="bg-white/3 border border-white/8 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/8">
-                  {['Actif','Catégorie','Affecté à','Valeur','Statut'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs text-gray-500 font-medium">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filtered.map((a: any) => {
-                  const sc = ASSET_STATUS[a.status] ?? ASSET_STATUS['ACTIVE'];
-                  return (
-                    <tr key={a.id} className="hover:bg-white/3 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 bg-white/5 border border-white/8 rounded-lg flex items-center justify-center shrink-0">
-                            <Package size={14} className="text-gray-400" />
-                          </div>
-                          <div>
-                            <p className="text-white font-medium">{a.name}</p>
-                            {a.serialNumber && <p className="text-xs text-gray-500">{a.serialNumber}</p>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {a.category && (
-                          <span className="flex items-center gap-1 text-xs text-gray-400">
-                            <Tag size={11} />{a.category}
-                          </span>
+        <TableShell>
+          <thead>
+            <tr>
+              <Th>Actif</Th>
+              <Th>Catégorie</Th>
+              <Th>Affecté à</Th>
+              <Th align="right">Valeur</Th>
+              <Th>Statut</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((a: any) => {
+              const sc = ASSET_STATUS[a.status] ?? ASSET_STATUS['ACTIVE'];
+              return (
+                <Tr key={a.id}>
+                  <Td>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}` }}
+                      >
+                        <Ico.Package size={13} color={C.textMuted} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: C.textPrimary }}>{a.name}</p>
+                        {a.serialNumber && (
+                          <p className="text-xs" style={{ color: C.textMuted }}>{a.serialNumber}</p>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs">
-                        {a.assignedEmployee
-                          ? `${a.assignedEmployee.firstName} ${a.assignedEmployee.lastName}`
-                          : <span className="text-gray-600">Non affecté</span>}
-                      </td>
-                      <td className="px-4 py-3 text-gray-300 text-xs">
-                        {a.purchasePrice ? `${fmt(a.purchasePrice)} F` : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${sc.bg} ${sc.color}`}>
-                          {sc.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      </div>
+                    </div>
+                  </Td>
+                  <Td>
+                    {a.category ? (
+                      <span className="flex items-center gap-1 text-xs" style={{ color: C.textSecondary }}>
+                        <Ico.Tag size={11} color="currentColor" />
+                        {a.category}
+                      </span>
+                    ) : (
+                      <span style={{ color: C.textMuted }}>—</span>
+                    )}
+                  </Td>
+                  <Td>
+                    <span className="text-xs" style={{ color: C.textSecondary }}>
+                      {a.assignedEmployee
+                        ? `${a.assignedEmployee.firstName} ${a.assignedEmployee.lastName}`
+                        : <span style={{ color: C.textMuted }}>Non affecté</span>
+                      }
+                    </span>
+                  </Td>
+                  <Td className="text-right">
+                    <span className="text-sm" style={{ color: C.textSecondary }}>
+                      {a.purchasePrice ? `${fmt(a.purchasePrice)} F` : '—'}
+                    </span>
+                  </Td>
+                  <Td>
+                    <Badge label={sc.label} variant={sc.variant} />
+                  </Td>
+                </Tr>
+              );
+            })}
+          </tbody>
+        </TableShell>
       )}
     </div>
   );

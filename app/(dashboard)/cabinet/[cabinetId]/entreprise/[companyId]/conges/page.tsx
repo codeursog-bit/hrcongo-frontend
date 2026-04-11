@@ -1,46 +1,46 @@
 'use client';
 
 // app/(dashboard)/cabinet/[cabinetId]/entreprise/[companyId]/conges/page.tsx
+// API INCHANGÉE — UX améliorée
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Calendar, Loader2, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react';
 import { api } from '@/services/api';
+import {
+  C, Ico, Card, Badge, Avatar, Btn, KpiCard,
+  PageHeader, SectionHeader, FilterBar,
+  EmptyState, LoadingInline,
+} from '@/components/cabinet/cabinet-ui';
 
 const TYPES: Record<string, string> = {
   ANNUAL: 'Annuel', SICK: 'Maladie', MATERNITY: 'Maternité',
   PATERNITY: 'Paternité', UNPAID: 'Sans solde', COMPENSATORY: 'Compensatoire',
 };
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
-  PENDING:   { label: 'En attente', color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20',   icon: Clock        },
-  APPROVED:  { label: 'Approuvé',   color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: CheckCircle2 },
-  REJECTED:  { label: 'Refusé',     color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20',       icon: XCircle      },
-  CANCELLED: { label: 'Annulé',     color: 'text-gray-400',    bg: 'bg-gray-500/10 border-gray-500/20',     icon: AlertCircle  },
+const STATUS_CFG: Record<string, { label: string; variant: any; color: string }> = {
+  PENDING:   { label: 'En attente', variant: 'warning', color: C.amber   },
+  APPROVED:  { label: 'Approuvé',   variant: 'success', color: C.emerald },
+  REJECTED:  { label: 'Refusé',     variant: 'danger',  color: C.red     },
+  CANCELLED: { label: 'Annulé',     variant: 'default', color: C.textMuted },
 };
+
+type Filter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export default function CabinetCongesPage() {
   const params    = useParams();
   const companyId = params.companyId as string;
 
-  const [leaves,    setLeaves]    = useState<any[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [filter,    setFilter]    = useState('ALL');
-  const [updating,  setUpdating]  = useState<string | null>(null);
+  const [leaves,   setLeaves]   = useState<any[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [filter,   setFilter]   = useState<Filter>('ALL');
+  const [updating, setUpdating] = useState<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const data: any = await api.get(`/leaves?companyId=${companyId}`);
-        setLeaves(Array.isArray(data) ? data : []);
-      } catch {
-        setLeaves([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    setLoading(true);
+    api.get(`/leaves?companyId=${companyId}`)
+      .then((data: any) => setLeaves(Array.isArray(data) ? data : []))
+      .catch(() => setLeaves([]))
+      .finally(() => setLoading(false));
   }, [companyId]);
 
   const updateStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
@@ -55,98 +55,114 @@ export default function CabinetCongesPage() {
 
   const filtered = filter === 'ALL' ? leaves : leaves.filter(l => l.status === filter);
 
+  const stats = {
+    PENDING:   leaves.filter(l => l.status === 'PENDING').length,
+    APPROVED:  leaves.filter(l => l.status === 'APPROVED').length,
+    REJECTED:  leaves.filter(l => l.status === 'REJECTED').length,
+    CANCELLED: leaves.filter(l => l.status === 'CANCELLED').length,
+  };
+
+  const FILTER_OPTS: { key: Filter; label: string }[] = [
+    { key: 'ALL',      label: `Tous (${leaves.length})`              },
+    { key: 'PENDING',  label: `En attente (${stats.PENDING})`        },
+    { key: 'APPROVED', label: `Approuvés (${stats.APPROVED})`        },
+    { key: 'REJECTED', label: `Refusés (${stats.REJECTED})`          },
+  ];
+
   return (
-    <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
-            <Calendar size={20} className="text-cyan-400" /> Congés
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">Demandes de congés de la PME</p>
-        </div>
-        <div className="flex gap-1 bg-white/3 border border-white/8 rounded-lg p-1">
-          {['ALL','PENDING','APPROVED','REJECTED'].map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-md text-xs transition-colors ${filter === f ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'}`}>
-              {f === 'ALL' ? 'Tous' : STATUS_CONFIG[f]?.label ?? f}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div className="p-6 space-y-5" style={{ minHeight: '100vh', background: C.pageBg }}>
 
-      {/* Stats rapides */}
+      <PageHeader
+        title="Congés"
+        sub="Demandes de congés de la PME"
+        icon={<Ico.Leave size={18} color={C.cyan} />}
+      />
+
+      {/* KPIs */}
       <div className="grid grid-cols-4 gap-3">
-        {['PENDING','APPROVED','REJECTED','CANCELLED'].map(s => {
-          const count = leaves.filter(l => l.status === s).length;
-          const sc    = STATUS_CONFIG[s];
-          return (
-            <div key={s} className={`border rounded-xl p-3 ${sc.bg}`}>
-              <p className={`text-xl font-bold ${sc.color}`}>{count}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{sc.label}</p>
-            </div>
-          );
-        })}
+        <KpiCard label="En attente"  value={stats.PENDING}  icon={<Ico.Clock size={16} color={C.amber}   />} accentColor={C.amber}   />
+        <KpiCard label="Approuvés"   value={stats.APPROVED} icon={<Ico.Check size={16} color={C.emerald} />} accentColor={C.emerald} />
+        <KpiCard label="Refusés"     value={stats.REJECTED} icon={<Ico.Alert size={16} color={C.red}     />} accentColor={C.red}     />
+        <KpiCard label="Annulés"     value={stats.CANCELLED}icon={<Ico.Leave size={16} color={C.textMuted}/>} accentColor={C.textMuted} />
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-gray-600" /></div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <Calendar size={32} className="mx-auto mb-3 text-gray-700" />
-          <p>Aucune demande de congé</p>
-        </div>
+      {/* Filters */}
+      <FilterBar filters={FILTER_OPTS} active={filter} onChange={setFilter} />
+
+      {/* List */}
+      {loading ? <LoadingInline /> : filtered.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={<Ico.Leave size={22} color={C.textMuted} />}
+            title="Aucune demande de congé"
+            sub={filter !== 'ALL' ? 'Aucun résultat pour ce filtre' : undefined}
+          />
+        </Card>
       ) : (
-        <div className="space-y-2">
-          {filtered.map(leave => {
-            const sc = STATUS_CONFIG[leave.status] ?? STATUS_CONFIG['PENDING'];
-            const Icon = sc.icon;
-            return (
-              <div key={leave.id} className="bg-white/3 border border-white/8 rounded-2xl p-4 flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/5 border border-white/8 rounded-xl flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-gray-400">
-                    {`${leave.employee?.firstName?.[0] ?? ''}${leave.employee?.lastName?.[0] ?? ''}`.toUpperCase()}
-                  </span>
+        <Card>
+          <div>
+            {filtered.map((leave, i) => {
+              const sc = STATUS_CFG[leave.status] ?? STATUS_CFG['PENDING'];
+              const empName = leave.employee
+                ? `${leave.employee.firstName ?? ''} ${leave.employee.lastName ?? ''}`.trim()
+                : 'Employé';
+              return (
+                <div
+                  key={leave.id}
+                  className="flex items-center gap-3 px-5 py-4 transition-colors"
+                  style={{
+                    borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <Avatar name={empName} size={36} index={i} />
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium" style={{ color: C.textPrimary }}>{empName}</p>
+                    <p className="text-xs mt-0.5" style={{ color: C.textSecondary }}>
+                      {TYPES[leave.type] ?? leave.type}
+                      {' · '}
+                      {new Date(leave.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {' → '}
+                      {new Date(leave.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {leave.daysCount && ` · ${leave.daysCount} jour${leave.daysCount > 1 ? 's' : ''}`}
+                    </p>
+                    {leave.reason && (
+                      <p className="text-xs mt-0.5 truncate" style={{ color: C.textMuted }}>
+                        {leave.reason}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge label={sc.label} variant={sc.variant} />
+                    {leave.status === 'PENDING' && (
+                      <>
+                        <Btn
+                          variant="success"
+                          size="sm"
+                          onClick={() => updateStatus(leave.id, 'APPROVED')}
+                          disabled={updating === leave.id}
+                        >
+                          {updating === leave.id ? '…' : 'Approuver'}
+                        </Btn>
+                        <Btn
+                          variant="danger"
+                          size="sm"
+                          onClick={() => updateStatus(leave.id, 'REJECTED')}
+                          disabled={updating === leave.id}
+                        >
+                          Refuser
+                        </Btn>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white">
-                    {leave.employee?.firstName} {leave.employee?.lastName}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {TYPES[leave.type] ?? leave.type} ·{' '}
-                    {new Date(leave.startDate).toLocaleDateString('fr-FR', { day:'numeric', month:'short' })}
-                    {' → '}
-                    {new Date(leave.endDate).toLocaleDateString('fr-FR', { day:'numeric', month:'short' })}
-                    {' · '}{leave.daysCount} jour{leave.daysCount > 1 ? 's' : ''}
-                  </p>
-                  {leave.reason && <p className="text-xs text-gray-600 mt-0.5 truncate">{leave.reason}</p>}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border ${sc.bg} ${sc.color}`}>
-                    <Icon size={11} /> {sc.label}
-                  </span>
-                  {leave.status === 'PENDING' && (
-                    <>
-                      <button
-                        onClick={() => updateStatus(leave.id, 'APPROVED')}
-                        disabled={updating === leave.id}
-                        className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors"
-                      >
-                        {updating === leave.id ? '...' : 'Approuver'}
-                      </button>
-                      <button
-                        onClick={() => updateStatus(leave.id, 'REJECTED')}
-                        disabled={updating === leave.id}
-                        className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium transition-colors"
-                      >
-                        Refuser
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </Card>
       )}
     </div>
   );
