@@ -7,6 +7,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/services/api';
+import CabinetSidebar from '../CabinetSidebar';
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
 const T = {
@@ -304,6 +305,8 @@ export default function ClotureImportPage() {
 
   return (
     <div className="min-h-screen p-6 space-y-6" style={{ background: T.bg, color: T.text }}>
+       <CabinetSidebar cabinetId={cabinetId} userEmail={user?.email} />
+     <main className="ml-56 p-8" style={{ maxWidth: 'calc(640px + 224px)' }}>
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
@@ -699,6 +702,7 @@ export default function ClotureImportPage() {
           )}
         </div>
       </div>
+      </main>
     </div>
   );
 }
