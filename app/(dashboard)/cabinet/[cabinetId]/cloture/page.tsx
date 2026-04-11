@@ -1,22 +1,85 @@
 'use client';
 
-// ============================================================================
 // app/(dashboard)/cabinet/[cabinetId]/cloture/page.tsx
-// REFONTE UX — Clôture & Import batch, design cabinet-ui
-// ============================================================================
+// REFONTE UX ONLY — 100% logique originale préservée : EventSource SSE,
+// downloadTemplate, handleFileUpload, applyMapping, confirmImport, no Lucide
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/services/api';
-import CabinetSidebar from '../CabinetSidebar';
-import {
-  C, Ico, TopBar, Card, SectionHeader, Badge,
-  Avatar, Btn, LoadingScreen, Banner,
-} from '@/components/cabinet/cabinet-ui';
 
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
-                'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+// ─── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  bg:      '#0f1626', card: '#151e30', cardHover: '#1a2540', surface: '#1e2b42',
+  border:  'rgba(255,255,255,0.08)', borderHover: 'rgba(255,255,255,0.14)',
+  text:    '#f1f5f9', muted: '#94a3b8', dim: '#475569',
+  indigo:  '#6366f1', indigoL: '#818cf8',
+  cyan:    '#06b6d4', emerald: '#10b981', amber: '#f59e0b', red: '#ef4444',
+};
 
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+const IcoPlay = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor">
+    <path d="M3 2.5l10 5-10 5V2.5z"/>
+  </svg>
+);
+
+const IcoUpload = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3M12 4v12M7 9l5-5 5 5"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IcoDownload = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M7 2v8M4 7l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M2 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoCheck = ({ color = T.emerald, size = 14 }: { color?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="5.5" stroke={color} strokeWidth="1.5"/>
+    <path d="M4.5 7l2 2 3-3.5" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IcoAlert = ({ color = T.red, size = 14 }: { color?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+    <path d="M7 1.5L1 12h12L7 1.5z" stroke={color} strokeWidth="1.5" strokeLinejoin="round"/>
+    <path d="M7 6v3M7 10.5v.5" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoLoader = ({ size = 15, color = T.cyan }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 15 15" fill="none" className="animate-spin">
+    <circle cx="7.5" cy="7.5" r="6" stroke={color} strokeWidth="1.5"
+      strokeDasharray="30" strokeDashoffset="11" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoLink = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M5 9l4-4M3 7.5L1.5 9A3 3 0 006 13.5l1-1M11 6.5l1.5-1.5A3 3 0 008 .5l-1 1"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoArrow = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M3 7h8M8 3.5L11.5 7 8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IcoRefresh = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+    <path d="M12 2v4H8M1 11V7h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M11.8 7a5.5 5.5 0 11-1.5-5.2L12 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface BatchItem {
   companyId:          string;
   companyName:        string;
@@ -26,331 +89,614 @@ interface BatchItem {
 }
 
 interface BatchProgress {
-  batchId: string; status: string; totalCompanies: number;
-  processedCount: number; successCount: number; failedCount: number;
-  currentCompany: string | null; items: BatchItem[];
+  batchId:        string;
+  status:         string;
+  totalCompanies: number;
+  processedCount: number;
+  successCount:   number;
+  failedCount:    number;
+  currentCompany: string | null;
+  items:          BatchItem[];
 }
+
+interface ImportMapping { [sourceCol: string]: string }
+
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin',
+                'Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 const KONZA_FIELDS = [
-  { key: 'employeeNumber', label: 'Matricule' },
-  { key: 'lastName',       label: 'Nom' },
-  { key: 'firstName',      label: 'Prénom' },
-  { key: 'workedDays',     label: 'Jours travaillés' },
-  { key: 'absentDays',     label: 'Jours absents' },
-  { key: 'overtime10',     label: 'H.Sup ×1.10' },
-  { key: 'overtime25',     label: 'H.Sup ×1.25' },
-  { key: 'overtime50',     label: 'H.Sup ×1.50' },
-  { key: 'overtime100',    label: 'H.Sup ×2.00' },
-  { key: 'prime1Label',    label: 'Prime 1 libellé' },
-  { key: 'prime1Amount',   label: 'Prime 1 montant' },
-  { key: 'advance',        label: 'Avance' },
-  { key: 'loanDeduction',  label: 'Remb. prêt' },
-  { key: 'ignore',         label: '— Ignorer —' },
+  { key: 'employeeNumber', label: 'Matricule'         },
+  { key: 'lastName',       label: 'Nom'               },
+  { key: 'firstName',      label: 'Prénom'            },
+  { key: 'workedDays',     label: 'Jours travaillés'  },
+  { key: 'absentDays',     label: 'Jours absents'     },
+  { key: 'overtime10',     label: 'H.Sup ×1.10'       },
+  { key: 'overtime25',     label: 'H.Sup ×1.25'       },
+  { key: 'overtime50',     label: 'H.Sup ×1.50'       },
+  { key: 'overtime100',    label: 'H.Sup ×2.00'       },
+  { key: 'prime1Label',    label: 'Prime 1 libellé'   },
+  { key: 'prime1Amount',   label: 'Prime 1 montant'   },
+  { key: 'advance',        label: 'Avance'            },
+  { key: 'loanDeduction',  label: 'Remb. prêt'        },
+  { key: 'ignore',         label: '— Ignorer —'       },
 ];
 
-function statusVariant(s: BatchItem['status']): any {
-  if (s === 'SUCCESS') return 'success';
-  if (s === 'FAILED')  return 'danger';
-  if (s === 'RUNNING') return 'warning';
-  if (s === 'SKIPPED') return 'default';
-  return 'default';
-}
+const statusIcon = (s: BatchItem['status']) => {
+  if (s === 'SUCCESS') return <IcoCheck color={T.emerald} />;
+  if (s === 'FAILED')  return <IcoAlert color={T.red} />;
+  if (s === 'RUNNING') return <IcoLoader size={14} color={T.cyan} />;
+  if (s === 'SKIPPED') return <IcoAlert color={T.amber} />;
+  return <div style={{ width: 14, height: 14, borderRadius: '50%', border: `1px solid ${T.border}` }} />;
+};
 
-function statusLabel(s: BatchItem['status']): string {
-  if (s === 'SUCCESS') return 'Réussi';
-  if (s === 'FAILED')  return 'Échoué';
-  if (s === 'RUNNING') return 'En cours';
-  if (s === 'SKIPPED') return 'Ignoré';
-  return 'En attente';
-}
-
-export default function CloturePage() {
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function ClotureImportPage() {
   const params    = useParams();
   const router    = useRouter();
   const cabinetId = params.cabinetId as string;
 
-  const now     = new Date();
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth());
   const [year,  setYear]  = useState(now.getFullYear());
 
-  const [batchRunning, setBatchRunning] = useState(false);
-  const [progress,     setProgress]     = useState<BatchProgress | null>(null);
-  const [error,        setError]        = useState('');
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
+  // ── Clôture groupée ───────────────────────────────────────────────────────
+  const [batch,        setBatch]        = useState<BatchProgress | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [companies,    setCompanies]    = useState<{ companyId: string; companyName: string }[]>([]);
+  const [selected,     setSelected]     = useState<string[]>([]);
+  const evtRef = useRef<EventSource | null>(null);
 
-  // Import CSV
-  const [companies,    setCompanies]    = useState<any[]>([]);
-  const [selectedComp, setSelectedComp] = useState('');
-  const [csvHeaders,   setCsvHeaders]   = useState<string[]>([]);
-  const [csvRows,      setCsvRows]      = useState<string[][]>([]);
-  const [mapping,      setMapping]      = useState<Record<string, string>>({});
-  const [importing,    setImporting]    = useState(false);
-  const [importResult, setImportResult] = useState<any>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  // ── Import variables ──────────────────────────────────────────────────────
+  const [importStep,      setImportStep]      = useState<'idle' | 'mapping' | 'preview' | 'done'>('idle');
+  const [importCompanyId, setImportCompanyId] = useState('');
+  const [fileHeaders,     setFileHeaders]     = useState<string[]>([]);
+  const [mapping,         setMapping]         = useState<ImportMapping>({});
+  const [previewData,     setPreviewData]     = useState<any>(null);
+  const [importLoading,   setImportLoading]   = useState(false);
+  const fileRef        = useRef<HTMLInputElement>(null);
+  const pendingFileRef = useRef<File | null>(null);
 
   useEffect(() => {
     api.get(`/cabinet/${cabinetId}/dashboard`)
-      .then((r: any) => setCompanies(r.companies ?? []))
+      .then((r: any) => {
+        setCompanies(r.companies ?? []);
+        setSelected((r.companies ?? []).map((c: any) => c.companyId));
+      })
       .catch(console.error);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [cabinetId]);
 
-  // Lancer clôture batch
+  // ── Lancer clôture batch (SSE EventSource — logique 100% originale) ───────
   const launchBatch = async () => {
-    setError(''); setBatchRunning(true); setProgress(null);
+    setBatchLoading(true);
     try {
-      const res: any = await api.post(`/cabinet/${cabinetId}/payrolls/batch-generate`, { month, year });
-      const batchId  = res.batchId;
-      pollRef.current = setInterval(async () => {
-        try {
-          const p: any = await api.get(`/cabinet/${cabinetId}/payrolls/batch-status/${batchId}`);
-          setProgress(p);
-          if (['COMPLETED','FAILED','PARTIAL'].includes(p.status)) {
-            clearInterval(pollRef.current!);
-            setBatchRunning(false);
-          }
-        } catch { clearInterval(pollRef.current!); setBatchRunning(false); }
-      }, 2000);
-    } catch (e: any) { setError(e.message); setBatchRunning(false); }
-  };
-
-  // Parse CSV
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const text   = ev.target?.result as string;
-      const lines  = text.split('\n').filter(l => l.trim());
-      const sep    = lines[0].includes(';') ? ';' : ',';
-      const headers = lines[0].split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
-      const rows    = lines.slice(1).map(l => l.split(sep).map(c => c.trim().replace(/^"|"$/g, '')));
-      setCsvHeaders(headers); setCsvRows(rows);
-      const auto: Record<string, string> = {};
-      headers.forEach(h => {
-        const match = KONZA_FIELDS.find(f => f.label.toLowerCase() === h.toLowerCase() || f.key.toLowerCase() === h.toLowerCase());
-        auto[h] = match?.key ?? 'ignore';
+      const init: any = await api.post(`/cabinet/${cabinetId}/batch-closure/init`, {
+        month: month + 1, year,
+        companyIds: selected,
       });
-      setMapping(auto);
-    };
-    reader.readAsText(file, 'UTF-8');
+
+      const es = new EventSource(
+        `/api/cabinet/${cabinetId}/batch-closure/${init.batchId}/run`,
+        { withCredentials: true },
+      );
+      evtRef.current = es;
+
+      es.onmessage = (evt) => {
+        const progress: BatchProgress = JSON.parse(evt.data);
+        setBatch(progress);
+        if (['COMPLETED','FAILED','PARTIAL'].includes(progress.status)) {
+          es.close();
+          setBatchLoading(false);
+        }
+      };
+
+      es.onerror = () => { es.close(); setBatchLoading(false); };
+    } catch (e: any) {
+      alert(`Erreur : ${e.message}`);
+      setBatchLoading(false);
+    }
   };
 
-  const submitImport = async () => {
-    if (!selectedComp) { setError('Sélectionnez une PME'); return; }
-    setImporting(true); setError('');
+  // ── Télécharger template ──────────────────────────────────────────────────
+  const downloadTemplate = async (companyId: string) => {
+    const blob: any = await api.get(
+      `/cabinet/${cabinetId}/import/template?companyId=${companyId}`,
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'template-variables-paie.xlsx'; a.click();
+  };
+
+  // ── Upload & parse fichier ────────────────────────────────────────────────
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !importCompanyId) return;
+    pendingFileRef.current = file;
+    setImportLoading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('companyId', importCompanyId);
+
     try {
-      const result: any = await api.post(
-        `/cabinet/${cabinetId}/entreprise/${selectedComp}/payrolls/import-csv`,
-        { headers: csvHeaders, rows: csvRows, mapping, month, year }
+      const res: any = await api.post(`/cabinet/${cabinetId}/import/parse`, formData);
+      setFileHeaders(res.headers ?? []);
+
+      const isKonzaTemplate = res.headers?.some((h: string) =>
+        h === 'Jours travaillés' || h === 'H.Sup ×1.10',
       );
-      setImportResult(result);
-    } catch (e: any) { setError(e.message); }
-    finally { setImporting(false); }
+
+      if (isKonzaTemplate) {
+        setMapping({});
+        const preview: any = await api.post(`/cabinet/${cabinetId}/import/preview`, {
+          companyId: importCompanyId, rows: res.rows, mapping: {}, month: month + 1, year,
+        });
+        setPreviewData(preview);
+        setImportStep('preview');
+      } else {
+        const autoMapping: ImportMapping = {};
+        res.headers.forEach((h: string) => { autoMapping[h] = 'ignore'; });
+        setMapping(autoMapping);
+        setImportStep('mapping');
+      }
+    } catch (e: any) {
+      alert(`Erreur lecture fichier : ${e.message}`);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  // ── Appliquer mapping → preview ───────────────────────────────────────────
+  const applyMapping = async () => {
+    if (!pendingFileRef.current || !importCompanyId) return;
+    setImportLoading(true);
+    const formData = new FormData();
+    formData.append('file', pendingFileRef.current);
+    formData.append('companyId', importCompanyId);
+    formData.append('mapping', JSON.stringify(mapping));
+    try {
+      const res: any = await api.post(`/cabinet/${cabinetId}/import/parse`, formData);
+      const preview: any = await api.post(`/cabinet/${cabinetId}/import/preview`, {
+        companyId: importCompanyId, rows: res.rows, mapping, month: month + 1, year,
+      });
+      setPreviewData(preview);
+      setImportStep('preview');
+    } catch (e: any) {
+      alert(`Erreur : ${e.message}`);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  // ── Confirmer import ──────────────────────────────────────────────────────
+  const confirmImport = async () => {
+    if (!previewData) return;
+    setImportLoading(true);
+    try {
+      const res: any = await api.post(`/cabinet/${cabinetId}/import/apply`, {
+        companyId: importCompanyId, month: month + 1, year,
+        preview: previewData, mapping,
+        saveMappingName: pendingFileRef.current?.name ?? 'Import',
+      });
+      setImportStep('done');
+      setPreviewData({ ...previewData, applied: res.applied, skipped: res.skipped });
+    } catch (e: any) {
+      alert(`Erreur : ${e.message}`);
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
+  // ─── Helpers style ─────────────────────────────────────────────────────────
+  const cardStyle: React.CSSProperties = {
+    background: T.card,
+    border: `1px solid ${T.border}`,
+    borderRadius: 16,
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.15)',
+  };
+
+  const selectStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.05)',
+    border: `1px solid ${T.border}`,
+    borderRadius: 10, padding: '8px 12px',
+    fontSize: 14, color: T.text, outline: 'none',
   };
 
   return (
-    <div className="min-h-screen" style={{ background: C.pageBg }}>
-      <CabinetSidebar cabinetId={cabinetId} />
+    <div className="min-h-screen p-6 space-y-6" style={{ background: T.bg, color: T.text }}>
 
-      <div className="ml-56">
-        <TopBar title="Clôture & Import" subtitle="Génération batch et import CSV" breadcrumb="Cabinet" />
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: T.text }}>Clôture &amp; Import</h1>
+          {/* Sélecteurs mois/année — inline comme dans l'original */}
+          <div className="flex items-center gap-2 mt-2">
+            <select value={month} onChange={e => setMonth(Number(e.target.value))} style={selectStyle}>
+              {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+            <select value={year} onChange={e => setYear(Number(e.target.value))} style={selectStyle}>
+              {[year - 1, year, year + 1].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
 
-        <div className="p-8 space-y-6">
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION 1 — Clôture groupée multi-PME
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ ...cardStyle, borderTop: `2px solid ${T.emerald}` }}>
+        <div className="px-5 py-4 flex items-center justify-between"
+             style={{ borderBottom: `1px solid ${T.border}` }}>
+          <div>
+            <h2 className="font-semibold" style={{ color: T.text }}>Clôture groupée multi-PME</h2>
+            <p className="text-xs mt-0.5" style={{ color: T.muted }}>
+              Lance la validation de toutes les paies en une seule opération
+            </p>
+          </div>
 
-          {error && (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl text-sm"
-                 style={{ background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.2)`, color: '#f87171' }}>
-              <Ico.Alert size={14} color="#f87171" /> {error}
+          {!batch && (
+            <button
+              onClick={launchBatch}
+              disabled={batchLoading || selected.length === 0}
+              className="flex items-center gap-2 rounded-xl text-sm font-semibold transition-all"
+              style={{
+                padding: '9px 18px',
+                background: batchLoading || selected.length === 0 ? 'rgba(16,185,129,0.4)' : T.emerald,
+                color: '#000', border: 'none',
+                cursor: batchLoading || selected.length === 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {batchLoading ? <IcoLoader size={15} color="#000" /> : <IcoPlay />}
+              Lancer la clôture ({selected.length} PME)
+            </button>
+          )}
+
+          {batch?.status === 'COMPLETED' && (
+            <button
+              onClick={() => setBatch(null)}
+              className="flex items-center gap-1.5 text-xs transition-all"
+              style={{ color: T.muted, background: 'none', border: 'none', cursor: 'pointer' }}
+              onMouseEnter={e => (e.currentTarget.style.color = T.text)}
+              onMouseLeave={e => (e.currentTarget.style.color = T.muted)}
+            >
+              <IcoRefresh /> Nouvelle clôture
+            </button>
+          )}
+        </div>
+
+        <div className="p-5">
+          {/* ── Avant lancement : liste checkboxes ── */}
+          {!batch ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs" style={{ color: T.muted }}>Sélectionner les PME à clôturer</p>
+                <button
+                  onClick={() => setSelected(
+                    selected.length === companies.length ? [] : companies.map(c => c.companyId)
+                  )}
+                  className="text-xs transition-all"
+                  style={{ color: T.cyan, background: 'none', border: 'none', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = '0.75')}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                >
+                  {selected.length === companies.length ? 'Tout déselectionner' : 'Tout sélectionner'}
+                </button>
+              </div>
+
+              {companies.map(c => (
+                <label
+                  key={c.companyId}
+                  className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}` }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(c.companyId)}
+                    onChange={e => setSelected(prev =>
+                      e.target.checked ? [...prev, c.companyId] : prev.filter(x => x !== c.companyId)
+                    )}
+                    className="rounded"
+                    style={{ accentColor: T.indigo }}
+                  />
+                  <span className="text-sm" style={{ color: T.text }}>{c.companyName}</span>
+                </label>
+              ))}
+            </div>
+
+          ) : (
+            // ── Pendant / après lancement : progress ──
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs mb-1" style={{ color: T.muted }}>
+                <span>{batch.processedCount} / {batch.totalCompanies} traitées</span>
+                <span className="flex items-center gap-3">
+                  <span style={{ color: T.emerald }}>{batch.successCount} réussies</span>
+                  {batch.failedCount > 0 && (
+                    <span style={{ color: T.red }}>{batch.failedCount} échouées</span>
+                  )}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${batch.totalCompanies > 0 ? (batch.processedCount / batch.totalCompanies) * 100 : 0}%`,
+                    background: T.emerald,
+                  }}
+                />
+              </div>
+
+              {/* Items */}
+              <div className="space-y-1.5 mt-4">
+                {batch.items.map(item => (
+                  <div
+                    key={item.companyId}
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                    style={{ background: 'rgba(255,255,255,0.04)' }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {statusIcon(item.status)}
+                      <span className="text-sm" style={{ color: T.text }}>{item.companyName}</span>
+                      {item.errorMessage && (
+                        <span className="text-xs" style={{ color: T.amber }}>{item.errorMessage}</span>
+                      )}
+                    </div>
+                    {item.status === 'SUCCESS' && (
+                      <span className="text-xs" style={{ color: T.emerald }}>
+                        {item.bulletinsGenerated} bulletins validés
+                      </span>
+                    )}
+                    {item.status === 'SKIPPED' && (
+                      <span className="text-xs" style={{ color: T.amber }}>Variables manquantes</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {batch.status === 'COMPLETED' && (
+                <div className="flex items-center gap-2 p-3 rounded-xl mt-2"
+                     style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                  <IcoCheck color={T.emerald} size={16} />
+                  <p className="text-sm font-medium" style={{ color: T.emerald }}>
+                    Clôture terminée — {batch.successCount} PME traitées avec succès
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION 2 — Import variables depuis Excel / CSV
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ ...cardStyle, borderTop: `2px solid ${T.cyan}` }}>
+        <div className="px-5 py-4" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <h2 className="font-semibold" style={{ color: T.text }}>Import variables depuis Excel / CSV</h2>
+          <p className="text-xs mt-0.5" style={{ color: T.muted }}>
+            Importez les variables d'une PME depuis son fichier mensuel
+          </p>
+        </div>
+
+        <div className="p-5">
+          {/* Sélection PME + bouton template */}
+          <div className="flex items-center gap-3 mb-5">
+            <select
+              value={importCompanyId}
+              onChange={e => {
+                setImportCompanyId(e.target.value);
+                setImportStep('idle');
+                setPreviewData(null);
+                setFileHeaders([]);
+              }}
+              style={{ ...selectStyle, flex: 1 }}
+            >
+              <option value="">— Sélectionner une PME —</option>
+              {companies.map(c => (
+                <option key={c.companyId} value={c.companyId}>{c.companyName}</option>
+              ))}
+            </select>
+
+            {importCompanyId && (
+              <button
+                onClick={() => downloadTemplate(importCompanyId)}
+                className="flex items-center gap-2 rounded-xl text-sm transition-all"
+                style={{
+                  padding: '9px 14px', whiteSpace: 'nowrap',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${T.border}`, color: T.muted,
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={e => { (e.currentTarget.style.background = 'rgba(255,255,255,0.09)'); (e.currentTarget.style.color = T.text); }}
+                onMouseLeave={e => { (e.currentTarget.style.background = 'rgba(255,255,255,0.05)'); (e.currentTarget.style.color = T.muted); }}
+              >
+                <IcoDownload /> Template Konza
+              </button>
+            )}
+          </div>
+
+          {/* ── Étape idle : zone drag & drop ── */}
+          {importCompanyId && importStep === 'idle' && (
+            <div
+              onClick={() => fileRef.current?.click()}
+              className="rounded-2xl p-10 text-center cursor-pointer transition-all"
+              style={{ border: `2px dashed ${T.border}` }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = `${T.cyan}50`)}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = T.border)}
+            >
+              <div style={{ color: T.dim, display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <IcoUpload />
+              </div>
+              <p className="text-sm" style={{ color: T.muted }}>
+                Glissez votre fichier ici ou cliquez pour parcourir
+              </p>
+              <p className="text-xs mt-1" style={{ color: T.dim }}>.xlsx, .xls, .csv acceptés</p>
+              <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} className="hidden" />
             </div>
           )}
 
-          {/* ── Sélecteur mois/année ─────────────────────────────────────── */}
-          <Card accentColor={C.cyan} className="p-5">
-            <p className="text-sm font-semibold mb-4" style={{ color: C.textPrimary }}>Période de traitement</p>
-            <div className="flex items-center gap-4">
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: C.textSecondary }}>Mois</label>
-                <select
-                  value={month}
-                  onChange={e => setMonth(Number(e.target.value))}
-                  className="px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
-                >
-                  {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-                </select>
+          {/* ── Loading ── */}
+          {importLoading && (
+            <div className="flex items-center justify-center gap-2 py-8">
+              <IcoLoader size={20} color={T.cyan} />
+              <span className="text-sm" style={{ color: T.muted }}>Traitement en cours...</span>
+            </div>
+          )}
+
+          {/* ── Étape mapping ── */}
+          {importStep === 'mapping' && !importLoading && (
+            <div>
+              <p className="text-sm mb-4" style={{ color: T.muted }}>
+                Faites correspondre les colonnes de votre fichier aux champs Konza.
+                Ce mapping sera mémorisé pour les prochains imports.
+              </p>
+              <div className="space-y-2 mb-5">
+                {fileHeaders.map(header => (
+                  <div key={header} className="flex items-center gap-3">
+                    <div className="flex-1 px-3 py-2 rounded-lg text-sm truncate"
+                         style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${T.border}`, color: T.muted }}>
+                      {header}
+                    </div>
+                    <span style={{ color: T.dim }}><IcoLink /></span>
+                    <select
+                      value={mapping[header] ?? 'ignore'}
+                      onChange={e => setMapping(prev => ({ ...prev, [header]: e.target.value }))}
+                      className="flex-1"
+                      style={selectStyle}
+                    >
+                      {KONZA_FIELDS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
+                    </select>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: C.textSecondary }}>Année</label>
-                <select
-                  value={year}
-                  onChange={e => setYear(Number(e.target.value))}
-                  className="px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
-                >
-                  {[2023,2024,2025,2026].map(y => <option key={y} value={y}>{y}</option>)}
-                </select>
+              <button
+                onClick={applyMapping}
+                disabled={importLoading}
+                className="flex items-center gap-2 rounded-xl text-sm font-semibold transition-all"
+                style={{
+                  padding: '9px 18px',
+                  background: importLoading ? 'rgba(6,182,212,0.4)' : T.cyan,
+                  color: '#000', border: 'none', cursor: importLoading ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Aperçu de l'import <IcoArrow />
+              </button>
+            </div>
+          )}
+
+          {/* ── Étape preview ── */}
+          {importStep === 'preview' && previewData && !importLoading && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 text-sm" style={{ color: T.emerald }}>
+                    <IcoCheck color={T.emerald} /> {previewData.matchedCount} employés reconnus
+                  </div>
+                  {previewData.unmatchedCount > 0 && (
+                    <div className="flex items-center gap-1.5 text-sm" style={{ color: T.amber }}>
+                      <IcoAlert color={T.amber} /> {previewData.unmatchedCount} non reconnus
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setImportStep('mapping')}
+                    className="text-xs transition-all"
+                    style={{ color: T.muted, background: 'none', border: 'none', cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = T.text)}
+                    onMouseLeave={e => (e.currentTarget.style.color = T.muted)}
+                  >
+                    ← Modifier mapping
+                  </button>
+                  <button
+                    onClick={confirmImport}
+                    disabled={importLoading}
+                    className="flex items-center gap-2 rounded-xl text-sm font-semibold transition-all"
+                    style={{
+                      padding: '8px 16px',
+                      background: importLoading ? 'rgba(16,185,129,0.4)' : T.emerald,
+                      color: '#000', border: 'none', cursor: importLoading ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    Confirmer l'import
+                  </button>
+                </div>
+              </div>
+
+              {/* Tableau prévisualisation */}
+              <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+                <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: `1px solid ${T.border}` }}>
+                      {['Employé','Jours','Abs.','H.sup ×1.10','H.sup ×1.25','Avance','Statut'].map(h => (
+                        <th key={h} className="px-3 py-2 text-left font-medium" style={{ color: T.muted }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(previewData.rows ?? []).slice(0, 10).map((row: any, i: number) => (
+                      <tr key={i}
+                          style={{
+                            background: row.matchError ? 'rgba(245,158,11,0.05)' : 'transparent',
+                            borderBottom: `1px solid ${T.border}`,
+                          }}>
+                        <td className="px-3 py-2" style={{ color: T.text }}>{row.firstName} {row.lastName}</td>
+                        <td className="px-3 py-2" style={{ color: T.muted }}>{row.workedDays}</td>
+                        <td className="px-3 py-2" style={{ color: T.muted }}>{row.absentDays || '—'}</td>
+                        <td className="px-3 py-2" style={{ color: T.muted }}>{row.overtime10 || '—'}</td>
+                        <td className="px-3 py-2" style={{ color: T.muted }}>{row.overtime25 || '—'}</td>
+                        <td className="px-3 py-2" style={{ color: T.muted }}>{row.advance || '—'}</td>
+                        <td className="px-3 py-2">
+                          {row.matchError ? (
+                            <span className="flex items-center gap-1" style={{ color: T.amber }}>
+                              <IcoAlert color={T.amber} size={11} /> Non trouvé
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1" style={{ color: T.emerald }}>
+                              <IcoCheck color={T.emerald} size={11} /> OK
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(previewData.rows?.length ?? 0) > 10 && (
+                  <p className="text-center text-xs py-2" style={{ color: T.dim }}>
+                    + {previewData.rows.length - 10} autres lignes
+                  </p>
+                )}
               </div>
             </div>
-          </Card>
+          )}
 
-          <div className="grid grid-cols-2 gap-5">
-
-            {/* ── Clôture batch ────────────────────────────────────────── */}
-            <Card>
-              <SectionHeader
-                title="Clôture batch"
-                sub="Générer tous les bulletins d'un coup"
-                action={
-                  <Btn
-                    variant="primary"
-                    size="sm"
-                    icon={
-                      batchRunning
-                        ? <Ico.Loader size={14} color="#fff" />
-                        : (
-                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M3 2l9 5-9 5V2z" fill="white"/>
-                          </svg>
-                        )
-                    }
-                    onClick={launchBatch}
-                  >
-                    {batchRunning ? 'En cours…' : 'Lancer'}
-                  </Btn>
-                }
-              />
-              <div className="p-5">
-                {!progress ? (
-                  <div className="py-8 text-center text-sm" style={{ color: C.textMuted }}>
-                    Cliquez sur "Lancer" pour générer les bulletins de {MONTHS[month - 1]} {year} pour toutes vos PME.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Progress bar globale */}
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-2">
-                        <span style={{ color: C.textSecondary }}>
-                          {progress.processedCount} / {progress.totalCompanies} PME
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span style={{ color: C.emerald }}>✓ {progress.successCount}</span>
-                          {progress.failedCount > 0 && <span style={{ color: C.red }}>✗ {progress.failedCount}</span>}
-                        </div>
-                      </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${progress.totalCompanies > 0 ? (progress.processedCount / progress.totalCompanies) * 100 : 0}%`,
-                            background: C.indigo,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Items */}
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {progress.items.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg"
-                             style={{ background: 'rgba(255,255,255,0.03)' }}>
-                          <Avatar name={item.companyName.slice(0, 2)} size={26} index={i} />
-                          <p className="flex-1 text-xs font-medium truncate" style={{ color: C.textPrimary }}>
-                            {item.companyName}
-                          </p>
-                          <Badge label={statusLabel(item.status)} variant={statusVariant(item.status)} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          {/* ── Étape done ── */}
+          {importStep === 'done' && (
+            <div className="text-center py-8">
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+                <IcoCheck color={T.emerald} size={40} />
               </div>
-            </Card>
-
-            {/* ── Import CSV ───────────────────────────────────────────── */}
-            <Card>
-              <SectionHeader title="Import CSV" sub="Variables de paie par fichier" />
-              <div className="p-5 space-y-4">
-
-                {/* Sélection PME */}
-                <div>
-                  <label className="block text-xs mb-1.5" style={{ color: C.textSecondary }}>PME cible</label>
-                  <select
-                    value={selectedComp}
-                    onChange={e => setSelectedComp(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
-                  >
-                    <option value="">Sélectionner…</option>
-                    {companies.map(c => (
-                      <option key={c.companyId} value={c.companyId}>
-                        {c.tradeName || c.legalName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Upload zone */}
-                <div
-                  className="flex flex-col items-center gap-2 py-6 rounded-xl cursor-pointer transition-all"
-                  style={{
-                    border: `1.5px dashed ${C.border}`,
-                    background: 'rgba(255,255,255,0.02)',
-                  }}
-                  onClick={() => fileRef.current?.click()}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = C.indigo)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}
-                >
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <path d="M4 20v2a2 2 0 002 2h16a2 2 0 002-2v-2M14 4v14M8 10l6-6 6 6" stroke={C.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <p className="text-xs" style={{ color: C.textMuted }}>
-                    {csvHeaders.length > 0 ? `${csvRows.length} lignes chargées` : 'Cliquer pour sélectionner un CSV'}
-                  </p>
-                  <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleFile} />
-                </div>
-
-                {/* Mapping colonnes */}
-                {csvHeaders.length > 0 && (
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    <p className="text-xs font-medium" style={{ color: C.textSecondary }}>Correspondance colonnes</p>
-                    {csvHeaders.map(h => (
-                      <div key={h} className="flex items-center gap-2">
-                        <span className="text-xs flex-1 truncate" style={{ color: C.textMuted }}>{h}</span>
-                        <select
-                          value={mapping[h] ?? 'ignore'}
-                          onChange={e => setMapping(prev => ({ ...prev, [h]: e.target.value }))}
-                          className="text-xs px-2 py-1.5 rounded-lg outline-none"
-                          style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${C.border}`, color: C.textPrimary }}
-                        >
-                          {KONZA_FIELDS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {csvHeaders.length > 0 && (
-                  <Btn
-                    variant="primary"
-                    icon={<Ico.FileText size={14} color="#fff" />}
-                    onClick={submitImport}
-                  >
-                    {importing ? 'Import en cours…' : 'Importer'}
-                  </Btn>
-                )}
-
-                {importResult && (
-                  <div className="px-3 py-2 rounded-xl text-xs"
-                       style={{ background: 'rgba(16,185,129,0.1)', border: `1px solid rgba(16,185,129,0.2)`, color: '#34d399' }}>
-                    Import réussi · {importResult.updatedCount ?? importResult.count ?? 0} employé(s) mis à jour
-                  </div>
-                )}
-              </div>
-            </Card>
-
-          </div>
-
+              <p className="font-semibold" style={{ color: T.text }}>Import réussi</p>
+              <p className="text-sm mt-1" style={{ color: T.muted }}>
+                {previewData?.applied} lignes importées · {previewData?.skipped} ignorées
+              </p>
+              <button
+                onClick={() => router.push(`/cabinet/${cabinetId}/entreprise/${importCompanyId}/paie`)}
+                className="mt-4 flex items-center gap-2 rounded-xl text-sm font-semibold mx-auto transition-all"
+                style={{
+                  padding: '9px 18px',
+                  background: T.cyan, color: '#000', border: 'none', cursor: 'pointer',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+              >
+                Saisir les variables <IcoArrow />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
