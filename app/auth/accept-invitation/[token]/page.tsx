@@ -94,7 +94,7 @@ export default function AcceptInvitationPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get<InvitationInfo>(`/cabinet/invitation-info/${token}`);
+        const res = await api.get<InvitationInfo>(`/auth/invitation-info/${token}`);
         setInfo(res);
         setStep('form');
       } catch (e: any) {
@@ -129,7 +129,7 @@ export default function AcceptInvitationPage() {
 
     try {
       // 1. Créer le compte via accept-invitation
-      await api.post(`/cabinet/accept-invitation/${token}`, {
+      await api.post(`/auth/accept-invitation/${token}`, {
         password,
         firstName: firstName.trim(),
         lastName:  lastName.trim(),
