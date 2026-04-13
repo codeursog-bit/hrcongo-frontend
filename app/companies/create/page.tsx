@@ -154,7 +154,7 @@ export default function CreateCompanyPage() {
       await api.post('/companies', {
         legalName: form.legalName,
         tradeName: form.tradeName || undefined,
-        rccmNumber: form.rccmNumber || 'EN-COURS',
+        rccmNumber: form.rccmNumber || undefined ,
         cnssNumber: form.cnssNumber || undefined,
         taxNumber: form.taxNumber || undefined,
         address: form.address,
@@ -416,7 +416,7 @@ export default function CreateCompanyPage() {
                   <Field label="Nom Commercial" name="tradeName" value={form.tradeName} onChange={handleChange}
                     placeholder="Ex: InnoTech" colorKey="sky" />
                   <Field label="Secteur d'Activité" name="industry" value={form.industry} onChange={handleChange}
-                    placeholder="Ex: Technologie, Commerce..." colorKey="sky" />
+                    placeholder="Ex: Technologie, Commerce..."  required colorKey="sky" />
                   <Field label="N° RCCM" name="rccmNumber" value={form.rccmNumber} onChange={handleChange}
                     placeholder="CG-BZV-01-2024-B12-00123" mono colorKey="sky" hint="Optionnel" />
                   <Field label="N° CNSS Employeur" name="cnssNumber" value={form.cnssNumber} onChange={handleChange}
