@@ -27,8 +27,7 @@ import {
   ArrowLeft, Save, AlertTriangle, Calculator, Percent, Clock,
   Calendar, Shield, Info, Loader2, CheckCircle2, Moon, Sun,
   ToggleLeft, ToggleRight, Zap, ChevronRight, FileText,
-  Users, Gift, Banknote, ClipboardList, Landmark, X,
-  Play, User, Plus, Trash2, ChevronDown, ChevronUp
+  Users, Gift, Banknote, ClipboardList, Landmark, X
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -98,9 +97,9 @@ const DAYS = [
 // ITS Congo 2026 (barème de référence)
 const DEFAULT_ITS_BRACKETS = [
    { min: 0,         max: 615000,   rate: 0,        label: '0 – 615 000 FCFA (1 200 F fixe)'          },
-  { min: 615000,   max: 1500_000, rate: 0.10,      label: '615 001 – 1 500 000 FCFA (10%)'           },
-  { min: 1500_000, max: 3500_000, rate: 0.15,      label: '1 500 001 – 3 500 000 FCFA (15%)'         },
-  { min: 3500_000, max: 5000_000, rate: 0.20,      label: '3 500 001 – 5 000 000 FCFA (20%)'         },
+  { min: 615000,   max: 1500000, rate: 0.10,      label: '615 001 – 1 500 000 FCFA (10%)'           },
+  { min: 1500_000, max: 3500000, rate: 0.15,      label: '1 500 001 – 3 500 000 FCFA (15%)'         },
+  { min: 3500_000, max: 5000000, rate: 0.20,      label: '3 500 001 – 5 000 000 FCFA (20%)'         },
   { min: 5000_000, max: null,  rate: 0.30,      label: '> 5 000 000 FCFA (30%)'                   },
 ];
 
@@ -164,19 +163,9 @@ export default function PayrollSettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [saved, setSaved]           = useState(false);
 
-  // ── Simulateur de bulletin ──────────────────────────────────────────────────
-  const [simBaseSalary, setSimBaseSalary]   = useState('');
-  const [simWorkedDays, setSimWorkedDays]   = useState(26);
-  const [simOt10, setSimOt10]               = useState(0);
-  const [simOt25, setSimOt25]               = useState(0);
-  const [simOt50, setSimOt50]               = useState(0);
-  const [simBonuses, setSimBonuses]         = useState<{id:string;label:string;amount:number;taxable:boolean}[]>([]);
-  const [simApplyCnss, setSimApplyCnss]     = useState(true);
-  const [simApplyIts, setSimApplyIts]       = useState(true);
-  const [simResult, setSimResult]           = useState<any>(null);
-  const [simLoading, setSimLoading]         = useState(false);
-  const [simError, setSimError]             = useState('');
-  const [simExpanded, setSimExpanded]       = useState(false);
+  // Simulateur ITS
+  const [simIncome, setSimIncome]   = useState(450000);
+  const [simResult, setSimResult]   = useState<any>(null);
 
   // ── Chargement ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -256,72 +245,25 @@ const handleSave = async () => {
   };
  
 
-  // ── Simulation bulletin complet ─────────────────────────────────────────────
-  const uid = () => Math.random().toString(36).slice(2, 8);
+  // ── Simulateur ITS ──────────────────────────────────────────────────────────
+  const calculateITS = () => {
+    const brackets = settings.taxBrackets || DEFAULT_ITS_BRACKETS;
+    let tax = 0;
+    const breakdown: any[] = [];
 
-  const handleSimulate = async () => {
-    const base = Number(simBaseSalary);
-    if (!base || base < 70400) {
-      setSimError('Salaire de base requis (min. 70 400 FCFA).');
-      return;
-    }
-    setSimLoading(true); setSimError(''); setSimResult(null);
-    try {
-      const now = new Date();
-      const payload: Record<string, any> = {
-        firstName: 'Simulation', lastName: '',
-        baseSalary: base,
-        workedDays: simWorkedDays,
-        workDays: settings.workDaysPerMonth,
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
-        overtimeHours10: simOt10,
-        overtimeHours25: simOt25,
-        overtimeHours50: simOt50,
-        overtimeHours100: 0,
-        isSubjectToCnss: simApplyCnss,
-        isSubjectToIrpp: simApplyIts,
-        fiscalMode: settings.fiscalMode,
-        forfaitItsRate: settings.fiscalMode === 'FORFAIT' ? settings.forfaitItsRate : undefined,
-      };
-      const validBonuses = simBonuses.filter(b => b.label.trim() && b.amount > 0);
-      if (validBonuses.length > 0) {
-        payload.manualBonuses = validBonuses.map(b => ({
-          bonusType: b.label, amount: b.amount, isTaxable: b.taxable, isCnss: b.taxable,
-        }));
+    for (const b of brackets) {
+      const lo   = b.min;
+      const hi   = b.max ?? Number.MAX_SAFE_INTEGER;
+      const chunk = Math.max(0, Math.min(simIncome, hi) - lo + 1);
+      const amt   = chunk * b.rate;
+      if (chunk > 0) {
+        breakdown.push({ range: `${lo.toLocaleString('fr-FR')} – ${b.max ? b.max.toLocaleString('fr-FR') : '∞'}`, rate: b.label || `${(b.rate * 100).toFixed(0)}%`, amount: Math.round(amt) });
+        tax += amt;
       }
-      const data: any = await api.post('/payrolls/simulate-free', payload);
-      setSimResult(data);
-      setSimExpanded(true);
-    } catch (e: any) {
-      // Fallback calcul local si l'endpoint n'est pas dispo
-      const base2 = Number(simBaseSalary);
-      const absenceDeduct = Math.round(base2 - (base2 / settings.workDaysPerMonth) * simWorkedDays);
-      const adjustedBase = base2 - absenceDeduct;
-      const bonusTotal = simBonuses.reduce((s, b) => s + b.amount, 0);
-      const gross = adjustedBase + bonusTotal;
-      const cnssCeiling = 1200000;
-      const cnssBase = Math.min(gross, cnssCeiling);
-      const cnssSal = simApplyCnss ? Math.round(cnssBase * 0.04) : 0;
-      const taxableBase = gross - cnssSal;
-      const abat = Math.round(taxableBase * 0.20);
-      const imposable = taxableBase - abat;
-      let its = 0;
-      if (simApplyIts) {
-        const brackets = DEFAULT_ITS_BRACKETS;
-        for (const b of brackets) {
-          const lo = b.min; const hi = b.max ?? 1e12;
-          const chunk = Math.max(0, Math.min(imposable, hi) - lo);
-          its += chunk * b.rate;
-        }
-        its = Math.round(its);
-      }
-      const net = gross - cnssSal - its;
-      setSimResult({ grossSalary: gross, cnssSalarial: cnssSal, its, netSalary: net, _local: true });
-      setSimExpanded(true);
-    } finally {
-      setSimLoading(false);
     }
+    // Abattement 20%
+    const net = simIncome - Math.round(tax);
+    setSimResult({ breakdown, total: Math.round(tax), net });
   };
 
   // ── Tabs config ─────────────────────────────────────────────────────────────
@@ -883,170 +825,50 @@ const handleSave = async () => {
             </p>
           </div>
 
-          {/* ── Simulateur bulletin (toujours visible) ─── */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl text-white shadow-xl overflow-hidden">
-            <button
-              onClick={() => setSimExpanded(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 border-b border-gray-700/60"
-            >
-              <div className="flex items-center gap-2">
-                <Calculator size={16} className="text-sky-400" />
-                <span className="font-bold text-sm">Simulateur de bulletin</span>
+          {/* Simulateur ITS (uniquement sur l'onglet ITS) */}
+          {activeTab === 'its' && (
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 text-white shadow-xl">
+              <div className="flex items-center gap-2 mb-5 pb-4 border-b border-gray-700">
+                <Calculator size={18} className="text-sky-400" />
+                <h3 className="font-bold">Simulateur ITS / IRPP</h3>
               </div>
-              {simExpanded ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
-            </button>
-
-            <div className="p-5 space-y-4">
-              {/* Salaire de base */}
-              <div>
-                <label className="text-[11px] text-gray-400 uppercase font-bold tracking-wider block mb-1.5">Salaire de base (FCFA)</label>
-                <input
-                  type="number"
-                  placeholder="ex: 350 000"
-                  value={simBaseSalary}
-                  onChange={e => { setSimBaseSalary(e.target.value); setSimResult(null); }}
-                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white font-mono font-bold placeholder-gray-600 focus:border-sky-500 focus:outline-none text-sm"
-                />
-              </div>
-
-              {/* Jours travaillés */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-[11px] text-gray-400 uppercase font-bold tracking-wider block mb-1.5">Jours travaillés</label>
-                  <input type="number" min={0} max={31}
-                    value={simWorkedDays}
-                    onChange={e => { setSimWorkedDays(+e.target.value); setSimResult(null); }}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white font-bold text-center focus:border-sky-500 focus:outline-none text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-gray-400 uppercase font-bold tracking-wider block mb-1.5">Jours / mois</label>
-                  <div className="px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-gray-400 font-bold text-center text-sm">
-                    {settings.workDaysPerMonth}
-                  </div>
-                </div>
-              </div>
-
-              {/* Heures sup rapides */}
-              <div>
-                <label className="text-[11px] text-gray-400 uppercase font-bold tracking-wider block mb-2">Heures supp.</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: '+10%', val: simOt10, set: setSimOt10 },
-                    { label: '+25%', val: simOt25, set: setSimOt25 },
-                    { label: '+50%', val: simOt50, set: setSimOt50 },
-                  ].map(({ label, val, set: setFn }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <span className="text-[11px] text-gray-500 w-8">{label}</span>
-                      <input type="number" min={0} max={100}
-                        value={val}
-                        onChange={e => { setFn(+e.target.value); setSimResult(null); }}
-                        className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white font-mono text-xs text-center focus:border-amber-500 focus:outline-none"
-                      />
-                      <span className="text-[11px] text-gray-600">h</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Primes */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Primes</label>
-                  <button
-                    onClick={() => setSimBonuses(b => [...b, { id: uid(), label: '', amount: 0, taxable: true }])}
-                    className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-bold"
-                  >
-                    <Plus size={11} /> Ajouter
-                  </button>
-                </div>
-                {simBonuses.map(b => (
-                  <div key={b.id} className="flex items-center gap-2 mb-2">
-                    <input
-                      placeholder="Prime transport..."
-                      value={b.label}
-                      onChange={e => setSimBonuses(p => p.map(x => x.id === b.id ? { ...x, label: e.target.value } : x))}
-                      className="flex-1 min-w-0 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-xs placeholder-gray-600 focus:border-sky-500 focus:outline-none"
-                    />
+                  <label className="text-xs text-gray-400 uppercase font-bold">Revenu imposable annuel</label>
+                  <div className="relative mt-1.5">
                     <input type="number"
-                      value={b.amount || ''}
-                      onChange={e => setSimBonuses(p => p.map(x => x.id === b.id ? { ...x, amount: +e.target.value } : x))}
-                      className="w-20 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-white font-mono text-xs text-center focus:border-sky-500 focus:outline-none"
+                      value={simIncome}
+                      onChange={e => setSimIncome(+e.target.value)}
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white font-mono font-bold focus:border-sky-500"
                     />
-                    <button onClick={() => setSimBonuses(p => p.filter(x => x.id !== b.id))}
-                      className="text-gray-600 hover:text-red-400 transition-colors">
-                      <Trash2 size={13} />
-                    </button>
+                    <span className="absolute right-3 top-2.5 text-xs text-gray-400">XAF</span>
                   </div>
-                ))}
-              </div>
-
-              {/* CNSS / ITS toggles */}
-              <div className="flex gap-2">
-                {[
-                  { label: 'CNSS', val: simApplyCnss, set: setSimApplyCnss, color: 'bg-purple-600' },
-                  { label: 'ITS', val: simApplyIts, set: setSimApplyIts, color: 'bg-orange-600' },
-                ].map(({ label, val, set: setFn, color }) => (
-                  <button key={label}
-                    onClick={() => { setFn(!val); setSimResult(null); }}
-                    className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
-                      val ? `${color} border-transparent text-white` : 'border-gray-700 text-gray-500 bg-transparent'
-                    }`}>
-                    {label} {val ? '✓' : '✗'}
-                  </button>
-                ))}
-              </div>
-
-              {simError && (
-                <p className="text-xs text-red-400 bg-red-900/20 border border-red-800 rounded-lg px-3 py-2">{simError}</p>
-              )}
-
-              <button
-                onClick={handleSimulate}
-                disabled={simLoading || !simBaseSalary}
-                className="w-full py-2.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-40 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-              >
-                {simLoading ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                {simLoading ? 'Calcul...' : 'Simuler le bulletin'}
-              </button>
-
-              {/* Résultats */}
-              {simResult && simExpanded && (
-                <div className="pt-4 border-t border-gray-700 space-y-2">
-                  <p className="text-[11px] text-gray-500 uppercase font-bold tracking-wider mb-3">Résultat de simulation</p>
-                  {[
-                    { label: 'Salaire brut',    value: simResult.grossSalary,    color: 'text-white' },
-                    { label: 'CNSS salarié',    value: -simResult.cnssSalarial,  color: 'text-red-400' },
-                    { label: 'ITS / IRPP',      value: -simResult.its,           color: 'text-orange-400' },
-                    ...(simResult.totalLoanDeduction > 0 ? [{ label: 'Prêts', value: -simResult.totalLoanDeduction, color: 'text-red-400' }] : []),
-                    ...(simResult.totalAdvanceDeduction > 0 ? [{ label: 'Avances', value: -simResult.totalAdvanceDeduction, color: 'text-red-400' }] : []),
-                  ].map(({ label, value, color }) => value !== undefined && value !== 0 && (
-                    <div key={label} className="flex justify-between text-sm">
-                      <span className="text-gray-400">{label}</span>
-                      <span className={`font-mono font-bold ${color}`}>
-                        {value < 0 ? '−' : ''}{Math.abs(Math.round(value || 0)).toLocaleString('fr-FR')}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between pt-3 border-t border-gray-700">
-                    <span className="font-black text-base">Net à payer</span>
-                    <span className="font-black font-mono text-emerald-400 text-lg">
-                      {Math.round(simResult.netSalary || 0).toLocaleString('fr-FR')} <span className="text-sm text-gray-500">XAF</span>
-                    </span>
-                  </div>
-                  {simResult.totalEmployerCost > 0 && (
-                    <div className="flex justify-between text-xs text-gray-500 pt-1">
-                      <span>Coût total employeur</span>
-                      <span className="font-mono">{Math.round(simResult.totalEmployerCost).toLocaleString('fr-FR')}</span>
-                    </div>
-                  )}
-                  {simResult._local && (
-                    <p className="text-[10px] text-gray-600 text-center pt-1">* Calcul approximatif local</p>
-                  )}
                 </div>
-              )}
+                <button onClick={calculateITS}
+                  className="w-full py-2.5 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold text-sm transition-colors">
+                  Calculer
+                </button>
+                {simResult && (
+                  <div className="space-y-2 pt-4 border-t border-gray-700">
+                    {simResult.breakdown.map((b: any, i: number) => (
+                      <div key={i} className="flex justify-between text-xs text-gray-400">
+                        <span>{b.range}</span>
+                        <span className="font-mono">{b.amount.toLocaleString('fr-FR')}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between font-bold text-orange-400 pt-2 border-t border-gray-700">
+                      <span>Total ITS</span>
+                      <span className="font-mono">{simResult.total.toLocaleString('fr-FR')}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-emerald-400 text-lg">
+                      <span>Net</span>
+                      <span className="font-mono">{simResult.net.toLocaleString('fr-FR')}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Raccourcis */}
           <QuickLinks router={router} />
