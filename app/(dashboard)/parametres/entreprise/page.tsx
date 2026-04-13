@@ -241,32 +241,38 @@ const handleLogoUpload = async () => {
   if (!logoFile || !companyId) return;
   setLogoUploading(true);
   try {
-    const token = localStorage.getItem('token');
     const form = new FormData();
     form.append('logo', logoFile);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/companies/${companyId}/logo`, {
-      method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form,
-    });
-    if (!res.ok) throw new Error((await res.json()).message || 'Erreur upload');
-    const data = await res.json();
-    setCurrentLogo(data.logo); setLogoFile(null);
+
+    // On utilise postFormData pour que le header Content-Type soit géré correctement
+    const data = await api.postFormData<any>(`/companies/${companyId}/logo`, form);
+    
+    setCurrentLogo(data.logo);
+    setLogoFile(null);
     alert.success('Logo enregistré', 'Apparaîtra sur les bulletins de paie.');
-  } catch (e: any) { alert.error('Erreur upload logo', e.message); }
-  finally { setLogoUploading(false); }
+  } catch (e: any) { 
+    alert.error('Erreur upload logo', e.message); 
+  } finally { 
+    setLogoUploading(false); 
+  }
 };
 
 const handleLogoDelete = async () => {
   if (!companyId) return;
   setLogoUploading(true);
   try {
-    const token = localStorage.getItem('token');
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/companies/${companyId}/logo`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-    });
-    setCurrentLogo(null); setLogoPreview(null); setLogoFile(null);
+    // Utilisation de la méthode delete standard du service
+    await api.delete(`/companies/${companyId}/logo`);
+
+    setCurrentLogo(null);
+    setLogoPreview(null);
+    setLogoFile(null);
     alert.success('Logo supprimé', '');
-  } catch (e: any) { alert.error('Erreur', e.message); }
-  finally { setLogoUploading(false); }
+  } catch (e: any) { 
+    alert.error('Erreur', e.message); 
+  } finally { 
+    setLogoUploading(false); 
+  }
 };
 
 const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLogo); };
