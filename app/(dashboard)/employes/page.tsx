@@ -7,7 +7,7 @@ import {
   Search, Plus, LayoutGrid, List,
   Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Briefcase,
-  BadgeCheck, Building2, X, Lock,
+  BadgeCheck, Building2, X, Lock,FileText,
   Loader2, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -299,7 +299,7 @@ export default function EmployeeListPage() {
       </AnimatePresence>
 
       {/* ── HEADER ── */}
-<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
   <div>
     <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Employés</h1>
     <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
@@ -317,7 +317,7 @@ export default function EmployeeListPage() {
     {/* --- ✅ BOUTON GÉRER LES CONTRATS (Visible uniquement pour RH/Admin) --- */}
     {canCreate && (
       <Link 
-        href="/contrats" 
+        href="/employes/contrats" 
         className="px-5 py-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
       >
         <FileText size={20} className="text-sky-500" /> 
