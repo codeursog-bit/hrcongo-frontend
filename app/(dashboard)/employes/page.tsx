@@ -317,7 +317,7 @@ export default function EmployeeListPage() {
     {/* --- ✅ BOUTON GÉRER LES CONTRATS (Visible uniquement pour RH/Admin) --- */}
     {canCreate && (
       <Link 
-        href="/employes/contrats" 
+        href="/contrats" 
         className="px-5 py-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
       >
         <FileText size={20} className="text-sky-500" /> 
