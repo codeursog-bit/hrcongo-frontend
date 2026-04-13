@@ -244,7 +244,7 @@ const handleLogoUpload = async () => {
     const token = localStorage.getItem('token');
     const form = new FormData();
     form.append('logo', logoFile);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/companies/${companyId}/logo`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/companies/${companyId}/logo`, {
       method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form,
     });
     if (!res.ok) throw new Error((await res.json()).message || 'Erreur upload');
