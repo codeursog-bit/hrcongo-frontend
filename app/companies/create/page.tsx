@@ -135,7 +135,7 @@ export default function CreateCompanyPage() {
   const validateStep = (): string | null => {
     if (step === 1) {
       if (!form.legalName.trim()) return "Le nom légal est requis.";
-      if (!form.rccmNumber.trim()) return "Le numéro RCCM est requisis.";
+      if (!form.rccmNumber.trim()) return "Le numéro RCCM est requis.";
     }
     if (step === 2) {
       if (!form.address.trim() || !form.city.trim()) return "L'adresse et la ville sont requises.";
