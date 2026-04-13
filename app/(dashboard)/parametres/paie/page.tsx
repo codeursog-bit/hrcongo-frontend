@@ -96,12 +96,11 @@ const DAYS = [
 
 // ITS Congo 2026 (barème de référence)
 const DEFAULT_ITS_BRACKETS = [
-  { min: 0,        max: 464000,   rate: 0,    label: '0%'  },
-  { min: 464001,   max: 1000000,  rate: 0.01, label: '1%'  },
-  { min: 1000001,  max: 3000000,  rate: 0.10, label: '10%' },
-  { min: 3000001,  max: 8000000,  rate: 0.25, label: '25%' },
-  { min: 8000001,  max: 13000000, rate: 0.40, label: '40%' },
-  { min: 13000001, max: null,     rate: 0.45, label: '45%' },
+   { min: 0,         max: 615000,   rate: 0,        label: '0 – 615 000 FCFA (1 200 F fixe)'          },
+  { min: 615000,   max: 1500_000, rate: 0.10,      label: '615 001 – 1 500 000 FCFA (10%)'           },
+  { min: 1500_000, max: 3500_000, rate: 0.15,      label: '1 500 001 – 3 500 000 FCFA (15%)'         },
+  { min: 3500_000, max: 5000_000, rate: 0.20,      label: '3 500 001 – 5 000 000 FCFA (20%)'         },
+  { min: 5000_000, max: null,  rate: 0.30,      label: '> 5 000 000 FCFA (30%)'                   },
 ];
 
 // ─── Composant Toast inline ───────────────────────────────────────────────────
@@ -222,10 +221,20 @@ export default function PayrollSettingsPage() {
   };
 
   // ── Sauvegarde ──────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+const handleSave = async () => {
     setIsSaving(true);
     try {
-      await api.patch('/payroll-settings', settings);
+      // ✅ Supprimer les champs qui appartiennent au modèle Company (pas PayrollSettings)
+      // pour éviter l'erreur "property X should not exist" côté backend NestJS
+      const {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        payrollPaymentDay,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        payrollCloseDay,
+        ...payrollPayload
+      } = settings as any;
+ 
+      await api.patch('/payroll-settings', payrollPayload);
       setShowConfirm(false);
       setSaved(true);
     } catch (e: any) {
@@ -234,6 +243,7 @@ export default function PayrollSettingsPage() {
       setIsSaving(false);
     }
   };
+ 
 
   // ── Simulateur ITS ──────────────────────────────────────────────────────────
   const calculateITS = () => {

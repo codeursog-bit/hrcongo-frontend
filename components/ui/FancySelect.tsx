@@ -1,5 +1,12 @@
 'use client';
 
+// ============================================================================
+// 📁 components/ui/FancySelect.tsx
+// ✅ FIX insertBefore — Le portal est rendu directement sans composant
+//    intermédiaire (DropdownPortal) pour éviter que AnimatePresence tente
+//    de manipuler un nœud déjà détaché de document.body.
+// ============================================================================
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,9 +39,15 @@ export const FancySelect: React.FC<FancySelectProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  // ✅ Guard SSR : le portal ne se monte que côté client
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Calculer la position du dropdown
   useEffect(() => {
@@ -43,7 +56,7 @@ export const FancySelect: React.FC<FancySelectProps> = ({
       setDropdownPosition({
         top: rect.bottom + 8,
         left: rect.left,
-        width: rect.width
+        width: rect.width,
       });
     }
   }, [isOpen]);
@@ -60,95 +73,25 @@ export const FancySelect: React.FC<FancySelectProps> = ({
         setIsOpen(false);
       }
     };
-    
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   // Fermer au scroll de la page (mais pas au scroll du dropdown)
   useEffect(() => {
     const handleScroll = (e: Event) => {
-      // Ne pas fermer si on scroll DANS le dropdown
-      if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) {
-        return;
-      }
+      if (dropdownRef.current && dropdownRef.current.contains(e.target as Node)) return;
       if (isOpen) setIsOpen(false);
     };
-    
-    if (isOpen) {
-      window.addEventListener('scroll', handleScroll, true);
-    }
-    
+    if (isOpen) window.addEventListener('scroll', handleScroll, true);
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [isOpen]);
 
   const selectedOption = options.find(opt => opt.value === value);
 
   const handleSelect = (optionValue: string) => {
-    console.log('Option clicked:', optionValue); // Debug
     onChange(optionValue);
     setIsOpen(false);
-  };
-
-  const DropdownPortal = () => {
-    if (typeof window === 'undefined' || !isOpen) return null;
-
-    return createPortal(
-      <motion.div
-        ref={dropdownRef}
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.15 }}
-        onWheel={(e) => {
-          // Empêcher le scroll de la page quand on scroll dans le dropdown
-          e.stopPropagation();
-        }}
-        style={{
-          position: 'fixed',
-          top: `${dropdownPosition.top}px`,
-          left: `${dropdownPosition.left}px`,
-          width: `${dropdownPosition.width}px`,
-          zIndex: 99999,
-          maxHeight: '300px',
-          pointerEvents: 'auto' // IMPORTANT !
-        }}
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-y-auto"
-      >
-        <div className="p-2">
-          {options.map((option) => {
-            const isSelected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault(); // Empêche la perte de focus
-                  e.stopPropagation();
-                  handleSelect(option.value);
-                }}
-                className={`
-                  w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer
-                  ${isSelected 
-                    ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400' 
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
-                `}
-              >
-                <span className="text-left">{option.label}</span>
-                {isSelected && <Check size={16} className="text-sky-500 flex-shrink-0" />}
-              </button>
-            );
-          })}
-          {options.length === 0 && (
-            <div className="p-4 text-center text-sm text-gray-400">Aucune option</div>
-          )}
-        </div>
-      </motion.div>,
-      document.body
-    );
   };
 
   return (
@@ -189,9 +132,66 @@ export const FancySelect: React.FC<FancySelectProps> = ({
         />
       </button>
 
-      <AnimatePresence>
-        {isOpen && <DropdownPortal />}
-      </AnimatePresence>
+      {/*
+        ✅ FIX insertBefore :
+        - On ne crée plus un composant "DropdownPortal" intermédiaire.
+        - AnimatePresence est à l'INTÉRIEUR du createPortal, pas à l'extérieur.
+        - Le guard `mounted` empêche le rendu SSR qui causerait un hydration mismatch.
+      */}
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              ref={dropdownRef}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              onWheel={(e) => e.stopPropagation()}
+              style={{
+                position: 'fixed',
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
+                zIndex: 99999,
+                maxHeight: '300px',
+                pointerEvents: 'auto',
+              }}
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-y-auto"
+            >
+              <div className="p-2">
+                {options.map((option) => {
+                  const isSelected = option.value === value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSelect(option.value);
+                      }}
+                      className={`
+                        w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer
+                        ${isSelected 
+                          ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400' 
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}
+                      `}
+                    >
+                      <span className="text-left">{option.label}</span>
+                      {isSelected && <Check size={16} className="text-sky-500 flex-shrink-0" />}
+                    </button>
+                  );
+                })}
+                {options.length === 0 && (
+                  <div className="p-4 text-center text-sm text-gray-400">Aucune option</div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };
