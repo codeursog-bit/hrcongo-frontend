@@ -299,30 +299,50 @@ export default function EmployeeListPage() {
       </AnimatePresence>
 
       {/* ── HEADER ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Employés</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            {totalEmployees} collaborateur{totalEmployees > 1 ? 's' : ''} actif{totalEmployees > 1 ? 's' : ''}
-            {isManager && (
-              <span className="ml-2 px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 rounded-full text-xs font-bold">
-                Votre département uniquement
-              </span>
-            )}
-          </p>
-        </div>
+<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div>
+    <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Employés</h1>
+    <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+      {totalEmployees} collaborateur{totalEmployees > 1 ? 's' : ''} actif{totalEmployees > 1 ? 's' : ''}
+      {isManager && (
+        <span className="ml-2 px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 rounded-full text-xs font-bold">
+          Votre département uniquement
+        </span>
+      )}
+    </p>
+  </div>
 
-        {canCreate ? (
-          <Link href="/employes/nouveau" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2">
-            <Plus size={20} /> Ajouter un employé
-          </Link>
-        ) : (
-          <div className="px-5 py-2.5 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 font-bold flex items-center gap-2 cursor-not-allowed select-none" title="Seuls les RH et administrateurs peuvent créer des employés">
-            <Lock size={16} /> Ajouter un employé
-          </div>
-        )}
+  <div className="flex items-center gap-3">
+    {/* --- ✅ BOUTON GÉRER LES CONTRATS (Visible uniquement pour RH/Admin) --- */}
+    {canCreate && (
+      <Link 
+        href="/contrats" 
+        className="px-5 py-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
+      >
+        <FileText size={20} className="text-sky-500" /> 
+        Gérer les contrats
+      </Link>
+    )}
+
+    {/* --- BOUTON AJOUTER --- */}
+    {canCreate ? (
+      <Link 
+        href="/employes/nouveau" 
+        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
+      >
+        <Plus size={20} /> Ajouter un employé
+      </Link>
+    ) : (
+      <div 
+        className="px-5 py-2.5 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 font-bold flex items-center gap-2 cursor-not-allowed select-none" 
+        title="Seuls les RH et administrateurs peuvent gérer les employés"
+      >
+        <Lock size={16} /> Ajouter un employé
       </div>
+    )}
+  </div>
+</div>
 
       {/* ── BARRE DE FILTRES ── */}
       <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
