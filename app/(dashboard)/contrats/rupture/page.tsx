@@ -180,6 +180,7 @@ export default function ContractRupturePage() {
   const [saving, setSaving]           = useState(false);
   const [saveError, setSaveError]     = useState('');
   const [saved, setSaved]             = useState(false);
+  const [ruptureId, setRuptureId]     = useState<string | null>(null);
 
   useEffect(() => {
     if (step !== 'select') return;
@@ -241,7 +242,7 @@ export default function ContractRupturePage() {
     setSaving(true);
     setSaveError('');
     try {
-      await api.post('/contract-rupture', {
+      const result = await api.post<{ ruptureId: string }>('/contract-rupture', {
         employeeId: selected.id,
         ruptureType: form.ruptureType,
         ruptureDate: form.ruptureDate,
@@ -255,6 +256,7 @@ export default function ContractRupturePage() {
         autresSommesDetail: form.autresSommesDetail || undefined,
         notes: form.notes || undefined,
       });
+      setRuptureId(result?.ruptureId ?? null);
       setSaved(true);
       setStep('confirm');
     } catch (e: any) {
@@ -679,10 +681,41 @@ export default function ContractRupturePage() {
             Le solde de tout compte de{' '}
             <strong className="text-emerald-600">{calc ? fmt(calc.totaux.net) : '—'}</strong> a été calculé et sauvegardé.
           </p>
+
+          {/* Documents légaux */}
+          {ruptureId && (
+            <div className="flex flex-col items-center gap-2 pt-2 w-full max-w-sm">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                Documents légaux obligatoires
+              </p>
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL ?? ''}/contract-rupture/${ruptureId}/lettre`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                Lettre de notification (art. 46 CT)
+              </a>
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL ?? ''}/contract-rupture/${ruptureId}/certificat`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition-colors"
+              >
+                <FileCheck className="w-4 h-4" />
+                Certificat de travail (art. 46 CT)
+              </a>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                Ouvrez chaque document puis utilisez Ctrl+P / Cmd+P pour imprimer
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => {
-                setStep('select'); setSelected(null); setCalc(null); setSaved(false);
+                setStep('select'); setSelected(null); setCalc(null); setSaved(false); setRuptureId(null);
                 setForm({ ruptureType: '', ruptureDate: new Date().toISOString().split('T')[0], causeCode: '', causeLabel: '', causeDetail: '', noticePeriodDays: '', noticeWorked: true, noticeWaived: false, autresSommesDues: '', autresSommesDetail: '', notes: '' });
               }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-sm font-semibold hover:bg-slate-800 transition-colors"
@@ -712,20 +745,52 @@ export default function ContractRupturePage() {
           )}
           <div className="grid gap-3">
             {history.map(h => (
-              <div key={h.employeeId} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60">
+              <div key={h.ruptureId ?? h.employeeId} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60">
                 <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/40 flex items-center justify-center text-sm font-bold text-red-600 dark:text-red-400 shrink-0">
                   {h.nom.split(' ').map((n: string) => n[0]).join('')}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-900 dark:text-white text-sm">{h.nom}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{h.poste} · {h.department ?? '—'}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs text-slate-400">Date rupture</p>
-                  <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-                    {h.terminationDate ? new Date(h.terminationDate).toLocaleDateString('fr-FR') : '—'}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {h.poste} · {h.department ?? '—'} · {h.causeLabel ?? h.ruptureType ?? '—'}
                   </p>
                 </div>
+                <div className="text-right shrink-0 mr-2">
+                  <p className="text-xs text-slate-400">Solde net</p>
+                  <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                    {h.totalNet != null ? fmt(h.totalNet) + ' FCFA' : '—'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {h.ruptureDate ? new Date(h.ruptureDate).toLocaleDateString('fr-FR') : '—'}
+                  </p>
+                </div>
+                {/* Boutons documents si la rupture a un ID (nouvelles ruptures) */}
+                {h.ruptureId && (
+                  <div className="flex flex-col gap-1 shrink-0">
+                    {h.hasLettre && (
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL ?? ''}/contract-rupture/${h.ruptureId}/lettre`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Lettre de notification"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 text-xs font-medium transition-colors"
+                      >
+                        <FileText className="w-3 h-3" /> Lettre
+                      </a>
+                    )}
+                    {h.hasCertificat && (
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL ?? ''}/contract-rupture/${h.ruptureId}/certificat`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Certificat de travail"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 text-xs font-medium transition-colors"
+                      >
+                        <FileCheck className="w-3 h-3" /> Certificat
+                      </a>
+                    )}
+                  </div>
+                )}
                 <Chip color={CONTRACT_COLORS[h.contractType]}>{CONTRACT_LABELS[h.contractType] ?? h.contractType}</Chip>
               </div>
             ))}
