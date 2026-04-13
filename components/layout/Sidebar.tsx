@@ -428,6 +428,14 @@ const navItems: NavItem[] = [
     path: '/presences/pointage-manuel',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
+   {
+    id: 'presences_equipe',
+    label: 'Présences Équipe',
+    icon: Users2,
+    path: '/presences',
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
+  },
+
 
   // ─── Section Manager ────────────────────────────────────────────────────────
   {
@@ -512,18 +520,18 @@ const navItems: NavItem[] = [
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
   {
-    id: 'rapports',
-    label: 'Rapports',
-    icon: BarChart3,
-    path: '/rapports',
-    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
-  },
-  {
     id: 'formation',
     label: 'Formation',
     icon: GraduationCap,
     path: '/formation',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'EMPLOYEE'],
+  },
+    {
+    id: 'rapports',
+    label: 'Rapports',
+    icon: BarChart3,
+    path: '/rapports',
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
   {
     id: 'parametres',
