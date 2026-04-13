@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   FileText, Clock, CheckCircle2, AlertTriangle, ChevronRight,
   Loader2, Search, RefreshCw, RotateCcw, TrendingUp, AlertCircle,
-  XCircle, ChevronDown, UserX, Shield, Calculator, Users,
-  CalendarX, Gavel, Info, Check,
+  XCircle, UserX, Shield, Calculator, ArrowLeft, Gavel,
+  Infinity, CalendarDays, GraduationCap, Briefcase, Handshake,
+  RefreshCcw, Check, Info,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { differenceInDays } from 'date-fns';
@@ -38,14 +40,23 @@ interface TrialEmployee {
   department?: { name: string };
 }
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
-const CONTRACT_META: Record<string, { icon: string; label: string; color: string; badge: string }> = {
-  CDI:         { icon: '♾️', label: 'CDI',         color: 'blue',   badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
-  CDD:         { icon: '📅', label: 'CDD',         color: 'amber',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
-  STAGE:       { icon: '🎓', label: 'Stage',       color: 'purple', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400' },
-  CONSULTANT:  { icon: '💼', label: 'Consultant',  color: 'teal',   badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' },
-  PRESTATAIRE: { icon: '🤝', label: 'Prestataire', color: 'slate',  badge: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
-  INTERIM:     { icon: '🔄', label: 'Intérim',     color: 'orange', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' },
+// ─── Icônes par type de contrat (remplace les emojis) ────────────────────────
+const CONTRACT_TYPE_ICON: Record<string, React.ElementType> = {
+  CDI:         Infinity,
+  CDD:         CalendarDays,
+  STAGE:       GraduationCap,
+  CONSULTANT:  Briefcase,
+  PRESTATAIRE: Handshake,
+  INTERIM:     RefreshCcw,
+};
+
+const CONTRACT_META: Record<string, { label: string; color: string; badge: string }> = {
+  CDI:         { label: 'CDI',         color: 'blue',   badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
+  CDD:         { label: 'CDD',         color: 'amber',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  STAGE:       { label: 'Stage',       color: 'purple', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400' },
+  CONSULTANT:  { label: 'Consultant',  color: 'teal',   badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' },
+  PRESTATAIRE: { label: 'Prestataire', color: 'slate',  badge: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
+  INTERIM:     { label: 'Intérim',     color: 'orange', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' },
 };
 
 const TEMP_CONTRACTS = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
@@ -67,19 +78,20 @@ type Tab = 'actifs' | 'expirant' | 'essais' | 'bnc' | 'termines';
 // ─── Composants ───────────────────────────────────────────────────────────────
 function ContractBadge({ type }: { type: string }) {
   const m = CONTRACT_META[type];
+  const Icon = CONTRACT_TYPE_ICON[type];
   if (!m) return <span className="text-xs font-semibold text-slate-500">{type}</span>;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${m.badge}`}>
-      {m.icon} {m.label}
+      {Icon && <Icon className="w-3 h-3" />} {m.label}
     </span>
   );
 }
 
 function UrgencyBadge({ days, status }: { days: number; status: string }) {
   if (status === 'EXPIRED') return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">Expiré</span>;
-  if (days <= 3)  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">🔴 J-{days}</span>;
-  if (days <= 7)  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400">🟠 J-{days}</span>;
-  if (days <= 14) return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">🟡 J-{days}</span>;
+  if (days <= 3)  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 flex items-center gap-1"><XCircle className="w-3 h-3" /> J-{days}</span>;
+  if (days <= 7)  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> J-{days}</span>;
+  if (days <= 14) return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 flex items-center gap-1"><Clock className="w-3 h-3" /> J-{days}</span>;
   return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">J-{days}</span>;
 }
 
@@ -136,8 +148,9 @@ function RenewModal({ emp, onClose, onDone }: { emp: ContractEmployee; onClose: 
           </div>
         )}
         {action === 'CONVERT' && (
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-700 dark:text-emerald-400">
-            ✅ Converti en CDI à partir d'aujourd'hui. Ancienneté comptée depuis {fmtDate(emp.hireDate)}.
+          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-700 dark:text-emerald-400 flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            Converti en CDI à partir d'aujourd'hui. Ancienneté comptée depuis {fmtDate(emp.hireDate)}.
           </div>
         )}
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -183,19 +196,19 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
             {isConfirm ? <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <UserX className="w-5 h-5 text-red-600 dark:text-red-400" />}
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white">{isConfirm ? 'Confirmer l\'essai' : 'Rompre l\'essai'}</h3>
+            <h3 className="font-bold text-slate-900 dark:text-white">{isConfirm ? "Confirmer l'essai" : "Rompre l'essai"}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">{emp.firstName} {emp.lastName} · {emp.contractType}</p>
           </div>
         </div>
         {isConfirm ? (
           <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm text-emerald-700 dark:text-emerald-400 space-y-1">
-            <p className="font-semibold">✅ L'employé sera confirmé définitivement.</p>
+            <p className="font-semibold flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> L'employé sera confirmé définitivement.</p>
             <p>Son statut d'essai passe à CONFIRMÉ. Le {emp.contractType} continue normalement avec toutes les charges.</p>
           </div>
         ) : (
           <div className="space-y-3">
             <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-400">
-              <p className="font-semibold">⚠️ Rupture pendant l'essai</p>
+              <p className="font-semibold flex items-center gap-1.5"><AlertTriangle className="w-4 h-4" /> Rupture pendant l'essai</p>
               <p className="mt-1">Aucun préavis ni indemnité de licenciement. L'employé sera marqué Terminé.</p>
             </div>
             <div>
@@ -212,7 +225,7 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
           <button onClick={save} disabled={saving}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50 ${isConfirm ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30' : 'bg-red-600 hover:bg-red-700 shadow-red-500/30'}`}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : isConfirm ? <Check className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
-            {isConfirm ? 'Confirmer l\'essai' : 'Rompre l\'essai'}
+            {isConfirm ? "Confirmer l'essai" : "Rompre l'essai"}
           </button>
         </div>
       </div>
@@ -224,6 +237,8 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
 // PAGE PRINCIPALE
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function ContratsPage() {
+  const router = useRouter();
+
   const [employees, setEmployees] = useState<ContractEmployee[]>([]);
   const [trials, setTrials]       = useState<TrialEmployee[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -282,21 +297,27 @@ export default function ContratsPage() {
 
   const currentList = tab === 'actifs' ? filtered(actifs) : tab === 'expirant' ? filtered(expirant) : tab === 'termines' ? filtered(termines) : tab === 'bnc' ? filtered(bncList) : [];
 
-  // Stat cards
   const TABS: { id: Tab; label: string; count: number; icon: React.ElementType; alert?: boolean }[] = [
-    { id: 'actifs',   label: 'Actifs',          count: actifs.length,   icon: CheckCircle2 },
-    { id: 'expirant', label: 'Expirant bientôt', count: expirant.length, icon: Clock,       alert: critiques > 0 },
-    { id: 'essais',   label: 'Périodes d\'essai',count: trials.length,   icon: Shield,      alert: trialsExpired > 0 },
-    { id: 'bnc',      label: 'BNC',             count: bncList.length,  icon: Calculator },
-    { id: 'termines', label: 'Terminés',         count: termines.length, icon: XCircle },
+    { id: 'actifs',   label: 'Actifs',           count: actifs.length,   icon: CheckCircle2 },
+    { id: 'expirant', label: 'Expirant bientôt',  count: expirant.length, icon: Clock,       alert: critiques > 0 },
+    { id: 'essais',   label: "Périodes d'essai",  count: trials.length,   icon: Shield,      alert: trialsExpired > 0 },
+    { id: 'bnc',      label: 'BNC',              count: bncList.length,  icon: Calculator },
+    { id: 'termines', label: 'Terminés',          count: termines.length, icon: XCircle },
   ];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 max-w-6xl mx-auto space-y-5">
 
-      {/* Header */}
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div className="flex items-center gap-3">
+          {/* Bouton retour */}
+          <button
+            onClick={() => router.back()}
+            className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30">
             <FileText className="w-6 h-6 text-white" />
           </div>
@@ -305,10 +326,23 @@ export default function ContratsPage() {
             <p className="text-sm text-slate-500 dark:text-slate-400">{actifs.length} actifs · {expirant.length} expirant · {trials.length} en essai · {bncList.length} BNC</p>
           </div>
         </div>
-        <button onClick={() => { loadEmployees(); if (tab === 'essais') loadTrials(); }}
-          className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 transition-colors">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* ✅ Bouton vers page rupture */}
+          <button
+            onClick={() => router.push('/contrats/rupture')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-red-500/30 transition-all"
+          >
+            <Gavel className="w-4 h-4" />
+            Rupture de contrat
+          </button>
+          <button
+            onClick={() => { loadEmployees(); if (tab === 'essais') loadTrials(); }}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Succès */}
@@ -323,7 +357,7 @@ export default function ContratsPage() {
         <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl">
           <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-red-700 dark:text-red-400 text-sm">🔴 {critiques} contrat{critiques > 1 ? 's' : ''} expire{critiques === 1 ? '' : 'nt'} dans moins de 7 jours !</p>
+            <p className="font-semibold text-red-700 dark:text-red-400 text-sm">{critiques} contrat{critiques > 1 ? 's' : ''} expire{critiques === 1 ? '' : 'nt'} dans moins de 7 jours !</p>
             <button onClick={() => setTab('expirant')} className="text-xs text-red-600 dark:text-red-400 underline mt-0.5">Voir maintenant →</button>
           </div>
         </div>
@@ -332,20 +366,21 @@ export default function ContratsPage() {
         <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl">
           <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-amber-700 dark:text-amber-400 text-sm">⚠️ {trialsExpired} période{trialsExpired > 1 ? 's' : ''} d'essai expirée{trialsExpired > 1 ? 's' : ''} sans action</p>
+            <p className="font-semibold text-amber-700 dark:text-amber-400 text-sm">{trialsExpired} période{trialsExpired > 1 ? 's' : ''} d'essai expirée{trialsExpired > 1 ? 's' : ''} sans action</p>
             <button onClick={() => setTab('essais')} className="text-xs text-amber-600 dark:text-amber-400 underline mt-0.5">Régulariser →</button>
           </div>
         </div>
       )}
 
-      {/* Stats mini par type */}
+      {/* Stats mini par type de contrat */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         {Object.entries(CONTRACT_META).map(([ct, m]) => {
+          const Icon = CONTRACT_TYPE_ICON[ct];
           const count = employees.filter(e => e.contractType === ct && e.status === 'ACTIVE').length;
           return (
             <button key={ct} onClick={() => setTypeFilter(typeFilter === ct ? 'ALL' : ct)}
               className={`p-3 rounded-xl border text-center transition-all ${typeFilter === ct ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300'}`}>
-              <div className="text-lg mb-0.5">{m.icon}</div>
+              {Icon && <div className="flex justify-center mb-0.5"><Icon className={`w-4 h-4 ${typeFilter === ct ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} /></div>}
               <div className="font-bold text-slate-900 dark:text-white text-lg leading-none">{count}</div>
               <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{m.label}</div>
             </button>
@@ -366,7 +401,7 @@ export default function ContratsPage() {
         ))}
       </div>
 
-      {/* Recherche (pas pour essais) */}
+      {/* Recherche */}
       {tab !== 'essais' && (
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -375,7 +410,7 @@ export default function ContratsPage() {
         </div>
       )}
 
-      {/* ═══ ONG. ESSAIS ════════════════════════════════════════════════════ */}
+      {/* ═══ ONGLET ESSAIS ══════════════════════════════════════════════════ */}
       {tab === 'essais' && (
         <div className="space-y-3">
           {trialsLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /></div>}
@@ -411,7 +446,6 @@ export default function ContratsPage() {
                   </button>
                 </div>
               </div>
-              {/* Barre de progression essai */}
               {emp.trialStatus === 'IN_PROGRESS' && (
                 <div className="px-4 pb-3">
                   <div className="flex justify-between text-xs text-slate-400 mb-1">
@@ -434,11 +468,11 @@ export default function ContratsPage() {
         </div>
       )}
 
-      {/* ═══ ONG. BNC ═══════════════════════════════════════════════════════ */}
+      {/* ═══ ONGLET BNC ═════════════════════════════════════════════════════ */}
       {tab === 'bnc' && (
         <div className="space-y-4">
           <div className="p-4 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-2xl text-xs text-teal-700 dark:text-teal-400 space-y-1">
-            <p className="font-bold">📋 Régime BNC — Obligation légale Congo (CGI art. 47 ter &amp; 44)</p>
+            <p className="font-bold flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> Régime BNC — Obligation légale Congo (CGI art. 47 ter &amp; 44)</p>
             <p>• Résident/Congolais → <strong>BNC 10%</strong> retenu à la source sur montant HT</p>
             <p>• Étranger non domicilié → <strong>BNC 20%</strong> retenu à la source sur montant HT</p>
             <p>• Reversement à la DGI avant le <strong>15 du mois suivant</strong> le paiement</p>
@@ -457,7 +491,7 @@ export default function ContratsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentList.map((emp, i) => {
+                  {currentList.map(emp => {
                     const bncTaux = emp.isResident !== false ? 0.10 : 0.20;
                     const bncMontant = Math.round(emp.baseSalary * bncTaux);
                     return (
@@ -467,7 +501,7 @@ export default function ContratsPage() {
                         <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{emp.position}</td>
                         <td className="px-4 py-3">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${emp.isResident !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400'}`}>
-                            {emp.isResident !== false ? '🇨🇬 Résident' : '🌍 Étranger'}
+                            {emp.isResident !== false ? 'Résident' : 'Étranger'}
                             {emp.nationality ? ` (${emp.nationality})` : ''}
                           </span>
                         </td>
@@ -518,13 +552,15 @@ export default function ContratsPage() {
                         <p className="font-semibold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
                         <ContractBadge type={emp.contractType} />
                         {endDays !== null && endDays <= 60 && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${endDays <= 7 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : endDays <= 30 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${endDays <= 7 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : endDays <= 30 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'}`}>
+                            {endDays <= 7 ? <XCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                             J-{endDays}
                           </span>
                         )}
                         {hasActiveTrial && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${emp.trialStatus === 'EXPIRED' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400'}`}>
-                            {emp.trialStatus === 'EXPIRED' ? '⚠️ Essai expiré' : '⏱️ En essai'}
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${emp.trialStatus === 'EXPIRED' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400'}`}>
+                            {emp.trialStatus === 'EXPIRED' ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                            {emp.trialStatus === 'EXPIRED' ? 'Essai expiré' : 'En essai'}
                           </span>
                         )}
                       </div>
@@ -551,7 +587,6 @@ export default function ContratsPage() {
                     </div>
                   </div>
 
-                  {/* Barre progression CDD/STAGE */}
                   {pct !== null && emp.status === 'ACTIVE' && (
                     <div className="px-4 pb-3">
                       <div className="flex justify-between text-[11px] text-slate-400 mb-1">
@@ -571,9 +606,11 @@ export default function ContratsPage() {
         </>
       )}
 
-      {/* Info légale */}
+      {/* Info légale — emojis remplacés par des puces texte simples */}
       <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">📋 Code du Travail Congo — Rappels clés</p>
+        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+          <Info className="w-3.5 h-3.5" /> Code du Travail Congo — Rappels clés
+        </p>
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs text-slate-600 dark:text-slate-400">
           <p>• <strong>CDI</strong> : Essai max 3 mois cadres / 1 mois autres. Préavis 8j à 3 mois.</p>
           <p>• <strong>CDD</strong> : Max 2 ans renouvellement inclus. Requalification CDI au-delà.</p>
@@ -587,12 +624,12 @@ export default function ContratsPage() {
       {/* Modals */}
       {renewModal && (
         <RenewModal emp={renewModal} onClose={() => setRenewModal(null)}
-          onDone={() => { setRenewModal(null); onSuccess('✅ Contrat mis à jour'); }} />
+          onDone={() => { setRenewModal(null); onSuccess('Contrat mis à jour'); }} />
       )}
       {trialModal && (
         <TrialModal emp={trialModal.emp} mode={trialModal.mode}
           onClose={() => setTrialModal(null)}
-          onDone={() => { setTrialModal(null); onSuccess(trialModal.mode === 'CONFIRM' ? '✅ Essai confirmé' : '✅ Rupture d\'essai enregistrée'); }} />
+          onDone={() => { setTrialModal(null); onSuccess(trialModal.mode === 'CONFIRM' ? 'Essai confirmé' : "Rupture d'essai enregistrée"); }} />
       )}
     </div>
   );

@@ -1,11 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  AlertTriangle, Users, Search, ChevronDown, Calculator,
+  AlertTriangle, Users, Search, Calculator,
   FileText, CheckCircle2, Loader2, XCircle, ChevronRight,
-  Gavel, Clock, Banknote, ShieldAlert, Info, ArrowRight,
-  UserX, CalendarX, History, Scale,
+  Gavel, Clock, Banknote, Info, ArrowLeft,
+  UserX, History, Scale, ArrowRight,
+  DoorOpen, AlertCircle, TrendingDown, Handshake,
+  CalendarX, FlaskConical, Sunset, Flame, HeartPulse,
+  Zap, FileCheck, RotateCcw,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -38,19 +42,35 @@ interface RuptureCalc {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
+// Icône lucide par type de rupture (remplace les emojis)
+const RUPTURE_ICON: Record<string, React.ElementType> = {
+  DEMISSION:                 DoorOpen,
+  LICENCIEMENT_FAUTE_SIMPLE: AlertCircle,
+  LICENCIEMENT_FAUTE_GRAVE:  AlertTriangle,
+  LICENCIEMENT_FAUTE_LOURDE: Flame,
+  LICENCIEMENT_ECONOMIQUE:   TrendingDown,
+  RUPTURE_CONVENTIONNELLE:   Handshake,
+  FIN_CDD:                   CalendarX,
+  FIN_PERIODE_ESSAI:         FlaskConical,
+  RETRAITE:                  Sunset,
+  DECES:                     HeartPulse,
+  INVALIDITE:                HeartPulse,
+  FORCE_MAJEURE:             Zap,
+};
+
 const RUPTURE_TYPES = [
-  { value: 'DEMISSION',                    label: 'Démission',                 icon: '🚪', group: 'Initiative employé' },
-  { value: 'LICENCIEMENT_FAUTE_SIMPLE',    label: 'Licenciement faute simple', icon: '⚠️', group: 'Initiative employeur' },
-  { value: 'LICENCIEMENT_FAUTE_GRAVE',     label: 'Licenciement faute grave',  icon: '🔴', group: 'Initiative employeur' },
-  { value: 'LICENCIEMENT_FAUTE_LOURDE',    label: 'Licenciement faute lourde', icon: '🔴', group: 'Initiative employeur' },
-  { value: 'LICENCIEMENT_ECONOMIQUE',      label: 'Licenciement économique',   icon: '📉', group: 'Initiative employeur' },
-  { value: 'RUPTURE_CONVENTIONNELLE',      label: 'Rupture conventionnelle',   icon: '🤝', group: 'Commun accord' },
-  { value: 'FIN_CDD',                      label: 'Fin de CDD',                icon: '📅', group: 'Terme du contrat' },
-  { value: 'FIN_PERIODE_ESSAI',            label: "Fin période d'essai",       icon: '🔬', group: 'Terme du contrat' },
-  { value: 'RETRAITE',                     label: 'Départ à la retraite',      icon: '🌅', group: 'Terme naturel' },
-  { value: 'DECES',                        label: 'Décès',                     icon: '🕊️', group: 'Terme naturel' },
-  { value: 'INVALIDITE',                   label: 'Invalidité / Inaptitude',   icon: '🏥', group: 'Terme naturel' },
-  { value: 'FORCE_MAJEURE',                label: 'Force majeure',             icon: '⚡', group: 'Terme naturel' },
+  { value: 'DEMISSION',                    label: 'Démission',                 group: 'Initiative employé' },
+  { value: 'LICENCIEMENT_FAUTE_SIMPLE',    label: 'Licenciement faute simple', group: 'Initiative employeur' },
+  { value: 'LICENCIEMENT_FAUTE_GRAVE',     label: 'Licenciement faute grave',  group: 'Initiative employeur' },
+  { value: 'LICENCIEMENT_FAUTE_LOURDE',    label: 'Licenciement faute lourde', group: 'Initiative employeur' },
+  { value: 'LICENCIEMENT_ECONOMIQUE',      label: 'Licenciement économique',   group: 'Initiative employeur' },
+  { value: 'RUPTURE_CONVENTIONNELLE',      label: 'Rupture conventionnelle',   group: 'Commun accord' },
+  { value: 'FIN_CDD',                      label: 'Fin de CDD',                group: 'Terme du contrat' },
+  { value: 'FIN_PERIODE_ESSAI',            label: "Fin période d'essai",       group: 'Terme du contrat' },
+  { value: 'RETRAITE',                     label: 'Départ à la retraite',      group: 'Terme naturel' },
+  { value: 'DECES',                        label: 'Décès',                     group: 'Terme naturel' },
+  { value: 'INVALIDITE',                   label: 'Invalidité / Inaptitude',   group: 'Terme naturel' },
+  { value: 'FORCE_MAJEURE',                label: 'Force majeure',             group: 'Terme naturel' },
 ];
 
 const CONTRACT_LABELS: Record<string, string> = {
@@ -69,7 +89,7 @@ const CONTRACT_COLORS: Record<string, string> = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
+const fmt  = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
 const fmtN = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n));
 
 function seniority(hireDate: string, ruptureDate: string) {
@@ -129,6 +149,8 @@ function LineIndemnite({ label, sub, amount, highlight }: {
 type Step = 'select' | 'form' | 'preview' | 'confirm' | 'history';
 
 export default function ContractRupturePage() {
+  const router = useRouter();
+
   const [step, setStep] = useState<Step>('select');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [search, setSearch] = useState('');
@@ -136,10 +158,8 @@ export default function ContractRupturePage() {
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHist, setLoadingHist] = useState(false);
 
-  // Employé sélectionné
   const [selected, setSelected] = useState<Employee | null>(null);
 
-  // Formulaire
   const [form, setForm] = useState({
     ruptureType:         '',
     ruptureDate:         new Date().toISOString().split('T')[0],
@@ -154,15 +174,13 @@ export default function ContractRupturePage() {
     notes:               '',
   });
 
-  // Calcul
-  const [calc, setCalc]         = useState<RuptureCalc | null>(null);
+  const [calc, setCalc]               = useState<RuptureCalc | null>(null);
   const [calculating, setCalculating] = useState(false);
-  const [calcError, setCalcError] = useState('');
-  const [saving, setSaving]     = useState(false);
-  const [saveError, setSaveError] = useState('');
-  const [saved, setSaved]       = useState(false);
+  const [calcError, setCalcError]     = useState('');
+  const [saving, setSaving]           = useState(false);
+  const [saveError, setSaveError]     = useState('');
+  const [saved, setSaved]             = useState(false);
 
-  // ── Charger employés actifs ────────────────────────────────────────────────
   useEffect(() => {
     if (step !== 'select') return;
     setLoadingEmps(true);
@@ -172,7 +190,6 @@ export default function ContractRupturePage() {
       .finally(() => setLoadingEmps(false));
   }, [step]);
 
-  // ── Charger historique ─────────────────────────────────────────────────────
   useEffect(() => {
     if (step !== 'history') return;
     setLoadingHist(true);
@@ -182,7 +199,6 @@ export default function ContractRupturePage() {
       .finally(() => setLoadingHist(false));
   }, [step]);
 
-  // ── Filtrer employés ───────────────────────────────────────────────────────
   const filteredEmployees = employees.filter(e => {
     if (!search) return true;
     const s = search.toLowerCase();
@@ -191,7 +207,6 @@ export default function ContractRupturePage() {
       || e.position.toLowerCase().includes(s);
   });
 
-  // ── Calculer ───────────────────────────────────────────────────────────────
   const handleCalculate = useCallback(async () => {
     if (!selected || !form.ruptureType || !form.ruptureDate) return;
     setCalculating(true);
@@ -221,7 +236,6 @@ export default function ContractRupturePage() {
     }
   }, [selected, form]);
 
-  // ── Confirmer / Sauvegarder ────────────────────────────────────────────────
   const handleConfirm = async () => {
     if (!selected || !form.ruptureType) return;
     setSaving(true);
@@ -252,16 +266,19 @@ export default function ContractRupturePage() {
 
   const ruptureTypeInfo = RUPTURE_TYPES.find(r => r.value === form.ruptureType);
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDU
-  // ═══════════════════════════════════════════════════════════════════════════
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 max-w-5xl mx-auto">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="mb-6 flex items-start justify-between">
         <div className="flex items-center gap-3">
+          {/* Bouton retour */}
+          <button
+            onClick={() => step === 'select' ? router.push('/contrats') : setStep('select')}
+            className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div className="p-2.5 bg-red-600 rounded-xl shadow-lg shadow-red-500/30">
             <Gavel className="w-6 h-6 text-white" />
           </div>
@@ -275,14 +292,23 @@ export default function ContractRupturePage() {
           </div>
         </div>
 
-        {/* Onglet historique */}
-        <button
-          onClick={() => setStep(step === 'history' ? 'select' : 'history')}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-        >
-          <History className="w-4 h-4" />
-          Historique
-        </button>
+        <div className="flex items-center gap-2">
+          {/* ✅ Lien retour vers la liste des contrats */}
+          <button
+            onClick={() => router.push('/contrats')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            Contrats
+          </button>
+          <button
+            onClick={() => setStep(step === 'history' ? 'select' : 'history')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <History className="w-4 h-4" />
+            Historique
+          </button>
+        </div>
       </div>
 
       {/* ── Breadcrumb ──────────────────────────────────────────────────────── */}
@@ -304,9 +330,7 @@ export default function ContractRupturePage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          ÉTAPE 1 — Sélection employé
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══ ÉTAPE 1 — Sélection employé ═══════════════════════════════════════ */}
       {step === 'select' && (
         <div className="space-y-4">
           <div className="relative">
@@ -356,9 +380,7 @@ export default function ContractRupturePage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          ÉTAPE 2 — Formulaire motif
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══ ÉTAPE 2 — Formulaire motif ════════════════════════════════════════ */}
       {step === 'form' && selected && (
         <div className="space-y-5">
           {/* Carte employé */}
@@ -369,7 +391,7 @@ export default function ContractRupturePage() {
             <div className="flex-1">
               <p className="font-bold text-slate-900 dark:text-white">{selected.firstName} {selected.lastName}</p>
               <p className="text-sm text-slate-600 dark:text-slate-400">{selected.position} · Mat. {selected.employeeNumber}</p>
-              <div className="flex gap-2 mt-1">
+              <div className="flex gap-2 mt-1 flex-wrap">
                 <Chip color={CONTRACT_COLORS[selected.contractType]}>{CONTRACT_LABELS[selected.contractType] ?? selected.contractType}</Chip>
                 <Chip>Embauché le {new Date(selected.hireDate).toLocaleDateString('fr-FR')}</Chip>
                 <Chip>Ancienneté : {seniority(selected.hireDate, form.ruptureDate)}</Chip>
@@ -381,26 +403,29 @@ export default function ContractRupturePage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
-            {/* Type de rupture */}
+            {/* Type de rupture — icônes Lucide à la place des emojis */}
             <div className="md:col-span-2">
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                 Type de rupture <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {RUPTURE_TYPES.map(r => (
-                  <button
-                    key={r.value}
-                    onClick={() => setForm(f => ({ ...f, ruptureType: r.value }))}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left text-sm transition-all ${
-                      form.ruptureType === r.value
-                        ? 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-semibold shadow-sm'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
-                    }`}
-                  >
-                    <span>{r.icon}</span>
-                    <span className="truncate">{r.label}</span>
-                  </button>
-                ))}
+                {RUPTURE_TYPES.map(r => {
+                  const RIcon = RUPTURE_ICON[r.value] || Gavel;
+                  return (
+                    <button
+                      key={r.value}
+                      onClick={() => setForm(f => ({ ...f, ruptureType: r.value }))}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left text-sm transition-all ${
+                        form.ruptureType === r.value
+                          ? 'border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-semibold shadow-sm'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
+                      }`}
+                    >
+                      <RIcon className={`w-4 h-4 shrink-0 ${form.ruptureType === r.value ? 'text-red-600 dark:text-red-400' : 'text-slate-400'}`} />
+                      <span className="truncate">{r.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -424,9 +449,7 @@ export default function ContractRupturePage() {
 
             {/* Code cause */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Motif / Code interne
-              </label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Motif / Code interne</label>
               <input
                 type="text"
                 placeholder="Ex : ABANDON_POSTE, RESTRUCTURATION…"
@@ -438,9 +461,7 @@ export default function ContractRupturePage() {
 
             {/* Description cause */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Description détaillée du motif
-              </label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Description détaillée du motif</label>
               <textarea
                 rows={3}
                 placeholder="Décrivez les faits ayant motivé la rupture…"
@@ -452,12 +473,9 @@ export default function ContractRupturePage() {
 
             {/* Préavis */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Préavis (jours) — laisser vide pour auto
-              </label>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Préavis (jours) — laisser vide pour auto</label>
               <input
-                type="number"
-                min={0}
+                type="number" min={0}
                 placeholder="Auto-calculé selon le type de contrat"
                 value={form.noticePeriodDays}
                 onChange={e => setForm(f => ({ ...f, noticePeriodDays: e.target.value }))}
@@ -468,47 +486,26 @@ export default function ContractRupturePage() {
             {/* Options préavis */}
             <div className="flex flex-col gap-2 justify-center">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.noticeWorked}
-                  onChange={e => setForm(f => ({ ...f, noticeWorked: e.target.checked }))}
-                  className="w-4 h-4 accent-red-600"
-                />
+                <input type="checkbox" checked={form.noticeWorked} onChange={e => setForm(f => ({ ...f, noticeWorked: e.target.checked }))} className="w-4 h-4 accent-red-600" />
                 <span className="text-sm text-slate-700 dark:text-slate-300">Préavis effectué</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.noticeWaived}
-                  onChange={e => setForm(f => ({ ...f, noticeWaived: e.target.checked }))}
-                  className="w-4 h-4 accent-red-600"
-                />
+                <input type="checkbox" checked={form.noticeWaived} onChange={e => setForm(f => ({ ...f, noticeWaived: e.target.checked }))} className="w-4 h-4 accent-red-600" />
                 <span className="text-sm text-slate-700 dark:text-slate-300">Préavis dispensé (avec indemnité compensatrice)</span>
               </label>
             </div>
 
             {/* Autres sommes */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Autres sommes dues (FCFA)
-              </label>
-              <input
-                type="number"
-                min={0}
-                placeholder="0"
-                value={form.autresSommesDues}
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Autres sommes dues (FCFA)</label>
+              <input type="number" min={0} placeholder="0" value={form.autresSommesDues}
                 onChange={e => setForm(f => ({ ...f, autresSommesDues: e.target.value }))}
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/40"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Détail autres sommes
-              </label>
-              <input
-                type="text"
-                placeholder="Ex : Prime non versée, remboursement avance…"
-                value={form.autresSommesDetail}
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Détail autres sommes</label>
+              <input type="text" placeholder="Ex : Prime non versée, remboursement avance…" value={form.autresSommesDetail}
                 onChange={e => setForm(f => ({ ...f, autresSommesDetail: e.target.value }))}
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/40"
               />
@@ -516,13 +513,8 @@ export default function ContractRupturePage() {
 
             {/* Notes */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Notes internes (non imprimées)
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Observations RH confidentielles…"
-                value={form.notes}
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Notes internes (non imprimées)</label>
+              <textarea rows={2} placeholder="Observations RH confidentielles…" value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 resize-none"
               />
@@ -537,17 +529,11 @@ export default function ContractRupturePage() {
           )}
 
           <div className="flex gap-3">
-            <button
-              onClick={() => setStep('select')}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-            >
+            <button onClick={() => setStep('select')} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               Retour
             </button>
-            <button
-              onClick={handleCalculate}
-              disabled={!form.ruptureType || !form.ruptureDate || calculating}
-              className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-red-500/30 transition-all"
-            >
+            <button onClick={handleCalculate} disabled={!form.ruptureType || !form.ruptureDate || calculating}
+              className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-red-500/30 transition-all">
               {calculating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
               Calculer les indemnités
             </button>
@@ -555,12 +541,9 @@ export default function ContractRupturePage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          ÉTAPE 3 — Aperçu du calcul
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══ ÉTAPE 3 — Aperçu du calcul ════════════════════════════════════════ */}
       {step === 'preview' && calc && (
         <div className="space-y-5">
-          {/* Récap employé */}
           <div className="p-4 bg-slate-900 dark:bg-slate-950 rounded-2xl border border-slate-700 text-white flex flex-wrap gap-4 items-center">
             <div className="flex-1 min-w-0">
               <p className="font-bold text-lg">{calc.employee.nom}</p>
@@ -583,13 +566,12 @@ export default function ContractRupturePage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
-            {/* Éligibilité */}
             <Section title="Éligibilité aux indemnités" icon={Scale}>
               <div className="space-y-2">
                 {[
-                  { ok: calc.eligibilite.aLicenciement, label: "Indemnité de licenciement" },
-                  { ok: calc.eligibilite.aPreavis, label: "Indemnité compensatrice de préavis" },
-                  { ok: calc.eligibilite.aConges, label: "Indemnité compensatrice de congés" },
+                  { ok: calc.eligibilite.aLicenciement, label: 'Indemnité de licenciement' },
+                  { ok: calc.eligibilite.aPreavis,      label: 'Indemnité compensatrice de préavis' },
+                  { ok: calc.eligibilite.aConges,       label: 'Indemnité compensatrice de congés' },
                 ].map(e => (
                   <div key={e.label} className="flex items-center gap-2">
                     {e.ok
@@ -609,7 +591,6 @@ export default function ContractRupturePage() {
               </div>
             </Section>
 
-            {/* Salaires de référence */}
             <Section title="Base de calcul" icon={Banknote}>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -634,40 +615,18 @@ export default function ContractRupturePage() {
             </Section>
           </div>
 
-          {/* Détail indemnités */}
           <Section title="Détail du solde de tout compte" icon={FileText}>
-            <LineIndemnite
-              label="Indemnité de licenciement"
-              sub={calc.indemnites.licenciementBase || 'Barème art. 82 Code Travail Congo'}
-              amount={calc.indemnites.licenciement}
-            />
-            <LineIndemnite
-              label="Indemnité compensatrice de préavis"
-              sub={`${calc.preavis.dureeJours} jours — ${calc.preavis.dispense ? 'dispensé' : calc.preavis.travaille ? 'effectué' : 'non effectué'}`}
-              amount={calc.indemnites.preavis}
-            />
-            <LineIndemnite
-              label="Indemnité compensatrice de congés payés"
-              sub={`${Math.round(calc.indemnites.congesDays * 10) / 10} jours non pris`}
-              amount={calc.indemnites.conges}
-            />
+            <LineIndemnite label="Indemnité de licenciement" sub={calc.indemnites.licenciementBase || 'Barème art. 82 Code Travail Congo'} amount={calc.indemnites.licenciement} />
+            <LineIndemnite label="Indemnité compensatrice de préavis" sub={`${calc.preavis.dureeJours} jours — ${calc.preavis.dispense ? 'dispensé' : calc.preavis.travaille ? 'effectué' : 'non effectué'}`} amount={calc.indemnites.preavis} />
+            <LineIndemnite label="Indemnité compensatrice de congés payés" sub={`${Math.round(calc.indemnites.congesDays * 10) / 10} jours non pris`} amount={calc.indemnites.conges} />
             {calc.indemnites.dernierSalaire > 0 && (
-              <LineIndemnite
-                label="Dernier salaire proratisé"
-                sub={`${calc.indemnites.dernierSalaireDays} jours travaillés ce mois`}
-                amount={calc.indemnites.dernierSalaire}
-              />
+              <LineIndemnite label="Dernier salaire proratisé" sub={`${calc.indemnites.dernierSalaireDays} jours travaillés ce mois`} amount={calc.indemnites.dernierSalaire} />
             )}
             {calc.indemnites.autresSommes > 0 && (
-              <LineIndemnite
-                label="Autres sommes dues"
-                sub={calc.indemnites.autresSommesDetail}
-                amount={calc.indemnites.autresSommes}
-              />
+              <LineIndemnite label="Autres sommes dues" sub={calc.indemnites.autresSommesDetail} amount={calc.indemnites.autresSommes} />
             )}
           </Section>
 
-          {/* Total */}
           <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl border border-slate-700 p-5 text-white">
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center">
@@ -683,7 +642,8 @@ export default function ContractRupturePage() {
                 <p className="text-2xl font-bold text-emerald-400">{fmt(calc.totaux.net)}</p>
               </div>
             </div>
-            <p className="text-xs text-slate-500 text-center">
+            <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1.5">
+              <Info className="w-3 h-3" />
               Les indemnités légales de licenciement sont exonérées d'ITS et CNSS (art. 2-9 CGI Congo)
             </p>
           </div>
@@ -698,11 +658,8 @@ export default function ContractRupturePage() {
             <button onClick={() => setStep('form')} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               Modifier
             </button>
-            <button
-              onClick={handleConfirm}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-md shadow-red-500/30 transition-all"
-            >
+            <button onClick={handleConfirm} disabled={saving}
+              className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl shadow-md shadow-red-500/30 transition-all">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
               Confirmer la rupture et terminer l'employé
             </button>
@@ -710,9 +667,7 @@ export default function ContractRupturePage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          ÉTAPE 4 — Confirmation
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══ ÉTAPE 4 — Confirmation ════════════════════════════════════════════ */}
       {step === 'confirm' && (
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
@@ -720,26 +675,34 @@ export default function ContractRupturePage() {
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Rupture enregistrée</h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm">
-            L'employé a été marqué comme <strong>Terminé</strong>. 
-            Le solde de tout compte de <strong className="text-emerald-600">{calc ? fmt(calc.totaux.net) : '—'}</strong> a été calculé et sauvegardé.
+            L'employé a été marqué comme <strong>Terminé</strong>.{' '}
+            Le solde de tout compte de{' '}
+            <strong className="text-emerald-600">{calc ? fmt(calc.totaux.net) : '—'}</strong> a été calculé et sauvegardé.
           </p>
           <div className="flex gap-3 pt-4">
             <button
-              onClick={() => { setStep('select'); setSelected(null); setCalc(null); setSaved(false); setForm({ ruptureType: '', ruptureDate: new Date().toISOString().split('T')[0], causeCode: '', causeLabel: '', causeDetail: '', noticePeriodDays: '', noticeWorked: true, noticeWaived: false, autresSommesDues: '', autresSommesDetail: '', notes: '' }); }}
-              className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-sm font-semibold hover:bg-slate-800 transition-colors"
+              onClick={() => {
+                setStep('select'); setSelected(null); setCalc(null); setSaved(false);
+                setForm({ ruptureType: '', ruptureDate: new Date().toISOString().split('T')[0], causeCode: '', causeLabel: '', causeDetail: '', noticePeriodDays: '', noticeWorked: true, noticeWaived: false, autresSommesDues: '', autresSommesDetail: '', notes: '' });
+              }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-sm font-semibold hover:bg-slate-800 transition-colors"
             >
+              <RotateCcw className="w-4 h-4" />
               Nouvelle rupture
             </button>
-            <button onClick={() => setStep('history')} className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <button onClick={() => router.push('/contrats')}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <FileText className="w-4 h-4" /> Retour aux contrats
+            </button>
+            <button onClick={() => setStep('history')}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               <History className="w-4 h-4" /> Voir l'historique
             </button>
           </div>
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          HISTORIQUE
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ══ HISTORIQUE ════════════════════════════════════════════════════════ */}
       {step === 'history' && (
         <div className="space-y-4">
           <h2 className="font-semibold text-slate-900 dark:text-white">Employés dont le contrat a été rompu</h2>
@@ -767,8 +730,8 @@ export default function ContractRupturePage() {
               </div>
             ))}
           </div>
-          <button onClick={() => setStep('select')} className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            ← Retour
+          <button onClick={() => setStep('select')} className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Retour
           </button>
         </div>
       )}
