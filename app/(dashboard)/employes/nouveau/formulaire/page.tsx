@@ -323,7 +323,8 @@ function CreateEmployeeFormInner() {
     baseSalary:          '',
     trialPeriodDays:     '0',
     trialEndDate:        '',
-    isResident:          true,   // ✅ toujours boolean
+    // ✅ FIX : string dès l'initialisation — cohérent avec Step3Contract
+    isResident:          'true',
     nationality:         '',
     paymentMethod:       'CASH',
     bankName:            '',
@@ -437,8 +438,8 @@ function CreateEmployeeFormInner() {
         departmentId:        formData.departmentId,
         baseSalary:          parseFloat(formData.baseSalary),
         trialPeriodDays:     parseInt(formData.trialPeriodDays as string) || 0,
-        // ✅ isResident est boolean dans le state — pas besoin de comparer à 'false'
-        isResident: formData.isResident === false || formData.isResident === 'false' ? false : true,
+        // ✅ FIX : isResident est string ('true'|'false') → on envoie un vrai boolean au backend
+        isResident:          formData.isResident !== 'false',
         nationality:         (formData.nationality as string) || null,
         paymentMethod:       formData.paymentMethod,
         bankName:            formData.bankName,
@@ -648,4 +649,3 @@ export default function CreateEmployeePage() {
     </Suspense>
   );
 }
- 
