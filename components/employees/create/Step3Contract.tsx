@@ -2,9 +2,10 @@
 
 // ============================================================================
 // 📁 components/employees/create/Step3Contract.tsx
-// 🆕 contractEndDate : champ conditionnel (caché pour CDI, obligatoire sinon)
-// 🆕 Calcul automatique durée + aperçu de la période
-// ✅ FIX TS : isResident est toujours string ('true' | 'false')
+// ✅ FIX DOM : fragment <> → <div> racine + AnimatePresence mode="wait" (removeChild fix)
+// ✅ FIX BNC : isResident initialisé à 'true' dès sélection CONSULTANT/PRESTATAIRE
+// ✅ FIX PREVIEW : bncTaux/bncMontant/bncNet recalculés correctement
+// ✅ ICONS : emojis remplacés par vraies icônes Lucide
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import {
   Building2, Wallet, Smartphone, Briefcase, Calendar, DollarSign,
   CreditCard, AlertCircle, Plus, X, Loader2, Save, Network,
   Sparkles, Clock, CalendarDays, Check,
+  Infinity, CalendarCheck, GraduationCap, UserCheck, Handshake, RefreshCw,
 } from 'lucide-react';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -64,14 +66,24 @@ const TRIAL_MAX_DAYS: Record<string, number> = {
 // Contrats BNC (pas de bulletin, facture + retenue à la source)
 const BNC_CONTRACTS = ['CONSULTANT', 'PRESTATAIRE'];
 
-// Infos par type de contrat
-const CONTRACT_INFO: Record<string, { icon: string; desc: string; bulletin: boolean; cnss: string; impot: string; tus: string; alertes: string[] }> = {
-  CDI:         { icon: '♾️',  desc: 'Permanent', bulletin: true,  cnss: 'CNSS 4% sal. + 20,28% pat.',  impot: 'ITS barème',     tus: 'TUS 7,5%', alertes: [] },
-  CDD:         { icon: '📅',  desc: 'Temporaire', bulletin: true, cnss: 'CNSS identique CDI',           impot: 'ITS barème',     tus: 'TUS 7,5%', alertes: ['Max 2 ans renouvellement inclus'] },
-  STAGE:       { icon: '🎓',  desc: 'Formation', bulletin: true,  cnss: 'AT patronale 2,25% seulement', impot: 'ITS si > SMIG',  tus: 'Aucun',    alertes: ['Convention tripartite obligatoire', 'Max 6 mois'] },
-  CONSULTANT:  { icon: '💼',  desc: 'Prestation', bulletin: false, cnss: 'Aucune CNSS',                 impot: 'BNC à la source',tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
-  PRESTATAIRE: { icon: '🤝',  desc: 'Service',   bulletin: false, cnss: 'Aucune CNSS',                  impot: 'BNC à la source',tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
-  INTERIM:     { icon: '🔄',  desc: 'Agence',    bulletin: false, cnss: 'Géré par l\'agence',           impot: 'Géré par l\'agence', tus: 'Géré par l\'agence', alertes: ['Pas de bulletin — suivi mission uniquement'] },
+// ✅ Icônes Lucide par type de contrat (plus d'emojis)
+const CONTRACT_ICONS: Record<string, React.ElementType> = {
+  CDI:         Infinity,
+  CDD:         CalendarCheck,
+  STAGE:       GraduationCap,
+  CONSULTANT:  UserCheck,
+  PRESTATAIRE: Handshake,
+  INTERIM:     RefreshCw,
+};
+
+// Infos par type de contrat (icône emoji retiré)
+const CONTRACT_INFO: Record<string, { desc: string; bulletin: boolean; cnss: string; impot: string; tus: string; alertes: string[] }> = {
+  CDI:         { desc: 'Permanent',  bulletin: true,  cnss: 'CNSS 4% sal. + 20,28% pat.',  impot: 'ITS barème',      tus: 'TUS 7,5%', alertes: [] },
+  CDD:         { desc: 'Temporaire', bulletin: true,  cnss: 'CNSS identique CDI',            impot: 'ITS barème',      tus: 'TUS 7,5%', alertes: ['Max 2 ans renouvellement inclus'] },
+  STAGE:       { desc: 'Formation',  bulletin: true,  cnss: 'AT patronale 2,25% seulement',  impot: 'ITS si > SMIG',   tus: 'Aucun',    alertes: ['Convention tripartite obligatoire', 'Max 6 mois'] },
+  CONSULTANT:  { desc: 'Prestation', bulletin: false, cnss: 'Aucune CNSS',                   impot: 'BNC à la source', tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  PRESTATAIRE: { desc: 'Service',    bulletin: false, cnss: 'Aucune CNSS',                   impot: 'BNC à la source', tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  INTERIM:     { desc: 'Agence',     bulletin: false, cnss: "Géré par l'agence",              impot: "Géré par l'agence", tus: "Géré par l'agence", alertes: ["Pas de bulletin — suivi mission uniquement"] },
 };
 
 // ─── HELPER durée en texte lisible ──────────────────────────────────────────
@@ -88,7 +100,6 @@ function formatDuration(days: number): string {
 function ContractDurationPreview({
   hireDate,
   endDate,
-  contractType,
 }: {
   hireDate: string;
   endDate: string;
@@ -117,7 +128,6 @@ function ContractDurationPreview({
       animate={{ opacity: 1, y: 0 }}
       className="mt-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3"
     >
-      {/* Durée totale */}
       <div className="flex items-center justify-between text-sm">
         <span className="text-slate-500 font-medium flex items-center gap-1.5">
           <Clock size={13} /> Durée totale
@@ -125,7 +135,6 @@ function ContractDurationPreview({
         <span className="font-bold text-slate-900 dark:text-white">{formatDuration(totalDays)}</span>
       </div>
 
-      {/* Barre de progression */}
       <div>
         <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
           <motion.div
@@ -143,7 +152,6 @@ function ContractDurationPreview({
         </div>
       </div>
 
-      {/* Jours restants */}
       {daysLeft > 0 ? (
         <p className={`text-xs font-semibold flex items-center gap-1.5 ${
           daysLeft <= 7 ? 'text-red-600' : daysLeft <= 30 ? 'text-orange-600' : 'text-emerald-600'
@@ -183,7 +191,6 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
   const suggestions   = SUGGESTED_DURATIONS[formData.contractType] ?? [];
   const maxTrialDays  = TRIAL_MAX_DAYS[formData.contractType] ?? 90;
 
-  // ✅ isResident est désormais toujours une string ('true' | 'false')
   const trialDays = parseInt(formData.trialPeriodDays as string || '0') || 0;
   const trialEndDate = (canHaveTrial && trialDays > 0 && formData.hireDate)
     ? (() => {
@@ -193,14 +200,14 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
       })()
     : null;
 
+  // ✅ FIX BNC PREVIEW
+  // isResident: undefined → true (résident par défaut), 'true' → true, 'false' → false
   const montantHT  = parseFloat(formData.baseSalary as string) || 0;
-  // ✅ FIX : comparaison string uniquement — plus de comparaison boolean/string
   const isResident = formData.isResident !== 'false';
   const bncTaux    = isResident ? 0.10 : 0.20;
-  const bncMontant = isBncContract ? Math.round(montantHT * bncTaux) : 0;
+  const bncMontant = isBncContract && montantHT > 0 ? Math.round(montantHT * bncTaux) : 0;
   const bncNet     = montantHT - bncMontant;
 
-  // Charger la convention de l'entreprise
   useEffect(() => {
     const load = async () => {
       try {
@@ -216,28 +223,24 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     load();
   }, []);
 
-  // Quand on change le type de contrat → reset champs liés
   const handleContractTypeChange = (type: string) => {
     onSelectChange('contractType', type);
-    // CDI → effacer date de fin
     if (type === 'CDI') {
       onSelectChange('contractEndDate', '');
     }
-    // Pas d'essai pour ces types
     if (!CAN_HAVE_TRIAL.includes(type)) {
       onSelectChange('trialPeriodDays', '0');
       onSelectChange('trialEndDate', '');
     }
-    // ✅ FIX : on passe 'true' (string) au lieu de true (boolean)
-    if (BNC_CONTRACTS.includes(type) && formData.isResident === undefined) {
+    // ✅ FIX : initialiser isResident à 'true' si pas encore défini pour BNC
+    if (BNC_CONTRACTS.includes(type) && !formData.isResident) {
       onSelectChange('isResident', 'true');
     }
   };
 
-  // Suggestion de durée → calculer la date de fin depuis la date d'embauche
   const applySuggestion = (months: number) => {
     if (!formData.hireDate) {
-      alert.warning('Date d\'embauche manquante', 'Renseignez d\'abord la date d\'embauche');
+      alert.warning("Date d'embauche manquante", "Renseignez d'abord la date d'embauche");
       return;
     }
     const start  = new Date(formData.hireDate);
@@ -260,7 +263,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     setIsCreatingDept(true);
     try {
       const newDept = await api.post('/departments', deptFormData);
-      alert.success('✨ Département créé', `${deptFormData.name} a été ajouté.`);
+      alert.success('Département créé', `${deptFormData.name} a été ajouté.`);
       setShowDeptModal(false);
       setDeptFormData({ name: '', code: '' });
       onDepartmentCreated(newDept);
@@ -271,14 +274,17 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     }
   };
 
+  // ✅ FIX DOM CRITIQUE : on utilise <div> à la racine au lieu de <>
+  // Un fragment racine avec AnimatePresence enfant cause removeChild DOM error
+  // car React peut tenter de supprimer un nœud dont le parent est incorrect
   return (
-    <>
+    <div>
       <div className="space-y-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-cyan-100 dark:bg-cyan-900/30 rounded-full mb-4">
             <Briefcase size={40} className="text-cyan-500" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Contrat & Rémunération</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Contrat &amp; Rémunération</h2>
           <p className="text-slate-600 dark:text-slate-400">Définissons les conditions d'emploi</p>
         </div>
 
@@ -286,13 +292,19 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
           {/* ── COLONNE GAUCHE ─────────────────────────────────────────────── */}
           <div className="space-y-6">
             <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <Building2 size={16} className="text-cyan-500" /> Poste & Affectation
+              <Building2 size={16} className="text-cyan-500" /> Poste &amp; Affectation
             </h3>
 
             {/* Département */}
             <div>
-              <FancySelect label="Département *" value={formData.departmentId} onChange={(v) => onSelectChange('departmentId', v)} icon={Building2}
-                options={departments.map((d) => ({ value: d.id, label: d.name }))} placeholder="Choisir un département..." />
+              <FancySelect
+                label="Département *"
+                value={formData.departmentId}
+                onChange={(v) => onSelectChange('departmentId', v)}
+                icon={Building2}
+                options={departments.map((d) => ({ value: d.id, label: d.name }))}
+                placeholder="Choisir un département..."
+              />
               {departments.length === 0 ? (
                 <div className="mt-3 p-4 bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-200 dark:border-amber-800 rounded-xl">
                   <p className="text-sm text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2 font-medium">
@@ -318,9 +330,13 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                 Intitulé du Poste <span className="text-red-500">*</span>
               </label>
-              <input name="position" value={formData.position} onChange={onInputChange}
+              <input
+                name="position"
+                value={formData.position}
+                onChange={onInputChange}
                 placeholder="Comptable, Développeur, Manager..."
-                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all" />
+                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+              />
             </div>
 
             {/* Convention collective */}
@@ -332,11 +348,16 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-purple-700 dark:text-purple-300 uppercase mb-2">Catégorie Professionnelle</label>
-                  <select value={formData.professionalCategory || ''} onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full p-3 bg-white dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl font-medium text-slate-900 dark:text-white focus:border-purple-500 outline-none">
+                  <select
+                    value={formData.professionalCategory || ''}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="w-full p-3 bg-white dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl font-medium text-slate-900 dark:text-white focus:border-purple-500 outline-none"
+                  >
                     <option value="">Sélectionner une catégorie...</option>
                     {conventionCategories.map((cat) => (
-                      <option key={cat.code} value={cat.code}>{cat.label} — {cat.minSalary.toLocaleString()} FCFA min.</option>
+                      <option key={cat.code} value={cat.code}>
+                        {cat.label} — {cat.minSalary.toLocaleString()} FCFA min.
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -348,8 +369,13 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                 <Calendar size={16} className="text-sky-500" /> Date d'embauche <span className="text-red-500">*</span>
               </label>
-              <input type="date" name="hireDate" value={formData.hireDate} onChange={onInputChange}
-                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all" />
+              <input
+                type="date"
+                name="hireDate"
+                value={formData.hireDate}
+                onChange={onInputChange}
+                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+              />
             </div>
 
             {/* Type de contrat */}
@@ -358,18 +384,26 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 Type de Contrat <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-3 gap-2.5">
-                {['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'].map((type) => {
+                {(['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'] as const).map((type) => {
                   const meta = CONTRACT_INFO[type];
+                  const ContractIcon = CONTRACT_ICONS[type];
                   const isSelected = formData.contractType === type;
                   return (
-                    <motion.div key={type} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    <motion.div
+                      key={type}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => handleContractTypeChange(type)}
                       className={`cursor-pointer p-3 rounded-xl border-2 text-center transition-all ${
                         isSelected
                           ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-lg shadow-cyan-500/20'
                           : 'border-slate-200 dark:border-slate-700 hover:border-cyan-300 text-slate-600 dark:text-slate-400'
-                      }`}>
-                      <div className="text-lg mb-0.5">{meta?.icon}</div>
+                      }`}
+                    >
+                      <ContractIcon
+                        size={18}
+                        className={`mx-auto mb-0.5 ${isSelected ? 'text-cyan-500' : 'text-slate-400'}`}
+                      />
                       <div className="text-xs font-bold">{type}</div>
                       <div className="text-[10px] opacity-60 mt-0.5">{meta?.desc}</div>
                     </motion.div>
@@ -377,10 +411,11 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 })}
               </div>
 
-              {/* Résumé fiscal du contrat choisi */}
-              <AnimatePresence>
+              {/* Résumé fiscal */}
+              <AnimatePresence mode="wait">
                 {formData.contractType && (
                   <motion.div
+                    key={`fiscal-${formData.contractType}`}
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
@@ -428,9 +463,10 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             </div>
 
             {/* ── DATE DE FIN (conditionnel) ─────────────────────────────── */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {needsEndDate && (
                 <motion.div
+                  key="endDate-section"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -447,8 +483,12 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                     {suggestions.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {suggestions.map((s) => (
-                          <button key={s.months} type="button" onClick={() => applySuggestion(s.months)}
-                            className="px-3 py-1.5 bg-white dark:bg-sky-900/30 border border-sky-300 dark:border-sky-600 rounded-lg text-xs font-bold text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-800/40 transition-colors">
+                          <button
+                            key={s.months}
+                            type="button"
+                            onClick={() => applySuggestion(s.months)}
+                            className="px-3 py-1.5 bg-white dark:bg-sky-900/30 border border-sky-300 dark:border-sky-600 rounded-lg text-xs font-bold text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-800/40 transition-colors"
+                          >
                             + {s.label}
                           </button>
                         ))}
@@ -478,12 +518,22 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                 <DollarSign size={16} className="text-cyan-500" />
-                {isBncContract ? 'Montant HT de la prestation' : formData.contractType === 'STAGE' ? 'Gratification mensuelle' : 'Salaire de Base Mensuel'}
+                {isBncContract
+                  ? 'Montant HT de la prestation'
+                  : formData.contractType === 'STAGE'
+                    ? 'Gratification mensuelle'
+                    : 'Salaire de Base Mensuel'}
                 <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <input type="number" name="baseSalary" value={formData.baseSalary} onChange={onInputChange} placeholder="0"
-                  className="w-full px-4 py-4 pr-20 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none font-bold text-2xl transition-all" />
+                <input
+                  type="number"
+                  name="baseSalary"
+                  value={formData.baseSalary}
+                  onChange={onInputChange}
+                  placeholder="0"
+                  className="w-full px-4 py-4 pr-20 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none font-bold text-2xl transition-all"
+                />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">FCFA</span>
               </div>
               {formData.baseSalary && parseFloat(formData.baseSalary as string) > 0 && !isBncContract && (
@@ -494,10 +544,11 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               )}
             </div>
 
-            {/* ── NATIONALITÉ / RÉSIDENCE — BNC (Consultant / Prestataire) ── */}
-            <AnimatePresence>
+            {/* ── BNC (Consultant / Prestataire) ── */}
+            <AnimatePresence mode="wait">
               {isBncContract && (
                 <motion.div
+                  key="bnc-section"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -505,7 +556,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 >
                   <div className="p-5 bg-teal-50 dark:bg-teal-900/10 border-2 border-teal-200 dark:border-teal-700 rounded-2xl space-y-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">📋</span>
+                      <UserCheck size={16} className="text-teal-600" />
                       <span className="text-sm font-bold text-teal-900 dark:text-teal-100">
                         Retenue BNC — Résidence fiscale
                       </span>
@@ -514,7 +565,6 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       Le taux de retenue à la source dépend du statut de résidence du prestataire (CGI Congo art. 47 ter &amp; art. 44).
                     </p>
 
-                    {/* Résidence */}
                     <div>
                       <label className="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider mb-2">
                         Statut de résidence
@@ -523,16 +573,15 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                         {[
                           {
                             value: 'true',
-                            label: '🇨🇬 Résident / Congolais',
+                            label: 'Résident / Congolais',
                             sub: 'BNC 10%',
-                            // ✅ isResident est string — comparaison string/string
                             color: isResident
                               ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 shadow-lg'
                               : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300',
                           },
                           {
                             value: 'false',
-                            label: '🌍 Étranger non résident',
+                            label: 'Étranger non résident',
                             sub: 'BNC 20%',
                             color: !isResident
                               ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 shadow-lg'
@@ -543,7 +592,6 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                             key={value}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            // ✅ FIX : on passe directement la string 'true' ou 'false'
                             onClick={() => onSelectChange('isResident', value)}
                             className={`cursor-pointer p-3 rounded-xl border-2 transition-all text-center ${color}`}
                           >
@@ -556,33 +604,45 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       </div>
                     </div>
 
-                    {/* Nationalité libre */}
                     <div>
                       <label className="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider mb-2">
                         Nationalité (optionnel)
                       </label>
-                      <input name="nationality" value={formData.nationality as string || ''} onChange={onInputChange}
+                      <input
+                        name="nationality"
+                        value={formData.nationality as string || ''}
+                        onChange={onInputChange}
                         placeholder="Ex: CG, FR, US, CM…"
-                        className="w-full px-3 py-2.5 border-2 border-teal-300 dark:border-teal-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-teal-500 outline-none" />
+                        className="w-full px-3 py-2.5 border-2 border-teal-300 dark:border-teal-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-teal-500 outline-none"
+                      />
                     </div>
 
-                    {/* Preview BNC */}
+                    {/* ✅ FIX PREVIEW BNC : re-render quand isResident ou montantHT change */}
                     {montantHT > 0 && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-teal-200 dark:border-teal-700 space-y-1.5 text-xs">
-                        <p className="font-bold text-slate-700 dark:text-slate-300">📊 Calcul BNC</p>
+                      <motion.div
+                        key={`bnc-calc-${isResident ? 'resident' : 'etranger'}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-teal-200 dark:border-teal-700 space-y-1.5 text-xs"
+                      >
+                        <p className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <DollarSign size={12} className="text-teal-500" /> Calcul BNC
+                        </p>
                         <div className="flex justify-between">
                           <span className="text-slate-500">Montant HT</span>
                           <span className="font-bold">{montantHT.toLocaleString('fr-FR')} FCFA</span>
                         </div>
                         <div className="flex justify-between">
-                          {/* ✅ bncTaux calculé depuis isResident (string) */}
                           <span className="text-slate-500">BNC retenu ({bncTaux * 100}%)</span>
-                          <span className="font-bold text-red-600 dark:text-red-400">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">
+                            − {bncMontant.toLocaleString('fr-FR')} FCFA
+                          </span>
                         </div>
                         <div className="flex justify-between border-t pt-1.5 border-teal-100 dark:border-teal-800">
                           <span className="font-bold text-slate-700 dark:text-slate-300">Net versé au prestataire</span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                            {bncNet.toLocaleString('fr-FR')} FCFA
+                          </span>
                         </div>
                         <p className="text-teal-600 dark:text-teal-400 pt-0.5">
                           Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois suivant.
@@ -595,9 +655,10 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             </AnimatePresence>
 
             {/* ── PÉRIODE D'ESSAI (CDI / CDD uniquement) ────────────────── */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {canHaveTrial && (
                 <motion.div
+                  key="trial-section"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -624,13 +685,19 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                         { label: '30 jours', days: 30 },
                         ...(formData.contractType === 'CDI' ? [{ label: '60 jours', days: 60 }, { label: '90 jours', days: 90 }] : []),
                       ].map(({ label, days }) => (
-                        <button key={days} type="button"
-                          onClick={() => { onSelectChange('trialPeriodDays', String(days)); if (days === 0) onSelectChange('trialEndDate', ''); }}
+                        <button
+                          key={days}
+                          type="button"
+                          onClick={() => {
+                            onSelectChange('trialPeriodDays', String(days));
+                            if (days === 0) onSelectChange('trialEndDate', '');
+                          }}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
                             trialDays === days
                               ? 'bg-indigo-600 text-white border-indigo-600'
                               : 'bg-white dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/40'
-                          }`}>
+                          }`}
+                        >
                           {label}
                         </button>
                       ))}
@@ -640,18 +707,28 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       <label className="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1.5">
                         Ou saisir manuellement (jours)
                       </label>
-                      <input type="number" name="trialPeriodDays" min={0} max={maxTrialDays}
+                      <input
+                        type="number"
+                        name="trialPeriodDays"
+                        min={0}
+                        max={maxTrialDays}
                         value={formData.trialPeriodDays as string || '0'}
                         onChange={onInputChange}
-                        className="w-full px-3 py-2.5 border-2 border-indigo-300 dark:border-indigo-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-indigo-500 outline-none" />
+                        className="w-full px-3 py-2.5 border-2 border-indigo-300 dark:border-indigo-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-indigo-500 outline-none"
+                      />
                       {trialDays > maxTrialDays && (
-                        <p className="text-xs text-red-500 mt-1 font-semibold">⚠️ Dépasse le maximum légal de {maxTrialDays} jours</p>
+                        <p className="text-xs text-red-500 mt-1 font-semibold flex items-center gap-1">
+                          <AlertCircle size={11} /> Dépasse le maximum légal de {maxTrialDays} jours
+                        </p>
                       )}
                     </div>
 
                     {trialDays > 0 && trialEndDate && formData.hireDate && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-indigo-200 dark:border-indigo-700 space-y-2 text-xs">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-indigo-200 dark:border-indigo-700 space-y-2 text-xs"
+                      >
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Début essai</span>
                           <span className="font-bold">{format(new Date(formData.hireDate), 'd MMMM yyyy', { locale: fr })}</span>
@@ -662,8 +739,8 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                             {format(trialEndDate, 'd MMMM yyyy', { locale: fr })}
                           </span>
                         </div>
-                        <p className="text-indigo-600 dark:text-indigo-400 pt-0.5 font-medium">
-                          ℹ️ Pendant l'essai : salaire normal + charges habituelles. Rupture libre.
+                        <p className="text-indigo-600 dark:text-indigo-400 pt-0.5 font-medium flex items-center gap-1">
+                          <Check size={11} /> Pendant l'essai : salaire normal + charges habituelles. Rupture libre.
                         </p>
                         <p className="text-slate-500">
                           Après l'essai : confirmation automatique → l'employé passe en statut confirmé.
@@ -676,13 +753,21 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             </AnimatePresence>
 
             {/* ── INFO INTERIM ─────────────────────────────────────────── */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {formData.contractType === 'INTERIM' && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="p-4 bg-orange-50 dark:bg-orange-900/10 border-2 border-orange-200 dark:border-orange-700 rounded-xl">
-                  <p className="text-xs font-bold text-orange-700 dark:text-orange-400 mb-1">🔄 Intérimaire — suivi de mission uniquement</p>
+                <motion.div
+                  key="interim-info"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-4 bg-orange-50 dark:bg-orange-900/10 border-2 border-orange-200 dark:border-orange-700 rounded-xl"
+                >
+                  <p className="text-xs font-bold text-orange-700 dark:text-orange-400 mb-1 flex items-center gap-1.5">
+                    <RefreshCw size={12} /> Intérimaire — suivi de mission uniquement
+                  </p>
                   <p className="text-xs text-orange-600 dark:text-orange-500">
-                    Cet employé est salarié de son agence d'intérim. L'application gère son suivi RH (présences, missions) mais <strong>aucun bulletin de paie ne sera généré</strong> côté entreprise. Vous payez la facture de l'agence.
+                    Cet employé est salarié de son agence d'intérim. L'application gère son suivi RH (présences, missions) mais{' '}
+                    <strong>aucun bulletin de paie ne sera généré</strong> côté entreprise. Vous payez la facture de l'agence.
                   </p>
                 </motion.div>
               )}
@@ -697,45 +782,89 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
 
             <div className="grid grid-cols-3 gap-3">
               {[
-                { value: 'MOBILE_MONEY', label: 'Mobile', icon: Smartphone },
-                { value: 'BANK_TRANSFER', label: 'Banque', icon: Building2 },
-                { value: 'CASH', label: 'Espèces', icon: CreditCard },
+                { value: 'MOBILE_MONEY', label: 'Mobile',   icon: Smartphone },
+                { value: 'BANK_TRANSFER', label: 'Banque',  icon: Building2 },
+                { value: 'CASH',          label: 'Espèces', icon: CreditCard },
               ].map(({ value, label, icon: Icon }) => (
-                <motion.button key={value} type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                <motion.button
+                  key={value}
+                  type="button"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => onSelectChange('paymentMethod', value)}
                   className={`p-4 rounded-xl border-2 text-center transition-all ${
                     formData.paymentMethod === value
                       ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-lg'
                       : 'border-slate-200 dark:border-slate-700 hover:border-cyan-300'
-                  }`}>
+                  }`}
+                >
                   <Icon className="mx-auto mb-1" size={20} />
                   <div className="text-xs font-bold">{label}</div>
                 </motion.button>
               ))}
             </div>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {formData.paymentMethod === 'BANK_TRANSFER' && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="p-6 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 space-y-4">
-                  <FancySelect label="Banque" value={formData.bankName} onChange={(v) => onSelectChange('bankName', v)} icon={Building2}
-                    options={[{ value: 'BGFI', label: 'BGFI Bank' }, { value: 'ECOBANK', label: 'Ecobank' }, { value: 'LCB', label: 'LCB Bank' }, { value: 'UBA', label: 'UBA' }, { value: 'SOCIETE_GENERALE', label: 'Société Générale' }]} />
+                <motion.div
+                  key="bank-details"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-6 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 space-y-4"
+                >
+                  <FancySelect
+                    label="Banque"
+                    value={formData.bankName}
+                    onChange={(v) => onSelectChange('bankName', v)}
+                    icon={Building2}
+                    options={[
+                      { value: 'BGFI', label: 'BGFI Bank' },
+                      { value: 'ECOBANK', label: 'Ecobank' },
+                      { value: 'LCB', label: 'LCB Bank' },
+                      { value: 'UBA', label: 'UBA' },
+                      { value: 'SOCIETE_GENERALE', label: 'Société Générale' },
+                    ]}
+                  />
                   <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Numéro de Compte (RIB)</label>
-                    <input name="bankAccountNumber" value={formData.bankAccountNumber} onChange={onInputChange}
-                      placeholder="XXXXXXXXXXXXXXXXXXXXXXXX" className="w-full p-3 border-2 border-cyan-300 dark:border-cyan-700 dark:bg-slate-800 rounded-xl font-mono focus:border-cyan-500 outline-none" />
+                    <input
+                      name="bankAccountNumber"
+                      value={formData.bankAccountNumber}
+                      onChange={onInputChange}
+                      placeholder="XXXXXXXXXXXXXXXXXXXXXXXX"
+                      className="w-full p-3 border-2 border-cyan-300 dark:border-cyan-700 dark:bg-slate-800 rounded-xl font-mono focus:border-cyan-500 outline-none"
+                    />
                   </div>
                 </motion.div>
               )}
               {formData.paymentMethod === 'MOBILE_MONEY' && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="p-6 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 space-y-4">
-                  <FancySelect label="Opérateur" value={formData.mobileMoneyOperator} onChange={(v) => onSelectChange('mobileMoneyOperator', v)} icon={Smartphone}
-                    options={[{ value: 'MTN', label: 'MTN Mobile Money' }, { value: 'AIRTEL', label: 'Airtel Money' }]} />
+                <motion.div
+                  key="mobile-details"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-6 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 space-y-4"
+                >
+                  <FancySelect
+                    label="Opérateur"
+                    value={formData.mobileMoneyOperator}
+                    onChange={(v) => onSelectChange('mobileMoneyOperator', v)}
+                    icon={Smartphone}
+                    options={[
+                      { value: 'MTN', label: 'MTN Mobile Money' },
+                      { value: 'AIRTEL', label: 'Airtel Money' },
+                    ]}
+                  />
                   <div>
                     <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Numéro de téléphone</label>
-                    <input name="mobileMoneyNumber" value={formData.mobileMoneyNumber} onChange={onInputChange}
-                      placeholder="06 123 45 67" className="w-full p-3 border-2 border-cyan-300 dark:border-cyan-700 dark:bg-slate-800 rounded-xl font-mono focus:border-cyan-500 outline-none" />
+                    <input
+                      name="mobileMoneyNumber"
+                      value={formData.mobileMoneyNumber}
+                      onChange={onInputChange}
+                      placeholder="06 123 45 67"
+                      className="w-full p-3 border-2 border-cyan-300 dark:border-cyan-700 dark:bg-slate-800 rounded-xl font-mono focus:border-cyan-500 outline-none"
+                    />
                   </div>
                 </motion.div>
               )}
@@ -744,40 +873,71 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
         </div>
       </div>
 
-      {/* MODAL DÉPARTEMENT */}
-      <AnimatePresence>
+      {/* ✅ FIX DOM CRITIQUE : Modal DANS le <div> racine, jamais dans <> fragment */}
+      <AnimatePresence mode="wait">
         {showDeptModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          <motion.div
+            key="dept-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
-            onClick={() => setShowDeptModal(false)}>
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+            onClick={() => setShowDeptModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
-              <button type="button" onClick={() => setShowDeptModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+            >
+              <button
+                type="button"
+                onClick={() => setShowDeptModal(false)}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
                 <X size={20} />
               </button>
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 rounded-full flex items-center justify-center"><Network size={24} /></div>
+                <div className="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 rounded-full flex items-center justify-center">
+                  <Network size={24} />
+                </div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Nouveau Département</h2>
               </div>
               <form onSubmit={handleCreateDepartment} className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nom du département</label>
-                  <input required autoFocus placeholder="Ex: Marketing, IT, Finance..." value={deptFormData.name}
+                  <input
+                    required
+                    autoFocus
+                    placeholder="Ex: Marketing, IT, Finance..."
+                    value={deptFormData.name}
                     onChange={(e) => setDeptFormData({ ...deptFormData, name: e.target.value })}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-lg" />
+                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-lg"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Code (Optionnel)</label>
-                  <input placeholder="Ex: MKT, IT, FIN..." value={deptFormData.code}
+                  <input
+                    placeholder="Ex: MKT, IT, FIN..."
+                    value={deptFormData.code}
                     onChange={(e) => setDeptFormData({ ...deptFormData, code: e.target.value.toUpperCase() })}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none font-mono" />
+                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none font-mono"
+                  />
                 </div>
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setShowDeptModal(false)}
-                    className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl">Annuler</button>
-                  <button type="submit" disabled={isCreatingDept}
-                    className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-sky-500 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2 disabled:opacity-50">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeptModal(false)}
+                    className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreatingDept}
+                    className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-sky-500 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2 disabled:opacity-50"
+                  >
                     {isCreatingDept ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} Créer
                   </button>
                 </div>
@@ -786,6 +946,6 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 };
