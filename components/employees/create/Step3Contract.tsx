@@ -758,7 +758,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     : null;
 
   const montantHT = parseFloat(formData.baseSalary as string) || 0;
-  const isResident = formData.isResident !== false; // default true
+  const isResident = formData.isResident !== false && formData.isResident !== 'false';
   const bncTaux = isResident ? 0.10 : 0.20;
   const bncMontant = isBncContract ? Math.round(montantHT * bncTaux) : 0;
   const bncNet = montantHT - bncMontant;
@@ -793,7 +793,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     }
     // BNC → reset isResident si pas encore défini
     if (BNC_CONTRACTS.includes(type) && formData.isResident === undefined) {
-      onSelectChange('isResident', 'true');
+      onSelectChange('isResident', true);
     }
   };
 
@@ -1092,7 +1092,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                           { value: false, label: '🌍 Étranger non résident', sub: 'BNC 20%', color: !isResident ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 shadow-lg' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300' },
                         ].map(({ value, label, sub, color }) => (
                           <motion.div key={String(value)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                            onClick={() => onSelectChange('isResident', String(value))}
+                            onClick={() => onSelectChange('isResident', value)}
                             className={`cursor-pointer p-3 rounded-xl border-2 transition-all text-center ${color}`}
                           >
                             <p className="text-xs font-bold">{label}</p>

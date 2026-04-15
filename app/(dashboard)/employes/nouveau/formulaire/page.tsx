@@ -438,7 +438,7 @@ function CreateEmployeeFormInner() {
         baseSalary:          parseFloat(formData.baseSalary),
         trialPeriodDays:     parseInt(formData.trialPeriodDays as string) || 0,
         // ✅ isResident est boolean dans le state — pas besoin de comparer à 'false'
-        isResident:          formData.isResident,
+        isResident: formData.isResident === false || formData.isResident === 'false' ? false : true,
         nationality:         (formData.nationality as string) || null,
         paymentMethod:       formData.paymentMethod,
         bankName:            formData.bankName,
