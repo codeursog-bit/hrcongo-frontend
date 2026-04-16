@@ -1,12 +1,8 @@
-// ============================================================================
-// Fichier: frontend/components/admin/Sidebar.tsx
-// ============================================================================
-
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { NAVIGATION_ITEMS } from '@/lib/admin/constants';
 import { Plus, Mail, Database, RefreshCw, AlertTriangle, Zap, LogOut } from 'lucide-react';
 
@@ -21,6 +17,17 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ recentActivity = [] }) => {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Suppression du token et des infos user
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redirection vers la page de login
+    router.push('/admin/login');
+    router.refresh();
+  };
 
   return (
     <div className="hidden xl:flex flex-col w-[280px] shrink-0 border-l border-gray-800 bg-[#0B0F19]/50 backdrop-blur-sm h-full overflow-hidden">
@@ -125,7 +132,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ recentActivity = [] }) => {
       </div>
       
       <div className="p-4 border-t border-gray-800 mt-auto">
-         <button className="flex items-center gap-2 text-gray-500 hover:text-white text-xs font-medium w-full px-2 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+         <button 
+           onClick={handleLogout}
+           className="flex items-center gap-2 text-gray-500 hover:text-white text-xs font-medium w-full px-2 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+         >
             <LogOut className="w-4 h-4" /> Déconnexion
          </button>
       </div>
