@@ -245,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Contrats', path: '/contrats', icon: History },
     { label: 'Rupture Contrats', path: '/contrats/rupture', icon: UserMinus },
     // ✅ CORRECTION ICI : Ajout de l'accent pour matcher ton dossier "impayés"
-    { label: 'Salaires Impayés', path: '/paie/impayés', icon: AlertCircle }, 
+    { label: 'Salaires Impayés', path: '/paie/impays', icon: AlertCircle }, 
   ];
 
   const showAutreMenu = user && ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(user.role);
