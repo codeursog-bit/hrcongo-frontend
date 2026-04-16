@@ -428,15 +428,7 @@ const navItems: NavItem[] = [
     path: '/presences/pointage-manuel',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
-   {
-    id: 'presences_equipe',
-    label: 'Présences Équipe',
-    icon: Users2,
-    path: '/presences',
-    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
-  },
-
-
+   
   // ─── Section Manager ────────────────────────────────────────────────────────
   {
     id: 'mon_equipe',
@@ -505,6 +497,14 @@ const navItems: NavItem[] = [
   },
 
   // ─── Autres modules (Admin / RH) ────────────────────────────────────────────
+{
+    id: 'presences_equipe',
+    label: 'Présences Équipe',
+    icon: Users2,
+    path: '/presences',
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
+  },
+
   {
     id: 'recrutement',
     label: 'Recrutement',
