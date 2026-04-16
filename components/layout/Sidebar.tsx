@@ -61,7 +61,6 @@ const navItems: NavItem[] = [
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
 
-  // Pointage Admin / RH (ORDRE CORRIGÉ : Présences avant Pointage Manuel)
   {
     id: 'presences_equipe_admin',
     label: 'Présences Équipe',
@@ -144,7 +143,6 @@ const navItems: NavItem[] = [
     allowedRoles: ['EMPLOYEE'],
   },
 
-  // ─── Autres modules ────────────────────────────────────────────
   {
     id: 'recrutement',
     label: 'Recrutement',
@@ -164,7 +162,7 @@ const navItems: NavItem[] = [
     label: 'Formation',
     icon: GraduationCap,
     path: '/formation',
-    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'], // Manager Ajouté
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
   },
   {
     id: 'rapports',
@@ -193,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [isAutreOpen, setIsAutreOpen] = useState(false); // État pour le dropdown "Autre"
+  const [isAutreOpen, setIsAutreOpen] = useState(false);
 
   const isWhiteLabel = !!(brandName || brandLogo);
   const accentColor = brandColor || '#0ea5e9';
@@ -235,20 +233,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return `${basePath}/${slug}`;
   };
 
-  // ✅ Correction du Bug d'activation : 
-  // Si le path est /presences, on veut un match exact pour éviter d'activer "Présences Équipe" quand on est sur "Pointage Manuel"
   const isActive = (itemPath: string) => {
     const full = buildPath(itemPath);
     if (full === '/presences') return pathname === full;
     return pathname === full || pathname.startsWith(full + '/');
   };
 
-  // Menu "Autre" Items
+  // ─── Menu "Autre" Items ─────────────────────────────────────────────────────
   const autreItems = [
     { label: 'Déclaration CNSS', path: '/cnss-declaration', icon: FileCheck },
     { label: 'Contrats', path: '/contrats', icon: History },
     { label: 'Rupture Contrats', path: '/contrats/rupture', icon: UserMinus },
-    { label: 'Salaires Impayés', path: '/paie/impayes', icon: AlertCircle },
+    // ✅ CORRECTION ICI : Ajout de l'accent pour matcher ton dossier "impayés"
+    { label: 'Salaires Impayés', path: '/paie/impayés', icon: AlertCircle }, 
   ];
 
   const showAutreMenu = user && ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(user.role);
@@ -293,7 +290,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        {/* User Card */}
+        {/* User Profile Card */}
         <div className="px-4 pb-4 pt-2">
           <div className="bg-slate-50/80 dark:bg-white/5 rounded-2xl p-3 flex items-center gap-3 border border-slate-100 dark:border-white/5 hover:border-sky-200 dark:hover:border-white/10 transition-colors group">
             <div className="relative shrink-0">
@@ -318,7 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Nav Menu */}
+        {/* Navigation Menu */}
         <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-1 custom-scrollbar">
           {navItems
             .filter(item => user && item.allowedRoles.includes(user.role))
@@ -343,7 +340,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               );
             })}
 
-          {/* ── Menu Déroulant "Autre" (Admin/RH) ── */}
           {showAutreMenu && (
             <div className="pt-2">
               <button
