@@ -195,6 +195,7 @@ export const NAVIGATION_ITEMS = [
   { icon: CreditCard, label: 'Billing', path: '/admin/billing' },
   { icon: Activity, label: 'System Health', path: 'admin/health' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: Users, label: 'affiliates', path: '/admin/affiliates' },
 ];
 
 // --- Settings Constants ---
