@@ -10,7 +10,7 @@ import {
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit,
   ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle
 } from 'lucide-react';
-import { NavItem, UserProfile, UserRole } from '../../types';
+import { NavItem, UserProfile, UserRole } from '../../../../types';
 import Image from 'next/image';
 
 interface SidebarProps {
