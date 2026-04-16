@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUpRight, Shield, CreditCard, User, Mail, Users, BarChart2, AlertTriangle, ShieldAlert, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { ShieldAlert, Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 import { authService } from '@/lib/services/authService';
 
 export default function AdminLoginPage() {
@@ -13,15 +12,20 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ✅ FIX : vider le localStorage dès l'arrivée sur la page login
+  // Évite que l'ancien token expiré soit renvoyé dans les appels API
+  useEffect(() => {
+    authService.logout();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
       const response = await authService.login({ email, password });
-      
-      // ✅ Vérifier si SUPER_ADMIN
+
       if (response.user.role !== 'SUPER_ADMIN') {
         setError('Accès refusé. Seuls les Super Administrateurs peuvent se connecter ici.');
         authService.logout();
@@ -29,10 +33,16 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // ✅ Rediriger vers /admin (pas /admin/dashboard)
       router.push('/admin');
     } catch (err: any) {
-      setError(err.message || 'Email ou mot de passe incorrect');
+      // ✅ FIX : ne jamais afficher "Session expirée" sur la page login,
+      // c'est toujours une erreur de credentials ici
+      const msg = err.message || '';
+      if (msg === 'Session expirée' || msg.toLowerCase().includes('session')) {
+        setError('Email ou mot de passe incorrect');
+      } else {
+        setError(msg || 'Email ou mot de passe incorrect');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -66,11 +76,11 @@ export default function AdminLoginPage() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-500 group-focus-within:text-brand-red transition-colors" />
                 </div>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red placeholder-gray-600 transition-all outline-none" 
+                  className="block w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red placeholder-gray-600 transition-all outline-none"
                   placeholder="admin@hrcongo.com"
                   required
                 />
@@ -83,19 +93,19 @@ export default function AdminLoginPage() {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-brand-red transition-colors" />
                 </div>
-                <input 
+                <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red placeholder-gray-600 transition-all outline-none" 
+                  className="block w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-brand-red/50 focus:border-brand-red placeholder-gray-600 transition-all outline-none"
                   placeholder="••••••••••••"
                   required
                 />
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full flex items-center justify-center bg-gradient-to-r from-brand-red to-brand-darkRed hover:to-red-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-red-900/20 hover:shadow-red-900/40 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
             >
