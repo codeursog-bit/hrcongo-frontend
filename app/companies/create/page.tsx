@@ -109,7 +109,7 @@ export default function CreateCompanyPage() {
   const [form, setForm] = useState({
     legalName: '', tradeName: '', rccmNumber: '', cnssNumber: '', taxNumber: '', industry: '',
     address: '', city: '', phone: '', email: '',
-    appliesCnssEmployer: true, cnssEmployerRate: 16,
+    appliesCnssEmployer: true, cnssEmployerRate: 20.28,
     defaultAppliesIrpp: true, defaultAppliesCnss: true,
   });
 
@@ -154,10 +154,13 @@ export default function CreateCompanyPage() {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
+      // ← Lire le code affilié stocké au moment de l'inscription
+      const affiliateCode = localStorage.getItem('affiliate_ref') || undefined;
+
       await api.post('/companies', {
         legalName: form.legalName,
         tradeName: form.tradeName || undefined,
-        rccmNumber: form.rccmNumber ,
+        rccmNumber: form.rccmNumber,
         cnssNumber: form.cnssNumber || undefined,
         taxNumber: form.taxNumber || undefined,
         address: form.address,
@@ -171,7 +174,12 @@ export default function CreateCompanyPage() {
         cnssEmployerRate: form.appliesCnssEmployer ? Number(form.cnssEmployerRate) : 0,
         defaultAppliesIrpp: form.defaultAppliesIrpp,
         defaultAppliesCnss: form.defaultAppliesCnss,
+        affiliateCode,
       });
+
+      // ← Nettoyer après usage pour ne pas re-lier si la company est recréée
+      localStorage.removeItem('affiliate_ref');
+
       setCreatedCompanyName(form.tradeName || form.legalName);
       setIsSuccess(true);
       setConfettiActive(true);
