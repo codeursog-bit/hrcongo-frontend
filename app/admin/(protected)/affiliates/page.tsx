@@ -35,6 +35,11 @@ const fmtDate = (d: string) =>
     year: 'numeric',
   });
 
+// ─── Helper token ─────────────────────────────────────────────────────────────
+// Le super-admin stocke son token sous "accessToken" (voir /auth/register et authService)
+const getToken = () =>
+  typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AffiliatesAdminPage() {
@@ -50,9 +55,6 @@ export default function AffiliatesAdminPage() {
   // Toggle actif/inactif
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const getToken = () =>
-    typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
   const fetchAffiliates = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -61,11 +63,15 @@ export default function AffiliatesAdminPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/affiliate/admin/all`,
         { headers: { Authorization: `Bearer ${getToken()}` } },
       );
-      if (!res.ok) throw new Error('Erreur chargement');
+      if (res.status === 401) {
+        setError('Session expirée. Reconnectez-vous.');
+        return;
+      }
+      if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const data = await res.json();
       setAffiliates(data);
-    } catch {
-      setError('Impossible de charger les affiliés.');
+    } catch (e: any) {
+      setError('Impossible de charger les affiliés. Vérifiez que l\'API est accessible.');
     } finally {
       setLoading(false);
     }
@@ -95,7 +101,7 @@ export default function AffiliatesAdminPage() {
       setEditingId(null);
       await fetchAffiliates();
     } catch {
-      // on pourrait afficher une erreur inline ici
+      // silencieux — on pourrait afficher une erreur inline
     } finally {
       setSavingRate(false);
     }
@@ -185,8 +191,14 @@ export default function AffiliatesAdminPage() {
 
       {/* Erreur */}
       {error && (
-        <div className="bg-red-900/20 border border-red-900/50 rounded-xl p-4 text-red-400 text-sm">
-          {error}
+        <div className="bg-red-900/20 border border-red-900/50 rounded-xl p-4 text-red-400 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={fetchAffiliates}
+            className="text-xs text-red-300 hover:text-white underline ml-4"
+          >
+            Réessayer
+          </button>
         </div>
       )}
 
@@ -196,12 +208,16 @@ export default function AffiliatesAdminPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-7 h-7 text-indigo-500 animate-spin" />
           </div>
-        ) : affiliates.length === 0 ? (
+        ) : affiliates.length === 0 && !error ? (
           <div className="py-16 text-center">
             <Users className="w-10 h-10 text-gray-700 mx-auto mb-3" />
             <p className="text-sm text-gray-500">Aucun affilié pour l'instant.</p>
+            <p className="text-xs text-gray-600 mt-1">
+              Les affiliés apparaissent ici une fois inscrits sur{' '}
+              <span className="font-mono text-gray-500">/affiliate/login</span>
+            </p>
           </div>
-        ) : (
+        ) : affiliates.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -324,9 +340,9 @@ export default function AffiliatesAdminPage() {
                             : 'bg-green-900/30 text-green-400 hover:bg-green-900/50 border border-green-900/50'
                         }`}
                       >
-                        {togglingId === a.id ? (
+                        {togglingId === a.id && (
                           <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : null}
+                        )}
                         {a.isActive ? 'Désactiver' : 'Activer'}
                       </button>
                     </td>
@@ -335,13 +351,15 @@ export default function AffiliatesAdminPage() {
               </tbody>
             </table>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Note bas de page */}
-      <p className="text-xs text-gray-700 text-center pb-2">
-        Modifier le taux d'un affilié n'affecte pas les commissions passées, uniquement les futures.
-      </p>
+      {affiliates.length > 0 && (
+        <p className="text-xs text-gray-700 text-center pb-2">
+          Modifier le taux d'un affilié n'affecte pas les commissions passées, uniquement les futures.
+        </p>
+      )}
     </div>
   );
 }
