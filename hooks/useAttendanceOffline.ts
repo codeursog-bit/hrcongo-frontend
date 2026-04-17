@@ -86,13 +86,12 @@
 // }
 
 // hooks/useAttendanceOffline.ts
-
 'use client';
 
 import { useState, useCallback } from 'react';
 import { addAttendanceToQueue } from '@/lib/pwa/db';
 import { useOffline } from './useOffline';
-import { attendanceApi } from '@/services/attendance-api'; // ← import direct
+import { attendanceApi } from '@/services/attendance-api';
 
 export function useAttendanceOffline() {
   const { isOffline } = useOffline();
@@ -104,7 +103,7 @@ export function useAttendanceOffline() {
     latitude?: number;
     longitude?: number;
     notes?: string;
-  }) => { // ← plus de paramètre apiClient
+  }) => {
     setIsSubmitting(true);
 
     try {
@@ -128,23 +127,24 @@ export function useAttendanceOffline() {
         };
       }
 
-      // Online → appel API direct avec la bonne méthode
-    // ✅ APRÈS — on capture la réponse et on la propage
-try {
-  const response = await attendanceApi.checkIn({
-    employeeId: data.employeeId,
-    latitude: data.latitude,
-    longitude: data.longitude,
-    notes: data.notes,
-  });
+      // Online → appel API direct, on propage TOUTE la réponse backend
+      try {
+        const response = await attendanceApi.checkIn({
+          employeeId: data.employeeId,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          notes: data.notes,
+        });
 
-  return {
-    success: true,
-    offline: false,
-    message: 'Pointage enregistré avec succès.',
-    // ✅ Propager TOUS les champs extras du backend (earlyArrival, slightLate, etc.)
-    ...response,
-  }; catch (apiError) {
+        return {
+          success: true,
+          offline: false,
+          message: 'Pointage enregistré avec succès.',
+          // ✅ Propage earlyArrival, slightLate, et tous les champs extras du backend
+          ...response,
+        };
+
+      } catch (apiError) {
         // Vrai échec réseau → fallback offline
         await addAttendanceToQueue({
           employeeId: data.employeeId,
