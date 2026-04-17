@@ -5,74 +5,105 @@ import {
   AlertTriangle, Banknote, Users, Clock, CheckCircle2,
   ChevronDown, Loader2, XCircle, ShieldAlert, RefreshCw,
   AlertCircle, Calendar, TrendingDown, Bell, FileWarning,
+  FileX, CreditCard,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
-const MONTHS_FR   = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MONTHS_FR    = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
 
-// ─── Types alignés Service V4 ─────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type AlertLevel = 'INFO' | 'WARNING' | 'CRITIQUE';
+type EmployeePhase = 'NO_BULLETIN' | 'UNPAID_BULLETIN';
 
-interface UnpaidMonth {
-  id: string; month: number; year: number;
-  net: number; dueDate: string; daysOverdue: number; isLate: boolean;
+interface MoisNonPaye {
+  id:          string | null;
+  month:       number;
+  year:        number;
+  net:         number;
+  dueDate:     string;
+  daysOverdue: number;
+  isLate:      boolean;
+  phase:       EmployeePhase;
 }
 
 interface UnpaidEmployee {
-  employeeId: string; nom: string; matricule: string; poste: string;
-  monthsLate: number; maxDaysOverdue: number; totalNetDu: number;
-  alertLevel: AlertLevel;
-  moisNonPayes: UnpaidMonth[];
-  oldestUnpaid: UnpaidMonth;
-}
-
-interface MissingPayroll {
-  employeeId: string; nom: string; matricule: string; poste: string;
-  month: number; year: number; dueDate: string; daysOverdue: number;
+  employeeId:     string;
+  nom:            string;
+  matricule:      string;
+  poste:          string;
+  monthsLate:     number;
+  maxDaysOverdue: number;
+  totalNetDu:     number;
+  alertLevel:     AlertLevel;
+  moisNonPayes:   MoisNonPaye[];
+  oldestUnpaid:   MoisNonPaye;
+  phase:          EmployeePhase; // Phase dominante
 }
 
 interface UpcomingDue {
-  hasDue: boolean; count: number; totalNet: number;
-  daysUntilDue: number; month: number; year: number;
+  hasDue:       boolean;
+  count:        number;
+  totalNet:     number;
+  daysUntilDue: number;
+  month:        number;
+  year:         number;
 }
 
 interface DashboardData {
-  companyId: string;
-  unpaidCount: number; employeeCount: number;
-  totalNetDu: number; maxMonthsLate: number;
-  alertLevel: AlertLevel;
-  employees: UnpaidEmployee[];
-  missingPayrolls: MissingPayroll[];
-  upcomingDue: UpcomingDue;
+  companyId:                string;
+  unpaidCount:              number;
+  employeeCount:            number;
+  totalNetDu:               number;
+  maxMonthsLate:            number;
+  alertLevel:               AlertLevel;
+  employees:                UnpaidEmployee[];
+  noBulletinEmployees:      UnpaidEmployee[]; // Phase 3
+  unpaidBulletinEmployees:  UnpaidEmployee[]; // Phase 4
+  upcomingDue:              UpcomingDue;
 }
 
 interface TimelineEntry {
-  id: string; mois: string;
-  netSalary: number; grossSalary: number;
-  status: 'PAID' | 'LATE' | 'PENDING';
-  paidAt: string | null; paymentReference: string | null;
-  dueDate: string; daysOverdue: number;
+  id:               string;
+  mois:             string;
+  netSalary:        number;
+  grossSalary:      number;
+  status:           'PAID' | 'LATE' | 'PENDING';
+  paidAt:           string | null;
+  paymentReference: string | null;
+  dueDate:          string;
+  daysOverdue:      number;
 }
 
-// ─── Utilitaires ──────────────────────────────────────────────────────────
+// ─── Utilitaires ──────────────────────────────────────────────────────────────
 
 const fmt  = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
 const fmtN = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n));
-
-// ─── Styles alerte ────────────────────────────────────────────────────────
 
 const ALERT_STYLES: Record<AlertLevel, {
   bg: string; border: string; text: string; badge: string; dot: string;
   icon: React.ElementType;
 }> = {
-  INFO:     { bg: 'bg-sky-50 dark:bg-sky-950/30',    border: 'border-sky-200 dark:border-sky-800',    text: 'text-sky-700 dark:text-sky-400',    badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',    dot: 'bg-sky-500',    icon: AlertCircle  },
-  WARNING:  { bg: 'bg-amber-50 dark:bg-amber-950/30',border: 'border-amber-200 dark:border-amber-800',text: 'text-amber-700 dark:text-amber-400',badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',dot: 'bg-amber-500',icon: AlertTriangle },
-  CRITIQUE: { bg: 'bg-red-50 dark:bg-red-950/30',    border: 'border-red-200 dark:border-red-800',    text: 'text-red-700 dark:text-red-400',    badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',    dot: 'bg-red-500',    icon: ShieldAlert  },
+  INFO:     { bg: 'bg-sky-50 dark:bg-sky-950/30',     border: 'border-sky-200 dark:border-sky-800',     text: 'text-sky-700 dark:text-sky-400',     badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',     dot: 'bg-sky-500',    icon: AlertCircle  },
+  WARNING:  { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-400', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400', dot: 'bg-amber-500', icon: AlertTriangle },
+  CRITIQUE: { bg: 'bg-red-50 dark:bg-red-950/30',     border: 'border-red-200 dark:border-red-800',     text: 'text-red-700 dark:text-red-400',     badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',     dot: 'bg-red-500',   icon: ShieldAlert  },
 };
 
-// ─── Composant principal ──────────────────────────────────────────────────
+// ─── Badge phase ──────────────────────────────────────────────────────────────
+function PhaseBadge({ phase }: { phase: EmployeePhase }) {
+  return phase === 'NO_BULLETIN' ? (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+      <FileX className="w-3 h-3" /> Paie non lancée
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+      <CreditCard className="w-3 h-3" /> Généré, non payé
+    </span>
+  );
+}
+
+// ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function UnpaidSalaryPage() {
   const [data,      setData]      = useState<DashboardData | null>(null);
@@ -83,16 +114,13 @@ export default function UnpaidSalaryPage() {
   const [tlLoading, setTlLoading] = useState<string | null>(null);
   const [tlError,   setTlError]   = useState<Record<string, string>>({});
   const [filter,    setFilter]    = useState<AlertLevel | 'ALL'>('ALL');
+  const [phaseFilter, setPhaseFilter] = useState<EmployeePhase | 'ALL'>('ALL');
 
   const loadDashboard = useCallback(() => {
     setLoading(true);
     setError(null);
     api.get<DashboardData>('/unpaid-salary/dashboard')
-      .then(d => {
-        const order: Record<AlertLevel, number> = { CRITIQUE: 0, WARNING: 1, INFO: 2 };
-        d.employees.sort((a, b) => order[a.alertLevel] - order[b.alertLevel]);
-        setData(d);
-      })
+      .then(d => setData(d))
       .catch(err => setError(err.message ?? 'Impossible de charger les données.'))
       .finally(() => setLoading(false));
   }, []);
@@ -103,6 +131,8 @@ export default function UnpaidSalaryPage() {
     if (expanded === emp.employeeId) { setExpanded(null); return; }
     setExpanded(emp.employeeId);
     if (timelines[emp.employeeId]) return;
+    // Seulement si des bulletins existent (phase 4)
+    if (emp.phase === 'NO_BULLETIN') return;
     setTlLoading(emp.employeeId);
     setTlError(prev => ({ ...prev, [emp.employeeId]: '' }));
     try {
@@ -115,30 +145,28 @@ export default function UnpaidSalaryPage() {
     }
   };
 
-  const filtered      = (data?.employees ?? []).filter(e => filter === 'ALL' || e.alertLevel === filter);
+  // Filtrage combiné
+  const filtered = (data?.employees ?? []).filter(e => {
+    const alertOk = filter === 'ALL' || e.alertLevel === filter;
+    const phaseOk = phaseFilter === 'ALL' || e.phase === phaseFilter;
+    return alertOk && phaseOk;
+  });
+
   const hasRetards    = (data?.unpaidCount ?? 0) > 0;
-  const hasMissing    = (data?.missingPayrolls ?? []).length > 0;
   const hasUpcoming   = data?.upcomingDue?.hasDue ?? false;
-  const hasAnyAlert   = hasRetards || hasMissing || hasUpcoming;
-  const initials      = (nom: string) => nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-  const countByLevel  = (level: AlertLevel) => (data?.employees ?? []).filter(e => e.alertLevel === level).length;
+  const hasAnyAlert   = hasRetards || hasUpcoming;
+  const noBulletinCount     = data?.noBulletinEmployees?.length ?? 0;
+  const unpaidBulletinCount = data?.unpaidBulletinEmployees?.length ?? 0;
 
-  // ── Grouper les bulletins manquants par mois ──────────────────────────────
-  const missingByMonth = React.useMemo(() => {
-    const map = new Map<string, MissingPayroll[]>();
-    for (const m of data?.missingPayrolls ?? []) {
-      const key = `${MONTHS_FR[m.month - 1]} ${m.year}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(m);
-    }
-    return map;
-  }, [data?.missingPayrolls]);
+  const initials     = (nom: string) => nom.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const countByLevel = (level: AlertLevel) => (data?.employees ?? []).filter(e => e.alertLevel === level).length;
 
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        <p className="text-sm text-slate-500 dark:text-slate-400">Chargement des bulletins…</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Analyse des salaires en cours…</p>
       </div>
     </div>
   );
@@ -154,7 +182,7 @@ export default function UnpaidSalaryPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Suivi Salaires Impayés</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Bulletins validés dont l'échéance est dépassée</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Détection basée sur la date de paiement prévue</p>
           </div>
         </div>
         <button onClick={loadDashboard} disabled={loading}
@@ -175,45 +203,54 @@ export default function UnpaidSalaryPage() {
         </div>
       )}
 
-      {/* ── 🆕 ALERTE PRÉVENTIVE — paiement imminent ── */}
+      {/* ── PHASE 1 & 2 — Alerte préventive ── */}
       {hasUpcoming && data?.upcomingDue && (
         <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl">
           <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="font-bold text-sm text-blue-800 dark:text-blue-300">
               {data.upcomingDue.daysUntilDue === 0
-                ? `💰 Paiement prévu aujourd'hui`
-                : `📅 Paiement dans ${data.upcomingDue.daysUntilDue} jour(s)`
+                ? `💰 Paiement des salaires prévu aujourd'hui`
+                : `📅 Paiement des salaires dans ${data.upcomingDue.daysUntilDue} jour(s)`
               }
             </p>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 leading-relaxed">
-              {data.upcomingDue.count} bulletin(s) pour{' '}
+              {data.upcomingDue.count} employé(s) pour{' '}
               <strong>{MONTHS_FR[(data.upcomingDue.month - 1)]} {data.upcomingDue.year}</strong>{' '}
-              arrivent à échéance.
-              Total à verser : <strong>{fmt(data.upcomingDue.totalNet)}</strong>.
+              doivent être payés le <strong>{data.upcomingDue.daysUntilDue === 0 ? "aujourd'hui" : `dans ${data.upcomingDue.daysUntilDue} jour(s)`}</strong>.
+              {data.upcomingDue.totalNet > 0 && <> Total estimé : <strong>{fmt(data.upcomingDue.totalNet)}</strong>.</>}
               {data.upcomingDue.daysUntilDue > 0 && ' Pensez à préparer les virements.'}
             </p>
           </div>
         </div>
       )}
 
-      {/* ── 🆕 ALERTE — paie non générée ── */}
-      {hasMissing && (
+      {/* ── PHASE 3 — Paie jamais lancée ── */}
+      {noBulletinCount > 0 && (
         <div className="flex items-start gap-3 p-4 bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-2xl">
           <FileWarning className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="font-bold text-sm text-violet-800 dark:text-violet-300">
-              🚨 Paie non générée — {data?.missingPayrolls.length} bulletin(s) manquant(s)
+              🚨 Paie non lancée — {noBulletinCount} employé(s) sans aucun bulletin
             </p>
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              {Array.from(missingByMonth.entries()).map(([label, employees]) => (
-                <span key={label} className="text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 px-2 py-1 rounded-lg font-medium">
-                  {label} — {employees.length} employé(s)
-                </span>
-              ))}
-            </div>
-            <p className="text-xs text-violet-500 dark:text-violet-400 mt-1.5">
-              Rendez-vous dans <strong>Paie → Générer</strong> pour lancer ces bulletins.
+            <p className="text-xs text-violet-500 dark:text-violet-400 mt-1">
+              La date de paiement prévue est dépassée et aucun bulletin n'a été généré pour ces employés.
+              Rendez-vous dans <strong>Paie → Générer</strong> pour lancer la paie.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── PHASE 4 — Bulletins générés mais non payés ── */}
+      {unpaidBulletinCount > 0 && (
+        <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-2xl">
+          <CreditCard className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-bold text-sm text-orange-800 dark:text-orange-300">
+              ⚠️ Bulletins générés mais non payés — {unpaidBulletinCount} employé(s)
+            </p>
+            <p className="text-xs text-orange-500 dark:text-orange-400 mt-1">
+              Des bulletins ont été générés mais le paiement n'a pas encore été effectué et marqué comme payé.
             </p>
           </div>
         </div>
@@ -225,7 +262,7 @@ export default function UnpaidSalaryPage() {
           <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <div>
             <p className="font-semibold text-emerald-700 dark:text-emerald-400">Tous les salaires sont à jour ✅</p>
-            <p className="text-sm text-emerald-600 dark:text-emerald-500">Aucun bulletin en retard ni paiement imminent.</p>
+            <p className="text-sm text-emerald-600 dark:text-emerald-500">Aucun retard ni paiement imminent.</p>
           </div>
         </div>
       )}
@@ -234,14 +271,40 @@ export default function UnpaidSalaryPage() {
       {hasRetards && data && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'Bulletins impayés',  value: String(data.unpaidCount),    sub: `${data.employeeCount} employé(s)`,         icon: XCircle,     color: 'bg-red-600' },
-            { label: 'Retard maximum',     value: `${data.maxMonthsLate} mois`, sub: data.maxMonthsLate >= 3 ? '⚠️ Critique' : 'Surveiller', icon: Clock, color: data.maxMonthsLate >= 3 ? 'bg-red-600' : 'bg-amber-500' },
-            { label: 'Employés concernés', value: String(data.employeeCount),   sub: `${countByLevel('CRITIQUE')} critique(s)`,  icon: Users,       color: countByLevel('CRITIQUE') > 0 ? 'bg-red-600' : 'bg-amber-500' },
-            { label: 'Total dû (net)',     value: fmt(data.totalNetDu),         sub: 'Montant cumulé',                           icon: TrendingDown, color: 'bg-slate-700 dark:bg-slate-600' },
+            {
+              label: 'Sans bulletin',
+              value: String(noBulletinCount),
+              sub:   'Paie jamais lancée',
+              icon:  FileX,
+              color: noBulletinCount > 0 ? 'bg-violet-600' : 'bg-slate-400',
+            },
+            {
+              label: 'Non payés',
+              value: String(unpaidBulletinCount),
+              sub:   'Bulletins en attente',
+              icon:  CreditCard,
+              color: unpaidBulletinCount > 0 ? 'bg-orange-500' : 'bg-slate-400',
+            },
+            {
+              label: 'Retard max',
+              value: `${data.maxMonthsLate} mois`,
+              sub:   data.maxMonthsLate >= 3 ? '⚠️ Critique' : 'Surveiller',
+              icon:  Clock,
+              color: data.maxMonthsLate >= 3 ? 'bg-red-600' : 'bg-amber-500',
+            },
+            {
+              label: 'Total dû (net)',
+              value: fmt(data.totalNetDu),
+              sub:   'Montant cumulé (bulletins)',
+              icon:  TrendingDown,
+              color: 'bg-slate-700 dark:bg-slate-600',
+            },
           ].map(card => (
             <div key={card.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg shrink-0 ${card.color}`}><card.icon className="w-4 h-4 text-white" /></div>
+                <div className={`p-2 rounded-lg shrink-0 ${card.color}`}>
+                  <card.icon className="w-4 h-4 text-white" />
+                </div>
                 <div className="min-w-0">
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-tight">{card.label}</p>
                   <p className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 truncate">{card.value}</p>
@@ -253,22 +316,21 @@ export default function UnpaidSalaryPage() {
         </div>
       )}
 
-      {/* ── Bannière alerte globale (≥ 2 mois) ── */}
+      {/* ── Bannière alerte globale ── */}
       {data && data.maxMonthsLate >= 2 && (() => {
-        const s = ALERT_STYLES[data.alertLevel];
+        const s    = ALERT_STYLES[data.alertLevel];
         const Icon = s.icon;
-        const critique = countByLevel('CRITIQUE');
         return (
           <div className={`flex items-start gap-3 p-4 ${s.bg} border ${s.border} rounded-2xl`}>
             <Icon className={`w-5 h-5 ${s.text} shrink-0 mt-0.5`} />
             <div className="flex-1">
               <p className={`font-semibold text-sm ${s.text}`}>
                 {data.alertLevel === 'CRITIQUE'
-                  ? `🔴 Situation critique — ${critique} employé(s) avec 3+ mois de retard`
+                  ? `🔴 Situation critique — ${countByLevel('CRITIQUE')} employé(s) avec 3+ mois de retard`
                   : `🟠 Retard de paiement — ${data.employeeCount} employé(s) concerné(s)`}
               </p>
               <p className={`text-xs mt-1 ${s.text} opacity-80 leading-relaxed`}>
-                Le Code du Travail Congo (art. 95) impose le paiement des salaires à date fixe. Un retard de 3 mois ou plus permet à l'employé de saisir l'Inspection du Travail.
+                Code du Travail Congo (art. 95) : paiement à date fixe obligatoire. 3 mois de retard = droit de saisir l'Inspection du Travail.
               </p>
             </div>
           </div>
@@ -277,21 +339,40 @@ export default function UnpaidSalaryPage() {
 
       {/* ── Filtres ── */}
       {hasRetards && (
-        <div className="flex gap-2 flex-wrap">
-          {(['ALL', 'CRITIQUE', 'WARNING', 'INFO'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
+        <div className="flex gap-2 flex-wrap items-center">
+          {/* Filtre alerte */}
+          <div className="flex gap-1.5 flex-wrap">
+            {(['ALL', 'CRITIQUE', 'WARNING', 'INFO'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  filter === f
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                }`}>
+                {f === 'ALL' ? `Tous (${data?.employees.length ?? 0})`
+                  : <span className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${ALERT_STYLES[f].dot}`} />
+                      {f} <span className="opacity-60">{countByLevel(f)}</span>
+                    </span>
+                }
+              </button>
+            ))}
+          </div>
+
+          {/* Séparateur */}
+          <div className="w-px h-5 bg-slate-200 dark:bg-slate-700" />
+
+          {/* Filtre phase */}
+          {(['ALL', 'NO_BULLETIN', 'UNPAID_BULLETIN'] as const).map(p => (
+            <button key={p} onClick={() => setPhaseFilter(p)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                filter === f
+                phaseFilter === p
                   ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
                   : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
               }`}>
-              {f === 'ALL'
-                ? `Tous (${data?.employees.length ?? 0})`
-                : <span className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${ALERT_STYLES[f].dot}`} />
-                    {f} <span className="opacity-60">{countByLevel(f)}</span>
-                  </span>
-              }
+              {p === 'ALL'           ? 'Toutes phases'
+               : p === 'NO_BULLETIN' ? `🚨 Sans bulletin (${noBulletinCount})`
+               :                       `⚠️ Non payés (${unpaidBulletinCount})`}
             </button>
           ))}
         </div>
@@ -314,111 +395,170 @@ export default function UnpaidSalaryPage() {
               <div key={emp.employeeId} className={`rounded-2xl border ${s.border} overflow-hidden hover:shadow-md transition-shadow`}>
                 <button onClick={() => toggleEmployee(emp)}
                   className={`w-full flex items-center gap-4 p-4 ${s.bg} hover:brightness-[0.97] dark:hover:brightness-110 transition-all text-left`}>
+
+                  {/* Avatar */}
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${s.badge}`}>
                     {initials(emp.nom)}
                   </div>
+
+                  {/* Infos */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-slate-900 dark:text-white text-sm">{emp.nom}</span>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${s.badge}`}>{emp.alertLevel}</span>
+                      <PhaseBadge phase={emp.phase} />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{emp.poste} · {emp.matricule}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      {emp.poste} · {emp.matricule}
+                    </p>
                     {emp.maxDaysOverdue > 0 && (
-                      <p className={`text-xs font-medium mt-0.5 ${s.text}`}>{emp.maxDaysOverdue}j de retard (échéance la plus ancienne)</p>
+                      <p className={`text-xs font-medium mt-0.5 ${s.text}`}>
+                        {emp.maxDaysOverdue}j de retard (échéance la plus ancienne)
+                      </p>
                     )}
                   </div>
+
+                  {/* Métriques */}
                   <div className="flex items-center gap-4 shrink-0">
                     <div className="text-center hidden sm:block">
-                      <p className="text-xs text-slate-400">Mois impayés</p>
+                      <p className="text-xs text-slate-400">Mois en retard</p>
                       <p className={`font-bold text-lg ${s.text}`}>{emp.monthsLate}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-slate-400">Total dû</p>
-                      <p className="font-bold text-slate-900 dark:text-white text-sm">{fmt(emp.totalNetDu)}</p>
+                      <p className="font-bold text-slate-900 dark:text-white text-sm">
+                        {emp.totalNetDu > 0 ? fmt(emp.totalNetDu) : '—'}
+                      </p>
                     </div>
                     <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </div>
                 </button>
 
+                {/* Détail déplié */}
                 {isOpen && (
                   <div className="bg-white dark:bg-slate-900 p-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-                    {/* Pills mois non payés */}
+
+                    {/* Pills mois */}
                     <div>
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Mois non payés</p>
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                        Mois en retard
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {emp.moisNonPayes.map(m => (
-                          <div key={`${m.month}-${m.year}`} className={`inline-flex flex-col items-center px-3 py-2 rounded-xl text-xs font-semibold ${s.badge}`}>
+                          <div key={`${m.month}-${m.year}`}
+                            className={`inline-flex flex-col items-center px-3 py-2 rounded-xl text-xs font-semibold border ${
+                              m.phase === 'NO_BULLETIN'
+                                ? 'bg-violet-50 border-violet-200 text-violet-700 dark:bg-violet-900/30 dark:border-violet-800 dark:text-violet-300'
+                                : `${s.badge} border-transparent`
+                            }`}>
                             <span>{MONTHS_SHORT[m.month - 1]} {m.year}</span>
-                            <span className="font-normal opacity-80 mt-0.5">{fmtN(m.net)} FCFA</span>
-                            {m.daysOverdue > 0 && <span className={`font-bold mt-0.5 ${s.text}`}>+{m.daysOverdue}j</span>}
+                            {m.net > 0
+                              ? <span className="font-normal opacity-80 mt-0.5">{fmtN(m.net)} FCFA</span>
+                              : <span className="font-normal opacity-60 mt-0.5 italic">Pas de bulletin</span>
+                            }
+                            {m.daysOverdue > 0 && (
+                              <span className={`font-bold mt-0.5 ${s.text}`}>+{m.daysOverdue}j</span>
+                            )}
+                            <span className={`text-[10px] mt-0.5 opacity-70 ${
+                              m.phase === 'NO_BULLETIN' ? 'text-violet-500' : 'text-orange-500'
+                            }`}>
+                              {m.phase === 'NO_BULLETIN' ? 'Non lancé' : 'Non payé'}
+                            </span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Timeline */}
-                    {tlLoading === emp.employeeId && (
-                      <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 text-slate-400 animate-spin" /></div>
-                    )}
-                    {tlErr && (
-                      <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400">
-                        <XCircle className="w-4 h-4 shrink-0" />{tlErr}
+                    {/* Message spécifique phase 3 */}
+                    {emp.phase === 'NO_BULLETIN' && (
+                      <div className="flex items-center gap-2 p-3 bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-xl text-xs text-violet-700 dark:text-violet-300">
+                        <FileX className="w-4 h-4 shrink-0" />
+                        <span>
+                          Aucun bulletin n'a été généré pour cet employé sur les périodes en retard.
+                          Rendez-vous dans <strong>Paie → Générer</strong> pour lancer la paie.
+                        </span>
                       </div>
                     )}
-                    {tl && tl.length > 0 && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Historique des paiements</p>
-                        <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                          {tl.map(t => {
-                            const isPaid    = t.status === 'PAID';
-                            const isLate    = t.status === 'LATE';
-                            const isPending = t.status === 'PENDING';
-                            return (
-                              <div key={t.id} className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs ${
-                                isLate    ? 'bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900' :
-                                isPending ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50' :
-                                            'bg-slate-50 dark:bg-slate-800/40'
-                              }`}>
-                                <div className="flex items-center gap-2">
-                                  {isPaid    ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                                  : isLate   ? <XCircle      className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                                             : <Clock        className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                                  <span className="font-medium text-slate-700 dark:text-slate-300">{t.mois}</span>
-                                  {isLate    && t.daysOverdue > 0 && <span className="text-red-500 font-semibold">· {t.daysOverdue}j de retard</span>}
-                                  {isPending && <span className="text-amber-600 dark:text-amber-400">· En attente</span>}
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="font-semibold text-slate-900 dark:text-white">{fmtN(t.netSalary)} FCFA</span>
-                                  {isPaid && t.paidAt && (
-                                    <span className="text-slate-400 hidden sm:inline">
-                                      Payé le {new Date(t.paidAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                    </span>
-                                  )}
-                                  {t.paymentReference && <span className="font-mono text-slate-400">Réf: {t.paymentReference}</span>}
-                                  <span className={`px-1.5 py-0.5 rounded-md font-semibold hidden md:inline ${
-                                    isPaid    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                    isLate    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+
+                    {/* Timeline (Phase 4 seulement) */}
+                    {emp.phase === 'UNPAID_BULLETIN' && (
+                      <>
+                        {tlLoading === emp.employeeId && (
+                          <div className="flex justify-center py-4">
+                            <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                          </div>
+                        )}
+                        {tlErr && (
+                          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-600 dark:text-red-400">
+                            <XCircle className="w-4 h-4 shrink-0" />{tlErr}
+                          </div>
+                        )}
+                        {tl && tl.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                              Historique des paiements
+                            </p>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                              {tl.map(t => {
+                                const isPaid    = t.status === 'PAID';
+                                const isLate    = t.status === 'LATE';
+                                const isPending = t.status === 'PENDING';
+                                return (
+                                  <div key={t.id} className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs ${
+                                    isLate    ? 'bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900' :
+                                    isPending ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50' :
+                                                'bg-slate-50 dark:bg-slate-800/40'
                                   }`}>
-                                    {isPaid ? 'Payé' : isLate ? 'En retard' : 'En attente'}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                                    <div className="flex items-center gap-2">
+                                      {isPaid    ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                       : isLate  ? <XCircle      className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                                                 : <Clock        className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                                      <span className="font-medium text-slate-700 dark:text-slate-300">{t.mois}</span>
+                                      {isLate    && t.daysOverdue > 0 && <span className="text-red-500 font-semibold">· {t.daysOverdue}j de retard</span>}
+                                      {isPending && <span className="text-amber-600 dark:text-amber-400">· En attente</span>}
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-semibold text-slate-900 dark:text-white">{fmtN(t.netSalary)} FCFA</span>
+                                      {isPaid && t.paidAt && (
+                                        <span className="text-slate-400 hidden sm:inline">
+                                          Payé le {new Date(t.paidAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                        </span>
+                                      )}
+                                      {t.paymentReference && <span className="font-mono text-slate-400">Réf: {t.paymentReference}</span>}
+                                      <span className={`px-1.5 py-0.5 rounded-md font-semibold hidden md:inline ${
+                                        isPaid    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                        isLate    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                      }`}>
+                                        {isPaid ? 'Payé' : isLate ? 'En retard' : 'En attente'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {/* Récap dette */}
                     <div className={`flex items-center justify-between p-3 ${s.bg} rounded-xl border ${s.border}`}>
                       <div>
-                        <span className={`font-semibold text-sm ${s.text}`}>Total dû à {emp.nom.split(' ')[0]}</span>
+                        <span className={`font-semibold text-sm ${s.text}`}>
+                          Situation de {emp.nom.split(' ')[0]}
+                        </span>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          {emp.monthsLate} mois · plus ancien : {MONTHS_FR[(emp.oldestUnpaid.month - 1)]} {emp.oldestUnpaid.year}
+                          {emp.monthsLate} mois · retard depuis :{' '}
+                          {MONTHS_FR[(emp.oldestUnpaid.month - 1)]} {emp.oldestUnpaid.year}
                         </p>
                       </div>
-                      <span className={`font-bold text-base ${s.text}`}>{fmt(emp.totalNetDu)}</span>
+                      <div className="text-right">
+                        {emp.totalNetDu > 0 && (
+                          <span className={`font-bold text-base ${s.text}`}>{fmt(emp.totalNetDu)}</span>
+                        )}
+                        <PhaseBadge phase={emp.phase} />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -444,6 +584,3 @@ export default function UnpaidSalaryPage() {
     </div>
   );
 }
-
-
-
