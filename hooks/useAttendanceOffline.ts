@@ -129,21 +129,22 @@ export function useAttendanceOffline() {
       }
 
       // Online → appel API direct avec la bonne méthode
-      try {
-        await attendanceApi.checkIn({ // ← ici on utilise attendanceApi.checkIn()
-          employeeId: data.employeeId,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          notes: data.notes,
-        });
+    // ✅ APRÈS — on capture la réponse et on la propage
+try {
+  const response = await attendanceApi.checkIn({
+    employeeId: data.employeeId,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    notes: data.notes,
+  });
 
-        return {
-          success: true,
-          offline: false,
-          message: 'Pointage enregistré avec succès.',
-        };
-
-      } catch (apiError) {
+  return {
+    success: true,
+    offline: false,
+    message: 'Pointage enregistré avec succès.',
+    // ✅ Propager TOUS les champs extras du backend (earlyArrival, slightLate, etc.)
+    ...response,
+  }; catch (apiError) {
         // Vrai échec réseau → fallback offline
         await addAttendanceToQueue({
           employeeId: data.employeeId,
