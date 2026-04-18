@@ -2,10 +2,6 @@
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/shifts/page.tsx
-// FIXES :
-//  1. Après assignation → fetchAssignments() appelé TOUJOURS (pas seulement si onglet actif)
-//  2. Vue "Employés & Plannings" : filtre toggle — affiche seulement les shiftés OU tous
-//  3. Compteur dans le tab "Employés" se met à jour sans rechargement
 // ============================================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -14,8 +10,7 @@ import {
   Moon, Sun, Clock, Plus, Edit2, Trash2, Users,
   ArrowLeft, Loader2, Check, X, AlertCircle, Calendar,
   Search, RefreshCw, AlertTriangle, Eye,
-  ChevronDown, Filter, Download, Building2,
-  Sunset, Info, UserCheck, UserX, Repeat,
+  Download, Building2, Sunset, Info, UserCheck, UserX, Repeat,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -87,7 +82,6 @@ const PRESETS = [
   { name: 'Garde', sh: 20, eh: 8, color: '#EF4444', night: true },
 ];
 
-// ─── Badge shift inline ───────────────────────────────────────────────────────
 function ShiftBadge({ shift, small }: { shift: WorkShift; small?: boolean }) {
   const size = small ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
   return (
@@ -250,7 +244,7 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
   const [empId, setEmpId] = useState('');
   const [type, setType] = useState<'date' | 'recurring'>('date');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dow, setDow] = useState(1);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [validFrom, setValidFrom] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [notes, setNotes] = useState('');
@@ -259,6 +253,31 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
   const filtered = employees.filter(e =>
     `${e.firstName} ${e.lastName} ${e.department?.name ?? ''}`.toLowerCase().includes(search.toLowerCase())
   );
+
+  const toggleDay = (day: number) => {
+    setSelectedDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+    );
+  };
+
+  const canSubmit = !!empId && !!shiftId && (
+    type === 'date' || (type === 'recurring' && selectedDays.length > 0)
+  );
+
+  const handleAssign = () => {
+    if (type === 'date') {
+      onAssign({ shiftId, employeeId: empId, specificDate: date, notes: notes || undefined });
+    } else {
+      onAssign({
+        shiftId,
+        employeeId: empId,
+        days: selectedDays,
+        validFrom: validFrom || undefined,
+        validUntil: validUntil || undefined,
+        notes: notes || undefined,
+      });
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -269,25 +288,38 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
         </div>
         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Assigner un planning</h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800"><X size={18} className="text-gray-400" /></button>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
+            <X size={18} className="text-gray-400" />
+          </button>
         </div>
+
         <div className="p-6 max-h-[75vh] overflow-y-auto space-y-5">
+
+          {/* Shift */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Shift <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+              Shift <span className="text-red-500">*</span>
+            </label>
             <div className="space-y-1.5">
               {shifts.map(s => (
                 <button key={s.id} onClick={() => setShiftId(s.id)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-all ${shiftId === s.id ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-1.5"><ShiftIcon shift={s} />{s.name}{s.isDefault && <span className="ml-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded text-[10px] font-bold">Défaut</span>}</p>
+                    <p className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-1.5">
+                      <ShiftIcon shift={s} />
+                      {s.name}
+                      {s.isDefault && <span className="ml-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded text-[10px] font-bold">Défaut</span>}
+                    </p>
                     <p className="text-xs text-gray-500">{fmtHHMM(s.startHour, s.startMinute)} → {fmtHHMM(s.endHour, s.endMinute)} · {s.durationHours}h{s.nightPremiumRate > 0 ? ` · +${s.nightPremiumRate}%` : ''}</p>
                   </div>
-                  {shiftId === s.id && <Check size={14} className="text-sky-500" />}
+                  {shiftId === s.id && <Check size={14} className="text-sky-500 flex-shrink-0" />}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Type */}
           <div>
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Type</label>
             <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
@@ -299,6 +331,8 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
               ))}
             </div>
           </div>
+
+          {/* Contenu selon type */}
           {type === 'date' ? (
             <div>
               <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">Date</label>
@@ -306,32 +340,85 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
                 className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Jours multi-sélection */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">Jour</label>
-                <div className="grid grid-cols-7 gap-1">
-                  {DAY_NAMES.map((d, i) => (
-                    <button key={i} onClick={() => setDow(i)}
-                      className={`py-2 rounded-lg text-xs font-bold transition-all ${dow === i ? 'bg-sky-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200'}`}>
-                      {d}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                    Jours <span className="text-red-500">*</span>
+                  </label>
+                  {selectedDays.length > 0 && (
+                    <span className="text-[10px] font-bold text-sky-500">
+                      {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} sélectionné{selectedDays.length > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-7 gap-1.5">
+                  {DAY_NAMES.map((d, i) => {
+                    const isSelected = selectedDays.includes(i);
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => toggleDay(i)}
+                        className={`flex flex-col items-center py-2.5 rounded-xl text-xs font-bold transition-all ${
+                          isSelected
+                            ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30 scale-105'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {d}
+                        <span className={`w-1 h-1 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-transparent'}`} />
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Raccourcis */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {[
+                    { label: 'Lun–Ven', days: [1, 2, 3, 4, 5] },
+                    { label: 'Lun·Mer·Ven', days: [1, 3, 5] },
+                    { label: 'Mar·Jeu', days: [2, 4] },
+                    { label: 'Week-end', days: [6, 0] },
+                  ].map(({ label, days }) => (
+                    <button key={label} onClick={() => setSelectedDays(days)}
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                      {label}
                     </button>
                   ))}
+                  {selectedDays.length > 0 && (
+                    <button onClick={() => setSelectedDays([])}
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-400 hover:bg-red-100 transition-colors ml-auto">
+                      Effacer
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* Période */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Du</label>
-                  <input type="date" value={validFrom} onChange={e => setValidFrom(e.target.value)} className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
+                    Du <span className="text-gray-400 font-normal">(optionnel)</span>
+                  </label>
+                  <input type="date" value={validFrom} onChange={e => setValidFrom(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Au</label>
-                  <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
+                    Au <span className="text-gray-400 font-normal">(optionnel)</span>
+                  </label>
+                  <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
+                    className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
                 </div>
               </div>
             </div>
           )}
+
+          {/* Employé */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Employé <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+              Employé <span className="text-red-500">*</span>
+            </label>
             <div className="relative mb-2">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
@@ -343,34 +430,39 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
               ) : filtered.map(emp => (
                 <button key={emp.id} onClick={() => setEmpId(emp.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-all ${empId === emp.id ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
-                  {emp.photoUrl ? <img src={emp.photoUrl} className="w-8 h-8 rounded-lg object-cover" alt="" /> : (
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white">
-                      {emp.firstName[0]}{emp.lastName[0]}
-                    </div>
-                  )}
+                  {emp.photoUrl
+                    ? <img src={emp.photoUrl} className="w-8 h-8 rounded-lg object-cover" alt="" />
+                    : <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white">{emp.firstName[0]}{emp.lastName[0]}</div>
+                  }
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{emp.firstName} {emp.lastName}</p>
                     <p className="text-xs text-gray-500 truncate">{emp.department?.name}</p>
                   </div>
-                  {empId === emp.id && <Check size={14} className="text-sky-500" />}
+                  {empId === emp.id && <Check size={14} className="text-sky-500 flex-shrink-0" />}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Notes */}
           <div>
-            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">Notes (optionnel)</label>
-            <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ex : Remplacement congé..."
+            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">
+              Notes <span className="text-gray-400 font-normal">(optionnel)</span>
+            </label>
+            <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
+              placeholder="Ex : Remplacement congé..."
               className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
           </div>
         </div>
+
         <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
           <button onClick={onClose} className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold">Annuler</button>
           <button
-            onClick={() => onAssign({ shiftId, employeeId: empId, specificDate: type === 'date' ? date : undefined, dayOfWeek: type === 'recurring' ? dow : undefined, validFrom: validFrom || undefined, validUntil: validUntil || undefined, notes: notes || undefined })}
-            disabled={!empId || !shiftId || saving}
+            onClick={handleAssign}
+            disabled={!canSubmit || saving}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-            Assigner
+            {type === 'recurring' && selectedDays.length > 1 ? `Assigner (${selectedDays.length} jours)` : 'Assigner'}
           </button>
         </div>
       </div>
@@ -379,11 +471,7 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 }
 
 // ─── Vue Employés Shiftés ─────────────────────────────────────────────────────
-// FIX: par défaut, n'affiche QUE les employés qui ont un shift assigné
-// Toggle "Afficher tous" pour voir les employés sans planning
-function EmployeeShiftView({
-  assignments, employees, shifts, loading,
-}: {
+function EmployeeShiftView({ assignments, employees, shifts, loading }: {
   assignments: ShiftAssignment[];
   employees: Employee[];
   shifts: WorkShift[];
@@ -392,30 +480,19 @@ function EmployeeShiftView({
   const [search, setSearch] = useState('');
   const [filterShift, setFilterShift] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'date' | 'recurring'>('all');
-  // FIX: par défaut showAll = false → seulement les shiftés
   const [showAll, setShowAll] = useState(false);
 
-  type EmployeeGroup = {
-    employee: Employee;
-    assignments: ShiftAssignment[];
-    hasShift: boolean;
-  };
+  type EmployeeGroup = { employee: Employee; assignments: ShiftAssignment[]; hasShift: boolean; };
 
   const employeeMap = new Map<string, EmployeeGroup>();
 
-  // Construire la map depuis les assignations d'abord
   assignments.forEach(a => {
     if (!employeeMap.has(a.employeeId)) {
-      employeeMap.set(a.employeeId, {
-        employee: a.employee,
-        assignments: [],
-        hasShift: true,
-      });
+      employeeMap.set(a.employeeId, { employee: a.employee, assignments: [], hasShift: true });
     }
     employeeMap.get(a.employeeId)!.assignments.push(a);
   });
 
-  // Si showAll, ajouter les employés sans shift
   if (showAll) {
     employees.forEach(emp => {
       if (!employeeMap.has(emp.id)) {
@@ -429,10 +506,9 @@ function EmployeeShiftView({
   const filtered = allGroups.filter(g => {
     const nameMatch = `${g.employee.firstName} ${g.employee.lastName} ${g.employee.department?.name ?? ''}`.toLowerCase().includes(search.toLowerCase());
     const shiftMatch = !filterShift || g.assignments.some(a => a.shiftId === filterShift);
-    const typeMatch =
-      filterType === 'all' ||
-      (filterType === 'date' && g.assignments.some(a => a.specificDate)) ||
-      (filterType === 'recurring' && g.assignments.some(a => a.dayOfWeek !== undefined));
+    const typeMatch = filterType === 'all'
+      || (filterType === 'date' && g.assignments.some(a => a.specificDate))
+      || (filterType === 'recurring' && g.assignments.some(a => a.dayOfWeek !== undefined));
     return nameMatch && shiftMatch && typeMatch;
   }).sort((a, b) => {
     if (a.hasShift && !b.hasShift) return -1;
@@ -453,11 +529,11 @@ function EmployeeShiftView({
 
   return (
     <div className="space-y-4">
-      {/* Stats rapides */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 text-center">
           <p className="text-2xl font-black text-gray-900 dark:text-white">{employees.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1"><Users size={11} />Employés total</p>
+          <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1"><Users size={11} />Total</p>
         </div>
         <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
           <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{assignedCount}</p>
@@ -469,23 +545,15 @@ function EmployeeShiftView({
         </div>
       </div>
 
-      {/* Filtres + toggle showAll */}
+      {/* Filtres */}
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un employé..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500"
-          />
+          <input type="text" placeholder="Rechercher un employé..." value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full pl-8 pr-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
         </div>
-        <select
-          value={filterShift}
-          onChange={e => setFilterShift(e.target.value)}
-          className="px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:border-sky-500"
-        >
+        <select value={filterShift} onChange={e => setFilterShift(e.target.value)}
+          className="px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:border-sky-500">
           <option value="">Tous les shifts</option>
           {shifts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
@@ -497,68 +565,48 @@ function EmployeeShiftView({
             </button>
           ))}
         </div>
-        {/* FIX: toggle pour inclure les employés sans planning */}
-        <button
-          onClick={() => setShowAll(v => !v)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${showAll ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400' : 'border-gray-200 dark:border-gray-700 text-gray-500'}`}
-        >
+        <button onClick={() => setShowAll(v => !v)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${showAll ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400' : 'border-gray-200 dark:border-gray-700 text-gray-500'}`}>
           <Eye size={13} />
           {showAll ? 'Shiftés + Globaux' : 'Shiftés seulement'}
         </button>
       </div>
 
-      {/* Table employés */}
+      {/* Table */}
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
           <Users size={28} className="text-gray-300 mx-auto mb-3" />
           <p className="text-sm text-gray-500 font-semibold mb-1">
             {assignedCount === 0 ? 'Aucun employé n\'a encore de shift assigné' : 'Aucun résultat'}
           </p>
-          {assignedCount === 0 && (
-            <p className="text-xs text-gray-400">Cliquez sur "Assigner" pour lier un employé à un planning.</p>
-          )}
+          {assignedCount === 0 && <p className="text-xs text-gray-400">Cliquez sur "Assigner" pour lier un employé à un planning.</p>}
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-          {/* Header table */}
           <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Employé</p>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider hidden sm:block">Planning assigné</p>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Statut</p>
           </div>
-
-          {/* Rows */}
           <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {filtered.map(({ employee, assignments: empAssignments, hasShift }) => (
               <div key={employee.id} className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-4 items-start hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                {/* Employé */}
                 <div className="flex items-center gap-3 min-w-0">
-                  {employee.photoUrl ? (
-                    <img src={employee.photoUrl} className="w-9 h-9 rounded-xl object-cover flex-shrink-0" alt="" />
-                  ) : (
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                      {employee.firstName[0]}{employee.lastName[0]}
-                    </div>
-                  )}
+                  {employee.photoUrl
+                    ? <img src={employee.photoUrl} className="w-9 h-9 rounded-xl object-cover flex-shrink-0" alt="" />
+                    : <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">{employee.firstName[0]}{employee.lastName[0]}</div>
+                  }
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-                      {employee.firstName} {employee.lastName}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {employee.department?.name && <span className="inline-flex items-center gap-1"><Building2 size={10} />{employee.department.name}</span>}
-                    </p>
-                    {employee.position && (
-                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{employee.position}</p>
+                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{employee.firstName} {employee.lastName}</p>
+                    {employee.department?.name && (
+                      <p className="text-xs text-gray-500 truncate flex items-center gap-1"><Building2 size={10} />{employee.department.name}</p>
                     )}
+                    {employee.position && <p className="text-[10px] text-gray-400 truncate mt-0.5">{employee.position}</p>}
                   </div>
                 </div>
-
-                {/* Planning */}
                 <div className="hidden sm:flex flex-col gap-1.5 min-w-0">
                   {!hasShift ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 italic">
-                      <Info size={11} />Horaires officiels de l'entreprise
-                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 italic"><Info size={11} />Horaires officiels de l'entreprise</span>
                   ) : (
                     empAssignments.map(a => (
                       <div key={a.id} className="flex items-center gap-2 flex-wrap">
@@ -567,43 +615,33 @@ function EmployeeShiftView({
                           {a.specificDate ? (
                             <><Calendar size={10} />{new Date(a.specificDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</>
                           ) : a.dayOfWeek !== undefined ? (
-                            <><Repeat size={10} />{DAY_NAMES_FULL[a.dayOfWeek]}s{a.validFrom || a.validUntil ? (
-                              <span className="text-gray-400">
-                                {a.validFrom ? ` · du ${new Date(a.validFrom).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
-                                {a.validUntil ? ` au ${new Date(a.validUntil).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
-                              </span>
-                            ) : null}</>
+                            <><Repeat size={10} />{DAY_NAMES_FULL[a.dayOfWeek]}s
+                              {(a.validFrom || a.validUntil) && (
+                                <span className="text-gray-400">
+                                  {a.validFrom ? ` · du ${new Date(a.validFrom).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
+                                  {a.validUntil ? ` au ${new Date(a.validUntil).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
+                                </span>
+                              )}
+                            </>
                           ) : null}
                         </span>
-                        {a.notes && (
-                          <span className="text-[10px] text-gray-400 italic truncate max-w-[120px]" title={a.notes}>💬 {a.notes}</span>
-                        )}
+                        {a.notes && <span className="text-[10px] text-gray-400 italic truncate max-w-[120px]" title={a.notes}>💬 {a.notes}</span>}
                       </div>
                     ))
                   )}
                 </div>
-
-                {/* Statut */}
                 <div className="flex-shrink-0">
                   {hasShift ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-bold">
-                      <UserCheck size={10} />Shifté
-                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-bold"><UserCheck size={10} />Shifté</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg text-[10px] font-bold">
-                      <Clock size={10} />Global
-                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg text-[10px] font-bold"><Clock size={10} />Global</span>
                   )}
                 </div>
               </div>
             ))}
           </div>
-
-          {/* Footer */}
           <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <p className="text-xs text-gray-500">
-              {assignedCount} avec planning · {withoutShiftCount} horaires globaux
-            </p>
+            <p className="text-xs text-gray-500">{assignedCount} avec planning · {withoutShiftCount} horaires globaux</p>
             <button
               onClick={() => {
                 const lines = ['Nom,Département,Poste,Shift,Type,Détail'];
@@ -612,22 +650,19 @@ function EmployeeShiftView({
                     lines.push(`"${employee.firstName} ${employee.lastName}","${employee.department?.name ?? ''}","${employee.position ?? ''}","Horaires globaux","",""`);
                   } else {
                     empAssignments.forEach(a => {
-                      const type = a.specificDate ? 'Date' : 'Récurrent';
+                      const t = a.specificDate ? 'Date' : 'Récurrent';
                       const detail = a.specificDate ? a.specificDate : a.dayOfWeek !== undefined ? DAY_NAMES_FULL[a.dayOfWeek] : '';
-                      lines.push(`"${employee.firstName} ${employee.lastName}","${employee.department?.name ?? ''}","${employee.position ?? ''}","${a.shift.name} (${fmtHHMM(a.shift.startHour, a.shift.startMinute)}-${fmtHHMM(a.shift.endHour, a.shift.endMinute)})","${type}","${detail}"`);
+                      lines.push(`"${employee.firstName} ${employee.lastName}","${employee.department?.name ?? ''}","${employee.position ?? ''}","${a.shift.name}","${t}","${detail}"`);
                     });
                   }
                 });
                 const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `plannings-shifts-${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
+                a.href = url; a.download = `plannings-${new Date().toISOString().split('T')[0]}.csv`; a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors"
-            >
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors">
               <Download size={12} />Export CSV
             </button>
           </div>
@@ -649,15 +684,16 @@ export default function ShiftsPage() {
   const [assignLoading, setAssignLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
   const [activeTab, setActiveTab] = useState<'shifts' | 'employees'>('shifts');
-
   const [shiftModal, setShiftModal] = useState(false);
   const [editingShift, setEditingShift] = useState<WorkShift | null>(null);
   const [assignModal, setAssignModal] = useState(false);
-
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-  const showToast = (msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3500); };
+
+  const showToast = (msg: string, ok = true) => {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const isAdmin = ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN'].includes(userRole);
   const canAssign = ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN', 'MANAGER'].includes(userRole);
@@ -674,9 +710,8 @@ export default function ShiftsPage() {
         const sr = await api.get('/attendance/shifts') as any;
         shiftsData = Array.isArray(sr) ? sr : [];
       } catch (e: any) {
-        console.warn('Shifts API non disponible:', e.message);
         if (e?.response?.status === 404 || e?.message?.includes('WorkShift')) {
-          showToast('ℹ️ Les tables shifts ne sont pas encore créées. Lancez npx prisma migrate dev.', false);
+          showToast('ℹ️ Tables shifts non créées. Lancez npx prisma migrate dev.', false);
         }
       }
       setShifts(shiftsData);
@@ -690,7 +725,6 @@ export default function ShiftsPage() {
       } catch (e) {
         console.warn('Erreur chargement employés:', e);
       }
-
     } catch (e: any) {
       setError(e?.message || 'Impossible de charger la page');
     } finally {
@@ -698,54 +732,20 @@ export default function ShiftsPage() {
     }
   }, []);
 
-  // FIX MAJEUR: 1 seule requête GET /attendance/shift-assignments
-  // au lieu de N requêtes par employé (qui causaient le bug d'affichage vide)
   const fetchAssignments = useCallback(async () => {
     setAssignLoading(true);
     try {
       const data = await api.get('/attendance/shift-assignments') as any;
-      const arr: ShiftAssignment[] = Array.isArray(data) ? data : [];
-      setAssignments(arr);
+      setAssignments(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      console.warn('Erreur chargement assignations:', e);
-      // Fallback : si l'endpoint global n'existe pas encore, on essaie l'ancienne méthode
-      if (e?.response?.status === 404 || e?.response?.status === 405) {
-        try {
-          const empsRes: any = await api.get('/employees?status=ACTIVE&limit=200');
-          const empsArray: Employee[] = Array.isArray(empsRes) ? empsRes
-            : Array.isArray(empsRes?.employees) ? empsRes.employees : [];
-          const allAssignments: ShiftAssignment[] = [];
-          const chunks: Employee[][] = [];
-          for (let i = 0; i < empsArray.length; i += 10) chunks.push(empsArray.slice(i, i + 10));
-          for (const chunk of chunks) {
-            const results = await Promise.allSettled(
-              chunk.map(emp => api.get(`/attendance/shift-assignments/${emp.id}`) as Promise<any>)
-            );
-            results.forEach((r, idx) => {
-              if (r.status === 'fulfilled') {
-                const rows = Array.isArray(r.value) ? r.value : [];
-                rows.forEach((a: ShiftAssignment) => allAssignments.push({ ...a, employee: chunk[idx] }));
-              }
-            });
-          }
-          setAssignments(allAssignments);
-        } catch (fallbackErr) {
-          console.warn('Fallback aussi échoué:', fallbackErr);
-        }
-      }
+      console.warn('Erreur assignations:', e);
     } finally {
       setAssignLoading(false);
     }
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  // Charger les assignations quand on bascule sur l'onglet employés
-  useEffect(() => {
-    if (activeTab === 'employees') {
-      fetchAssignments();
-    }
-  }, [activeTab, fetchAssignments]);
+  useEffect(() => { if (activeTab === 'employees') fetchAssignments(); }, [activeTab, fetchAssignments]);
 
   const handleSaveShift = async (data: any) => {
     setSaving(true);
@@ -781,12 +781,32 @@ export default function ShiftsPage() {
   const handleAssign = async (data: any) => {
     setSaving(true);
     try {
-      await api.post('/attendance/shift-assignments', data);
+      if (data.days && data.days.length > 0) {
+        // Récurrent multi-jours → 1 POST par jour sélectionné
+        await Promise.all(
+          data.days.map((dow: number) =>
+            api.post('/attendance/shift-assignments', {
+              shiftId:    data.shiftId,
+              employeeId: data.employeeId,
+              dayOfWeek:  dow,
+              validFrom:  data.validFrom,
+              validUntil: data.validUntil,
+              notes:      data.notes,
+            })
+          )
+        );
+      } else {
+        // Date précise → 1 POST
+        await api.post('/attendance/shift-assignments', {
+          shiftId:      data.shiftId,
+          employeeId:   data.employeeId,
+          specificDate: data.specificDate,
+          notes:        data.notes,
+        });
+      }
       showToast('Planning assigné ✅');
       setAssignModal(false);
-      // FIX: toujours rafraîchir les assignations après une assignation réussie
       await fetchAssignments();
-      // Aussi basculer sur l'onglet employés pour que l'utilisateur voie le résultat
       setActiveTab('employees');
     } catch (e: any) {
       showToast(e?.response?.data?.message || e.message || 'Erreur', false);
@@ -853,7 +873,7 @@ export default function ShiftsPage() {
         </div>
       </div>
 
-      {/* Info banner */}
+      {/* Banner info */}
       <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl p-4 flex items-start gap-3">
         <AlertCircle size={18} className="text-sky-500 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-sky-700 dark:text-sky-400">
@@ -874,16 +894,12 @@ export default function ShiftsPage() {
 
       {/* Tabs */}
       <div className="flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5 gap-1">
-        <button
-          onClick={() => setActiveTab('shifts')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'shifts' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-        >
+        <button onClick={() => setActiveTab('shifts')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'shifts' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
           <Clock size={15} />Shifts ({shifts.length})
         </button>
-        <button
-          onClick={() => setActiveTab('employees')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'employees' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-        >
+        <button onClick={() => setActiveTab('employees')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'employees' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
           <Users size={15} />Employés & Plannings
           {assignments.length > 0 && (
             <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
@@ -898,7 +914,6 @@ export default function ShiftsPage() {
           <Loader2 size={32} className="animate-spin text-sky-500" />
         </div>
       ) : activeTab === 'shifts' ? (
-        /* ── Onglet Shifts ── */
         <div className="space-y-6">
           {shifts.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
@@ -919,8 +934,7 @@ export default function ShiftsPage() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {shifts.map(shift => (
-                <div key={shift.id}
-                  className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 hover:shadow-md transition-all group">
+                <div key={shift.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 hover:shadow-md transition-all group">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: shift.color }} />
@@ -929,20 +943,16 @@ export default function ShiftsPage() {
                           <ShiftIcon shift={shift} />{shift.name}
                         </p>
                         {shift.isDefault && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded font-bold">
-                            Défaut
-                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded font-bold">Défaut</span>
                         )}
                       </div>
                     </div>
                     {isAdmin && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditingShift(shift)}
-                          className="p-1.5 hover:bg-sky-100 dark:hover:bg-sky-900/30 rounded-lg transition-colors">
+                        <button onClick={() => setEditingShift(shift)} className="p-1.5 hover:bg-sky-100 dark:hover:bg-sky-900/30 rounded-lg transition-colors">
                           <Edit2 size={13} className="text-sky-500" />
                         </button>
-                        <button onClick={() => handleDelete(shift.id)}
-                          className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors">
+                        <button onClick={() => handleDelete(shift.id)} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors">
                           <Trash2 size={13} className="text-red-400" />
                         </button>
                       </div>
@@ -1006,7 +1016,6 @@ export default function ShiftsPage() {
           )}
         </div>
       ) : (
-        /* ── Onglet Employés & Plannings ── */
         <EmployeeShiftView
           assignments={assignments}
           employees={employees}
