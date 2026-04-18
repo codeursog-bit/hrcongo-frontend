@@ -2,577 +2,482 @@
 
 // ============================================================================
 // 📁 components/onboarding/CabinetOnboardingChecklist.tsx
-//
-// Flow cabinet en 2 niveaux :
-//   NIVEAU 1 — Cabinet lui-même (1 seule fois)
-//     ① Paramètres du cabinet (nom, logo)
-//     ② Ajouter un gestionnaire (optionnel mais recommandé)
-//
-//   NIVEAU 2 — Première PME (guidé pas à pas)
-//     ③ Créer la première PME
-//     ④ Configurer cette PME (infos légales + département)
-//     ⑤ Ajouter un employé dans cette PME
-//     ⑥ Générer la première paie de cette PME
-//
-// Persistance : localStorage par cabinetId
-// Disparaît : quand toutes les étapes sont validées (célébration 4s)
-// Options : "Réduire" (chevron) / "Masquer" (X) / "Ne plus afficher"
+// Visibilité : CABINET_ADMIN uniquement
+// Flow en 2 niveaux :
+//   Niveau 1 — Cabinet (nom/logo + gestionnaire optionnel)
+//   Niveau 2 — Première PME (création → config → employé → paie)
+// Persistance localStorage par cabinetId :
+//   dismissed    → jamais plus
+//   completedAt  → complétion, jamais plus
+//   hiddenUntilLogin → session uniquement
 // ============================================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  CheckCircle2, ChevronRight, X, Sparkles,
-  Building2, Users, CreditCard, Settings,
-  ArrowRight, Loader2, ChevronDown, ChevronUp,
-  UserPlus, Briefcase,
+  CheckCircle2, X, Sparkles, Building2, Users,
+  CreditCard, Settings, ArrowRight, Loader2,
+  ChevronDown, ChevronUp, ChevronRight, UserPlus, Briefcase,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface StepStatus {
-  done: boolean;
-  loading: boolean;
-}
-
-interface CabinetOnboardingState {
-  dismissed: boolean;
-  hiddenUntilLogin: boolean;
-  completedAt?: string;
-}
+interface StepStatus { done: boolean; loading: boolean; }
+interface CabinetOnboardingState { dismissed?: boolean; hiddenUntilLogin?: boolean; completedAt?: string; }
 
 const STORAGE_KEY_PREFIX = 'konza_cabinet_onboarding_v1_';
+const getKey = (id: string) => `${STORAGE_KEY_PREFIX}${id}`;
 
-function getStorageKey(cabinetId: string) {
-  return `${STORAGE_KEY_PREFIX}${cabinetId}`;
+function getSaved(key: string): CabinetOnboardingState {
+  try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch { return {}; }
+}
+function setSaved(key: string, patch: Partial<CabinetOnboardingState>) {
+  localStorage.setItem(key, JSON.stringify({ ...getSaved(key), ...patch }));
+}
+
+// ─── Section divider ──────────────────────────────────────────────────────────
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px 4px' }}>
+      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+      <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+    </div>
+  );
 }
 
 // ─── Step Icon ────────────────────────────────────────────────────────────────
 function StepIcon({ done, loading, index }: { done: boolean; loading: boolean; index: number }) {
-  if (loading) {
-    return (
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-        style={{ background: 'rgba(99,102,241,0.12)' }}>
-        <Loader2 size={14} className="animate-spin" style={{ color: '#6366f1' }} />
-      </div>
-    );
-  }
-  if (done) {
-    return (
-      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 animate-[pop_0.3s_ease]"
-        style={{ background: 'rgba(16,185,129,0.12)' }}>
-        <CheckCircle2 size={16} style={{ color: '#10b981' }} />
-      </div>
-    );
-  }
+  const base: React.CSSProperties = {
+    width: 32, height: 32, borderRadius: '50%',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  };
+  if (loading) return (
+    <div style={{ ...base, background: 'rgba(99,102,241,0.12)' }}>
+      <Loader2 size={14} style={{ color: '#6366f1', animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
+  if (done) return (
+    <div style={{ ...base, background: 'rgba(16,185,129,0.15)', animation: 'cab-pop 0.35s cubic-bezier(0.34,1.56,0.64,1)' }}>
+      <CheckCircle2 size={16} style={{ color: '#10b981' }} />
+    </div>
+  );
   return (
-    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-      style={{ background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(255,255,255,0.12)' }}>
+    <div style={{ ...base, background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.1)' }}>
       <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>{index + 1}</span>
     </div>
   );
 }
 
-// ─── Séparateur de section ────────────────────────────────────────────────────
-function SectionDivider({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3 px-3 py-2">
-      <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-      <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-        {label}
-      </span>
-      <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-    </div>
-  );
-}
-
-// ─── Config des étapes ────────────────────────────────────────────────────────
-function getStepsConfig(cabinetId: string, firstCompanyId: string | null) {
-  return [
-    // ── NIVEAU 1 : Cabinet ──
-    {
-      section: 'Votre cabinet',
-      icon: Settings,
-      iconColor: '#6366f1',
-      title: 'Configurez votre cabinet',
-      desc: 'Nom, logo et informations qui apparaîtront sur vos documents.',
-      cta: 'Configurer',
-      href: `/cabinet/${cabinetId}/parametres`,
-    },
-    {
-      section: null, // même section que précédent
-      icon: UserPlus,
-      iconColor: '#8b5cf6',
-      title: 'Invitez un gestionnaire',
-      desc: 'Ajoutez un collaborateur pour co-gérer vos PME clientes.',
-      cta: 'Inviter',
-      href: `/cabinet/${cabinetId}/gestionnaires`,
-      optional: true,
-    },
-    // ── NIVEAU 2 : Première PME ──
-    {
-      section: 'Votre première PME',
-      icon: Building2,
-      iconColor: '#0ea5e9',
-      title: 'Créez votre première PME cliente',
-      desc: 'Ajoutez une entreprise à gérer — elle aura son propre espace isolé.',
-      cta: 'Créer une PME',
-      href: `/cabinet/${cabinetId}/ajouter-pme`,
-    },
-    {
-      section: null,
-      icon: Briefcase,
-      iconColor: '#f59e0b',
-      title: 'Configurez la PME',
-      desc: 'Infos légales (RCCM, adresse) et premier département.',
-      cta: 'Configurer',
-      href: firstCompanyId
-        ? `/cabinet/${cabinetId}/entreprise/${firstCompanyId}/parametres`
-        : `/cabinet/${cabinetId}/mes-pme`,
-      hint: firstCompanyId
-        ? null
-        : '⚠️ Créez d\'abord une PME pour accéder à ses paramètres.',
-    },
-    {
-      section: null,
-      icon: Users,
-      iconColor: '#10b981',
-      title: 'Ajoutez des employés à la PME',
-      desc: 'Créez les dossiers employés avec contrat et salaire de base.',
-      cta: 'Ajouter',
-      href: firstCompanyId
-        ? `/cabinet/${cabinetId}/entreprise/${firstCompanyId}/employes`
-        : `/cabinet/${cabinetId}/mes-pme`,
-    },
-    {
-      section: null,
-      icon: CreditCard,
-      iconColor: '#06b6d4',
-      title: 'Générez la première paie',
-      desc: 'Saisie des variables, calcul automatique CNSS/ITS, bulletin PDF.',
-      cta: 'Générer',
-      href: firstCompanyId
-        ? `/cabinet/${cabinetId}/entreprise/${firstCompanyId}/bulletins`
-        : `/cabinet/${cabinetId}/mes-pme`,
-    },
-  ];
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 export default function CabinetOnboardingChecklist() {
   const router = useRouter();
   const params = useParams();
   const cabinetId = params.cabinetId as string;
 
-  const [visible, setVisible] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [userName, setUserName] = useState('');
+  const [visible,        setVisible]        = useState(false);
+  const [collapsed,      setCollapsed]      = useState(false);
+  const [celebrating,    setCelebrating]    = useState(false);
+  const [userName,       setUserName]       = useState('');
   const [firstCompanyId, setFirstCompanyId] = useState<string | null>(null);
-  const [celebrating, setCelebrating] = useState(false);
 
-  const [steps, setSteps] = useState<StepStatus[]>([
-    { done: false, loading: true },  // 0 - Paramètres cabinet
-    { done: false, loading: true },  // 1 - Gestionnaire (optionnel)
-    { done: false, loading: true },  // 2 - Première PME créée
-    { done: false, loading: true },  // 3 - PME configurée
-    { done: false, loading: true },  // 4 - Employé ajouté
-    { done: false, loading: true },  // 5 - Paie générée
-  ]);
+  // 6 étapes : 0-1 cabinet, 2-5 PME
+  const [steps, setSteps] = useState<StepStatus[]>(
+    Array.from({ length: 6 }, () => ({ done: false, loading: true }))
+  );
 
-  // ─── Init ──────────────────────────────────────────────────────────────────
+  // ─── Init ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!cabinetId) return;
-
-    const init = async () => {
-      // User info
+    (async () => {
       try {
         const stored = localStorage.getItem('user');
-        if (stored) {
-          const u = JSON.parse(stored);
-          setUserName(u.firstName || '');
-          // Seul CABINET_ADMIN voit l'onboarding
-          if (u.role !== 'CABINET_ADMIN') return;
+        if (!stored) return;
+        const u = JSON.parse(stored);
+        if (u.role !== 'CABINET_ADMIN') return;
+        setUserName(u.firstName || '');
+
+        const saved = getSaved(getKey(cabinetId));
+        if (saved.dismissed || saved.completedAt) return;
+        if (saved.hiddenUntilLogin) {
+          setSaved(getKey(cabinetId), { hiddenUntilLogin: false });
+          return;
         }
-      } catch {}
 
-      // Vérifier état sauvegardé
-      const key = getStorageKey(cabinetId);
-      const savedRaw = localStorage.getItem(key);
-      const saved: CabinetOnboardingState = savedRaw
-        ? JSON.parse(savedRaw)
-        : { dismissed: false, hiddenUntilLogin: false };
+        // Récupérer la première PME
+        let firstCId: string | null = null;
+        try {
+          const dash: any = await api.get(`/cabinet/${cabinetId}/dashboard`);
+          if (dash?.companies?.length > 0) {
+            firstCId = dash.companies[0].companyId;
+            setFirstCompanyId(firstCId);
+          }
+        } catch {}
 
-      if (saved.dismissed) return;
-      if (saved.hiddenUntilLogin) {
-        localStorage.setItem(key, JSON.stringify({ ...saved, hiddenUntilLogin: false }));
-        return;
-      }
-
-      // Charger la première PME d'abord
-      let firstCId: string | null = null;
-      try {
-        const dash: any = await api.get(`/cabinet/${cabinetId}/dashboard`);
-        const companies = dash?.companies || [];
-        if (companies.length > 0) {
-          firstCId = companies[0].companyId;
-          setFirstCompanyId(firstCId);
-        }
-      } catch {}
-
-      // Vérifier toutes les étapes
-      await checkAllSteps(cabinetId, firstCId);
-      setVisible(true);
-    };
-
-    init();
+        await checkAll(cabinetId, firstCId);
+        setVisible(true);
+      } catch (e) { console.warn('Cabinet onboarding:', e); }
+    })();
   }, [cabinetId]);
 
-  // ─── Checks ────────────────────────────────────────────────────────────────
-  const checkAllSteps = useCallback(async (cId: string, firstCId: string | null) => {
-    const results = await Promise.allSettled([
-      checkCabinetConfig(cId),
-      checkGestionnaire(cId),
-      checkPmeCreee(cId),
-      checkPmeConfiguree(firstCId),
-      checkEmploye(firstCId),
-      checkPaie(cId, firstCId),
-    ]);
-
-    const newSteps = results.map(r => ({
-      done: r.status === 'fulfilled' ? r.value : false,
-      loading: false,
-    }));
-
-    setSteps(newSteps);
-
-    // Ignorer l'étape optionnelle (index 1) pour la détection "tout complété"
-    const requiredDone = newSteps.filter((s, i) => i !== 1).every(s => s.done);
-    if (requiredDone) {
-      setAllDoneFlow(cId);
-    }
-
-    return newSteps;
+  // ─── Checks ───────────────────────────────────────────────────────────────
+  const checkAll = useCallback(async (cId: string, firstCId: string | null) => {
+    const fns = [
+      () => chkCabinet(cId),
+      () => chkGestionnaire(cId),
+      () => chkPmeCreee(cId),
+      () => chkPmeConfig(firstCId),
+      () => chkEmploye(firstCId),
+      () => chkPaie(firstCId),
+    ];
+    const results = await Promise.allSettled(fns.map(fn => fn()));
+    const next = results.map(r => ({ done: r.status === 'fulfilled' ? r.value : false, loading: false }));
+    setSteps(next);
+    // Complétion = toutes les étapes requises (on ignore l'optionnel index 1)
+    const required = next.filter((_, i) => i !== 1);
+    if (required.every(s => s.done)) complete(cId);
+    return next;
   }, []);
 
-  function setAllDoneFlow(cId: string) {
-    setCelebrating(true);
-    const key = getStorageKey(cId);
-    const saved = JSON.parse(localStorage.getItem(key) || '{}');
-    localStorage.setItem(key, JSON.stringify({ ...saved, completedAt: new Date().toISOString() }));
-    setTimeout(() => setVisible(false), 4000);
+  async function chkCabinet(cId: string): Promise<boolean> {
+    try { const r: any = await api.get(`/cabinet/${cId}/profile`); return !!(r?.name?.trim()); } catch { return false; }
   }
-
-  async function checkCabinetConfig(cId: string): Promise<boolean> {
-    try {
-      const res: any = await api.get(`/cabinet/${cId}/profile`);
-      return !!(res?.name && res.name.trim() !== '');
-    } catch { return false; }
+  async function chkGestionnaire(cId: string): Promise<boolean> {
+    try { const r: any = await api.get(`/cabinet/${cId}/gestionnaires`); return (Array.isArray(r) ? r : r?.gestionnaires || []).length > 0; } catch { return false; }
   }
-
-  async function checkGestionnaire(cId: string): Promise<boolean> {
-    try {
-      const res: any = await api.get(`/cabinet/${cId}/gestionnaires`);
-      const arr = Array.isArray(res) ? res : res?.gestionnaires || [];
-      return arr.length > 0;
-    } catch { return false; }
+  async function chkPmeCreee(cId: string): Promise<boolean> {
+    try { const r: any = await api.get(`/cabinet/${cId}/dashboard`); return (r?.companies?.length || 0) > 0; } catch { return false; }
   }
-
-  async function checkPmeCreee(cId: string): Promise<boolean> {
-    try {
-      const dash: any = await api.get(`/cabinet/${cId}/dashboard`);
-      return (dash?.companies?.length || 0) > 0;
-    } catch { return false; }
-  }
-
-  async function checkPmeConfiguree(firstCId: string | null): Promise<boolean> {
+  async function chkPmeConfig(firstCId: string | null): Promise<boolean> {
     if (!firstCId) return false;
     try {
-      const [company, depts]: any[] = await Promise.all([
+      const [comp, depts]: any[] = await Promise.all([
         api.get(`/companies/${firstCId}`),
         api.get(`/departments?companyId=${firstCId}`),
       ]);
-      const deptsArr = Array.isArray(depts) ? depts : depts?.data || [];
-      return !!(company?.name && deptsArr.length > 0);
+      return !!(comp?.name) && (Array.isArray(depts) ? depts : depts?.data || []).length > 0;
     } catch { return false; }
   }
-
-  async function checkEmploye(firstCId: string | null): Promise<boolean> {
+  async function chkEmploye(firstCId: string | null): Promise<boolean> {
     if (!firstCId) return false;
-    try {
-      const res: any = await api.get(`/employees?companyId=${firstCId}&status=ACTIVE&limit=1`);
-      const arr = Array.isArray(res) ? res : res?.data || res?.employees || [];
-      return arr.length > 0;
-    } catch { return false; }
+    try { const r: any = await api.get(`/employees?companyId=${firstCId}&status=ACTIVE&limit=1`); return (Array.isArray(r) ? r : r?.data || r?.employees || []).length > 0; } catch { return false; }
   }
-
-  async function checkPaie(cId: string, firstCId: string | null): Promise<boolean> {
+  async function chkPaie(firstCId: string | null): Promise<boolean> {
     if (!firstCId) return false;
-    try {
-      const res: any = await api.get(`/payroll?companyId=${firstCId}&limit=1`);
-      const arr = Array.isArray(res) ? res : res?.payslips || res?.data || [];
-      return arr.length > 0;
-    } catch { return false; }
+    try { const r: any = await api.get(`/payroll?companyId=${firstCId}&limit=1`); return (Array.isArray(r) ? r : r?.payslips || r?.data || []).length > 0; } catch { return false; }
   }
 
-  // ─── Refresh une étape ─────────────────────────────────────────────────────
-  const refreshStep = async (index: number) => {
+  // ─── Complétion ───────────────────────────────────────────────────────────
+  function complete(cId: string) {
+    setCelebrating(true);
+    setSaved(getKey(cId), { completedAt: new Date().toISOString() });
+    setTimeout(() => { setVisible(false); setCelebrating(false); }, 4500);
+  }
+
+  const refreshStep = async (i: number) => {
     if (!cabinetId) return;
-    setSteps(prev => prev.map((s, i) => i === index ? { ...s, loading: true } : s));
-
-    const checkers = [
-      () => checkCabinetConfig(cabinetId),
-      () => checkGestionnaire(cabinetId),
-      () => checkPmeCreee(cabinetId),
-      () => checkPmeConfiguree(firstCompanyId),
-      () => checkEmploye(firstCompanyId),
-      () => checkPaie(cabinetId, firstCompanyId),
+    setSteps(prev => prev.map((s, j) => j === i ? { ...s, loading: true } : s));
+    const fns = [
+      () => chkCabinet(cabinetId),
+      () => chkGestionnaire(cabinetId),
+      () => chkPmeCreee(cabinetId),
+      () => chkPmeConfig(firstCompanyId),
+      () => chkEmploye(firstCompanyId),
+      () => chkPaie(firstCompanyId),
     ];
-
-    const done = await checkers[index]().catch(() => false);
-
+    const done = await fns[i]().catch(() => false);
     setSteps(prev => {
-      const next = prev.map((s, i) => i === index ? { done, loading: false } : s);
-      const requiredDone = next.filter((s, i) => i !== 1).every(s => s.done);
-      if (requiredDone) setAllDoneFlow(cabinetId);
+      const next = prev.map((s, j) => j === i ? { done, loading: false } : s);
+      const required = next.filter((_, j) => j !== 1);
+      if (required.every(s => s.done)) complete(cabinetId);
       return next;
     });
   };
 
-  // ─── Dismiss ───────────────────────────────────────────────────────────────
-  const dismissForever = () => {
-    const key = getStorageKey(cabinetId);
-    localStorage.setItem(key, JSON.stringify({ dismissed: true }));
-    setVisible(false);
-  };
+  const dismissForever = () => { setSaved(getKey(cabinetId), { dismissed: true }); setVisible(false); };
+  const hideForNow = () => { setSaved(getKey(cabinetId), { hiddenUntilLogin: true }); setVisible(false); };
 
-  const hideForNow = () => {
-    const key = getStorageKey(cabinetId);
-    const saved = JSON.parse(localStorage.getItem(key) || '{}');
-    localStorage.setItem(key, JSON.stringify({ ...saved, hiddenUntilLogin: true }));
-    setVisible(false);
-  };
+  // ─── Config étapes ────────────────────────────────────────────────────────
+  const STEPS_CONFIG = [
+    {
+      section: 'Votre cabinet',
+      icon: Settings, color: '#6366f1',
+      title: 'Configurez votre cabinet',
+      desc: 'Renseignez le nom, le logo et les couleurs de votre cabinet. Ces informations apparaissent sur l\'espace de vos PME clientes.',
+      path: 'Paramètres cabinet',
+      cta: 'Configurer', href: `/cabinet/${cabinetId}/parametres`,
+    },
+    {
+      section: null,
+      icon: UserPlus, color: '#8b5cf6',
+      title: 'Invitez un gestionnaire',
+      desc: 'Ajoutez un collaborateur pour co-gérer vos PME clientes en équipe.',
+      path: 'Gestionnaires',
+      cta: 'Inviter', href: `/cabinet/${cabinetId}/gestionnaires`,
+      optional: true,
+    },
+    {
+      section: 'Votre première PME cliente',
+      icon: Building2, color: '#0ea5e9',
+      title: 'Créez votre première PME',
+      desc: 'Ajoutez une entreprise cliente à gérer — elle disposera de son propre espace isolé avec employés, présences et paie.',
+      path: 'Mes PME → Ajouter une PME',
+      cta: 'Créer une PME', href: `/cabinet/${cabinetId}/ajouter-pme`,
+    },
+    {
+      section: null,
+      icon: Briefcase, color: '#f59e0b',
+      title: 'Configurez la PME',
+      desc: 'Infos légales (RCCM, adresse) et création du premier département. Ces données apparaîtront sur les bulletins de paie.',
+      path: 'Entreprise → Paramètres',
+      cta: 'Configurer la PME',
+      href: firstCompanyId ? `/cabinet/${cabinetId}/entreprise/${firstCompanyId}/parametres` : `/cabinet/${cabinetId}/mes-pme`,
+      hint: !firstCompanyId ? '⚠️ Créez d\'abord une PME pour accéder à ses paramètres.' : null,
+    },
+    {
+      section: null,
+      icon: Users, color: '#10b981',
+      title: 'Ajoutez des employés à la PME',
+      desc: 'Créez les dossiers employés avec contrat et salaire de base, ou importez-les via Excel.',
+      path: 'Entreprise → Employés',
+      cta: 'Ajouter des employés',
+      href: firstCompanyId ? `/cabinet/${cabinetId}/entreprise/${firstCompanyId}/employes` : `/cabinet/${cabinetId}/mes-pme`,
+    },
+    {
+      section: null,
+      icon: CreditCard, color: '#06b6d4',
+      title: 'Générez la première paie',
+      desc: 'Saisissez les variables de paie, CNSS/ITS calculés automatiquement, générez les bulletins PDF pour toute la PME.',
+      path: 'Entreprise → Bulletins',
+      cta: 'Générer la paie',
+      href: firstCompanyId ? `/cabinet/${cabinetId}/entreprise/${firstCompanyId}/bulletins` : `/cabinet/${cabinetId}/mes-pme`,
+    },
+  ];
 
-  // ─── Calculs affichage ──────────────────────────────────────────────────────
-  const stepsConfig = getStepsConfig(cabinetId, firstCompanyId);
-  const completedCount = steps.filter((s, i) => s.done).length;
-  // Pour la progression : on compte les required (hors optional index 1)
-  const requiredSteps = steps.filter((_, i) => i !== 1);
+  // ─── Calculs ──────────────────────────────────────────────────────────────
+  const requiredSteps = steps.filter((_, i) => i !== 1); // exclure l'optionnel
   const requiredDone = requiredSteps.filter(s => s.done).length;
-  const progress = Math.round((requiredDone / requiredSteps.length) * 100);
-  const activeIndex = steps.findIndex(s => !s.done && !s.loading);
+  const pct = Math.round((requiredDone / requiredSteps.length) * 100);
+  const totalDone = steps.filter(s => s.done).length;
+  const activeIdx = steps.findIndex(s => !s.done && !s.loading);
 
   if (!visible) return null;
 
   // ─── Célébration ──────────────────────────────────────────────────────────
   if (celebrating) {
     return (
-      <div style={{ margin: '0 0 16px 0', animation: 'fadeInUp 0.4s ease' }}>
+      <div style={{ margin: '0 0 20px 0', animation: 'cab-fadein 0.4s ease' }}>
+        <style>{`
+          @keyframes cab-fadein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+          @keyframes cab-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+          @keyframes cab-bounce{0%,100%{transform:scale(1)}40%{transform:scale(1.25)}}
+          @keyframes cab-fadeout{0%,70%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
+          @keyframes spin{to{transform:rotate(360deg)}}
+          @keyframes cab-pop{0%{transform:scale(0.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+        `}</style>
         <div style={{
-          borderRadius: 20,
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)',
-          padding: '20px 24px',
-          display: 'flex', alignItems: 'center', gap: 16,
-          boxShadow: '0 8px 32px rgba(99,102,241,0.3)',
-          position: 'relative', overflow: 'hidden',
+          position: 'relative', overflow: 'hidden', borderRadius: 20,
+          padding: '24px 28px',
+          background: 'linear-gradient(135deg,#6366f1,#8b5cf6 50%,#06b6d4)',
+          boxShadow: '0 8px 32px rgba(99,102,241,0.35)',
+          animation: 'cab-fadein 0.4s ease, cab-fadeout 0.8s ease 3.7s forwards',
         }}>
-          {[...Array(10)].map((_, i) => (
+          {[...Array(14)].map((_, i) => (
             <div key={i} style={{
               position: 'absolute',
-              width: 6, height: 6, borderRadius: '50%',
-              background: ['#fff', '#fde68a', '#a7f3d0', '#bfdbfe'][i % 4],
-              opacity: 0.5,
-              left: `${10 + i * 9}%`,
-              top: `${15 + (i % 3) * 28}%`,
-              animation: `float ${1.5 + i * 0.2}s ease-in-out infinite`,
-              animationDelay: `${i * 0.12}s`,
-            }} />
+              width: i%3===0?8:5, height: i%3===0?8:5,
+              borderRadius: i%2===0?'50%':'2px',
+              background: ['#fff','#fde68a','#a7f3d0','#bfdbfe','#fca5a5'][i%5],
+              opacity: 0.6, left:`${5+i*6.5}%`, top:`${8+(i%4)*22}%`,
+              animation:`cab-float ${1.2+(i%4)*0.3}s ease-in-out infinite`,
+              animationDelay:`${i*0.1}s`,
+            }}/>
           ))}
-          <div style={{ fontSize: 36 }}>🎉</div>
-          <div>
-            <p style={{ color: '#fff', fontWeight: 800, fontSize: 16, margin: 0 }}>
-              Cabinet configuré avec succès !
-            </p>
-            <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, margin: '4px 0 0' }}>
-              Vous pouvez maintenant gérer toutes vos PME clientes depuis votre tableau de bord.
-            </p>
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ fontSize: 48, animation: 'cab-bounce 0.5s ease 2' }}>🎉</div>
+            <div>
+              <h3 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 900, color: '#fff' }}>
+                {userName ? `Bravo ${userName} !` : 'Cabinet configuré !'}
+              </h3>
+              <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>
+                Votre cabinet est opérationnel. Vous pouvez maintenant gérer toutes vos PME clientes, générer leurs bulletins et suivre leur activité RH.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {['✅ Cabinet','✅ PME créée','✅ Configurée','✅ Employés','✅ Paie'].map(t => (
+                  <span key={t} style={{
+                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
+                    background: 'rgba(255,255,255,0.18)', color: '#fff',
+                  }}>{t}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ─── Rendu principal ───────────────────────────────────────────────────────
+  // ─── Bannière principale ──────────────────────────────────────────────────
   return (
     <>
       <style>{`
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pop {
-          0% { transform: scale(0.8); }
-          60% { transform: scale(1.15); }
-          100% { transform: scale(1); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        .cab-step:hover { background: rgba(255,255,255,0.025); }
-        .cab-step-active { background: rgba(99,102,241,0.07) !important; border: 1px solid rgba(99,102,241,0.2) !important; }
-        .progress-bar { transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
-        .cab-cta-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .cab-cta-secondary:hover { background: rgba(255,255,255,0.08) !important; }
+        @keyframes cab-fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes cab-pop{0%{transform:scale(0.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+        @keyframes cab-pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .cab-step{transition:background .15s,border-color .15s;border-radius:14px;border:1px solid transparent;}
+        .cab-step:hover{background:rgba(255,255,255,0.025);}
+        .cab-active{background:rgba(99,102,241,0.08)!important;border-color:rgba(99,102,241,0.25)!important;}
+        .cab-bar{transition:width .7s cubic-bezier(.4,0,.2,1);}
+        .cab-btn{transition:all .15s ease;}
+        .cab-btn:hover{opacity:.88;transform:translateY(-1px);}
       `}</style>
 
-      <div style={{ marginBottom: 16, animation: 'fadeInUp 0.4s ease' }}>
+      <div style={{ marginBottom: 20, animation: 'cab-fadein 0.4s ease' }}>
         <div style={{
-          borderRadius: 18,
+          borderRadius: 20, overflow: 'hidden',
           background: '#151e30',
           border: '1px solid rgba(255,255,255,0.07)',
-          overflow: 'hidden',
           boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
         }}>
 
-          {/* ── Header ── */}
+          {/* Header */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{
-                width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Sparkles size={15} color="#fff" />
+                <Sparkles size={16} color="#fff" />
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
-                    {userName ? `Bienvenue ${userName} 👋` : 'Bienvenue 👋'}
+                    {userName ? `Bienvenue ${userName} 👋` : 'Bienvenue dans votre cabinet 👋'}
                   </h3>
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
                     background: 'rgba(99,102,241,0.15)', color: '#818cf8',
                   }}>
-                    {completedCount}/{steps.length} étapes
+                    {totalDone}/{steps.length} étapes
                   </span>
                 </div>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
-                  Configurez votre cabinet en quelques étapes
+                <p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b' }}>
+                  Configurez votre cabinet et gérez votre première PME cliente
                 </p>
               </div>
             </div>
-
             <div style={{ display: 'flex', gap: 4 }}>
               <button onClick={() => setCollapsed(c => !c)} style={{
                 width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer',
                 background: 'rgba(255,255,255,0.05)', color: '#64748b',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                {collapsed ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
+                {collapsed ? <ChevronDown size={15}/> : <ChevronUp size={15}/>}
               </button>
               <button onClick={hideForNow} style={{
                 width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer',
                 background: 'rgba(255,255,255,0.05)', color: '#64748b',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <X size={15} />
+                <X size={15}/>
               </button>
             </div>
           </div>
 
-          {/* ── Barre de progression ── */}
+          {/* Progress */}
           <div style={{ padding: '12px 20px 8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: '#64748b' }}>
-                {progress === 100 ? '✅ Cabinet prêt !' : `${progress}% complété`}
+                {pct === 100 ? '✅ Cabinet prêt !'
+                  : pct === 0 ? 'Commencez par l\'étape 1'
+                  : `${pct}% complété — continuez !`}
               </span>
-              <span style={{ fontSize: 11, color: '#64748b' }}>
-                {requiredDone}/{requiredSteps.length} étapes principales
-              </span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>{requiredDone}/{requiredSteps.length} étapes principales</span>
             </div>
             <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.06)' }}>
-              <div className="progress-bar" style={{
-                height: '100%', borderRadius: 99, width: `${progress}%`,
-                background: 'linear-gradient(90deg, #6366f1, #06b6d4)',
-              }} />
+              <div className="cab-bar" style={{
+                height: '100%', borderRadius: 99, width: `${pct}%`,
+                background: pct === 100
+                  ? 'linear-gradient(90deg,#10b981,#0d9488)'
+                  : 'linear-gradient(90deg,#6366f1,#06b6d4)',
+              }}/>
             </div>
           </div>
 
-          {/* ── Étapes ── */}
+          {/* Étapes */}
           {!collapsed && (
             <div style={{ padding: '4px 8px 8px' }}>
-              {stepsConfig.map((cfg, i) => {
+              {STEPS_CONFIG.map((cfg, i) => {
                 const step = steps[i];
+                if (!step) return null;
                 const Icon = cfg.icon;
-                const isActive = i === activeIndex;
-                const isOptional = (cfg as any).optional === true;
+                const isActive = i === activeIdx;
+                const isOptional = !!(cfg as any).optional;
+                const isLocked = !step.done && activeIdx !== -1 && i > activeIdx && !isOptional;
 
                 return (
                   <React.Fragment key={i}>
-                    {/* Séparateur de section */}
-                    {cfg.section && (
-                      <SectionDivider label={cfg.section} />
-                    )}
+                    {cfg.section && <SectionLabel label={cfg.section} />}
+                    <div className={`cab-step ${isActive && !step.done ? 'cab-active' : ''}`}
+                      style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 12px', marginBottom: 2 }}>
 
-                    <div
-                      className={`cab-step ${isActive && !step.done ? 'cab-step-active' : ''}`}
-                      style={{
-                        display: 'flex', alignItems: 'flex-start', gap: 12,
-                        padding: '10px 12px', borderRadius: 12,
-                        marginBottom: 2, border: '1px solid transparent',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      {/* Icône statut */}
                       <StepIcon done={step.done} loading={step.loading} index={i} />
 
-                      {/* Contenu */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
                           <p style={{
                             margin: 0, fontSize: 13, fontWeight: 600,
-                            color: step.done ? '#475569' : '#e2e8f0',
+                            color: step.done ? '#475569' : isLocked ? '#334155' : '#e2e8f0',
                             textDecoration: step.done ? 'line-through' : 'none',
                           }}>
                             {cfg.title}
                           </p>
                           {isOptional && (
                             <span style={{
-                              fontSize: 9, fontWeight: 700, padding: '1px 6px',
-                              borderRadius: 999, background: 'rgba(255,255,255,0.07)',
-                              color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em',
-                            }}>
-                              Optionnel
-                            </span>
+                              fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999,
+                              background: 'rgba(255,255,255,0.06)', color: '#64748b',
+                              textTransform: 'uppercase', letterSpacing: '0.05em',
+                            }}>Optionnel</span>
                           )}
                           {isActive && !step.done && (
                             <span style={{
-                              fontSize: 9, fontWeight: 700, padding: '2px 7px',
-                              borderRadius: 999, background: '#6366f1',
-                              color: '#fff', animation: 'none',
+                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                              fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999,
+                              background: '#6366f1', color: '#fff',
                             }}>
-                              ← Maintenant
+                              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff', animation: 'cab-pulse 1.2s ease-in-out infinite' }}/>
+                              Maintenant
                             </span>
+                          )}
+                          {step.done && (
+                            <span style={{
+                              fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999,
+                              background: 'rgba(16,185,129,0.15)', color: '#10b981',
+                            }}>Complété ✓</span>
                           )}
                         </div>
 
-                        {!step.done && (
-                          <p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                        {!step.done && !isLocked && (
+                          <p style={{ margin: '1px 0 0', fontSize: 10, color: '#475569', fontFamily: 'monospace' }}>
+                            {cfg.path}
+                          </p>
+                        )}
+                        {!step.done && !isLocked && (
+                          <p style={{ margin: '4px 0 6px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>
                             {cfg.desc}
                           </p>
                         )}
 
                         {/* Hint */}
-                        {!step.done && (cfg as any).hint && (
+                        {!step.done && !isLocked && (cfg as any).hint && (
                           <div style={{
-                            marginTop: 8, padding: '8px 12px',
-                            background: 'rgba(245,158,11,0.08)',
-                            border: '1px solid rgba(245,158,11,0.2)',
-                            borderRadius: 8,
+                            margin: '6px 0', padding: '8px 12px', borderRadius: 10,
+                            background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)',
                           }}>
                             <p style={{ margin: 0, fontSize: 11, color: '#f59e0b', lineHeight: 1.5 }}>
                               {(cfg as any).hint}
@@ -581,47 +486,41 @@ export default function CabinetOnboardingChecklist() {
                         )}
 
                         {/* CTA */}
-                        {!step.done && !step.loading && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                            <button
-                              className="cab-cta-primary"
+                        {!step.done && !step.loading && !isLocked && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <button className="cab-btn"
                               onClick={() => {
                                 router.push(cfg.href);
-                                const onFocus = () => { refreshStep(i); window.removeEventListener('focus', onFocus); };
-                                window.addEventListener('focus', onFocus);
+                                const fn = () => { refreshStep(i); window.removeEventListener('focus', fn); };
+                                window.addEventListener('focus', fn);
                               }}
                               style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                                padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                                padding: '6px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
                                 fontSize: 12, fontWeight: 700,
-                                background: isActive ? '#6366f1' : 'rgba(255,255,255,0.07)',
+                                background: isActive ? cfg.color : 'rgba(255,255,255,0.07)',
                                 color: isActive ? '#fff' : '#94a3b8',
-                                transition: 'all 0.15s ease',
-                                boxShadow: isActive ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
-                              }}
-                            >
-                              {cfg.cta}
-                              <ArrowRight size={11} />
+                                boxShadow: isActive ? `0 4px 12px ${cfg.color}40` : 'none',
+                              }}>
+                              {cfg.cta} <ArrowRight size={11}/>
                             </button>
-                            <button
-                              className="cab-cta-secondary"
-                              onClick={() => refreshStep(i)}
-                              style={{
-                                background: 'none', border: 'none', cursor: 'pointer',
-                                fontSize: 11, color: '#475569',
-                                textDecoration: 'underline', padding: '4px 2px',
-                              }}
-                            >
+                            <button onClick={() => refreshStep(i)} style={{
+                              background: 'none', border: 'none', cursor: 'pointer',
+                              fontSize: 11, color: '#475569', textDecoration: 'underline',
+                            }}>
                               Déjà fait ?
                             </button>
                           </div>
                         )}
+
+                        {isLocked && !step.done && (
+                          <p style={{ margin: '4px 0 0', fontSize: 11, color: '#334155', fontStyle: 'italic' }}>
+                            Disponible après l'étape {activeIdx + 1}
+                          </p>
+                        )}
                       </div>
 
-                      {/* Check si done */}
-                      {step.done && (
-                        <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: 2 }} />
-                      )}
+                      {step.done && <CheckCircle2 size={15} style={{ color: '#10b981', flexShrink: 0, marginTop: 2 }}/>}
                     </div>
                   </React.Fragment>
                 );
@@ -629,12 +528,11 @@ export default function CabinetOnboardingChecklist() {
             </div>
           )}
 
-          {/* ── Footer ── */}
+          {/* Footer */}
           {!collapsed && (
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '10px 20px',
-              borderTop: '1px solid rgba(255,255,255,0.05)',
+              padding: '10px 20px', borderTop: '1px solid rgba(255,255,255,0.05)',
             }}>
               <button onClick={dismissForever} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
@@ -642,15 +540,14 @@ export default function CabinetOnboardingChecklist() {
               }}>
                 Ne plus afficher
               </button>
-              <a href="/docs" target="_blank" style={{
+              <a href="/docs" target="_blank" rel="noopener noreferrer" style={{
                 fontSize: 11, color: '#6366f1', textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 4,
               }}>
-                Centre d'aide <ChevronRight size={11} />
+                Centre d'aide <ChevronRight size={11}/>
               </a>
             </div>
           )}
-
         </div>
       </div>
     </>
