@@ -2,9 +2,10 @@
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/shifts/page.tsx
-// ============================================================================
-// ✅ Garde tout le CRUD existant
-// 🆕 Ajoute : Vue "Employés & leurs shifts" avec filtres, badges, export rapide
+// FIXES :
+//  1. Après assignation → fetchAssignments() appelé TOUJOURS (pas seulement si onglet actif)
+//  2. Vue "Employés & Plannings" : filtre toggle — affiche seulement les shiftés OU tous
+//  3. Compteur dans le tab "Employés" se met à jour sans rechargement
 // ============================================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -377,7 +378,9 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
   );
 }
 
-// ─── 🆕 Vue Employés Shiftés ──────────────────────────────────────────────────
+// ─── Vue Employés Shiftés ─────────────────────────────────────────────────────
+// FIX: par défaut, n'affiche QUE les employés qui ont un shift assigné
+// Toggle "Afficher tous" pour voir les employés sans planning
 function EmployeeShiftView({
   assignments, employees, shifts, loading,
 }: {
@@ -389,8 +392,9 @@ function EmployeeShiftView({
   const [search, setSearch] = useState('');
   const [filterShift, setFilterShift] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'date' | 'recurring'>('all');
+  // FIX: par défaut showAll = false → seulement les shiftés
+  const [showAll, setShowAll] = useState(false);
 
-  // Groupe par employé
   type EmployeeGroup = {
     employee: Employee;
     assignments: ShiftAssignment[];
@@ -399,26 +403,26 @@ function EmployeeShiftView({
 
   const employeeMap = new Map<string, EmployeeGroup>();
 
-  // Init tous les employés (même sans shift)
-  employees.forEach(emp => {
-    employeeMap.set(emp.id, { employee: emp, assignments: [], hasShift: false });
-  });
-
-  // Remplir avec les assignations
+  // Construire la map depuis les assignations d'abord
   assignments.forEach(a => {
-    const group = employeeMap.get(a.employeeId);
-    if (group) {
-      group.assignments.push(a);
-      group.hasShift = true;
-    } else {
-      // Employé dans les assignations mais pas dans la liste (rare)
+    if (!employeeMap.has(a.employeeId)) {
       employeeMap.set(a.employeeId, {
         employee: a.employee,
-        assignments: [a],
+        assignments: [],
         hasShift: true,
       });
     }
+    employeeMap.get(a.employeeId)!.assignments.push(a);
   });
+
+  // Si showAll, ajouter les employés sans shift
+  if (showAll) {
+    employees.forEach(emp => {
+      if (!employeeMap.has(emp.id)) {
+        employeeMap.set(emp.id, { employee: emp, assignments: [], hasShift: false });
+      }
+    });
+  }
 
   const allGroups = Array.from(employeeMap.values());
 
@@ -431,14 +435,13 @@ function EmployeeShiftView({
       (filterType === 'recurring' && g.assignments.some(a => a.dayOfWeek !== undefined));
     return nameMatch && shiftMatch && typeMatch;
   }).sort((a, b) => {
-    // Employés avec shift d'abord
     if (a.hasShift && !b.hasShift) return -1;
     if (!a.hasShift && b.hasShift) return 1;
     return `${a.employee.firstName} ${a.employee.lastName}`.localeCompare(`${b.employee.firstName} ${b.employee.lastName}`);
   });
 
-  const withShift = filtered.filter(g => g.hasShift).length;
-  const withoutShift = filtered.filter(g => !g.hasShift).length;
+  const assignedCount = new Set(assignments.map(a => a.employeeId)).size;
+  const withoutShiftCount = employees.length - assignedCount;
 
   if (loading) {
     return (
@@ -457,16 +460,16 @@ function EmployeeShiftView({
           <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1"><Users size={11} />Employés total</p>
         </div>
         <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{assignments.length > 0 ? new Set(assignments.map(a => a.employeeId)).size : 0}</p>
+          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{assignedCount}</p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center justify-center gap-1"><UserCheck size={11} />Avec planning</p>
         </div>
         <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-gray-500">{employees.length - (assignments.length > 0 ? new Set(assignments.map(a => a.employeeId)).size : 0)}</p>
+          <p className="text-2xl font-black text-gray-500">{withoutShiftCount}</p>
           <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1"><UserX size={11} />Horaires globaux</p>
         </div>
       </div>
 
-      {/* Filtres */}
+      {/* Filtres + toggle showAll */}
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[180px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -494,13 +497,26 @@ function EmployeeShiftView({
             </button>
           ))}
         </div>
+        {/* FIX: toggle pour inclure les employés sans planning */}
+        <button
+          onClick={() => setShowAll(v => !v)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${showAll ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400' : 'border-gray-200 dark:border-gray-700 text-gray-500'}`}
+        >
+          <Eye size={13} />
+          {showAll ? 'Shiftés + Globaux' : 'Shiftés seulement'}
+        </button>
       </div>
 
       {/* Table employés */}
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
           <Users size={28} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-400">Aucun résultat</p>
+          <p className="text-sm text-gray-500 font-semibold mb-1">
+            {assignedCount === 0 ? 'Aucun employé n\'a encore de shift assigné' : 'Aucun résultat'}
+          </p>
+          {assignedCount === 0 && (
+            <p className="text-xs text-gray-400">Cliquez sur "Assigner" pour lier un employé à un planning.</p>
+          )}
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
@@ -586,11 +602,10 @@ function EmployeeShiftView({
           {/* Footer */}
           <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <p className="text-xs text-gray-500">
-              {withShift} avec planning · {withoutShift} horaires globaux
+              {assignedCount} avec planning · {withoutShiftCount} horaires globaux
             </p>
             <button
               onClick={() => {
-                // Export CSV simple
                 const lines = ['Nom,Département,Poste,Shift,Type,Détail'];
                 filtered.forEach(({ employee, assignments: empAssignments, hasShift }) => {
                   if (!hasShift) {
@@ -635,7 +650,6 @@ export default function ShiftsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Tabs
   const [activeTab, setActiveTab] = useState<'shifts' | 'employees'>('shifts');
 
   const [shiftModal, setShiftModal] = useState(false);
@@ -684,19 +698,16 @@ export default function ShiftsPage() {
     }
   }, []);
 
-  // Charger les assignations séparément (peut être lent)
+  // FIX: fetchAssignments récupère les données de tous les employés assignés
+  // en passant par un endpoint dédié ou en batch
   const fetchAssignments = useCallback(async () => {
     setAssignLoading(true);
     try {
-      // On récupère les assignations de tous les employés
-      // L'endpoint GET /attendance/shift-assignments/:employeeId ne retourne que pour un employé
-      // On fait donc une requête par employé en parallèle (limité)
       const empsRes: any = await api.get('/employees?status=ACTIVE&limit=200');
       const empsArray: Employee[] = Array.isArray(empsRes) ? empsRes
         : Array.isArray(empsRes?.employees) ? empsRes.employees
         : [];
 
-      // Batch les requêtes par groupe de 10
       const allAssignments: ShiftAssignment[] = [];
       const chunks = [];
       for (let i = 0; i < empsArray.length; i += 10) {
@@ -710,7 +721,6 @@ export default function ShiftsPage() {
           if (r.status === 'fulfilled') {
             const data = Array.isArray(r.value) ? r.value : [];
             data.forEach((a: ShiftAssignment) => {
-              // Enrichir avec l'objet employee
               allAssignments.push({ ...a, employee: chunk[idx] });
             });
           }
@@ -725,11 +735,13 @@ export default function ShiftsPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Charger les assignations quand on bascule sur l'onglet employés
   useEffect(() => {
-    if (activeTab === 'employees' && assignments.length === 0) {
+    if (activeTab === 'employees') {
       fetchAssignments();
     }
-  }, [activeTab, assignments.length, fetchAssignments]);
+  }, [activeTab, fetchAssignments]);
 
   const handleSaveShift = async (data: any) => {
     setSaving(true);
@@ -768,8 +780,10 @@ export default function ShiftsPage() {
       await api.post('/attendance/shift-assignments', data);
       showToast('Planning assigné ✅');
       setAssignModal(false);
-      // Refresh les assignations si l'onglet est actif
-      if (activeTab === 'employees') fetchAssignments();
+      // FIX: toujours rafraîchir les assignations après une assignation réussie
+      await fetchAssignments();
+      // Aussi basculer sur l'onglet employés pour que l'utilisateur voie le résultat
+      setActiveTab('employees');
     } catch (e: any) {
       showToast(e?.response?.data?.message || e.message || 'Erreur', false);
     } finally {
@@ -953,7 +967,6 @@ export default function ShiftsPage() {
                       </div>
                     )}
                   </div>
-                  {/* Nb employés assignés */}
                   {assignments.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
                       <Users size={11} className="text-gray-400" />
@@ -967,7 +980,6 @@ export default function ShiftsPage() {
             </div>
           )}
 
-          {/* Cas d'usage */}
           {canAssign && shifts.length > 0 && (
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
               <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
