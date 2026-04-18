@@ -1,5 +1,6 @@
 // ============================================================================
-// 📁 components/landing/Navbar.tsx
+// 📁 components/landing/Navbar.tsx — mis à jour
+// Ajout : lien "Documentation" → /docs dans la navigation desktop & mobile
 // ============================================================================
 'use client';
 
@@ -21,16 +22,22 @@ export function Navbar() {
                  <Hexagon size={20} className="sm:w-6 sm:h-6" fill="currentColor" />
                </div>
             </div>
-            <span className="text-xl sm:text-2xl font-bold text-white tracking-tight">HRCongo</span>
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-white tracking-tight">HRCongo</Link>
           </div>
 
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8 lg:gap-10">
             {['Fonctionnalités', 'Tarifs', 'Contact'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group">
-                    {item}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full"></span>
-                </a>
+              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group">
+                {item}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full"></span>
+              </a>
             ))}
+            {/* Lien Documentation */}
+            <Link href="/docs" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group">
+              Documentation
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full"></span>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
@@ -53,6 +60,7 @@ export function Navbar() {
           </div>
         </div>
 
+        {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden py-4 border-t border-white/5 space-y-4">
             {['Fonctionnalités', 'Tarifs', 'Contact'].map((item) => (
@@ -65,6 +73,14 @@ export function Navbar() {
                 {item}
               </a>
             ))}
+            {/* Documentation dans le menu mobile */}
+            <Link
+              href="/docs"
+              className="block text-slate-300 hover:text-white transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Documentation
+            </Link>
             <Link 
               href="/auth/register"
               className="w-full py-3 bg-cyan-500 text-slate-900 rounded-xl font-bold text-center block"
