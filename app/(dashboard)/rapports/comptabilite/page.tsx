@@ -374,8 +374,8 @@ export default function AccountingPage() {
                 Comptes utilisés par défaut :
                 <span className="font-mono mx-1">661100</span> Salaires bruts ·
                 <span className="font-mono mx-1">431100</span> CNSS Salarié ·
-                <span className="font-mono mx-1">442000</span> ITS/IRPP ·
-                <span className="font-mono mx-1">421000</span> Net à payer ·
+                <span className="font-mono mx-1">447200</span> ITS/IRPP ·
+                <span className="font-mono mx-1">422100</span> Net à payer ·
                 <span className="font-mono mx-1">664100</span> Charges patronales ·
                 <span className="font-mono mx-1">443000</span> TUS
               </p>
@@ -566,7 +566,7 @@ export default function AccountingPage() {
                 </h4>
                 <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
                   Format journal PNM pipe-séparé. Dans Sage : <em>Fichier → Import → Écritures comptables</em> puis sélectionnez le fichier .TXT.
-                  Les comptes 661100, 431100, 442000, 421000 doivent exister dans votre plan comptable.
+                  Les comptes 661100, 431100, 431300, 447200, 422100, 664100, 641300 doivent exister dans votre plan comptable.
                 </p>
               </div>
             </div>
