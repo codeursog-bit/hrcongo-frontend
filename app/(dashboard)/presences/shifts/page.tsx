@@ -698,37 +698,41 @@ export default function ShiftsPage() {
     }
   }, []);
 
-  // FIX: fetchAssignments récupère les données de tous les employés assignés
-  // en passant par un endpoint dédié ou en batch
+  // FIX MAJEUR: 1 seule requête GET /attendance/shift-assignments
+  // au lieu de N requêtes par employé (qui causaient le bug d'affichage vide)
   const fetchAssignments = useCallback(async () => {
     setAssignLoading(true);
     try {
-      const empsRes: any = await api.get('/employees?status=ACTIVE&limit=200');
-      const empsArray: Employee[] = Array.isArray(empsRes) ? empsRes
-        : Array.isArray(empsRes?.employees) ? empsRes.employees
-        : [];
-
-      const allAssignments: ShiftAssignment[] = [];
-      const chunks = [];
-      for (let i = 0; i < empsArray.length; i += 10) {
-        chunks.push(empsArray.slice(i, i + 10));
-      }
-      for (const chunk of chunks) {
-        const results = await Promise.allSettled(
-          chunk.map(emp => api.get(`/attendance/shift-assignments/${emp.id}`) as Promise<any>)
-        );
-        results.forEach((r, idx) => {
-          if (r.status === 'fulfilled') {
-            const data = Array.isArray(r.value) ? r.value : [];
-            data.forEach((a: ShiftAssignment) => {
-              allAssignments.push({ ...a, employee: chunk[idx] });
+      const data = await api.get('/attendance/shift-assignments') as any;
+      const arr: ShiftAssignment[] = Array.isArray(data) ? data : [];
+      setAssignments(arr);
+    } catch (e: any) {
+      console.warn('Erreur chargement assignations:', e);
+      // Fallback : si l'endpoint global n'existe pas encore, on essaie l'ancienne méthode
+      if (e?.response?.status === 404 || e?.response?.status === 405) {
+        try {
+          const empsRes: any = await api.get('/employees?status=ACTIVE&limit=200');
+          const empsArray: Employee[] = Array.isArray(empsRes) ? empsRes
+            : Array.isArray(empsRes?.employees) ? empsRes.employees : [];
+          const allAssignments: ShiftAssignment[] = [];
+          const chunks: Employee[][] = [];
+          for (let i = 0; i < empsArray.length; i += 10) chunks.push(empsArray.slice(i, i + 10));
+          for (const chunk of chunks) {
+            const results = await Promise.allSettled(
+              chunk.map(emp => api.get(`/attendance/shift-assignments/${emp.id}`) as Promise<any>)
+            );
+            results.forEach((r, idx) => {
+              if (r.status === 'fulfilled') {
+                const rows = Array.isArray(r.value) ? r.value : [];
+                rows.forEach((a: ShiftAssignment) => allAssignments.push({ ...a, employee: chunk[idx] }));
+              }
             });
           }
-        });
+          setAssignments(allAssignments);
+        } catch (fallbackErr) {
+          console.warn('Fallback aussi échoué:', fallbackErr);
+        }
       }
-      setAssignments(allAssignments);
-    } catch (e) {
-      console.warn('Erreur assignations:', e);
     } finally {
       setAssignLoading(false);
     }
