@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, Calendar, Download, Printer, DollarSign, Wallet, 
   Shield, TrendingUp, TrendingDown, Users, Building2, Loader2,
-  ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle
+  ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle,
+
+  ClipboardList, LayoutDashboard,UsersRound,
+  UmbrellaOff,BookOpen
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -102,11 +105,12 @@ export default function PayrollAnalyticsPage() {
 
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
         {[
-          { href: '/rapports', label: 'Vue d\'ensemble', icon: '📊' },
-          { href: '/rapports/complet', label: 'Rapport Complet', icon: '📋' },
-          { href: '/rapports/analyse-paie', label: 'Paie & Coûts', icon: '💰', active: true },
-          { href: '/rapports/effectifs', label: 'Effectifs', icon: '👥' },
-          { href: '/rapports/analyse-conges', label: 'Congés', icon: '🏖️' }
+          { href:'/rapports',                label:"Vue d'ensemble", Icon:LayoutDashboard },
+          { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
+          { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign , active:true },
+          { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
+          { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
+          { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
         ].map((item) => (
           <button
             key={item.href}
@@ -119,7 +123,7 @@ export default function PayrollAnalyticsPage() {
               }
             `}
           >
-            <span>{item.icon}</span>
+            <span><item.Icon size={16} /></span>
             <span className="hidden sm:inline">{item.label}</span>
           </button>
         ))}
