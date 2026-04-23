@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Briefcase, MapPin, DollarSign, Save, Loader2, Building2, Upload, X, Calendar, ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Briefcase, MapPin, DollarSign, Save, Loader2, Building2, Upload, X, Calendar, ImageIcon, Eye, EyeOff, Clock, FileText } from 'lucide-react';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import Image from 'next/image';
@@ -23,6 +23,9 @@ interface JobData {
   expirationDate?: string;
   status: string;
   isExpired: boolean;
+  aiConfig?: { testDurationMinutes?: number };
+  additionalDocumentType?: string;
+  additionalDocumentLabel?: string;
 }
 
 interface FormData {
@@ -35,6 +38,9 @@ interface FormData {
   requirements: string;
   expirationDate: string;
   status: string;
+  testDurationMinutes: number;
+  additionalDocumentType: '' | 'CNI' | 'BULLETIN' | 'LETTRE_MOTIVATION' | 'BREF' | 'CASIER' | 'AUTRE';
+  additionalDocumentLabel: string;
 }
 
 export default function EditJobOfferPage({ params }: { params: { id: string } }) {
@@ -55,7 +61,10 @@ export default function EditJobOfferPage({ params }: { params: { id: string } })
     description: '',
     requirements: '',
     expirationDate: '',
-    status: 'PUBLISHED'
+    status: 'PUBLISHED',
+    testDurationMinutes: 10,
+    additionalDocumentType: '',
+    additionalDocumentLabel: '',
   });
 
   useEffect(() => {
@@ -90,7 +99,10 @@ export default function EditJobOfferPage({ params }: { params: { id: string } })
           description: job.description,
           requirements: job.requirements || '',
           expirationDate: formattedDate,
-          status: job.status
+          status: job.status,
+          testDurationMinutes: job.aiConfig?.testDurationMinutes ?? 10,
+          additionalDocumentType: (job.additionalDocumentType as '' | 'CNI' | 'BREF' | 'AUTRE') || '',
+          additionalDocumentLabel: job.additionalDocumentLabel || '',
         });
       } catch (e) {
         console.error(e);
@@ -141,6 +153,16 @@ export default function EditJobOfferPage({ params }: { params: { id: string } })
       formDataToSend.append('description', formData.description);
       formDataToSend.append('requirements', formData.requirements || '');
       formDataToSend.append('status', formData.status); // ✅ Envoyer le statut
+      
+      const aiConfig = { testDurationMinutes: formData.testDurationMinutes };
+      formDataToSend.append('aiConfig', JSON.stringify(aiConfig));
+
+      if (formData.additionalDocumentType) {
+        formDataToSend.append('additionalDocumentType', formData.additionalDocumentType);
+        formDataToSend.append('additionalDocumentLabel', formData.additionalDocumentLabel || formData.additionalDocumentType);
+      } else {
+        formDataToSend.append('additionalDocumentType', '');
+      }
       
       if (formData.expirationDate) {
         const isoDate = new Date(formData.expirationDate).toISOString();
@@ -334,6 +356,73 @@ export default function EditJobOfferPage({ params }: { params: { id: string } })
             <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Compétences requises</label>
             <textarea value={formData.requirements} onChange={e => setFormData({...formData, requirements: e.target.value})} className="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 rounded-xl outline-none min-h-[100px] resize-y" placeholder="Liste des compétences..." />
           </div>
+        </div>
+
+        {/* ⏱ DURÉE DU TEST */}
+        <div className="space-y-3">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Clock size={20} className="text-purple-500"/> Durée du test
+          </h3>
+          <div className="flex items-center gap-4 p-4 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 rounded-xl">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-purple-700 dark:text-purple-300">Durée en minutes</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Temps accordé aux candidats pour répondre au test</p>
+            </div>
+            <input
+              type="number"
+              min={1}
+              max={180}
+              value={formData.testDurationMinutes}
+              onChange={e => setFormData({...formData, testDurationMinutes: Math.max(1, parseInt(e.target.value) || 10)})}
+              className="w-24 text-center p-3 bg-white dark:bg-gray-900/50 border border-purple-300 dark:border-purple-500/40 rounded-xl text-lg font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500/30"
+            />
+          </div>
+        </div>
+
+        {/* 📄 DOCUMENT SUPPLÉMENTAIRE */}
+        <div className="space-y-3">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <FileText size={20} className="text-amber-500"/> Document supplémentaire (Optionnel)
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">En plus du CV, demandez un document additionnel au candidat lors de sa candidature</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {([
+              { value: '' as const, label: 'Aucun' },
+              { value: 'CNI' as const, label: "Pièce d'identité" },
+              { value: 'BREF' as const, label: 'BREF / Diplôme' },
+              { value: 'AUTRE' as const, label: 'Autre' },
+            ]).map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setFormData({...formData, additionalDocumentType: opt.value, additionalDocumentLabel: ''})}
+                className={`py-3 px-4 rounded-xl text-sm font-bold border transition-all ${
+                  formData.additionalDocumentType === opt.value
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-md'
+                    : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-amber-400'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {formData.additionalDocumentType === 'AUTRE' && (
+            <input
+              type="text"
+              placeholder="Ex : Lettre de référence, Casier judiciaire..."
+              value={formData.additionalDocumentLabel}
+              onChange={e => setFormData({...formData, additionalDocumentLabel: e.target.value})}
+              className="w-full p-4 bg-gray-50 dark:bg-gray-900/50 border border-amber-300 dark:border-amber-500/40 rounded-xl outline-none focus:ring-2 focus:ring-amber-500/20 text-gray-900 dark:text-white"
+            />
+          )}
+          {formData.additionalDocumentType && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+              <FileText size={16} className="text-amber-500 shrink-0"/>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Les candidats devront uploader : <strong>{formData.additionalDocumentLabel || formData.additionalDocumentType}</strong> en plus de leur CV
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="pt-4 flex justify-end gap-3">

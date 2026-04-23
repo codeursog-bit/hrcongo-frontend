@@ -461,6 +461,7 @@ interface CandidateIA {
   email: string;
   phone: string;
   resumeUrl: string;
+  additionalDocUrl?: string;
   coverLetter?: string;
   aiSuggestion: AIDecision;
   hrDecision?: AIDecision;
@@ -761,16 +762,34 @@ function DetailCandidatIAContent({ id }: { id: string }) {
                 {isInInterview ? 'Modifier l\'entretien' : 'Planifier un entretien'}
               </button>
 
-              {/* CV Download */}
-              <a
-                href={candidate.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
-              >
-                <Download size={17} /> Télécharger le CV
-              </a>
+              {/* ── Documents téléchargeables ── */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1">Documents</p>
+
+                {/* CV */}
+                <a
+                  href={candidate.resumeUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Download size={17} /> Télécharger le CV
+                </a>
+
+                {/* Document additionnel */}
+                {candidate.additionalDocUrl && (
+                  <a
+                    href={candidate.additionalDocUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
+                  >
+                    <Download size={17} /> Télécharger le document joint
+                  </a>
+                )}
+              </div>
             </div>
           </motion.div>
 

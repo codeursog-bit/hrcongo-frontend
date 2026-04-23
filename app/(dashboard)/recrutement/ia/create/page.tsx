@@ -6,7 +6,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   Sparkles, Plus, Trash2, GripVertical, BrainCircuit, Send, X,
   MapPin, Building2, Loader2, ArrowLeft, CheckCircle2, Copy, Check,
-  Globe, Target, GraduationCap, Zap, Upload, ImageIcon, Calendar, DollarSign, Eye
+  Globe, Target, GraduationCap, Zap, Upload, ImageIcon, Calendar, DollarSign, Eye, Clock, FileText
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { EducationLevel, QuizQuestion, Department } from '@/types/recruitment';
@@ -38,14 +38,16 @@ export default function CreateIAJobPage() {
     requiredSkills: [] as string[],
     minExperience: 2,
     educationLevel: EducationLevel.BAC_PLUS_3,
-    testDurationMinutes: 30,
+    testDurationMinutes: 10,
     salaryMin: '',
     salaryMax: '',
     salaryCurrency: 'XAF',
     expirationDate: '',
     showOnPortal: true,
     quiz: [] as QuizQuestion[],
-    isPremium: false // ✨ NOUVEAU
+    isPremium: false, // ✨ NOUVEAU
+    additionalDocumentType: '' as '' | 'CNI' | 'BULLETIN' | 'LETTRE_MOTIVATION' | 'BREF' | 'CASIER' | 'AUTRE',
+    additionalDocumentLabel: '',
   });
 
   useEffect(() => {
@@ -141,6 +143,10 @@ export default function CreateIAJobPage() {
       formDataToSend.append('status', 'PUBLISHED');
       formDataToSend.append('showOnPortal', formData.showOnPortal.toString());
       formDataToSend.append('isPremium', formData.isPremium.toString()); // ✨ AJOUT
+      if (formData.additionalDocumentType) {
+        formDataToSend.append('additionalDocumentType', formData.additionalDocumentType);
+        formDataToSend.append('additionalDocumentLabel', formData.additionalDocumentLabel || formData.additionalDocumentType);
+      }
       
       // ✅ requiredSkills en JSON string (sera transformé par le DTO)
       formDataToSend.append('requiredSkills', JSON.stringify(formData.requiredSkills));
@@ -524,6 +530,69 @@ export default function CreateIAJobPage() {
                   />
                   <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-yellow-500 peer-checked:to-orange-500"></div>
                 </label>
+              </div>
+
+              {/* ⏱ DURÉE DU TEST */}
+              <div className="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <Clock className="text-purple-400 shrink-0" size={20} />
+                  <div>
+                    <p className="font-bold text-purple-300 text-sm">Durée du test (minutes)</p>
+                    <p className="text-xs text-slate-400">Temps accordé aux candidats pour répondre</p>
+                  </div>
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  max={180}
+                  value={formData.testDurationMinutes}
+                  onChange={e => setFormData({ ...formData, testDurationMinutes: Math.max(1, parseInt(e.target.value) || 10) })}
+                  className="w-20 text-center bg-black/40 border border-purple-500/40 rounded-xl px-3 py-2 text-white font-bold text-lg focus:ring-2 focus:ring-purple-500/50 outline-none"
+                />
+              </div>
+
+              {/* 📄 DOCUMENT SUPPLÉMENTAIRE */}
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
+                <div className="flex items-center gap-3 mb-1">
+                  <FileText className="text-amber-400 shrink-0" size={20} />
+                  <div>
+                    <p className="font-bold text-amber-300 text-sm">Document supplémentaire (Optionnel)</p>
+                    <p className="text-xs text-slate-400">En plus du CV, exiger un autre document au candidat</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {([
+                    { value: '', label: 'Aucun' },
+                    { value: 'CNI', label: "Pièce d'identité (CNI)" },
+                    { value: 'BULLETIN', label: 'Bulletin de salaire' },
+                    { value: 'LETTRE_MOTIVATION', label: 'Lettre de motivation' },
+                    { value: 'BREF', label: 'BREF / Diplôme' },
+                    { value: 'CASIER', label: 'Casier judiciaire' },
+                    { value: 'AUTRE', label: 'Autre document' },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, additionalDocumentType: opt.value, additionalDocumentLabel: '' })}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
+                        formData.additionalDocumentType === opt.value
+                          ? 'bg-amber-500/30 border-amber-400 text-amber-300'
+                          : 'bg-white/5 border-white/10 text-slate-400 hover:border-amber-500/40'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {formData.additionalDocumentType === 'AUTRE' && (
+                  <input
+                    type="text"
+                    placeholder="Ex : Lettre de référence, Casier judiciaire..."
+                    value={formData.additionalDocumentLabel}
+                    onChange={e => setFormData({ ...formData, additionalDocumentLabel: e.target.value })}
+                    className="w-full bg-black/30 border border-amber-500/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:ring-2 focus:ring-amber-500/40 outline-none"
+                  />
+                )}
               </div>
             </div>
           </div>

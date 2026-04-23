@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,6 +18,8 @@ interface JobOffer {
   type: string;
   description: string;
   requirements?: string;
+  additionalDocumentType?: string;
+  additionalDocumentLabel?: string;
   department?: {
     name: string;
   };
@@ -32,6 +33,7 @@ export default function JobApplyManualPage({ params }: { params: { id: string } 
   const [isSuccess, setIsSuccess] = useState(false);
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [additionalDocFile, setAdditionalDocFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -64,6 +66,12 @@ export default function JobApplyManualPage({ params }: { params: { id: string } 
       return;
     }
 
+    if (job?.additionalDocumentType && !additionalDocFile) {
+      const label = job.additionalDocumentLabel || job.additionalDocumentType;
+      alert(`Veuillez uploader le document requis : ${label}`);
+      return;
+    }
+
     setIsApplying(true);
 
     try {
@@ -74,6 +82,9 @@ export default function JobApplyManualPage({ params }: { params: { id: string } 
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('coverLetter', formData.coverLetter);
       formDataToSend.append('resume', resumeFile);
+      if (additionalDocFile) {
+        formDataToSend.append('additionalDoc', additionalDocFile);
+      }
 
       const res = await fetch(`${API_URL}/public/jobs/${params.id}/apply`, {
         method: 'POST',
@@ -106,6 +117,17 @@ export default function JobApplyManualPage({ params }: { params: { id: string } 
         return;
       }
       setResumeFile(file);
+    }
+  };
+
+  const handleAdditionalDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Le fichier est trop volumineux (max 5MB)");
+        return;
+      }
+      setAdditionalDocFile(file);
     }
   };
 
@@ -340,6 +362,46 @@ export default function JobApplyManualPage({ params }: { params: { id: string } 
                         </label>
                       </div>
                     </div>
+
+                    {/* ─── Document supplémentaire requis ─── */}
+                    {job?.additionalDocumentType && (
+                      <div>
+                        <label className="text-xs font-bold text-amber-400 uppercase ml-1 flex items-center gap-1.5">
+                          <FileText size={12}/>
+                          {job.additionalDocumentLabel || job.additionalDocumentType}
+                          <span className="text-red-400">*</span>
+                        </label>
+                        <div className="relative mt-1">
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                            onChange={handleAdditionalDocChange}
+                            className="hidden"
+                            id="additional-doc-upload"
+                            required
+                          />
+                          <label
+                            htmlFor="additional-doc-upload"
+                            className="block border border-dashed border-amber-500/40 bg-amber-500/5 rounded-xl p-6 text-center hover:bg-amber-500/10 hover:border-amber-500/70 transition-all cursor-pointer group"
+                          >
+                            {additionalDocFile ? (
+                              <div className="flex items-center justify-center gap-2 text-amber-400">
+                                <CheckCircle2 size={20}/>
+                                <span className="text-sm font-medium">{additionalDocFile.name}</span>
+                              </div>
+                            ) : (
+                              <>
+                                <Upload size={24} className="mx-auto text-amber-500/50 group-hover:text-amber-400 mb-2 transition-colors"/>
+                                <p className="text-xs text-slate-400 group-hover:text-amber-300 transition-colors">
+                                  Importer : {job.additionalDocumentLabel || job.additionalDocumentType}
+                                </p>
+                                <p className="text-[10px] text-slate-600 mt-1">PDF, DOC, DOCX, JPG ou PNG (max 5MB)</p>
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="text-xs font-bold text-slate-500 uppercase ml-1">Lettre de motivation (Optionnel)</label>

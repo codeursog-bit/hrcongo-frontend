@@ -19,6 +19,8 @@ interface JobOffer {
   type: string;
   description: string;
   requirements?: string;
+  additionalDocumentType?: string;
+  additionalDocumentLabel?: string;
 }
 
 interface ApplicationResult {
@@ -41,6 +43,7 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
   const [redirectCountdown, setRedirectCountdown] = useState(3);
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [additionalDocFile, setAdditionalDocFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -88,6 +91,12 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
       return;
     }
 
+    if (job?.additionalDocumentType && !additionalDocFile) {
+      const label = job.additionalDocumentLabel || job.additionalDocumentType;
+      alert(`Veuillez uploader le document requis : ${label}`);
+      return;
+    }
+
     setIsApplying(true);
 
     try {
@@ -98,6 +107,9 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('coverLetter', formData.coverLetter);
       formDataToSend.append('resume', resumeFile);
+      if (additionalDocFile) {
+        formDataToSend.append('additionalDoc', additionalDocFile);
+      }
 
       const res = await fetch(`${API_URL}/public/jobs/${params.id}/apply`, {
         method: 'POST',
@@ -131,6 +143,17 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
         return;
       }
       setResumeFile(file);
+    }
+  };
+
+  const handleAdditionalDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Le fichier est trop volumineux (max 5MB)");
+        return;
+      }
+      setAdditionalDocFile(file);
     }
   };
 
@@ -512,6 +535,45 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
                         </label>
                       </div>
                     </div>
+
+                    {/* ─── Document supplémentaire ─── */}
+                    {job?.additionalDocumentType && (
+                      <div>
+                        <label className="text-xs font-bold text-amber-400 uppercase mb-2 block flex items-center gap-2">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                          {job.additionalDocumentLabel || job.additionalDocumentType} <span className="text-red-400 ml-0.5">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                            onChange={handleAdditionalDocChange}
+                            className="hidden"
+                            id="additional-doc-upload"
+                            required
+                          />
+                          <label
+                            htmlFor="additional-doc-upload"
+                            className="block border-2 border-dashed border-amber-500/40 bg-amber-500/5 rounded-xl p-6 text-center hover:bg-amber-500/10 hover:border-amber-500/70 transition-all cursor-pointer group"
+                          >
+                            {additionalDocFile ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span className="text-sm font-medium text-amber-400">{additionalDocFile.name}</span>
+                              </div>
+                            ) : (
+                              <>
+                                <svg className="w-8 h-8 mx-auto text-amber-500/50 group-hover:text-amber-400 mb-2 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                <p className="text-sm text-slate-400 group-hover:text-white transition-colors font-medium">
+                                  Importer : {job.additionalDocumentLabel || job.additionalDocumentType}
+                                </p>
+                                <p className="text-xs text-slate-600 mt-1">PDF, DOC, DOCX, JPG ou PNG (max 5MB)</p>
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="text-xs font-bold text-slate-400 uppercase mb-2 block">Lettre de motivation (Optionnel)</label>
@@ -1111,4 +1173,3 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
 //     </div>
 //   );
 // }
-

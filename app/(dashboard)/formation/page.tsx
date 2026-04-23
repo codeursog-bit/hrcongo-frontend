@@ -254,10 +254,22 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
           )}
         </div>
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center scale-75 group-hover:scale-100 transition-transform">
-            <Play size={20} fill="white" className="text-white ml-0.5" />
+        {/* Hover overlay — effet glace */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(186,230,253,0.12) 50%, rgba(224,242,254,0.10) 100%)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+          }}
+        >
+          {/* reflets glace */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-none">
+            <div className="absolute -top-4 -left-4 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
+            <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-sky-200/20 rounded-full blur-xl" />
+            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+          </div>
+          <div className="relative w-12 h-12 rounded-full bg-white/30 backdrop-blur-md border border-white/50 flex items-center justify-center scale-75 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-sky-500/20">
+            <Play size={20} fill="white" className="text-white ml-0.5 drop-shadow" />
           </div>
         </div>
       </div>
@@ -333,6 +345,8 @@ export default function FormationPage() {
   // Filtres catalogue
   const [searchQuery, setSearchQuery]           = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tout');
+  const [dashPage, setDashPage]                 = useState(1);
+  const DASH_PAGE_SIZE = 10;
 
   // Forms
   const [newCourse, setNewCourse] = useState({
@@ -844,7 +858,7 @@ export default function FormationPage() {
         {navItems.map(item => (
           <button
             key={item.id}
-            onClick={() => setActiveView(item.id)}
+            onClick={() => { setActiveView(item.id); setDashPage(1); }}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
               activeView === item.id
                 ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-md'
@@ -881,7 +895,7 @@ export default function FormationPage() {
 
               {/* Budget depts + Demandes récentes */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/8 p-5">
+                <div className="bg-white dark:bg-slate-800/40 rounded-2xl shadow-sm dark:shadow-none ring-1 ring-slate-900/5 dark:ring-white/5 p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="font-black text-slate-900 dark:text-white">Plan Formation Annuel</h3>
@@ -893,13 +907,27 @@ export default function FormationPage() {
                       </button>
                     )}
                   </div>
-                  {dashboard.deptBudgets.length > 0
-                    ? dashboard.deptBudgets.map(d => <BudgetBar key={d.departmentId} dept={d} />)
-                    : <p className="text-sm text-slate-400 text-center py-4">Aucun budget configuré</p>
-                  }
+                  {(() => {
+                    const all = dashboard.deptBudgets;
+                    const paged = all.slice(0, dashPage * DASH_PAGE_SIZE);
+                    const hasMore = paged.length < all.length;
+                    return all.length > 0 ? (
+                      <>
+                        {paged.map(d => <BudgetBar key={d.departmentId} dept={d} />)}
+                        {hasMore && (
+                          <button
+                            onClick={() => setDashPage(p => p + 1)}
+                            className="w-full mt-3 py-2 text-xs font-bold text-sky-500 hover:text-sky-400 flex items-center justify-center gap-1 transition-colors"
+                          >
+                            Voir plus ({all.length - paged.length} restants) <ChevronRight size={12}/>
+                          </button>
+                        )}
+                      </>
+                    ) : <p className="text-sm text-slate-400 text-center py-4">Aucun budget configuré</p>;
+                  })()}
                 </div>
 
-                <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/8 p-5">
+                <div className="bg-white dark:bg-slate-800/40 rounded-2xl shadow-sm dark:shadow-none ring-1 ring-slate-900/5 dark:ring-white/5 p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="font-black text-slate-900 dark:text-white">Demandes récentes</h3>
@@ -911,7 +939,7 @@ export default function FormationPage() {
                   </div>
                   <div className="space-y-2">
                     {requests.slice(0, 4).length > 0 ? requests.slice(0, 4).map(req => (
-                      <div key={req.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-white/8">
+                      <div key={req.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
                         <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
                           {req.employee.firstName[0]}{req.employee.lastName[0]}
                         </div>
@@ -980,13 +1008,13 @@ export default function FormationPage() {
                 type="text"
                 placeholder="Rechercher une formation, une compétence…"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={e => { setSearchQuery(e.target.value); setDashPage(1); }}
                 className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/8 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {categories.map(cat => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)}
+                <button key={cat} onClick={() => { setSelectedCategory(cat); setDashPage(1); }}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                     selectedCategory === cat
                       ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow'
@@ -1026,13 +1054,31 @@ export default function FormationPage() {
           {/* Grille */}
           {loadingCourses ? (
             <div className="flex justify-center py-20"><Loader2 className="animate-spin text-sky-500" size={36}/></div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredCourses.map(course => (
-                <CourseCard key={course.id} course={course} onOpen={() => setShowCourseModal(course)} isRH={!!isRH}/>
-              ))}
-            </div>
-          )}
+          ) : (() => {
+            const CATALOG_PAGE_SIZE = 10;
+            const pagedCourses = filteredCourses.slice(0, dashPage * CATALOG_PAGE_SIZE);
+            const hasMore = pagedCourses.length < filteredCourses.length;
+            return (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {pagedCourses.map(course => (
+                    <CourseCard key={course.id} course={course} onOpen={() => setShowCourseModal(course)} isRH={!!isRH}/>
+                  ))}
+                </div>
+                {hasMore && (
+                  <div className="flex justify-center mt-6">
+                    <button
+                      onClick={() => setDashPage(p => p + 1)}
+                      className="px-6 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-bold text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-all flex items-center gap-2 shadow-sm"
+                    >
+                      Voir plus ({filteredCourses.length - pagedCourses.length} restants)
+                      <ChevronRight size={14}/>
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
           {!loadingCourses && filteredCourses.length === 0 && (
             <div className="flex flex-col items-center py-20 text-slate-400">
               <BookOpen size={40} className="mb-3 opacity-20"/>

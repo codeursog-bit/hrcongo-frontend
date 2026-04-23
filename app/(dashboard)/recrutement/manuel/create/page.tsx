@@ -38,7 +38,9 @@ export default function CreateManualJobPage() {
     salaryCurrency: 'XAF',
     expirationDate: '',
     showOnPortal: true,
-    isPremium: false // ✨ NOUVEAU
+    isPremium: false, // ✨ NOUVEAU
+    additionalDocumentType: '' as '' | 'CNI' | 'BULLETIN' | 'LETTRE_MOTIVATION' | 'BREF' | 'CASIER' | 'AUTRE',
+    additionalDocumentLabel: '',
   });
 
   useEffect(() => {
@@ -82,6 +84,11 @@ export default function CreateManualJobPage() {
       formDataToSend.append('status', 'PUBLISHED');
       formDataToSend.append('showOnPortal', formData.showOnPortal.toString());
       formDataToSend.append('isPremium', formData.isPremium.toString()); // ✨ AJOUT
+      
+      if (formData.additionalDocumentType) {
+        formDataToSend.append('additionalDocumentType', formData.additionalDocumentType);
+        formDataToSend.append('additionalDocumentLabel', formData.additionalDocumentLabel || formData.additionalDocumentType);
+      }
       
       if (formData.salaryMin) formDataToSend.append('salaryMin', formData.salaryMin);
       if (formData.salaryMax) formDataToSend.append('salaryMax', formData.salaryMax);
@@ -417,6 +424,58 @@ export default function CreateManualJobPage() {
               </div>
             </div>
           </div>
+
+          {/* 📄 DOCUMENT SUPPLÉMENTAIRE */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <FileText size={20} className="text-amber-400 shrink-0"/>
+              <div>
+                <p className="font-bold text-amber-300 text-sm">Document supplémentaire (Optionnel)</p>
+                <p className="text-xs text-slate-400">En plus du CV, exiger un autre document au candidat lors de sa candidature</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              {([
+                { value: '' as const, label: 'Aucun' },
+                { value: 'CNI' as const, label: "Pièce d'identité (CNI)" },
+                { value: 'BULLETIN' as const, label: 'Bulletin de salaire' },
+                { value: 'LETTRE_MOTIVATION' as const, label: 'Lettre de motivation' },
+                { value: 'BREF' as const, label: 'BREF / Diplôme' },
+                { value: 'CASIER' as const, label: 'Casier judiciaire' },
+                { value: 'AUTRE' as const, label: 'Autre document' },
+              ]).map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, additionalDocumentType: opt.value, additionalDocumentLabel: '' })}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all ${
+                    formData.additionalDocumentType === opt.value
+                      ? 'bg-amber-500/30 border-amber-400 text-amber-300'
+                      : 'bg-white/5 border-white/10 text-slate-400 hover:border-amber-500/40 hover:text-amber-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {formData.additionalDocumentType === 'AUTRE' && (
+              <input
+                type="text"
+                placeholder="Ex : Lettre de référence, Casier judiciaire..."
+                value={formData.additionalDocumentLabel}
+                onChange={e => setFormData({ ...formData, additionalDocumentLabel: e.target.value })}
+                className="w-full bg-black/30 border border-amber-500/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:ring-2 focus:ring-amber-500/40 outline-none"
+              />
+            )}
+            {formData.additionalDocumentType && (
+              <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <FileText size={14} className="text-amber-400 shrink-0"/>
+                <p className="text-xs text-amber-300">
+                  Les candidats devront fournir : <strong>{formData.additionalDocumentLabel || formData.additionalDocumentType}</strong> en plus de leur CV
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* SUBMIT */}
@@ -431,4 +490,3 @@ export default function CreateManualJobPage() {
     </div>
   );
 }
-
