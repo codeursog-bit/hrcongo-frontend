@@ -135,7 +135,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
   COMPLETED:   { label: 'Certifiée',   color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', icon: <CheckCircle2 size={11} /> },
   CANCELLED:   { label: 'Annulée',     color: 'text-red-400',     bg: 'bg-red-500/10 border-red-500/20',        icon: <Ban size={11} /> },
   COMPLETION_REQUESTED: { label: 'Validation en attente', color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20', icon: <Clock size={11} /> },
-  NOT_STARTED: { label: 'Non démarrée', color: 'text-slate-400',  bg: 'bg-slate-500/10 border-slate-500/20',   icon: <Clock size={11} /> },
+  NOT_STARTED: { label: 'Non démarrée', color: 'text-slate-400',  bg: 'bg-white/50/10 border-slate-500/20',   icon: <Clock size={11} /> },
 };
 
 const FormatBadge = ({ format }: { format: CourseFormat }) => {
@@ -156,7 +156,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, trend }: {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className={`relative overflow-hidden rounded-2xl p-5 border bg-white dark:bg-slate-800/50 backdrop-blur-sm ${color} group hover:scale-[1.02] transition-transform cursor-default`}
+      className={`relative overflow-hidden rounded-2xl p-5 bg-slate-800/50 dark:bg-slate-800/50 backdrop-blur-sm ${color} group transition-transform cursor-default`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="w-9 h-9 rounded-xl bg-current/10 flex items-center justify-center">
@@ -168,7 +168,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, trend }: {
           </span>
         )}
       </div>
-      <p className="text-xl font-black text-slate-900 dark:text-white">{value}</p>
+      <p className="text-xl font-black text-white">{value}</p>
       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{label}</p>
       {sub && <p className="text-[10px] text-slate-400 mt-1">{sub}</p>}
     </motion.div>
@@ -185,17 +185,17 @@ function BudgetBar({ dept }: { dept: DeptBudget }) {
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: dept.color }} />
-          <span className="text-sm font-bold text-slate-900 dark:text-white">{dept.name}</span>
+          <span className="text-sm font-bold text-white">{dept.name}</span>
           <span className="text-[10px] text-slate-400">{dept.employeeCount} emp.</span>
         </div>
         <div className="text-right">
-          <span className={`text-xs font-black ${isOver80 ? 'text-amber-500' : 'text-slate-700 dark:text-white'}`}>{pct}%</span>
+          <span className={`text-xs font-black ${isOver80 ? 'text-amber-500' : 'text-white'}`}>{pct}%</span>
           {dept.allocated > 0 && (
             <span className="text-[10px] text-slate-400 ml-1.5">{fmtCFA(dept.consumed)} / {fmtCFA(dept.allocated)}</span>
           )}
         </div>
       </div>
-      <div className="h-2 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+      <div className="h-2 bg-white/5 dark:bg-white/5 rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }} animate={{ width: `${Math.min(100, pct)}%` }}
           transition={{ duration: 1.2, ease: 'easeOut', delay: 0.1 }}
@@ -217,15 +217,15 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
       initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -4 }}
       onClick={onOpen}
-      className="group relative bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-white/8 rounded-2xl overflow-hidden cursor-pointer hover:border-sky-300 dark:hover:border-sky-500/40 hover:shadow-xl hover:shadow-sky-500/10 transition-all duration-300 flex flex-col"
+      className="group relative bg-slate-800/50 dark:bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-sky-500/40 hover:shadow-xl hover:shadow-sky-500/10 transition-all duration-300 flex flex-col"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden bg-slate-100 dark:bg-slate-900 shrink-0">
+      <div className="relative aspect-video overflow-hidden bg-white/5 dark:bg-slate-900 shrink-0">
         {course.thumbnailUrl ? (
           <img src={course.thumbnailUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={course.title} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-900">
-            <div className="w-14 h-14 rounded-2xl bg-slate-200 dark:bg-white/5 flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-white/5 dark:bg-slate-900">
+            <div className="w-14 h-14 rounded-2xl bg-slate-700 dark:bg-white/5 flex items-center justify-center">
               {course.format === 'IN_PERSON' ? <Ticket size={28} className="text-slate-400" /> : <BookOpen size={28} className="text-slate-400" />}
             </div>
           </div>
@@ -280,7 +280,7 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
           <span className="text-[10px] font-black text-sky-500 uppercase tracking-widest">{course.category ?? 'Formation'}</span>
           <FormatBadge format={course.format} />
         </div>
-        <h3 className="font-bold text-slate-900 dark:text-white text-sm leading-snug mb-1.5 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors line-clamp-2">
+        <h3 className="font-bold text-white text-sm leading-snug mb-1.5 group-hover:text-sky-300 transition-colors line-clamp-2">
           {course.title}
         </h3>
         {course.description && (
@@ -288,7 +288,7 @@ function CourseCard({ course, onOpen, isRH }: { course: Course; onOpen: () => vo
         )}
         <div className="mt-auto pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-white">
+            <div className="w-5 h-5 rounded-full bg-slate-700 dark:bg-slate-600 flex items-center justify-center text-[9px] font-black text-slate-600 dark:text-white">
               {(course.providerName ?? 'I').charAt(0)}
             </div>
             <span className="text-[10px] text-slate-400 truncate max-w-[90px]">{course.providerName ?? 'Interne'}</span>
@@ -826,7 +826,7 @@ export default function FormationPage() {
             <GraduationCap size={22} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl font-black text-white tracking-tight">
               Académie <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-500">Formation</span>
             </h1>
             <p className="text-xs text-slate-400">Plan de développement des compétences — Congo-Brazzaville</p>
@@ -837,7 +837,7 @@ export default function FormationPage() {
           {!isRH && (
             <button
               onClick={() => setShowRequestModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 rounded-xl text-sm font-bold transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-700/60 hover:bg-slate-700 text-white border border-white/10 rounded-xl text-sm font-bold transition-all"
             >
               <Send size={14} /> Demander une formation
             </button>
@@ -854,15 +854,15 @@ export default function FormationPage() {
       </div>
 
       {/* NAV TABS */}
-      <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-2xl border border-slate-200 dark:border-white/5 w-fit overflow-x-auto">
+      <div className="flex items-center gap-1 bg-slate-800/60 p-1.5 rounded-2xl border border-white/5 w-fit overflow-x-auto">
         {navItems.map(item => (
           <button
             key={item.id}
             onClick={() => { setActiveView(item.id); setDashPage(1); }}
             className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
               activeView === item.id
-                ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-md'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-slate-700 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
             }`}
           >
             <item.icon size={14} /> {item.label}
@@ -895,10 +895,10 @@ export default function FormationPage() {
 
               {/* Budget depts + Demandes récentes */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-white dark:bg-slate-800/40 rounded-2xl shadow-sm dark:shadow-none ring-1 ring-slate-900/5 dark:ring-white/5 p-5">
+                <div className="bg-slate-800/50 rounded-2xl border border-white/5 p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-black text-slate-900 dark:text-white">Plan Formation Annuel</h3>
+                      <h3 className="font-black text-white">Plan Formation Annuel</h3>
                       <p className="text-xs text-slate-400">Budget par département</p>
                     </div>
                     {isRH && (
@@ -927,10 +927,10 @@ export default function FormationPage() {
                   })()}
                 </div>
 
-                <div className="bg-white dark:bg-slate-800/40 rounded-2xl shadow-sm dark:shadow-none ring-1 ring-slate-900/5 dark:ring-white/5 p-5">
+                <div className="bg-slate-800/50 rounded-2xl border border-white/5 p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="font-black text-slate-900 dark:text-white">Demandes récentes</h3>
+                      <h3 className="font-black text-white">Demandes récentes</h3>
                       <p className="text-xs text-slate-400">{dashboard.pendingRequests} en attente</p>
                     </div>
                     <button onClick={() => setActiveView('requests')} className="text-xs font-bold text-sky-500 flex items-center gap-1">
@@ -939,13 +939,13 @@ export default function FormationPage() {
                   </div>
                   <div className="space-y-2">
                     {requests.slice(0, 4).length > 0 ? requests.slice(0, 4).map(req => (
-                      <div key={req.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-                        <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
+                      <div key={req.id} className="flex items-center gap-3 p-3 bg-white/3 dark:bg-white/3 rounded-xl hover:bg-white/5 transition-colors">
+                        <div className="w-8 h-8 rounded-xl bg-slate-700 flex items-center justify-center text-xs font-black text-white shrink-0">
                           {req.employee.firstName[0]}{req.employee.lastName[0]}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{req.employee.firstName} {req.employee.lastName}</p>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{req.course.title}</p>
+                          <p className="text-sm font-bold text-white truncate">{req.employee.firstName} {req.employee.lastName}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{req.course.title}</p>
                         </div>
                         <StatusBadge status={req.status} />
                       </div>
@@ -1009,7 +1009,7 @@ export default function FormationPage() {
                 placeholder="Rechercher une formation, une compétence…"
                 value={searchQuery}
                 onChange={e => { setSearchQuery(e.target.value); setDashPage(1); }}
-                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/8 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                className="w-full pl-10 pr-4 py-3 bg-slate-800/60 border border-white/8 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -1017,8 +1017,8 @@ export default function FormationPage() {
                 <button key={cat} onClick={() => { setSelectedCategory(cat); setDashPage(1); }}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                     selectedCategory === cat
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow'
-                      : 'bg-white dark:bg-slate-800/60 text-slate-500 border-slate-200 dark:border-white/8'
+                      ? 'bg-slate-700 text-white border-transparent shadow'
+                      : 'bg-slate-800/60 text-slate-400 border-white/8'
                   }`}
                 >
                   {cat}
@@ -1069,7 +1069,7 @@ export default function FormationPage() {
                   <div className="flex justify-center mt-6">
                     <button
                       onClick={() => setDashPage(p => p + 1)}
-                      className="px-6 py-3 bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-bold text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-all flex items-center gap-2 shadow-sm"
+                      className="px-6 py-3 bg-slate-800/60 border border-white/10 rounded-xl text-sm font-bold text-white hover:bg-slate-700/60 transition-all flex items-center gap-2"
                     >
                       Voir plus ({filteredCourses.length - pagedCourses.length} restants)
                       <ChevronRight size={14}/>
@@ -1214,12 +1214,12 @@ export default function FormationPage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">Gestion des demandes</h2>
+              <h2 className="text-lg font-black text-white">Gestion des demandes</h2>
               <p className="text-sm text-slate-400">
                 {requests.filter(r => r.status === 'REQUESTED').length} en attente • {requests.length} au total
               </p>
             </div>
-            <button onClick={loadRequests} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors">
+            <button onClick={loadRequests} className="p-2 hover:bg-white/5 dark:hover:bg-white/5 rounded-xl transition-colors">
               <RotateCcw size={16} className="text-slate-400"/>
             </button>
           </div>
@@ -1237,23 +1237,23 @@ export default function FormationPage() {
                 <motion.div
                   key={req.id}
                   initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                  className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/8 rounded-2xl p-5"
+                  className="bg-slate-800/50 border border-white/5 rounded-2xl p-5"
                 >
                   <div className="flex flex-col sm:flex-row items-start gap-4">
                     {/* Employé */}
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-sm font-black text-slate-700 dark:text-white shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-white/5 dark:bg-slate-700 flex items-center justify-center text-sm font-black text-white shrink-0">
                         {req.employee.firstName[0]}{req.employee.lastName[0]}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 dark:text-white">{req.employee.firstName} {req.employee.lastName}</p>
+                        <p className="font-bold text-white">{req.employee.firstName} {req.employee.lastName}</p>
                         <p className="text-xs text-slate-400 truncate">{req.employee.position}{req.employee.department && ` • ${req.employee.department.name}`}</p>
                       </div>
                     </div>
 
                     {/* Formation */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-900 dark:text-white text-sm">{req.course.title}</p>
+                      <p className="font-bold text-white text-sm">{req.course.title}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <FormatBadge format={req.course.format}/>
                         {req.course.cost && (
@@ -1316,12 +1316,12 @@ export default function FormationPage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+              <h2 className="text-lg font-black text-white">
                 Plan de Formation Annuel {pfa?.year ?? new Date().getFullYear()}
               </h2>
               <p className="text-sm text-slate-400">Suivi budgétaire et conformité Loi 45-75</p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-sm font-bold shadow hover:scale-105 transition-transform">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold shadow hover:scale-105 transition-transform">
               <Download size={14}/> Bilan PDF
             </button>
           </div>
@@ -1333,11 +1333,11 @@ export default function FormationPage() {
               {/* Résumé global */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { label: 'Budget Alloué', value: fmtCFA(pfa.totalAllocated), color: 'text-slate-900 dark:text-white', sub: `Exercice ${pfa.year}` },
+                  { label: 'Budget Alloué', value: fmtCFA(pfa.totalAllocated), color: 'text-white', sub: `Exercice ${pfa.year}` },
                   { label: 'Consommé',      value: fmtCFA(pfa.totalConsumed),   color: 'text-amber-500',                sub: `${pfa.globalProgress}% du budget` },
                   { label: 'Disponible',    value: fmtCFA(pfa.totalRemaining),  color: 'text-emerald-500',             sub: `${100 - pfa.globalProgress}% restant` },
                 ].map(item => (
-                  <div key={item.label} className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/8 rounded-2xl p-5">
+                  <div key={item.label} className="bg-slate-800/50 border border-white/5 rounded-2xl p-5">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{item.label}</p>
                     <p className={`text-2xl font-black ${item.color}`}>{item.value}</p>
                     <p className="text-xs text-slate-400 mt-1">{item.sub}</p>
@@ -1346,9 +1346,9 @@ export default function FormationPage() {
               </div>
 
               {/* Tableau détaillé */}
-              <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/8 rounded-2xl overflow-hidden">
+              <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
                 <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                  <h3 className="font-black text-slate-900 dark:text-white text-sm">Détail par Département</h3>
+                  <h3 className="font-black text-white text-sm">Détail par Département</h3>
                   <span className="text-xs text-slate-400">{pfa.totalTrainings} formation(s) cette année</span>
                 </div>
                 <div className="overflow-x-auto">
@@ -1362,21 +1362,21 @@ export default function FormationPage() {
                     </thead>
                     <tbody>
                       {pfa.departments.map(dept => (
-                        <tr key={dept.departmentId} className="border-b border-slate-50 dark:border-white/3 hover:bg-slate-50 dark:hover:bg-white/2 transition-colors">
+                        <tr key={dept.departmentId} className="border-b border-slate-50 dark:border-white/3 hover:bg-white/5 dark:hover:bg-white/2 transition-colors">
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-2">
                               <div className="w-2.5 h-2.5 rounded-full" style={{ background: dept.color }}/>
-                              <span className="font-bold text-slate-900 dark:text-white text-sm">{dept.name}</span>
+                              <span className="font-bold text-white text-sm">{dept.name}</span>
                             </div>
                           </td>
                           <td className="px-5 py-4 text-slate-500 text-sm">{dept.employeeCount}</td>
-                          <td className="px-5 py-4 font-bold text-slate-900 dark:text-white text-sm">{fmtCFA(dept.allocated)}</td>
+                          <td className="px-5 py-4 font-bold text-white text-sm">{fmtCFA(dept.allocated)}</td>
                           <td className="px-5 py-4 text-amber-500 font-bold text-sm">{fmtCFA(dept.consumed)}</td>
                           <td className="px-5 py-4 text-emerald-500 font-bold text-sm">{fmtCFA(dept.remaining)}</td>
                           <td className="px-5 py-4 text-slate-500 text-sm">{dept.completedTrainings}</td>
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 bg-slate-100 dark:bg-white/5 rounded-full min-w-[60px]">
+                              <div className="flex-1 h-1.5 bg-white/5 dark:bg-white/5 rounded-full min-w-[60px]">
                                 <div className="h-full rounded-full" style={{ width: `${Math.min(100, dept.progressPct)}%`, background: dept.progressPct > 80 ? '#f59e0b' : dept.color }}/>
                               </div>
                               <span className={`text-xs font-black ${dept.progressPct > 80 ? 'text-amber-400' : 'text-slate-500'}`}>{dept.progressPct}%</span>
@@ -1385,7 +1385,7 @@ export default function FormationPage() {
                           <td className="px-5 py-4">
                             <button
                               onClick={() => { setShowBudgetModal(dept); setBudgetForm(String(dept.allocated)); }}
-                              className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors"
+                              className="p-1.5 hover:bg-white/5 dark:hover:bg-white/10 rounded-lg transition-colors"
                               title="Modifier le budget"
                             >
                               <Edit3 size={13} className="text-slate-400"/>
@@ -1424,7 +1424,7 @@ export default function FormationPage() {
         {showCourseModal && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 md:pl-[300px]"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
@@ -1451,7 +1451,7 @@ export default function FormationPage() {
                         <button
                           onClick={() => handleJoin(showCourseModal)}
                           disabled={isJoining}
-                          className="px-8 py-3 bg-white text-black font-black rounded-full hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+                          className="px-8 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-black rounded-full hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-[0_0_40px_rgba(99,179,237,0.3)]"
                         >
                           {isJoining ? <Loader2 className="animate-spin" size={16}/> : <Play fill="black" size={16}/>}
                           S'inscrire à cette formation
@@ -1473,7 +1473,7 @@ export default function FormationPage() {
                 {/* En cours / Terminé — Présentiel */}
                 {(showCourseModal.status === 'IN_PROGRESS' || showCourseModal.status === 'COMPLETED') && showCourseModal.format === 'IN_PERSON' && (
                   <div className="flex items-center justify-center w-full h-full p-8">
-                    <div className="bg-white text-slate-900 rounded-3xl p-7 max-w-sm w-full shadow-2xl relative overflow-hidden">
+                    <div className="bg-slate-800 text-white rounded-3xl p-7 max-w-sm w-full shadow-2xl relative overflow-hidden border border-white/10">
                       <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-orange-500"/>
                       <div className="flex items-center justify-between mb-5">
                         <div>
@@ -1483,20 +1483,20 @@ export default function FormationPage() {
                         <Ticket size={24} className="text-amber-500"/>
                       </div>
                       <div className="space-y-2.5 mb-5">
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                           <Calendar size={16} className="text-slate-400"/>
                           <span className="font-bold text-sm">{showCourseModal.dateSchedule ? fmt(showCourseModal.dateSchedule) : 'Date à confirmer'}</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                           <MapPin size={16} className="text-slate-400"/>
                           <span className="font-bold text-sm">{showCourseModal.location ?? 'Lieu à confirmer'}</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                           <Clock size={16} className="text-slate-400"/>
                           <span className="font-bold text-sm">{showCourseModal.durationHours}h de formation</span>
                         </div>
                       </div>
-                      <div className="p-3 bg-slate-100 rounded-xl border-2 border-dashed border-slate-200 text-center">
+                      <div className="p-3 bg-white/5 rounded-xl border-2 border-dashed border-white/10 text-center">
                         <p className="text-[9px] text-slate-400 font-mono">Feuille de présence — Référence</p>
                         <p className="text-xs font-black text-slate-700 mt-1">{showCourseModal.id?.slice(0,8).toUpperCase()}</p>
                       </div>
@@ -1639,14 +1639,14 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 dark:border-white/10 max-h-[90vh] overflow-y-auto"
+              className="bg-slate-900 rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Créer une formation</h2>
+                  <h2 className="text-xl font-black text-white">Créer une formation</h2>
                   <p className="text-xs text-slate-400">Visible dans le catalogue de l'entreprise</p>
                 </div>
-                <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl"><X size={16} className="text-slate-500"/></button>
+                <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl"><X size={16} className="text-slate-500"/></button>
               </div>
 
               <div className="space-y-4">
@@ -1660,7 +1660,7 @@ export default function FormationPage() {
                       value={(newCourse as any)[field.key]}
                       onChange={e => setNewCourse({ ...newCourse, [field.key]: e.target.value })}
                       placeholder={field.placeholder}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                      className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
                     />
                   </div>
                 ))}
@@ -1669,7 +1669,7 @@ export default function FormationPage() {
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Format</label>
                     <select value={newCourse.format} onChange={e => setNewCourse({ ...newCourse, format: e.target.value as CourseFormat })}
-                      className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none">
+                      className="w-full px-3 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none">
                       <option value="IN_PERSON">Présentiel</option>
                       <option value="ONLINE">En ligne</option>
                       <option value="HYBRID">Hybride</option>
@@ -1679,7 +1679,7 @@ export default function FormationPage() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Durée (h)</label>
                     <input type="number" min={1} value={newCourse.durationHours}
                       onChange={e => setNewCourse({ ...newCourse, durationHours: Number(e.target.value) })}
-                      className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none"/>
+                      className="w-full px-3 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none"/>
                   </div>
                 </div>
 
@@ -1688,14 +1688,14 @@ export default function FormationPage() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Organisme</label>
                     <input value={newCourse.providerName} onChange={e => setNewCourse({ ...newCourse, providerName: e.target.value })}
                       placeholder="Cabinet Mbemba & Associés"
-                      className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none"/>
+                      className="w-full px-3 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none"/>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Coût (FCFA)</label>
                     <input type="number" min={0} value={newCourse.cost}
                       onChange={e => setNewCourse({ ...newCourse, cost: Number(e.target.value) })}
                       placeholder="450000"
-                      className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none"/>
+                      className="w-full px-3 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none"/>
                   </div>
                 </div>
 
@@ -1705,13 +1705,13 @@ export default function FormationPage() {
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Lieu</label>
                       <input value={newCourse.location} onChange={e => setNewCourse({ ...newCourse, location: e.target.value })}
                         placeholder="Brazzaville"
-                        className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none"/>
+                        className="w-full px-3 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none"/>
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Date</label>
                       <input type="datetime-local" value={newCourse.dateSchedule}
                         onChange={e => setNewCourse({ ...newCourse, dateSchedule: e.target.value })}
-                        className="w-full px-3 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none"/>
+                        className="w-full px-3 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none"/>
                     </div>
                   </div>
                 )}
@@ -1721,7 +1721,7 @@ export default function FormationPage() {
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Lien du contenu</label>
                     <input value={newCourse.linkUrl} onChange={e => setNewCourse({ ...newCourse, linkUrl: e.target.value })}
                       placeholder="https://youtube.com/..."
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-sky-500 text-sm focus:outline-none"/>
+                      className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-sky-500 text-sm focus:outline-none"/>
                   </div>
                 )}
 
@@ -1729,20 +1729,20 @@ export default function FormationPage() {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Description</label>
                   <textarea value={newCourse.description} onChange={e => setNewCourse({ ...newCourse, description: e.target.value })}
                     rows={3} placeholder="Objectifs pédagogiques, public cible, prérequis…"
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none resize-none"/>
+                    className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none resize-none"/>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Image (URL)</label>
                   <input value={newCourse.thumbnailUrl} onChange={e => setNewCourse({ ...newCourse, thumbnailUrl: e.target.value })}
                     placeholder="https://..."
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none"/>
+                    className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none"/>
                 </div>
               </div>
 
               <div className="flex gap-3 mt-6">
                 <button onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleAddCourse} disabled={isSubmitting || !newCourse.title.trim()}
@@ -1765,21 +1765,21 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+              className="bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Demander une formation</h2>
+                  <h2 className="text-xl font-black text-white">Demander une formation</h2>
                   <p className="text-xs text-slate-400">Votre demande sera transmise au RH pour validation</p>
                 </div>
-                <button onClick={() => setShowRequestModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl"><X size={16} className="text-slate-500"/></button>
+                <button onClick={() => setShowRequestModal(false)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl"><X size={16} className="text-slate-500"/></button>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Formation souhaitée *</label>
                   <select value={requestForm.courseId} onChange={e => setRequestForm({ ...requestForm, courseId: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none">
+                    className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none">
                     <option value="">Choisir dans le catalogue…</option>
                     {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
@@ -1788,7 +1788,7 @@ export default function FormationPage() {
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Justification / Besoin</label>
                   <textarea value={requestForm.reason} onChange={e => setRequestForm({ ...requestForm, reason: e.target.value })}
                     rows={4} placeholder="En quoi cette formation est-elle utile pour votre poste ou vos missions ?"
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none resize-none"/>
+                    className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none resize-none"/>
                 </div>
                 <div className="flex items-start gap-2 p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-500/20 rounded-xl">
                   <Info size={13} className="text-sky-500 shrink-0 mt-0.5"/>
@@ -1798,7 +1798,7 @@ export default function FormationPage() {
 
               <div className="flex gap-3 mt-6">
                 <button onClick={() => setShowRequestModal(false)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleSendRequest} disabled={isSubmitting || !requestForm.courseId}
@@ -1821,30 +1821,30 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-white/10"
+              className="bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-white/10"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 dark:text-white">Budget Formation</h2>
+                  <h2 className="text-lg font-black text-white">Budget Formation</h2>
                   <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
                     <div className="w-2 h-2 rounded-full" style={{ background: showBudgetModal.color }}/> {showBudgetModal.name}
                   </p>
                 </div>
-                <button onClick={() => setShowBudgetModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl"><X size={16}/></button>
+                <button onClick={() => setShowBudgetModal(null)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl"><X size={16}/></button>
               </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Montant alloué (FCFA)</label>
                 <input
                   type="number" min={0} value={budgetForm}
                   onChange={e => setBudgetForm(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-lg font-black focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                  className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-lg font-black focus:outline-none focus:ring-2 focus:ring-sky-500/30"
                   placeholder="Ex: 2000000"
                 />
                 <p className="text-xs text-slate-400 mt-1">Actuellement : {fmtCFA(showBudgetModal.allocated)}</p>
               </div>
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setShowBudgetModal(null)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleUpdateBudget} disabled={isSubmitting || !budgetForm}
@@ -1867,23 +1867,23 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+              className="bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Certifier la formation</h2>
+                  <h2 className="text-xl font-black text-white">Certifier la formation</h2>
                   <p className="text-xs text-slate-400 mt-0.5">{validateModal.employeeName}</p>
                 </div>
-                <button onClick={() => setValidateModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
+                <button onClick={() => setValidateModal(null)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl">
                   <X size={16} className="text-slate-500"/>
                 </button>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
+              <div className="flex items-center gap-3 p-3 bg-white/5 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/20 flex items-center justify-center shrink-0">
                   <Award size={18} className="text-amber-500"/>
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900 dark:text-white text-sm">{validateModal.courseTitle}</p>
+                  <p className="font-bold text-white text-sm">{validateModal.courseTitle}</p>
                   <p className="text-[11px] text-slate-400">Demande de validation reçue</p>
                 </div>
               </div>
@@ -1891,7 +1891,7 @@ export default function FormationPage() {
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Mention *</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: 'SATISFAISANT', label: 'Satisfaisant', active: 'border-slate-400 bg-slate-50 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300', emoji: '✓' },
+                    { value: 'SATISFAISANT', label: 'Satisfaisant', active: 'border-slate-400 bg-white/5 dark:bg-slate-400/10 text-slate-300', emoji: '✓' },
                     { value: 'BIEN',         label: 'Bien',         active: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', emoji: '★' },
                     { value: 'TRES_BIEN',    label: 'Très Bien',    active: 'border-sky-400 bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300', emoji: '★★' },
                     { value: 'EXCELLENT',    label: 'Excellent',    active: 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', emoji: '★★★' },
@@ -1899,7 +1899,7 @@ export default function FormationPage() {
                     <button key={m.value}
                       onClick={() => setValidateForm({ ...validateForm, mention: m.value })}
                       className={`p-3 rounded-xl border-2 transition-all text-left ${
-                        validateForm.mention === m.value ? m.active : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+                        validateForm.mention === m.value ? m.active : 'border-white/8 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -1916,7 +1916,7 @@ export default function FormationPage() {
                   value={validateForm.note}
                   onChange={e => setValidateForm({ ...validateForm, note: e.target.value })}
                   placeholder="Ex: Très bonne participation, assidu les 3 jours"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                  className="w-full px-4 py-3 bg-white/5 dark:bg-slate-800 border border-white/8 dark:border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">Apparaîtra sur le certificat. {validateForm.note.length}/120</p>
               </div>
@@ -1931,7 +1931,7 @@ export default function FormationPage() {
               )}
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setValidateModal(null)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleValidateCompletion} disabled={isSubmitting || !validateForm.mention}
@@ -1954,23 +1954,23 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 dark:border-white/10"
+              className="bg-slate-900 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-white/10"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Assigner la formation</h2>
+                  <h2 className="text-xl font-black text-white">Assigner la formation</h2>
                   <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{showAssignModal.title}</p>
                 </div>
-                <button onClick={() => setShowAssignModal(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl">
+                <button onClick={() => setShowAssignModal(null)} className="p-2 hover:bg-white/5 dark:hover:bg-white/10 rounded-xl">
                   <X size={16} className="text-slate-500"/>
                 </button>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
+              <div className="flex items-center gap-3 p-3 bg-white/5 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/8 mb-5">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-500/20 flex items-center justify-center shrink-0">
                   <GraduationCap size={18} className="text-sky-500"/>
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900 dark:text-white text-sm">{showAssignModal.title}</p>
+                  <p className="font-bold text-white text-sm">{showAssignModal.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <FormatBadge format={showAssignModal.format}/>
                     {showAssignModal.durationHours && <span className="text-[10px] text-slate-400">{showAssignModal.durationHours}h</span>}
@@ -1991,14 +1991,14 @@ export default function FormationPage() {
                         className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
                           selectedEmployeeId === emp.id
                             ? 'bg-sky-50 dark:bg-sky-500/10 border-sky-300 dark:border-sky-500/40'
-                            : 'bg-slate-50 dark:bg-white/3 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
+                            : 'bg-white/5 dark:bg-white/3 border-slate-100 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'
                         }`}
                       >
-                        <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-slate-700 dark:text-white shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-slate-700 dark:bg-slate-700 flex items-center justify-center text-xs font-black text-white shrink-0">
                           {emp.firstName[0]}{emp.lastName[0]}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
+                          <p className="font-bold text-white text-sm">{emp.firstName} {emp.lastName}</p>
                           <p className="text-[11px] text-slate-400 truncate">{emp.position}{emp.department && ` • ${emp.department.name}`}</p>
                         </div>
                         {selectedEmployeeId === emp.id && <CheckCircle2 size={16} className="text-sky-500 shrink-0"/>}
@@ -2009,7 +2009,7 @@ export default function FormationPage() {
               </div>
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setShowAssignModal(null)}
-                  className="flex-1 py-3 border border-slate-200 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                  className="flex-1 py-3 border border-white/8 dark:border-white/10 rounded-xl text-slate-500 font-bold text-sm hover:bg-white/5 dark:hover:bg-white/5 transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleAssign} disabled={isSubmitting || !selectedEmployeeId}

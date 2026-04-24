@@ -43,7 +43,7 @@ export default function CreateIAJobPage() {
     salaryMax: '',
     salaryCurrency: 'XAF',
     expirationDate: '',
-    showOnPortal: true,
+    showOnPortal: false,
     quiz: [] as QuizQuestion[],
     isPremium: false, // ✨ NOUVEAU
     additionalDocumentType: '' as '' | 'CNI' | 'BULLETIN' | 'LETTRE_MOTIVATION' | 'BREF' | 'CASIER' | 'AUTRE',
