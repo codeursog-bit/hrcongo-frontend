@@ -1,19 +1,41 @@
-// // app/(dashboard)/cabinet/[cabinetId]/layout.tsx
-// // Layout minimal pour toutes les routes /cabinet/[cabinetId]/*
-// // Il court-circuite le (dashboard)/layout.tsx qui bloquerait les CABINET_ADMIN
-
-// export default function CabinetLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   return <>{children}</>;
-// }
-
 // app/(dashboard)/cabinet/[cabinetId]/layout.tsx
-// Layout cabinet — ajoute le CabinetOnboardingChecklist pour CABINET_ADMIN
+// Layout cabinet — ErrorBoundary autour de CabinetOnboardingChecklist
+// pour éviter que son crash/loop bloque toutes les pages cabinet
 
+'use client';
+
+import React from 'react';
 import CabinetOnboardingChecklist from '@/components/onboarding/CabinetOnboardingChecklist';
+
+// ─── ErrorBoundary simple ─────────────────────────────────────────────────────
+// Isole le CabinetOnboardingChecklist : s'il plante ou boucle,
+// le reste de la page reste fonctionnel.
+
+class ChecklistErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn('[CabinetOnboardingChecklist] Erreur isolée :', error.message);
+  }
+
+  render() {
+    // Si le checklist plante → on l'ignore silencieusement
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
 
 export default function CabinetLayout({
   children,
@@ -22,7 +44,9 @@ export default function CabinetLayout({
 }) {
   return (
     <>
-      <CabinetOnboardingChecklist />
+      <ChecklistErrorBoundary>
+        <CabinetOnboardingChecklist />
+      </ChecklistErrorBoundary>
       {children}
     </>
   );

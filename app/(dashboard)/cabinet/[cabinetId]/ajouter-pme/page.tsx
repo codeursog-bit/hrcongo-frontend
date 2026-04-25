@@ -163,6 +163,17 @@ export default function AjouterPmePage() {
     setCreating(true);
     setCreateErr('');
     try {
+      // Vérifier le quota PME du cabinet avant création
+      const sub: any = await api.get(`/cabinet/${cabinetId}/subscription`).catch(() => null);
+      if (sub && !sub.canAddCompany) {
+        setCreateErr(
+          `Limite atteinte : votre plan ${sub.plan} permet ${sub.maxCompanies} PME maximum ` +
+          `(${sub.currentCompanies} actuellement). Passez au plan supérieur dans Abonnement.`
+        );
+        setCreating(false);
+        return;
+      }
+
       const res: any = await api.post(`/cabinet/${cabinetId}/companies/create`, {
         ...form,
         startDate: form.startDate || undefined,

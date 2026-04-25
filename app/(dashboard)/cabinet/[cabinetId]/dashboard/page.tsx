@@ -52,9 +52,21 @@ interface DashboardData {
 }
 
 interface Subscription {
-  planLabel: string; status: string; isTrial: boolean;
-  trialEndsAt: string | null; bulletinsBalance: number;
-  remainingSlots: number | null; canGenerate: boolean;
+  // Nouveau shape CabinetSubscription
+  plan:             string;
+  status:           string;
+  trialEndsAt:      string | null;
+  currentPeriodEnd: string;
+  maxCompanies:     number;
+  maxEmployees:     number;
+  currentCompanies: number;
+  currentEmployees: number;
+  daysLeftInTrial:  number;
+  canAddCompany:    boolean;
+  // Compat ancien shape (wallet renvoyait ces champs)
+  planLabel?:       string;
+  isTrial?:         boolean;
+  bulletinsBalance?: number;
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
@@ -119,9 +131,9 @@ export default function CabinetDashboardPage() {
     return { totalEmployees, totalNetLast, bulletinsThisMonth, portailActifs, pmeWithoutPayroll, chartData, statusRepartition, topPme };
   }, [data]);
 
-  const daysLeft = sub?.trialEndsAt
+  const daysLeft = sub?.daysLeftInTrial ?? (sub?.trialEndsAt
     ? Math.max(0, Math.ceil((new Date(sub.trialEndsAt).getTime() - Date.now()) / 86400000))
-    : null;
+    : 0);
 
   if (loading) return <LoadingScreen />;
 
@@ -157,12 +169,12 @@ export default function CabinetDashboardPage() {
         <div className="p-8 space-y-6">
 
           {/* ── Banners ─────────────────────────────────────────────────── */}
-          {sub?.isTrial && (
+          {sub?.status === 'TRIALING' && (
             <Banner
               icon={<Ico.Crown size={18} color={C.violet} />}
               color={C.violet}
-              title={`Essai gratuit — ${sub.planLabel}`}
-              sub={`${daysLeft !== null ? `${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}` : ''} · ${sub.bulletinsBalance} bulletin${sub.bulletinsBalance > 1 ? 's' : ''} disponible${sub.bulletinsBalance > 1 ? 's' : ''}`}
+              title={`Essai gratuit — Plan ${sub.plan ?? 'Starter'}`}
+              sub={`${daysLeft > 0 ? `${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}` : 'Expiré'} · ${sub.currentCompanies ?? 0}/${sub.maxCompanies ?? 5} PME`}
               action={{ label: 'Voir les plans', onClick: () => router.push(`/cabinet/${cabinetId}/abonnement`) }}
             />
           )}
@@ -201,9 +213,9 @@ export default function CabinetDashboardPage() {
               accentColor={C.emerald}
             />
             <KpiCard
-              label="Bulletins restants"
-              value={sub?.bulletinsBalance ?? '∞'}
-              sub={sub?.planLabel ?? 'Pay-as-you-go'}
+              label="Plan cabinet"
+              value={sub ? `${sub.currentCompanies ?? 0}/${sub.maxCompanies ?? 5}` : '—'}
+              sub={sub ? `Plan ${sub.plan} · ${sub.currentEmployees ?? 0} employés` : 'Chargement…'}
               icon={<Ico.Wallet size={18} color={C.amber} />}
               accentColor={C.amber}
               onClick={() => router.push(`/cabinet/${cabinetId}/abonnement`)}
