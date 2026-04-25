@@ -167,8 +167,13 @@ export default function ClotureImportPage() {
 
     api.get(`/cabinet/${cabinetId}/dashboard`)
       .then((r: any) => {
-        setCompanies(r.companies ?? []);
-        setSelected((r.companies ?? []).map((c: any) => c.companyId));
+        // Le dashboard retourne legalName/tradeName, pas companyName
+        const companies = (r.companies ?? []).map((c: any) => ({
+          ...c,
+          companyName: c.tradeName || c.legalName || c.companyName || 'PME sans nom',
+        }));
+        setCompanies(companies);
+        setSelected(companies.map((c: any) => c.companyId));
       })
       .catch(console.error);
   }, [cabinetId]);
@@ -304,10 +309,13 @@ export default function ClotureImportPage() {
   };
 
   const selectStyle: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.05)',
+    background: 'rgba(255,255,255,0.06)',
     border: `1px solid ${T.border}`,
     borderRadius: 10, padding: '8px 12px',
     fontSize: 14, color: T.text, outline: 'none',
+    appearance: 'auto',
+    WebkitAppearance: 'auto' as React.CSSProperties['WebkitAppearance'],
+    colorScheme: 'dark',
   };
 
   return (
