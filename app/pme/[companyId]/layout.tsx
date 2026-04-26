@@ -33,7 +33,10 @@ export default function PmeLayout({ children }: { children: React.ReactNode }) {
     const user   = stored ? JSON.parse(stored) : {};
 
     // Vérification accès
-    if (user.companyId !== companyId && user.role !== 'SUPER_ADMIN') {
+    // ✅ CABINET_ADMIN et CABINET_GESTIONNAIRE peuvent accéder à toutes les PME
+    // de leur cabinet — ils n'ont pas de companyId sur leur User
+    const isCabinetUser = user.role === 'CABINET_ADMIN' || user.role === 'CABINET_GESTIONNAIRE';
+    if (!isCabinetUser && user.companyId !== companyId && user.role !== 'SUPER_ADMIN') {
       router.replace('/auth/login');
       return;
     }
