@@ -49,6 +49,7 @@ interface WorkforceData {
 
 export default function EmployeeAnalyticsPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [data, setData] = useState<WorkforceData | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [topEmployees, setTopEmployees] = useState<any>(null);

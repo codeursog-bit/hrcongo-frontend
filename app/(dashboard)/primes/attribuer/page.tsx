@@ -72,6 +72,7 @@ const FiscalBadges = ({ isTaxable, isCnss }: { isTaxable: boolean; isCnss: boole
 // ─── Bouton catalogue (présent en bas de chaque liste de primes) ─────────────
 const CatalogueLink = ({ backUrl }: { backUrl: string }) => {
   const router = useRouter();
+  const { bp } = useBasePath();
   return (
     <button
       onClick={() => router.push(bp(`/parametres/primes?back=${encodeURIComponent(backUrl)}`))}
