@@ -1,3 +1,4 @@
+'use client';
 // 'use client';
 
 // import React, { useState, useMemo, useEffect } from 'react';
@@ -42,7 +43,6 @@
 // };
 
 // export default function LeaveManagementPage() {
-  const { bp } = useBasePath();
 //   const [activeTab, setActiveTab] = useState<'ACTION' | 'HISTORY'>('ACTION');
 //   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
 //   const [isLoading, setIsLoading] = useState(true);
@@ -496,7 +496,7 @@
 
 
 
-'use client';
+
 
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
@@ -556,6 +556,7 @@ const fmtXAF = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function LeaveManagementPage() {
+  const { bp } = useBasePath();
   const [activeTab, setActiveTab]   = useState<'ACTION' | 'HISTORY'>('ACTION');
   const [leaves, setLeaves]         = useState<LeaveRequest[]>([]);
   const [provision, setProvision]   = useState<ProvisionSummary | null>(null);
