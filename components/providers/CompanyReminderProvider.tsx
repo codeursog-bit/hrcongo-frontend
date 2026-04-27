@@ -58,8 +58,9 @@ const EXCLUDED_PATHS = [
 
 const isUserAuthenticated = (): boolean => {
   if (typeof window === 'undefined') return false;
-  const token = localStorage.getItem('accessToken');
-  return !!token && token.length > 0;
+  // Les tokens sont en cookie HttpOnly — on vérifie via l'objet user en localStorage
+  const user = localStorage.getItem('user');
+  return !!user;
 };
 
 // ============================================================================
@@ -378,5 +379,3 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
     </CompanyReminderContext.Provider>
   );
 };
-
-

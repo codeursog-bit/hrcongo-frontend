@@ -2,11 +2,12 @@
 
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Lock, Eye, EyeOff, Loader2, CheckCircle2,
-  AlertCircle, Hexagon, ShieldCheck, XCircle,
+  AlertCircle, ShieldCheck, XCircle,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -28,13 +29,13 @@ function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token        = searchParams.get('token') ?? '';
 
-  const [password, setPassword]         = useState('');
-  const [confirm, setConfirm]           = useState('');
-  const [showPwd, setShowPwd]           = useState(false);
-  const [showConfirm, setShowConfirm]   = useState(false);
-  const [isLoading, setIsLoading]       = useState(false);
-  const [error, setError]               = useState('');
-  const [success, setSuccess]           = useState(false);
+  const [password, setPassword]       = useState('');
+  const [confirm, setConfirm]         = useState('');
+  const [showPwd, setShowPwd]         = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isLoading, setIsLoading]     = useState(false);
+  const [error, setError]             = useState('');
+  const [success, setSuccess]         = useState(false);
 
   // Critères
   const has8   = password.length >= 8;
@@ -71,7 +72,7 @@ function ResetPasswordContent() {
   // Token absent → message clair
   if (!token) {
     return (
-      <div className="bg-white/4 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
+      <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
         <XCircle size={40} className="text-red-400 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-white mb-2">Lien invalide</h2>
         <p className="text-gray-400 text-sm mb-6">
@@ -92,11 +93,16 @@ function ResetPasswordContent() {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white/4 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center"
+        className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center"
       >
-        <div className="w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', delay: 0.1 }}
+          className="w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-5"
+        >
           <ShieldCheck size={30} className="text-emerald-400" />
-        </div>
+        </motion.div>
         <h2 className="text-xl font-bold text-white mb-2">Mot de passe réinitialisé</h2>
         <p className="text-gray-400 text-sm mb-1">
           Votre mot de passe a été modifié avec succès.
@@ -117,7 +123,7 @@ function ResetPasswordContent() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white/4 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
+      className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
     >
       <div className="text-center mb-8">
         <div className="w-14 h-14 bg-cyan-500/15 border border-cyan-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -147,7 +153,7 @@ function ResetPasswordContent() {
               autoFocus
               className="flex-1 bg-transparent text-white placeholder-gray-600 text-sm outline-none"
             />
-            <button type="button" onClick={() => setShowPwd(v => !v)} className="text-gray-500 hover:text-gray-300">
+            <button type="button" onClick={() => setShowPwd(v => !v)} className="text-gray-500 hover:text-gray-300 transition-colors">
               {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -192,7 +198,7 @@ function ResetPasswordContent() {
               placeholder="Répétez le mot de passe"
               className="flex-1 bg-transparent text-white placeholder-gray-600 text-sm outline-none"
             />
-            <button type="button" onClick={() => setShowConfirm(v => !v)} className="text-gray-500 hover:text-gray-300">
+            <button type="button" onClick={() => setShowConfirm(v => !v)} className="text-gray-500 hover:text-gray-300 transition-colors">
               {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -229,7 +235,7 @@ function ResetPasswordContent() {
       </form>
 
       <div className="mt-6 text-center">
-        <Link href="/auth/login" className="text-sm text-gray-400 hover:text-white transition-colors">
+        <Link href="/auth/login" className="text-sm text-gray-400 hover:text-cyan-400 transition-colors">
           Retour à la connexion
         </Link>
       </div>
@@ -237,29 +243,41 @@ function ResetPasswordContent() {
   );
 }
 
-// ── Page principale avec Suspense (obligatoire pour useSearchParams) ─────────
+// ── Page principale avec Suspense ─────────────────────────────────────────
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Fond décoratif */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] bg-blue-600/8 rounded-full blur-[100px]" />
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+
+      {/* Halos décoratifs */}
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[140px] animate-pulse pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
+
+      {/* Logo Konza en filigrane */}
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
+        <div className="relative w-[480px] h-[240px] opacity-[0.04]">
+          <Image src="/logos/konza_logo_h_color.png" alt="" fill className="object-contain" priority />
+        </div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <div className="relative">
-            <Hexagon className="text-cyan-400" size={40} fill="rgba(34,211,238,0.15)" />
-            <span className="absolute inset-0 flex items-center justify-center text-cyan-300 font-black text-sm">HR</span>
+
+        {/* Logo Konza visible */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-10"
+        >
+          <div className="relative w-52 h-16">
+            <Image
+              src="/logos/konza_logo_h_color.png"
+              alt="Konza"
+              fill
+              className="object-contain drop-shadow-[0_0_24px_rgba(6,182,212,0.35)]"
+              priority
+            />
           </div>
-          <span className="text-2xl font-black text-white tracking-tight">HRCongo</span>
-        </div>
+        </motion.div>
 
         <Suspense fallback={
           <div className="flex items-center justify-center h-40">

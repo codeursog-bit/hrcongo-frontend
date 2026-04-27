@@ -4,10 +4,11 @@
 // Logo cabinet (si disponible) à la place de Konza — même style que login
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Lock, Eye, EyeOff, Loader2, CheckCircle2,
-  AlertCircle, Hexagon, ArrowRight, Building2, User,
+  AlertCircle, ArrowRight, Building2, User,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -62,10 +63,66 @@ function getStrength(pwd: string) {
   if (/[A-Z]/.test(pwd)) s += 25;
   if (/[a-z]/.test(pwd)) s += 25;
   if (/[0-9]/.test(pwd)) s += 25;
-  if (s <= 25)  return { strength: s,   label: 'Faible',   color: 'bg-red-500'    };
-  if (s <= 50)  return { strength: s,   label: 'Moyen',    color: 'bg-orange-500' };
-  if (s <= 75)  return { strength: s,   label: 'Bon',      color: 'bg-yellow-500' };
-  return               { strength: 100, label: 'Excellent', color: 'bg-green-500' };
+  if (s <= 25)  return { strength: s,   label: 'Faible',    color: 'bg-red-500'    };
+  if (s <= 50)  return { strength: s,   label: 'Moyen',     color: 'bg-orange-500' };
+  if (s <= 75)  return { strength: s,   label: 'Bon',       color: 'bg-yellow-500' };
+  return               { strength: 100, label: 'Excellent', color: 'bg-green-500'  };
+}
+
+// ─── Composant Logo (cabinet ou Konza) ───────────────────────────────────────
+
+interface BrandLogoProps {
+  info:         InvitationInfo | null;
+  brandColor:   string;
+  brandColor2:  string;
+  hasCabinet:   boolean;
+  size?:        'sm' | 'lg';
+}
+
+function BrandLogo({ info, brandColor, brandColor2, hasCabinet, size = 'lg' }: BrandLogoProps) {
+  if (info?.cabinetLogo) {
+    return (
+      <div
+        className={size === 'lg' ? 'p-6 rounded-3xl shadow-2xl' : 'p-3 rounded-2xl'}
+        style={{ background: `${brandColor}18`, border: `1px solid ${brandColor}30` }}
+      >
+        <img
+          src={info.cabinetLogo}
+          alt={info.cabinetName ?? 'Cabinet'}
+          className={size === 'lg' ? 'h-20 w-auto object-contain' : 'h-10 w-auto object-contain'}
+        />
+      </div>
+    );
+  }
+
+  if (hasCabinet) {
+    return (
+      <div
+        className={`${size === 'lg' ? 'w-24 h-24 rounded-3xl' : 'w-14 h-14 rounded-2xl'} flex items-center justify-center`}
+        style={{
+          background: `linear-gradient(135deg, ${brandColor}, ${brandColor2})`,
+          boxShadow:  `0 0 40px ${brandColor}40`,
+        }}
+      >
+        <Building2 size={size === 'lg' ? 48 : 26} className="text-white" />
+      </div>
+    );
+  }
+
+  // Fallback : logo Konza
+  return (
+    <div className={`relative ${size === 'lg' ? 'w-72 h-24' : 'w-44 h-14'}`}>
+      <Image
+        src="/logos/konza_logo_h_color.png"
+        alt="Konza"
+        fill
+        className={`object-contain ${size === 'lg'
+          ? 'drop-shadow-[0_0_32px_rgba(6,182,212,0.35)]'
+          : 'drop-shadow-[0_0_20px_rgba(6,182,212,0.3)]'}`}
+        priority
+      />
+    </div>
+  );
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
@@ -141,9 +198,8 @@ export default function AcceptInvitationPage() {
         password,
       });
 
-      localStorage.setItem('accessToken',  loginRes.access_token);
-      localStorage.setItem('refreshToken', loginRes.refresh_token);
-      localStorage.setItem('user',         JSON.stringify(loginRes.user));
+      // Tokens en cookie HttpOnly — rien à stocker
+      localStorage.setItem('user', JSON.stringify(loginRes.user));
 
       setStep('success');
 
@@ -168,8 +224,8 @@ export default function AcceptInvitationPage() {
   };
 
   // ── Couleur branding ────────────────────────────────────────────────────────
-  const brandColor  = info?.cabinetColor  || '#06b6d4'; // cyan par défaut
-  const brandColor2 = info?.cabinetColor2 || '#3b82f6'; // blue par défaut
+  const brandColor  = info?.cabinetColor  || '#06b6d4';
+  const brandColor2 = info?.cabinetColor2 || '#3b82f6';
   const hasCabinet  = !!(info?.cabinetName || info?.cabinetLogo);
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -178,11 +234,16 @@ export default function AcceptInvitationPage() {
   if (step === 'loading') {
     return (
       <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white items-center justify-center">
-        <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Hexagon size={28} fill="currentColor" className="text-white" />
+          <div className="relative w-44 h-14 mb-2">
+            <Image
+              src="/logos/konza_logo_h_color.png"
+              alt="Konza"
+              fill
+              className="object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+              priority
+            />
           </div>
           <Loader2 size={22} className="animate-spin text-cyan-400" />
           <p className="text-sm text-gray-400">Vérification de votre invitation...</p>
@@ -197,14 +258,18 @@ export default function AcceptInvitationPage() {
   if (step === 'error') {
     return (
       <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white">
-        <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-red-600/5 rounded-full blur-[120px]" />
+        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-red-600/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="flex-1 flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-md text-center"
           >
+            <div className="flex justify-center mb-8">
+              <div className="relative w-44 h-14">
+                <Image src="/logos/konza_logo_h_color.png" alt="Konza" fill className="object-contain opacity-60" priority />
+              </div>
+            </div>
             <div className="w-20 h-20 bg-red-500/15 border border-red-500/25 rounded-3xl flex items-center justify-center mx-auto mb-6">
               <AlertCircle size={36} className="text-red-400" />
             </div>
@@ -228,8 +293,7 @@ export default function AcceptInvitationPage() {
   if (step === 'success') {
     return (
       <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white">
-        <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-green-600/8 rounded-full blur-[120px]" />
+        <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-green-600/8 rounded-full blur-[120px] pointer-events-none" />
         <div className="flex-1 flex items-center justify-center p-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -268,11 +332,19 @@ export default function AcceptInvitationPage() {
     <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white font-sans overflow-x-hidden">
 
       {/* Background FX */}
-      <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
-      <div className="fixed top-0 right-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] animate-pulse"
+      <div className="fixed top-0 right-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] animate-pulse pointer-events-none"
            style={{ background: `${brandColor}18` }} />
-      <div className="fixed bottom-0 left-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px]"
+      <div className="fixed bottom-0 left-0 w-[300px] sm:w-[500px] lg:w-[800px] h-[300px] sm:h-[500px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] pointer-events-none"
            style={{ background: `${brandColor2}12` }} />
+
+      {/* Filigrane Konza si pas de cabinet */}
+      {!hasCabinet && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
+          <div className="relative w-[480px] h-[240px] opacity-[0.04]">
+            <Image src="/logos/konza_logo_h_color.png" alt="" fill className="object-contain" priority />
+          </div>
+        </div>
+      )}
 
       {/* ── GAUCHE — Branding cabinet ou Konza ──────────────────────────────── */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12 z-10">
@@ -285,35 +357,13 @@ export default function AcceptInvitationPage() {
             transition={{ delay: 0.2 }}
             className="mb-10 flex justify-center"
           >
-            {info?.cabinetLogo ? (
-              /* Logo cabinet personnalisé */
-              <div
-                className="p-6 rounded-3xl shadow-2xl"
-                style={{ background: `${brandColor}18`, border: `1px solid ${brandColor}30` }}
-              >
-                <img
-                  src={info.cabinetLogo}
-                  alt={info.cabinetName ?? 'Cabinet'}
-                  className="h-20 w-auto object-contain"
-                />
-              </div>
-            ) : hasCabinet ? (
-              /* Icône cabinet avec couleur branding */
-              <div
-                className="w-24 h-24 rounded-3xl flex items-center justify-center"
-                style={{
-                  background:  `linear-gradient(135deg, ${brandColor}, ${brandColor2})`,
-                  boxShadow:   `0 0 40px ${brandColor}40`,
-                }}
-              >
-                <Building2 size={48} className="text-white" />
-              </div>
-            ) : (
-              /* Fallback Konza si pas de cabinet */
-              <div className="w-24 h-24 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center text-white shadow-[0_0_40px_rgba(6,182,212,0.4)]">
-                <Hexagon size={56} fill="currentColor" />
-              </div>
-            )}
+            <BrandLogo
+              info={info}
+              brandColor={brandColor}
+              brandColor2={brandColor2}
+              hasCabinet={hasCabinet}
+              size="lg"
+            />
           </motion.div>
 
           {/* Titre */}
@@ -363,24 +413,13 @@ export default function AcceptInvitationPage() {
 
           {/* Logo mobile */}
           <div className="lg:hidden mb-6 flex justify-center">
-            {info?.cabinetLogo ? (
-              <img
-                src={info.cabinetLogo}
-                alt={info.cabinetName ?? ''}
-                className="h-14 w-auto object-contain"
-              />
-            ) : hasCabinet ? (
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg"
-                style={{ background: `linear-gradient(135deg, ${brandColor}, ${brandColor2})` }}
-              >
-                <Building2 size={26} className="text-white" />
-              </div>
-            ) : (
-              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Hexagon size={28} fill="currentColor" className="text-white" />
-              </div>
-            )}
+            <BrandLogo
+              info={info}
+              brandColor={brandColor}
+              brandColor2={brandColor2}
+              hasCabinet={hasCabinet}
+              size="sm"
+            />
           </div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
@@ -468,11 +507,8 @@ export default function AcceptInvitationPage() {
                     required
                     className="block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd(v => !v)}
-                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
-                  >
+                  <button type="button" onClick={() => setShowPwd(v => !v)}
+                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
                     {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -524,11 +560,8 @@ export default function AcceptInvitationPage() {
                         : 'border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/50'
                     }`}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowCfm(v => !v)}
-                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
-                  >
+                  <button type="button" onClick={() => setShowCfm(v => !v)}
+                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
                     {showCfm ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
@@ -548,8 +581,8 @@ export default function AcceptInvitationPage() {
                 disabled={submitting || !formOk}
                 className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 border border-transparent rounded-xl text-sm font-bold text-black disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
                 style={{
-                  background:  `linear-gradient(to right, ${brandColor}, ${brandColor2})`,
-                  boxShadow:   `0 0 20px ${brandColor}40`,
+                  background: `linear-gradient(to right, ${brandColor}, ${brandColor2})`,
+                  boxShadow:  `0 0 20px ${brandColor}40`,
                 }}
               >
                 {submitting ? (

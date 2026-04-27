@@ -544,6 +544,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CompanyTaxBase = 'GROSS' | 'TAXABLE' | 'NET_IMPOSABLE' | 'FIXED';
@@ -647,6 +648,7 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function TaxesPage() {
+  const { bp } = useBasePath();
   const [taxes, setTaxes]           = useState<CompanyTax[]>([]);
   const [isLoading, setIsLoading]   = useState(true);
   const [showModal, setShowModal]   = useState(false);
@@ -790,7 +792,7 @@ export default function TaxesPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/parametres" className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
+        <Link href={bp('/parametres')} className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
           <ChevronLeft size={18} className="text-gray-500" />
         </Link>
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center shadow-lg shadow-orange-500/25">

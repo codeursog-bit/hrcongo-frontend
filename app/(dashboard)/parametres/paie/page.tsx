@@ -30,6 +30,7 @@ import {
   Users, Gift, Banknote, ClipboardList, Landmark, X
 } from 'lucide-react';
 import { api } from '@/services/api';
+ import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TabId = 'cnss' | 'overtime' | 'nightshift' | 'its' | 'calendar';
@@ -156,6 +157,7 @@ function QuickLinks({ router }: { router: any }) {
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function PayrollSettingsPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [activeTab, setActiveTab]   = useState<TabId>('cnss');
   const [settings, setSettings]     = useState<PayrollSettings>(DEFAULTS);
   const [isLoading, setIsLoading]   = useState(true);
@@ -632,7 +634,7 @@ const handleSave = async () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => router.push('/presences/shifts')}
+                  onClick={() => router.push(bp('/presences/shifts'))}
                   className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold hover:-translate-y-0.5 transition-all"
                 >
                   Gérer <ChevronRight size={13} />

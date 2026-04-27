@@ -1,81 +1,74 @@
 // ============================================================================
-// Fichier: frontend/lib/services/authService.ts
+// 📁 lib/services/authService.ts
+// Auth unifié — Super Admin ET utilisateurs normaux
+// Tokens JWT en cookie HttpOnly (géré par le navigateur + serveur)
+// localStorage : uniquement les données d'affichage (user object)
 // ============================================================================
 
-import { api } from '../api';
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  companyId?: string;
-}
-
-export interface AuthResponse {
-  access_token: string;
-  refresh_token?: string;
-  user: User;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export const authService = {
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('accessToken', response.access_token);
-      if (response.refresh_token) {
-        localStorage.setItem('refreshToken', response.refresh_token);
-      }
-      localStorage.setItem('user', JSON.stringify(response.user));
-    }
-    
-    return response;
-  },
 
-  logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-    }
-  },
+  // ── Connexion (admin ou user normal) ─────────────────────────────────────
+  async login(email: string, password: string) {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method:      'POST',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Identifiants incorrects');
 
-  getCurrentUser: (): User | null => {
-    if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        try {
-          return JSON.parse(userStr);
-        } catch {
-          return null;
-        }
+    // Stocker uniquement les données d'affichage
+    if (typeof window !== 'undefined' && data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      // Pour le panel admin on garde aussi admin_user
+      if (data.user.role === 'SUPER_ADMIN') {
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
       }
     }
-    return null;
+    return data;
   },
 
-  getToken: (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('accessToken');
+  // ── Déconnexion — révoque le cookie côté serveur ──────────────────────────
+  async logout() {
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST', credentials: 'include',
+      });
+    } catch { /* silencieux */ } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('notifications_muted_until');
+      }
     }
-    return null;
   },
 
-  isSuperAdmin: (): boolean => {
-    const user = authService.getCurrentUser();
-    return user?.role === 'SUPER_ADMIN';
+  // ── Récupérer le user courant ─────────────────────────────────────────────
+  getCurrentUser() {
+    if (typeof window === 'undefined') return null;
+    // Essayer d'abord 'user', puis 'admin_user'
+    const raw = localStorage.getItem('user') || localStorage.getItem('admin_user');
+    if (!raw) return null;
+    try { return JSON.parse(raw); } catch { return null; }
   },
 
-  isAuthenticated: (): boolean => {
-    const token = authService.getToken();
-    const user = authService.getCurrentUser();
-    return !!(token && user);
+  // ── Vérifier si authentifié (via cookie) ─────────────────────────────────
+  async isAuthenticated(): Promise<boolean> {
+    try {
+      const res = await fetch(`${API_URL}/auth/verify`, {
+        method: 'POST', credentials: 'include',
+      });
+      return res.ok;
+    } catch { return false; }
+  },
+
+  // ── Compatibilité avec ancien code qui appelait getToken() ───────────────
+  getToken(): string | null {
+    // Tokens en cookie HttpOnly — on retourne truthy si user présent
+    const user = this.getCurrentUser();
+    return user ? 'cookie-based-auth' : null;
   },
 };

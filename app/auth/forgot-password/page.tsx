@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Hexagon } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '@/services/api';
 
 export default function ForgotPasswordPage() {
@@ -24,7 +25,7 @@ export default function ForgotPasswordPage() {
       await api.post('/auth/forgot-password', { email: email.trim().toLowerCase() });
       setSent(true);
     } catch (err: any) {
-      // On affiche un message neutre même en cas d'erreur (sécurité)
+      // Message neutre même en cas d'erreur (sécurité)
       setSent(true);
     } finally {
       setIsLoading(false);
@@ -32,27 +33,38 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Fond décoratif */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-cyan-500/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] bg-blue-600/8 rounded-full blur-[100px]" />
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+
+      {/* Halos décoratifs */}
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[140px] animate-pulse pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
+
+      {/* Logo Konza en filigrane */}
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
+        <div className="relative w-[480px] h-[240px] opacity-[0.04]">
+          <Image src="/logos/konza_logo_h_color.png" alt="" fill className="object-contain" priority />
+        </div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
 
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <div className="relative">
-            <Hexagon className="text-cyan-400" size={40} fill="rgba(34,211,238,0.15)" />
-            <span className="absolute inset-0 flex items-center justify-center text-cyan-300 font-black text-sm">HR</span>
+        {/* Logo Konza visible */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-10"
+        >
+          <div className="relative w-52 h-16">
+            <Image
+              src="/logos/konza_logo_h_color.png"
+              alt="Konza"
+              fill
+              className="object-contain drop-shadow-[0_0_24px_rgba(6,182,212,0.35)]"
+              priority
+            />
           </div>
-          <span className="text-2xl font-black text-white tracking-tight">HRCongo</span>
-        </div>
+        </motion.div>
 
         <AnimatePresence mode="wait">
           {!sent ? (
@@ -63,15 +75,15 @@ export default function ForgotPasswordPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-white/4 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
+              className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
             >
               <div className="text-center mb-8">
                 <div className="w-14 h-14 bg-cyan-500/15 border border-cyan-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Mail size={26} className="text-cyan-400" />
                 </div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Mot de passe oublié</h1>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Mot de passe oublié ?</h1>
                 <p className="text-gray-400 text-sm mt-2 leading-relaxed">
-                  Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                  Entrez votre adresse email et nous vous enverrons un lien de réinitialisation.
                 </p>
               </div>
 
@@ -116,7 +128,7 @@ export default function ForgotPasswordPage() {
               <div className="mt-6 text-center">
                 <Link
                   href="/auth/login"
-                  className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors"
                 >
                   <ArrowLeft size={14} /> Retour à la connexion
                 </Link>
@@ -130,18 +142,24 @@ export default function ForgotPasswordPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35 }}
-              className="bg-white/4 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl text-center"
+              className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl text-center"
             >
-              <div className="w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', delay: 0.1 }}
+                className="w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              >
                 <CheckCircle2 size={30} className="text-emerald-400" />
-              </div>
+              </motion.div>
               <h2 className="text-xl font-bold text-white mb-3">Vérifiez votre boîte mail</h2>
               <p className="text-gray-400 text-sm leading-relaxed mb-2">
-                Si un compte est associé à l'adresse <span className="text-white font-semibold">{email}</span>,
-                vous recevrez un email avec un lien de réinitialisation.
+                Si un compte est associé à{' '}
+                <span className="text-white font-semibold">{email}</span>,
+                vous recevrez un lien de réinitialisation.
               </p>
               <p className="text-gray-500 text-xs mb-8">
-                Le lien est valable 30 minutes. Pensez à vérifier vos spams.
+                Le lien est valable <span className="text-gray-400">30 minutes</span>. Pensez à vérifier vos spams.
               </p>
 
               <div className="space-y-3">

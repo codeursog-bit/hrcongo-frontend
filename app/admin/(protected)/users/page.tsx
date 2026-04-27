@@ -1,167 +1,205 @@
 'use client';
-import React, { useState } from 'react';
-import { 
-  Users, UserPlus, Shield, Mail, MoreVertical, 
-  Search, Filter, CheckCircle, XCircle, Clock, Key
-} from 'lucide-react';
 
-const ADMINS = [
-  { id: '1', name: 'Alexandre Mbemba', email: 'alex@hrcongo.com', role: 'Root Admin', status: 'Active', lastActive: '2 mins ago', level: '99' },
-  { id: '2', name: 'Sarah Koné', email: 's.kone@hrcongo.com', role: 'Security Admin', status: 'Active', lastActive: '1 hour ago', lastIp: '197.234.12.1', level: '80' },
-  { id: '3', name: 'Jean-Luc Batou', email: 'jl.batou@hrcongo.com', role: 'Billing Admin', status: 'Inactive', lastActive: '2 days ago', level: '70' },
-];
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Shield, UserPlus, Search, CheckCircle, XCircle, Clock,
+  Key, MoreVertical, Loader2, RefreshCw, AlertTriangle,
+  User, Mail, Globe, Lock, ShieldCheck,
+} from 'lucide-react';
+import { adminService } from '@/lib/services/adminService';
+
+const fmtD = (d?: string) => d
+  ? new Date(d).toLocaleString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+  : '—';
+
+const ROLE_STYLE: Record<string, string> = {
+  SUPER_ADMIN: 'bg-red-500/15 text-red-300 border-red-500/25',
+  ADMIN:       'bg-sky-500/15 text-sky-300 border-sky-500/25',
+  HR_MANAGER:  'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
+};
 
 export default function UsersPage() {
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [users,   setUsers]   = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search,  setSearch]  = useState('');
+  const [showInvite, setInvite] = useState(false);
+  const [invEmail, setInvEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [msg, setMsg] = useState<{t:'ok'|'err';s:string}|null>(null);
+
+  // Stats depuis audit logs
+  const [auditStats, setAuditStats] = useState<any>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [u, as] = await Promise.all([
+        adminService.getUsers().catch(() => []),
+        adminService.getMonitoringStats().catch(() => null),
+      ]);
+      setUsers(Array.isArray(u) ? u : u?.data ?? []);
+      setAuditStats(as);
+    } catch(e) { console.error(e); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = users.filter(u =>
+    !search ||
+    u.email?.toLowerCase().includes(search.toLowerCase()) ||
+    u.firstName?.toLowerCase().includes(search.toLowerCase()) ||
+    u.lastName?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Shield className="w-8 h-8 text-brand-red" /> Platform Administrators
+            <Shield className="text-red-500" size={24} /> Administrateurs Plateforme
           </h1>
-          <p className="text-gray-400 text-sm mt-1">Manage high-privilege accounts and platform permissions</p>
+          <p className="text-gray-400 text-sm mt-0.5">
+            Comptes à hauts privilèges — Super Admins et Admins internes
+          </p>
         </div>
-        <button 
-          onClick={() => setShowInviteModal(true)}
-          className="bg-white hover:bg-gray-200 text-gray-900 px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold shadow-xl transition-all hover:-translate-y-0.5"
-        >
-          <UserPlus className="w-5 h-5" />
-          Invite Super Admin
-        </button>
+        <div className="flex gap-3">
+          <button onClick={load} disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm transition-colors disabled:opacity-50">
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Actualiser
+          </button>
+          <button onClick={() => setInvite(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-900 rounded-xl font-bold text-sm transition-colors shadow-lg">
+            <UserPlus size={16} /> Inviter Super Admin
+          </button>
+        </div>
       </div>
 
-      {/* Admin List */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-2xl">
-        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-800/20">
-           <div className="flex gap-4">
-              <span className="text-sm font-bold text-white">All Admins ({ADMINS.length})</span>
-              <span className="text-sm text-gray-500">Active Sessions: 2</span>
-           </div>
-           <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-              <input type="text" placeholder="Search admins..." className="bg-gray-800 border border-gray-700 text-xs rounded-lg pl-10 pr-4 py-2 text-white outline-none w-64" />
-           </div>
-        </div>
-
-        <table className="w-full text-left">
-          <thead className="bg-gray-800/30 text-gray-400 text-xs uppercase tracking-wider">
-            <tr>
-              <th className="p-4">Administrator</th>
-              <th className="p-4">Role & Privilege</th>
-              <th className="p-4">Security Status</th>
-              <th className="p-4">Activity</th>
-              <th className="p-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-800">
-            {ADMINS.map(admin => (
-              <tr key={admin.id} className="hover:bg-gray-800/30 transition-colors">
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 border border-gray-600 flex items-center justify-center text-white font-bold">
-                      {admin.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-white">{admin.name}</div>
-                      <div className="text-xs text-gray-500">{admin.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="flex flex-col gap-1">
-                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border w-fit ${
-                        admin.role.includes('Root') ? 'bg-red-900/20 text-red-400 border-red-900/50' :
-                        admin.role.includes('Security') ? 'bg-blue-900/20 text-blue-400 border-blue-900/50' :
-                        'bg-brand-gold/20 text-brand-gold border-brand-gold/50'
-                     }`}>
-                        {admin.role}
-                     </span>
-                     <div className="flex items-center gap-1 mt-1">
-                        <div className="w-24 h-1 bg-gray-800 rounded-full overflow-hidden">
-                           <div className="h-full bg-brand-red" style={{ width: `${admin.level}%` }}></div>
-                        </div>
-                        <span className="text-[10px] text-gray-600 font-mono">Lvl {admin.level}</span>
-                     </div>
-                  </div>
-                </td>
-                <td className="p-4">
-                   <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${admin.status === 'Active' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-gray-600'}`}></div>
-                      <span className={`text-xs ${admin.status === 'Active' ? 'text-green-400' : 'text-gray-500'}`}>{admin.status}</span>
-                      {admin.lastIp && <span className="text-[10px] text-gray-600 font-mono ml-2">{admin.lastIp}</span>}
-                   </div>
-                </td>
-                <td className="p-4">
-                   <div className="text-xs text-gray-400 flex items-center gap-1.5">
-                      <Clock className="w-3 h-3" /> {admin.lastActive}
-                   </div>
-                </td>
-                <td className="p-4 text-right">
-                   <button className="text-gray-500 hover:text-white transition-colors"><MoreVertical className="w-5 h-5" /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Invite Admin Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-           <div className="bg-gray-900 border border-gray-800 w-full max-w-lg rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-slide-up">
-              <div className="p-8 border-b border-gray-800 bg-gradient-to-br from-gray-900 to-gray-950">
-                 <div className="flex justify-between items-start">
-                    <div>
-                       <h2 className="text-2xl font-bold text-white tracking-tight">Invite Administrator</h2>
-                       <p className="text-gray-500 text-sm mt-1">Grant high-level system access via secure email</p>
-                    </div>
-                    <button onClick={() => setShowInviteModal(false)} className="text-gray-500 hover:text-white"><XCircle className="w-6 h-6"/></button>
-                 </div>
-              </div>
-              
-              <div className="p-8 space-y-6">
-                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
-                    <div className="relative group">
-                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-brand-red transition-colors" />
-                       <input type="email" placeholder="new.admin@hrcongo.com" className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-700 focus:border-brand-red outline-none transition-all" />
-                    </div>
-                 </div>
-
-                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Administrative Role</label>
-                    <div className="grid grid-cols-2 gap-3">
-                       <button className="p-3 bg-gray-950 border border-brand-red/50 text-white rounded-xl text-left hover:bg-gray-800 transition-colors">
-                          <div className="font-bold text-sm">Security Admin</div>
-                          <div className="text-[10px] text-gray-500 mt-1 leading-tight">Can manage audits, IPs & platform security policies.</div>
-                       </button>
-                       <button className="p-3 bg-gray-950 border border-gray-800 text-gray-400 rounded-xl text-left hover:border-gray-500 transition-colors">
-                          <div className="font-bold text-sm">Billing Admin</div>
-                          <div className="text-[10px] text-gray-500 mt-1 leading-tight">Manage payments, invoices and plan configurations.</div>
-                       </button>
-                    </div>
-                 </div>
-
-                 <div className="bg-brand-gold/5 border border-brand-gold/20 p-4 rounded-xl flex items-start gap-3">
-                    <Key className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
-                    <div>
-                       <h4 className="text-xs font-bold text-brand-gold uppercase">Security Protocol</h4>
-                       <p className="text-[10px] text-brand-gold/70 mt-1 leading-relaxed">Invitations expire in 24 hours. Recipient must pass multi-factor authentication and provide the Organization Secret Key to activate their account.</p>
-                    </div>
-                 </div>
-              </div>
-
-              <div className="p-8 bg-gray-950 flex justify-end gap-4">
-                 <button onClick={() => setShowInviteModal(false)} className="text-gray-500 text-sm font-bold hover:text-white transition-colors">Discard</button>
-                 <button className="bg-brand-red hover:bg-red-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-red-900/20 transition-all">Send Invitation</button>
-              </div>
-           </div>
+      {/* Stats rapides depuis audit */}
+      {auditStats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { l: 'Connexions (24h)',   v: auditStats.logins24h,       c: 'text-sky-400'     },
+            { l: 'Échecs connexion',   v: auditStats.failedLogins24h, c: 'text-red-400'     },
+            { l: 'Taux d\'échec',      v: `${auditStats.failRatio}%`, c: auditStats.failRatio > 20 ? 'text-red-400' : 'text-emerald-400' },
+            { l: 'Sessions actives',   v: '—',                         c: 'text-violet-400'  },
+          ].map((s, i) => (
+            <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+              <p className="text-[11px] text-gray-600 mb-2">{s.l}</p>
+              <p className={`text-xl font-black ${s.c}`}>{s.v}</p>
+            </div>
+          ))}
         </div>
       )}
 
+      {/* Message */}
+      {msg && (
+        <div className={`flex items-center gap-2 p-3.5 rounded-xl border text-sm font-medium
+          ${msg.t === 'ok' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300' : 'bg-red-500/10 border-red-500/20 text-red-300'}`}>
+          {msg.t === 'ok' ? <CheckCircle size={15} /> : <AlertTriangle size={15} />} {msg.s}
+        </div>
+      )}
+
+      {/* Recherche */}
+      <div className="relative">
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
+        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher par email, nom…"
+          className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-sm text-white placeholder:text-gray-700 outline-none focus:border-gray-600 transition-colors" />
+      </div>
+
+      {/* Liste */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-800 flex items-center justify-between">
+          <p className="text-sm font-bold text-white">{filtered.length} administrateur{filtered.length > 1 ? 's' : ''}</p>
+          <span className="text-[10px] text-gray-600 font-mono">Tous les accès sont logués dans Monitoring</span>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-red-500" /></div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16 text-gray-600">
+            <User size={32} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">Aucun utilisateur</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-800">
+            {filtered.map((u, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-800/30 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500/20 to-red-700/20 border border-red-500/15 flex items-center justify-center shrink-0">
+                  <span className="text-sm font-black text-red-400">
+                    {(u.firstName?.[0] ?? u.email?.[0] ?? '?').toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <p className="text-sm font-semibold text-white">{u.firstName} {u.lastName}</p>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${ROLE_STYLE[u.role] ?? 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                      {u.role}
+                    </span>
+                    {u.twoFactorEnabled && (
+                      <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                        <ShieldCheck size={9} /> 2FA
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 flex items-center gap-1">
+                    <Mail size={10} /> {u.email}
+                  </p>
+                  {u.lastLoginAt && (
+                    <p className="text-[10px] text-gray-700 flex items-center gap-1 mt-0.5">
+                      <Clock size={9} /> Dernière connexion : {fmtD(u.lastLoginAt)}
+                      {u.lastLoginIp && <><Globe size={9} className="ml-1" /> {u.lastLoginIp}</>}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`w-2 h-2 rounded-full ${u.isActive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-600'}`} />
+                  <span className="text-[11px] text-gray-500">{u.isActive ? 'Actif' : 'Inactif'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal invitation */}
+      {showInvite && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold text-white mb-1">Inviter un Super Admin</h3>
+            <p className="text-xs text-gray-500 mb-5">Cette action crée un compte avec accès total à la plateforme.</p>
+            <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)}
+              placeholder="email@konzarh.com"
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm outline-none focus:border-red-500/50 mb-4 transition-colors" />
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  if (!invEmail) return;
+                  setInviting(true);
+                  try {
+                    await adminService.inviteSuperAdmin?.(invEmail);
+                    setMsg({ t: 'ok', s: `Invitation envoyée à ${invEmail}` });
+                    setInvite(false); setInvEmail('');
+                  } catch(e: any) {
+                    setMsg({ t: 'err', s: e.message });
+                  } finally { setInviting(false); }
+                }}
+                disabled={inviting || !invEmail}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+                {inviting ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+                Envoyer l'invitation
+              </button>
+              <button onClick={() => { setInvite(false); setInvEmail(''); }}
+                className="px-4 py-2.5 border border-gray-700 text-gray-400 rounded-xl text-sm hover:bg-gray-800 transition-colors">
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,9 +18,11 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (isPublicPage) {
-      // ✅ FIX : vider le localStorage ici pour éviter que l'ancien token
-      // soit renvoyé lors du prochain appel API depuis cette page
-      authService.logout();
+      // Sur la page login : nettoyer localStorage uniquement (pas d'appel serveur)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+        localStorage.removeItem('admin_user');
+      }
       setIsAuthorized(true);
       return;
     }

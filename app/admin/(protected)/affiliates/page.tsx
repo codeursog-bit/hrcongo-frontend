@@ -37,8 +37,7 @@ const fmtDate = (d: string) =>
 
 // ─── Helper token ─────────────────────────────────────────────────────────────
 // Le super-admin stocke son token sous "accessToken" (voir /auth/register et authService)
-const getToken = () =>
-  typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+// Auth via cookie HttpOnly — credentials: 'include' suffit
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -61,7 +60,7 @@ export default function AffiliatesAdminPage() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/affiliate/admin/all`,
-        { headers: { Authorization: `Bearer ${getToken()}` } },
+        { credentials: 'include' },
       );
       if (res.status === 401) {
         setError('Session expirée. Reconnectez-vous.');
@@ -92,7 +91,7 @@ export default function AffiliatesAdminPage() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${getToken()}`,
+            // Auth via cookie HttpOnly
           },
           body: JSON.stringify({ commissionRate: newRate }),
         },
@@ -118,7 +117,7 @@ export default function AffiliatesAdminPage() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${getToken()}`,
+            // Auth via cookie HttpOnly
           },
           body: JSON.stringify({ isActive: !current }),
         },

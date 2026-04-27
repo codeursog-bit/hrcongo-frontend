@@ -213,8 +213,7 @@
 //   }, []);
 
 //   const handleLogout = () => {
-//     localStorage.removeItem('accessToken');
-//     localStorage.removeItem('user');
+//     localStorage.removeItem('user'); // token supprimé via cookie serveur
 //     localStorage.removeItem('notifications_muted_until');
 //     router.replace('/auth/login');
 //   };
@@ -603,11 +602,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('notifications_muted_until');
-    router.replace('/auth/login');
+  const handleLogout = async () => {
+    // Le cookie HttpOnly est révoqué côté serveur via /auth/logout
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch { /* silencieux */ } finally {
+      localStorage.removeItem('user');
+      localStorage.removeItem('notifications_muted_until');
+      router.replace('/auth/login');
+    }
   };
 
   const roleLabels: Record<string, string> = {

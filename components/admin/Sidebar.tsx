@@ -19,14 +19,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ recentActivity = [] }) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    // Suppression du token et des infos user
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // Redirection vers la page de login
-    router.push('/admin/login');
-    router.refresh();
+  const handleLogout = async () => {
+    // Le cookie HttpOnly est révoqué côté serveur
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch { /* silencieux */ } finally {
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('user');
+      router.push('/admin/login');
+    }
   };
 
   return (

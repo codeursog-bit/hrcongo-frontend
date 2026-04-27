@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.login(email, password);
 
       if (response.user.role !== 'SUPER_ADMIN') {
         setError('Accès refusé. Seuls les Super Administrateurs peuvent se connecter ici.');
