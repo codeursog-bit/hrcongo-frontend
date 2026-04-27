@@ -42,6 +42,7 @@
 // };
 
 // export default function LeaveManagementPage() {
+  const { bp } = useBasePath();
 //   const [activeTab, setActiveTab] = useState<'ACTION' | 'HISTORY'>('ACTION');
 //   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
 //   const [isLoading, setIsLoading] = useState(true);
@@ -134,13 +135,13 @@
 //         </div>
 //         <div className="flex gap-3">
 //           <Link
-//             href="/conges/mon-espace"
+//             href={bp("/conges/mon-espace")}
 //             className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-600 dark:text-gray-300"
 //           >
 //             <UserCircle size={18} /> Mon Espace
 //           </Link>
 //           <Link
-//             href="/conges/calendrier"
+//             href={bp("/conges/calendrier")}
 //             className="px-5 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold text-sm hover:opacity-90 transition-opacity flex items-center gap-2 shadow-sm"
 //           >
 //             <Calendar size={18} /> Planning
@@ -508,6 +509,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -658,21 +660,21 @@ export default function LeaveManagementPage() {
         <div className="flex flex-wrap gap-3">
           {/* Toujours visible */}
           <Link
-            href="/conges/mon-espace"
+            href={bp("/conges/mon-espace")}
             className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-600 dark:text-gray-300"
           >
             <UserCircle size={18} /> Mon Espace
           </Link>
 
           <Link
-            href="/conges/nouveau"
+            href={bp("/conges/nouveau")}
             className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-600 dark:text-gray-300"
           >
             <AlertCircle size={18} /> Nouvelle demande
           </Link>
 
           <Link
-            href="/conges/calendrier"
+            href={bp("/conges/calendrier")}
             className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-600 dark:text-gray-300"
           >
             <Calendar size={18} /> Planning
@@ -682,14 +684,14 @@ export default function LeaveManagementPage() {
           {isRH && (
             <>
               <Link
-                href="/conges/soldes"
+                href={bp("/conges/soldes")}
                 className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-600 dark:text-gray-300"
               >
                 <Users size={18} /> Soldes
               </Link>
 
               <Link
-                href="/conges/provision"
+                href={bp("/conges/provision")}
                 className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 shadow-sm ${
                   criticalCount > 0
                     ? 'bg-red-500 hover:bg-red-600 text-white'
@@ -730,7 +732,7 @@ export default function LeaveManagementPage() {
             </div>
           </div>
           <Link
-            href="/conges/provision"
+            href={bp("/conges/provision")}
             className="shrink-0 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2"
           >
             Voir le détail <ArrowRight size={14} />
@@ -752,7 +754,7 @@ export default function LeaveManagementPage() {
               Provision : <strong>{fmtXAF(provision?.totalProvision ?? 0)} F CFA</strong>
             </p>
           </div>
-          <Link href="/conges/provision" className="text-sm font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 shrink-0">
+          <Link href={bp("/conges/provision")} className="text-sm font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 shrink-0">
             Détails <ArrowRight size={13} />
           </Link>
         </motion.div>
