@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { differenceInDays } from 'date-fns';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ContractEmployee {
@@ -237,6 +238,7 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
 // PAGE PRINCIPALE
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function ContratsPage() {
+  const { bp } = useBasePath();
   const router = useRouter();
 
   const [employees, setEmployees] = useState<ContractEmployee[]>([]);
@@ -330,7 +332,7 @@ export default function ContratsPage() {
         <div className="flex items-center gap-2">
           {/* ✅ Bouton vers page rupture */}
           <button
-            onClick={() => router.push('/contrats/rupture')}
+            onClick={() => router.push(bp('/contrats/rupture'))}
             className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-red-500/30 transition-all"
           >
             <Gavel className="w-4 h-4" />

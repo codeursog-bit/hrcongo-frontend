@@ -14,6 +14,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 const C = { sky:'#0EA5E9', emerald:'#10B981', amber:'#F59E0B', rose:'#EF4444', violet:'#8B5CF6' };
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -54,6 +55,7 @@ function SectionTitle({children}:any) {
 }
 
 export default function RapportsPage() {
+  const { bp } = useBasePath();
   const router = useRouter();
   const now = new Date();
   const [month,setMonth] = useState(now.getMonth()+1);
@@ -240,12 +242,12 @@ export default function RapportsPage() {
                   <p className="text-sm font-bold text-amber-800 dark:text-amber-300">{cnss.totals.missingCnss} salarié(s) sans numéro CNSS</p>
                   <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">La déclaration nominative DNMS sera incomplète. Complétez les fiches employés avant dépôt.</p>
                 </div>
-                <button onClick={()=>router.push('/cnss-declaration')} className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-400 transition-colors">Voir</button>
+                <button onClick={()=>router.push(bp('/cnss-declaration'))} className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold hover:bg-amber-400 transition-colors">Voir</button>
               </div>
             )}
 
             <div className="lg:col-span-3 flex justify-end">
-              <button onClick={()=>router.push('/cnss-declaration')} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-400 transition-colors shadow-sm">
+              <button onClick={()=>router.push(bp('/cnss-declaration'))} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-400 transition-colors shadow-sm">
                 <FileText size={15}/> Déclaration CNSS complète <ChevronRight size={14}/>
               </button>
             </div>
@@ -342,7 +344,7 @@ export default function RapportsPage() {
           </div>
         )}
         <div className="flex justify-end">
-          <button onClick={()=>router.push('/rapports/analyse-conges')} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <button onClick={()=>router.push(bp('/rapports/analyse-conges'))} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             Analyse détaillée <ChevronRight size={14}/>
           </button>
         </div>
@@ -424,10 +426,10 @@ export default function RapportsPage() {
               </div>
             )}
             <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex gap-2">
-              <button onClick={()=>router.push('/contrats')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <button onClick={()=>router.push(bp('/contrats'))} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <FilePlus size={13}/> Tous les contrats
               </button>
-              <button onClick={()=>router.push('/contrats/rupture')} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">
+              <button onClick={()=>router.push(bp('/contrats/rupture'))} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">
                 <FileX size={13}/> Ruptures de contrat
               </button>
             </div>
@@ -643,7 +645,7 @@ export default function RapportsPage() {
 //       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 print:hidden">
 //         <div className="flex items-center gap-4">
 //           <button
-//             onClick={() => router.push('/rapports')}
+//             onClick={() => router.push(bp('/rapports'))}
 //             className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
 //           >
 //             <ArrowLeft size={20} className="text-gray-500" />

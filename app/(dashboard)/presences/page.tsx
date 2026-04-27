@@ -13,10 +13,12 @@ import WeeklyView from './WeeklyView';
 import MonthlyView from './MonthlyView';
 import CorrectionsView from './CorrectionsView';
 import EmployeeView from './EmployeeView';
+import { useBasePath } from '@/hooks/useBasePath';
 
 type TabType = 'monthly' | 'daily' | 'weekly' | 'corrections' | 'myview';
 
 export default function AttendancePage() {
+  const { bp } = useBasePath();
   const [activeTab, setActiveTab] = useState<TabType>('daily');
   const [date, setDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -159,7 +161,7 @@ export default function AttendancePage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Link href="/presences/pointage" className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
+            <Link href={bp("/presences/pointage")} className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
               <Fingerprint size={20} /> Pointeur
             </Link>
             
@@ -201,11 +203,11 @@ export default function AttendancePage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Link href="/presences/resume" className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <Link href={bp("/presences/resume")} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
             <FileText size={20} /> Rapports
           </Link>
           
-          <Link href="/presences/pointage" className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
+          <Link href={bp("/presences/pointage")} className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
             <Fingerprint size={20} /> Ma Pointeuse
           </Link>
           

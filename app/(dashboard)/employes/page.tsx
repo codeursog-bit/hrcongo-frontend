@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import {
   Search, Plus, LayoutGrid, List,
   Eye, Pencil, Trash2,
@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -178,6 +179,7 @@ const DeleteConfirmModal = ({ employee, isDeleting, onConfirm, onCancel }: Delet
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 export default function EmployeeListPage() {
+  const { bp } = useBasePath();
   const router = useRouter();
   const [viewMode, setViewMode]             = useState<'grid' | 'table'>('grid');
   const [isLoading, setIsLoading]           = useState(true);
@@ -195,7 +197,13 @@ export default function EmployeeListPage() {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
   const [isDeleting, setIsDeleting]             = useState(false);
 
-  const canCreate    = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(userRole);
+  // ── companyId depuis l'URL (contexte cabinet/PME) ─────────────────────────
+  const params = useParams();
+  const pmeCompanyId = (params?.companyId as string) || '';
+  // Suffix à ajouter au lien "Ajouter" pour que le formulaire sache quel companyId utiliser
+  const addEmployeeSuffix = pmeCompanyId ? `?companyId=${pmeCompanyId}` : '';
+
+  const canCreate    = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'CABINET_ADMIN', 'CABINET_GESTIONNAIRE'].includes(userRole);
   const canEdit      = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(userRole);
   const canDelete    = ['SUPER_ADMIN', 'ADMIN'].includes(userRole);
   const canSeeSalary = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(userRole);
@@ -317,7 +325,7 @@ export default function EmployeeListPage() {
     {/* --- ✅ BOUTON GÉRER LES CONTRATS (Visible uniquement pour RH/Admin) --- */}
     {canCreate && (
       <Link 
-        href="/contrats" 
+        href={bp("/contrats")} 
         className="px-5 py-2.5 rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
       >
         <FileText size={20} className="text-sky-500" /> 
@@ -328,7 +336,7 @@ export default function EmployeeListPage() {
     {/* --- BOUTON AJOUTER --- */}
     {canCreate ? (
       <Link 
-        href="/employes/nouveau" 
+        href={`/employes/nouveau${addEmployeeSuffix}`}
         className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
       >
         <Plus size={20} /> Ajouter un employé
