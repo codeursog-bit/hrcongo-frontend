@@ -5,9 +5,13 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Download, FileSpreadsheet, Copy, CheckCircle2,
   Building2, ArrowRightLeft, Settings, Loader2, AlertCircle,
-  CheckCircle, FileText, Calculator, Receipt, Globe
+  CheckCircle, FileText, Calculator, Receipt, Globe,
+
+  ClipboardList, LayoutDashboard,UsersRound,
+  UmbrellaOff,BookOpen,DollarSign
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface JournalEntry {
@@ -29,12 +33,12 @@ interface JournalResponse {
 
 // ─── Navigation commune ──────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { href: '/rapports',              label: "Vue d'ensemble",  icon: '📊' },
-  { href: '/rapports/complet',      label: 'Rapport Complet', icon: '📋' },
-  { href: '/rapports/analyse-paie', label: 'Paie & Coûts',    icon: '💰' },
-  { href: '/rapports/effectifs',    label: 'Effectifs',        icon: '👥' },
-  { href: '/rapports/analyse-conges', label: 'Congés',         icon: '🏖️' },
-  { href: '/rapports/comptabilite', label: 'Comptabilité',     icon: '📒', active: true },
+  { href:'/rapports',                label:"Vue d'ensemble", Icon:LayoutDashboard},
+  { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
+  { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
+  { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
+  { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
+  { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen , active:true  },
 ];
 
 const MONTHS = [
@@ -47,6 +51,7 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
 
 export default function AccountingPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
 
   const now = new Date();
   const [period, setPeriod]     = useState({ month: now.getMonth() + 1, year: now.getFullYear() });
@@ -125,10 +130,14 @@ export default function AccountingPage() {
   const handleETaxExport = async () => {
     setExportLoading('etax');
     try {
+      const token = typeof window !== 'undefined'
+        ? (localStorage.getItem('accessToken') || '')
+        : '';
+
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const response = await fetch(
         `${API_URL}/payrolls/export/etax?month=${period.month}&year=${period.year}`,
-        { credentials: 'include' }  // cookie HttpOnly envoyé automatiquement
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
       if (!response.ok) {
@@ -213,7 +222,7 @@ export default function AccountingPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/rapports')}
+            onClick={() => router.push(bp('/rapports'))}
             className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft size={20} className="text-gray-500" />
@@ -262,7 +271,7 @@ export default function AccountingPage() {
                 : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-sky-300'
               }`}
           >
-            <span>{item.icon}</span>
+            <span><item.Icon size={16} /></span>
             <span className="hidden sm:inline">{item.label}</span>
           </button>
         ))}

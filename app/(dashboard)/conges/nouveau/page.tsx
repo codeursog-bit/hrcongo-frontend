@@ -363,6 +363,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ✅ CONGO : 26j/an = 2.1667j/mois (pas 2.5)
 const CONGO_MONTHLY_RATE = (26 / 12).toFixed(2); // "2.17"
@@ -375,6 +376,7 @@ interface LeaveBalance {
 }
 
 export default function NewLeaveRequestPage() {
+  const { bp } = useBasePath();
   const router = useRouter();
   const [employees, setEmployees] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -397,7 +399,7 @@ export default function NewLeaveRequestPage() {
     const loadData = async () => {
       try {
         const storedUser = localStorage.getItem('user');
-        if (!storedUser) { router.push('/login'); return; }
+        if (!storedUser) { router.push(bp('/login')); return; }
         const user = JSON.parse(storedUser);
         setCurrentUser(user);
 
@@ -491,7 +493,7 @@ export default function NewLeaveRequestPage() {
         reason:     formData.reason
       });
       setShowConfirmation(true);
-      setTimeout(() => router.push('/conges/mon-espace'), 2500);
+      setTimeout(() => router.push(bp('/conges/mon-espace')), 2500);
     } catch (e: any) {
       setSubmitError(e?.message || "Erreur lors de la demande");
       setIsSubmitting(false);

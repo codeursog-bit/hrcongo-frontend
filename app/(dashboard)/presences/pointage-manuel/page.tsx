@@ -505,6 +505,7 @@ import {
 import { api } from '@/services/api';
 import { attendanceApi } from '@/services/attendance-api';
 import { useNotification } from '@/components/providers/NotificationProvider';
+ import { useBasePath } from '@/hooks/useBasePath';
 
 interface Employee {
   id: string;
@@ -527,6 +528,7 @@ interface CurrentUser {
 }
 
 export default function PointageManuelPage() {
+  const { bp } = useBasePath();
   const router = useRouter();
   const { addNotification } = useNotification();
   
@@ -558,7 +560,7 @@ export default function PointageManuelPage() {
     try {
       const storedUser = localStorage.getItem('user');
       if (!storedUser) {
-        router.push('/login');
+        router.push(bp('/login'));
         return;
       }
 
@@ -780,7 +782,7 @@ export default function PointageManuelPage() {
         ══════════════════════════════════════════════════════ */}
         {canSelfCheckGps && (
           <button
-            onClick={() => router.push('/presences/pointage')}
+            onClick={() => router.push(bp('/presences/pointage'))}
             className="
               w-full group relative overflow-hidden
               bg-gradient-to-r from-emerald-500/20 to-teal-500/20

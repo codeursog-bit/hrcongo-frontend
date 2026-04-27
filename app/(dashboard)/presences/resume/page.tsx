@@ -343,6 +343,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ✅ Interface mise à jour — 4 catégories Décret 78-360
 interface AttendanceSummary {
@@ -367,6 +368,7 @@ interface AttendanceSummary {
 }
 
 export default function AttendanceResumePage() {
+  const { bp } = useBasePath();
   const router = useRouter();
   
   const [month, setMonth] = useState('02');
@@ -407,7 +409,7 @@ export default function AttendanceResumePage() {
   };
 
   const handleSendToPayroll = () => {
-    router.push('/paie/nouveau');
+    router.push(bp('/paie/nouveau'));
   };
 
   const filteredData = useMemo(() => {
@@ -441,7 +443,7 @@ export default function AttendanceResumePage() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Link href="/presences" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+           <Link href={bp('/presences')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
               <ArrowRight className="rotate-180 text-gray-500" size={20} />
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Résumés de Présences</h1>

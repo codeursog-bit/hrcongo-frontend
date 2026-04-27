@@ -452,7 +452,7 @@ import PayslipHeader from './components/PayslipHeader';
 import PayslipEmployeeInfo from './components/PayslipEmployeeInfo';
 import PayslipBreakdown from './components/PayslipBreakdown';
 import PayslipFooter from './components/PayslipFooter';
-
+import { useBasePath } from '@/hooks/useBasePath';
 // ============================================================================
 // ✅ TUS : tusAmount SUPPRIMÉ — remplacé par tusDgiAmount + tusCnssAmount + tusTotal
 // ============================================================================
@@ -510,6 +510,7 @@ const CONFIRM_CONFIG = {
 
 export default function PayslipPage({ params }: { params: { id: string } }) {
   const router   = useRouter();
+  const { bp } = useBasePath();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [data, setData]             = useState<PayrollData | null>(null);
@@ -535,7 +536,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
           setBonuses(all.filter((b: any) => b.isRecurring || b.source === 'AUTOMATIC'));
         } catch {}
       }
-    } catch { router.push('/paie'); }
+    } catch { router.push(bp('/paie')); }
     finally { setIsLoading(false); }
   };
 
@@ -543,7 +544,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     if (!confirm) return;
     setIsBusy(true);
     try {
-      if (confirm === 'delete') { await api.delete(`/payrolls/${params.id}`); router.push('/paie'); return; }
+      if (confirm === 'delete') { await api.delete(`/payrolls/${params.id}`); router.push(bp('/paie')); return; }
       const statusMap: Record<string, string> = { validate: 'VALIDATED', pay: 'PAID', cancel: 'CANCELLED', restore: 'DRAFT' };
       const updated = await api.patch<PayrollData>(`/payrolls/${params.id}`, { status: statusMap[confirm] });
       setData(updated); setConfirm(null);
@@ -565,7 +566,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     <div className="p-8 text-center">
       <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
       <p className="text-gray-500">Bulletin introuvable</p>
-      <button onClick={() => router.push('/paie')} className="mt-4 px-6 py-2 bg-gray-900 text-white rounded-xl font-bold">Retour</button>
+      <button onClick={() => router.push(bp('/paie'))} className="mt-4 px-6 py-2 bg-gray-900 text-white rounded-xl font-bold">Retour</button>
     </div>
   );
 
@@ -619,7 +620,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
 
           <div className="flex flex-wrap items-center gap-2">
             {isAdmin && isDraft && (
-              <button onClick={() => router.push(`/paie/${params.id}/modifier`)}
+              <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 12, fontWeight: 700, fontSize: 14, background: '#0ea5e9', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(14,165,233,0.35)' }}>
                 <Pencil size={16} /> Modifier
               </button>
@@ -643,7 +644,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                   <p style={{ fontSize: 11, color: '#3b82f6', margin: 0 }}>Statut Brouillon — jours et heures supplémentaires modifiables</p>
                 </div>
               </div>
-              <button onClick={() => router.push(`/paie/${params.id}/modifier`)}
+              <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, fontWeight: 700, fontSize: 12, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', flexShrink: 0 }}>
                 <Pencil size={13} /> Modifier
               </button>
@@ -700,7 +701,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
           <div className="no-print space-y-4">
 
             {isAdmin && isDraft && (
-              <button onClick={() => router.push(`/paie/${params.id}/modifier`)}
+              <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px 16px', borderRadius: 14, fontWeight: 700, fontSize: 14, background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 20px rgba(14,165,233,0.3)' }}>
                 <Pencil size={17} /> Modifier ce bulletin
               </button>

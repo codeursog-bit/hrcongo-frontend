@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ const ALERT_CONFIG = {
 
 export default function LeaveBalancesAdminPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [balances, setBalances]    = useState<EmployeeBalance[]>([]);
   const [isLoading, setIsLoading]  = useState(true);
   const [search, setSearch]        = useState('');
@@ -160,7 +162,7 @@ export default function LeaveBalancesAdminPage() {
           <button onClick={refresh} disabled={isRefreshing} className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 disabled:opacity-50">
             <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} /> Actualiser
           </button>
-          <Link href="/conges/provision" className="px-4 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <Link href={bp('/conges/provision')} className="px-4 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity">
             <TrendingUp size={16} /> Voir la Provision
           </Link>
         </div>
@@ -311,7 +313,7 @@ export default function LeaveBalancesAdminPage() {
                   {/* Action */}
                   <td className="px-5 py-4">
                     <Link
-                      href={`/employes/${bal.employeeId}`}
+                      href={bp(`/employes/${bal.employeeId}`)}
                       className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center"
                     >
                       <ChevronRight size={14} className="text-gray-400" />

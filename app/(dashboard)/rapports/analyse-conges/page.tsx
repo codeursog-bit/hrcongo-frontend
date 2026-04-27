@@ -15,11 +15,13 @@ import {
   PieChart, Pie, Cell, Legend, BarChart, Bar
 } from 'recharts';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
 
 export default function LeaveAnalyticsPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [data, setData] = useState<any>(null);
   const [topEmployees, setTopEmployees] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +62,7 @@ export default function LeaveAnalyticsPage() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => router.push('/rapports')} 
+            onClick={() => router.push(bp('/rapports'))} 
             className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
           >
             <ArrowLeft size={20} className="text-gray-500"/>

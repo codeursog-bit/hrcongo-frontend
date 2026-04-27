@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import type { BonusTemplate } from '@/app/(dashboard)/parametres/primes/page';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -73,7 +74,7 @@ const CatalogueLink = ({ backUrl }: { backUrl: string }) => {
   const router = useRouter();
   return (
     <button
-      onClick={() => router.push(`/parametres/primes?back=${encodeURIComponent(backUrl)}`)}
+      onClick={() => router.push(bp(`/parametres/primes?back=${encodeURIComponent(backUrl)}`))}
       className="w-full flex items-center justify-between p-4 mt-2 rounded-xl border border-dashed border-cyan-300 dark:border-cyan-700 bg-cyan-50/50 dark:bg-cyan-900/10 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all group">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl flex items-center justify-center">
@@ -93,6 +94,7 @@ const CatalogueLink = ({ backUrl }: { backUrl: string }) => {
 
 export default function AssignPrimePage() {
   const router    = useRouter();
+  const { bp } = useBasePath();
   const alert     = useAlert();
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -560,7 +562,7 @@ export default function AssignPrimePage() {
                         Le catalogue est vide. Créez d'abord vos types de primes.
                       </p>
                       <button
-                        onClick={() => { setShowModal(false); router.push('/parametres/primes?back=/primes'); }}
+                        onClick={() => { setShowModal(false); router.push(bp('/parametres/primes?back=/primes')); }}
                         className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white font-bold rounded-xl text-sm">
                         <Settings2 size={14} /> Aller au catalogue
                       </button>
@@ -683,7 +685,7 @@ export default function AssignPrimePage() {
                 {/* Lien vers le catalogue */}
                 <div className="pt-1">
                   <button
-                    onClick={() => { setShowModal(false); router.push(`/parametres/primes?back=/primes`); }}
+                    onClick={() => { setShowModal(false); router.push(bp('/parametres/primes?back=/primes')); }}
                     className="flex items-center gap-2 text-xs text-slate-400 hover:text-cyan-500 transition-colors">
                     <Settings2 size={12} />
                     Vous ne trouvez pas la prime souhaitée ? Gérer le catalogue →

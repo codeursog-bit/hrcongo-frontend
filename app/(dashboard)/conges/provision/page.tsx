@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -76,6 +77,7 @@ const ALERT_CONFIG = {
 
 export default function LeaveProvisionPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [provision, setProvision] = useState<ProvisionResult | null>(null);
   const [isLoading, setIsLoading]  = useState(true);
   const [filter, setFilter]        = useState<'ALL' | 'CRITICAL' | 'WARNING' | 'OK'>('ALL');
@@ -171,7 +173,7 @@ export default function LeaveProvisionPage() {
             Actualiser
           </button>
           <Link
-            href="/conges"
+            href={bp('/conges')}
             className="px-4 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
             <Calendar size={16} /> Gérer les congés
@@ -390,7 +392,7 @@ export default function LeaveProvisionPage() {
                     </div>
 
                     <Link
-                      href={`/employes/${emp.employeeId}/conges`}
+                      href={bp(`/employes/${emp.employeeId}/conges`)}
                       className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0"
                     >
                       <ChevronRight size={16} className="text-gray-400" />

@@ -15,6 +15,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // Couleurs cohérentes
 const COLORS = {
@@ -30,6 +31,7 @@ const CHART_COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6
 
 export default function CompleteHRReport() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
@@ -108,7 +110,7 @@ export default function CompleteHRReport() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => router.push('/rapports')} 
+            onClick={() => router.push(bp('/rapports'))} 
             className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft size={20} className="text-gray-500" />

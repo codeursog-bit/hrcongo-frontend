@@ -12,6 +12,7 @@ import {
   Zap, FileCheck, RotateCcw, Shield, Building2,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -219,6 +220,7 @@ const INIT_FORM = {
 
 export default function ContractRupturePage() {
   const router = useRouter();
+  const { bp } = useBasePath();
 
   const [step, setStep]               = useState<Step>('select');
   const [employees, setEmployees]     = useState<Employee[]>([]);
@@ -316,7 +318,7 @@ export default function ContractRupturePage() {
       <div className="mb-6 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => step === 'select' ? router.push('/contrats') : setStep('select')}
+            onClick={() => step === 'select' ? router.push(bp('/contrats')) : setStep('select')}
             className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -334,11 +336,11 @@ export default function ContractRupturePage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => router.push('/contrats/rupture/pse')}
+          <button onClick={() => router.push(bp('/contrats/rupture/pse'))}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-sm font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-100 transition-colors">
             <Building2 className="w-4 h-4" /> PSE
           </button>
-          <button onClick={() => router.push('/contrats')}
+          <button onClick={() => router.push(bp('/contrats'))}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors">
             <FileText className="w-4 h-4" /> Contrats
           </button>
@@ -730,7 +732,7 @@ export default function ContractRupturePage() {
               <div>
                 <p className="font-semibold mb-0.5">Attention PSE requis</p>
                 <p className="text-xs">{pseWarning}</p>
-                <button onClick={() => router.push('/contrats/rupture/pse')} className="mt-2 text-xs font-semibold underline">
+                <button onClick={() => router.push(bp('/contrats/rupture/pse'))} className="mt-2 text-xs font-semibold underline">
                   Créer un PSE →
                 </button>
               </div>
@@ -771,7 +773,7 @@ export default function ContractRupturePage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-sm font-semibold hover:bg-slate-800 transition-colors">
               <RotateCcw className="w-4 h-4" /> Nouvelle rupture
             </button>
-            <button type="button" onClick={() => router.push('/contrats')}
+            <button type="button" onClick={() => router.push(bp('/contrats'))}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-colors">
               <FileText className="w-4 h-4" /> Retour aux contrats
             </button>

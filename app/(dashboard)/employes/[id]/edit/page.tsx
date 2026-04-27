@@ -520,6 +520,7 @@ import { fr } from 'date-fns/locale';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { FancySelect } from '@/components/ui/FancySelect';
+import { useBasePath } from '@/hooks/useBasePath';
 
 const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'];
 
@@ -580,6 +581,7 @@ function ContractDurationPreview({ hireDate, endDate }: { hireDate: string; endD
 
 // ─── PAGE PRINCIPALE ─────────────────────────────────────────────────────────
 export default function EditEmployeePage({ params }: { params: { id: string } }) {
+  const { bp } = useBasePath();
   const router = useRouter();
   const alert  = useAlert();
   const [isSaving, setIsSaving]   = useState(false);
@@ -722,7 +724,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         tolZone: formData.tolZone,
       });
       alert.success('Dossier mis à jour', 'Les modifications ont été enregistrées.');
-      router.push(`/employes/${params.id}`);
+      router.push(bp(`/employes/${params.id}`));
     } catch (e: any) {
       alert.error('Erreur', e.message || 'Impossible de sauvegarder.');
     } finally {

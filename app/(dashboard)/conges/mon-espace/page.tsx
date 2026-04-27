@@ -368,6 +368,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -425,6 +426,7 @@ const fmtXAF = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n
 
 export default function MyLeaveSpacePage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [leaves, setLeaves]       = useState<any[]>([]);
   const [balance, setBalance]     = useState<LeaveBalance | null>(null);
   const [indemnity, setIndemnity] = useState<LeaveIndemnity | null>(null);
@@ -588,7 +590,7 @@ export default function MyLeaveSpacePage() {
               </div>
             )}
 
-            <Link href="/conges/nouveau" className="block w-full py-3.5 bg-white text-slate-900 text-center font-bold rounded-xl hover:bg-gray-50 transition-colors text-sm relative z-10">
+            <Link href={bp('/conges/nouveau')} className="block w-full py-3.5 bg-white text-slate-900 text-center font-bold rounded-xl hover:bg-gray-50 transition-colors text-sm relative z-10">
               <span className="flex items-center justify-center gap-2">
                 <Plus size={18} /> Nouvelle demande
               </span>
@@ -695,7 +697,7 @@ export default function MyLeaveSpacePage() {
               <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                 <Clock size={20} className="text-gray-400" /> Mes demandes
               </h3>
-              <Link href="/conges/nouveau" className="text-sm text-sky-500 font-semibold hover:underline flex items-center gap-1">
+              <Link href={bp('/conges/nouveau')} className="text-sm text-sky-500 font-semibold hover:underline flex items-center gap-1">
                 Nouvelle <ArrowRight size={14} />
               </Link>
             </div>
@@ -704,7 +706,7 @@ export default function MyLeaveSpacePage() {
               <div className="flex flex-col items-center justify-center py-20 text-gray-300">
                 <Umbrella size={40} className="mb-4 opacity-30" />
                 <p className="text-sm font-medium text-gray-400">Aucune demande pour le moment</p>
-                <Link href="/conges/nouveau" className="text-sky-500 text-sm font-semibold hover:underline mt-2">
+                <Link href={bp('/conges/nouveau')} className="text-sky-500 text-sm font-semibold hover:underline mt-2">
                   Planifier mon premier congé →
                 </Link>
               </div>

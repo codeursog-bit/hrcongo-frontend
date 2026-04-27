@@ -4,8 +4,10 @@ import React from 'react';
 import Link from 'next/link';
 import { User, Upload, FileSpreadsheet, Zap, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useBasePath } from '@/hooks/useBasePath';
 
 export default function NewEmployeePage() {
+  const { bp } = useBasePath();
   return (
     <div className="w-full flex justify-center items-center min-h-[calc(100vh-100px)] py-8 px-4">
       <div className="w-full max-w-5xl">
@@ -34,7 +36,7 @@ export default function NewEmployeePage() {
         <div className="grid md:grid-cols-2 gap-8">
           
           {/* CARD 1: Import Excel */}
-          <Link href="/employes/import">
+          <Link href={bp('/employes/import')}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -99,7 +101,7 @@ export default function NewEmployeePage() {
           </Link>
 
           {/* CARD 2: Création Manuelle */}
-          <Link href="/employes/nouveau/formulaire">
+          <Link href={bp('/employes/nouveau/formulaire')}>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}

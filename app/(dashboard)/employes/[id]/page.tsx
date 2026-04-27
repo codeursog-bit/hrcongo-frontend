@@ -754,6 +754,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 type TabType = 'info' | 'docs' | 'paie' | 'conges' | 'materiel';
 
@@ -902,6 +903,7 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
 
 export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const { bp } = useBasePath();
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [showSalary, setShowSalary] = useState(false);
   const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
@@ -965,7 +967,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     setIsDeleting(true);
     try {
       await api.delete(`/employees/${params.id}`);
-      router.push('/employes');
+      router.push(bp('/employes'));
     } catch (err: any) {
       alert(err?.message || 'Erreur lors de la suppression');
       setIsDeleting(false);
@@ -1315,7 +1317,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <Star size={20} className="text-amber-500" /> Actions Rapides
               </h3>
               <div className="space-y-2">
-                <Link href={`/employes/${params.id}/primes`}
+                <Link href={bp(`/employes/${params.id}/primes`)}
                   className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-purple-300 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
@@ -1395,7 +1397,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       return (
         <div className="space-y-3">
           {tabData.map((p: any) => (
-            <Link href={`/paie/bulletins/${p.id}`} key={p.id}>
+            <Link href={bp(`/paie/bulletins/${p.id}`)} key={p.id}>
               <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-sky-200 dark:hover:border-sky-800 transition-all cursor-pointer group">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-emerald-500 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-lg shadow-sky-500/20">
@@ -1533,7 +1535,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         )}
       </AnimatePresence>
 
-      <Link href="/employes" className="inline-flex items-center text-sm text-gray-500 hover:text-sky-500 transition-colors">
+      <Link href={bp('/employes')} className="inline-flex items-center text-sm text-gray-500 hover:text-sky-500 transition-colors">
         <ArrowLeft size={16} className="mr-2" /> Retour à la liste
       </Link>
 
@@ -1594,12 +1596,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Link href={`/employes/${params.id}/primes`}
+                <Link href={bp(`/employes/${params.id}/primes`)}
                   className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 transition-colors border border-purple-200 dark:border-purple-800"
                   title="Gérer les primes">
                   <Gift size={20} />
                 </Link>
-                <button onClick={() => router.push(`/employes/${params.id}/edit`)}
+                <button onClick={() => router.push(bp(`/employes/${params.id}/edit`))}
                   className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 hover:bg-sky-100 transition-colors border border-sky-200 dark:border-sky-700"
                   title="Modifier">
                   <Edit size={20} />

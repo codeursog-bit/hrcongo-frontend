@@ -8,6 +8,7 @@ import {
   CheckCircle, FileText, Calculator, Receipt, Globe
 } from 'lucide-react';
 import { api } from '@/services/api';
+ import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface JournalEntry {
@@ -47,7 +48,7 @@ const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
 
 export default function AccountingPage() {
   const router = useRouter();
-
+  const { bp } = useBasePath();
   const now = new Date();
   const [period, setPeriod]     = useState({ month: now.getMonth() + 1, year: now.getFullYear() });
   const [journal, setJournal]   = useState<JournalResponse | null>(null);
@@ -213,7 +214,7 @@ export default function AccountingPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/rapports')}
+            onClick={() => router.push(bp('/rapports'))}
             className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft size={20} className="text-gray-500" />

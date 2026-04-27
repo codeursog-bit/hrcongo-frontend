@@ -319,6 +319,7 @@ import { PayrollTableRow } from './components/PayrollTableRow';
 import { PayrollBatchActionsFooter } from './components/PayrollBatchActionsFooter';
 import { PayrollPagination } from './components/PayrollPagination';
 import { usePayrollData } from '@/hooks/usePayrollData';
+import { useBasePath } from '@/hooks/useBasePath';
 
 type PayrollStatus = 'Draft' | 'Validated' | 'Paid' | 'Cancelled';
 
@@ -326,6 +327,7 @@ const ITEMS_PER_PAGE = 25;
 
 export default function PayrollPage() {
   const router = useRouter();
+  const { bp } = useBasePath();
   const now    = new Date();
   const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
@@ -468,16 +470,16 @@ export default function PayrollPage() {
         />
 
         <div className="flex items-center gap-3">
-          <Link href="/parametres/paie"
+          <Link href={bp('/parametres/paie')}
             className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             <Settings size={20} />
           </Link>
-          <Link href="/paie/masse"
+          <Link href={bp('/paie/masse')}
             className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
             <Users size={18} />
             <span className="hidden sm:inline">Paie en Masse</span>
           </Link>
-          <Link href="/paie/nouveau"
+          <Link href={bp('/paie/nouveau')}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2">
             <Wallet size={18} />
             <span className="hidden sm:inline">Créer Paie</span>
@@ -570,11 +572,11 @@ export default function PayrollPage() {
                     isSelected={selectedIds.includes(entry.id)}
                     isActionLoading={actionLoadingId === entry.id}
                     onToggleSelect={() => toggleSelection(entry.id)}
-                    onView={() => router.push(`/paie/${entry.id}`)}
+                    onView={() => router.push(bp(`/paie/${entry.id}`))}
                     onStatusChange={status => handleStatusChange(entry.id, status)}
                     // ✅ NOUVEAU : modifier (seulement DRAFT) + supprimer définitivement
                     onEdit={entry.status === 'Draft'
-                      ? () => router.push(`/paie/${entry.id}/modifier`)
+                      ? () => router.push(bp(`/paie/${entry.id}/modifier`))
                       : undefined}
                     onDelete={() => openDeleteModal(entry.id, entry.name)}
                   />

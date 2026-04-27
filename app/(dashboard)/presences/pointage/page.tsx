@@ -415,7 +415,7 @@ import { api } from '@/services/api';
 import { getDistanceFromLatLonInMeters } from '@/utils/geo';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import { useAttendanceOffline } from '@/hooks/useAttendanceOffline';
-
+import { useBasePath } from '@/hooks/useBasePath';
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PageStatus = 'loading' | 'idle' | 'working' | 'completed' | 'error';
 type OvertimeStatus =
@@ -601,6 +601,7 @@ function OvertimeWorkflowCard({
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function AttendanceCheckInPage() {
+  const { bp } = useBasePath();
   const router = useRouter();
   const { addNotification } = useNotification();
   const { checkIn: offlineCheckIn, isOffline } = useAttendanceOffline();
@@ -984,7 +985,7 @@ export default function AttendanceCheckInPage() {
               </div>
               <h2 className="text-2xl font-bold mb-2 text-white">À demain !</h2>
               <p className="text-slate-400 mb-8 text-sm">Votre journée est enregistrée.</p>
-              <button onClick={() => router.push('/presences')}
+              <button onClick={() => router.push(bp('/presences'))}
                 className="w-full py-3 bg-slate-700 text-white font-bold rounded-xl hover:bg-slate-600 transition-colors">
                 Fermer
               </button>
