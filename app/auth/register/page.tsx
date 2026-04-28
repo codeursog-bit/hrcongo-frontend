@@ -1,16 +1,23 @@
+
+
+
+
+
 // 'use client';
 
 // import React, { Suspense, useState, useEffect } from 'react';
 // import Link from 'next/link';
+// import Image from 'next/image';
 // import { useRouter } from 'next/navigation';
 // import { useForm } from 'react-hook-form';
 // import { zodResolver } from '@hookform/resolvers/zod';
 // import { useSearchParams } from 'next/navigation';
 // import * as z from 'zod';
 // import {
-//   User, Check, ArrowRight, Mail, Lock, Eye, EyeOff,
-//   Loader2, Hexagon, AlertCircle, Sparkles, Home,
+//   Check, ArrowRight, Mail, Lock, Eye, EyeOff,
+//   Loader2, AlertCircle, Sparkles, Home,
 //   Building2, Briefcase, Globe, Phone,
+//   Shield, Users, TrendingUp, Star, Zap, CheckCircle2, Rocket,
 // } from 'lucide-react';
 // import { motion, AnimatePresence } from 'framer-motion';
 // import { api } from '@/services/api';
@@ -43,23 +50,26 @@
 
 // type FormData = z.infer<typeof cabinetSchema>;
 
+// // ── Confetti ──────────────────────────────────────────────────────────────────
 // const Confetti = () => (
 //   <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center z-50">
-//     {Array.from({ length: 50 }).map((_, i) => (
+//     {Array.from({ length: 60 }).map((_, i) => (
 //       <motion.div
 //         key={i}
 //         initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
 //         animate={{
 //           opacity: [1, 1, 0],
-//           scale: Math.random() * 1 + 0.5,
-//           x: (Math.random() - 0.5) * 600,
-//           y: (Math.random() - 0.5) * 600,
+//           scale: Math.random() * 1.2 + 0.4,
+//           x: (Math.random() - 0.5) * 700,
+//           y: (Math.random() - 0.5) * 700,
 //           rotate: Math.random() * 360,
 //         }}
-//         transition={{ duration: 2, ease: 'easeOut' }}
-//         className={`absolute w-3 h-3 rounded-full ${
-//           ['bg-cyan-500', 'bg-purple-500', 'bg-emerald-500', 'bg-pink-500'][
-//             Math.floor(Math.random() * 4)
+//         transition={{ duration: 2.2, ease: 'easeOut', delay: Math.random() * 0.3 }}
+//         className={`absolute rounded-sm ${
+//           ['w-2 h-3', 'w-3 h-2', 'w-2 h-2', 'w-1.5 h-4'][Math.floor(Math.random() * 4)]
+//         } ${
+//           ['bg-cyan-400', 'bg-purple-500', 'bg-emerald-400', 'bg-pink-400', 'bg-amber-400', 'bg-blue-400'][
+//             Math.floor(Math.random() * 6)
 //           ]
 //         }`}
 //       />
@@ -67,6 +77,7 @@
 //   </div>
 // );
 
+// // ── Force mot de passe ────────────────────────────────────────────────────────
 // const getPasswordStrength = (pass: string) => {
 //   if (!pass) return 0;
 //   let score = 0;
@@ -78,15 +89,35 @@
 // };
 
 // const inputClass =
-//   'block w-full bg-black/20 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 px-4';
+//   'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 px-4';
 
 // const inputWithIconClass =
-//   'block w-full bg-black/20 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 pl-11 pr-4';
+//   'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 pl-11 pr-4';
 
-// // ─── Composant interne (utilise useSearchParams) ───────────────────────────────
+// // ── Floating particles ────────────────────────────────────────────────────────
+// const FloatingDots = () => (
+//   <div className="fixed inset-0 pointer-events-none overflow-hidden">
+//     {Array.from({ length: 18 }).map((_, i) => (
+//       <motion.div
+//         key={i}
+//         className="absolute rounded-full"
+//         style={{
+//           width:  `${Math.random() * 4 + 1}px`,
+//           height: `${Math.random() * 4 + 1}px`,
+//           left:   `${Math.random() * 100}%`,
+//           top:    `${Math.random() * 100}%`,
+//           background: i % 2 === 0 ? 'rgba(6,182,212,0.4)' : 'rgba(168,85,247,0.4)',
+//         }}
+//         animate={{ y: [0, -30, 0], opacity: [0.2, 0.6, 0.2] }}
+//         transition={{ duration: Math.random() * 4 + 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }}
+//       />
+//     ))}
+//   </div>
+// );
 
+// // ── Composant principal ───────────────────────────────────────────────────────
 // function RegisterForm() {
-//   const router = useRouter();
+//   const router       = useRouter();
 //   const searchParams = useSearchParams();
 //   const [step, setStep]               = useState<'type' | 'form' | 'success'>('type');
 //   const [accountType, setAccountType] = useState<'COMPANY' | 'CABINET' | null>(null);
@@ -132,8 +163,7 @@
 //         payload.cabinetPhone = data.cabinetPhone;
 //       }
 //       const res: any = await api.post('/auth/register', payload);
-//       // Tokens en cookie HttpOnly — rien à stocker
-//       localStorage.setItem('user',         JSON.stringify(res.user));
+//       localStorage.setItem('user', JSON.stringify(res.user));
 //       setStep('success');
 //     } catch (err: any) {
 //       setErrorMsg(err.message || "Une erreur est survenue lors de l'inscription.");
@@ -152,78 +182,274 @@
 //   };
 
 //   const variants = {
-//     enter:  { opacity: 0, y: 16 },
+//     enter:  { opacity: 0, y: 20 },
 //     center: { opacity: 1, y: 0 },
-//     exit:   { opacity: 0, y: -16 },
+//     exit:   { opacity: 0, y: -20 },
 //   };
 
 //   return (
 //     <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-//       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-600/20 rounded-full blur-[120px]" />
-//       <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-purple-600/20 rounded-full blur-[120px]" />
+//       {/* ── Fond ── */}
+//       <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[130px] pointer-events-none" />
+//       <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[130px] pointer-events-none" />
+//       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-600/6 rounded-full blur-[100px] pointer-events-none" />
 
-//       <div className="absolute top-6 left-6 z-20">
-//         <Link href="/" className="flex items-center gap-2 group">
-//           <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] group-hover:scale-105 transition-transform">
-//             <Hexagon size={16} fill="currentColor" />
+//       {/* Logo watermark */}
+//       <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
+//         <div className="relative w-[480px] h-[220px] opacity-[0.04]">
+//           <Image src="/logos/konza_logo_h_color.png" alt="" fill className="object-contain" priority />
+//         </div>
+//       </div>
+
+//       {/* Particules */}
+//       <FloatingDots />
+
+//       {/* Grille subtile */}
+//       <div
+//         className="fixed inset-0 pointer-events-none opacity-[0.025]"
+//         style={{
+//           backgroundImage: `linear-gradient(rgba(6,182,212,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.5) 1px, transparent 1px)`,
+//           backgroundSize: '60px 60px',
+//         }}
+//       />
+
+//       {/* ── Nav ── */}
+//       <div className="absolute top-5 left-5 z-20">
+//         <Link href="/" className="flex items-center gap-2.5 group">
+//           <div className="relative w-36 h-10">
+//             <Image
+//               src="/logos/konza_logo_h_color.png"
+//               alt="Konza"
+//               fill
+//               className="object-contain drop-shadow-[0_0_16px_rgba(6,182,212,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(6,182,212,0.6)] transition-all"
+//               priority
+//             />
 //           </div>
-//           <span className="text-lg font-bold tracking-tight">Konza</span>
 //         </Link>
 //       </div>
-//       <div className="absolute top-6 right-6 z-20">
+//       <div className="absolute top-5 right-5 z-20">
 //         <Link href="/" className="p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-gray-400 hover:text-white">
-//           <Home size={18} />
+//           <Home size={16} />
 //         </Link>
 //       </div>
 
-//       <div className="w-full max-w-lg relative z-10">
+//       {/* ── Contenu ── */}
+//       <div className="w-full max-w-2xl relative z-10 mt-8">
 //         <AnimatePresence mode="wait">
 
+//           {/* ══════════════ STEP 1 : Choix du type ══════════════ */}
 //           {step === 'type' && (
-//             <motion.div key="type" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }}>
-//               <div className="text-center mb-8">
-//                 <h1 className="text-3xl font-bold text-white">Créer un compte</h1>
-//                 <p className="text-gray-400 mt-2 text-sm">Choisissez votre profil pour commencer</p>
+//             <motion.div key="type" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
+
+//               {/* Header */}
+//               <div className="text-center mb-10">
+//                 <motion.div
+//                   initial={{ opacity: 0, y: -10 }}
+//                   animate={{ opacity: 1, y: 0 }}
+//                   transition={{ delay: 0.1 }}
+//                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-5"
+//                 >
+//                   <Zap size={12} className="fill-cyan-400" />
+//                   1 mois d'essai gratuit — sans carte bancaire
+//                 </motion.div>
+
+//                 <motion.h1
+//                   initial={{ opacity: 0, y: 10 }}
+//                   animate={{ opacity: 1, y: 0 }}
+//                   transition={{ delay: 0.15 }}
+//                   className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3"
+//                 >
+//                   Rejoignez{' '}
+//                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+//                     Konza
+//                   </span>
+//                 </motion.h1>
+
+//                 <motion.p
+//                   initial={{ opacity: 0, y: 10 }}
+//                   animate={{ opacity: 1, y: 0 }}
+//                   transition={{ delay: 0.2 }}
+//                   className="text-gray-400 text-base max-w-md mx-auto leading-relaxed"
+//                 >
+//                   La plateforme RH de référence pour les entreprises et cabinets congolais.
+//                   <br />
+//                   <span className="text-gray-300 font-medium">Quel est votre profil ?</span>
+//                 </motion.p>
 //               </div>
-//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-//                 <button onClick={() => selectType('COMPANY')} className="group bg-white/5 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/50 rounded-2xl p-6 text-left transition-all duration-200 hover:scale-[1.02]">
-//                   <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-cyan-500/30 transition-colors">
-//                     <Building2 size={22} className="text-cyan-400" />
+
+//               {/* ── Cards ── */}
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+
+//                 {/* Card Entreprise */}
+//                 <motion.button
+//                   onClick={() => selectType('COMPANY')}
+//                   initial={{ opacity: 0, y: 20 }}
+//                   animate={{ opacity: 1, y: 0 }}
+//                   transition={{ delay: 0.25 }}
+//                   whileHover={{ scale: 1.02, y: -3 }}
+//                   whileTap={{ scale: 0.98 }}
+//                   className="group relative bg-gradient-to-br from-white/5 to-cyan-500/5 hover:from-cyan-500/10 hover:to-blue-600/10 border border-white/10 hover:border-cyan-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
+//                 >
+//                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-600/0 group-hover:from-cyan-500/5 group-hover:to-blue-600/5 transition-all duration-300 rounded-2xl" />
+
+//                   {/* Badges — rangée en haut à droite */}
+//                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
+//                     {/* Badge gratuit */}
+//                     <div className="flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+//                       <Zap size={9} className="fill-cyan-400" /> 1 mois gratuit
+//                     </div>
+//                     {/* Badge identité */}
+//                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+//                       <Star size={9} className="fill-amber-400" /> Le plus choisi
+//                     </div>
 //                   </div>
-//                   <h3 className="text-white font-bold text-base mb-1">Je suis une entreprise</h3>
-//                   <p className="text-gray-500 text-xs leading-relaxed">Gérez votre RH en interne — paie, employés, présences, congés.</p>
-//                   <div className="mt-4 flex items-center gap-1 text-cyan-400 text-xs font-semibold">Commencer <ArrowRight size={14} /></div>
-//                 </button>
-//                 <button onClick={() => selectType('CABINET')} className="group bg-white/5 hover:bg-purple-500/10 border border-white/10 hover:border-purple-500/50 rounded-2xl p-6 text-left transition-all duration-200 hover:scale-[1.02]">
-//                   <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition-colors">
-//                     <Briefcase size={22} className="text-purple-400" />
+
+//                   <div className="relative">
+//                     <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/25 to-blue-600/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-cyan-500/35 group-hover:to-blue-600/30 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.25)]">
+//                       <Building2 size={26} className="text-cyan-400" />
+//                     </div>
+
+//                     <h3 className="text-white font-bold text-xl mb-2">Je suis une entreprise</h3>
+//                     <p className="text-gray-400 text-sm leading-relaxed mb-5">
+//                       Gérez votre RH en interne — paie, employés, présences et congés dans un seul espace.
+//                     </p>
+
+//                     <ul className="space-y-2 mb-6">
+//                       {[
+//                         'Gestion des employés & paie',
+//                         'Suivi des présences & congés',
+//                         'Rapports RH automatisés',
+//                       ].map((f) => (
+//                         <li key={f} className="flex items-center gap-2 text-xs text-gray-300">
+//                           <CheckCircle2 size={13} className="text-cyan-400 shrink-0" /> {f}
+//                         </li>
+//                       ))}
+//                     </ul>
+
+//                     <div className="flex items-center justify-between">
+//                       <div className="flex items-center gap-1.5 text-cyan-400 text-sm font-bold group-hover:gap-2.5 transition-all">
+//                         Commencer gratuitement <ArrowRight size={15} />
+//                       </div>
+//                       <div className="flex -space-x-2">
+//                         {['bg-cyan-500', 'bg-blue-500', 'bg-indigo-500'].map((c, i) => (
+//                           <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#020617] ${c}`} />
+//                         ))}
+//                         <div className="w-6 h-6 rounded-full border-2 border-[#020617] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
+//                       </div>
+//                     </div>
 //                   </div>
-//                   <h3 className="text-white font-bold text-base mb-1">Je suis un cabinet RH</h3>
-//                   <p className="text-gray-500 text-xs leading-relaxed">Gérez la paie de vos PME clientes depuis un seul espace.</p>
-//                   <div className="mt-4 flex items-center gap-1 text-purple-400 text-xs font-semibold">Essai gratuit 3 mois <Sparkles size={14} /></div>
-//                 </button>
+//                 </motion.button>
+
+//                 {/* Card Cabinet RH */}
+//                 <motion.button
+//                   onClick={() => selectType('CABINET')}
+//                   initial={{ opacity: 0, y: 20 }}
+//                   animate={{ opacity: 1, y: 0 }}
+//                   transition={{ delay: 0.32 }}
+//                   whileHover={{ scale: 1.02, y: -3 }}
+//                   whileTap={{ scale: 0.98 }}
+//                   className="group relative bg-gradient-to-br from-white/5 to-purple-500/5 hover:from-purple-500/10 hover:to-violet-600/10 border border-white/10 hover:border-purple-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
+//                 >
+//                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-violet-600/0 group-hover:from-purple-500/5 group-hover:to-violet-600/5 transition-all duration-300 rounded-2xl" />
+
+//                   {/* Badges — rangée en haut à droite */}
+//                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
+//                     {/* Badge gratuit */}
+//                     <div className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
+//                       <Sparkles size={9} /> 1 mois gratuit
+//                     </div>
+//                     {/* Badge identité */}
+//                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+//                       <Rocket size={9} /> Meilleur ROI
+//                     </div>
+//                   </div>
+
+//                   <div className="relative">
+//                     <div className="w-14 h-14 bg-gradient-to-br from-purple-500/25 to-violet-600/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-purple-500/35 group-hover:to-violet-600/30 transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.15)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.25)]">
+//                       <Briefcase size={26} className="text-purple-400" />
+//                     </div>
+
+//                     <h3 className="text-white font-bold text-xl mb-2">Je suis un cabinet RH</h3>
+//                     <p className="text-gray-400 text-sm leading-relaxed mb-5">
+//                       Gérez la paie de toutes vos PME clientes depuis un seul tableau de bord centralisé.
+//                     </p>
+
+//                     <ul className="space-y-2 mb-6">
+//                       {[
+//                         'Multi-clients depuis 1 espace',
+//                         'Portail dédié à votre marque',
+//                         'Facturez plus, travaillez moins',
+//                       ].map((f) => (
+//                         <li key={f} className="flex items-center gap-2 text-xs text-gray-300">
+//                           <CheckCircle2 size={13} className="text-purple-400 shrink-0" /> {f}
+//                         </li>
+//                       ))}
+//                     </ul>
+
+//                     <div className="flex items-center justify-between">
+//                       <div className="flex items-center gap-1.5 text-purple-400 text-sm font-bold group-hover:gap-2.5 transition-all">
+//                         Essai gratuit <Sparkles size={14} />
+//                       </div>
+//                       <div className="flex items-center gap-1 text-xs text-purple-400/70">
+//                         <TrendingUp size={12} /> Plan Growth
+//                       </div>
+//                     </div>
+//                   </div>
+//                 </motion.button>
 //               </div>
-//               <p className="text-center text-xs text-gray-500 mt-6">
+
+//               {/* Réassurance */}
+//               <motion.div
+//                 initial={{ opacity: 0 }}
+//                 animate={{ opacity: 1 }}
+//                 transition={{ delay: 0.45 }}
+//                 className="flex flex-wrap items-center justify-center gap-4 mb-6"
+//               >
+//                 {[
+//                   { icon: Shield,    text: 'Données sécurisées' },
+//                   { icon: Users,     text: '+200 entreprises congolaises' },
+//                   { icon: Zap,       text: 'Aucune carte bancaire requise' },
+//                 ].map(({ icon: Icon, text }) => (
+//                   <div key={text} className="flex items-center gap-1.5 text-xs text-gray-500">
+//                     <Icon size={12} className="text-gray-600" /> {text}
+//                   </div>
+//                 ))}
+//               </motion.div>
+
+//               <p className="text-center text-xs text-gray-500">
 //                 Déjà un compte ?{' '}
-//                 <Link href="/auth/login" className="text-cyan-400 hover:underline font-semibold">Se connecter</Link>
+//                 <Link href="/auth/login" className="text-cyan-400 hover:text-white transition-colors font-semibold">
+//                   Se connecter
+//                 </Link>
 //               </p>
 //             </motion.div>
 //           )}
 
+//           {/* ══════════════ STEP 2 : Formulaire ══════════════ */}
 //           {step === 'form' && (
 //             <motion.div key="form" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }}>
 //               <div className="flex items-center justify-between mb-6">
-//                 <button onClick={() => setStep('type')} className="text-xs text-gray-500 hover:text-white transition-colors flex items-center gap-1">← Retour</button>
-//                 <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${accountType === 'CABINET' ? 'text-purple-400 border-purple-500/40 bg-purple-500/10' : 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10'}`}>
-//                   {accountType === 'CABINET' ? 'Cabinet RH' : 'Entreprise'}
+//                 <button onClick={() => setStep('type')} className="text-xs text-gray-500 hover:text-white transition-colors flex items-center gap-1">
+//                   ← Retour
+//                 </button>
+//                 <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+//                   accountType === 'CABINET'
+//                     ? 'text-purple-400 border-purple-500/40 bg-purple-500/10'
+//                     : 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10'
+//                 }`}>
+//                   {accountType === 'CABINET' ? '🏢 Cabinet RH' : '🏬 Entreprise'}
 //                 </span>
 //               </div>
 
-//               <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl">
-//                 <h2 className="text-xl font-bold text-white mb-5">
+//               <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl">
+//                 <h2 className="text-xl font-bold text-white mb-1">
 //                   {accountType === 'CABINET' ? 'Créer votre cabinet' : 'Créer votre compte'}
 //                 </h2>
+//                 <p className="text-xs text-gray-500 mb-5">
+//                   1 mois d'essai gratuit, sans carte bancaire requise.
+//                 </p>
+
 //                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 //                   <div className="grid grid-cols-2 gap-3">
 //                     <div>
@@ -274,9 +500,9 @@
 //                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
 //                       </button>
 //                     </div>
-//                     <div className="flex gap-1 h-1 mt-2 rounded-full overflow-hidden bg-white/10">
+//                     <div className="flex gap-1 h-1.5 mt-2 rounded-full overflow-hidden bg-white/10">
 //                       {[25, 50, 75, 100].map((threshold, i) => (
-//                         <div key={i} className={`h-full w-1/4 transition-all duration-300 ${strength >= threshold ? ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500'][i] : ''}`} />
+//                         <div key={i} className={`h-full w-1/4 rounded-full transition-all duration-300 ${strength >= threshold ? ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500'][i] : ''}`} />
 //                       ))}
 //                     </div>
 //                     {form.formState.errors.password && <p className="text-xs text-red-400 mt-1">{form.formState.errors.password.message}</p>}
@@ -288,17 +514,18 @@
 //                   </div>
 
 //                   {errorMsg && (
-//                     <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-xs flex items-center gap-2">
-//                       <AlertCircle size={14} /> {errorMsg}
+//                     <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
+//                       <AlertCircle size={14} className="shrink-0" /> {errorMsg}
 //                     </div>
 //                   )}
 
 //                   <button
-//                     type="submit" disabled={isLoading}
-//                     className={`w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] disabled:opacity-50 ${
+//                     type="submit"
+//                     disabled={isLoading}
+//                     className={`w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 ${
 //                       accountType === 'CABINET'
-//                         ? 'bg-gradient-to-r from-purple-500 to-purple-400 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]'
-//                         : 'bg-gradient-to-r from-cyan-400 to-cyan-300 text-black shadow-[0_0_20px_rgba(6,182,212,0.3)]'
+//                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.35)] hover:shadow-[0_0_32px_rgba(168,85,247,0.5)]'
+//                         : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-[0_0_24px_rgba(6,182,212,0.35)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)]'
 //                     }`}
 //                   >
 //                     {isLoading
@@ -306,46 +533,55 @@
 //                       : <>{accountType === 'CABINET' ? 'Créer mon cabinet' : 'Créer mon compte'} <ArrowRight size={16} /></>
 //                     }
 //                   </button>
+
+//                   <p className="text-center text-[11px] text-gray-600 flex items-center justify-center gap-1.5">
+//                     <Shield size={11} /> Aucune carte bancaire · Résiliation à tout moment
+//                   </p>
 //                 </form>
 //               </div>
 
 //               <p className="text-center text-xs text-gray-500 mt-4">
 //                 Déjà un compte ?{' '}
-//                 <Link href="/auth/login" className="text-cyan-400 hover:underline font-semibold">Se connecter</Link>
+//                 <Link href="/auth/login" className="text-cyan-400 hover:text-white transition-colors font-semibold">Se connecter</Link>
 //               </p>
 //             </motion.div>
 //           )}
 
+//           {/* ══════════════ STEP 3 : Succès ══════════════ */}
 //           {step === 'success' && (
-//             <motion.div key="success" initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 relative">
+//             <motion.div key="success" initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 180 }} className="text-center py-12 relative">
 //               <Confetti />
 //               <motion.div
-//                 initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
+//                 initial={{ scale: 0 }}
+//                 animate={{ scale: 1 }}
+//                 transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
 //                 className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${
 //                   accountType === 'CABINET'
-//                     ? 'bg-purple-500/20 text-purple-400 shadow-[0_0_30px_rgba(168,85,247,0.3)]'
-//                     : 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
+//                     ? 'bg-purple-500/20 text-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.35)]'
+//                     : 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.35)]'
 //                 }`}
 //               >
 //                 <Check size={44} strokeWidth={3} />
 //               </motion.div>
 //               <h2 className="text-3xl font-bold text-white mb-2">
-//                 {accountType === 'CABINET' ? 'Cabinet créé !' : 'Bienvenue sur Konza !'}
+//                 {accountType === 'CABINET' ? 'Cabinet créé avec succès !' : 'Bienvenue sur Konza !'}
 //               </h2>
-//               <p className="text-gray-400 text-sm mb-2 max-w-sm mx-auto">
+//               <p className="text-gray-400 text-sm mb-4 max-w-sm mx-auto leading-relaxed">
 //                 {accountType === 'CABINET'
-//                   ? "Votre cabinet est prêt. Vous avez 3 mois d'accès gratuit au plan Growth."
-//                   : 'Votre compte a été créé. Configurez maintenant votre entreprise.'}
+//                   ? "Votre cabinet est prêt. Vous bénéficiez d'1 mois d'accès gratuit."
+//                   : "Votre compte est créé. Configurez maintenant votre entreprise pour commencer."}
 //               </p>
 //               {accountType === 'CABINET' && (
-//                 <p className="text-purple-400 text-xs font-mono mb-6">{form.getValues('subdomain')}.konza-rh.app</p>
+//                 <p className="text-purple-400 text-xs font-mono mb-6 bg-purple-500/10 border border-purple-500/20 inline-block px-3 py-1.5 rounded-lg">
+//                   {form.getValues('subdomain')}.konza-rh.app
+//                 </p>
 //               )}
 //               <button
 //                 onClick={handleSuccess}
 //                 className={`px-8 py-3.5 rounded-xl font-bold text-sm transition-all hover:scale-105 flex items-center gap-2 mx-auto ${
 //                   accountType === 'CABINET'
-//                     ? 'bg-gradient-to-r from-purple-500 to-purple-400 text-white'
-//                     : 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white'
+//                     ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.35)]'
+//                     : 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-[0_0_24px_rgba(16,185,129,0.35)]'
 //                 }`}
 //               >
 //                 {accountType === 'CABINET' ? 'Accéder à mon cabinet' : 'Créer mon entreprise'}
@@ -360,8 +596,6 @@
 //   );
 // }
 
-// // ─── Export avec Suspense boundary ────────────────────────────────────────────
-
 // export default function RegisterPage() {
 //   return (
 //     <Suspense fallback={<div className="min-h-screen bg-[#020617]" />}>
@@ -369,6 +603,10 @@
 //     </Suspense>
 //   );
 // }
+
+
+
+
 
 
 
@@ -419,6 +657,18 @@ const cabinetSchema = baseSchema.extend({
 );
 
 type FormData = z.infer<typeof cabinetSchema>;
+
+// ── Type user renvoyé par /auth/register ──────────────────────────────────────
+interface RegisteredUser {
+  id:               string;
+  email:            string;
+  firstName:        string;
+  lastName:         string;
+  role:             string;
+  companyId?:       string | null;
+  cabinetId?:       string | null;
+  managedByCabinet?: boolean;
+}
 
 // ── Confetti ──────────────────────────────────────────────────────────────────
 const Confetti = () => (
@@ -495,6 +745,9 @@ function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]       = useState('');
 
+  // ✅ FIX 5 — stocker le user en mémoire React pour un redirect fiable
+  const [registeredUser, setRegisteredUser] = useState<RegisteredUser | null>(null);
+
   const form = useForm<FormData>({
     resolver: zodResolver(accountType === 'CABINET' ? cabinetSchema : companySchema),
     mode: 'onChange',
@@ -533,6 +786,9 @@ function RegisterForm() {
         payload.cabinetPhone = data.cabinetPhone;
       }
       const res: any = await api.post('/auth/register', payload);
+
+      // ✅ FIX 5 — sauvegarder en mémoire ET localStorage
+      setRegisteredUser(res.user);
       localStorage.setItem('user', JSON.stringify(res.user));
       setStep('success');
     } catch (err: any) {
@@ -542,10 +798,25 @@ function RegisterForm() {
     }
   };
 
+  // ✅ FIX 5 — utiliser le state React en priorité, localStorage en fallback
   const handleSuccess = () => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = registeredUser ?? (() => {
+      try { return JSON.parse(localStorage.getItem('user') || '{}'); }
+      catch { return {}; }
+    })();
+
+    if (!user?.role) {
+      // Cas extrême : user inconnu → login
+      router.push('/auth/login');
+      return;
+    }
+
     if (user.role === 'CABINET_ADMIN' || user.role === 'CABINET_GESTIONNAIRE') {
-      router.push(`/cabinet/${user.cabinetId}/dashboard`);
+      if (user.cabinetId) {
+        router.push(`/cabinet/${user.cabinetId}/dashboard`);
+      } else {
+        router.push('/auth/login');
+      }
     } else {
       router.push('/companies/create');
     }
@@ -663,13 +934,11 @@ function RegisterForm() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-600/0 group-hover:from-cyan-500/5 group-hover:to-blue-600/5 transition-all duration-300 rounded-2xl" />
 
-                  {/* Badges — rangée en haut à droite */}
+                  {/* Badges */}
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-                    {/* Badge gratuit */}
                     <div className="flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Zap size={9} className="fill-cyan-400" /> 1 mois gratuit
                     </div>
-                    {/* Badge identité */}
                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Star size={9} className="fill-amber-400" /> Le plus choisi
                     </div>
@@ -723,13 +992,11 @@ function RegisterForm() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-violet-600/0 group-hover:from-purple-500/5 group-hover:to-violet-600/5 transition-all duration-300 rounded-2xl" />
 
-                  {/* Badges — rangée en haut à droite */}
+                  {/* Badges */}
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-                    {/* Badge gratuit */}
                     <div className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Sparkles size={9} /> 1 mois gratuit
                     </div>
-                    {/* Badge identité */}
                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Rocket size={9} /> Meilleur ROI
                     </div>

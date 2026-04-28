@@ -201,20 +201,44 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-// ─── Gestion centralisée des 401 ─────────────────────────────────────────────
+// ─── Refresh silencieux — un seul appel en vol à la fois ─────────────────────
+let isRefreshing     = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  // Si un refresh est déjà en cours, attendre le même promise
+  if (isRefreshing && refreshPromise) return refreshPromise;
+
+  isRefreshing   = true;
+  refreshPromise = fetch(`${API_URL}/auth/refresh`, {
+    method:      'POST',
+    credentials: 'include',
+  })
+    .then(r => r.ok)
+    .catch(() => false)
+    .finally(() => {
+      isRefreshing   = false;
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
+
+// ─── Redirection 401 — uniquement si le refresh a aussi échoué ───────────────
 function handle401() {
   if (typeof window === 'undefined') return;
-  const path        = window.location.pathname;
+  const path         = window.location.pathname;
   const isAdminRoute = path.startsWith('/admin');
-  const isLoginPage  = path.includes('/login') || path.includes('/register');
-  if (!isLoginPage) {
+  const isAuthPage   = path.includes('/login') || path.includes('/register');
+
+  if (!isAuthPage) {
     // Nettoyer uniquement les données d'affichage (pas les tokens — ils sont en cookie)
     localStorage.removeItem('user');
     window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
   }
 }
 
-// ─── Requête JSON standard ────────────────────────────────────────────────────
+// ─── Requête JSON principale ──────────────────────────────────────────────────
 async function request<T>(
   endpoint: string,
   method:   RequestMethod = 'GET',
@@ -228,7 +252,16 @@ async function request<T>(
   };
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, config);
+    let response = await fetch(`${API_URL}${endpoint}`, config);
+
+    // ── Si 401 → tenter un refresh silencieux AVANT de rendre la main ────────
+    if (response.status === 401) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        // Rejouer la requête originale avec le nouveau cookie access_token
+        response = await fetch(`${API_URL}${endpoint}`, config);
+      }
+    }
 
     // Essai de parse JSON (certaines réponses d'erreur peuvent ne pas être du JSON)
     let data: any;
@@ -240,12 +273,13 @@ async function request<T>(
     }
 
     if (response.status === 401) {
+      // Refresh aussi échoué → vraiment déconnecté
       handle401();
-      const isLoginPage = typeof window !== 'undefined' &&
+      const isAuthPage = typeof window !== 'undefined' &&
         (window.location.pathname.includes('/login') ||
          window.location.pathname.includes('/register'));
       throw new Error(
-        isLoginPage
+        isAuthPage
           ? (data.message || 'Identifiants incorrects')
           : 'Session expirée',
       );
@@ -266,19 +300,31 @@ async function request<T>(
   }
 }
 
-// ─── FormData (upload fichiers) ───────────────────────────────────────────────
+// ─── FormData (Upload de fichiers) ───────────────────────────────────────────
 async function requestFormData<T>(
   endpoint:  string,
   formData:  FormData,
   method:    'POST' | 'PUT' = 'POST',
 ): Promise<T> {
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    let response = await fetch(`${API_URL}${endpoint}`, {
       method,
       credentials: 'include',  // cookies automatiques
       body: formData,
       // Pas de Content-Type → le navigateur le gère avec le boundary multipart
     });
+
+    // Refresh silencieux si 401
+    if (response.status === 401) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        response = await fetch(`${API_URL}${endpoint}`, {
+          method,
+          credentials: 'include',
+          body: formData,
+        });
+      }
+    }
 
     const data = await response.json();
 
@@ -294,13 +340,22 @@ async function requestFormData<T>(
   }
 }
 
-// ─── Blob (Excel, PDF, fichiers binaires) ─────────────────────────────────────
+// ─── Blob (Téléchargement de fichiers) ───────────────────────────────────────
 async function requestBlob(endpoint: string): Promise<Blob> {
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    let response = await fetch(`${API_URL}${endpoint}`, {
       method:      'GET',
       credentials: 'include',
     });
+
+    if (response.status === 401) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        response = await fetch(`${API_URL}${endpoint}`, {
+          method: 'GET', credentials: 'include',
+        });
+      }
+    }
 
     if (response.status === 401) {
       handle401();
@@ -314,13 +369,22 @@ async function requestBlob(endpoint: string): Promise<Blob> {
   }
 }
 
-// ─── Text (Sage .TXT, eTax .CSV) ──────────────────────────────────────────────
+// ─── Text ─────────────────────────────────────────────────────────────────────
 async function requestText(endpoint: string): Promise<string> {
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    let response = await fetch(`${API_URL}${endpoint}`, {
       method:      'GET',
       credentials: 'include',
     });
+
+    if (response.status === 401) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        response = await fetch(`${API_URL}${endpoint}`, {
+          method: 'GET', credentials: 'include',
+        });
+      }
+    }
 
     if (response.status === 401) {
       handle401();
@@ -334,20 +398,15 @@ async function requestText(endpoint: string): Promise<string> {
   }
 }
 
-// ─── Export API ───────────────────────────────────────────────────────────────
+// ─── Export public ────────────────────────────────────────────────────────────
 export const api = {
-  // JSON standard
   get:    <T>(endpoint: string)              => request<T>(endpoint, 'GET'),
   post:   <T>(endpoint: string, body: any)   => request<T>(endpoint, 'POST', body),
   put:    <T>(endpoint: string, body: any)   => request<T>(endpoint, 'PUT', body),
   patch:  <T>(endpoint: string, body: any)   => request<T>(endpoint, 'PATCH', body),
   delete: <T>(endpoint: string)              => request<T>(endpoint, 'DELETE'),
-
-  // Upload fichiers
   postFormData: <T>(endpoint: string, fd: FormData) => requestFormData<T>(endpoint, fd, 'POST'),
   putFormData:  <T>(endpoint: string, fd: FormData) => requestFormData<T>(endpoint, fd, 'PUT'),
-
-  // Téléchargements
   getBlob: (endpoint: string) => requestBlob(endpoint),
   getText: (endpoint: string) => requestText(endpoint),
 };
