@@ -1,9 +1,7 @@
-                                                     
-          
 'use client';
 
-// app/(dashboard)/layout.tsx — VERSION MISE À JOUR
-// Ajoute redirect PME (/pme/) en plus du redirect cabinet déjà existant
+// app/(dashboard)/layout.tsx
+// Attend que useAuth ait fini de vérifier le cookie avant de rediriger
 
 import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -18,9 +16,11 @@ import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { userRole } = useAuth();
-  const router       = useRouter();
-  const pathname     = usePathname();
+  // ✅ FIX CRITIQUE : récupérer "loading" depuis useAuth
+  // Sans ça, on lit le user AVANT que /auth/verify ait répondu → redirect sauvage
+  const { userRole, user, loading } = useAuth();
+  const router   = useRouter();
+  const pathname = usePathname();
 
   // Ces routes ont leur propre layout — ne JAMAIS intercepter
   const isCabinetRoute = pathname?.startsWith('/cabinet/') ?? false;
@@ -28,12 +28,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isSpecialRoute = isCabinetRoute || isPmeRoute;
 
   useEffect(() => {
-    if (isSpecialRoute) return;
-
-    const user = (() => {
-      try { return JSON.parse(localStorage.getItem('user') || '{}'); }
-      catch { return {}; }
-    })();
+    // ✅ Attendre que useAuth ait fini (verify + éventuel refresh)
+    if (loading)          return;
+    if (isSpecialRoute)   return;
+    if (!user)            return; // pas encore de user → pas de redirect ici
 
     // ── Cabinet → /cabinet/[id]/dashboard ──────────────────────────────────
     if (userRole === 'CABINET_ADMIN' || userRole === 'CABINET_GESTIONNAIRE') {
@@ -53,17 +51,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace(dest);
       return;
     }
-  }, [userRole, router, isSpecialRoute]);
+  }, [userRole, user, loading, router, isSpecialRoute]);
 
-  // Blanc pendant redirect
+  // ✅ Blanc pendant le chargement initial (évite un flash de redirect)
+  if (loading) return null;
+
+  // Blanc pendant redirect cabinet/pme
   if (!isSpecialRoute) {
-    const user = (() => {
-      try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
-    })();
     if (
       userRole === 'CABINET_ADMIN' ||
       userRole === 'CABINET_GESTIONNAIRE' ||
-      user.managedByCabinet
+      user?.managedByCabinet
     ) {
       return null;
     }
