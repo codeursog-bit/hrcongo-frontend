@@ -6,7 +6,7 @@
  * API INCHANGÉE — UX refactorisée avec le design system cabinet-ui
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/services/api';
 import { C, Ico, Avatar } from '@/components/cabinet/cabinet-ui';
@@ -488,8 +488,16 @@ export default function SaisieVariablesPage() {
 
   // ── Calcul prévisuel ──────────────────────────────────────────────────────
 
+  // rowsRef permet à calculateRow de lire l'état ACTUEL des rows sans stale closure
+  // (problème : quand on calcule 200 employés en parallèle, chaque useCallback
+  // capturait le même snapshot figé de rows → les données des autres employés
+  // étaient perdues entre les appels batch)
+  const rowsRef = useRef<EmployeeRow[]>(rows);
+  useEffect(() => { rowsRef.current = rows; }, [rows]);
+
   const calculateRow = useCallback(async (empId: string) => {
-    const row = rows.find(r => r.employee.id === empId);
+    // Lire depuis la ref pour avoir les valeurs actuelles même en batch parallèle
+    const row = rowsRef.current.find(r => r.employee.id === empId);
     if (!row) return;
     setRows(prev => prev.map(r => r.employee.id === empId ? { ...r, isCalculating: true } : r));
     try {
@@ -510,7 +518,7 @@ export default function SaisieVariablesPage() {
     } catch {
       setRows(prev => prev.map(r => r.employee.id === empId ? { ...r, isCalculating: false } : r));
     }
-  }, [rows, companyId, selectedMonth, selectedYear]);
+  }, [companyId, selectedMonth, selectedYear]);
 
   // ── Sauvegarde ────────────────────────────────────────────────────────────
 
@@ -537,16 +545,19 @@ export default function SaisieVariablesPage() {
   const [calcProgress, setCalcProgress] = useState<{ done: number; total: number } | null>(null);
 
   const calculateAll = async () => {
-    const dirty = rows.filter(r => r.isDirty && !r.isSaved);
-    if (dirty.length === 0) return;
+    // FIX : calculer TOUTES les lignes sans preview, pas seulement les isDirty.
+    // Avant : rows sans modification manuelle avaient isDirty=false → fonction
+    // retournait immédiatement sans rien calculer (le compteur tournait puis rien).
+    const toCalc = rows.filter(r => !r.preview || r.isDirty);
+    if (toCalc.length === 0) return;
 
-    const BATCH = 10; // 10 requêtes en parallèle
-    setCalcProgress({ done: 0, total: dirty.length });
+    const BATCH = 5; // 5 en parallèle — plus stable sur Render gratuit (1 CPU)
+    setCalcProgress({ done: 0, total: toCalc.length });
 
-    for (let i = 0; i < dirty.length; i += BATCH) {
-      const batch = dirty.slice(i, i + BATCH);
+    for (let i = 0; i < toCalc.length; i += BATCH) {
+      const batch = toCalc.slice(i, i + BATCH);
       await Promise.all(batch.map(row => calculateRow(row.employee.id)));
-      setCalcProgress({ done: Math.min(i + BATCH, dirty.length), total: dirty.length });
+      setCalcProgress({ done: Math.min(i + BATCH, toCalc.length), total: toCalc.length });
     }
 
     setCalcProgress(null);

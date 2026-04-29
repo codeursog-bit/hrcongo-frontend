@@ -148,7 +148,14 @@ export default function ClotureImportPage() {
   const [batchLoading, setBatchLoading] = useState(false);
   const [companies,    setCompanies]    = useState<{ companyId: string; companyName: string }[]>([]);
   const [selected,     setSelected]     = useState<string[]>([]);
-  const evtRef = useRef<EventSource | null>(null);
+  const pollRef = useRef<number | null>(null); // intervalle de polling batch
+
+  // Nettoyer le polling si le composant est démonté
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
 
   // ── Import variables ──────────────────────────────────────────────────────
   const [importStep,      setImportStep]      = useState<'idle' | 'mapping' | 'preview' | 'done'>('idle');
@@ -178,31 +185,64 @@ export default function ClotureImportPage() {
       .catch(console.error);
   }, [cabinetId]);
 
-  // ── Lancer clôture batch (SSE EventSource — logique 100% originale) ───────
+  // ── Lancer clôture batch (polling — compatible cross-site Vercel+Render) ──
+  // EventSource (SSE) ne supporte pas credentials cross-site sans proxy.
+  // On lance le traitement en POST, puis on poll GET /status toutes les 2s.
   const launchBatch = async () => {
     setBatchLoading(true);
     try {
+      // 1. Initialiser le batch (crée l'enregistrement DB avec month/year)
       const init: any = await api.post(`/cabinet/${cabinetId}/batch-closure/init`, {
         month: month + 1, year,
         companyIds: selected,
       });
 
-      const es = new EventSource(
-        `/api/cabinet/${cabinetId}/batch-closure/${init.batchId}/run`,
-        { withCredentials: true },
-      );
-      evtRef.current = es;
+      // Afficher l'état PENDING immédiatement
+      setBatch({
+        batchId:        init.batchId,
+        status:         'RUNNING',
+        totalCompanies: init.totalCompanies,
+        processedCount: 0,
+        successCount:   0,
+        failedCount:    0,
+        currentCompany: null,
+        items:          init.companies.map((c: any) => ({
+          companyId: c.companyId, companyName: c.companyName,
+          status: 'PENDING' as const, bulletinsGenerated: 0,
+        })),
+      });
 
-      es.onmessage = (evt) => {
-        const progress: BatchProgress = JSON.parse(evt.data);
-        setBatch(progress);
-        if (['COMPLETED','FAILED','PARTIAL'].includes(progress.status)) {
-          es.close();
+      // 2. Lancer le traitement (POST — la requête peut prendre 30-120s)
+      api.post(`/cabinet/${cabinetId}/batch-closure/${init.batchId}/run`, {})
+        .then((result: any) => {
+          // Traitement terminé — mettre à jour l'état final
+          setBatch(result);
           setBatchLoading(false);
-        }
-      };
+          clearInterval(pollRef.current ?? undefined);
+          pollRef.current = null;
+        })
+        .catch((e: any) => {
+          setBatchLoading(false);
+          clearInterval(pollRef.current ?? undefined);
+          pollRef.current = null;
+          alert(`Erreur clôture : ${e.message}`);
+        });
 
-      es.onerror = () => { es.close(); setBatchLoading(false); };
+      // 3. Polling toutes les 2s pour la progression en temps réel
+      pollRef.current = setInterval(async () => {
+        try {
+          const status: any = await api.get(
+            `/cabinet/${cabinetId}/batch-closure/${init.batchId}/status`,
+          );
+          setBatch(status);
+          if (['COMPLETED','FAILED','PARTIAL'].includes(status.status)) {
+            clearInterval(pollRef.current ?? undefined);
+            pollRef.current = null;
+            setBatchLoading(false);
+          }
+        } catch { /* ignorer les erreurs de poll */ }
+      }, 2000) as unknown as number;
+
     } catch (e: any) {
       alert(`Erreur : ${e.message}`);
       setBatchLoading(false);
@@ -211,12 +251,23 @@ export default function ClotureImportPage() {
 
   // ── Télécharger template ──────────────────────────────────────────────────
   const downloadTemplate = async (companyId: string) => {
-    const blob: any = await api.get(
-      `/cabinet/${cabinetId}/import/template?companyId=${companyId}`,
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'template-variables-paie.xlsx'; a.click();
+    try {
+      // api.getBlob — lit la réponse en binaire, pas en JSON
+      // api.get ferait response.json() sur un .xlsx → crash
+      const blob = await api.getBlob(
+        `/cabinet/${cabinetId}/import/template?companyId=${companyId}`,
+      );
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href     = url;
+      a.download = 'template-variables-paie-konza.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert(`Erreur téléchargement template : ${e.message}`);
+    }
   };
 
   // ── Upload & parse fichier ────────────────────────────────────────────────

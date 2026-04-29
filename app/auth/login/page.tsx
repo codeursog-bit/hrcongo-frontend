@@ -1,7 +1,3 @@
-
-
-
-
 // // =============================================================================
 // // FICHIER : app/auth/login/page.tsx
 // // CHANGES v2 : ajout lecture callbackUrl (notifications push)
@@ -638,6 +634,7 @@ interface LoginResponse {
     role: string;
     companyId?: string | null;
     cabinetId?: string | null;
+    managedByCabinet?: boolean; // FIX: champ manquant — RH/EMPLOYEE PME cabinet
   };
 }
 
