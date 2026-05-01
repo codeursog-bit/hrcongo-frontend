@@ -15,20 +15,15 @@ import { Step2Family } from '@/components/employees/create/Step2Family';
 import { Step3Contract } from '@/components/employees/create/Step3Contract';
 import { Step4Validation } from '@/components/employees/create/Step4Validation';
 
+// ─── Steps config ──────────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Identité',   icon: User },
-  { id: 2, label: 'Famille',    icon: Heart },
-  { id: 3, label: 'Contrat',    icon: Briefcase },
-  { id: 4, label: 'Validation', icon: Check },
+  { id: 1, label: 'Identité',   icon: User,      color: 'from-sky-400 to-cyan-500',     desc: 'Informations personnelles' },
+  { id: 2, label: 'Famille',    icon: Heart,      color: 'from-violet-400 to-purple-500', desc: 'Situation familiale & fiscalité' },
+  { id: 3, label: 'Contrat',    icon: Briefcase,  color: 'from-emerald-400 to-teal-500',  desc: 'Poste, salaire & contrat' },
+  { id: 4, label: 'Validation', icon: ShieldCheck, color: 'from-amber-400 to-orange-500', desc: 'Vérification finale' },
 ];
 
-const STEP_CELEBRATIONS = [
-  { step: 1, headline: 'Identité enregistrée',     sub: 'Les bases sont posées.',               accent: 'from-cyan-400 to-sky-500',     particle: '✦' },
-  { step: 2, headline: 'Situation familiale OK',    sub: 'Fiscalité configurée avec soin.',      accent: 'from-violet-400 to-purple-500', particle: '◆' },
-  { step: 3, headline: 'Contrat défini',            sub: "Les conditions d'emploi sont claires.", accent: 'from-emerald-400 to-teal-500',  particle: '▲' },
-];
-
-// ─── Génération mot de passe aléatoire sécurisé ───────────────────────────────
+// ─── Génération mot de passe ────────────────────────────────────────────────────
 function generatePassword(length = 10): string {
   const upper   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const lower   = 'abcdefghijklmnopqrstuvwxyz';
@@ -45,75 +40,58 @@ function generatePassword(length = 10): string {
   return pwd.sort(() => Math.random() - 0.5).join('');
 }
 
-// ─── Particle flottant ────────────────────────────────────────────────────────
-function FloatingParticle({ char, delay, x, accent }: { char: string; delay: number; x: number; accent: string }) {
-  return (
-    <motion.span
-      initial={{ opacity: 0, y: 0, x, scale: 0.5 }}
-      animate={{ opacity: [0, 1, 0], y: -120, scale: [0.5, 1.2, 0.3] }}
-      transition={{ duration: 1.6, delay, ease: 'easeOut' }}
-      className={`absolute bottom-0 text-lg font-bold bg-gradient-to-r ${accent} bg-clip-text text-transparent pointer-events-none select-none`}
-      style={{ left: `${x}%` }}
-    >
-      {char}
-    </motion.span>
-  );
-}
+// ─── Toast de célébration step ─────────────────────────────────────────────────
+const CELEBRATIONS = [
+  { step: 1, headline: 'Identité enregistrée !',     sub: 'Les bases du dossier sont posées.',        color: 'from-sky-400 to-cyan-500' },
+  { step: 2, headline: 'Situation familiale OK !',    sub: 'Fiscalité configurée avec soin.',          color: 'from-violet-400 to-purple-500' },
+  { step: 3, headline: 'Contrat défini !',            sub: "Les conditions d'emploi sont claires.",    color: 'from-emerald-400 to-teal-500' },
+];
 
-// ─── Motivation overlay ───────────────────────────────────────────────────────
-function MotivationOverlay({ show, step }: { show: boolean; step: number }) {
-  const data = STEP_CELEBRATIONS.find((s) => s.step === step);
+function StepCelebrationToast({ show, step }: { show: boolean; step: number }) {
+  const data = CELEBRATIONS.find(c => c.step === step);
   if (!data) return null;
-  const particles = Array.from({ length: 12 }, (_, i) => ({ x: 5 + i * 8, delay: i * 0.07 }));
   return (
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+          initial={{ opacity: 0, y: 40, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
         >
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
-          <motion.div
-            initial={{ scale: 0.85, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.9, y: -10, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            className="relative bg-white dark:bg-slate-900 rounded-3xl px-14 py-10 shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden"
-            style={{ boxShadow: '0 32px 80px -12px rgba(0,0,0,0.18)' }}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${data.accent} opacity-[0.06] rounded-3xl`} />
-            <motion.div initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.4, delay: 0.1 }}
-              className={`absolute left-0 top-6 bottom-6 w-1 rounded-r-full bg-gradient-to-b ${data.accent}`}
-              style={{ transformOrigin: 'top' }} />
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
-              className={`text-xs font-black uppercase tracking-[0.2em] bg-gradient-to-r ${data.accent} bg-clip-text text-transparent mb-3`}>
-              Étape {step} / {STEPS.length - 1} complétée
-            </motion.div>
-            <motion.h2 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
-              {data.headline}
-            </motion.h2>
-            <motion.p initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
-              className="text-slate-500 dark:text-slate-400 text-base font-medium">
-              {data.sub}
-            </motion.p>
-            <div className="mt-6 flex items-center gap-3">
-              <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${(step / 3) * 100}%` }}
-                  transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-                  className={`h-full rounded-full bg-gradient-to-r ${data.accent}`} />
-              </div>
-              <span className={`text-xs font-black bg-gradient-to-r ${data.accent} bg-clip-text text-transparent`}>
+          <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-gray-900/95 dark:bg-white/95 backdrop-blur-xl shadow-2xl border border-white/10 dark:border-gray-200/30 min-w-[340px]">
+            {/* Accent bar */}
+            <div className={`w-1 h-10 rounded-full bg-gradient-to-b ${data.color} flex-shrink-0`} />
+            <div className="flex-1">
+              <p className="font-bold text-white dark:text-gray-900 text-sm tracking-tight">{data.headline}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{data.sub}</p>
+            </div>
+            {/* Progress ring */}
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <svg viewBox="0 0 36 36" className="w-10 h-10 -rotate-90">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-white/10 dark:text-gray-200" />
+                <motion.circle
+                  cx="18" cy="18" r="15"
+                  fill="none" strokeWidth="2.5" strokeLinecap="round"
+                  stroke="url(#toastGrad)"
+                  strokeDasharray={`${(step / 3) * 94.25} 94.25`}
+                  initial={{ strokeDasharray: '0 94.25' }}
+                  animate={{ strokeDasharray: `${(step / 3) * 94.25} 94.25` }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                />
+                <defs>
+                  <linearGradient id="toastGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#38bdf8" />
+                    <stop offset="100%" stopColor="#22d3ee" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white dark:text-gray-800">
                 {Math.round((step / 3) * 100)}%
               </span>
             </div>
-            <div className="absolute inset-0 overflow-hidden rounded-3xl">
-              {particles.map((p, i) => (
-                <FloatingParticle key={i} char={data.particle} delay={p.delay} x={p.x} accent={data.accent} />
-              ))}
-            </div>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -141,8 +119,7 @@ function SuccessModal({
         el.value = text;
         el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
         document.body.appendChild(el);
-        el.focus();
-        el.select();
+        el.focus(); el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
       }
@@ -160,115 +137,240 @@ function SuccessModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
         >
           <motion.div
-            initial={{ scale: 0.75, y: 40, opacity: 0 }}
+            initial={{ scale: 0.8, y: 30, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 26, delay: 0.05 }}
-            className="bg-white dark:bg-slate-900 rounded-[2rem] p-10 max-w-md w-full relative overflow-hidden"
-            style={{ boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)', zIndex: 60 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 28, delay: 0.05 }}
+            className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 max-w-md w-full relative overflow-hidden shadow-2xl"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-sky-500/5 pointer-events-none" />
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-gradient-to-br from-cyan-400/10 to-sky-500/10 pointer-events-none" />
-            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400/15 to-sky-500/15 pointer-events-none" />
+            {/* Subtle bg glow */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-gradient-to-br from-sky-400/15 to-cyan-400/10 pointer-events-none blur-2xl" />
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-gradient-to-br from-emerald-400/10 to-teal-400/8 pointer-events-none blur-2xl" />
 
-            {/* Confetti */}
-            {Array.from({ length: 20 }).map((_, i) => (
+            {/* Confetti dots */}
+            {Array.from({ length: 18 }).map((_, i) => (
               <motion.div key={i}
                 initial={{ x: '50%', y: '40%', scale: 0, opacity: 1 }}
-                animate={{ x: `${10 + Math.random() * 80}%`, y: `${10 + Math.random() * 80}%`, scale: [0, 1, 0], opacity: [1, 1, 0] }}
-                transition={{ duration: 1.2 + Math.random() * 0.6, delay: i * 0.04, ease: 'easeOut' }}
-                className="absolute pointer-events-none">
-                <div className="rounded-full" style={{ width: 4 + Math.random() * 6, height: 4 + Math.random() * 6, background: ['#06b6d4','#0ea5e9','#8b5cf6','#10b981','#f59e0b'][i % 5] }} />
-              </motion.div>
+                animate={{ x: `${10 + Math.random() * 80}%`, y: `${5 + Math.random() * 85}%`, scale: [0, 1, 0], opacity: [1, 1, 0] }}
+                transition={{ duration: 1.1 + Math.random() * 0.5, delay: i * 0.04, ease: 'easeOut' }}
+                className="absolute pointer-events-none w-1.5 h-1.5 rounded-full"
+                style={{ background: ['#38bdf8','#34d399','#a78bfa','#fbbf24','#f472b6'][i % 5] }}
+              />
             ))}
 
             {/* Avatar */}
-            <div className="flex justify-center mb-7 relative">
-              <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }} className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-cyan-500/30">
-                  {initials || <User size={40} />}
+            <div className="flex justify-center mb-6 relative">
+              <motion.div initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.18 }}
+                className="relative">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-sky-500/25">
+                  {initials || <User size={36} />}
                 </div>
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  transition={{ type: 'spring', delay: 0.45, stiffness: 400, damping: 20 }}
-                  className="absolute -bottom-2 -right-2 w-9 h-9 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
-                  <Check size={18} strokeWidth={3} className="text-white" />
+                  transition={{ type: 'spring', delay: 0.42, stiffness: 400, damping: 18 }}
+                  className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-900">
+                  <Check size={14} strokeWidth={3} className="text-white" />
                 </motion.div>
               </motion.div>
             </div>
 
-            {/* Texte */}
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+            {/* Text */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
               className="text-center mb-6">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1 tracking-tight">
+              <h2 className="text-xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">
                 {firstName} {lastName}
               </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-3">
-                Dossier RH créé — accès système activé
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Dossier RH créé · accès système activé
               </p>
               {fromCandidate && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 rounded-xl text-xs font-bold text-cyan-700 dark:text-cyan-400">
-                  <Star size={12} /> Candidat converti en employé
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/20 rounded-xl text-xs font-bold text-sky-700 dark:text-sky-400">
+                  <Star size={11} /> Candidat converti en employé
                 </div>
               )}
             </motion.div>
 
-            {/* Credentials */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}
-              className="mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
-              <div className="flex items-center gap-2 mb-1">
-                <KeyRound size={14} className="text-cyan-500" />
-                <span className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">Accès généré automatiquement</span>
+            {/* Credentials box */}
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36 }}
+              className="mb-5 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-2.5">
+              <div className="flex items-center gap-2 mb-2">
+                <KeyRound size={13} className="text-sky-500" />
+                <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Accès généré automatiquement</span>
               </div>
-              <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
-                <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Email</p>
-                <p className="text-sm font-mono text-slate-800 dark:text-slate-200 select-all break-all">{email}</p>
+              <div className="p-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
+                <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Email</p>
+                <p className="text-sm font-mono text-gray-800 dark:text-gray-200 select-all break-all">{email}</p>
               </div>
-              <div className="flex items-center gap-2 p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-600">
+              <div className="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Mot de passe provisoire</p>
-                  <p className="text-sm font-mono text-slate-800 dark:text-slate-200 tracking-wider select-all">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">Mot de passe provisoire</p>
+                  <p className="text-sm font-mono text-gray-800 dark:text-gray-200 tracking-wider select-all">
                     {showPwd ? generatedPassword : '••••••••••'}
                   </p>
                 </div>
                 <button type="button" onClick={() => setShowPwd(v => !v)}
-                  className="flex-shrink-0 p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                  {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               <button type="button" onClick={handleCopy}
                 className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
                   copied
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
-                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                    : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}>
-                {copied ? <><Check size={14} /> Copié !</> : <><Copy size={14} /> Copier les identifiants</>}
+                {copied ? <><Check size={13} /> Copié !</> : <><Copy size={13} /> Copier les identifiants</>}
               </button>
-              <p className="text-[10px] text-slate-400 text-center">
-                Transmettez ces identifiants à l'employé. Il pourra changer son mot de passe à la première connexion.
+              <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                Transmettez ces identifiants à l'employé. Il changera son mot de passe à la première connexion.
               </p>
             </motion.div>
 
-            {/* Boutons */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-              className="space-y-3">
+            {/* Actions */}
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.44 }}
+              className="space-y-2.5">
               <button type="button" onClick={onGoToEmployee}
-                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-2xl transition-all shadow-xl shadow-cyan-500/25 flex items-center justify-center gap-2 group cursor-pointer">
+                className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2 group cursor-pointer">
                 Voir le dossier employé
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
               </button>
               <button type="button" onClick={onAddAnother}
-                className="w-full py-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-2xl transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer">
-                Créer un autre employé
+                className="w-full py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-colors border border-gray-200 dark:border-gray-700 text-sm cursor-pointer">
+                + Créer un autre employé
               </button>
             </motion.div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// ─── STEPPER HEADER ─────────────────────────────────────────────────────────────
+function StepperHeader({ currentStep }: { currentStep: number }) {
+  return (
+    <div className="px-6 sm:px-10 pt-8 pb-6">
+      {/* Step pills */}
+      <div className="flex items-center gap-0">
+        {STEPS.map((step, idx) => {
+          const isActive    = step.id === currentStep;
+          const isCompleted = step.id < currentStep;
+          const isLast      = idx === STEPS.length - 1;
+          const Icon        = step.icon;
+
+          return (
+            <React.Fragment key={step.id}>
+              <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                {/* Circle */}
+                <motion.div
+                  animate={{
+                    scale: isActive ? 1.08 : 1,
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                  className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                    isCompleted
+                      ? 'bg-gray-900 dark:bg-white shadow-lg'
+                      : isActive
+                      ? `bg-gradient-to-br ${step.color} shadow-lg`
+                      : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <Check size={18} strokeWidth={2.5} className="text-white dark:text-gray-900" />
+                  ) : (
+                    <Icon size={18} className={isActive ? 'text-white' : 'text-gray-400 dark:text-gray-500'} />
+                  )}
+                  {/* Active ring pulse */}
+                  {isActive && (
+                    <motion.div
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0, 0.4] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${step.color} -z-10`}
+                    />
+                  )}
+                </motion.div>
+
+                {/* Label */}
+                <div className="text-center hidden sm:block">
+                  <span className={`text-[11px] font-bold tracking-wide block transition-colors ${
+                    isActive    ? 'text-gray-900 dark:text-white' :
+                    isCompleted ? 'text-gray-400 dark:text-gray-500' :
+                                  'text-gray-300 dark:text-gray-600'
+                  }`}>
+                    {step.label}
+                  </span>
+                  {isActive && (
+                    <motion.span
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[10px] text-gray-400 dark:text-gray-500 block mt-0.5"
+                    >
+                      {step.desc}
+                    </motion.span>
+                  )}
+                </div>
+              </div>
+
+              {/* Connector */}
+              {!isLast && (
+                <div className="flex-1 mx-2 h-px relative top-[-12px] sm:top-[-22px] overflow-hidden">
+                  <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-gradient-to-r from-gray-700 to-gray-500 dark:from-gray-400 dark:to-gray-500"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: step.id < currentStep ? 1 : 0 }}
+                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    style={{ transformOrigin: 'left' }}
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Progress bar */}
+      <div className="mt-6 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+        <motion.div
+          className="h-full rounded-full bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400"
+          initial={{ width: 0 }}
+          animate={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        />
+      </div>
+
+      {/* Step counter */}
+      <div className="flex justify-between mt-2 px-0.5">
+        <span className="text-[11px] text-gray-400 font-medium">Étape {currentStep} sur {STEPS.length}</span>
+        <span className="text-[11px] text-gray-400 font-medium">{Math.round(((currentStep - 1) / (STEPS.length - 1)) * 100)}% complété</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── PAGE BACKGROUND ────────────────────────────────────────────────────────────
+function PageBackground() {
+  return (
+    <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+      {/* Base */}
+      <div className="absolute inset-0 bg-gray-50 dark:bg-[#0d1117]" />
+
+      {/* Subtle dot grid */}
+      <div
+        className="absolute inset-0 opacity-[0.025] dark:opacity-[0.04]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #64748b 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+
+      {/* Ambient glows — very subtle */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[400px] bg-sky-400/6 dark:bg-sky-500/8 rounded-full blur-[120px]" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[350px] bg-violet-400/5 dark:bg-violet-500/6 rounded-full blur-[100px]" />
+    </div>
   );
 }
 
@@ -282,7 +384,7 @@ function CreateEmployeeFormInner() {
   const [currentStep, setCurrentStep]         = useState(1);
   const [direction, setDirection]             = useState(0);
   const [showSuccess, setShowSuccess]         = useState(false);
-  const [showMotivation, setShowMotivation]   = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationStep, setCelebrationStep] = useState(0);
   const [isLoading, setIsLoading]             = useState(false);
   const [departments, setDepartments]         = useState<any[]>([]);
@@ -323,7 +425,6 @@ function CreateEmployeeFormInner() {
     baseSalary:          '',
     trialPeriodDays:     '0',
     trialEndDate:        '',
-    // ✅ FIX : string dès l'initialisation — cohérent avec Step3Contract
     isResident:          'true',
     nationality:         '',
     paymentMethod:       'CASH',
@@ -338,7 +439,7 @@ function CreateEmployeeFormInner() {
       try {
         const data = await api.get<any[]>('/departments');
         setDepartments(data);
-        if (data.length > 0) setFormData((prev) => ({ ...prev, departmentId: data[0].id }));
+        if (data.length > 0) setFormData(prev => ({ ...prev, departmentId: data[0].id }));
       } catch {
         alert.error('Erreur', 'Impossible de charger les départements');
       }
@@ -347,17 +448,17 @@ function CreateEmployeeFormInner() {
   }, []);
 
   const handleDepartmentCreated = (newDept: any) => {
-    setDepartments((prev) => [...prev, newDept]);
-    setFormData((prev) => ({ ...prev, departmentId: newDept.id }));
+    setDepartments(prev => [...prev, newDept]);
+    setFormData(prev => ({ ...prev, departmentId: newDept.id }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const validateStep1 = () => {
@@ -393,9 +494,9 @@ function CreateEmployeeFormInner() {
 
   const triggerCelebration = (step: number) => {
     setCelebrationStep(step);
-    setShowMotivation(true);
-    return new Promise<void>((resolve) => {
-      setTimeout(() => { setShowMotivation(false); resolve(); }, 1800);
+    setShowCelebration(true);
+    return new Promise<void>(resolve => {
+      setTimeout(() => { setShowCelebration(false); resolve(); }, 2000);
     });
   };
 
@@ -406,12 +507,12 @@ function CreateEmployeeFormInner() {
     if (currentStep < 4) {
       setDirection(1);
       await triggerCelebration(currentStep);
-      setCurrentStep((curr) => curr + 1);
+      setCurrentStep(curr => curr + 1);
     }
   };
 
   const prevStep = () => {
-    if (currentStep > 1) { setDirection(-1); setCurrentStep((curr) => curr - 1); }
+    if (currentStep > 1) { setDirection(-1); setCurrentStep(curr => curr - 1); }
   };
 
   const handleSubmit = async () => {
@@ -438,7 +539,6 @@ function CreateEmployeeFormInner() {
         departmentId:        formData.departmentId,
         baseSalary:          parseFloat(formData.baseSalary),
         trialPeriodDays:     parseInt(formData.trialPeriodDays as string) || 0,
-        // ✅ FIX : isResident est string ('true'|'false') → on envoie un vrai boolean au backend
         isResident:          formData.isResident !== 'false',
         nationality:         (formData.nationality as string) || null,
         paymentMethod:       formData.paymentMethod,
@@ -460,16 +560,11 @@ function CreateEmployeeFormInner() {
 
       try {
         const invitePromise = api.post('/users/invite', {
-          email:        formData.email,
-          firstName:    formData.firstName,
-          lastName:     formData.lastName,
-          role:         'EMPLOYEE',
-          password:     pwd,
-          departmentId: formData.departmentId,
+          email: formData.email, firstName: formData.firstName,
+          lastName: formData.lastName, role: 'EMPLOYEE',
+          password: pwd, departmentId: formData.departmentId,
         });
-        const timeout = new Promise((_, rej) =>
-          setTimeout(() => rej(new Error('timeout')), 15000),
-        );
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000));
         await Promise.race([invitePromise, timeout]);
       } catch (e: any) {
         if (e.message === 'timeout') {
@@ -477,8 +572,8 @@ function CreateEmployeeFormInner() {
         } else if (e?.response?.status === 409) {
           // silencieux : compte déjà existant
         } else {
-          console.error('[invite] Erreur création compte utilisateur:', e?.response?.data || e.message);
-          alert.warning('Compte non créé', e?.response?.data?.message || "Le compte utilisateur n'a pas pu être créé. Vous pouvez le recréer depuis Paramètres > Utilisateurs.");
+          console.error('[invite] Erreur:', e?.response?.data || e.message);
+          alert.warning('Compte non créé', e?.response?.data?.message || "Le compte utilisateur n'a pas pu être créé.");
         }
       }
 
@@ -495,146 +590,190 @@ function CreateEmployeeFormInner() {
   };
 
   const variants = {
-    enter:  (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+    enter:  (dir: number) => ({ x: dir > 0 ? 32 : -32, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit:   (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
+    exit:   (dir: number) => ({ x: dir > 0 ? -32 : 32, opacity: 0 }),
   };
 
   return (
-    <div className="w-full flex justify-center items-start min-h-[calc(100vh-100px)] py-4 relative overflow-hidden">
+    <>
+      <PageBackground />
 
-      <MotivationOverlay show={showMotivation} step={celebrationStep} />
+      <div className="w-full flex justify-center items-start min-h-[calc(100vh-80px)] py-6 px-4 relative">
 
-      <SuccessModal
-        show={showSuccess}
-        firstName={formData.firstName}
-        lastName={formData.lastName}
-        email={formData.email}
-        generatedPassword={generatedPassword}
-        fromCandidate={!!fromCandidate}
-        onGoToEmployee={() => router.push(createdEmployeeId ? `/employes/${createdEmployeeId}` : '/employes')}
-        onAddAnother={() => window.location.reload()}
-      />
+        {/* Celebration toast */}
+        <StepCelebrationToast show={showCelebration} step={celebrationStep} />
 
-      {fromCandidate && (
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-          className="fixed top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-5 py-2.5 bg-cyan-600 text-white rounded-2xl shadow-xl shadow-cyan-500/30 text-sm font-bold">
-          <Sparkles size={15} className="shrink-0" />
-          Formulaire pré-rempli depuis le dossier candidat
-        </motion.div>
-      )}
+        <SuccessModal
+          show={showSuccess}
+          firstName={formData.firstName}
+          lastName={formData.lastName}
+          email={formData.email}
+          generatedPassword={generatedPassword}
+          fromCandidate={!!fromCandidate}
+          onGoToEmployee={() => router.push(createdEmployeeId ? `/employes/${createdEmployeeId}` : '/employes')}
+          onAddAnother={() => window.location.reload()}
+        />
 
-      <div className="w-full max-w-5xl glass-panel rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[600px]">
+        {/* Candidate banner */}
+        {fromCandidate && (
+          <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-5 py-2.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-2xl shadow-xl text-sm font-bold">
+            <Sparkles size={14} className="text-sky-400 dark:text-sky-600 shrink-0" />
+            Formulaire pré-rempli depuis le dossier candidat
+          </motion.div>
+        )}
 
-        {/* STEPPER */}
-        <div className="sticky top-0 z-20 glass-panel border-b border-white/10">
-          <div className="flex items-center justify-between px-6 sm:px-12 py-6 relative max-w-4xl mx-auto">
-            <div className="absolute top-1/2 left-8 right-8 h-px bg-slate-200 dark:bg-white/10 -z-10 -translate-y-1/2" />
-            {STEPS.map((step) => {
-              const isActive    = step.id === currentStep;
-              const isCompleted = step.id < currentStep;
-              return (
-                <div key={step.id} className="flex flex-col items-center bg-slate-50 dark:bg-slate-900 px-3 rounded-full py-1 transition-all">
-                  <motion.div
-                    animate={{ scale: isActive ? 1.1 : 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                      isActive
-                        ? 'bg-gradient-to-br from-cyan-500 to-sky-500 border-cyan-400 text-white shadow-lg shadow-cyan-500/30'
-                        : isCompleted
-                        ? 'bg-gradient-to-br from-cyan-400 to-sky-500 border-cyan-400 text-white'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-400'
-                    }`}
-                  >
-                    {isCompleted ? <Check size={22} strokeWidth={3} /> : <step.icon size={22} />}
-                  </motion.div>
-                  <span className={`mt-2 text-xs font-bold uppercase tracking-wider hidden sm:block transition-colors ${
-                    isActive ? 'text-cyan-600 dark:text-cyan-400' : isCompleted ? 'text-slate-400' : 'text-slate-300 dark:text-slate-600'
-                  }`}>
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="h-0.5 bg-slate-100 dark:bg-slate-800">
-            <motion.div
-              className="h-full bg-gradient-to-r from-cyan-400 to-sky-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${((currentStep - 1) / 3) * 100}%` }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-            />
-          </div>
-        </div>
+        <div className="w-full max-w-4xl">
 
-        {/* CONTENU */}
-        <div className="flex-1 p-6 sm:p-10 overflow-x-hidden">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={currentStep}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ type: 'spring', stiffness: 300, damping: 30, duration: 0.3 }}
-              className="max-w-4xl mx-auto"
+          {/* Page header */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center justify-between"
+          >
+            <div>
+              <p className="text-xs font-bold tracking-[0.18em] text-gray-400 uppercase mb-1">
+                Ressources Humaines
+              </p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Créer un employé
+              </h1>
+            </div>
+            <button
+              onClick={() => router.back()}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium transition-colors hidden sm:block"
             >
-              {currentStep === 1 && (
-                <Step1Identity formData={formData} onInputChange={handleInputChange} onSelectChange={handleSelectChange} imageUpload={imageUpload} />
-              )}
-              {currentStep === 2 && (
-                <Step2Family formData={formData} onInputChange={handleInputChange} onSelectChange={handleSelectChange} />
-              )}
-              {currentStep === 3 && (
-                <Step3Contract formData={formData} onInputChange={handleInputChange} onSelectChange={handleSelectChange} departments={departments} onDepartmentCreated={handleDepartmentCreated} />
-              )}
-              {currentStep === 4 && (
-                <Step4Validation formData={formData} departments={departments} imagePreview={imageUpload.preview} />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+              ← Annuler
+            </button>
+          </motion.div>
 
-        {/* FOOTER */}
-        <div className="p-6 glass-panel border-t border-white/10 flex justify-between items-center">
-          <button
-            onClick={currentStep === 1 ? () => router.back() : prevStep}
-            className="px-6 py-3 rounded-xl text-slate-500 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center gap-2 text-sm"
+          {/* Main card */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
           >
-            {currentStep === 1 ? 'Annuler' : <><ChevronLeft size={17} />Précédent</>}
-          </button>
+            {/* Stepper */}
+            <div className="border-b border-gray-100 dark:border-gray-800">
+              <StepperHeader currentStep={currentStep} />
+            </div>
 
-          <div className="flex gap-1.5 items-center">
-            {[1, 2, 3, 4].map((s) => (
-              <motion.div key={s}
-                animate={{ width: s === currentStep ? 28 : 8, opacity: s < currentStep ? 1 : s === currentStep ? 1 : 0.3 }}
-                transition={{ duration: 0.3 }}
-                className={`h-2 rounded-full ${s <= currentStep ? 'bg-gradient-to-r from-cyan-400 to-sky-500' : 'bg-slate-200 dark:bg-slate-700'}`}
-              />
-            ))}
-          </div>
+            {/* Step content */}
+            <div className="p-6 sm:p-10 overflow-x-hidden min-h-[420px]">
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={currentStep}
+                  custom={direction}
+                  variants={variants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                >
+                  {currentStep === 1 && (
+                    <Step1Identity
+                      formData={formData}
+                      onInputChange={handleInputChange}
+                      onSelectChange={handleSelectChange}
+                      imageUpload={imageUpload}
+                    />
+                  )}
+                  {currentStep === 2 && (
+                    <Step2Family
+                      formData={formData}
+                      onInputChange={handleInputChange}
+                      onSelectChange={handleSelectChange}
+                    />
+                  )}
+                  {currentStep === 3 && (
+                    <Step3Contract
+                      formData={formData}
+                      onInputChange={handleInputChange}
+                      onSelectChange={handleSelectChange}
+                      departments={departments}
+                      onDepartmentCreated={handleDepartmentCreated}
+                    />
+                  )}
+                  {currentStep === 4 && (
+                    <Step4Validation
+                      formData={formData}
+                      departments={departments}
+                      imagePreview={imageUpload.preview}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
 
-          <button
-            onClick={currentStep === 4 ? handleSubmit : nextStep}
-            disabled={isLoading || (currentStep === 1 && imageUpload.uploading)}
-            className={`px-8 py-3 rounded-xl text-white font-bold shadow-lg transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm ${
-              currentStep === 4
-                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/25'
-                : 'bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 shadow-cyan-500/25'
-            }`}
+            {/* Footer navigation */}
+            <div className="px-6 sm:px-10 py-5 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center gap-4">
+
+              {/* Back / Cancel */}
+              <button
+                onClick={currentStep === 1 ? () => router.back() : prevStep}
+                className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                {currentStep === 1 ? (
+                  'Annuler'
+                ) : (
+                  <><ChevronLeft size={16} /> Précédent</>
+                )}
+              </button>
+
+              {/* Dot indicators */}
+              <div className="flex gap-1.5 items-center">
+                {STEPS.map((s) => (
+                  <motion.div
+                    key={s.id}
+                    animate={{
+                      width: s.id === currentStep ? 24 : 7,
+                      opacity: s.id < currentStep ? 1 : s.id === currentStep ? 1 : 0.25,
+                    }}
+                    transition={{ duration: 0.28 }}
+                    className={`h-1.5 rounded-full ${
+                      s.id <= currentStep
+                        ? 'bg-gray-900 dark:bg-white'
+                        : 'bg-gray-200 dark:bg-gray-700'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Next / Submit */}
+              <button
+                onClick={currentStep === 4 ? handleSubmit : nextStep}
+                disabled={isLoading || (currentStep === 1 && imageUpload.uploading)}
+                className={`flex items-center gap-2 px-7 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  currentStep === 4
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/20'
+                    : 'bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 shadow-sky-500/20'
+                }`}
+              >
+                {isLoading ? (
+                  <><Loader2 className="animate-spin" size={16} /> Création…</>
+                ) : currentStep === 4 ? (
+                  <><BadgeCheck size={16} /> Créer l'employé</>
+                ) : (
+                  <>Suivant <ChevronRight size={16} /></>
+                )}
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Help tip */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-center text-xs text-gray-400 mt-4"
           >
-            {isLoading ? (
-              <><Loader2 className="animate-spin" size={17} />Création…</>
-            ) : currentStep === 4 ? (
-              <><BadgeCheck size={17} />Créer l'employé</>
-            ) : (
-              <>Suivant<ChevronRight size={17} /></>
-            )}
-          </button>
+            Vous pourrez toujours modifier ou compléter le dossier plus tard
+          </motion.p>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -642,7 +781,7 @@ export default function CreateEmployeePage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-cyan-500" size={36} />
+        <Loader2 className="animate-spin text-sky-500" size={32} />
       </div>
     }>
       <CreateEmployeeFormInner />

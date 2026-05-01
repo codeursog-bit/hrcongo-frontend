@@ -270,6 +270,22 @@ export default function ClotureImportPage() {
     }
   };
 
+  // ── Helper : POST multipart (contourne api.post qui force application/json) ──
+  const postMultipart = async (url: string, formData: FormData) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    // Les cookies HttpOnly (access_token) sont envoyés automatiquement avec credentials:'include'
+    const res = await fetch(`${API_URL}${url}`, {
+      method:      'POST',
+      credentials: 'include',  // envoie les cookies cross-site
+      body:        formData,   // NE PAS mettre Content-Type — le browser le met avec le boundary
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message ?? `Erreur ${res.status}`);
+    }
+    return res.json();
+  };
+
   // ── Upload & parse fichier ────────────────────────────────────────────────
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -282,7 +298,7 @@ export default function ClotureImportPage() {
     formData.append('companyId', importCompanyId);
 
     try {
-      const res: any = await api.post(`/cabinet/${cabinetId}/import/parse`, formData);
+      const res: any = await postMultipart(`/cabinet/${cabinetId}/import/parse`, formData);
       setFileHeaders(res.headers ?? []);
 
       const isKonzaTemplate = res.headers?.some((h: string) =>
@@ -318,7 +334,7 @@ export default function ClotureImportPage() {
     formData.append('companyId', importCompanyId);
     formData.append('mapping', JSON.stringify(mapping));
     try {
-      const res: any = await api.post(`/cabinet/${cabinetId}/import/parse`, formData);
+      const res: any = await postMultipart(`/cabinet/${cabinetId}/import/parse`, formData);
       const preview: any = await api.post(`/cabinet/${cabinetId}/import/preview`, {
         companyId: importCompanyId, rows: res.rows, mapping, month: month + 1, year,
       });
@@ -509,14 +525,28 @@ export default function ClotureImportPage() {
                           <span className="text-xs" style={{ color: T.amber }}>{item.errorMessage}</span>
                         )}
                       </div>
-                      {item.status === 'SUCCESS' && (
-                        <span className="text-xs" style={{ color: T.emerald }}>
-                          {item.bulletinsGenerated} bulletins validés
-                        </span>
-                      )}
-                      {item.status === 'SKIPPED' && (
-                        <span className="text-xs" style={{ color: T.amber }}>Variables manquantes</span>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {item.status === 'SUCCESS' && (
+                          <span className="text-xs" style={{ color: T.emerald }}>
+                            {item.bulletinsGenerated} bulletins validés
+                          </span>
+                        )}
+                        {item.status === 'SKIPPED' && (
+                          <>
+                            <span className="text-xs" style={{ color: T.amber }}>Variables manquantes</span>
+                            <a
+                              href={`/cabinet/${cabinetId}/entreprise/${item.companyId}/paie`}
+                              style={{
+                                fontSize: 11, color: T.indigo, textDecoration: 'none',
+                                padding: '2px 8px', borderRadius: 6,
+                                border: `1px solid ${T.indigo}`, whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Saisir →
+                            </a>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

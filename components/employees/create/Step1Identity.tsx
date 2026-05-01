@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, Phone, MapPin } from 'lucide-react';
+import { User, Mail, Phone, MapPin, FileText } from 'lucide-react';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { ImageUploader } from '@/components/employees/ImageUploader';
 
@@ -16,6 +16,48 @@ interface Step1IdentityProps {
   };
 }
 
+// ─── Input field component ────────────────────────────────────────────────────
+function Field({
+  label, required, hint, children,
+}: {
+  label: string; required?: boolean; hint?: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        {label}
+        {required && <span className="text-red-400 text-sm leading-none">*</span>}
+      </label>
+      {children}
+      {hint && <p className="text-[11px] text-gray-400 dark:text-gray-500">{hint}</p>}
+    </div>
+  );
+}
+
+function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={`w-full px-3.5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 dark:focus:border-sky-500 transition-all ${className}`}
+    />
+  );
+}
+
+// ─── Section header ───────────────────────────────────────────────────────────
+function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <Icon size={13} className="text-gray-400 dark:text-gray-500" />
+      </div>
+      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export const Step1Identity: React.FC<Step1IdentityProps> = ({
   formData,
   onInputChange,
@@ -24,211 +66,160 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 }) => {
   return (
     <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+
+      {/* Step title */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
           Identité & Coordonnées
         </h2>
-        <p className="text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Commençons par les informations de base
         </p>
       </div>
 
-      {/* PHOTO UPLOAD */}
+      {/* Photo */}
       <ImageUploader
         preview={imageUpload.preview}
         uploading={imageUpload.uploading}
         progress={imageUpload.progress}
         onFileSelect={imageUpload.handleFileSelect}
         onClear={imageUpload.clearImage}
-        className="mb-8"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* IDENTITÉ */}
-        <div className="space-y-6">
-          <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">
-            Identité Civile
-          </h3>
+      {/* ── Section Identité civile ────────────────────────────────────────── */}
+      <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <SectionLabel icon={User} label="Identité civile" />
 
-          {/* Prénom */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              Prénom <span className="text-red-500">*</span>
-            </label>
-            <input
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Prénom" required>
+            <Input
               name="firstName"
               value={formData.firstName}
               onChange={onInputChange}
               placeholder="Jean"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
             />
-          </div>
-
-          {/* Nom */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              Nom <span className="text-red-500">*</span>
-            </label>
-            <input
+          </Field>
+          <Field label="Nom" required>
+            <Input
               name="lastName"
               value={formData.lastName}
               onChange={onInputChange}
               placeholder="Dupont"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
             />
-          </div>
-
-          {/* Date de naissance & Genre */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Date Naissance <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={onInputChange}
-                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
-              />
-            </div>
-
-            <div>
-              <FancySelect
-                label="Genre"
-                value={formData.gender}
-                onChange={(v) => onSelectChange('gender', v)}
-                icon={User}
-                options={[
-                  { value: 'MALE', label: 'Homme' },
-                  { value: 'FEMALE', label: 'Femme' },
-                ]}
-              />
-            </div>
-          </div>
-
-          {/* Lieu de naissance */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              Lieu de naissance <span className="text-red-500">*</span>
-            </label>
-            <input
-              name="placeOfBirth"
-              value={formData.placeOfBirth}
-              onChange={onInputChange}
-              placeholder="Brazzaville"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
-            />
-          </div>
+          </Field>
         </div>
 
-        {/* CONTACT */}
-        <div className="space-y-6">
-          <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">
-            Coordonnées
-          </h3>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Date de naissance" required>
+            <Input
+              type="date"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={onInputChange}
+            />
+          </Field>
+          <Field label="Genre">
+            <FancySelect
+              label=""
+              value={formData.gender}
+              onChange={(v) => onSelectChange('gender', v)}
+              icon={User}
+              options={[
+                { value: 'MALE', label: 'Homme' },
+                { value: 'FEMALE', label: 'Femme' },
+              ]}
+            />
+          </Field>
+        </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              <div className="flex items-center gap-2">
-                <Mail size={16} className="text-cyan-500" />
-                Email <span className="text-red-500">*</span>
-              </div>
-            </label>
-            <input
+        <Field label="Lieu de naissance" required>
+          <Input
+            name="placeOfBirth"
+            value={formData.placeOfBirth}
+            onChange={onInputChange}
+            placeholder="Brazzaville"
+          />
+        </Field>
+      </div>
+
+      {/* ── Section Coordonnées ────────────────────────────────────────────── */}
+      <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <SectionLabel icon={Phone} label="Coordonnées" />
+
+        <Field label="Email" required>
+          <div className="relative">
+            <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Input
               type="email"
               name="email"
               value={formData.email}
               onChange={onInputChange}
               placeholder="jean.dupont@email.com"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+              className="pl-9"
             />
           </div>
+        </Field>
 
-          {/* Téléphone */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              <div className="flex items-center gap-2">
-                <Phone size={16} className="text-sky-500" />
-                Téléphone <span className="text-red-500">*</span>
-              </div>
-            </label>
-            <input
+        <Field label="Téléphone" required>
+          <div className="relative">
+            <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Input
               name="phone"
               value={formData.phone}
               onChange={onInputChange}
               placeholder="+242 06 123 45 67"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all"
+              className="pl-9"
             />
           </div>
+        </Field>
 
-          {/* Adresse */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              <div className="flex items-center gap-2">
-                <MapPin size={16} className="text-cyan-500" />
-                Adresse <span className="text-red-500">*</span>
-              </div>
-            </label>
-            <input
-              name="address"
-              value={formData.address}
-              onChange={onInputChange}
-              placeholder="123 Avenue de la Paix"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
-            />
-          </div>
-
-          {/* Ville */}
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              Ville <span className="text-red-500">*</span>
-            </label>
-            <input
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Adresse" required>
+            <div className="relative">
+              <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <Input
+                name="address"
+                value={formData.address}
+                onChange={onInputChange}
+                placeholder="Avenue de la Paix"
+                className="pl-9"
+              />
+            </div>
+          </Field>
+          <Field label="Ville" required>
+            <Input
               name="city"
               value={formData.city}
               onChange={onInputChange}
               placeholder="Brazzaville"
-              className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
             />
-          </div>
+          </Field>
         </div>
       </div>
 
-      {/* DOCUMENTS OPTIONNELS */}
-      <div className="pt-6 border-t-2 border-slate-100 dark:border-slate-700">
-        <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">
-          Documents Administratifs (Optionnel)
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              N° CNI / Passeport
-              <span className="text-xs text-slate-400 ml-2 font-normal">(optionnel)</span>
-            </label>
-            <input
+      {/* ── Section Documents admin (optionnel) ───────────────────────────── */}
+      <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <SectionLabel icon={FileText} label="Documents administratifs · optionnel" />
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="N° CNI / Passeport">
+            <Input
               name="nationalIdNumber"
               value={formData.nationalIdNumber}
               onChange={onInputChange}
               placeholder="ID-12345"
-              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl glass-card dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none font-mono text-sm"
+              className="font-mono text-sm"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              N° CNSS
-              <span className="text-xs text-slate-400 ml-2 font-normal">(optionnel)</span>
-            </label>
-            <input
+          </Field>
+          <Field label="N° CNSS">
+            <Input
               name="cnssNumber"
               value={formData.cnssNumber}
               onChange={onInputChange}
               placeholder="123456789"
-              className="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl glass-card dark:text-white focus:ring-2 focus:ring-cyan-500/20 outline-none font-mono text-sm"
+              className="font-mono text-sm"
             />
-          </div>
+          </Field>
         </div>
       </div>
     </div>

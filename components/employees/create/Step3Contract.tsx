@@ -1,13 +1,5 @@
 'use client';
 
-// ============================================================================
-// 📁 components/employees/create/Step3Contract.tsx
-// ✅ FIX DOM : fragment <> → <div> racine + AnimatePresence mode="wait" (removeChild fix)
-// ✅ FIX BNC : isResident initialisé à 'true' dès sélection CONSULTANT/PRESTATAIRE
-// ✅ FIX PREVIEW : bncTaux/bncMontant/bncNet recalculés correctement
-// ✅ ICONS : emojis remplacés par vraies icônes Lucide
-// ============================================================================
-
 import React, { useState, useEffect } from 'react';
 import {
   Building2, Wallet, Smartphone, Briefcase, Calendar, DollarSign,
@@ -42,31 +34,19 @@ interface CompanyData {
   [key: string]: any;
 }
 
-// Contrats qui nécessitent une date de fin
-const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
+const REQUIRES_END_DATE  = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
+const CAN_HAVE_TRIAL     = ['CDI', 'CDD'];
+const BNC_CONTRACTS      = ['CONSULTANT', 'PRESTATAIRE'];
+const TRIAL_MAX_DAYS: Record<string, number> = { CDI: 90, CDD: 30 };
 
-// Durées suggérées selon le type
 const SUGGESTED_DURATIONS: Record<string, { label: string; months: number }[]> = {
   STAGE:       [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
-  CDD:         [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
+  CDD:         [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an',   months: 12 }],
   INTERIM:     [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
-  CONSULTANT:  [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
+  CONSULTANT:  [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an',   months: 12 }],
   PRESTATAIRE: [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
 };
 
-// Contrats qui peuvent avoir une période d'essai
-const CAN_HAVE_TRIAL = ['CDI', 'CDD'];
-
-// Durées max légales période d'essai (Code Travail Congo)
-const TRIAL_MAX_DAYS: Record<string, number> = {
-  CDI: 90,
-  CDD: 30,
-};
-
-// Contrats BNC (pas de bulletin, facture + retenue à la source)
-const BNC_CONTRACTS = ['CONSULTANT', 'PRESTATAIRE'];
-
-// ✅ Icônes Lucide par type de contrat (plus d'emojis)
 const CONTRACT_ICONS: Record<string, React.ElementType> = {
   CDI:         Infinity,
   CDD:         CalendarCheck,
@@ -76,37 +56,68 @@ const CONTRACT_ICONS: Record<string, React.ElementType> = {
   INTERIM:     RefreshCw,
 };
 
-// Infos par type de contrat (icône emoji retiré)
 const CONTRACT_INFO: Record<string, { desc: string; bulletin: boolean; cnss: string; impot: string; tus: string; alertes: string[] }> = {
   CDI:         { desc: 'Permanent',  bulletin: true,  cnss: 'CNSS 4% sal. + 20,28% pat.',  impot: 'ITS barème',      tus: 'TUS 7,5%', alertes: [] },
   CDD:         { desc: 'Temporaire', bulletin: true,  cnss: 'CNSS identique CDI',            impot: 'ITS barème',      tus: 'TUS 7,5%', alertes: ['Max 2 ans renouvellement inclus'] },
   STAGE:       { desc: 'Formation',  bulletin: true,  cnss: 'AT patronale 2,25% seulement',  impot: 'ITS si > SMIG',   tus: 'Aucun',    alertes: ['Convention tripartite obligatoire', 'Max 6 mois'] },
-  CONSULTANT:  { desc: 'Prestation', bulletin: false, cnss: 'Aucune CNSS',                   impot: 'BNC à la source', tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
-  PRESTATAIRE: { desc: 'Service',    bulletin: false, cnss: 'Aucune CNSS',                   impot: 'BNC à la source', tus: 'Aucun',    alertes: ['FACTURE HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  CONSULTANT:  { desc: 'Prestation', bulletin: false, cnss: 'Aucune CNSS',                   impot: 'BNC à la source', tus: 'Aucun',    alertes: ['Facture HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  PRESTATAIRE: { desc: 'Service',    bulletin: false, cnss: 'Aucune CNSS',                   impot: 'BNC à la source', tus: 'Aucun',    alertes: ['Facture HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
   INTERIM:     { desc: 'Agence',     bulletin: false, cnss: "Géré par l'agence",              impot: "Géré par l'agence", tus: "Géré par l'agence", alertes: ["Pas de bulletin — suivi mission uniquement"] },
 };
 
-// ─── HELPER durée en texte lisible ──────────────────────────────────────────
 function formatDuration(days: number): string {
   if (days <= 0) return '—';
   if (days < 30) return `${days} jour${days > 1 ? 's' : ''}`;
   const months = Math.floor(days / 30);
   const rem    = days % 30;
   if (rem === 0) return `${months} mois`;
-  return `${months} mois et ${rem} jour${rem > 1 ? 's' : ''}`;
+  return `${months} mois ${rem}j`;
 }
 
-// ─── COMPOSANT APERÇU PÉRIODE ────────────────────────────────────────────────
-function ContractDurationPreview({
-  hireDate,
-  endDate,
-}: {
-  hireDate: string;
-  endDate: string;
-  contractType: string;
+// ─── Section label ────────────────────────────────────────────────────────────
+function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <Icon size={13} className="text-gray-400 dark:text-gray-500" />
+      </div>
+      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── Field wrapper ─────────────────────────────────────────────────────────────
+function Field({ label, required, hint, children }: {
+  label: string; required?: boolean; hint?: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="flex items-center gap-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+        {label}
+        {required && <span className="text-red-400">*</span>}
+      </label>
+      {children}
+      {hint && <p className="text-[11px] text-gray-400 dark:text-gray-500">{hint}</p>}
+    </div>
+  );
+}
+
+function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={`w-full px-3.5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 dark:focus:border-sky-500 transition-all ${className}`}
+    />
+  );
+}
+
+// ─── Contract duration preview ─────────────────────────────────────────────────
+function ContractDurationPreview({ hireDate, endDate, contractType }: {
+  hireDate: string; endDate: string; contractType: string;
 }) {
   if (!hireDate || !endDate) return null;
-
   const start = new Date(hireDate);
   const end   = new Date(endDate);
   if (end <= start) return null;
@@ -115,60 +126,48 @@ function ContractDurationPreview({
   const today     = new Date();
   const daysLeft  = differenceInDays(end, today);
   const pct       = Math.min(100, Math.round(((totalDays - Math.max(0, daysLeft)) / totalDays) * 100));
-
-  const urgencyColor =
-    daysLeft <= 7  ? 'bg-red-500'
-    : daysLeft <= 30 ? 'bg-orange-500'
-    : daysLeft <= 60 ? 'bg-yellow-500'
-    : 'bg-emerald-500';
+  const barColor  = daysLeft <= 7 ? 'bg-red-500' : daysLeft <= 30 ? 'bg-amber-500' : daysLeft <= 60 ? 'bg-yellow-500' : 'bg-emerald-500';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -6 }}
+      initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3"
+      className="mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
     >
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-slate-500 font-medium flex items-center gap-1.5">
-          <Clock size={13} /> Durée totale
-        </span>
-        <span className="font-bold text-slate-900 dark:text-white">{formatDuration(totalDays)}</span>
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-gray-500 flex items-center gap-1.5"><Clock size={12} /> Durée totale</span>
+        <span className="font-bold text-gray-900 dark:text-white">{formatDuration(totalDays)}</span>
       </div>
-
       <div>
-        <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className={`h-full rounded-full ${urgencyColor}`}
+            className={`h-full rounded-full ${barColor}`}
           />
         </div>
-        <div className="flex justify-between text-[11px] text-slate-400 mt-1">
+        <div className="flex justify-between text-[10px] text-gray-400 mt-1">
           <span>{format(start, 'd MMM yyyy', { locale: fr })}</span>
-          <span className={daysLeft <= 30 ? 'text-orange-500 font-bold' : ''}>
+          <span className={daysLeft <= 30 ? 'text-amber-500 font-bold' : ''}>
             {format(end, 'd MMM yyyy', { locale: fr })}
           </span>
         </div>
       </div>
-
-      {daysLeft > 0 ? (
-        <p className={`text-xs font-semibold flex items-center gap-1.5 ${
-          daysLeft <= 7 ? 'text-red-600' : daysLeft <= 30 ? 'text-orange-600' : 'text-emerald-600'
-        }`}>
-          <CalendarDays size={12} />
-          {`${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''} — alertes automatiques activées`}
-        </p>
-      ) : (
-        <p className="text-xs text-red-600 font-semibold flex items-center gap-1.5">
-          <AlertCircle size={12} /> Date de fin dans le passé
-        </p>
-      )}
+      <p className={`text-xs font-semibold flex items-center gap-1.5 ${
+        daysLeft <= 7 ? 'text-red-500' : daysLeft <= 30 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'
+      }`}>
+        <CalendarDays size={11} />
+        {daysLeft > 0
+          ? `${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''} — alertes automatiques actives`
+          : 'Date de fin dans le passé'
+        }
+      </p>
     </motion.div>
   );
 }
 
-// ─── COMPOSANT PRINCIPAL ─────────────────────────────────────────────────────
+// ─── Main component ────────────────────────────────────────────────────────────
 export const Step3Contract: React.FC<Step3ContractProps> = ({
   formData,
   onInputChange,
@@ -190,18 +189,11 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
   const contractMeta  = CONTRACT_INFO[formData.contractType] ?? CONTRACT_INFO['CDI'];
   const suggestions   = SUGGESTED_DURATIONS[formData.contractType] ?? [];
   const maxTrialDays  = TRIAL_MAX_DAYS[formData.contractType] ?? 90;
-
-  const trialDays = parseInt(formData.trialPeriodDays as string || '0') || 0;
-  const trialEndDate = (canHaveTrial && trialDays > 0 && formData.hireDate)
-    ? (() => {
-        const d = new Date(formData.hireDate);
-        d.setDate(d.getDate() + trialDays);
-        return d;
-      })()
+  const trialDays     = parseInt(formData.trialPeriodDays as string || '0') || 0;
+  const trialEndDate  = (canHaveTrial && trialDays > 0 && formData.hireDate)
+    ? (() => { const d = new Date(formData.hireDate); d.setDate(d.getDate() + trialDays); return d; })()
     : null;
 
-  // ✅ FIX BNC PREVIEW
-  // isResident: undefined → true (résident par défaut), 'true' → true, 'false' → false
   const montantHT  = parseFloat(formData.baseSalary as string) || 0;
   const isResident = formData.isResident !== 'false';
   const bncTaux    = isResident ? 0.10 : 0.20;
@@ -225,17 +217,13 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
 
   const handleContractTypeChange = (type: string) => {
     onSelectChange('contractType', type);
-    if (type === 'CDI') {
-      onSelectChange('contractEndDate', '');
-    }
+    if (type === 'CDI') onSelectChange('contractEndDate', '');
     if (!CAN_HAVE_TRIAL.includes(type)) {
       onSelectChange('trialPeriodDays', '0');
       onSelectChange('trialEndDate', '');
     }
-    // ✅ FIX : initialiser isResident à 'true' si pas encore défini pour BNC
-    if (BNC_CONTRACTS.includes(type) && !formData.isResident) {
+    if (BNC_CONTRACTS.includes(type) && !formData.isResident)
       onSelectChange('isResident', 'true');
-    }
   };
 
   const applySuggestion = (months: number) => {
@@ -243,8 +231,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
       alert.warning("Date d'embauche manquante", "Renseignez d'abord la date d'embauche");
       return;
     }
-    const start  = new Date(formData.hireDate);
-    const end    = new Date(start);
+    const end = new Date(formData.hireDate);
     end.setMonth(end.getMonth() + months);
     onSelectChange('contractEndDate', end.toISOString().split('T')[0]);
   };
@@ -274,27 +261,25 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
     }
   };
 
-  // ✅ FIX DOM CRITIQUE : on utilise <div> à la racine au lieu de <>
-  // Un fragment racine avec AnimatePresence enfant cause removeChild DOM error
-  // car React peut tenter de supprimer un nœud dont le parent est incorrect
   return (
     <div>
-      <div className="space-y-8">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-cyan-100 dark:bg-cyan-900/30 rounded-full mb-4">
-            <Briefcase size={40} className="text-cyan-500" />
-          </div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Contrat &amp; Rémunération</h2>
-          <p className="text-slate-600 dark:text-slate-400">Définissons les conditions d'emploi</p>
+      <div className="space-y-6">
+
+        {/* Step title */}
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Contrat & Rémunération
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Définissons les conditions d'emploi
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* ── COLONNE GAUCHE ─────────────────────────────────────────────── */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <Building2 size={16} className="text-cyan-500" /> Poste &amp; Affectation
-            </h3>
+        {/* ── BLOC 1 : Poste & Affectation ──────────────────────────────────── */}
+        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+          <SectionLabel icon={Building2} label="Poste & Affectation" />
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Département */}
             <div>
               <FancySelect
@@ -306,574 +291,492 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 placeholder="Choisir un département..."
               />
               {departments.length === 0 ? (
-                <div className="mt-3 p-4 bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-200 dark:border-amber-800 rounded-xl">
-                  <p className="text-sm text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2 font-medium">
-                    <AlertCircle size={16} /> Aucun département disponible
+                <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl">
+                  <p className="text-xs text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1.5">
+                    <AlertCircle size={12} /> Aucun département
                   </p>
                   <button type="button" onClick={() => setShowDeptModal(true)}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-sky-500 text-white font-bold rounded-xl flex items-center justify-center gap-2">
-                    <Plus size={18} /> Créer le premier département
+                    className="w-full py-2 px-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5">
+                    <Plus size={13} /> Créer le premier
                   </button>
                 </div>
               ) : (
-                <div className="mt-2 flex justify-end">
-                  <button type="button" onClick={() => setShowDeptModal(true)}
-                    className="text-sm text-cyan-600 dark:text-cyan-400 font-semibold flex items-center gap-1.5">
-                    <Plus size={14} /> Créer département
-                  </button>
-                </div>
+                <button type="button" onClick={() => setShowDeptModal(true)}
+                  className="mt-1.5 text-xs text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1 hover:underline">
+                  <Plus size={12} /> Créer un département
+                </button>
               )}
             </div>
 
             {/* Poste */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Intitulé du Poste <span className="text-red-500">*</span>
-              </label>
-              <input
+            <Field label="Intitulé du poste" required>
+              <Input
                 name="position"
                 value={formData.position}
                 onChange={onInputChange}
-                placeholder="Comptable, Développeur, Manager..."
-                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+                placeholder="Comptable, Dev, Manager…"
               />
-            </div>
+            </Field>
+          </div>
 
-            {/* Convention collective */}
-            {companyConvention && !isLoadingConvention && conventionCategories.length > 0 && (
-              <div className="p-5 bg-purple-50 dark:bg-purple-900/10 border-2 border-purple-200 dark:border-purple-700 rounded-xl space-y-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={18} className="text-purple-500" />
-                  <h4 className="font-bold text-purple-900 dark:text-purple-100 text-sm">Convention : {companyConvention}</h4>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-purple-700 dark:text-purple-300 uppercase mb-2">Catégorie Professionnelle</label>
-                  <select
-                    value={formData.professionalCategory || ''}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full p-3 bg-white dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-600 rounded-xl font-medium text-slate-900 dark:text-white focus:border-purple-500 outline-none"
-                  >
-                    <option value="">Sélectionner une catégorie...</option>
-                    {conventionCategories.map((cat) => (
-                      <option key={cat.code} value={cat.code}>
-                        {cat.label} — {cat.minSalary.toLocaleString()} FCFA min.
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          {/* Convention collective */}
+          {companyConvention && !isLoadingConvention && conventionCategories.length > 0 && (
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className="text-gray-500" />
+                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                  Convention collective · {companyConvention}
+                </span>
               </div>
-            )}
+              <select
+                value={formData.professionalCategory || ''}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="w-full px-3.5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+              >
+                <option value="">Sélectionner une catégorie…</option>
+                {conventionCategories.map((cat) => (
+                  <option key={cat.code} value={cat.code}>
+                    {cat.label} — {cat.minSalary.toLocaleString()} FCFA min.
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
-            {/* Date d'embauche */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <Calendar size={16} className="text-sky-500" /> Date d'embauche <span className="text-red-500">*</span>
-              </label>
-              <input
+          {/* Date d'embauche */}
+          <Field label="Date d'embauche" required>
+            <div className="relative">
+              <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <Input
                 type="date"
                 name="hireDate"
                 value={formData.hireDate}
                 onChange={onInputChange}
-                className="w-full px-4 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+                className="pl-9"
               />
             </div>
+          </Field>
+        </div>
 
-            {/* Type de contrat */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
-                Type de Contrat <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2.5">
-                {(['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'] as const).map((type) => {
-                  const meta = CONTRACT_INFO[type];
-                  const ContractIcon = CONTRACT_ICONS[type];
-                  const isSelected = formData.contractType === type;
-                  return (
-                    <motion.div
-                      key={type}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleContractTypeChange(type)}
-                      className={`cursor-pointer p-3 rounded-xl border-2 text-center transition-all ${
-                        isSelected
-                          ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-lg shadow-cyan-500/20'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-cyan-300 text-slate-600 dark:text-slate-400'
-                      }`}
-                    >
-                      <ContractIcon
-                        size={18}
-                        className={`mx-auto mb-0.5 ${isSelected ? 'text-cyan-500' : 'text-slate-400'}`}
-                      />
-                      <div className="text-xs font-bold">{type}</div>
-                      <div className="text-[10px] opacity-60 mt-0.5">{meta?.desc}</div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+        {/* ── BLOC 2 : Type de contrat ──────────────────────────────────────── */}
+        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+          <SectionLabel icon={Briefcase} label="Type de contrat" />
 
-              {/* Résumé fiscal */}
-              <AnimatePresence mode="wait">
-                {formData.contractType && (
-                  <motion.div
-                    key={`fiscal-${formData.contractType}`}
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className={`mt-3 p-3 rounded-xl border-2 space-y-1.5 ${
-                      isBncContract
-                        ? 'bg-teal-50 dark:bg-teal-900/10 border-teal-200 dark:border-teal-700'
-                        : formData.contractType === 'INTERIM'
-                          ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-700'
-                          : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
-                    }`}
-                  >
-                    <div className="grid grid-cols-3 gap-2 text-[11px]">
-                      <div>
-                        <p className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">CNSS</p>
-                        <p className={`font-semibold ${isBncContract || formData.contractType === 'INTERIM' ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                          {contractMeta?.cnss}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Impôt</p>
-                        <p className={`font-semibold ${isBncContract ? 'text-teal-700 dark:text-teal-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                          {contractMeta?.impot}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">TUS</p>
-                        <p className={`font-semibold ${!contractMeta?.bulletin ? 'text-slate-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                          {contractMeta?.tus}
-                        </p>
-                      </div>
+          {/* Contract type pills */}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {(['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'] as const).map((type) => {
+              const meta         = CONTRACT_INFO[type];
+              const ContractIcon = CONTRACT_ICONS[type];
+              const isSelected   = formData.contractType === type;
+              return (
+                <motion.button
+                  key={type}
+                  type="button"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleContractTypeChange(type)}
+                  className={`relative p-3 rounded-xl border text-center transition-all ${
+                    isSelected
+                      ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                  }`}
+                >
+                  <ContractIcon size={16} className="mx-auto mb-1" />
+                  <div className="text-[11px] font-black">{type}</div>
+                  <div className="text-[9px] opacity-60 mt-0.5 hidden sm:block">{meta?.desc}</div>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Résumé fiscal inline — discret */}
+          <AnimatePresence mode="wait">
+            {formData.contractType && (
+              <motion.div
+                key={`fiscal-${formData.contractType}`}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="p-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700"
+              >
+                <div className="grid grid-cols-3 gap-3 text-[11px]">
+                  {[
+                    { label: 'CNSS',  value: contractMeta?.cnss },
+                    { label: 'Impôt', value: contractMeta?.impot },
+                    { label: 'TUS',   value: contractMeta?.tus },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 text-[11px] leading-tight">{value}</p>
                     </div>
-                    {contractMeta?.alertes.map((a, i) => (
-                      <p key={i} className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                        <AlertCircle size={11} className="shrink-0" /> {a}
+                  ))}
+                </div>
+                {contractMeta?.alertes.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                    {contractMeta.alertes.map((a, i) => (
+                      <p key={i} className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                        <AlertCircle size={10} className="shrink-0" /> {a}
                       </p>
                     ))}
-                    {formData.contractType === 'CDI' && (
-                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                        <Check size={11} /> Contrat indéterminé — pas de date de fin requise
-                      </p>
-                    )}
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
-            </div>
+                {formData.contractType === 'CDI' && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
+                    <Check size={10} /> Contrat indéterminé — pas de date de fin requise
+                  </p>
+                )}
+                {formData.contractType === 'INTERIM' && (
+                  <p className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-1.5">
+                    <RefreshCw size={10} /> Aucun bulletin généré côté entreprise
+                  </p>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            {/* ── DATE DE FIN (conditionnel) ─────────────────────────────── */}
-            <AnimatePresence mode="wait">
-              {needsEndDate && (
-                <motion.div
-                  key="endDate-section"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <div className="p-5 bg-sky-50 dark:bg-sky-900/10 border-2 border-sky-200 dark:border-sky-800 rounded-2xl space-y-4">
-                    <div className="flex items-center gap-2">
-                      <CalendarDays size={16} className="text-sky-500" />
-                      <span className="text-sm font-bold text-sky-900 dark:text-sky-100">
-                        Date de fin de contrat <span className="text-red-500">*</span>
-                      </span>
-                    </div>
-
-                    {suggestions.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {suggestions.map((s) => (
-                          <button
-                            key={s.months}
-                            type="button"
-                            onClick={() => applySuggestion(s.months)}
-                            className="px-3 py-1.5 bg-white dark:bg-sky-900/30 border border-sky-300 dark:border-sky-600 rounded-lg text-xs font-bold text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-800/40 transition-colors"
-                          >
-                            + {s.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <input
-                      type="date"
-                      name="contractEndDate"
-                      value={formData.contractEndDate || ''}
-                      onChange={onInputChange}
-                      min={formData.hireDate || undefined}
-                      className="w-full px-4 py-3 border-2 border-sky-300 dark:border-sky-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all font-medium"
-                    />
-
-                    <ContractDurationPreview
-                      hireDate={formData.hireDate}
-                      endDate={formData.contractEndDate}
-                      contractType={formData.contractType}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Salaire / Montant HT */}
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                <DollarSign size={16} className="text-cyan-500" />
-                {isBncContract
-                  ? 'Montant HT de la prestation'
-                  : formData.contractType === 'STAGE'
-                    ? 'Gratification mensuelle'
-                    : 'Salaire de Base Mensuel'}
-                <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  name="baseSalary"
-                  value={formData.baseSalary}
-                  onChange={onInputChange}
-                  placeholder="0"
-                  className="w-full px-4 py-4 pr-20 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none font-bold text-2xl transition-all"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">FCFA</span>
-              </div>
-              {formData.baseSalary && parseFloat(formData.baseSalary as string) > 0 && !isBncContract && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="text-xs text-cyan-600 dark:text-cyan-400 mt-2 font-medium">
-                  ≈ {(parseFloat(formData.baseSalary as string) / 26).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA par jour ouvré
-                </motion.p>
-              )}
-            </div>
-
-            {/* ── BNC (Consultant / Prestataire) ── */}
-            <AnimatePresence mode="wait">
-              {isBncContract && (
-                <motion.div
-                  key="bnc-section"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="p-5 bg-teal-50 dark:bg-teal-900/10 border-2 border-teal-200 dark:border-teal-700 rounded-2xl space-y-4">
-                    <div className="flex items-center gap-2">
-                      <UserCheck size={16} className="text-teal-600" />
-                      <span className="text-sm font-bold text-teal-900 dark:text-teal-100">
-                        Retenue BNC — Résidence fiscale
-                      </span>
-                    </div>
-                    <p className="text-xs text-teal-700 dark:text-teal-400">
-                      Le taux de retenue à la source dépend du statut de résidence du prestataire (CGI Congo art. 47 ter &amp; art. 44).
-                    </p>
-
-                    <div>
-                      <label className="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider mb-2">
-                        Statut de résidence
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {[
-                          {
-                            value: 'true',
-                            label: 'Résident / Congolais',
-                            sub: 'BNC 10%',
-                            color: isResident
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 shadow-lg'
-                              : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300',
-                          },
-                          {
-                            value: 'false',
-                            label: 'Étranger non résident',
-                            sub: 'BNC 20%',
-                            color: !isResident
-                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 shadow-lg'
-                              : 'border-slate-200 dark:border-slate-700 hover:border-orange-300',
-                          },
-                        ].map(({ value, label, sub, color }) => (
-                          <motion.div
-                            key={value}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => onSelectChange('isResident', value)}
-                            className={`cursor-pointer p-3 rounded-xl border-2 transition-all text-center ${color}`}
-                          >
-                            <p className="text-xs font-bold">{label}</p>
-                            <p className={`text-lg font-black mt-1 ${value === 'true' ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                              {sub}
-                            </p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider mb-2">
-                        Nationalité (optionnel)
-                      </label>
-                      <input
-                        name="nationality"
-                        value={formData.nationality as string || ''}
-                        onChange={onInputChange}
-                        placeholder="Ex: CG, FR, US, CM…"
-                        className="w-full px-3 py-2.5 border-2 border-teal-300 dark:border-teal-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-teal-500 outline-none"
-                      />
-                    </div>
-
-                    {/* ✅ FIX PREVIEW BNC : re-render quand isResident ou montantHT change */}
-                    {montantHT > 0 && (
-                      <motion.div
-                        key={`bnc-calc-${isResident ? 'resident' : 'etranger'}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-teal-200 dark:border-teal-700 space-y-1.5 text-xs"
-                      >
-                        <p className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                          <DollarSign size={12} className="text-teal-500" /> Calcul BNC
-                        </p>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Montant HT</span>
-                          <span className="font-bold">{montantHT.toLocaleString('fr-FR')} FCFA</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">BNC retenu ({bncTaux * 100}%)</span>
-                          <span className="font-bold text-red-600 dark:text-red-400">
-                            − {bncMontant.toLocaleString('fr-FR')} FCFA
-                          </span>
-                        </div>
-                        <div className="flex justify-between border-t pt-1.5 border-teal-100 dark:border-teal-800">
-                          <span className="font-bold text-slate-700 dark:text-slate-300">Net versé au prestataire</span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                            {bncNet.toLocaleString('fr-FR')} FCFA
-                          </span>
-                        </div>
-                        <p className="text-teal-600 dark:text-teal-400 pt-0.5">
-                          Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois suivant.
-                        </p>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* ── PÉRIODE D'ESSAI (CDI / CDD uniquement) ────────────────── */}
-            <AnimatePresence mode="wait">
-              {canHaveTrial && (
-                <motion.div
-                  key="trial-section"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="p-5 bg-indigo-50 dark:bg-indigo-900/10 border-2 border-indigo-200 dark:border-indigo-700 rounded-2xl space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock size={16} className="text-indigo-500" />
-                        <span className="text-sm font-bold text-indigo-900 dark:text-indigo-100">
-                          Période d'essai <span className="font-normal text-indigo-500">(optionnel)</span>
-                        </span>
-                      </div>
-                      <span className="text-xs text-indigo-500 font-semibold">Max légal : {maxTrialDays} jours</span>
-                    </div>
-                    <p className="text-xs text-indigo-700 dark:text-indigo-400">
-                      Pendant l'essai : paie normale avec toutes les charges. Rupture possible sans préavis ni indemnités.
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { label: 'Sans essai', days: 0 },
-                        { label: '15 jours', days: 15 },
-                        { label: '30 jours', days: 30 },
-                        ...(formData.contractType === 'CDI' ? [{ label: '60 jours', days: 60 }, { label: '90 jours', days: 90 }] : []),
-                      ].map(({ label, days }) => (
-                        <button
-                          key={days}
-                          type="button"
-                          onClick={() => {
-                            onSelectChange('trialPeriodDays', String(days));
-                            if (days === 0) onSelectChange('trialEndDate', '');
-                          }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
-                            trialDays === days
-                              ? 'bg-indigo-600 text-white border-indigo-600'
-                              : 'bg-white dark:bg-indigo-900/20 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-800/40'
-                          }`}
-                        >
-                          {label}
+          {/* Date de fin conditionnelle */}
+          <AnimatePresence mode="wait">
+            {needsEndDate && (
+              <motion.div
+                key="endDate"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22 }}
+                className="space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <CalendarDays size={12} /> Date de fin <span className="text-red-400">*</span>
+                  </label>
+                  {/* Durée suggérée */}
+                  {suggestions.length > 0 && (
+                    <div className="flex gap-1.5 flex-wrap justify-end">
+                      {suggestions.map((s) => (
+                        <button key={s.months} type="button" onClick={() => applySuggestion(s.months)}
+                          className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[11px] font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                          +{s.label}
                         </button>
                       ))}
                     </div>
+                  )}
+                </div>
+                <Input
+                  type="date"
+                  name="contractEndDate"
+                  value={formData.contractEndDate || ''}
+                  onChange={onInputChange}
+                  min={formData.hireDate || undefined}
+                />
+                <ContractDurationPreview
+                  hireDate={formData.hireDate}
+                  endDate={formData.contractEndDate}
+                  contractType={formData.contractType}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                    <div>
-                      <label className="block text-xs font-bold text-indigo-700 dark:text-indigo-300 uppercase mb-1.5">
-                        Ou saisir manuellement (jours)
-                      </label>
-                      <input
-                        type="number"
-                        name="trialPeriodDays"
-                        min={0}
-                        max={maxTrialDays}
-                        value={formData.trialPeriodDays as string || '0'}
-                        onChange={onInputChange}
-                        className="w-full px-3 py-2.5 border-2 border-indigo-300 dark:border-indigo-600 rounded-xl bg-white dark:bg-slate-800 dark:text-white text-sm focus:border-indigo-500 outline-none"
-                      />
-                      {trialDays > maxTrialDays && (
-                        <p className="text-xs text-red-500 mt-1 font-semibold flex items-center gap-1">
-                          <AlertCircle size={11} /> Dépasse le maximum légal de {maxTrialDays} jours
-                        </p>
-                      )}
-                    </div>
-
-                    {trialDays > 0 && trialEndDate && formData.hireDate && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-indigo-200 dark:border-indigo-700 space-y-2 text-xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500">Début essai</span>
-                          <span className="font-bold">{format(new Date(formData.hireDate), 'd MMMM yyyy', { locale: fr })}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-500">Fin essai ({trialDays} jours)</span>
-                          <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                            {format(trialEndDate, 'd MMMM yyyy', { locale: fr })}
-                          </span>
-                        </div>
-                        <p className="text-indigo-600 dark:text-indigo-400 pt-0.5 font-medium flex items-center gap-1">
-                          <Check size={11} /> Pendant l'essai : salaire normal + charges habituelles. Rupture libre.
-                        </p>
-                        <p className="text-slate-500">
-                          Après l'essai : confirmation automatique → l'employé passe en statut confirmé.
-                        </p>
-                      </motion.div>
-                    )}
+          {/* Période d'essai */}
+          <AnimatePresence mode="wait">
+            {canHaveTrial && (
+              <motion.div
+                key="trial"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22 }}
+                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock size={13} className="text-gray-400" />
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+                      Période d'essai <span className="font-normal text-gray-400 lowercase">(optionnel)</span>
+                    </span>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <span className="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full font-semibold">
+                    Max {maxTrialDays}j
+                  </span>
+                </div>
 
-            {/* ── INFO INTERIM ─────────────────────────────────────────── */}
-            <AnimatePresence mode="wait">
-              {formData.contractType === 'INTERIM' && (
-                <motion.div
-                  key="interim-info"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="p-4 bg-orange-50 dark:bg-orange-900/10 border-2 border-orange-200 dark:border-orange-700 rounded-xl"
-                >
-                  <p className="text-xs font-bold text-orange-700 dark:text-orange-400 mb-1 flex items-center gap-1.5">
-                    <RefreshCw size={12} /> Intérimaire — suivi de mission uniquement
+                {/* Quick buttons */}
+                <div className="flex gap-1.5 flex-wrap">
+                  {[
+                    { label: 'Sans essai', days: 0 },
+                    { label: '15j', days: 15 },
+                    { label: '30j', days: 30 },
+                    ...(formData.contractType === 'CDI' ? [{ label: '60j', days: 60 }, { label: '90j', days: 90 }] : []),
+                  ].map(({ label, days }) => (
+                    <button key={days} type="button"
+                      onClick={() => { onSelectChange('trialPeriodDays', String(days)); if (days === 0) onSelectChange('trialEndDate', ''); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                        trialDays === days
+                          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white'
+                          : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'
+                      }`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Manual input */}
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  name="trialPeriodDays"
+                  value={formData.trialPeriodDays as string || '0'}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    onSelectChange('trialPeriodDays', val === '' ? '0' : val);
+                  }}
+                  placeholder="Ou saisir en jours…"
+                />
+                {trialDays > maxTrialDays && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertCircle size={11} /> Dépasse le maximum légal ({maxTrialDays}j)
                   </p>
-                  <p className="text-xs text-orange-600 dark:text-orange-500">
-                    Cet employé est salarié de son agence d'intérim. L'application gère son suivi RH (présences, missions) mais{' '}
-                    <strong>aucun bulletin de paie ne sera généré</strong> côté entreprise. Vous payez la facture de l'agence.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                )}
+                {trialDays > 0 && trialEndDate && formData.hireDate && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="flex items-center justify-between px-3 py-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-xs">
+                    <span className="text-gray-500">Fin de période d'essai</span>
+                    <span className="font-bold text-gray-900 dark:text-white">
+                      {format(trialEndDate, 'd MMMM yyyy', { locale: fr })}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-          {/* ── COLONNE DROITE : PAIEMENT ──────────────────────────────────── */}
-          <div className="space-y-6">
-            <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider flex items-center gap-2">
-              <Wallet size={16} className="text-sky-500" /> Mode de Paiement
-            </h3>
+        {/* ── BLOC 3 : Rémunération ─────────────────────────────────────────── */}
+        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+          <SectionLabel icon={DollarSign} label={isBncContract ? 'Prestation' : 'Rémunération'} />
 
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: 'MOBILE_MONEY', label: 'Mobile',   icon: Smartphone },
-                { value: 'BANK_TRANSFER', label: 'Banque',  icon: Building2 },
-                { value: 'CASH',          label: 'Espèces', icon: CreditCard },
-              ].map(({ value, label, icon: Icon }) => (
+          {/* Salaire */}
+          <Field
+            label={isBncContract ? 'Montant HT de la prestation' : formData.contractType === 'STAGE' ? 'Gratification mensuelle' : 'Salaire de base mensuel'}
+            required
+            hint={
+              !isBncContract && formData.baseSalary && parseFloat(formData.baseSalary) > 0
+                ? `≈ ${(parseFloat(formData.baseSalary) / 26).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} FCFA par jour ouvré`
+                : undefined
+            }
+          >
+            <div className="relative">
+              <input
+                type="text"
+                inputMode="numeric"
+                name="baseSalary"
+                value={formData.baseSalary}
+                onChange={(e) => {
+                  // Allow only digits and single dot
+                  const val = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                  onSelectChange('baseSalary', val);
+                }}
+                placeholder="0"
+                className="w-full pl-3.5 pr-16 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+              />
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 dark:text-gray-500">
+                FCFA
+              </span>
+            </div>
+          </Field>
+
+          {/* BNC section (Consultant / Prestataire) */}
+          <AnimatePresence mode="wait">
+            {isBncContract && (
+              <motion.div
+                key="bnc"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22 }}
+                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4"
+              >
+                <div className="flex items-center gap-2">
+                  <UserCheck size={13} className="text-gray-500" />
+                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Retenue BNC · Résidence fiscale
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                  CGI Congo art. 47 ter & art. 44 — le taux dépend du statut de résidence.
+                </p>
+
+                {/* Résidence */}
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'true',  label: 'Résident / Congolais',   sub: 'BNC 10%', active: isResident },
+                    { value: 'false', label: 'Étranger non résident',  sub: 'BNC 20%', active: !isResident },
+                  ].map(({ value, label, sub, active }) => (
+                    <motion.button
+                      key={value}
+                      type="button"
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => onSelectChange('isResident', value)}
+                      className={`p-3 rounded-xl border text-center transition-all ${
+                        active
+                          ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
+                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      <p className="text-[11px] font-bold">{label}</p>
+                      <p className={`text-base font-black mt-0.5 ${active ? '' : 'text-gray-400'}`}>{sub}</p>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Nationalité */}
+                <Field label="Nationalité (optionnel)">
+                  <Input
+                    name="nationality"
+                    value={formData.nationality as string || ''}
+                    onChange={onInputChange}
+                    placeholder="CG, FR, US, CM…"
+                  />
+                </Field>
+
+                {/* BNC preview */}
+                {montantHT > 0 && (
+                  <motion.div
+                    key={`bnc-${isResident}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2 text-xs"
+                  >
+                    <p className="font-bold text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                      <DollarSign size={11} /> Calcul BNC
+                    </p>
+                    <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                      <span>Montant HT</span>
+                      <span className="font-bold text-gray-900 dark:text-white">{montantHT.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                      <span>BNC retenu ({bncTaux * 100}%)</span>
+                      <span className="font-bold text-red-500">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div className="flex justify-between border-t border-gray-100 dark:border-gray-700 pt-2">
+                      <span className="font-bold text-gray-700 dark:text-gray-300">Net versé</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 pt-0.5">
+                      Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois.
+                    </p>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ── BLOC 4 : Mode de paiement ─────────────────────────────────────── */}
+        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+          <SectionLabel icon={Wallet} label="Mode de paiement" />
+
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: 'CASH',          label: 'Espèces',  icon: CreditCard },
+              { value: 'BANK_TRANSFER', label: 'Banque',   icon: Building2 },
+              { value: 'MOBILE_MONEY',  label: 'Mobile',   icon: Smartphone },
+            ].map(({ value, label, icon: Icon }) => {
+              const isSelected = formData.paymentMethod === value;
+              return (
                 <motion.button
                   key={value}
                   type="button"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => onSelectChange('paymentMethod', value)}
-                  className={`p-4 rounded-xl border-2 text-center transition-all ${
-                    formData.paymentMethod === value
-                      ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 shadow-lg'
-                      : 'border-slate-200 dark:border-slate-700 hover:border-cyan-300'
+                  className={`p-3.5 rounded-xl border text-center transition-all ${
+                    isSelected
+                      ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
+                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
                   }`}
                 >
-                  <Icon className="mx-auto mb-1" size={20} />
+                  <Icon size={18} className="mx-auto mb-1.5" />
                   <div className="text-xs font-bold">{label}</div>
                 </motion.button>
-              ))}
-            </div>
-
-            <AnimatePresence mode="wait">
-              {formData.paymentMethod === 'BANK_TRANSFER' && (
-                <motion.div
-                  key="bank-details"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="p-6 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 space-y-4"
-                >
-                  <FancySelect
-                    label="Banque"
-                    value={formData.bankName}
-                    onChange={(v) => onSelectChange('bankName', v)}
-                    icon={Building2}
-                    options={[
-                      { value: 'BGFI', label: 'BGFI Bank' },
-                      { value: 'ECOBANK', label: 'Ecobank' },
-                      { value: 'LCB', label: 'LCB Bank' },
-                      { value: 'UBA', label: 'UBA' },
-                      { value: 'SOCIETE_GENERALE', label: 'Société Générale' },
-                    ]}
-                  />
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Numéro de Compte (RIB)</label>
-                    <input
-                      name="bankAccountNumber"
-                      value={formData.bankAccountNumber}
-                      onChange={onInputChange}
-                      placeholder="XXXXXXXXXXXXXXXXXXXXXXXX"
-                      className="w-full p-3 border-2 border-cyan-300 dark:border-cyan-700 dark:bg-slate-800 rounded-xl font-mono focus:border-cyan-500 outline-none"
-                    />
-                  </div>
-                </motion.div>
-              )}
-              {formData.paymentMethod === 'MOBILE_MONEY' && (
-                <motion.div
-                  key="mobile-details"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="p-6 rounded-2xl border-2 border-cyan-200 dark:border-cyan-800 space-y-4"
-                >
-                  <FancySelect
-                    label="Opérateur"
-                    value={formData.mobileMoneyOperator}
-                    onChange={(v) => onSelectChange('mobileMoneyOperator', v)}
-                    icon={Smartphone}
-                    options={[
-                      { value: 'MTN', label: 'MTN Mobile Money' },
-                      { value: 'AIRTEL', label: 'Airtel Money' },
-                    ]}
-                  />
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Numéro de téléphone</label>
-                    <input
-                      name="mobileMoneyNumber"
-                      value={formData.mobileMoneyNumber}
-                      onChange={onInputChange}
-                      placeholder="06 123 45 67"
-                      className="w-full p-3 border-2 border-cyan-300 dark:border-cyan-700 dark:bg-slate-800 rounded-xl font-mono focus:border-cyan-500 outline-none"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              );
+            })}
           </div>
+
+          {/* Bank details */}
+          <AnimatePresence mode="wait">
+            {formData.paymentMethod === 'BANK_TRANSFER' && (
+              <motion.div key="bank"
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1"
+              >
+                <FancySelect
+                  label="Banque"
+                  value={formData.bankName}
+                  onChange={(v) => onSelectChange('bankName', v)}
+                  icon={Building2}
+                  options={[
+                    { value: 'BGFI',             label: 'BGFI Bank' },
+                    { value: 'ECOBANK',           label: 'Ecobank' },
+                    { value: 'LCB',               label: 'LCB Bank' },
+                    { value: 'UBA',               label: 'UBA' },
+                    { value: 'SOCIETE_GENERALE',  label: 'Société Générale' },
+                  ]}
+                />
+                <Field label="N° de compte (RIB)">
+                  <Input
+                    name="bankAccountNumber"
+                    value={formData.bankAccountNumber}
+                    onChange={onInputChange}
+                    placeholder="XXXXXXXXXXXXXXXXXXXXXXXX"
+                    className="font-mono"
+                  />
+                </Field>
+              </motion.div>
+            )}
+            {formData.paymentMethod === 'MOBILE_MONEY' && (
+              <motion.div key="mobile"
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1"
+              >
+                <FancySelect
+                  label="Opérateur"
+                  value={formData.mobileMoneyOperator}
+                  onChange={(v) => onSelectChange('mobileMoneyOperator', v)}
+                  icon={Smartphone}
+                  options={[
+                    { value: 'MTN',    label: 'MTN Mobile Money' },
+                    { value: 'AIRTEL', label: 'Airtel Money' },
+                  ]}
+                />
+                <Field label="Numéro de téléphone">
+                  <Input
+                    name="mobileMoneyNumber"
+                    value={formData.mobileMoneyNumber}
+                    onChange={onInputChange}
+                    placeholder="06 123 45 67"
+                    className="font-mono"
+                  />
+                </Field>
+              </motion.div>
+            )}
+            {formData.paymentMethod === 'CASH' && (
+              <motion.div key="cash"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700"
+              >
+                <Check size={13} className="text-gray-400" />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Paiement en espèces — aucune information bancaire requise
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* ✅ FIX DOM CRITIQUE : Modal DANS le <div> racine, jamais dans <> fragment */}
+      {/* ── Modal création département ──────────────────────────────────────── */}
       <AnimatePresence mode="wait">
         {showDeptModal && (
           <motion.div
@@ -881,64 +784,52 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={() => setShowDeptModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.92, y: 16 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              exit={{ scale: 0.92, y: 16 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
             >
-              <button
-                type="button"
-                onClick={() => setShowDeptModal(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              >
-                <X size={20} />
+              <button type="button" onClick={() => setShowDeptModal(false)}
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <X size={18} />
               </button>
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 rounded-full flex items-center justify-center">
-                  <Network size={24} />
+              <div className="flex items-center gap-3 mb-7">
+                <div className="w-11 h-11 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
+                  <Network size={20} className="text-gray-500 dark:text-gray-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Nouveau Département</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nouveau département</h2>
               </div>
-              <form onSubmit={handleCreateDepartment} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nom du département</label>
-                  <input
-                    required
-                    autoFocus
-                    placeholder="Ex: Marketing, IT, Finance..."
+              <form onSubmit={handleCreateDepartment} className="space-y-5">
+                <Field label="Nom du département" required>
+                  <Input
+                    required autoFocus
+                    placeholder="Marketing, IT, Finance…"
                     value={deptFormData.name}
                     onChange={(e) => setDeptFormData({ ...deptFormData, name: e.target.value })}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none text-lg"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Code (Optionnel)</label>
-                  <input
-                    placeholder="Ex: MKT, IT, FIN..."
+                </Field>
+                <Field label="Code (optionnel)">
+                  <Input
+                    placeholder="MKT, IT, FIN…"
                     value={deptFormData.code}
                     onChange={(e) => setDeptFormData({ ...deptFormData, code: e.target.value.toUpperCase() })}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500/50 outline-none font-mono"
+                    className="font-mono"
                   />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowDeptModal(false)}
-                    className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl"
-                  >
+                </Field>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" onClick={() => setShowDeptModal(false)}
+                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                     Annuler
                   </button>
-                  <button
-                    type="submit"
-                    disabled={isCreatingDept}
-                    className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-sky-500 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2 disabled:opacity-50"
-                  >
-                    {isCreatingDept ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />} Créer
+                  <button type="submit" disabled={isCreatingDept}
+                    className="flex-1 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-2xl text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors shadow-lg">
+                    {isCreatingDept ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                    Créer
                   </button>
                 </div>
               </form>

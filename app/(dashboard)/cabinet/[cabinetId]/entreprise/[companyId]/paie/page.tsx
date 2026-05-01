@@ -527,7 +527,7 @@ export default function SaisieVariablesPage() {
     if (!row || !row.preview) return;
     try {
       await api.post('/payrolls', {
-        employeeId: empId, companyId,
+        employeeId: empId, companyId,          // ← companyId obligatoire pour cabinet
         month: MONTHS[selectedMonth], year: selectedYear,
         workedDays: row.workedDays,
         overtime10: row.overtime10, overtime25: row.overtime25,
@@ -568,13 +568,23 @@ export default function SaisieVariablesPage() {
   const launchPayroll = async () => {
     const unready = rows.filter(r => !r.preview);
     if (unready.length > 0) {
-      if (!confirm(`${unready.length} employé(s) sans calcul. Calculer automatiquement avant de lancer ?`)) return;
+      if (!confirm(`${unready.length} employé(s) sans calcul prévisuel. Calculer automatiquement d'abord ?`)) return;
       await calculateAll();
+      // Attendre que les rows soient recalculées
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     setLaunching(true);
+    let errorCount = 0;
     try {
       for (const row of rows) {
-        if (!row.isSaved && row.preview) await saveRow(row.employee.id);
+        if (!row.isSaved && row.preview) {
+          try { await saveRow(row.employee.id); }
+          catch { errorCount++; }
+        }
+      }
+      if (errorCount > 0) {
+        alert(`${errorCount} bulletin(s) n'ont pas pu être sauvegardés. Vérifiez les logs.`);
+        return;
       }
       router.push(`/cabinet/${cabinetId}/entreprise/${companyId}/bulletins?month=${selectedMonth + 1}&year=${selectedYear}`);
     } catch (e: any) { alert(`Erreur : ${e.message}`); }
