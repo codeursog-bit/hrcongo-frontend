@@ -41,8 +41,18 @@ interface CompanySettings {
   defaultAppliesCnss:    boolean;
   collectiveAgreement?:  string;
   // 🆕 Calendrier de paie
-  payrollPaymentDay:     number;  // Jour du mois de paiement (1-31)
-  payrollCloseDay:       number;  // Jour de clôture des bulletins (1-31)
+  payrollPaymentDay:     number;
+  payrollCloseDay:       number;
+}
+
+// 🆕 Multi-sites
+interface CompanySite {
+  id:        string;
+  name:      string;
+  latitude:  number;
+  longitude: number;
+  radius:    number;
+  isActive:  boolean;
 }
 
 interface PayrollSettings {
@@ -115,7 +125,7 @@ const DAYS_OF_WEEK = [
 
 // ─── TYPE ONGLETS ─────────────────────────────────────────────────────────────
 
-type TabId = 'general' | 'fiscal' | 'convention' | 'payroll_calendar' | 'location' | 'attendance' | 'contact';
+type TabId = 'general' | 'fiscal' | 'convention' | 'payroll_calendar' | 'location' | 'attendance' | 'contact' | 'sites';
 
 // ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
 
@@ -133,6 +143,12 @@ export default function CompanySettingsPage() {
   const [currentLogo,   setCurrentLogo]   = useState<string | null>(null);
   const [logoPreview,   setLogoPreview]   = useState<string | null>(null);
   const [logoFile,      setLogoFile]      = useState<File | null>(null);
+
+  // 🆕 Multi-sites
+  const [sites,         setSites]         = useState<CompanySite[]>([]);
+  const [siteForm,      setSiteForm]      = useState({ name: '', latitude: 0, longitude: 0, radius: 100 });
+  const [editingSiteId, setEditingSiteId] = useState<string | null>(null);
+  const [siteError,     setSiteError]     = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -173,6 +189,12 @@ export default function CompanySettingsPage() {
         setCompanyId(company.id || null);
         setCurrentLogo(company.logo || null);
         setLogoPreview(company.logo || null);
+
+        // 🆕 Charger les sites multi-pointage
+        try {
+          const sitesData: any[] = await api.get(`/companies/${company.id}/sites`);
+          setSites(sitesData ?? []);
+        } catch { /* pas de sites encore — pas grave */ }
 
         const settings: any = await api.get('/payroll-settings');
         if (settings) {
@@ -276,6 +298,58 @@ const handleLogoDelete = async () => {
 };
 
 const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLogo); };
+
+  // ── Multi-sites handlers ────────────────────────────────────────────────────
+  const getSiteCurrentLocation = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      pos => setSiteForm(f => ({ ...f, latitude: pos.coords.latitude, longitude: pos.coords.longitude })),
+      ()  => alert.error('GPS', 'Impossible de récupérer la position.'),
+    );
+  };
+
+  const handleSaveSite = async () => {
+    setSiteError(null);
+    if (!siteForm.name.trim()) { setSiteError('Le nom du site est obligatoire.'); return; }
+    if (siteForm.radius < 1)   { setSiteError('Le rayon doit être d\'au moins 1 mètre.'); return; }
+    if (!companyId)            return;
+    try {
+      if (editingSiteId) {
+        const updated = await api.patch(`/companies/${companyId}/sites/${editingSiteId}`, siteForm);
+        setSites(s => s.map(x => x.id === editingSiteId ? updated : x));
+        alert.success('Site modifié', siteForm.name);
+      } else {
+        const created = await api.post(`/companies/${companyId}/sites`, siteForm);
+        setSites(s => [...s, created]);
+        alert.success('Site ajouté', siteForm.name);
+      }
+      setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 });
+      setEditingSiteId(null);
+    } catch (e: any) { setSiteError(e.message ?? 'Erreur'); }
+  };
+
+  const handleEditSite = (site: CompanySite) => {
+    setEditingSiteId(site.id);
+    setSiteForm({ name: site.name, latitude: site.latitude, longitude: site.longitude, radius: site.radius });
+  };
+
+  const handleDeleteSite = async (siteId: string) => {
+    if (!companyId) return;
+    if (!confirm('Supprimer ce site ?')) return;
+    try {
+      await api.delete(`/companies/${companyId}/sites/${siteId}`);
+      setSites(s => s.filter(x => x.id !== siteId));
+      alert.success('Site supprimé', '');
+    } catch (e: any) { alert.error('Erreur', e.message); }
+  };
+
+  const handleToggleSite = async (site: CompanySite) => {
+    if (!companyId) return;
+    try {
+      const updated = await api.patch(`/companies/${companyId}/sites/${site.id}`, { isActive: !site.isActive });
+      setSites(s => s.map(x => x.id === site.id ? updated : x));
+    } catch (e: any) { alert.error('Erreur', e.message); }
+  };
   // ── Sauvegarde ──────────────────────────────────────────────────────────────
   const handleSave = async () => {
     // Validation minimale date de paie
@@ -415,6 +489,7 @@ const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLog
         {([
           { id: 'payroll_calendar', label: 'Calendrier de paie', icon: Banknote },
           { id: 'location',         label: 'Localisation GPS',   icon: MapPin   },
+          { id: 'sites',            label: 'Sites de pointage',  icon: Navigation },
           { id: 'contact',          label: 'Coordonnées',        icon: Phone    },
         ] as { id: TabId; label: string; icon: React.ElementType }[]).map(tab => (
           <button
@@ -1029,6 +1104,170 @@ const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLog
                       </p>
                     </div>
                   </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════════════════════════════════════════════
+                ONGLET SITES DE POINTAGE MULTI-SITES
+            ══════════════════════════════════════════════ */}
+            {activeTab === 'sites' && (
+              <motion.div key="sites" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+
+                {/* Info */}
+                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 p-4 rounded-2xl flex gap-3 items-start">
+                  <Navigation className="text-blue-500 shrink-0 mt-1" size={20} />
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    Ajoutez tous vos sites (bureaux, chantiers, entrepôts…). Un employé pourra pointer dès qu'il est dans le rayon de <strong>l'un</strong> des sites actifs. Pas besoin de lui assigner un site spécifique.
+                  </p>
+                </div>
+
+                {/* Formulaire ajout / modification */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <MapPin size={18} className="text-indigo-500" />
+                    {editingSiteId ? 'Modifier le site' : 'Ajouter un site'}
+                  </h3>
+
+                  {siteError && (
+                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-xs flex items-center gap-2">
+                      <AlertTriangle size={14} /> {siteError}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nom du site *</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Siège Brazzaville, Chantier Pointe-Noire…"
+                        value={siteForm.name}
+                        onChange={e => setSiteForm(f => ({ ...f, name: e.target.value }))}
+                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
+                      <input
+                        type="number" step="0.000001"
+                        value={siteForm.latitude}
+                        onChange={e => setSiteForm(f => ({ ...f, latitude: parseFloat(e.target.value) || 0 }))}
+                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
+                      <input
+                        type="number" step="0.000001"
+                        value={siteForm.longitude}
+                        onChange={e => setSiteForm(f => ({ ...f, longitude: parseFloat(e.target.value) || 0 }))}
+                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon (mètres) — min 1m</label>
+                      <input
+                        type="number" min="1"
+                        value={siteForm.radius}
+                        onChange={e => setSiteForm(f => ({ ...f, radius: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">1m = entrée précise · 50m = bureau · 500m = chantier large</p>
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        onClick={getSiteCurrentLocation}
+                        className="w-full p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-orange-100 transition-colors"
+                      >
+                        <MapPin size={16} /> Utiliser ma position GPS
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-5">
+                    <button
+                      onClick={handleSaveSite}
+                      className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Check size={16} /> {editingSiteId ? 'Enregistrer les modifications' : 'Ajouter ce site'}
+                    </button>
+                    {editingSiteId && (
+                      <button
+                        onClick={() => { setEditingSiteId(null); setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 }); setSiteError(null); }}
+                        className="px-5 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Liste des sites */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Navigation size={18} className="text-green-500" />
+                    Sites configurés
+                    <span className="ml-auto text-xs font-normal text-gray-400">{sites.filter(s => s.isActive).length} actif(s) sur {sites.length}</span>
+                  </h3>
+
+                  {sites.length === 0 ? (
+                    <div className="text-center py-10 text-gray-400">
+                      <Navigation size={32} className="mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">Aucun site configuré.</p>
+                      <p className="text-xs mt-1">Ajoutez votre premier site ci-dessus.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sites.map(site => (
+                        <div
+                          key={site.id}
+                          className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                            site.isActive
+                              ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10'
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 opacity-60'
+                          }`}
+                        >
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${site.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{site.name}</p>
+                            <p className="text-xs text-gray-400 font-mono mt-0.5">
+                              {Number(site.latitude).toFixed(6)}, {Number(site.longitude).toFixed(6)} · rayon {site.radius}m
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Toggle actif/inactif */}
+                            <button
+                              onClick={() => handleToggleSite(site)}
+                              title={site.isActive ? 'Désactiver' : 'Activer'}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                site.isActive
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200'
+                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 hover:bg-gray-300'
+                              }`}
+                            >
+                              {site.isActive ? 'Actif' : 'Inactif'}
+                            </button>
+                            {/* Modifier */}
+                            <button
+                              onClick={() => handleEditSite(site)}
+                              className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-colors"
+                              title="Modifier"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            {/* Supprimer */}
+                            <button
+                              onClick={() => handleDeleteSite(site.id)}
+                              className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
