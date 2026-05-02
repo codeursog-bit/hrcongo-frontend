@@ -315,12 +315,12 @@ const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLog
     if (!companyId)            return;
     try {
       if (editingSiteId) {
-        const updated = await api.patch(`/companies/${companyId}/sites/${editingSiteId}`, siteForm);
-        setSites(s => s.map(x => x.id === editingSiteId ? updated : x));
+       const updated = await api.patch<CompanySite>(`/companies/${companyId}/sites/${editingSiteId}`, siteForm);
+setSites(s => s.map(x => x.id === editingSiteId ? updated : x));
         alert.success('Site modifié', siteForm.name);
       } else {
-        const created = await api.post(`/companies/${companyId}/sites`, siteForm);
-        setSites(s => [...s, created]);
+const created = await api.post<CompanySite>(`/companies/${companyId}/sites`, siteForm);
+setSites(s => [...s, created]);
         alert.success('Site ajouté', siteForm.name);
       }
       setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 });
@@ -346,8 +346,8 @@ const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLog
   const handleToggleSite = async (site: CompanySite) => {
     if (!companyId) return;
     try {
-      const updated = await api.patch(`/companies/${companyId}/sites/${site.id}`, { isActive: !site.isActive });
-      setSites(s => s.map(x => x.id === site.id ? updated : x));
+const updated = await api.patch<CompanySite>(`/companies/${companyId}/sites/${site.id}`, { isActive: !site.isActive });
+setSites(s => s.map(x => x.id === site.id ? updated : x));
     } catch (e: any) { alert.error('Erreur', e.message); }
   };
   // ── Sauvegarde ──────────────────────────────────────────────────────────────
