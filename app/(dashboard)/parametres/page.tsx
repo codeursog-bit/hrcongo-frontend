@@ -60,14 +60,14 @@ export default function ParametresPage() {
       desc: 'Double authentification, mot de passe.',
       icon: Lock,
       color: 'bg-purple-500',
-      path: '/parametres/',
+      path: '/parametres/securite',
     },
-    {
+{
   title: 'Apparence Bulletin',
   desc: 'Personnalisez le design de vos bulletins de paie.',
   icon: Palette,
   color: 'bg-rose-500',
-  path: '/parametres/securite',
+  path: '/parametres/bulletin',
 },
   ];
 
