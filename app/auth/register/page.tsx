@@ -775,7 +775,7 @@ function RegisterForm() {
   const subdomainValue = form.watch('subdomain') || '';
   const strength       = getPasswordStrength(passwordValue || '');
 
-  // ── PATCH : Capturer ?ref= à l'arrivée ───────────────────────────────────
+  // ── Capturer ?ref= à l'arrivée ───────────────────────────────────────────
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
@@ -783,7 +783,6 @@ function RegisterForm() {
     }
   }, [searchParams]);
 
-  // Détecter si l'utilisateur vient d'un lien affilié (URL ou localStorage)
   const hasAffiliateRef =
     searchParams.get('ref') ??
     (typeof window !== 'undefined' ? localStorage.getItem('affiliate_ref') : null);
@@ -794,7 +793,6 @@ function RegisterForm() {
     setStep('form');
   };
 
-  // ── PATCH : onSubmit avec affiliateCode ───────────────────────────────────
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setErrorMsg('');
@@ -811,14 +809,23 @@ function RegisterForm() {
         payload.subdomain    = data.subdomain;
         payload.cabinetPhone = data.cabinetPhone;
       }
-      // Lire le code affilié stocké (capturé depuis ?ref= à l'arrivée)
+      // Lire le code affilié stocké
       const affiliateRef = localStorage.getItem('affiliate_ref');
       if (affiliateRef) {
         payload.affiliateCode = affiliateRef;
       }
+
       const res: any = await api.post('/auth/register', payload);
-      // Nettoyer après succès — évite de re-lier les prochaines inscriptions
-      localStorage.removeItem('affiliate_ref');
+
+      // ── FIX : suppression conditionnelle de affiliate_ref ────────────────
+      // CABINET → linkCabinet est fait côté backend dans auth.service → on nettoie ici
+      // COMPANY → /companies/create a encore besoin de affiliate_ref → on NE supprime PAS ici
+      //           c'est /companies/create qui le lira et le supprimera lui-même
+      if (data.accountType === 'CABINET') {
+        localStorage.removeItem('affiliate_ref');
+      }
+      // ─────────────────────────────────────────────────────────────────────
+
       setRegisteredUser(res.user);
       localStorage.setItem('user', JSON.stringify(res.user));
       setStep('success');
@@ -944,7 +951,7 @@ function RegisterForm() {
                   <span className="text-gray-300 font-medium">Quel est votre profil ?</span>
                 </motion.p>
 
-                {/* ── PATCH : Bandeau affilié (step type) ── */}
+                {/* Bandeau affilié */}
                 {hasAffiliateRef && (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
@@ -1123,7 +1130,7 @@ function RegisterForm() {
                   1 mois d'essai gratuit, sans carte bancaire requise.
                 </p>
 
-                {/* ── PATCH : Bandeau affilié (step form) ── */}
+                {/* Bandeau affilié */}
                 {hasAffiliateRef && (
                   <div className="mb-4 px-4 py-2.5 bg-indigo-900/20 border border-indigo-800/40 rounded-xl text-xs text-indigo-300 flex items-center gap-2">
                     🎉 Vous avez été invité par un partenaire — votre compte sera lié automatiquement.
