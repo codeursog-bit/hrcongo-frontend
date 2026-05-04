@@ -2,30 +2,29 @@
 
 import React, { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Mail, Lock, User, Loader2, ArrowRight, Users } from 'lucide-react';
+import { Mail, Lock, User, Phone, Smartphone, Loader2, ArrowRight, Users, Check } from 'lucide-react';
 
 type Mode = 'login' | 'register';
 
 function AffiliateAuthForm() {
-  const router = useRouter();
+  const router       = useRouter();
   const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode]       = useState<Mode>('login');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
+  const [success, setSuccess] = useState(false);
 
   const [form, setForm] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
+    email: '', password: '', firstName: '', lastName: '',
+    phone: '', disbursementPhone: '',
   });
 
   useEffect(() => {
     if (searchParams.get('mode') === 'register') setMode('register');
   }, [searchParams]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const set = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError('');
   };
@@ -35,19 +34,17 @@ function AffiliateAuthForm() {
     setLoading(true);
     setError('');
 
-    const endpoint = mode === 'login' ? '/affiliate/login' : '/affiliate/register';
-
-    const body =
-      mode === 'login'
+    try {
+      const endpoint = mode === 'login' ? '/affiliate/login' : '/affiliate/register';
+      const body = mode === 'login'
         ? { email: form.email, password: form.password }
         : {
-            email: form.email,
-            password: form.password,
-            firstName: form.firstName,
-            lastName: form.lastName,
+            email: form.email, password: form.password,
+            firstName: form.firstName, lastName: form.lastName,
+            phone: form.phone,
+            disbursementPhone: form.disbursementPhone || undefined,
           };
 
-    try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,11 +52,16 @@ function AffiliateAuthForm() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || 'Une erreur est survenue');
 
       localStorage.setItem('affiliate_token', data.token);
-      router.push('/affiliate/dashboard');
+
+      if (mode === 'register') {
+        setSuccess(true);
+        setTimeout(() => router.push('/affiliate/dashboard'), 1200);
+      } else {
+        router.push('/affiliate/dashboard');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -67,124 +69,128 @@ function AffiliateAuthForm() {
     }
   };
 
+  const inputBase = 'w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder-gray-600 transition-all outline-none text-sm';
+
+  const Field = ({ name, type = 'text', placeholder, icon: Icon, required = true, label }: {
+    name: string; type?: string; placeholder: string;
+    icon: React.ElementType; required?: boolean; label: string;
+  }) => (
+    <div>
+      <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">
+        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      <div className="relative group">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Icon className="h-4 w-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
+        </div>
+        <input
+          name={name} type={type} required={required}
+          value={(form as any)[name]}
+          onChange={set}
+          placeholder={placeholder}
+          className={inputBase}
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#0B0F19]">
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-[#0B0F19] relative overflow-hidden">
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/8 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="w-full max-w-md px-4 relative z-10">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 shadow-[0_0_30px_rgba(99,102,241,0.4)] mb-5 border border-indigo-500/30">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-700 shadow-[0_0_30px_rgba(99,102,241,0.4)] mb-5 border border-indigo-500/30">
             <Users className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Espace Affiliés</h1>
-          <p className="text-gray-400 mt-2 text-sm">
-            Konza RH — Gérez vos commissions et suivez vos entreprises
-          </p>
+          <p className="text-gray-400 mt-2 text-sm">Konza RH — Commissions PME & Cabinet</p>
         </div>
 
+        {/* Toggle login/register */}
         <div className="flex bg-gray-900/60 border border-gray-800 rounded-xl p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-2.5 text-sm rounded-lg font-medium transition-all ${
-              mode === 'login' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            Connexion
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 py-2.5 text-sm rounded-lg font-medium transition-all ${
-              mode === 'register' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            Créer un compte
-          </button>
+          {(['login', 'register'] as const).map(m => (
+            <button key={m} type="button"
+              onClick={() => { setMode(m); setError(''); }}
+              className={`flex-1 py-2.5 text-sm rounded-lg font-medium transition-all ${mode === m ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}>
+              {m === 'login' ? 'Connexion' : 'Créer un compte'}
+            </button>
+          ))}
         </div>
 
         <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-800 rounded-2xl p-8 shadow-2xl">
-          {error && (
-            <div className="mb-5 p-3 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400 text-sm">
-              {error}
-            </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {mode === 'register' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Prénom</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-4 w-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
-                    </div>
-                    <input
-                      name="firstName" type="text" required value={form.firstName} onChange={handleChange} placeholder="Jean"
-                      className="block w-full pl-9 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder-gray-600 transition-all outline-none text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Nom</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-4 w-4 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
-                    </div>
-                    <input
-                      name="lastName" type="text" required value={form.lastName} onChange={handleChange} placeholder="Dupont"
-                      className="block w-full pl-9 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder-gray-600 transition-all outline-none text-sm"
-                    />
-                  </div>
-                </div>
+          {/* Succès */}
+          {success ? (
+            <div className="text-center py-6">
+              <div className="w-14 h-14 bg-green-900/30 border border-green-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-7 h-7 text-green-400" />
               </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Email</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
-                </div>
-                <input
-                  name="email" type="email" required value={form.email} onChange={handleChange} placeholder="jean@exemple.com"
-                  className="block w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder-gray-600 transition-all outline-none text-sm"
-                />
-              </div>
+              <p className="text-white font-semibold mb-1">Compte créé !</p>
+              <p className="text-sm text-gray-500">Redirection vers votre tableau de bord…</p>
+              <Loader2 className="w-5 h-5 text-indigo-400 animate-spin mx-auto mt-4" />
             </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Mot de passe</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-indigo-400 transition-colors" />
+          ) : (
+            <>
+              {error && (
+                <div className="mb-5 p-3 bg-red-900/20 border border-red-900/50 rounded-xl text-red-400 text-sm">
+                  {error}
                 </div>
-                <input
-                  name="password" type="password" required minLength={6} value={form.password} onChange={handleChange} placeholder="••••••••••••"
-                  className="block w-full pl-10 bg-gray-950/50 border border-gray-800 text-white rounded-lg py-3 px-4 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 placeholder-gray-600 transition-all outline-none text-sm"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit" disabled={loading}
-              className="w-full flex items-center justify-center bg-gradient-to-r from-indigo-600 to-indigo-700 hover:to-indigo-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-900/30 hover:shadow-indigo-900/50 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  {mode === 'login' ? 'Accéder au Tableau de Bord' : 'Créer mon compte'}
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </>
               )}
-            </button>
-          </form>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+
+                {mode === 'register' && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field name="firstName" label="Prénom" placeholder="Jean" icon={User} />
+                      <Field name="lastName"  label="Nom"    placeholder="Dupont" icon={User} />
+                    </div>
+
+                    {/* Numéro téléphone — obligatoire */}
+                    <Field
+                      name="phone" type="tel"
+                      label="Téléphone Mobile Money"
+                      placeholder="+242 06 123 45 67"
+                      icon={Phone}
+                    />
+                    <p className="text-xs text-gray-600 -mt-2 ml-1">
+                      Ce numéro sera utilisé par l'équipe Konza RH pour effectuer vos versements.
+                    </p>
+
+                    {/* Numéro disbursement — optionnel */}
+                    <Field
+                      name="disbursementPhone" type="tel" required={false}
+                      label="Numéro dédié aux versements (optionnel)"
+                      placeholder="Si différent du numéro de contact"
+                      icon={Smartphone}
+                    />
+                  </>
+                )}
+
+                <Field name="email" type="email" label="Email" placeholder="jean@exemple.com" icon={Mail} />
+                <Field name="password" type="password" label="Mot de passe" placeholder="••••••••••••" icon={Lock} />
+
+                <button type="submit" disabled={loading}
+                  className="w-full flex items-center justify-center bg-gradient-to-r from-indigo-600 to-indigo-700 hover:to-indigo-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-900/30 hover:shadow-indigo-900/50 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none mt-2">
+                  {loading
+                    ? <Loader2 className="w-5 h-5 animate-spin" />
+                    : <>
+                        {mode === 'login' ? 'Accéder au tableau de bord' : 'Créer mon compte'}
+                        <ArrowRight className="ml-2 w-5 h-5" />
+                      </>
+                  }
+                </button>
+              </form>
+            </>
+          )}
         </div>
 
-        <p className="text-center text-xs text-gray-600 mt-5">
-          Cet espace est réservé aux partenaires affiliés Konza RH.
+        <p className="text-center text-xs text-gray-700 mt-5">
+          Espace réservé aux partenaires affiliés Konza RH.
+          {mode === 'register' && <><br /><span className="text-indigo-600">*</span> Le numéro de téléphone est requis pour les versements manuels.</>}
         </p>
       </div>
     </div>

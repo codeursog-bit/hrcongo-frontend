@@ -1,8 +1,3 @@
-
-
-
-
-
 // 'use client';
 
 // import React, { Suspense, useState, useEffect } from 'react';
@@ -49,6 +44,18 @@
 // );
 
 // type FormData = z.infer<typeof cabinetSchema>;
+
+// // ── Type user renvoyé par /auth/register ──────────────────────────────────────
+// interface RegisteredUser {
+//   id:               string;
+//   email:            string;
+//   firstName:        string;
+//   lastName:         string;
+//   role:             string;
+//   companyId?:       string | null;
+//   cabinetId?:       string | null;
+//   managedByCabinet?: boolean;
+// }
 
 // // ── Confetti ──────────────────────────────────────────────────────────────────
 // const Confetti = () => (
@@ -125,6 +132,9 @@
 //   const [showPassword, setShowPassword] = useState(false);
 //   const [errorMsg, setErrorMsg]       = useState('');
 
+//   // ✅ FIX 5 — stocker le user en mémoire React pour un redirect fiable
+//   const [registeredUser, setRegisteredUser] = useState<RegisteredUser | null>(null);
+
 //   const form = useForm<FormData>({
 //     resolver: zodResolver(accountType === 'CABINET' ? cabinetSchema : companySchema),
 //     mode: 'onChange',
@@ -163,6 +173,9 @@
 //         payload.cabinetPhone = data.cabinetPhone;
 //       }
 //       const res: any = await api.post('/auth/register', payload);
+
+//       // ✅ FIX 5 — sauvegarder en mémoire ET localStorage
+//       setRegisteredUser(res.user);
 //       localStorage.setItem('user', JSON.stringify(res.user));
 //       setStep('success');
 //     } catch (err: any) {
@@ -172,10 +185,25 @@
 //     }
 //   };
 
+//   // ✅ FIX 5 — utiliser le state React en priorité, localStorage en fallback
 //   const handleSuccess = () => {
-//     const user = JSON.parse(localStorage.getItem('user') || '{}');
+//     const user = registeredUser ?? (() => {
+//       try { return JSON.parse(localStorage.getItem('user') || '{}'); }
+//       catch { return {}; }
+//     })();
+
+//     if (!user?.role) {
+//       // Cas extrême : user inconnu → login
+//       router.push('/auth/login');
+//       return;
+//     }
+
 //     if (user.role === 'CABINET_ADMIN' || user.role === 'CABINET_GESTIONNAIRE') {
-//       router.push(`/cabinet/${user.cabinetId}/dashboard`);
+//       if (user.cabinetId) {
+//         router.push(`/cabinet/${user.cabinetId}/dashboard`);
+//       } else {
+//         router.push('/auth/login');
+//       }
 //     } else {
 //       router.push('/companies/create');
 //     }
@@ -293,13 +321,11 @@
 //                 >
 //                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-600/0 group-hover:from-cyan-500/5 group-hover:to-blue-600/5 transition-all duration-300 rounded-2xl" />
 
-//                   {/* Badges — rangée en haut à droite */}
+//                   {/* Badges */}
 //                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-//                     {/* Badge gratuit */}
 //                     <div className="flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Zap size={9} className="fill-cyan-400" /> 1 mois gratuit
 //                     </div>
-//                     {/* Badge identité */}
 //                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Star size={9} className="fill-amber-400" /> Le plus choisi
 //                     </div>
@@ -353,13 +379,11 @@
 //                 >
 //                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-violet-600/0 group-hover:from-purple-500/5 group-hover:to-violet-600/5 transition-all duration-300 rounded-2xl" />
 
-//                   {/* Badges — rangée en haut à droite */}
+//                   {/* Badges */}
 //                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-//                     {/* Badge gratuit */}
 //                     <div className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Sparkles size={9} /> 1 mois gratuit
 //                     </div>
-//                     {/* Badge identité */}
 //                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Rocket size={9} /> Meilleur ROI
 //                     </div>
@@ -607,10 +631,6 @@
 
 
 
-
-
-
-
 'use client';
 
 import React, { Suspense, useState, useEffect } from 'react';
@@ -658,7 +678,6 @@ const cabinetSchema = baseSchema.extend({
 
 type FormData = z.infer<typeof cabinetSchema>;
 
-// ── Type user renvoyé par /auth/register ──────────────────────────────────────
 interface RegisteredUser {
   id:               string;
   email:            string;
@@ -744,8 +763,6 @@ function RegisterForm() {
   const [isLoading, setIsLoading]     = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg]       = useState('');
-
-  // ✅ FIX 5 — stocker le user en mémoire React pour un redirect fiable
   const [registeredUser, setRegisteredUser] = useState<RegisteredUser | null>(null);
 
   const form = useForm<FormData>({
@@ -758,10 +775,18 @@ function RegisterForm() {
   const subdomainValue = form.watch('subdomain') || '';
   const strength       = getPasswordStrength(passwordValue || '');
 
+  // ── PATCH : Capturer ?ref= à l'arrivée ───────────────────────────────────
   useEffect(() => {
     const ref = searchParams.get('ref');
-    if (ref) localStorage.setItem('affiliate_ref', ref);
+    if (ref) {
+      localStorage.setItem('affiliate_ref', ref);
+    }
   }, [searchParams]);
+
+  // Détecter si l'utilisateur vient d'un lien affilié (URL ou localStorage)
+  const hasAffiliateRef =
+    searchParams.get('ref') ??
+    (typeof window !== 'undefined' ? localStorage.getItem('affiliate_ref') : null);
 
   const selectType = (type: 'COMPANY' | 'CABINET') => {
     setAccountType(type);
@@ -769,6 +794,7 @@ function RegisterForm() {
     setStep('form');
   };
 
+  // ── PATCH : onSubmit avec affiliateCode ───────────────────────────────────
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setErrorMsg('');
@@ -785,9 +811,14 @@ function RegisterForm() {
         payload.subdomain    = data.subdomain;
         payload.cabinetPhone = data.cabinetPhone;
       }
+      // Lire le code affilié stocké (capturé depuis ?ref= à l'arrivée)
+      const affiliateRef = localStorage.getItem('affiliate_ref');
+      if (affiliateRef) {
+        payload.affiliateCode = affiliateRef;
+      }
       const res: any = await api.post('/auth/register', payload);
-
-      // ✅ FIX 5 — sauvegarder en mémoire ET localStorage
+      // Nettoyer après succès — évite de re-lier les prochaines inscriptions
+      localStorage.removeItem('affiliate_ref');
       setRegisteredUser(res.user);
       localStorage.setItem('user', JSON.stringify(res.user));
       setStep('success');
@@ -798,7 +829,6 @@ function RegisterForm() {
     }
   };
 
-  // ✅ FIX 5 — utiliser le state React en priorité, localStorage en fallback
   const handleSuccess = () => {
     const user = registeredUser ?? (() => {
       try { return JSON.parse(localStorage.getItem('user') || '{}'); }
@@ -806,7 +836,6 @@ function RegisterForm() {
     })();
 
     if (!user?.role) {
-      // Cas extrême : user inconnu → login
       router.push('/auth/login');
       return;
     }
@@ -843,10 +872,8 @@ function RegisterForm() {
         </div>
       </div>
 
-      {/* Particules */}
       <FloatingDots />
 
-      {/* Grille subtile */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.025]"
         style={{
@@ -883,7 +910,6 @@ function RegisterForm() {
           {step === 'type' && (
             <motion.div key="type" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }}>
 
-              {/* Header */}
               <div className="text-center mb-10">
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -917,6 +943,18 @@ function RegisterForm() {
                   <br />
                   <span className="text-gray-300 font-medium">Quel est votre profil ?</span>
                 </motion.p>
+
+                {/* ── PATCH : Bandeau affilié (step type) ── */}
+                {hasAffiliateRef && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-900/20 border border-indigo-800/40 rounded-xl text-xs text-indigo-300"
+                  >
+                    🎉 Vous avez été invité par un partenaire — votre compte sera lié automatiquement.
+                  </motion.div>
+                )}
               </div>
 
               {/* ── Cards ── */}
@@ -934,7 +972,6 @@ function RegisterForm() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-600/0 group-hover:from-cyan-500/5 group-hover:to-blue-600/5 transition-all duration-300 rounded-2xl" />
 
-                  {/* Badges */}
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
                     <div className="flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Zap size={9} className="fill-cyan-400" /> 1 mois gratuit
@@ -992,7 +1029,6 @@ function RegisterForm() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-violet-600/0 group-hover:from-purple-500/5 group-hover:to-violet-600/5 transition-all duration-300 rounded-2xl" />
 
-                  {/* Badges */}
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
                     <div className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Sparkles size={9} /> 1 mois gratuit
@@ -1086,6 +1122,13 @@ function RegisterForm() {
                 <p className="text-xs text-gray-500 mb-5">
                   1 mois d'essai gratuit, sans carte bancaire requise.
                 </p>
+
+                {/* ── PATCH : Bandeau affilié (step form) ── */}
+                {hasAffiliateRef && (
+                  <div className="mb-4 px-4 py-2.5 bg-indigo-900/20 border border-indigo-800/40 rounded-xl text-xs text-indigo-300 flex items-center gap-2">
+                    🎉 Vous avez été invité par un partenaire — votre compte sera lié automatiquement.
+                  </div>
+                )}
 
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
