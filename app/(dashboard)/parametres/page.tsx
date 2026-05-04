@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Settings, Wallet, Users, Lock, ChevronRight, Building2, Network, Gift, Receipt,Crown } from 'lucide-react';
+import { Settings, Wallet, Users, Lock, ChevronRight, Building2, Network, Gift, Receipt,Crown,Palette } from 'lucide-react';
 
 export default function ParametresPage() {
   const modules = [
@@ -60,8 +60,15 @@ export default function ParametresPage() {
       desc: 'Double authentification, mot de passe.',
       icon: Lock,
       color: 'bg-purple-500',
-      path: '#',
+      path: '/parametres/',
     },
+    {
+  title: 'Apparence Bulletin',
+  desc: 'Personnalisez le design de vos bulletins de paie.',
+  icon: Palette,
+  color: 'bg-rose-500',
+  path: '/parametres/securite',
+},
   ];
 
   return (
