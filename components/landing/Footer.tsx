@@ -5,119 +5,128 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Hexagon, Mail, Phone, MapPin, Facebook, Twitter, Linkedin } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="bg-[#0B1121] border-t border-white/5">
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+    <footer style={{ background: '#020817', borderTop: '1px solid rgba(255,255,255,0.06)', fontFamily: "system-ui, sans-serif" }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 48, paddingBottom: 48, borderBottom: '1px solid rgba(255,255,255,0.06)' }} className="footer-grid">
+
           {/* Brand */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <Hexagon size={24} fill="white" />
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#06B6D4,#3B82F6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(6,182,212,0.3)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <span className="text-2xl font-bold text-white">HRCongo</span>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>HR<span style={{ color: '#06B6D4' }}>Congo</span></span>
             </div>
-            <p className="text-slate-400 mb-6 leading-relaxed">
-              Simplifiez la gestion des RH grâce à une plateforme moderne tout-en-un.
+            <p style={{ color: '#64748B', fontSize: 14, lineHeight: 1.7, maxWidth: 300, marginBottom: 24 }}>
+              La première plateforme RH conçue pour le marché congolais. Paie conforme, pointage GPS, recrutement — tout en un.
             </p>
-            
-            {/* Contact Info */}
-            <div className="space-y-3">
-              <a href="mailto:contact@hrcongo.com" className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors">
-                <Mail size={18} />
-                <span className="text-sm">contact@hrcongo.com</span>
-              </a>
-              <a href="tel:+242053079107" className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors">
-                <Phone size={18} />
-                <span className="text-sm">+242 053 079 107</span>
-              </a>
-              <div className="flex items-center gap-3 text-slate-400">
-                <MapPin size={18} />
-                <span className="text-sm">Pointe-Noire, Congo-Brazzaville</span>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { icon: '✉', text: 'contact@hrcongo.com', href: 'mailto:contact@hrcongo.com' },
+                { icon: '☎', text: '+242 053 079 107', href: 'tel:+242053079107' },
+                { icon: '⌖', text: 'Pointe-Noire, Congo-Brazzaville', href: null },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ color: '#06B6D4', fontSize: 13 }}>{item.icon}</span>
+                  {item.href
+                    ? <a href={item.href} style={{ color: '#64748B', fontSize: 13, textDecoration: 'none', transition: 'color 0.15s' }}
+                        onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
+                        onMouseLeave={e => (e.target as HTMLElement).style.color = '#64748B'}
+                      >{item.text}</a>
+                    : <span style={{ color: '#64748B', fontSize: 13 }}>{item.text}</span>
+                  }
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Produit */}
           <div>
-            <h3 className="text-white font-bold mb-4">Produit</h3>
-            <ul className="space-y-3">
-              <li><a href="#fonctionnalités" className="text-slate-400 hover:text-white transition-colors text-sm">Caractéristiques</a></li>
-              <li><a href="#tarifs" className="text-slate-400 hover:text-white transition-colors text-sm">Tarification</a></li>
+            <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 14, marginBottom: 20, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Produit</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {['Fonctionnalités', 'Tarification', 'Changelog', 'Statut système', 'API Docs'].map(item => (
+                <li key={item}><a href="#" style={{ color: '#64748B', fontSize: 14, textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
+                  onMouseLeave={e => (e.target as HTMLElement).style.color = '#64748B'}
+                >{item}</a></li>
+              ))}
             </ul>
           </div>
 
           {/* Entreprise */}
           <div>
-            <h3 className="text-white font-bold mb-4">Entreprise</h3>
-            <ul className="space-y-3">
-              <li><Link href="/about" className="text-slate-400 hover:text-white transition-colors text-sm">À propos de nous</Link></li>
-              <li><Link href="/contact" className="text-slate-400 hover:text-white transition-colors text-sm">Contact</Link></li>
+            <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 14, marginBottom: 20, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Entreprise</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'À propos', href: '/qui-sommes-nous' },
+                { label: 'Blog', href: '/blog' },
+                { label: 'Partenaires', href: '/partenaires' },
+                { label: 'Contact', href: '/contact' },
+              ].map(item => (
+                <li key={item.label}><Link href={item.href} style={{ color: '#64748B', fontSize: 14, textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
+                  onMouseLeave={e => (e.target as HTMLElement).style.color = '#64748B'}
+                >{item.label}</Link></li>
+              ))}
             </ul>
           </div>
 
-          {/* Soutien & Légal */}
+          {/* Légal */}
           <div>
-            <h3 className="text-white font-bold mb-4">Légal</h3>
-            <ul className="space-y-3">
-              <li><Link href="/faq" className="text-slate-400 hover:text-white transition-colors text-sm">FAQ</Link></li>
-              <li><Link href="/cgu" className="text-slate-400 hover:text-white transition-colors text-sm">Conditions d'utilisation</Link></li>
-              <li><Link href="/privacy" className="text-slate-400 hover:text-white transition-colors text-sm">Politique de confidentialité</Link></li>
+            <h4 style={{ color: '#fff', fontWeight: 700, fontSize: 14, marginBottom: 20, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Légal & Support</h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'FAQ', href: '/faq' },
+                { label: 'CGU', href: '/cgu' },
+                { label: 'Confidentialité', href: '/privacy' },
+                { label: 'Cookies', href: '/cookies' },
+              ].map(item => (
+                <li key={item.label}><Link href={item.href} style={{ color: '#64748B', fontSize: 14, textDecoration: 'none', transition: 'color 0.15s' }}
+                  onMouseEnter={e => (e.target as HTMLElement).style.color = '#fff'}
+                  onMouseLeave={e => (e.target as HTMLElement).style.color = '#64748B'}
+                >{item.label}</Link></li>
+              ))}
             </ul>
+
+            {/* Newsletter mini */}
+            <div style={{ marginTop: 28 }}>
+              <p style={{ color: '#64748B', fontSize: 13, marginBottom: 10 }}>Newsletter RH Congo :</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input type="email" placeholder="votre@email.com" style={{
+                  flex: 1, padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', minWidth: 0,
+                }} />
+                <button style={{ padding: '8px 14px', background: 'linear-gradient(135deg,#06B6D4,#3B82F6)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 0', flexWrap: 'wrap', gap: 16 }}>
+          <p style={{ color: '#334155', fontSize: 13 }}>© 2025 HRCongo. Tous droits réservés. Fait avec ❤ à Pointe-Noire.</p>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {['Facebook', 'LinkedIn', 'Twitter'].map(sn => (
+              <a key={sn} href="#" style={{ color: '#334155', fontSize: 13, textDecoration: 'none', transition: 'color 0.15s' }}
+                onMouseEnter={e => (e.target as HTMLElement).style.color = '#06B6D4'}
+                onMouseLeave={e => (e.target as HTMLElement).style.color = '#334155'}
+              >{sn}</a>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Newsletter */}
-      <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-white mb-4">Restez Informé</h3>
-            <p className="text-slate-400 mb-6">
-              Inscrivez-vous à notre newsletter pour recevoir des conseils RH et les dernières actualités
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input 
-                type="email" 
-                placeholder="Saisissez votre adresse e-mail"
-                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
-              />
-              <button className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-900 rounded-xl font-bold transition-colors">
-                S'abonner
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Bar */}
-      <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm">
-              © 2025 HRCongo. Tous droits réservés.
-            </p>
-            
-            {/* Social Links */}
-            <div className="flex items-center gap-4">
-              <span className="text-slate-500 text-sm">Suivez-nous:</span>
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <Linkedin size={20} />
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      <style>{`
+        @media (max-width: 900px) {
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 600px) {
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </footer>
   );
 }

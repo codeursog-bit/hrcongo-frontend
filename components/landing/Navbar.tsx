@@ -1,95 +1,165 @@
 // ============================================================================
-// 📁 components/landing/Navbar.tsx — mis à jour
-// Ajout : lien "Documentation" → /docs dans la navigation desktop & mobile
+// 📁 components/landing/Navbar.tsx
 // ============================================================================
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Menu, X, Hexagon } from 'lucide-react';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [scrolled, setScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const links = [
+    { label: 'Accueil', href: '/' },
+    { label: 'À propos', href: '/qui-sommes-nous' },
+    { label: 'Fonctionnalités', href: '#fonctionnalites' },
+    { label: 'Tarifs', href: '#tarifs' },
+    { label: 'Blog', href: '/blog' },
+    { label: 'Documentation', href: '/docs' },
+    { label: 'Contact', href: '/contact' },
+  ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 sm:h-20">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative group cursor-pointer">
-               <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-50 group-hover:opacity-100 transition-opacity"></div>
-               <div className="relative w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white border border-white/20">
-                 <Hexagon size={20} className="sm:w-6 sm:h-6" fill="currentColor" />
-               </div>
+    <nav
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        background: scrolled ? 'rgba(5, 8, 22, 0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+        transition: 'all 0.3s ease',
+      }}
+    >
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 72 }}>
+          {/* Logo */}
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <div style={{
+              width: 36, height: 36,
+              background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 20px rgba(6,182,212,0.35)',
+              position: 'relative',
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </div>
-            <Link href="/" className="text-xl sm:text-2xl font-bold text-white tracking-tight">HRCongo</Link>
-          </div>
+            <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+              HR<span style={{ color: '#06B6D4' }}>Congo</span>
+            </span>
+          </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8 lg:gap-10">
-            {['Fonctionnalités', 'Tarifs', 'Contact'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group">
-                {item}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full"></span>
-              </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="desktop-nav">
+            {links.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                style={{
+                  color: 'rgba(148,163,184,1)',
+                  textDecoration: 'none',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  transition: 'all 0.15s',
+                  fontFamily: "system-ui, sans-serif",
+                }}
+                onMouseEnter={e => { (e.target as HTMLElement).style.color = '#fff'; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                onMouseLeave={e => { (e.target as HTMLElement).style.color = 'rgba(148,163,184,1)'; (e.target as HTMLElement).style.background = 'transparent'; }}
+              >
+                {link.label}
+              </Link>
             ))}
-            {/* Lien Documentation */}
-            <Link href="/docs" className="text-sm font-medium text-slate-400 hover:text-white transition-colors relative group">
-              Documentation
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full"></span>
-            </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-3 lg:gap-4">
-            <Link href="/auth/login" className="text-white font-bold hover:text-cyan-400 transition-colors px-3 lg:px-4 text-sm lg:text-base">
+          {/* CTA */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="desktop-cta">
+            <Link href="/auth/login" style={{ color: '#94A3B8', textDecoration: 'none', fontSize: 14, fontWeight: 600, padding: '8px 16px', borderRadius: 8, transition: 'color 0.15s' }}
+              onMouseEnter={e => { (e.target as HTMLElement).style.color = '#fff'; }}
+              onMouseLeave={e => { (e.target as HTMLElement).style.color = '#94A3B8'; }}
+            >
               Connexion
             </Link>
-            <Link 
-              href="/auth/register"
-              className="group relative px-4 lg:px-6 py-2 lg:py-3 bg-white text-slate-900 rounded-xl font-bold transition-all hover:scale-105 overflow-hidden text-sm lg:text-base"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-300 via-cyan-400 to-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <span className="relative z-10 flex items-center gap-2">Essai Gratuit <ArrowRight size={16}/></span>
+            <Link href="/auth/register" style={{
+              background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+              color: '#fff',
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 700,
+              padding: '10px 22px',
+              borderRadius: 10,
+              boxShadow: '0 0 24px rgba(6,182,212,0.3)',
+              transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              Essai gratuit
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </Link>
           </div>
 
-          <div className="md:hidden">
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white p-2">
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            style={{ display: 'none', background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}
+            className="hamburger"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {isOpen
+                ? <><path d="M18 6L6 18"/><path d="M6 6l12 12"/></>
+                : <><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></>
+              }
+            </svg>
+          </button>
         </div>
 
         {/* Mobile menu */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-white/5 space-y-4">
-            {['Fonctionnalités', 'Tarifs', 'Contact'].map((item) => (
-              <a 
-                key={item} 
-                href={`#${item.toLowerCase()}`} 
-                className="block text-slate-300 hover:text-white transition-colors"
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            paddingBottom: 20,
+            paddingTop: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}>
+            {links.map(link => (
+              <Link key={link.label} href={link.href}
+                style={{ color: '#94A3B8', textDecoration: 'none', fontSize: 15, fontWeight: 500, padding: '10px 8px', borderRadius: 8 }}
                 onClick={() => setIsOpen(false)}
               >
-                {item}
-              </a>
+                {link.label}
+              </Link>
             ))}
-            {/* Documentation dans le menu mobile */}
-            <Link
-              href="/docs"
-              className="block text-slate-300 hover:text-white transition-colors"
+            <Link href="/auth/register"
+              style={{ marginTop: 12, background: 'linear-gradient(135deg,#06B6D4,#3B82F6)', color: '#fff', textDecoration: 'none', fontWeight: 700, padding: '12px 16px', borderRadius: 10, textAlign: 'center' }}
               onClick={() => setIsOpen(false)}
             >
-              Documentation
-            </Link>
-            <Link 
-              href="/auth/register"
-              className="w-full py-3 bg-cyan-500 text-slate-900 rounded-xl font-bold text-center block"
-            >
-              Essai Gratuit
+              Essai gratuit →
             </Link>
           </div>
         )}
       </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .desktop-nav { display: none !important; }
+          .desktop-cta { display: none !important; }
+          .hamburger { display: flex !important; }
+        }
+      `}</style>
     </nav>
   );
 }
