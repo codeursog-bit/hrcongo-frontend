@@ -9,6 +9,7 @@
 // ✅ Historique des ruptures
 // ✅ UX 3 étapes conservée + améliorations
 // ============================================================================
+"use client"
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useConventionGuard } from "@/hooks/useConventionGuard";
