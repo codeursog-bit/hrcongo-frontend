@@ -1,30 +1,41 @@
 'use client';
 
+// ============================================================================
+// app/(dashboard)/paie/[id]/page.tsx
+// ✅ Utilise BulletinDisplay — gère automatiquement mode template ET canvas
+// ============================================================================
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Printer, Download, Check, Ban,
   DollarSign, ChevronDown, ChevronUp, AlertCircle,
-  Loader2, Info, Building2, Gift, Pencil, Trash2, RotateCcw
+  Loader2, Info, Building2, Gift, Pencil, Trash2, RotateCcw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
-import BulletinRenderer from '@/components/BulletinRenderer';
-import { useBulletinTemplate } from '@/hooks/useBulletinTemplate';
+import BulletinDisplay from '@/components/BulletinDisplay';
 
 interface PayrollData {
   employee?: {
     id: string;
     firstName?: string; lastName?: string;
-    isSubjectToCnss?: boolean; isSubjectToIrpp?: boolean; isSubjectToTus?: boolean;
+    isSubjectToCnss?: boolean; isSubjectToIrpp?: boolean;
     professionalCategory?: string; employeeNumber?: string; position?: string;
     department?: { name?: string };
     cnssNumber?: string; nationalIdNumber?: string;
     paymentMethod?: string; maritalStatus?: string; numberOfChildren?: number;
     echelon?: string; contractType?: string; hireDate?: string;
   };
-  company?: { legalName?: string; tradeName?: string; logo?: string; address?: string; city?: string; rccmNumber?: string; cnssNumber?: string; taxNumber?: string; nif?: string; phone?: string; email?: string; collectiveAgreement?: string; primaryColor?: string; secondaryColor?: string; [key: string]: any; };
+  company?: {
+    legalName?: string; tradeName?: string; logo?: string;
+    address?: string; city?: string; rccmNumber?: string;
+    cnssNumber?: string; taxNumber?: string; nif?: string;
+    phone?: string; email?: string; collectiveAgreement?: string;
+    primaryColor?: string; secondaryColor?: string;
+    [key: string]: any;
+  };
   items?: Array<{
     id: string; code: string; label: string;
     type: 'GAIN' | 'DEDUCTION' | 'EMPLOYER_COST';
@@ -33,32 +44,35 @@ interface PayrollData {
   }>;
   status: string;
   month: number; year: number;
-  grossSalary: number; netSalary: number; totalDeductions: number; totalEmployerCost?: number;
+  grossSalary: number; netSalary: number;
+  totalDeductions: number; totalEmployerCost?: number;
   workDays?: number; workedDays?: number; absenceDays?: number;
-  daysOnLeave?: number; daysRemote?: number; daysHoliday?: number;
-  overtimeHours10?: number; overtimeHours25?: number; overtimeHours50?: number; overtimeHours100?: number;
-  baseSalary?: number; adjustedBaseSalary?: number; absenceDeduction?: number; totalBonuses?: number;
+  daysOnLeave?: number; daysRemote?: number;
+  overtimeHours10?: number; overtimeHours25?: number;
+  overtimeHours50?: number; overtimeHours100?: number;
+  baseSalary?: number; adjustedBaseSalary?: number;
+  absenceDeduction?: number; totalBonuses?: number;
   cnssSalarial?: number; cnssEmployer?: number;
   cnssEmployerPension?: number; cnssEmployerFamily?: number; cnssEmployerAccident?: number;
-  its?: number; irppEffectiveRate?: number; irppDetails?: any;
+  its?: number; irppEffectiveRate?: number;
   tusDgiAmount?: number; tusCnssAmount?: number; tusTotal?: number;
 }
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 const STATUS_INFO: Record<string, { label: string; dot: string; border: string; text: string }> = {
-  DRAFT:     { label: 'Brouillon', dot: '#94a3b8', border: '#e2e8f0', text: '#64748b' },
-  VALIDATED: { label: 'Validé',    dot: '#10b981', border: '#a7f3d0', text: '#059669' },
-  PAID:      { label: 'Payé',      dot: '#0ea5e9', border: '#bae6fd', text: '#0369a1' },
-  CANCELLED: { label: 'Annulé',    dot: '#ef4444', border: '#fecaca', text: '#dc2626' },
+  DRAFT:     { label:'Brouillon', dot:'#94a3b8', border:'#e2e8f0', text:'#64748b' },
+  VALIDATED: { label:'Validé',    dot:'#10b981', border:'#a7f3d0', text:'#059669' },
+  PAID:      { label:'Payé',      dot:'#0ea5e9', border:'#bae6fd', text:'#0369a1' },
+  CANCELLED: { label:'Annulé',    dot:'#ef4444', border:'#fecaca', text:'#dc2626' },
 };
 
 const CONFIRM_CONFIG = {
-  validate: { title: 'Valider le bulletin ?',      sub: 'Le bulletin ne pourra plus être modifié.',       btnLabel: 'Valider',    btnColor: '#10b981', icon: Check      },
-  pay:      { title: 'Confirmer le paiement ?',    sub: "L'employé pourra accéder à son bulletin.",       btnLabel: 'Confirmer',  btnColor: '#0ea5e9', icon: DollarSign },
-  cancel:   { title: 'Annuler ce bulletin ?',      sub: 'Le bulletin sera invalidé.',                     btnLabel: 'Annuler',    btnColor: '#f97316', icon: Ban        },
-  restore:  { title: 'Remettre en brouillon ?',    sub: 'Le bulletin repassera en statut Brouillon.',     btnLabel: 'Restaurer',  btnColor: '#6366f1', icon: RotateCcw  },
-  delete:   { title: 'Supprimer définitivement ?', sub: 'Action irréversible — le bulletin sera effacé.', btnLabel: 'Supprimer',  btnColor: '#dc2626', icon: Trash2     },
+  validate: { title:'Valider le bulletin ?',      sub:'Le bulletin ne pourra plus être modifié.', btnLabel:'Valider',   btnColor:'#10b981', icon: Check      },
+  pay:      { title:'Confirmer le paiement ?',    sub:"L'employé pourra accéder à son bulletin.", btnLabel:'Confirmer', btnColor:'#0ea5e9', icon: DollarSign },
+  cancel:   { title:'Annuler ce bulletin ?',      sub:'Le bulletin sera invalidé.',               btnLabel:'Annuler',   btnColor:'#f97316', icon: Ban        },
+  restore:  { title:'Remettre en brouillon ?',    sub:'Repassera en statut Brouillon.',           btnLabel:'Restaurer', btnColor:'#6366f1', icon: RotateCcw  },
+  delete:   { title:'Supprimer définitivement ?', sub:'Action irréversible.',                     btnLabel:'Supprimer', btnColor:'#dc2626', icon: Trash2     },
 };
 
 export default function PayslipPage({ params }: { params: { id: string } }) {
@@ -66,15 +80,13 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
   const { bp }   = useBasePath();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const [data, setData]               = useState<PayrollData | null>(null);
-  const [userRole, setUserRole]       = useState<string | null>(null);
-  const [isLoading, setIsLoading]     = useState(true);
-  const [isBusy, setIsBusy]           = useState(false);
+  const [data, setData]             = useState<PayrollData | null>(null);
+  const [userRole, setUserRole]     = useState<string | null>(null);
+  const [isLoading, setIsLoading]   = useState(true);
+  const [isBusy, setIsBusy]         = useState(false);
   const [showEmployer, setShowEmployer] = useState(false);
-  const [confirm, setConfirm]         = useState<keyof typeof CONFIRM_CONFIG | null>(null);
-  const [bonuses, setBonuses]         = useState<any[]>([]);
-
-  const { template } = useBulletinTemplate();
+  const [confirm, setConfirm]       = useState<keyof typeof CONFIRM_CONFIG | null>(null);
+  const [bonuses, setBonuses]       = useState<any[]>([]);
 
   useEffect(() => { fetchData(); }, [params.id]);
 
@@ -87,7 +99,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
       if (payroll?.employee?.id) {
         try {
           const bd: any = await api.get(`/employee-bonuses?employeeId=${payroll.employee.id}`);
-          const all = Array.isArray(bd) ? bd : bd?.data || [];
+          const all = Array.isArray(bd) ? bd : bd?.data ?? [];
           setBonuses(all.filter((b: any) => b.isRecurring || b.source === 'AUTOMATIC'));
         } catch {}
       }
@@ -99,17 +111,24 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     if (!confirm) return;
     setIsBusy(true);
     try {
-      if (confirm === 'delete') { await api.delete(`/payrolls/${params.id}`); router.push(bp('/paie')); return; }
-      const statusMap: Record<string, string> = { validate: 'VALIDATED', pay: 'PAID', cancel: 'CANCELLED', restore: 'DRAFT' };
+      if (confirm === 'delete') {
+        await api.delete(`/payrolls/${params.id}`);
+        router.push(bp('/paie'));
+        return;
+      }
+      const statusMap: Record<string, string> = {
+        validate:'VALIDATED', pay:'PAID', cancel:'CANCELLED', restore:'DRAFT',
+      };
       const updated = await api.patch<PayrollData>(`/payrolls/${params.id}`, { status: statusMap[confirm] });
-      setData(updated); setConfirm(null);
+      setData(updated);
+      setConfirm(null);
     } catch (e: any) {
       alert(`Erreur : ${e.response?.data?.message || e.message}`);
     } finally { setIsBusy(false); }
   };
 
-  const fmt = (v: any) => (Number(v) || 0).toLocaleString('fr-FR');
-  const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(userRole || '');
+  const fmt    = (v: any) => (Number(v) || 0).toLocaleString('fr-FR');
+  const isAdmin = ['SUPER_ADMIN','ADMIN','HR_MANAGER'].includes(userRole || '');
   const isDraft = data?.status === 'DRAFT';
 
   if (isLoading) return (
@@ -117,6 +136,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
       <Loader2 className="animate-spin text-sky-500" size={32} />
     </div>
   );
+
   if (!data) return (
     <div className="p-8 text-center">
       <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
@@ -125,28 +145,21 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     </div>
   );
 
-  const cnssItem    = (data.items || []).find(i => i.code === 'CNSS_SAL');
-  const irppItem    = (data.items || []).find(i => i.code === 'ITS' || i.code === 'BNC_SOURCE');
-  const absItem     = (data.items || []).find(i => i.code === 'ABS_CONGE' || i.code === 'ABS_DEDUCT');
-
+  const cnssItem = (data.items || []).find(i => i.code === 'CNSS_SAL');
+  const irppItem = (data.items || []).find(i => i.code === 'ITS' || i.code === 'BNC_SOURCE');
   const isSubjectToCnss = data.employee?.isSubjectToCnss ?? ((cnssItem?.amount ?? 0) > 0);
   const isSubjectToIrpp = data.employee?.isSubjectToIrpp ?? ((irppItem?.amount ?? 0) > 0);
   const statusInfo      = STATUS_INFO[data.status] ?? STATUS_INFO['DRAFT'];
   const monthLabel      = MONTHS[(data.month ?? 1) - 1];
+  const tusDgiAmount    = Number(data.tusDgiAmount  ?? 0);
+  const tusCnssAmount   = Number(data.tusCnssAmount ?? 0);
 
-  const tusTotal     = Number(data.tusTotal      ?? 0);
-  const tusDgiAmount = Number(data.tusDgiAmount  ?? 0);
-  const tusCnssAmount= Number(data.tusCnssAmount ?? 0);
-  const cnssPatTotal = Number(data.cnssEmployerPension ?? 0)
-                     + Number(data.cnssEmployerFamily   ?? 0)
-                     + Number(data.cnssEmployerAccident ?? 0);
-
-  // Objet compatible BulletinRenderer — données API telles quelles + bonuses
-  const payrollForRenderer = {
+  // Objet payroll compatible BulletinDisplay (données API telles quelles)
+  const payrollForDisplay = {
     ...data,
     items:   (data.items ?? []) as any,
     bonuses: bonuses.length > 0 ? bonuses : [],
-    employee: data.employee ?? { id: '' },
+    employee: data.employee ?? { id:'' },
     company:  data.company  ?? {},
   };
 
@@ -154,11 +167,11 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     <>
       <style jsx global>{`
         @media print {
-          body            { background: #fff !important; margin: 0; }
-          .no-print       { display: none !important; }
-          @page           { size: A4 portrait; margin: 8mm 10mm 8mm 10mm; }
-          *               { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
-          .payslip-sheet  { width: 100% !important; max-width: 100% !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; margin: 0 !important; }
+          body { background: #fff !important; margin: 0; }
+          .no-print { display: none !important; }
+          @page { size: A4 portrait; margin: 8mm 10mm; }
+          * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
+          .payslip-sheet { width: 100% !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; }
         }
       `}</style>
 
@@ -166,8 +179,11 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
 
         {/* ── BARRE D'ACTIONS ── */}
         <div className="no-print mb-6 space-y-3">
+
+          {/* Ligne titre */}
           <div className="flex items-center gap-3">
-            <button onClick={() => router.back()} className="flex-shrink-0 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
+            <button onClick={() => router.back()}
+              className="flex-shrink-0 p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
               <ArrowLeft size={18} className="text-gray-500" />
             </button>
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -175,13 +191,14 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                 Bulletin — {data.employee?.firstName} {data.employee?.lastName}
               </h1>
               <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700, border:`1.5px solid ${statusInfo.border}`, color:statusInfo.text, background:'#fff', flexShrink:0 }}>
-                <span style={{ width:7, height:7, borderRadius:'50%', background:statusInfo.dot, flexShrink:0 }} />
+                <span style={{ width:7, height:7, borderRadius:'50%', background:statusInfo.dot }} />
                 {statusInfo.label}
               </span>
               <span className="text-sm text-gray-400 flex-shrink-0">{monthLabel} {data.year}</span>
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex flex-wrap items-center gap-2">
             {isAdmin && isDraft && (
               <button onClick={() => router.push(bp(`/paie/${params.id}/modifier`))}
@@ -189,16 +206,17 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                 <Pencil size={16} /> Modifier
               </button>
             )}
-            {isAdmin && data.status === 'DRAFT'     && <button onClick={() => setConfirm('validate')} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm"><Check size={15} /> Valider</button>}
-            {isAdmin && data.status === 'VALIDATED' && <button onClick={() => setConfirm('pay')}      className="flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm"><DollarSign size={15} /> Marquer Payé</button>}
-            {isAdmin && !['CANCELLED','PAID'].includes(data.status) && <button onClick={() => setConfirm('cancel')}  className="flex items-center gap-2 px-4 py-2.5 border border-orange-200 dark:border-orange-700 text-orange-600 hover:bg-orange-50 font-bold rounded-xl text-sm"><Ban size={15} /> Annuler</button>}
-            {isAdmin && data.status === 'CANCELLED' && <button onClick={() => setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl text-sm"><RotateCcw size={15} /> Restaurer</button>}
+            {isAdmin && data.status==='DRAFT'     && <button onClick={()=>setConfirm('validate')} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm"><Check size={15}/> Valider</button>}
+            {isAdmin && data.status==='VALIDATED' && <button onClick={()=>setConfirm('pay')}      className="flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm"><DollarSign size={15}/> Marquer Payé</button>}
+            {isAdmin && !['CANCELLED','PAID'].includes(data.status) && <button onClick={()=>setConfirm('cancel')}  className="flex items-center gap-2 px-4 py-2.5 border border-orange-200 dark:border-orange-700 text-orange-600 hover:bg-orange-50 font-bold rounded-xl text-sm"><Ban size={15}/> Annuler</button>}
+            {isAdmin && data.status==='CANCELLED' && <button onClick={()=>setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl text-sm"><RotateCcw size={15}/> Restaurer</button>}
             <div className="w-px h-7 bg-gray-200 dark:bg-gray-700 hidden sm:block mx-1" />
-            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl text-sm"><Download size={15} /> PDF</button>
-            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm"><Printer size={15} /> Imprimer</button>
-            {isAdmin && <button onClick={() => setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 font-bold rounded-xl text-sm"><Trash2 size={14} /> Supprimer</button>}
+            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl text-sm"><Download size={15}/> PDF</button>
+            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm"><Printer size={15}/> Imprimer</button>
+            {isAdmin && <button onClick={()=>setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 font-bold rounded-xl text-sm"><Trash2 size={14}/> Supprimer</button>}
           </div>
 
+          {/* Bandeau modifiable */}
           {isAdmin && isDraft && (
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', borderRadius:12, background:'#eff6ff', border:'1.5px solid #93c5fd' }}>
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -219,15 +237,12 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         {/* ── LAYOUT ── */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-6 items-start print:block">
 
-          {/* ✅ BULLETIN — BulletinRenderer remplace les 4 Payslip* */}
+          {/* ✅ BULLETIN — BulletinDisplay gère template ET canvas automatiquement */}
           <div ref={printRef} className="payslip-sheet bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
-            <BulletinRenderer
-              payroll={payrollForRenderer as any}
-              template={template}
-            />
+            <BulletinDisplay payroll={payrollForDisplay as any} />
           </div>
 
-          {/* ── SIDEBAR DROITE — identique à l'original ── */}
+          {/* ── SIDEBAR ── */}
           <div className="no-print space-y-4">
 
             {isAdmin && isDraft && (
@@ -256,7 +271,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
 
             {(!isSubjectToCnss || !isSubjectToIrpp) && (
               <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 rounded-2xl p-4">
-                <p className="font-bold text-amber-800 text-sm flex items-center gap-2 mb-2"><AlertCircle size={14} /> Exemptions actives</p>
+                <p className="font-bold text-amber-800 text-sm flex items-center gap-2 mb-2"><AlertCircle size={14}/> Exemptions actives</p>
                 {!isSubjectToCnss && <p className="text-xs text-amber-600">• CNSS : exempté</p>}
                 {!isSubjectToIrpp && <p className="text-xs text-amber-600">• ITS : exempté</p>}
               </div>
@@ -265,9 +280,9 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             {isAdmin && (
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <button onClick={() => setShowEmployer(!showEmployer)}
-                  className="w-full flex items-center justify-between p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                  <span className="flex items-center gap-2 text-sm"><Building2 size={15} className="text-sky-500" /> Coût Employeur</span>
-                  {showEmployer ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                  className="w-full flex items-center justify-between p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 transition-colors">
+                  <span className="flex items-center gap-2 text-sm"><Building2 size={15} className="text-sky-500"/> Coût Employeur</span>
+                  {showEmployer ? <ChevronUp size={15}/> : <ChevronDown size={15}/>}
                 </button>
                 <AnimatePresence>
                   {showEmployer && (
@@ -275,13 +290,13 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                       className="border-t border-gray-100 dark:border-gray-700 overflow-hidden">
                       <div className="p-4 space-y-2 text-sm bg-gray-50 dark:bg-gray-900/40">
                         {[
-                          ['Brut',               `+${fmt(data.grossSalary)} F`,              'text-gray-600 dark:text-gray-400'],
-                          ['CNSS Pensions (8%)',  `+${fmt(data.cnssEmployerPension ?? 0)} F`, 'font-mono font-bold text-orange-500'],
-                          ['CNSS Famille',        `+${fmt(data.cnssEmployerFamily ?? 0)} F`,  'font-mono font-bold text-orange-500'],
-                          ['CNSS Accident',       `+${fmt(data.cnssEmployerAccident ?? 0)} F`,'font-mono font-bold text-orange-500'],
-                          ['TUS DGI (2,025%)',    `+${fmt(tusDgiAmount)} F`,                  'font-mono font-bold text-orange-500'],
-                          ['TUS CNSS (5,475%)',   `+${fmt(tusCnssAmount)} F`,                 'font-mono font-bold text-orange-500'],
-                        ].map(([l, v, cls]) => (
+                          ['Brut',             `+${fmt(data.grossSalary)} F`,              'text-gray-600 dark:text-gray-400'],
+                          ['CNSS Pensions 8%',  `+${fmt(data.cnssEmployerPension ?? 0)} F`, 'font-mono font-bold text-orange-500'],
+                          ['CNSS Famille',      `+${fmt(data.cnssEmployerFamily   ?? 0)} F`, 'font-mono font-bold text-orange-500'],
+                          ['CNSS Accident',     `+${fmt(data.cnssEmployerAccident ?? 0)} F`, 'font-mono font-bold text-orange-500'],
+                          ['TUS DGI 2,025%',    `+${fmt(tusDgiAmount)} F`,                  'font-mono font-bold text-orange-500'],
+                          ['TUS CNSS 5,475%',   `+${fmt(tusCnssAmount)} F`,                 'font-mono font-bold text-orange-500'],
+                        ].map(([l,v,cls]) => (
                           <div key={l} className="flex justify-between">
                             <span className="text-gray-500">{l}</span>
                             <span className={cls as string}>{v}</span>
@@ -302,9 +317,9 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
               <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-sm">Récapitulatif</h3>
               <div className="space-y-2.5 text-sm">
                 {[
-                  { label:'Brut', val:`+${fmt(data.grossSalary)} F`,      cls:'text-emerald-600 font-mono font-bold' },
-                  { label:'CNSS', val:`−${fmt(cnssItem?.amount ?? 0)} F`, cls:'font-mono text-red-500'              },
-                  { label:'ITS',  val:`−${fmt(irppItem?.amount ?? 0)} F`, cls:'font-mono text-red-500'              },
+                  { label:'Brut', val:`+${fmt(data.grossSalary)} F`,       cls:'text-emerald-600 font-mono font-bold' },
+                  { label:'CNSS', val:`−${fmt(cnssItem?.amount ?? 0)} F`,  cls:'font-mono text-red-500'              },
+                  { label:'ITS',  val:`−${fmt(irppItem?.amount ?? 0)} F`,  cls:'font-mono text-red-500'              },
                 ].map(r => (
                   <div key={r.label} className="flex justify-between">
                     <span className="text-gray-500 dark:text-gray-400">{r.label}</span>
@@ -320,15 +335,12 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
 
             <div className="bg-sky-50 dark:bg-sky-900/20 rounded-2xl p-4 border border-sky-200 dark:border-sky-800">
               <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2 text-sm">
-                <Info size={14} className="text-sky-500" /> Congo 2026
+                <Info size={14} className="text-sky-500"/> Congo 2026
               </h3>
               <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                <p>• ITS 2026 — barème progressif</p>
-                <p>• Abattement 20% avant calcul ITS</p>
+                <p>• ITS 2026 — barème progressif — Abattement 20%</p>
                 <p>• CNSS salarié : 4% (plafond 1 200 000 F)</p>
-                <p>• CNSS pat. Pensions : 8% / 1 200 000 F</p>
-                <p>• CNSS pat. Famille : 10,03% / 600 000 F</p>
-                <p>• CNSS pat. Accident : 2,25% / 600 000 F</p>
+                <p>• CNSS patronale : 8% + 10,03% + 2,25%</p>
                 <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS DGI : 2,025% sur brut</p>
                 <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS CNSS : 5,475% sur brut</p>
                 <p>• SMIG : 70 400 FCFA/mois</p>
@@ -352,7 +364,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                     <div className="flex flex-col items-center text-center">
                       <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
                         style={{ background:isDel?'#fee2e2':'#f1f5f9', color:isDel?'#dc2626':'#475569' }}>
-                        <Icon size={30} />
+                        <Icon size={30}/>
                       </div>
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{cfg.title}</h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">{cfg.sub}</p>
@@ -369,7 +381,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                         <button onClick={handleConfirm} disabled={isBusy}
                           className="flex-1 py-3 text-white font-bold rounded-xl flex justify-center items-center gap-2 text-sm disabled:opacity-50"
                           style={{ background:cfg.btnColor }}>
-                          {isBusy ? <Loader2 className="animate-spin" size={18} /> : <Icon size={16} />}
+                          {isBusy ? <Loader2 className="animate-spin" size={18}/> : <Icon size={16}/>}
                           {isBusy ? '…' : cfg.btnLabel}
                         </button>
                       </div>

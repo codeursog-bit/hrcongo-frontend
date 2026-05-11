@@ -79,7 +79,6 @@ export const BACKEND_VARIABLES: VariableInfo[] = [
   { key:'cnssEmployerAccident',     label:'CNSS patronale accidents',  group:'Résultat',      format:'money'  },
 ];
 
-export const VARIABLE_GROUPS = BACKEND_VARIABLES.map(v => v.group)
-  .filter((g, i, arr) => arr.indexOf(g) === i);
+export const VARIABLE_GROUPS = BACKEND_VARIABLES.map(v => v.group).filter((g, i, arr) => arr.indexOf(g) === i);
 
 export const REQUIRED_BLOCK_IDS = ['header','employee','salary','deductions','net'];

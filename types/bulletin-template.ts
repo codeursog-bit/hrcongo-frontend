@@ -107,8 +107,6 @@ export interface BulletinPayroll {
 // ─── Template config ─────────────────────────────────────────────────────────
 
 export type TemplateId = 'default' | 'corporate' | 'moderne' | 'compact' | 'premium';
-// Dans types/bulletin-template.ts
-
 
 export type BlockStyleDisplay = 'table' | 'card' | 'line' | 'subtle';
 export type LayoutMode = '1col' | '2col';
@@ -139,7 +137,7 @@ export type BlockId =
 export type BlockScope = 'print' | 'app' | 'both';
 
 export interface BlockConfig {
-  id: BlockId;
+  id: string;
   // Titre affiché dans le bulletin (renommable par l'utilisateur)
   label: string;
   // Style d'affichage du bloc
