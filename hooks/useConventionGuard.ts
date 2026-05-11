@@ -2,12 +2,12 @@
 // 📁 src/hooks/useConventionGuard.ts
 //
 // Hook React — Vérifie si l'entreprise a une convention via
-// GET /contract-rupture/convention-status
-// Si hasConvention = false → déclenche le modal de sélection.
-// La sélection appelle POST /conventions/activate (service existant).
+// GET /conventions/status (Route corrigée pour correspondre au backend)
+// Utilise le service centralisé pour l'authentification et l'URL Render.
 // ============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { api } from '@/services/api'; // Pointage vers ton service de gestion API
 
 export interface ConventionStatus {
   hasConvention:  boolean;
@@ -31,17 +31,18 @@ export function useConventionGuard() {
   const [activating,  setActivating]  = useState(false);
   const [error,       setError]       = useState<string | null>(null);
 
-  // Vérifie si l'entreprise a une convention active
+  // 1️⃣ Vérifie si l'entreprise a une convention active
   const checkStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/contract-rupture/convention-status', {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Erreur réseau');
-      const data: ConventionStatus = await res.json();
+      setLoading(true);
+      // Correction de la route : /conventions/status au lieu de contract-rupture/...
+      const data = await api.get<ConventionStatus>('/conventions/status');
+      
       setStatus(data);
+      // On affiche le modal uniquement si hasConvention est explicitement false
       setShowModal(!data.hasConvention);
-    } catch {
+    } catch (err) {
+      console.error("Erreur lors de la vérification du statut:", err);
       setStatus({ hasConvention: false, conventionCode: null, conventionName: null, categories: [] });
       setShowModal(true);
     } finally {
@@ -49,12 +50,14 @@ export function useConventionGuard() {
     }
   }, []);
 
-  // Charge les conventions disponibles pour le modal
+  // 2️⃣ Charge les conventions disponibles pour le modal
   const loadPredefined = useCallback(async () => {
     try {
-      const res = await fetch('/api/conventions/predefined', { credentials: 'include' });
-      if (res.ok) setPredefined(await res.json());
-    } catch {}
+      const data = await api.get<PredefinedConvention[]>('/conventions/predefined');
+      setPredefined(data);
+    } catch (err) {
+      console.error("Erreur lors du chargement des conventions prédéfinies:", err);
+    }
   }, []);
 
   useEffect(() => {
@@ -62,27 +65,20 @@ export function useConventionGuard() {
     loadPredefined();
   }, [checkStatus, loadPredefined]);
 
-  // Active une convention — appelle POST /conventions/activate (service existant)
+  // 3️⃣ Active une convention — appelle POST /conventions/activate
   const activateConvention = async (conventionCode: string): Promise<boolean> => {
     setActivating(true);
     setError(null);
     try {
-      const res = await fetch('/api/conventions/activate', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ conventionCode }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setError(err.message ?? 'Erreur lors de l\'activation');
-        return false;
-      }
-      // Recharger le statut
+      // Utilisation du service API pour injecter automatiquement le token
+      await api.post('/conventions/activate', { conventionCode });
+      
+      // Recharger le statut après activation pour mettre à jour l'UI
       await checkStatus();
       return true;
-    } catch {
-      setError('Erreur réseau');
+    } catch (err: any) {
+      console.error("Erreur activation convention:", err);
+      setError(err.message || 'Erreur lors de l\'activation');
       return false;
     } finally {
       setActivating(false);
