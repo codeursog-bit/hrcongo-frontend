@@ -1,5 +1,5 @@
 // ============================================================================
-// 📁 app/(landing)/page.tsx  — HRCongo Landing Page (composant unique)
+// 📁 app/(landing)/page.tsx  — Konza RH Landing Page (composant unique)
 // Dark mode only · Grid background · Design senior & premium
 // Navbar et Footer sont importés comme composants séparés
 // ============================================================================
@@ -100,59 +100,6 @@ function Blob({ color, style }: { color: string; style: React.CSSProperties }) {
 }
 
 // ─── Feature card ─────────────────────────────────────────────────────────────
-function FeatureCard({
-  icon, title, desc, color, bg, badge
-}: { icon: React.ReactNode; title: string; desc: string; color: string; bg: string; badge?: string }) {
-  const [hover, setHover] = useState(false);
-  return (
-    <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        background: hover ? C.bgCardHover : C.bgCard,
-        border: `1px solid ${hover ? color + '40' : C.border}`,
-        borderRadius: 16,
-        padding: '28px 28px 32px',
-        transition: 'all 0.25s ease',
-        transform: hover ? 'translateY(-4px)' : 'none',
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: 'default',
-      }}
-    >
-      {/* Glow on hover */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: hover ? 1 : 0, transition: 'opacity 0.3s',
-        background: `radial-gradient(ellipse at 0% 0%, ${color}10 0%, transparent 70%)`,
-        pointerEvents: 'none',
-      }} />
-
-      {badge && (
-        <span style={{
-          position: 'absolute', top: 20, right: 20,
-          fontSize: 10, fontWeight: 700, color: '#fff',
-          background: 'linear-gradient(135deg,#06B6D4,#3B82F6)',
-          padding: '3px 10px', borderRadius: 99, letterSpacing: '0.06em',
-        }}>{badge}</span>
-      )}
-
-      <div style={{
-        width: 52, height: 52, borderRadius: 14,
-        background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        marginBottom: 20, transition: 'transform 0.2s',
-        transform: hover ? 'scale(1.08)' : 'scale(1)',
-        color,
-      }}>
-        {icon}
-      </div>
-      <h3 style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 10, letterSpacing: '-0.02em', fontFamily: "system-ui, sans-serif" }}>
-        {title}
-      </h3>
-      <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.65 }}>{desc}</p>
-    </div>
-  );
-}
-
 // ─── Stat card ───────────────────────────────────────────────────────────────
 function StatCard({ value, label, icon }: { value: string; label: string; icon: React.ReactNode }) {
   return (
@@ -369,7 +316,7 @@ export default function LandingPage() {
           </h1>
 
           <p style={{ ...s.p, margin: '0 auto 40px', textAlign: 'center', fontSize: 20 }}>
-            HRCongo automatise la paie, les congés, le pointage GPS et le recrutement — 
+            Konza RH automatise la paie, les congés, le pointage GPS et le recrutement — 
             <strong style={{ color: C.text }}> 100% conforme au Code Général des Impôts congolais.</strong>
             <br />La seule solution RH conçue pour les entreprises du Congo-Brazzaville.
           </p>
@@ -431,23 +378,32 @@ export default function LandingPage() {
               <div style={{ flex: 1, height: 22, background: 'rgba(255,255,255,0.04)', borderRadius: 6, margin: '0 60px' }} />
             </div>
 
-            {/* Fake dashboard - image placeholder zone */}
+            {/* Dashboard preview — remplacez l'img src par votre capture réelle */}
+            {/* Pour utiliser votre vraie capture : remplacez le src ci-dessous par "/screenshots/dashboard-konza.png" */}
             <div style={{
               height: 500,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               position: 'relative',
-              background: 'linear-gradient(160deg, rgba(6,182,212,0.04) 0%, rgba(59,130,246,0.03) 100%)',
+              overflow: 'hidden',
             }}>
-              {/* Replace this div with your actual <Image> component */}
-              {/* <Image src="/screenshots/dashboard.png" alt="Dashboard HRCongo" fill style={{ objectFit: 'cover' }} /> */}
-
-              {/* Placeholder visuel */}
-              <div style={{ textAlign: 'center', opacity: 0.3 }}>
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={C.cyan} strokeWidth="1.5" style={{ marginBottom: 16 }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                <p style={{ color: C.cyan, fontSize: 13, fontFamily: 'ui-monospace, monospace' }}>// Capture dashboard — à remplacer</p>
-              </div>
+              {/* Image provisoire — à remplacer par votre vraie capture dashboard */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80"
+                alt="Dashboard Konza RH — aperçu"
+                style={{
+                  width: '100%', height: '100%',
+                  objectFit: 'cover',
+                  filter: 'brightness(0.6) saturate(0.7)',
+                  // 👇 Remplacez tout ce bloc <img> par :
+                  // <Image src="/screenshots/dashboard-konza.png" alt="Dashboard Konza RH" fill style={{ objectFit: 'cover' }} />
+                }}
+              />
+              {/* Overlay gradient */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(160deg, rgba(6,182,212,0.08) 0%, rgba(5,8,22,0.4) 100%)',
+                pointerEvents: 'none',
+              }} />
 
               {/* Floating mini cards on top of screenshot */}
               <div style={{
@@ -484,7 +440,7 @@ export default function LandingPage() {
             Déjà utilisé par des entreprises à Pointe-Noire & Brazzaville
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 48, flexWrap: 'wrap' }}>
-            {['TOTAL Energies', 'BTP Congo', 'Pharmacie Elite', 'Groupe Bolloré', 'Cabinet Juridique RC', 'Mining Corp CG'].map(name => (
+            {['TOTAL Energies', 'BTP Congo', 'Pharmacie Elite', 'Groupe Bolloré', 'Cabinet Juridique RDC', 'Mining Corp CG'].map(name => (
               <div key={name} style={{
                 fontSize: 13, fontWeight: 700, color: 'rgba(100,116,139,0.6)',
                 letterSpacing: '0.05em', textTransform: 'uppercase', whiteSpace: 'nowrap',
@@ -495,81 +451,9 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
-          FEATURES — PAIE & CONFORMITÉ
+          FEATURES
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ ...s.section, position: 'relative', zIndex: 1 }} id="fonctionnalites" className="reveal" >
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{ ...s.label, margin: '0 auto 20px', width: 'fit-content' }}>// Fonctionnalités</div>
-          <h2 style={s.h2}>Une suite RH complète,<br/>conçue pour le Congo</h2>
-          <p style={{ ...s.p, margin: '0 auto', textAlign: 'center' }}>
-            De la fiche employé au bulletin de paie, du pointage GPS à la déclaration CNSS — tout en un, sans compromis.
-          </p>
-        </div>
-
-        {/* Feature grid 3 cols */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }} className="feat-grid">
-          <FeatureCard
-            icon={<Icon.Payroll />}
-            color={C.cyan} bg="rgba(6,182,212,0.1)"
-            title="Paie Automatique & Conformes"
-            desc="Bulletins de salaire générés en 1 clic. CNSS 4% salarial + 20.28% patronal, IRPP/ITS avec abattement 20%, quotient familial, primes et retenues — 100% conforme au CGI 2025-2026."
-            badge="Core"
-          />
-          <FeatureCard
-            icon={<Icon.Shield />}
-            color={C.green} bg="rgba(16,185,129,0.1)"
-            title="Conformité Légale Garantie"
-            desc="Toutes les règles du Code Général des Impôts congolais appliquées automatiquement. Barèmes IRPP mis à jour, TUS, déclarations CNSS prêtes à soumettre. Zéro risque de redressement."
-          />
-          <FeatureCard
-            icon={<Icon.Map />}
-            color={C.pink} bg="rgba(236,72,153,0.1)"
-            title="Pointage GPS Multi-Sites"
-            desc="Vos équipes pointent depuis leur smartphone. Géolocalisation en temps réel, radius configurable par site, alertes retard/absence automatiques, historique infalsifiable."
-          />
-          <FeatureCard
-            icon={<Icon.Calendar />}
-            color={C.blue} bg="rgba(59,130,246,0.1)"
-            title="Gestion des Congés & Absences"
-            desc="Demandes en ligne, circuit de validation hiérarchique, soldes automatiques calculés sur 26 jours ouvrables, compteurs de RTT, congés maladie, maternité — et jours fériés congolais intégrés."
-          />
-          <FeatureCard
-            icon={<Icon.Loan />}
-            color={C.purple} bg="rgba(139,92,246,0.1)"
-            title="Prêts, Avances & Acomptes"
-            desc="Gérez les demandes de prêt avec validation automatique des plafonds légaux. Remboursements déduits automatiquement sur les fiches de paie. Historique complet par employé."
-          />
-          <FeatureCard
-            icon={<Icon.People />}
-            color={C.orange} bg="rgba(245,158,11,0.1)"
-            title="Recrutement & Onboarding"
-            desc="Page carrière personnalisée avec vos couleurs. Publiez vos offres, recevez les candidatures, gérez les entretiens — et intégrez le nouveau recruté en quelques clics directement dans la paie."
-          />
-        </div>
-
-        {/* Second row — advanced features */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginTop: 20 }} className="feat-grid">
-          <FeatureCard
-            icon={<Icon.Chart />}
-            color={C.cyan} bg="rgba(6,182,212,0.1)"
-            title="Tableaux de Bord RH"
-            desc="Vue consolidée : masse salariale, effectifs actifs, taux d'absentéisme, coûts patronaux, alertes contrats — tout sur un seul écran, en temps réel."
-          />
-          <FeatureCard
-            icon={<Icon.File />}
-            color={C.green} bg="rgba(16,185,129,0.1)"
-            title="Documents & Archivage"
-            desc="GED intégrée : contrats, avenants, bulletins signés, attestations de travail, DIPE, DAS. Stockage sécurisé, accès rapide, notifications d'expiration."
-          />
-          <FeatureCard
-            icon={<Icon.Cabinet />}
-            color={C.purple} bg="rgba(139,92,246,0.1)"
-            title="Mode Cabinet Comptable"
-            desc="Gérez plusieurs entreprises clientes depuis un seul compte. Clôture de paie groupée, imports/exports comptables, droits granulaires par gestionnaire. Fait pour les experts-comptables."
-            badge="Pro"
-          />
-        </div>
-      </section>
+      <FeaturesSection />
 
       {/* ═══════════════════════════════════════════════════════════════════════
           WHY US — Chiffres + Avantages
@@ -580,10 +464,10 @@ export default function LandingPage() {
         <div style={{ ...s.section, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }} className="why-grid">
           {/* Left — text */}
           <div>
-            <div style={{ ...s.label, marginBottom: 24 }}>// Pourquoi HRCongo ?</div>
+            <div style={{ ...s.label, marginBottom: 24 }}>// Pourquoi Konza RH ?</div>
             <h2 style={{ ...s.h2, marginBottom: 24 }}>Conçu pour la réalité<br/>congolaise.</h2>
             <p style={{ ...s.p, marginBottom: 40 }}>
-              La plupart des logiciels RH sont faits pour l'Europe ou les États-Unis. HRCongo est le premier — et seul — système conçu nativement pour les spécificités fiscales, sociales et opérationnelles du Congo-Brazzaville.
+              La plupart des logiciels RH sont faits pour l'Europe ou les États-Unis. Konza RH est le premier — et seul — système conçu nativement pour les spécificités fiscales, sociales et opérationnelles du Congo-Brazzaville.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {[
@@ -631,7 +515,7 @@ export default function LandingPage() {
                 ))}
               </div>
               <p style={{ fontSize: 13, color: C.sub, fontStyle: 'italic', lineHeight: 1.6 }}>
-                "HRCongo nous a économisé 3 jours par mois sur la paie. Les bulletins sont conformes, la DRH est sereine."
+                "Konza RH nous a économisé 3 jours par mois sur la paie. Les bulletins sont conformes, la DRH est sereine."
               </p>
               <p style={{ fontSize: 12, color: C.muted, marginTop: 8 }}>— Directeur Administratif, groupe industriel à PNR</p>
             </div>
@@ -765,7 +649,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }} className="testi-grid">
           <TestiCard
-            quote="Avant HRCongo, notre DRH passait 4 jours sur la paie chaque mois. Maintenant c'est 2 heures. Les bulletins sont conformes et nos employés reçoivent leurs fiches le 25 sans exception."
+            quote="Avant Konza RH, notre DRH passait 4 jours sur la paie chaque mois. Maintenant c'est 2 heures. Les bulletins sont conformes et nos employés reçoivent leurs fiches le 25 sans exception."
             name="Marie-Claire N." role="Directrice Administrative" company="Groupe BTP Pointe-Noire"
           />
           <TestiCard
@@ -773,7 +657,7 @@ export default function LandingPage() {
             name="Franck O." role="DRH" company="Entreprise de construction, Brazzaville"
           />
           <TestiCard
-            quote="En tant que cabinet comptable, je gère 12 clients avec HRCongo. La clôture groupée me fait économiser 3 jours de travail par mois. Le module d'import/export vers SAGE est parfait."
+            quote="En tant que cabinet comptable, je gère 12 clients avec Konza RH. La clôture groupée me fait économiser 3 jours de travail par mois. Le module d'import/export vers SAGE est parfait."
             name="Dr. Paul M." role="Expert-Comptable" company="Cabinet PM & Associés"
           />
         </div>
@@ -870,25 +754,348 @@ export default function LandingPage() {
   );
 }
 
+// ─── Features data ───────────────────────────────────────────────────────────
+const FEATURES = [
+  // ── Big cards (alternées gauche/droite) ──────────────────────────────────
+  {
+    id: 'paie', group: 'big',
+    tag: 'Core', tagColor: C.cyan,
+    title: 'Paie automatique & conforme',
+    hook: '500 bulletins en moins de 3 minutes.',
+    desc: 'Calculs CNSS, IRPP/ITS et TUS appliqués automatiquement selon le CGI 2025-2026. Abattement 20%, quotient familial, primes, retenues — zéro erreur, zéro redressement fiscal.',
+    // 👇 Remplacez le src par votre vraie image : '/features/paie.png'
+    img: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=900&q=75',
+    imgAlt: 'Paie automatique Konza RH',
+    color: C.cyan, accent: 'rgba(6,182,212,0.1)',
+    pills: ['CNSS 4% + 20.28%', 'IRPP / ITS', 'Quotient familial', 'Bulletins PDF'],
+  },
+  {
+    id: 'conformite', group: 'big',
+    tag: 'Légal', tagColor: C.green,
+    title: 'Conformité légale garantie',
+    hook: 'Le CGI 2025-2026 appliqué automatiquement.',
+    desc: 'Barèmes mis à jour à chaque révision légale. Déclarations CNSS prêtes à soumettre. TUS, abattement 20%, parts fiscales — rien n\'est oublié. Dormez tranquille.',
+    // 👇 Remplacez : '/features/conformite.png'
+    img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=75',
+    imgAlt: 'Conformité fiscale Congo',
+    color: C.green, accent: 'rgba(16,185,129,0.1)',
+    pills: ['CGI 2025-2026', 'Déclaration CNSS', 'TUS inclus', 'Alertes légales'],
+  },
+  {
+    id: 'pointage', group: 'big',
+    tag: 'Terrain', tagColor: C.pink,
+    title: 'Pointage GPS multi-sites',
+    hook: 'Votre équipe pointe depuis son téléphone.',
+    desc: 'Géolocalisation en temps réel, périmètre configurable par site, alertes retard et absence automatiques. Historique infalsifiable, accessible en un clic pour la DRH.',
+    // 👇 Remplacez : '/features/pointage.png'
+    img: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=900&q=75',
+    imgAlt: 'Pointage GPS mobile Congo',
+    color: C.pink, accent: 'rgba(236,72,153,0.1)',
+    pills: ['Géolocalisation live', 'Multi-sites', 'Alertes retard', 'Historique intégral'],
+  },
+  {
+    id: 'conges', group: 'big',
+    tag: 'RH', tagColor: C.blue,
+    title: 'Congés & absences simplifiés',
+    hook: 'Fini les tableaux Excel de suivi.',
+    desc: 'Demandes en ligne, validation hiérarchique, soldes calculés sur 26 jours ouvrables, jours fériés congolais intégrés. RTT, maladie, maternité — tout est automatique.',
+    // 👇 Remplacez : '/features/conges.png'
+    img: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?auto=format&fit=crop&w=900&q=75',
+    imgAlt: 'Gestion congés Congo',
+    color: C.blue, accent: 'rgba(59,130,246,0.1)',
+    pills: ['Validation hiérarchique', '26 j. ouvrables', 'Jours fériés CG', 'Soldes auto'],
+  },
+  // ── Compact cards (grid 2×2) ─────────────────────────────────────────────
+  {
+    id: 'prets', group: 'compact',
+    tag: 'Finance', tagColor: C.purple,
+    title: 'Prêts, avances & acomptes',
+    hook: 'Sans risque légal, remboursement automatique.',
+    desc: 'Plafonds légaux validés automatiquement. Remboursements déduits chaque mois sur la fiche de paie. Historique complet par employé.',
+    // 👇 Remplacez : '/features/prets.png'
+    img: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=700&q=75',
+    imgAlt: 'Prêts avances employés',
+    color: C.purple, accent: 'rgba(139,92,246,0.1)',
+    pills: ['Plafonds légaux', 'Remboursement auto'],
+  },
+  {
+    id: 'recrutement', group: 'compact',
+    tag: 'Talent', tagColor: C.orange,
+    title: 'Recrutement & onboarding',
+    hook: 'De l\'offre à la première fiche de paie.',
+    desc: 'Page carrière personnalisée, gestion des candidatures, entretiens planifiés, intégration directe dans la paie dès le recrutement.',
+    // 👇 Remplacez : '/features/recrutement.png'
+    img: 'https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?auto=format&fit=crop&w=700&q=75',
+    imgAlt: 'Recrutement onboarding',
+    color: C.orange, accent: 'rgba(245,158,11,0.1)',
+    pills: ['Page carrière custom', 'ATS intégré'],
+  },
+  {
+    id: 'rupture', group: 'compact',
+    tag: 'Légal', tagColor: C.pink,
+    title: 'Rupture de contrat',
+    hook: 'Calculs de fin de contrat sans erreur.',
+    desc: 'Indemnités légales, préavis, solde de tout compte — calculés automatiquement selon le Code du Travail congolais. Documents de sortie PDF générés en 1 clic.',
+    // 👇 Remplacez : '/features/rupture.png'
+    img: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=700&q=75',
+    imgAlt: 'Rupture contrat travail Congo',
+    color: C.pink, accent: 'rgba(236,72,153,0.1)',
+    pills: ['Indemnités légales', 'Documents de sortie'],
+  },
+  {
+    id: 'cnss', group: 'compact',
+    tag: 'Déclaration', tagColor: C.green,
+    title: 'Déclaration CNSS automatique',
+    hook: 'Plus jamais de retard de déclaration.',
+    desc: 'État nominatif des salaires généré chaque mois au format CNSS Congo. Rappels de délais, historique des soumissions, cotisations calculées employé par employé.',
+    // 👇 Remplacez : '/features/cnss.png'
+    img: 'https://images.unsplash.com/photo-1560472355-536de3962603?auto=format&fit=crop&w=700&q=75',
+    imgAlt: 'Déclaration CNSS Congo',
+    color: C.green, accent: 'rgba(16,185,129,0.1)',
+    pills: ['Export CNSS CG', 'Rappels délais'],
+  },
+];
+
+// ─── Big card (image côté, texte côté) ───────────────────────────────────────
+function FBigCard({ feat, reverse }: { feat: typeof FEATURES[0]; reverse?: boolean }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: reverse ? '1fr 1.15fr' : '1.15fr 1fr',
+        background: hover ? feat.accent : C.bgCard,
+        border: `1px solid ${hover ? feat.color + '45' : C.border}`,
+        borderRadius: 20,
+        overflow: 'hidden',
+        transition: 'all 0.3s ease',
+        minHeight: 340,
+      }}
+      className="fbig-card"
+    >
+      {/* Texte */}
+      <div style={{
+        padding: '48px 44px',
+        display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 18,
+        order: reverse ? 2 : 1,
+      }}>
+        <span style={{
+          display: 'inline-block', width: 'fit-content',
+          fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+          color: feat.color, background: feat.accent,
+          border: `1px solid ${feat.color}30`,
+          padding: '4px 12px', borderRadius: 99,
+        }}>{feat.tag}</span>
+
+        <h3 style={{ fontSize: 'clamp(20px,2.5vw,28px)', fontWeight: 900, color: C.text, letterSpacing: '-0.025em', lineHeight: 1.2, fontFamily: 'system-ui,sans-serif' }}>
+          {feat.title}
+        </h3>
+
+        <p style={{ fontSize: 15, fontWeight: 700, color: feat.color, lineHeight: 1.45 }}>{feat.hook}</p>
+
+        <p style={{ fontSize: 14, color: C.sub, lineHeight: 1.75, maxWidth: 400 }}>{feat.desc}</p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8, marginTop: 4 }}>
+          {feat.pills?.map(p => (
+            <span key={p} style={{
+              fontSize: 12, fontWeight: 600, color: feat.color,
+              background: feat.accent, border: `1px solid ${feat.color}25`,
+              padding: '5px 12px', borderRadius: 8,
+            }}>{p}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Image */}
+      <div style={{
+        position: 'relative' as const, minHeight: 260, overflow: 'hidden',
+        order: reverse ? 1 : 2,
+        borderLeft: reverse ? 'none' : `1px solid ${C.border}`,
+        borderRight: reverse ? `1px solid ${C.border}` : 'none',
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={feat.img} alt={feat.imgAlt}
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', filter: 'brightness(0.6) saturate(0.75)',
+            transition: 'transform 0.4s ease',
+            transform: hover ? 'scale(1.05)' : 'scale(1)',
+          }}
+        />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: reverse
+            ? `linear-gradient(to right, transparent 35%, ${C.bgCard}CC)`
+            : `linear-gradient(to left, transparent 35%, ${C.bgCard}CC)`,
+        }} />
+        <div style={{ position: 'absolute', inset: 0, background: feat.color + '15', opacity: hover ? 1 : 0, transition: 'opacity 0.3s' }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Compact card (image top, texte bas) ─────────────────────────────────────
+function FCompactCard({ feat }: { feat: typeof FEATURES[0] }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background: hover ? C.bgCardHover : C.bgCard,
+        border: `1px solid ${hover ? feat.color + '45' : C.border}`,
+        borderRadius: 18, overflow: 'hidden',
+        transition: 'all 0.25s ease',
+        transform: hover ? 'translateY(-5px)' : 'none',
+        display: 'flex', flexDirection: 'column',
+      }}
+    >
+      {/* Image */}
+      <div style={{ position: 'relative', height: 190, overflow: 'hidden', flexShrink: 0 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={feat.img} alt={feat.imgAlt}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            filter: 'brightness(0.55) saturate(0.7)',
+            transition: 'transform 0.4s ease',
+            transform: hover ? 'scale(1.07)' : 'scale(1)',
+          }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, transparent 30%, ${C.bgCard}F2)` }} />
+        <div style={{ position: 'absolute', inset: 0, background: feat.color + '18', opacity: hover ? 1 : 0, transition: 'opacity 0.3s' }} />
+        <span style={{
+          position: 'absolute', top: 14, left: 14,
+          fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+          color: feat.color, background: 'rgba(5,8,22,0.78)',
+          border: `1px solid ${feat.color}40`,
+          padding: '3px 10px', borderRadius: 99, backdropFilter: 'blur(8px)',
+        }}>{feat.tag}</span>
+      </div>
+
+      {/* Texte */}
+      <div style={{ padding: '24px 26px 28px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+        <h3 style={{ fontSize: 19, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', lineHeight: 1.2, fontFamily: 'system-ui,sans-serif' }}>{feat.title}</h3>
+        <p style={{ fontSize: 13.5, fontWeight: 700, color: feat.color, lineHeight: 1.45 }}>{feat.hook}</p>
+        <p style={{ fontSize: 13.5, color: C.sub, lineHeight: 1.7 }}>{feat.desc}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, marginTop: 'auto', paddingTop: 8 }}>
+          {feat.pills?.map(p => (
+            <span key={p} style={{
+              fontSize: 11, fontWeight: 600, color: feat.color,
+              background: feat.accent, padding: '4px 10px', borderRadius: 7,
+              border: `1px solid ${feat.color}20`,
+            }}>{p}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Section Features complète ────────────────────────────────────────────────
+function FeaturesSection() {
+  const bigCards   = FEATURES.filter(f => f.group === 'big');
+  const compactCards = FEATURES.filter(f => f.group === 'compact');
+
+  return (
+    <section id="fonctionnalites" style={{ padding: '100px 0', position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px' }}>
+
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 56 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 99, fontSize: 12, fontWeight: 700, color: C.cyan, letterSpacing: '0.08em', textTransform: 'uppercase' as const, marginBottom: 20 }}>
+            // Fonctionnalités
+          </div>
+          <h2 style={{ fontSize: 'clamp(32px,5vw,52px)', fontWeight: 900, color: C.text, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 16, fontFamily: 'system-ui,sans-serif' }}>
+            Une suite RH complète,<br />conçue pour le Congo
+          </h2>
+          <p style={{ fontSize: 18, color: C.sub, maxWidth: 560, margin: '0 auto', lineHeight: 1.65 }}>
+            De la fiche employé au bulletin de paie — tout en un, conforme au Code Général des Impôts congolais.
+          </p>
+        </div>
+
+        {/* Big cards alternées */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {bigCards.map((feat, i) => (
+            <FBigCard key={feat.id} feat={feat} reverse={i % 2 === 1} />
+          ))}
+        </div>
+
+        {/* Séparateur */}
+        <div style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, background: 'rgba(6,182,212,0.03)', margin: '72px -32px', padding: '40px 32px', textAlign: 'center' }}>
+          <p style={{ fontSize: 12, color: C.muted, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 10 }}>Et aussi — parce que les détails font la différence</p>
+          <p style={{ fontSize: 20, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', fontFamily: 'system-ui,sans-serif' }}>
+            Gestion de bout en bout,{' '}
+            <span style={{ color: C.cyan }}>sans exception.</span>
+          </p>
+        </div>
+
+        {/* Compact 2×2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 22 }} className="fcompact-grid">
+          {compactCards.map(feat => <FCompactCard key={feat.id} feat={feat} />)}
+        </div>
+
+        {/* CTA bas */}
+        <div style={{ marginTop: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
+          <p style={{ fontSize: 16, color: C.sub, maxWidth: 460 }}>
+            Toutes les fonctionnalités incluses dans votre essai gratuit de 14 jours.
+          </p>
+          <Link href="/auth/register" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            background: 'linear-gradient(135deg,#06B6D4,#3B82F6)',
+            color: '#fff', textDecoration: 'none', fontWeight: 800, fontSize: 15,
+            padding: '14px 32px', borderRadius: 12,
+            boxShadow: '0 0 40px rgba(6,182,212,0.28)',
+          }}>
+            Essayer gratuitement — sans carte bancaire
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </Link>
+        </div>
+      </div>
+
+      <style>{`
+        .fbig-card { transition: background 0.3s ease, border-color 0.3s ease !important; }
+        @media (max-width: 860px) {
+          .fbig-card { grid-template-columns: 1fr !important; }
+          .fbig-card > div[style*="order: 2"], .fbig-card > div[style*="order: 1"] { order: unset !important; }
+          .fbig-card > div:last-child { min-height: 200px; border-left: none !important; border-right: none !important; border-top: 1px solid rgba(255,255,255,0.07); }
+        }
+        @media (max-width: 640px) {
+          .fcompact-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 // ─── FAQ accordion ────────────────────────────────────────────────────────────
 function FaqList() {
   const [open, setOpen] = useState<number | null>(null);
   const items = [
     {
       q: "Est-ce vraiment conforme à la fiscalité congolaise ?",
-      a: "Oui, à 100%. HRCongo applique les barèmes IRPP/ITS avec abattement de 20%, le CNSS salarial (4%) et patronal (20.28%), la Taxe Unique sur les Salaires (TUS), et le quotient familial — selon le Code Général des Impôts 2025-2026. Les barèmes sont mis à jour automatiquement à chaque révision légale."
+      a: "Oui, à 100%. Konza RH applique les barèmes IRPP/ITS avec abattement de 20%, le CNSS salarial (4%) et patronal (20.28%), la Taxe Unique sur les Salaires (TUS), et le quotient familial — selon le Code Général des Impôts 2025-2026. Les barèmes sont mis à jour automatiquement à chaque révision légale."
     },
     {
       q: "Combien de temps pour générer les bulletins de 500 employés ?",
       a: "Moins de 3 minutes. Notre moteur de calcul traite les 500 fiches en parallèle, génère les PDF et prépare l'export CNSS en quelques minutes. Les variables exceptionnelles du mois (absences, primes, heures sup) sont prises en compte automatiquement."
     },
     {
-      q: "Peut-on utiliser HRCongo pour plusieurs entreprises ?",
+      q: "Peut-on utiliser Konza RH pour plusieurs entreprises ?",
       a: "Oui. Le plan Enterprise et le mode Cabinet comptable permettent de gérer plusieurs entités légales depuis un seul compte. Chaque entreprise a ses propres paramètres fiscaux, ses employés et ses bulletins. Les experts-comptables peuvent gérer tout leur portefeuille clients."
     },
     {
       q: "Comment fonctionne le pointage GPS ?",
       a: "Chaque employé installe l'application mobile et pointe à son arrivée/départ. Le système vérifie sa position GPS en temps réel et la compare au périmètre autorisé (configurable en mètres par site). Les retards et absences sont signalés automatiquement au RH."
+    },
+    {
+      q: "Comment Konza RH gère-t-il la rupture de contrat ?",
+      a: "Konza RH calcule automatiquement toutes les indemnités légales de fin de contrat selon le Code du Travail congolais : indemnité de licenciement, préavis, congés payés non pris, solde de tout compte. Les documents de sortie (attestation de travail, reçu pour solde de tout compte) sont générés en PDF prêts à signer."
+    },
+    {
+      q: "La déclaration CNSS est-elle générée automatiquement ?",
+      a: "Oui. Chaque mois, Konza RH produit automatiquement l'état nominatif des salaires au format requis par la CNSS Congo, avec les cotisations salariales (4%) et patronales (20.28%) calculées employé par employé. Vous n'avez plus qu'à déposer le fichier. Des rappels de délai sont envoyés avant la date limite."
     },
     {
       q: "Quels modes de paiement sont acceptés ?",
