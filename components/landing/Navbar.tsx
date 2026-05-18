@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -20,7 +21,7 @@ export function Navbar() {
     { label: 'Accueil', href: '/' },
     { label: 'À propos', href: '/qui-sommes-nous' },
     { label: 'Fonctionnalités', href: '#fonctionnalites' },
-    { label: 'Tarifs', href: '#tarifs' },
+    { label: 'Tarifs', href: '/tarifs' },
     { label: 'Blog', href: '/blog' },
     { label: 'Documentation', href: '/docs' },
     { label: 'Contact', href: '/contact' },
@@ -42,23 +43,17 @@ export function Navbar() {
     >
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 72 }}>
+
           {/* Logo */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div style={{
-              width: 36, height: 36,
-              background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
-              borderRadius: 10,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(6,182,212,0.35)',
-              position: 'relative',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.03em', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-              HR<span style={{ color: '#06B6D4' }}>Congo</span>
-            </span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Image
+              src="/logos/konza_logo_h_color.png"
+              alt="Logo"
+              width={140}
+              height={40}
+              style={{ objectFit: 'contain', height: 40, width: 'auto' }}
+              priority
+            />
           </Link>
 
           {/* Desktop nav */}
@@ -75,10 +70,16 @@ export function Navbar() {
                   padding: '8px 14px',
                   borderRadius: 8,
                   transition: 'all 0.15s',
-                  fontFamily: "system-ui, sans-serif",
+                  fontFamily: 'system-ui, sans-serif',
                 }}
-                onMouseEnter={e => { (e.target as HTMLElement).style.color = '#fff'; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                onMouseLeave={e => { (e.target as HTMLElement).style.color = 'rgba(148,163,184,1)'; (e.target as HTMLElement).style.background = 'transparent'; }}
+                onMouseEnter={e => {
+                  (e.target as HTMLElement).style.color = '#fff';
+                  (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
+                }}
+                onMouseLeave={e => {
+                  (e.target as HTMLElement).style.color = 'rgba(148,163,184,1)';
+                  (e.target as HTMLElement).style.background = 'transparent';
+                }}
               >
                 {link.label}
               </Link>
@@ -87,26 +88,35 @@ export function Navbar() {
 
           {/* CTA */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="desktop-cta">
-            <Link href="/auth/login" style={{ color: '#94A3B8', textDecoration: 'none', fontSize: 14, fontWeight: 600, padding: '8px 16px', borderRadius: 8, transition: 'color 0.15s' }}
+            <Link
+              href="/auth/login"
+              style={{ color: '#94A3B8', textDecoration: 'none', fontSize: 14, fontWeight: 600, padding: '8px 16px', borderRadius: 8, transition: 'color 0.15s' }}
               onMouseEnter={e => { (e.target as HTMLElement).style.color = '#fff'; }}
               onMouseLeave={e => { (e.target as HTMLElement).style.color = '#94A3B8'; }}
             >
               Connexion
             </Link>
-            <Link href="/auth/register" style={{
-              background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
-              color: '#fff',
-              textDecoration: 'none',
-              fontSize: 14,
-              fontWeight: 700,
-              padding: '10px 22px',
-              borderRadius: 10,
-              boxShadow: '0 0 24px rgba(6,182,212,0.3)',
-              transition: 'all 0.2s',
-              display: 'flex', alignItems: 'center', gap: 6,
-            }}>
+            <Link
+              href="/auth/register"
+              style={{
+                background: 'linear-gradient(135deg, #06B6D4, #3B82F6)',
+                color: '#fff',
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 700,
+                padding: '10px 22px',
+                borderRadius: 10,
+                boxShadow: '0 0 24px rgba(6,182,212,0.3)',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
               Essai gratuit
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </Link>
           </div>
 
@@ -136,14 +146,17 @@ export function Navbar() {
             gap: 4,
           }}>
             {links.map(link => (
-              <Link key={link.label} href={link.href}
+              <Link
+                key={link.label}
+                href={link.href}
                 style={{ color: '#94A3B8', textDecoration: 'none', fontSize: 15, fontWeight: 500, padding: '10px 8px', borderRadius: 8 }}
                 onClick={() => setIsOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <Link href="/auth/register"
+            <Link
+              href="/auth/register"
               style={{ marginTop: 12, background: 'linear-gradient(135deg,#06B6D4,#3B82F6)', color: '#fff', textDecoration: 'none', fontWeight: 700, padding: '12px 16px', borderRadius: 10, textAlign: 'center' }}
               onClick={() => setIsOpen(false)}
             >

@@ -604,40 +604,6 @@ export default function LandingPage() {
       {/* ═══════════════════════════════════════════════════════════════════════
           PRICING
       ═══════════════════════════════════════════════════════════════════════ */}
-      <section style={{ ...s.section, position: 'relative', zIndex: 1, borderTop: `1px solid ${C.border}` }} id="tarifs">
-        <Blob color="#8B5CF6" style={{ width: 600, height: 600, top: -100, right: -200 }} />
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{ ...s.label, margin: '0 auto 20px', width: 'fit-content' }}>// Tarifs</div>
-          <h2 style={s.h2}>Simple. Transparent.<br/>Sans surprise.</h2>
-          <p style={{ ...s.p, margin: '0 auto', textAlign: 'center' }}>
-            14 jours d'essai gratuit sur tous les plans. Aucune carte bancaire requise.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20, position: 'relative' }} className="pricing-grid">
-          <PricingCard
-            name="Gratuit" price="0" priceUnit="" sub="Jusqu'à 5 employés" cta="Commencer"
-            features={['Paie basique (CNSS + IRPP)', 'Gestion des congés', 'Pointage simple', '1 utilisateur', 'Support communauté']}
-          />
-          <PricingCard
-            name="Startup" price="15 000" priceUnit="FCFA/mois" sub="Jusqu'à 20 employés" cta="Démarrer"
-            features={['Tout Gratuit +', 'Calcul fiscal complet CGI', 'Bulletins PDF signés', 'Déclaration CNSS auto', '3 utilisateurs', 'Support email']}
-          />
-          <PricingCard
-            name="Business" price="35 000" priceUnit="FCFA/mois" sub="Jusqu'à 100 employés" cta="Choisir Business"
-            popular
-            features={['Tout Startup +', 'Pointage GPS multi-sites', 'Prêts & avances', 'Recrutement intégré', 'GED documents', 'Formations', '10 utilisateurs', 'Support prioritaire']}
-          />
-          <PricingCard
-            name="Enterprise" price="65 000" priceUnit="FCFA/mois" sub="Employés illimités" cta="Nous contacter"
-            features={['Tout Business +', 'Multi-entreprises', 'Mode Cabinet comptable', 'API & Intégrations ERP', 'Export SAGE / CIEL', 'Utilisateurs illimités', 'Manager dédié', 'Support 24/7']}
-          />
-        </div>
-
-        <p style={{ textAlign: 'center', color: C.muted, fontSize: 13, marginTop: 32 }}>
-          Paiement par MTN Mobile Money · Airtel Money · Virement bancaire · Aucune carte requise
-        </p>
-      </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           TESTIMONIALS

@@ -398,7 +398,7 @@ import {
   FileText, Settings, LogOut, Hexagon, Briefcase, Target,
   GraduationCap, Flag, Monitor, Fingerprint, FolderHeart,
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit,
-  ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle
+  ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle,BookOpen
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
 import Image from 'next/image';
@@ -643,6 +643,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Contrats', path: '/contrats', icon: History },
     { label: 'Rupture Contrats', path: '/contrats/rupture', icon: UserMinus },
     { label: 'Salaires Impayés', path: '/paie/impayes', icon: AlertCircle }, 
+    {label: 'Blog RH',  path:  '/blog', icon:  BookOpen},
   ];
 
   const showAutreMenu = user && ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(user.role);
