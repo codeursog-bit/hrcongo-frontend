@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft, Plus, Trash2, Loader2, Gift, Save, X,
   AlertCircle, Check, Pencil, Info,
-  TrendingUp, Award, Shield, Clock, DollarSign, Calendar
+  TrendingUp, Award, Shield, Clock, DollarSign, Calendar,
+  Zap, Timer, Hash, ToggleLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -14,131 +15,273 @@ import { useAlert } from '@/components/providers/AlertProvider';
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
 export interface BonusTemplate {
-  id: string;
-  name: string;            // libellé libre : "Prime qualité", "Logement", etc.
-  defaultAmount: number | null;
-  defaultPercentage: number | null;
-  baseCalculation: 'BASE_SALARY' | 'GROSS_SALARY' | null;
-  isRecurring: boolean;    // fréquence par défaut
-  isTaxable: boolean;      // soumise ITS par défaut
-  isCnss: boolean;         // soumise CNSS par défaut
-  description: string | null;
-  isActive: boolean;
-  createdAt?: string;
+  id:                 string;
+  name:               string;
+  defaultAmount:      number | null;
+  defaultPercentage:  number | null;
+  baseCalculation:    'BASE_SALARY' | 'GROSS_SALARY' | null;
+  isRecurring:        boolean;
+  isTaxable:          boolean;
+  isCnss:             boolean;
+  fiscalType?:        'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE' | null;
+  // 🆕 Système quantité
+  unitAmount?:        number | null;
+  quantityMode?:      'AUTO_DAYS' | 'AUTO_WEEKS' | 'AUTO_HOURS' | 'FREE' | null;
+  defaultQuantity?:   number | null;
+  isProratized?:      boolean;
+  description:        string | null;
+  isActive:           boolean;
+  createdAt?:         string;
 }
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
 
-// Primes conventionnelles pré-définies — le RH peut toutes les modifier/supprimer
+// 🆕 Primes conventionnelles enrichies avec quantityMode + fiscalType
 const CONVENTIONAL_PRESETS: Omit<BonusTemplate, 'id' | 'createdAt' | 'isActive'>[] = [
-  { name: 'Prime de transport',     defaultAmount: 15000, defaultPercentage: null, baseCalculation: null, isRecurring: true,  isTaxable: false, isCnss: false, description: 'Remboursement frais de transport — exonérée ITS et CNSS' },
-  { name: 'Prime de panier',        defaultAmount: 5000,  defaultPercentage: null, baseCalculation: null, isRecurring: true,  isTaxable: false, isCnss: false, description: 'Indemnité repas journalière — exonérée ITS et CNSS' },
-  { name: 'Prime de logement',      defaultAmount: null,  defaultPercentage: 10,   baseCalculation: 'BASE_SALARY', isRecurring: true,  isTaxable: true,  isCnss: false, description: '% du salaire de base — imposable ITS, exonérée CNSS' },
-  { name: 'Prime de rendement',     defaultAmount: null,  defaultPercentage: null, baseCalculation: null, isRecurring: true,  isTaxable: true,  isCnss: true,  description: 'Liée à la performance — imposable ITS + CNSS' },
-  { name: "Prime de fin d'année",   defaultAmount: null,  defaultPercentage: null, baseCalculation: null, isRecurring: false, isTaxable: true,  isCnss: true,  description: '13ème mois — imposable ITS + CNSS' },
-  { name: 'Prime de sujétion',      defaultAmount: null,  defaultPercentage: null, baseCalculation: null, isRecurring: true,  isTaxable: true,  isCnss: false, description: 'Conditions difficiles — imposable ITS, exonérée CNSS' },
-  { name: 'Prime de responsabilité',defaultAmount: null,  defaultPercentage: null, baseCalculation: null, isRecurring: true,  isTaxable: true,  isCnss: true,  description: 'Lié au poste — imposable ITS + CNSS' },
-  { name: 'Indemnité de garde',     defaultAmount: null,  defaultPercentage: null, baseCalculation: null, isRecurring: false, isTaxable: false, isCnss: false, description: 'Remboursement frais de garde — exonérée' },
+  {
+    name: 'Indemnité de transport',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: false, isCnss: false,
+    fiscalType: 'NON_TAXABLE',
+    unitAmount: 1200, quantityMode: 'AUTO_DAYS', defaultQuantity: null, isProratized: true,
+    description: 'Remboursement frais de transport — 1 200 FCFA × jours travaillés (automatique)',
+  },
+  {
+    name: 'Indemnité de panier',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: false, isCnss: false,
+    fiscalType: 'NON_TAXABLE',
+    unitAmount: 2000, quantityMode: 'FREE', defaultQuantity: 0, isProratized: false,
+    description: 'Indemnité repas — 2 000 FCFA × nombre de repas pris (saisi au bulletin)',
+  },
+  {
+    name: 'Prime d\'assiduité semaine',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: true, isCnss: false,
+    fiscalType: 'TAXABLE_NO_CNSS',
+    unitAmount: 2000, quantityMode: 'AUTO_WEEKS', defaultQuantity: null, isProratized: false,
+    description: 'Prime d\'assiduité — 2 000 FCFA × semaines du mois (automatique)',
+  },
+  {
+    name: 'Indemnité de logement',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: false, isCnss: false,
+    fiscalType: 'NON_TAXABLE',
+    unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: false,
+    description: 'Participation employeur au logement — montant fixe par catégorie',
+  },
+  {
+    name: 'Prime de responsabilité',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: true, isCnss: true,
+    fiscalType: 'TAXABLE_CNSS',
+    unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: false,
+    description: 'Prime liée à une responsabilité particulière — montant fixe mensuel',
+  },
+  {
+    name: 'Prime de diplôme',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: true, isCnss: true,
+    fiscalType: 'TAXABLE_CNSS',
+    unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: false,
+    description: 'Majoration mensuelle liée au diplôme — montant fixe par niveau',
+  },
+  {
+    name: 'Prime de rendement',
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: true, isTaxable: true, isCnss: false,
+    fiscalType: 'TAXABLE_NO_CNSS',
+    unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: true,
+    description: 'Prime liée à la performance — imposable ITS, exonérée CNSS',
+  },
+  {
+    name: "Prime de fin d'année",
+    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
+    isRecurring: false, isTaxable: true, isCnss: false,
+    fiscalType: 'TAXABLE_NO_CNSS',
+    unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: true,
+    description: '13ème mois — imposable ITS, exonéré CNSS',
+  },
 ];
 
-const FREQ_LABEL: Record<string, string> = { true: 'Récurrente', false: 'Ponctuelle' };
+// 🆕 Labels et configs des modes de quantité
+const QUANTITY_MODES = [
+  {
+    value: null,
+    label: 'Montant fixe / %',
+    icon: DollarSign,
+    desc: 'Montant constant chaque mois (ou % du salaire)',
+    color: 'slate',
+  },
+  {
+    value: 'AUTO_DAYS',
+    label: 'Par jour travaillé',
+    icon: Timer,
+    desc: 'Montant unitaire × jours travaillés (automatique depuis pointage)',
+    color: 'cyan',
+  },
+  {
+    value: 'AUTO_WEEKS',
+    label: 'Par semaine du mois',
+    icon: Calendar,
+    desc: 'Montant unitaire × semaines du mois (4 ou 5, automatique)',
+    color: 'emerald',
+  },
+  {
+    value: 'AUTO_HOURS',
+    label: 'Par heure travaillée',
+    icon: Clock,
+    desc: 'Montant unitaire × heures travaillées (automatique depuis pointage)',
+    color: 'sky',
+  },
+  {
+    value: 'FREE',
+    label: 'Quantité libre',
+    icon: Hash,
+    desc: 'Admin saisit la quantité au moment du bulletin (repas, opérations...)',
+    color: 'amber',
+  },
+] as const;
+
+// 🆕 Types fiscaux simplifiés
+const FISCAL_TYPES = [
+  {
+    value: 'TAXABLE_CNSS',
+    label: 'Imposable + CNSS',
+    desc: 'Entre dans la base ITS et CNSS (ancienneté, diplôme, responsabilité)',
+    color: 'violet',
+    isTaxable: true, isCnss: true,
+  },
+  {
+    value: 'TAXABLE_NO_CNSS',
+    label: 'Imposable uniquement',
+    desc: 'Entre dans la base ITS mais exonérée CNSS (13e mois, rendement)',
+    color: 'blue',
+    isTaxable: true, isCnss: false,
+  },
+  {
+    value: 'NON_TAXABLE',
+    label: 'Indemnité nette',
+    desc: 'Exonérée ITS et CNSS — remboursement de frais réels (transport, panier)',
+    color: 'amber',
+    isTaxable: false, isCnss: false,
+  },
+] as const;
+
 const CALC_LABEL: Record<string, string> = { BASE_SALARY: 'du base', GROSS_SALARY: 'du brut' };
 
-// ─── Composant badge fiscal ────────────────────────────────────────────────
-const FiscalSummary = ({ t }: { t: BonusTemplate }) => {
-  if (!t.isTaxable && !t.isCnss) return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">Net direct</span>
+// ─── HELPERS VISUELS ─────────────────────────────────────────────────────────
+
+const FiscalBadge = ({ fiscalType, isTaxable, isCnss }: {
+  fiscalType?: string | null; isTaxable: boolean; isCnss: boolean;
+}) => {
+  const ft = fiscalType ?? (
+    !isTaxable && !isCnss ? 'NON_TAXABLE' :
+    isTaxable && !isCnss  ? 'TAXABLE_NO_CNSS' : 'TAXABLE_CNSS'
+  );
+  if (ft === 'NON_TAXABLE') return (
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+      Net direct
+    </span>
+  );
+  if (ft === 'TAXABLE_NO_CNSS') return (
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+      ITS seul.
+    </span>
   );
   return (
     <span className="inline-flex gap-1">
-      {t.isTaxable && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700">ITS</span>}
-      {t.isCnss   && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">CNSS</span>}
-      {t.isTaxable && !t.isCnss && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">ITS seul.</span>}
+      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700">ITS</span>
+      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">CNSS</span>
     </span>
   );
 };
 
-// ─── Composant toggle fiscal ──────────────────────────────────────────────
-const FiscalToggle = ({ label, desc, active, onChange }: {
-  label: string; desc: string; active: boolean; onChange: () => void;
-}) => (
-  <button type="button" onClick={onChange}
-    className={`flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-all w-full cursor-pointer ${
-      active
-        ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
-        : 'border-gray-200 dark:border-gray-700 opacity-50'
-    }`}>
-    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
-      active ? 'border-violet-500 bg-violet-500' : 'border-gray-300 dark:border-gray-600'
-    }`}>
-      {active && <div className="w-2 h-2 rounded-full bg-white" />}
-    </div>
-    <div>
-      <p className={`font-bold text-sm ${active ? 'text-violet-700 dark:text-violet-300' : 'text-gray-500'}`}>{label}</p>
-      <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-    </div>
-  </button>
-);
+const QuantityBadge = ({ mode }: { mode?: string | null }) => {
+  if (!mode) return null;
+  const cfg = QUANTITY_MODES.find(m => m.value === mode);
+  if (!cfg) return null;
+  const colors: Record<string, string> = {
+    cyan:    'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700',
+    emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
+    sky:     'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-700',
+    amber:   'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
+    slate:   'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  };
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${colors[cfg.color]}`}>
+      <Icon size={9} /> {cfg.label}
+    </span>
+  );
+};
 
-// ─── FORM STATE ─────────────────────────────────────────────────────────────
+// ─── FORM STATE ──────────────────────────────────────────────────────────────
+
 const emptyForm = () => ({
-  name:               '',
-  defaultAmount:      '' as string | number,
-  defaultPercentage:  '' as string | number,
-  baseCalculation:    'BASE_SALARY' as 'BASE_SALARY' | 'GROSS_SALARY',
-  isRecurring:        true,
-  isTaxable:          true,
-  isCnss:             true,
-  description:        '',
-  usePercentage:      false,
-  useFixedAmount:     false,  // false = montant libre à définir par employé
+  name:              '',
+  fiscalType:        'TAXABLE_CNSS' as 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE',
+  defaultAmount:     '' as string | number,
+  defaultPercentage: '' as string | number,
+  baseCalculation:   'BASE_SALARY' as 'BASE_SALARY' | 'GROSS_SALARY',
+  isRecurring:       true,
+  isTaxable:         true,
+  isCnss:            true,
+  description:       '',
+  // Montant
+  usePercentage:     false,
+  useFixedAmount:    false,
+  // 🆕 Quantité
+  quantityMode:      null as 'AUTO_DAYS' | 'AUTO_WEEKS' | 'AUTO_HOURS' | 'FREE' | null,
+  unitAmount:        '' as string | number,
+  defaultQuantity:   '' as string | number,
+  isProratized:      false,
 });
 
-// ─── COMPOSANT PRINCIPAL ──────────────────────────────────────────────────────
+// ─── COMPOSANT PRINCIPAL ─────────────────────────────────────────────────────
 
 export default function CataloguePrimesPage() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const alert        = useAlert();
 
-  // back param → redirect après sauvegarde depuis AssignPrimePage ou EmployeePrimesPage
   const backUrl = searchParams.get('back') || '/parametres';
 
-  const [templates,    setTemplates]    = useState<BonusTemplate[]>([]);
-  const [isLoading,    setIsLoading]    = useState(true);
-  const [showModal,    setShowModal]    = useState(false);
-  const [isSaving,     setIsSaving]     = useState(false);
-  const [deletingId,   setDeletingId]   = useState<string | null>(null);
-  const [editTarget,   setEditTarget]   = useState<BonusTemplate | null>(null);
-  const [form,         setForm]         = useState(emptyForm());
-  const [showPresets,  setShowPresets]  = useState(false);
+  const [templates,   setTemplates]   = useState<BonusTemplate[]>([]);
+  const [isLoading,   setIsLoading]   = useState(true);
+  const [showModal,   setShowModal]   = useState(false);
+  const [isSaving,    setIsSaving]    = useState(false);
+  const [deletingId,  setDeletingId]  = useState<string | null>(null);
+  const [editTarget,  setEditTarget]  = useState<BonusTemplate | null>(null);
+  const [form,        setForm]        = useState(emptyForm());
+  const [showPresets, setShowPresets] = useState(false);
 
   const load = useCallback(async () => {
     try {
       const res = await api.get<any>('/bonus-templates');
       const list: BonusTemplate[] = Array.isArray(res) ? res : res?.data || [];
       setTemplates(list);
-    } catch {
-      // non bloquant
-    } finally {
-      setIsLoading(false);
-    }
+    } catch { /* non bloquant */ } finally { setIsLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Ouvrir modal création ─────────────────────────────────────────────
-  const openCreate = () => {
-    setEditTarget(null);
-    setForm(emptyForm());
-    setShowModal(true);
+  // ── Sync fiscalType → isTaxable/isCnss ───────────────────────────────────
+  const setFiscalType = (ft: 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE') => {
+    const cfg = FISCAL_TYPES.find(f => f.value === ft)!;
+    setForm(p => ({ ...p, fiscalType: ft, isTaxable: cfg.isTaxable, isCnss: cfg.isCnss }));
   };
 
-  // ── Ouvrir modal édition ──────────────────────────────────────────────
+  // ── Modaux ───────────────────────────────────────────────────────────────
+  const openCreate = () => { setEditTarget(null); setForm(emptyForm()); setShowModal(true); };
+
   const openEdit = (t: BonusTemplate) => {
     setEditTarget(t);
+    const ft = t.fiscalType ?? (!t.isTaxable && !t.isCnss ? 'NON_TAXABLE' :
+      t.isTaxable && !t.isCnss ? 'TAXABLE_NO_CNSS' : 'TAXABLE_CNSS');
     setForm({
       name:              t.name,
+      fiscalType:        ft as any,
       defaultAmount:     t.defaultAmount ?? '',
       defaultPercentage: t.defaultPercentage ?? '',
       baseCalculation:   t.baseCalculation ?? 'BASE_SALARY',
@@ -147,15 +290,21 @@ export default function CataloguePrimesPage() {
       isCnss:            t.isCnss,
       description:       t.description ?? '',
       usePercentage:     t.defaultPercentage != null,
-      useFixedAmount:    t.defaultAmount != null,
+      useFixedAmount:    t.defaultAmount != null && !t.unitAmount,
+      quantityMode:      t.quantityMode ?? null,
+      unitAmount:        t.unitAmount ?? '',
+      defaultQuantity:   t.defaultQuantity ?? '',
+      isProratized:      t.isProratized ?? false,
     });
     setShowModal(true);
   };
 
-  // ── Appliquer un preset ───────────────────────────────────────────────
-  const applyPreset = (p: typeof CONVENTIONAL_PRESETS[0]) => {
+  const applyPreset = (p: Omit<BonusTemplate, 'id' | 'createdAt' | 'isActive'>) => {
+    const ft = p.fiscalType ?? (!p.isTaxable && !p.isCnss ? 'NON_TAXABLE' :
+      p.isTaxable && !p.isCnss ? 'TAXABLE_NO_CNSS' : 'TAXABLE_CNSS');
     setForm({
       name:              p.name,
+      fiscalType:        ft as any,
       defaultAmount:     p.defaultAmount ?? '',
       defaultPercentage: p.defaultPercentage ?? '',
       baseCalculation:   p.baseCalculation ?? 'BASE_SALARY',
@@ -164,83 +313,96 @@ export default function CataloguePrimesPage() {
       isCnss:            p.isCnss,
       description:       p.description ?? '',
       usePercentage:     p.defaultPercentage != null,
-      useFixedAmount:    p.defaultAmount != null,
+      useFixedAmount:    p.defaultAmount != null && !p.unitAmount,
+      quantityMode:      p.quantityMode ?? null,
+      unitAmount:        p.unitAmount ?? '',
+      defaultQuantity:   p.defaultQuantity ?? '',
+      isProratized:      p.isProratized ?? false,
     });
     setShowPresets(false);
+    setEditTarget(null);
   };
 
-  // ── Sauvegarder (création ou mise à jour) ─────────────────────────────
+  // ── Sauvegarder ──────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!form.name.trim()) {
-      alert.error('Nom requis', 'Donnez un nom à cette prime.');
+    if (!form.name.trim()) { alert.error('Nom requis', 'Donnez un nom à cette prime.'); return; }
+
+    const hasQuantityMode = !!form.quantityMode;
+    const needsUnitAmount = hasQuantityMode && !form.unitAmount;
+    if (needsUnitAmount) {
+      alert.error('Montant unitaire requis', 'Indiquez le montant par unité (ex: 1 200 FCFA par jour).');
       return;
+    }
+
+    const payload: any = {
+      name:            form.name.trim(),
+      isRecurring:     form.isRecurring,
+      isTaxable:       form.isTaxable,
+      isCnss:          form.isCnss,
+      fiscalType:      form.fiscalType,
+      isProratized:    form.isProratized,
+      description:     form.description || null,
+      // Quantité
+      quantityMode:    form.quantityMode || null,
+      unitAmount:      form.unitAmount ? parseFloat(String(form.unitAmount)) : null,
+      defaultQuantity: form.defaultQuantity ? parseFloat(String(form.defaultQuantity)) : null,
+    };
+
+    // Montant fixe/% seulement si pas en mode quantité
+    if (!hasQuantityMode) {
+      if (form.useFixedAmount && form.defaultAmount) {
+        payload.defaultAmount = parseFloat(String(form.defaultAmount));
+        payload.calculationType = 'FIXED_AMOUNT';
+      } else if (form.usePercentage && form.defaultPercentage) {
+        payload.defaultPercentage = parseFloat(String(form.defaultPercentage));
+        payload.baseCalculation   = form.baseCalculation;
+        payload.calculationType   = 'PERCENTAGE';
+      }
     }
 
     setIsSaving(true);
     try {
-      const payload: any = {
-        name:        form.name.trim(),
-        isRecurring: form.isRecurring,
-        isTaxable:   form.isTaxable,
-        isCnss:      form.isCnss,
-        description: form.description || null,
-        // Montant / % — null si "à définir par employé"
-        defaultAmount:     form.useFixedAmount && !form.usePercentage && form.defaultAmount !== ''
-          ? Number(form.defaultAmount) : null,
-        defaultPercentage: form.usePercentage && form.defaultPercentage !== ''
-          ? Number(form.defaultPercentage) : null,
-        baseCalculation:   form.usePercentage ? form.baseCalculation : null,
-      };
-
       if (editTarget) {
         const updated = await api.patch<BonusTemplate>(`/bonus-templates/${editTarget.id}`, payload);
-        setTemplates(prev => prev.map(t => t.id === editTarget.id ? { ...t, ...updated } : t));
-        alert.success('Prime modifiée', 'Les modifications ont été enregistrées.');
+        setTemplates(prev => prev.map(t => t.id === editTarget.id ? (updated as BonusTemplate) : t));
+        alert.success('Mise à jour', `"${form.name}" a été modifiée.`);
       } else {
         const created = await api.post<BonusTemplate>('/bonus-templates', payload);
         setTemplates(prev => [created as BonusTemplate, ...prev]);
-        alert.success('Prime créée', `"${form.name}" a été ajoutée au catalogue.`);
+        alert.success('Prime créée', `"${form.name}" ajoutée au catalogue.`);
       }
-
       setShowModal(false);
       setForm(emptyForm());
     } catch (e: any) {
       alert.error('Erreur', e?.message || 'Impossible de sauvegarder.');
-    } finally {
-      setIsSaving(false);
-    }
+    } finally { setIsSaving(false); }
   };
 
-  // ── Supprimer ──────────────────────────────────────────────────────────
   const handleDelete = async (id: string, name: string) => {
     setDeletingId(id);
     try {
       await api.delete(`/bonus-templates/${id}`);
       setTemplates(prev => prev.filter(t => t.id !== id));
-      alert.success('Supprimé', `"${name}" a été retiré du catalogue.`);
+      alert.success('Supprimé', `"${name}" retiré du catalogue.`);
     } catch (e: any) {
       alert.error('Erreur', e?.message || 'Impossible de supprimer.');
-    } finally {
-      setDeletingId(null);
-    }
+    } finally { setDeletingId(null); }
   };
 
-  // ── Résumé montant ────────────────────────────────────────────────────
+  // ── Affichage du montant ─────────────────────────────────────────────────
   const amountSummary = (t: BonusTemplate) => {
-    if (t.defaultAmount != null) return `${t.defaultAmount.toLocaleString('fr-FR')} FCFA`;
+    if (t.quantityMode && t.unitAmount) {
+      const modeCfg = QUANTITY_MODES.find(m => m.value === t.quantityMode);
+      return `${Number(t.unitAmount).toLocaleString('fr-FR')} FCFA × ${modeCfg?.label ?? t.quantityMode}`;
+    }
+    if (t.defaultAmount != null) return `${Number(t.defaultAmount).toLocaleString('fr-FR')} FCFA / mois`;
     if (t.defaultPercentage != null) return `${t.defaultPercentage}% ${CALC_LABEL[t.baseCalculation!] ?? ''}`;
     return <span className="italic text-gray-400">Montant libre</span>;
   };
 
-  // ── Résumé fiscal ──────────────────────────────────────────────────────
-  const fiscalSummaryText = () => {
-    if (!form.isTaxable && !form.isCnss) return '💛 Versée au net — aucune retenue';
-    if (form.isTaxable && form.isCnss)   return '🟣 ITS + CNSS calculés dessus';
-    if (form.isTaxable && !form.isCnss)  return '🔵 ITS seulement — exonérée CNSS';
-    return '⚠️ Configuration inhabituelle';
-  };
+  const hasQuantityMode = !!form.quantityMode;
+  const selectedFiscal  = FISCAL_TYPES.find(f => f.value === form.fiscalType);
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto pb-20 space-y-6 px-4">
 
@@ -259,26 +421,42 @@ export default function CataloguePrimesPage() {
       {/* Titre */}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <Gift size={28} className="text-cyan-500" />
-          Catalogue des primes
+          <Gift size={28} className="text-cyan-500" /> Catalogue des primes
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Définissez ici les types de primes de votre entreprise — libellé, nature fiscale et montant par défaut.
+          Définissez les types de primes — libellé, mode de calcul, nature fiscale.
         </p>
       </div>
 
-      {/* Notice info */}
+      {/* Notice */}
       <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl">
         <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
         <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-          Ce catalogue définit les <strong>types de primes disponibles</strong> dans votre entreprise.
-          Lors de l'attribution à un employé, le RH choisit une prime depuis ce catalogue
-          et peut ajuster le montant individuellement.
-          Le statut fiscal (<strong>ITS</strong>, <strong>CNSS</strong>) est géré ici une fois pour toutes.
+          Configurez ici <strong>une fois pour toutes</strong> le mode de calcul de chaque prime.
+          Les primes <strong>AUTO</strong> (jours, semaines) se calculent automatiquement depuis le pointage.
+          Les primes <strong>Quantité libre</strong> demandent une saisie rapide au moment du bulletin.
         </p>
       </div>
 
-      {/* ── Bouton primes conventionnelles ── */}
+      {/* 🆕 Légende fiscale */}
+      <div className="grid grid-cols-3 gap-3">
+        {FISCAL_TYPES.map(ft => (
+          <div key={ft.value} className={`p-3 rounded-xl border text-center ${
+            ft.value === 'NON_TAXABLE'    ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800' :
+            ft.value === 'TAXABLE_NO_CNSS' ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800' :
+            'bg-violet-50 dark:bg-violet-900/10 border-violet-200 dark:border-violet-800'
+          }`}>
+            <p className={`text-xs font-bold mb-0.5 ${
+              ft.value === 'NON_TAXABLE'    ? 'text-amber-700 dark:text-amber-300' :
+              ft.value === 'TAXABLE_NO_CNSS' ? 'text-blue-700 dark:text-blue-300' :
+              'text-violet-700 dark:text-violet-300'
+            }`}>{ft.label}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">{ft.desc.split(' — ')[0]}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Bouton presets */}
       <div className="relative">
         <button onClick={() => setShowPresets(v => !v)}
           className="flex items-center gap-2 px-4 py-2.5 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700 rounded-xl text-sm font-bold text-violet-700 dark:text-violet-300 hover:bg-violet-100 transition-all">
@@ -290,13 +468,12 @@ export default function CataloguePrimesPage() {
 
         <AnimatePresence>
           {showPresets && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}
               className="absolute z-30 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg">
               <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Primes conventionnelles — cliquez pour pré-remplir le formulaire
+                  Cliquez pour pré-remplir le formulaire
                 </p>
                 <button onClick={() => setShowPresets(false)} className="text-gray-400 hover:text-gray-600">
                   <X size={14} />
@@ -310,7 +487,10 @@ export default function CataloguePrimesPage() {
                       <p className="font-semibold text-sm text-gray-900 dark:text-white">{p.name}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{p.description}</p>
                     </div>
-                    <FiscalSummary t={{ ...p, id: '', isActive: true } as BonusTemplate} />
+                    <div className="flex flex-col gap-1 items-end shrink-0 ml-3">
+                      <FiscalBadge fiscalType={p.fiscalType} isTaxable={p.isTaxable} isCnss={p.isCnss} />
+                      <QuantityBadge mode={p.quantityMode} />
+                    </div>
                   </button>
                 ))}
               </div>
@@ -319,7 +499,7 @@ export default function CataloguePrimesPage() {
         </AnimatePresence>
       </div>
 
-      {/* ── Liste des primes du catalogue ── */}
+      {/* Liste */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin text-cyan-500" size={28} />
@@ -331,9 +511,7 @@ export default function CataloguePrimesPage() {
             <Gift size={36} className="text-slate-300 dark:text-slate-600" />
           </div>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-lg mb-2">Catalogue vide</p>
-          <p className="text-slate-400 text-sm mb-5">
-            Créez vos premiers types de primes ou importez les primes conventionnelles.
-          </p>
+          <p className="text-slate-400 text-sm mb-5">Créez vos premiers types de primes.</p>
           <button onClick={openCreate}
             className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-sky-500 text-white font-bold rounded-xl text-sm flex items-center gap-2 mx-auto">
             <Plus size={16} /> Créer ma première prime
@@ -348,45 +526,43 @@ export default function CataloguePrimesPage() {
             {templates.map(t => (
               <motion.div key={t.id}
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 flex items-center gap-5">
-
-                {/* Icône */}
+                className="glass-panel rounded-xl p-5 flex items-start gap-5">
                 <div className="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl flex items-center justify-center shrink-0">
                   <Gift size={22} className="text-cyan-500" />
                 </div>
-
-                {/* Infos */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <p className="font-bold text-slate-900 dark:text-white">{t.name}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    <FiscalBadge fiscalType={t.fiscalType} isTaxable={t.isTaxable} isCnss={t.isCnss} />
+                    <QuantityBadge mode={t.quantityMode} />
+                    {t.isProratized && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
+                        Prorata
+                      </span>
+                    )}
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
                       t.isRecurring
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
                         : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
                     }`}>
                       {t.isRecurring ? 'Récurrente' : 'Ponctuelle'}
                     </span>
-                    <FiscalSummary t={t} />
                   </div>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-sm font-mono font-semibold text-gray-700 dark:text-gray-300">
-                      {amountSummary(t)}
-                    </span>
-                    {t.description && (
-                      <span className="text-xs text-gray-400 truncate max-w-xs">{t.description}</span>
-                    )}
-                  </div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 font-mono">
+                    {amountSummary(t)}
+                  </p>
+                  {t.description && (
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t.description}</p>
+                  )}
                 </div>
-
-                {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button onClick={() => openEdit(t)}
-                    className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-600 hover:border-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all text-gray-400 hover:text-cyan-600">
-                    <Pencil size={15} />
+                    className="p-2 text-slate-400 hover:text-cyan-500 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-all">
+                    <Pencil size={16} />
                   </button>
                   <button onClick={() => handleDelete(t.id, t.name)} disabled={deletingId === t.id}
-                    className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-600 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all text-gray-400 hover:text-red-500">
-                    {deletingId === t.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                    {deletingId === t.id ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
                   </button>
                 </div>
               </motion.div>
@@ -395,9 +571,7 @@ export default function CataloguePrimesPage() {
         </div>
       )}
 
-      {/* ================================================================
-          MODAL CRÉATION / ÉDITION
-      ================================================================ */}
+      {/* ═══ MODAL ═══════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -405,7 +579,7 @@ export default function CataloguePrimesPage() {
             onClick={() => setShowModal(false)}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-y-auto max-h-[92vh]">
+              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative overflow-y-auto max-h-[92vh]">
 
               <button onClick={() => setShowModal(false)}
                 className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -420,9 +594,7 @@ export default function CataloguePrimesPage() {
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                     {editTarget ? 'Modifier la prime' : 'Nouvelle prime'}
                   </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {editTarget ? editTarget.name : 'Ajouter au catalogue entreprise'}
-                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">Configuration une fois, utilisée partout</p>
                 </div>
               </div>
 
@@ -433,130 +605,225 @@ export default function CataloguePrimesPage() {
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
                     Nom de la prime *
                   </label>
-                  <input
-                    type="text"
-                    value={form.name}
+                  <input type="text" value={form.name}
                     onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-                    placeholder="Ex: Prime qualité, Indemnité terrain..."
-                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-slate-900 dark:text-white font-medium focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all"
-                  />
+                    placeholder="Ex: Indemnité de transport, Prime de garde..."
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-slate-900 dark:text-white font-medium focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all" />
                 </div>
 
-                {/* Montant par défaut */}
+                {/* 🆕 Nature fiscale — 3 choix clairs */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    Montant par défaut
+                    Nature fiscale *
                   </label>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    <button type="button"
-                      onClick={() => setForm(p => ({ ...p, useFixedAmount: false, usePercentage: false }))}
-                      className={`p-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all ${
-                        !form.useFixedAmount && !form.usePercentage
-                          ? 'border-slate-700 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-gray-900'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-500'
-                      }`}>
-                      Libre
-                    </button>
-                    <button type="button"
-                      onClick={() => setForm(p => ({ ...p, useFixedAmount: true, usePercentage: false }))}
-                      className={`p-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all ${
-                        form.useFixedAmount && !form.usePercentage
-                          ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-500'
-                      }`}>
-                      Fixe (FCFA)
-                    </button>
-                    <button type="button"
-                      onClick={() => setForm(p => ({ ...p, useFixedAmount: false, usePercentage: true }))}
-                      className={`p-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all ${
-                        form.usePercentage
-                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-500'
-                      }`}>
-                      % du salaire
-                    </button>
+                  <div className="space-y-2">
+                    {FISCAL_TYPES.map(ft => (
+                      <button key={ft.value} type="button" onClick={() => setFiscalType(ft.value)}
+                        className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                          form.fiscalType === ft.value
+                            ? ft.value === 'NON_TAXABLE'
+                              ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                              : ft.value === 'TAXABLE_NO_CNSS'
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                : 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
+                            : 'border-slate-200 dark:border-slate-700 opacity-60'
+                        }`}>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0 ${
+                          form.fiscalType === ft.value
+                            ? ft.value === 'NON_TAXABLE' ? 'border-amber-500 bg-amber-500'
+                              : ft.value === 'TAXABLE_NO_CNSS' ? 'border-blue-500 bg-blue-500'
+                              : 'border-violet-500 bg-violet-500'
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}>
+                          {form.fiscalType === ft.value && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-sm ${
+                            form.fiscalType === ft.value
+                              ? ft.value === 'NON_TAXABLE' ? 'text-amber-700 dark:text-amber-300'
+                                : ft.value === 'TAXABLE_NO_CNSS' ? 'text-blue-700 dark:text-blue-300'
+                                : 'text-violet-700 dark:text-violet-300'
+                              : 'text-gray-500'
+                          }`}>{ft.label}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{ft.desc}</p>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-
-                  {!form.useFixedAmount && !form.usePercentage && (
-                    <p className="text-xs text-slate-400 italic">
-                      Le montant sera saisi lors de l'attribution à chaque employé.
-                    </p>
-                  )}
-
-                  {form.useFixedAmount && !form.usePercentage && (
-                    <input type="number" min="0" value={form.defaultAmount}
-                      onChange={e => setForm(p => ({ ...p, defaultAmount: e.target.value }))}
-                      placeholder="Ex: 25 000"
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
-                  )}
-
-                  {form.usePercentage && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="number" min="0" max="100" step="0.5" value={form.defaultPercentage}
-                        onChange={e => setForm(p => ({ ...p, defaultPercentage: e.target.value }))}
-                        placeholder="Ex: 10"
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
-                      <select value={form.baseCalculation}
-                        onChange={e => setForm(p => ({ ...p, baseCalculation: e.target.value as any }))}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-slate-900 dark:text-white font-medium">
-                        <option value="BASE_SALARY">du salaire de base</option>
-                        <option value="GROSS_SALARY">du salaire brut</option>
-                      </select>
-                    </div>
-                  )}
                 </div>
+
+                {/* 🆕 Mode de calcul */}
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    Mode de calcul
+                  </label>
+                  <div className="space-y-2">
+                    {QUANTITY_MODES.map(m => {
+                      const Icon = m.icon;
+                      const isSelected = form.quantityMode === m.value;
+                      return (
+                        <button key={String(m.value)} type="button"
+                          onClick={() => setForm(p => ({
+                            ...p, quantityMode: m.value as any,
+                            useFixedAmount: m.value !== null ? false : p.useFixedAmount,
+                            usePercentage:  m.value !== null ? false : p.usePercentage,
+                          }))}
+                          className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                            isSelected
+                              ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20'
+                              : 'border-slate-200 dark:border-slate-700 opacity-60'
+                          }`}>
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                            isSelected ? 'bg-cyan-500' : 'bg-slate-100 dark:bg-slate-800'
+                          }`}>
+                            <Icon size={16} className={isSelected ? 'text-white' : 'text-slate-400'} />
+                          </div>
+                          <div className="flex-1">
+                            <p className={`font-bold text-sm ${isSelected ? 'text-cyan-700 dark:text-cyan-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                              {m.label}
+                            </p>
+                            <p className="text-xs text-gray-400">{m.desc}</p>
+                          </div>
+                          {isSelected && <Check size={16} className="text-cyan-500 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Montant selon mode */}
+                {hasQuantityMode ? (
+                  // Mode quantité → montant unitaire
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      Montant unitaire (FCFA) *
+                      <span className="font-normal text-gray-400 ml-2 text-xs">
+                        Ex: 1 200 pour "1 200 FCFA par jour"
+                      </span>
+                    </label>
+                    <input type="number" min="0" value={form.unitAmount}
+                      onChange={e => setForm(p => ({ ...p, unitAmount: e.target.value }))}
+                      placeholder="Ex: 1200"
+                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
+
+                    {/* Quantité par défaut pour FREE */}
+                    {form.quantityMode === 'FREE' && (
+                      <div className="mt-3">
+                        <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                          Quantité par défaut (optionnel)
+                          <span className="font-normal text-gray-400 ml-2 text-xs">Ex: 7 repas</span>
+                        </label>
+                        <input type="number" min="0" value={form.defaultQuantity}
+                          onChange={e => setForm(p => ({ ...p, defaultQuantity: e.target.value }))}
+                          placeholder="0"
+                          className="w-full p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                          <AlertCircle size={11} />
+                          Valeur pré-remplie au bulletin — modifiable à chaque mois
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Aperçu calcul */}
+                    {form.unitAmount && (
+                      <div className="mt-3 p-3 bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-200 dark:border-cyan-800 rounded-xl">
+                        <p className="text-xs font-bold text-cyan-700 dark:text-cyan-300 mb-1">Aperçu calcul</p>
+                        {form.quantityMode === 'AUTO_DAYS' && (
+                          <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono">
+                            {Number(form.unitAmount).toLocaleString('fr-FR')} × 26j = {(Number(form.unitAmount) * 26).toLocaleString('fr-FR')} FCFA (mois complet)
+                          </p>
+                        )}
+                        {form.quantityMode === 'AUTO_WEEKS' && (
+                          <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono">
+                            {Number(form.unitAmount).toLocaleString('fr-FR')} × 4 sem = {(Number(form.unitAmount) * 4).toLocaleString('fr-FR')} FCFA / mois
+                          </p>
+                        )}
+                        {form.quantityMode === 'FREE' && form.defaultQuantity && (
+                          <p className="text-xs text-cyan-600 dark:text-cyan-400 font-mono">
+                            {Number(form.unitAmount).toLocaleString('fr-FR')} × {form.defaultQuantity} = {(Number(form.unitAmount) * Number(form.defaultQuantity)).toLocaleString('fr-FR')} FCFA (défaut)
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Mode classique → fixe ou %
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      Montant par défaut
+                    </label>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      {[
+                        { key: 'libre', label: 'Libre', active: !form.useFixedAmount && !form.usePercentage },
+                        { key: 'fixe',  label: 'Fixe (FCFA)', active: form.useFixedAmount && !form.usePercentage },
+                        { key: 'pct',   label: '% du salaire', active: form.usePercentage },
+                      ].map(btn => (
+                        <button key={btn.key} type="button"
+                          onClick={() => setForm(p => ({
+                            ...p,
+                            useFixedAmount: btn.key === 'fixe',
+                            usePercentage:  btn.key === 'pct',
+                          }))}
+                          className={`p-2.5 rounded-xl border-2 text-xs font-bold text-center transition-all ${
+                            btn.active
+                              ? btn.key === 'pct'
+                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                                : btn.key === 'fixe'
+                                  ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300'
+                                  : 'border-slate-700 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-gray-900'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-500'
+                          }`}>
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {!form.useFixedAmount && !form.usePercentage && (
+                      <p className="text-xs text-slate-400 italic">Montant saisi lors de l'attribution à chaque employé.</p>
+                    )}
+                    {form.useFixedAmount && !form.usePercentage && (
+                      <input type="number" min="0" value={form.defaultAmount}
+                        onChange={e => setForm(p => ({ ...p, defaultAmount: e.target.value }))}
+                        placeholder="Ex: 25 000"
+                        className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
+                    )}
+                    {form.usePercentage && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <input type="number" min="0" max="100" step="0.5" value={form.defaultPercentage}
+                          onChange={e => setForm(p => ({ ...p, defaultPercentage: e.target.value }))}
+                          placeholder="Ex: 10"
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
+                        <select value={form.baseCalculation}
+                          onChange={e => setForm(p => ({ ...p, baseCalculation: e.target.value as any }))}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-slate-900 dark:text-white font-medium">
+                          <option value="BASE_SALARY">du salaire de base</option>
+                          <option value="GROSS_SALARY">du salaire brut</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Fréquence */}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Fréquence par défaut</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setForm(p => ({ ...p, isRecurring: true }))}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        form.isRecurring
-                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-500'
-                      }`}>
-                      <div className="font-bold text-sm">Récurrente</div>
-                      <div className="text-xs opacity-75 mt-0.5">Chaque mois</div>
-                    </button>
-                    <button type="button" onClick={() => setForm(p => ({ ...p, isRecurring: false }))}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        !form.isRecurring
-                          ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
-                          : 'border-slate-200 dark:border-slate-700 text-slate-500'
-                      }`}>
-                      <div className="font-bold text-sm">Ponctuelle</div>
-                      <div className="text-xs opacity-75 mt-0.5">1 mois cible</div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Nature fiscale */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Configuration fiscale</label>
-                  <p className="text-xs text-slate-400 mb-3">Fixée une fois pour ce type de prime — appliquée à tous les employés.</p>
-                  <div className="space-y-2">
-                    <FiscalToggle
-                      label="Soumise à l'ITS"
-                      desc="Entre dans le revenu imposable"
-                      active={form.isTaxable}
-                      onChange={() => setForm(p => ({ ...p, isTaxable: !p.isTaxable }))}
-                    />
-                    <FiscalToggle
-                      label="Soumise à la CNSS (4%)"
-                      desc="Entre dans la base CNSS salariale"
-                      active={form.isCnss}
-                      onChange={() => setForm(p => ({ ...p, isCnss: !p.isCnss }))}
-                    />
-                  </div>
-                  <div className={`mt-3 p-3 rounded-xl border text-xs font-medium ${
-                    !form.isTaxable && !form.isCnss
-                      ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'
-                      : form.isTaxable && form.isCnss
-                        ? 'bg-violet-50 dark:bg-violet-900/10 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300'
-                        : 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
-                  }`}>
-                    {fiscalSummaryText()}
+                    {[
+                      { val: true,  label: 'Récurrente', sub: 'Chaque mois', color: 'emerald' },
+                      { val: false, label: 'Ponctuelle',  sub: '1 mois cible', color: 'amber' },
+                    ].map(btn => (
+                      <button key={String(btn.val)} type="button" onClick={() => setForm(p => ({ ...p, isRecurring: btn.val }))}
+                        className={`p-3 rounded-xl border-2 text-left transition-all ${
+                          form.isRecurring === btn.val
+                            ? btn.color === 'emerald'
+                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                              : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                            : 'border-slate-200 dark:border-slate-700 text-slate-500'
+                        }`}>
+                        <div className="font-bold text-sm">{btn.label}</div>
+                        <div className="text-xs opacity-75 mt-0.5">{btn.sub}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -568,6 +835,21 @@ export default function CataloguePrimesPage() {
                     placeholder="Ex: Versée aux agents de terrain uniquement"
                     className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-slate-900 dark:text-white" />
                 </div>
+
+                {/* Récap fiscal */}
+                {selectedFiscal && (
+                  <div className={`p-3 rounded-xl border text-xs font-medium ${
+                    form.fiscalType === 'NON_TAXABLE'
+                      ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                      : form.fiscalType === 'TAXABLE_NO_CNSS'
+                        ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                        : 'bg-violet-50 dark:bg-violet-900/10 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300'
+                  }`}>
+                    {form.fiscalType === 'NON_TAXABLE'    && '💛 Versée au net — aucune retenue ITS ni CNSS'}
+                    {form.fiscalType === 'TAXABLE_NO_CNSS' && '🔵 ITS calculé dessus — exonérée CNSS'}
+                    {form.fiscalType === 'TAXABLE_CNSS'   && '🟣 ITS + CNSS calculés dessus'}
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">

@@ -142,7 +142,15 @@ function resolveItems(variable: CanvasVariable, payroll: BulletinPayroll): any[]
     case 'items.deductions': return items.filter(i => i.type === 'DEDUCTION').sort((a,b)=>a.order-b.order);
     case 'items.employer':   return items.filter(i => i.type === 'EMPLOYER_COST').sort((a,b)=>a.order-b.order);
     case 'items.overtime':   return items.filter(i => ['HS_10','HS_25','HS_50','HS_100'].includes(i.code)).sort((a,b)=>a.order-b.order);
-    case 'items.bonuses':    return items.filter(i => i.code.startsWith('BONUS_') || i.code.startsWith('AUTO_BONUS_')).sort((a,b)=>a.order-b.order);
+    case 'items.bonuses':    return items.filter(i =>
+      i.type === 'GAIN' &&
+      !['SAL_BASE','INDEM_CONGE'].includes(i.code) &&
+      !['HS_10','HS_25','HS_50','HS_100'].includes(i.code) &&
+      (i.code.startsWith('BONUS_') || i.code.startsWith('AUTO_BONUS_') ||
+       i.code.startsWith('PRIME_') || i.code.startsWith('TRANSPORT') ||
+       i.code.startsWith('REPAS')  || i.code.startsWith('PANIER') ||
+       i.code.startsWith('INDEM_') || i.code.startsWith('ALLOC_'))
+    ).sort((a,b)=>a.order-b.order);
     case 'items.all':        return [...items].sort((a,b)=>a.order-b.order);
     case 'items.loans':      return items.filter(i => i.code === 'LOAN').sort((a,b)=>a.order-b.order);
     case 'items.advances':   return items.filter(i => i.code === 'ADVANCE').sort((a,b)=>a.order-b.order);
@@ -284,15 +292,54 @@ function RenderInfoGrid({ block, payroll }: { block: CanvasBlock; payroll: Bulle
   );
 }
 
+// ── Helpers fiscaux (partagés par RenderTable) ────────────────────────────────
+
+function getBonusFiscalTypeCanvas(item: any, payroll: BulletinPayroll): 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE' {
+  const enriched = (payroll.bonuses ?? []).find(
+    (b: any) => b.id === item.id || b.bonusType === cleanLabel(item.label) || b.label === cleanLabel(item.label)
+  );
+  const ft = enriched?.fiscalType ?? (item as any).fiscalType ?? null;
+  if (ft === 'NON_TAXABLE')     return 'NON_TAXABLE';
+  if (ft === 'TAXABLE_NO_CNSS') return 'TAXABLE_NO_CNSS';
+  if (ft === 'TAXABLE_CNSS')    return 'TAXABLE_CNSS';
+  const taxable = enriched?.isTaxable ?? item.isTaxable ?? true;
+  const cnss    = enriched?.isCnss    ?? item.isCnss    ?? true;
+  if (!taxable) return 'NON_TAXABLE';
+  if (!cnss)    return 'TAXABLE_NO_CNSS';
+  return 'TAXABLE_CNSS';
+}
+
+function getBonusSubCanvas(item: any, payroll: BulletinPayroll): string | undefined {
+  const enriched = (payroll.bonuses ?? []).find(
+    (b: any) => b.id === item.id || b.bonusType === cleanLabel(item.label)
+  );
+  if (!enriched) return undefined;
+  if (enriched._seniorityYears != null && enriched._seniorityRate != null)
+    return `${enriched._seniorityYears} an${enriched._seniorityYears > 1 ? 's' : ''} — ${enriched._seniorityRate}%`;
+  if (enriched._proratized && enriched._originalAmount)
+    return `Proratisé : ${fmt(enriched._originalAmount)} → ${fmt(item.amount)}`;
+  if (enriched.quantityMode && enriched.unitAmount) {
+    const labels: Record<string, string> = { AUTO_DAYS:'× jours', AUTO_WEEKS:'× sem.', AUTO_HOURS:'× h', FREE:'× qté' };
+    return `${fmt(enriched.unitAmount)} F ${labels[enriched.quantityMode] ?? ''}`;
+  }
+  return undefined;
+}
+
 function RenderTable({ block, payroll }: { block: CanvasBlock; payroll: BulletinPayroll }) {
   const s     = block.style;
   const fs    = getFS(s.fontSize);
   const items = block.variable ? resolveItems(block.variable, payroll) : [];
   const pad   = getPad(s.padding);
 
-  const isGain  = block.variable === 'items.gains' || block.variable === 'items.overtime' || block.variable === 'items.bonuses';
+  const isBonus = block.variable === 'items.bonuses';
+  const isGain  = block.variable === 'items.gains' || block.variable === 'items.overtime';
   const isDed   = block.variable === 'items.deductions';
   const isEmp   = block.variable === 'items.employer';
+
+  // 🆕 Pour items.bonuses : séparer en 3 groupes fiscaux
+  const bonusTaxableCnss   = isBonus ? items.filter(i => getBonusFiscalTypeCanvas(i, payroll) === 'TAXABLE_CNSS')   : [];
+  const bonusTaxableNoCnss = isBonus ? items.filter(i => getBonusFiscalTypeCanvas(i, payroll) === 'TAXABLE_NO_CNSS') : [];
+  const bonusNonTaxable    = isBonus ? items.filter(i => getBonusFiscalTypeCanvas(i, payroll) === 'NON_TAXABLE')     : [];
 
   const amountColor = (type: string) => {
     if (type === 'GAIN')          return '#15803d';
@@ -320,7 +367,85 @@ function RenderTable({ block, payroll }: { block: CanvasBlock; payroll: Bulletin
         <div style={{ padding:'20px', textAlign:'center', fontSize:fs - 1, color:'#94a3b8', background:s.backgroundColor }}>
           Aucune donnée
         </div>
+      ) : isBonus ? (
+        /* ── 🆕 MODE BONUS : 3 sections fiscales ── */
+        <table style={{ width:'100%', borderCollapse:'collapse', tableLayout:'fixed' }}>
+          <colgroup>
+            <col style={{ width:'50%' }} /><col style={{ width:'20%' }} />
+            <col style={{ width:'13%' }} /><col style={{ width:'17%' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              {['Désignation','Base (F)','Taux','Montant (F)'].map((h, i) => (
+                <th key={h} style={{ background:'#1e293b', padding:`6px 12px`, textAlign: i === 0 ? 'left' : 'right', fontSize:fs - 2.5, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'#fff' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {/* Groupe A : ITS + CNSS */}
+            {bonusTaxableCnss.length > 0 && (
+              <>
+                <tr><td colSpan={4} style={{ background:'#7c3aed', padding:'4px 12px', fontSize:fs - 2.5, fontWeight:900, textTransform:'uppercase', letterSpacing:'.08em', color:'#fff' }}>Primes — ITS + CNSS</td></tr>
+                {bonusTaxableCnss.map((item: any, idx: number) => (
+                  <tr key={item.id ?? idx} style={{ background: idx % 2 === 0 ? s.backgroundColor : '#f9fafb' }}>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', fontSize:fs - 0.5, color:s.textColor, fontWeight: s.bold ? 700 : 500 }}>
+                      {cleanLabel(item.label || '—')}
+                      {getBonusSubCanvas(item, payroll) && <div style={{ fontSize:fs - 2.5, color:'#94a3b8', marginTop:1 }}>{getBonusSubCanvas(item, payroll)}</div>}
+                    </td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>—</td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>—</td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontWeight:700, fontSize:fs + 0.5, color:'#7c3aed' }}>+{fmt(item.amount)}</td>
+                  </tr>
+                ))}
+              </>
+            )}
+            {/* Groupe B : ITS seul */}
+            {bonusTaxableNoCnss.length > 0 && (
+              <>
+                <tr><td colSpan={4} style={{ background:'#1d4ed8', padding:'4px 12px', fontSize:fs - 2.5, fontWeight:900, textTransform:'uppercase', letterSpacing:'.08em', color:'#fff' }}>Primes — ITS uniquement</td></tr>
+                {bonusTaxableNoCnss.map((item: any, idx: number) => (
+                  <tr key={item.id ?? idx} style={{ background: idx % 2 === 0 ? s.backgroundColor : '#f9fafb' }}>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', fontSize:fs - 0.5, color:s.textColor, fontWeight: s.bold ? 700 : 500 }}>
+                      {cleanLabel(item.label || '—')}
+                      {getBonusSubCanvas(item, payroll) && <div style={{ fontSize:fs - 2.5, color:'#94a3b8', marginTop:1 }}>{getBonusSubCanvas(item, payroll)}</div>}
+                    </td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>—</td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>—</td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontWeight:700, fontSize:fs + 0.5, color:'#1d4ed8' }}>+{fmt(item.amount)}</td>
+                  </tr>
+                ))}
+              </>
+            )}
+            {/* Groupe C : Indemnités */}
+            {bonusNonTaxable.length > 0 && (
+              <>
+                <tr><td colSpan={4} style={{ background:'#b45309', padding:'4px 12px', fontSize:fs - 2.5, fontWeight:900, textTransform:'uppercase', letterSpacing:'.08em', color:'#fff' }}>Indemnités — Hors ITS et CNSS</td></tr>
+                {bonusNonTaxable.map((item: any, idx: number) => (
+                  <tr key={item.id ?? idx} style={{ background: idx % 2 === 0 ? s.backgroundColor : '#f9fafb' }}>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', fontSize:fs - 0.5, color:s.textColor, fontWeight: s.bold ? 700 : 500 }}>
+                      {cleanLabel(item.label || '—')}
+                      {getBonusSubCanvas(item, payroll) && <div style={{ fontSize:fs - 2.5, color:'#94a3b8', marginTop:1 }}>{getBonusSubCanvas(item, payroll)}</div>}
+                    </td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>—</td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>—</td>
+                    <td style={{ padding:pad, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontWeight:700, fontSize:fs + 0.5, color:'#b45309' }}>+{fmt(item.amount)}</td>
+                  </tr>
+                ))}
+              </>
+            )}
+            {/* Sous-total */}
+            <tr>
+              <td colSpan={3} style={{ background:'#f0fdf4', padding:`8px 12px`, fontSize:fs - 1, fontWeight:700, textTransform:'uppercase', color:'#15803d' }}>
+                Total primes & indemnités
+              </td>
+              <td style={{ background:'#f0fdf4', padding:`8px 12px`, textAlign:'right', fontFamily:'monospace', fontWeight:700, fontSize:fs + 1, color:'#15803d' }}>
+                +{fmt(items.reduce((s: number, i: any) => s + (Number(i.amount) || 0), 0))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       ) : (
+        /* ── MODE STANDARD (gains, déductions, patronal…) inchangé ── */
         <table style={{ width:'100%', borderCollapse:'collapse', tableLayout:'fixed' }}>
           <colgroup>
             <col style={{ width:'50%' }} />
@@ -345,7 +470,7 @@ function RenderTable({ block, payroll }: { block: CanvasBlock; payroll: Bulletin
                   {item.base ? fmt(item.base) : '—'}
                 </td>
                 <td style={{ padding:`${pad}`, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>
-                  {item.rate ? `${(item.rate * (item.type === 'GAIN' && item.rate > 1 ? 100 : 100)).toFixed(item.type === 'GAIN' && item.rate > 1 ? 0 : 2)}%` : '—'}
+                  {item.rate ? `${(item.rate * 100).toFixed(2)}%` : '—'}
                 </td>
                 <td style={{ padding:`${pad}`, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontWeight:700, fontSize:fs + 0.5, color: amountColor(item.type) }}>
                   {sign(item.type)}{fmt(item.amount)}
