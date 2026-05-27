@@ -106,7 +106,7 @@ export interface BulletinPayroll {
 
 // ─── Template config ─────────────────────────────────────────────────────────
 
-export type TemplateId = 'default' | 'corporate' | 'moderne' | 'compact' | 'premium';
+export type TemplateId = 'default' | 'corporate' | 'admin';
 
 export type BlockStyleDisplay = 'table' | 'card' | 'line' | 'subtle';
 export type LayoutMode = '1col' | '2col';

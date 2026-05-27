@@ -31,7 +31,7 @@ export function Footer() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { icon: '✉', text: 'contact@hrcongo.com', href: 'mailto:contact@konzarh.com' },
+                { icon: '✉', text: 'contact@konza-rh.cg', href: 'mailto:contact@konza-rh.cg' },
                 { icon: '☎', text: '+242 06 413 3693', href: 'tel:+242064133693' },
                 { icon: '⌖', text: 'Pointe-Noire, Congo-Brazzaville', href: null },
               ].map((item, i) => (

@@ -564,6 +564,7 @@ interface CompanyTax {
   ceiling?: number;
   isActive: boolean;
   minSalaryThreshold?: number;
+  thresholdType: 'ELIGIBILITY' | 'EXCESS_ONLY';
   createdAt: string;
   updatedAt: string;
 }
@@ -581,6 +582,7 @@ interface TaxFormData {
   ceiling: string;
   isActive: boolean;
   minSalaryThreshold: string;
+  thresholdType: 'ELIGIBILITY' | 'EXCESS_ONLY';
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -593,9 +595,10 @@ const BASE_TYPE_LABELS: Record<CompanyTaxBase, string> = {
 
 function formatTaxRate(tax: CompanyTax): string {
   const parts: string[] = [];
-  if (tax.employeeRate > 0) parts.push(`${tax.employeeRate}% salarié`);
+  // Les taux BDD sont en décimal (0.0227) → afficher en % lisible (2,27%)
+  if (tax.employeeRate > 0) parts.push(`${parseFloat((tax.employeeRate * 100).toPrecision(6)).toString().replace('.', ',')}% salarié`);
   if (tax.fixedEmployee  > 0) parts.push(`${tax.fixedEmployee.toLocaleString('fr-FR')} F salarié`);
-  if (tax.employerRate  > 0) parts.push(`${tax.employerRate}% patronal`);
+  if (tax.employerRate  > 0) parts.push(`${parseFloat((tax.employerRate * 100).toPrecision(6)).toString().replace('.', ',')}% patronal`);
   if (tax.fixedEmployer > 0) parts.push(`${tax.fixedEmployer.toLocaleString('fr-FR')} F patronal`);
   return parts.join(' / ') || '—';
 }
@@ -608,6 +611,7 @@ const EMPTY_FORM: TaxFormData = {
   hasCeiling: false, ceiling: '',
   isActive: true,
   minSalaryThreshold: '',
+  thresholdType: 'ELIGIBILITY',
 };
 
 // ── Taxes légales non modifiables ─────────────────────────────────────────────
@@ -618,7 +622,7 @@ const SYSTEM_TAXES = [
   { code: 'CNSS_AT',     name: 'CNSS Patronale — Accidents',   rate: '2,25%',  side: 'Patronal', color: 'amber',  note: 'Accidents du travail · plafond 600 000 F' },
   { code: 'TUS_DGI',     name: 'TUS — Part DGI',              rate: '4,13%',  side: 'Patronal', color: 'orange', note: 'Taxe Unique Salaires · déplafonné · versée DGI' },
   { code: 'TUS_CNSS',    name: 'TUS — Part CNSS',             rate: '3,38%',  side: 'Patronal', color: 'orange', note: 'Taxe Unique Salaires · déplafonné · versée CNSS' },
-  { code: 'ITS',         name: 'ITS — Impôt sur Traitements', rate: 'Barème', side: 'Salarié',  color: 'purple', note: 'Progressif 1%/10%/25%/40% · abattement 20%' },
+  { code: 'ITS',         name: 'ITS — Impôt sur Traitements', rate: 'Barème', side: 'Salarié',  color: 'purple', note: 'Progressif 1200(forfait)/10%/25%/40% · abattement 20%' },
 ];
 
 const SIDE_BADGE: Record<string, string> = {
@@ -688,14 +692,16 @@ export default function TaxesPage() {
     setForm({
       name: tax.name, code: tax.code, description: tax.description ?? '',
       baseType: tax.baseType,
-      employeeRate:  tax.employeeRate  > 0 ? String(tax.employeeRate)  : '',
+      // Taux BDD en décimal → convertir en % lisible pour l'input (0.0227 → 2.27)
+      employeeRate:  tax.employeeRate  > 0 ? String(parseFloat((tax.employeeRate  * 100).toPrecision(6))) : '',
       fixedEmployee: tax.fixedEmployee > 0 ? String(tax.fixedEmployee) : '',
-      employerRate:  tax.employerRate  > 0 ? String(tax.employerRate)  : '',
+      employerRate:  tax.employerRate  > 0 ? String(parseFloat((tax.employerRate  * 100).toPrecision(6))) : '',
       fixedEmployer: tax.fixedEmployer > 0 ? String(tax.fixedEmployer) : '',
       hasCeiling: tax.hasCeiling,
       ceiling: tax.ceiling ? String(tax.ceiling) : '',
       isActive: tax.isActive,
       minSalaryThreshold: tax.minSalaryThreshold ? String(tax.minSalaryThreshold) : '',
+      thresholdType: tax.thresholdType ?? 'ELIGIBILITY',
     });
     setShowModal(true);
   };
@@ -710,24 +716,23 @@ export default function TaxesPage() {
     const empFix  = parseFloat(form.fixedEmployee || '0');
     const patRate = parseFloat(form.employerRate  || '0');
     const patFix  = parseFloat(form.fixedEmployer || '0');
-    if (empRate === 0 && empFix === 0 && patRate === 0 && patFix === 0) {
-      showToast('Renseignez au moins un taux ou montant', 'error');
-      return;
-    }
+    // On autorise des taux/montants à 0 — une taxe peut servir de marqueur
+    // ou être complétée ultérieurement (ex: CAMU_SOL sans taux configuré)
 
     const dto = {
       name:          form.name.trim(),
       code:          form.code.trim().toUpperCase(),
       description:   form.description.trim() || undefined,
       baseType:      form.baseType,
-      employeeRate:  empRate,
+      employeeRate:  empRate / 100,   // % saisi (ex: 2.27) → décimal (0.0227) pour le back
       fixedEmployee: empFix,
-      employerRate:  patRate,
+      employerRate:  patRate / 100,   // % saisi (ex: 4.55) → décimal (0.0455) pour le back
       fixedEmployer: patFix,
       hasCeiling:    form.hasCeiling,
       ceiling:       form.hasCeiling && form.ceiling ? parseFloat(form.ceiling) : undefined,
       isActive:      form.isActive,
       minSalaryThreshold: form.minSalaryThreshold ? parseFloat(form.minSalaryThreshold) : undefined,
+      thresholdType: form.minSalaryThreshold ? form.thresholdType : undefined,
     };
 
     setIsSaving(true);
@@ -1019,16 +1024,33 @@ export default function TaxesPage() {
               {/* Seuil minimum salaire (ex: CAMU) */}
               <div className="space-y-1.5">
                 <label className="text-sm text-gray-600 dark:text-gray-400">
-                  Seuil minimum de salaire brut <span className="text-xs text-gray-400">(laisser vide = s'applique toujours)</span>
+                  Seuil de salaire brut <span className="text-xs text-gray-400">(laisser vide = s'applique toujours)</span>
                 </label>
                 <input type="number" min="0" value={form.minSalaryThreshold}
                   onChange={e => setF({ minSalaryThreshold: e.target.value })}
-                  placeholder="Ex: 500000 pour CAMU"
+                  placeholder="Ex: 500000 pour CAMU solidarité"
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono bg-white dark:bg-gray-800 outline-none focus:border-orange-400 transition-colors" />
                 {form.minSalaryThreshold && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
-                    ⚠️ Cette taxe ne sera prélevée que si le salaire brut ≥ {parseFloat(form.minSalaryThreshold).toLocaleString('fr-FR')} FCFA
-                  </p>
+                  <>
+                    {/* Toggle ELIGIBILITY / EXCESS_ONLY */}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => setF({ thresholdType: 'ELIGIBILITY' })}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${form.thresholdType === 'ELIGIBILITY' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:border-orange-300'}`}>
+                        Éligibilité
+                      </button>
+                      <button
+                        onClick={() => setF({ thresholdType: 'EXCESS_ONLY' })}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${form.thresholdType === 'EXCESS_ONLY' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700 hover:border-orange-300'}`}>
+                        Sur l'excédent
+                      </button>
+                    </div>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      {form.thresholdType === 'EXCESS_ONLY'
+                        ? `⚠️ Taxe sur l'excédent : (brut − ${parseFloat(form.minSalaryThreshold).toLocaleString('fr-FR')} FCFA) × taux — ex: CAMU solidarité`
+                        : `⚠️ Taxe ignorée si salaire brut < ${parseFloat(form.minSalaryThreshold).toLocaleString('fr-FR')} FCFA`}
+                    </p>
+                  </>
                 )}
               </div>
 
