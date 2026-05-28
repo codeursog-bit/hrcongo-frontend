@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import BulletinDisplay from '@/components/BulletinDisplay';
+import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bulletin-print';
 
 interface PayrollData {
   employee?: {
@@ -167,11 +168,27 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     <>
       <style jsx global>{`
         @media print {
-          body { background: #fff !important; margin: 0; }
+          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
           .no-print { display: none !important; }
-          @page { size: A4 portrait; margin: 8mm 10mm; }
-          * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; }
-          .payslip-sheet { width: 100% !important; box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+          @page { size: A4 portrait; margin: 0; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .payslip-sheet {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .payslip-sheet-wrap {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            background: #fff !important;
+            display: block !important;
+          }
         }
       `}</style>
 
@@ -211,8 +228,18 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             {isAdmin && !['CANCELLED','PAID'].includes(data.status) && <button onClick={()=>setConfirm('cancel')}  className="flex items-center gap-2 px-4 py-2.5 border border-orange-200 dark:border-orange-700 text-orange-600 hover:bg-orange-50 font-bold rounded-xl text-sm"><Ban size={15}/> Annuler</button>}
             {isAdmin && data.status==='CANCELLED' && <button onClick={()=>setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl text-sm"><RotateCcw size={15}/> Restaurer</button>}
             <div className="w-px h-7 bg-gray-200 dark:bg-gray-700 hidden sm:block mx-1" />
-            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl text-sm"><Download size={15}/> PDF</button>
-            <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm"><Printer size={15}/> Imprimer</button>
+            <button
+              onClick={() => downloadBulletinPDF(getBulletinRootId(data?.company?.bulletinTemplateId ?? 'default'), `bulletin-${MONTHS[(data?.month??1)-1].toLowerCase()}-${data?.year}.pdf`)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl text-sm hover:opacity-90 transition-opacity"
+            >
+              <Download size={15}/> Télécharger PDF
+            </button>
+            <button
+              onClick={printBulletin}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm hover:bg-gray-50 transition-colors"
+            >
+              <Printer size={15}/> Imprimer
+            </button>
             {isAdmin && <button onClick={()=>setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 font-bold rounded-xl text-sm"><Trash2 size={14}/> Supprimer</button>}
           </div>
 
@@ -238,9 +265,11 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-6 items-start print:block">
 
           {/* ✅ BULLETIN — BulletinDisplay gère template ET canvas automatiquement */}
-          <div ref={printRef} className="payslip-sheet bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
+          <div className="payslip-sheet-wrap print:fixed print:inset-0 print:z-[9999]">
+          <div ref={printRef} className="payslip-sheet bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
             <BulletinDisplay payroll={payrollForDisplay as any} />
           </div>
+          </div> {/* payslip-sheet-wrap */}
 
           {/* ── SIDEBAR ── */}
           <div className="no-print space-y-4">

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import BulletinDisplay from '@/components/BulletinDisplay';
+import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bulletin-print';
 
 export default function MyPayrollsPage() {
   const router = useRouter();
@@ -186,35 +187,67 @@ export default function MyPayrollsPage() {
 
       {/* ── MODAL BULLETIN ── */}
       {viewing && (
-        <div
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9999, overflowY:'auto', display:'flex', justifyContent:'center', padding:'40px 20px' }}
-          onClick={() => setViewing(null)}
-        >
-          <div
-            style={{ background:'#fff', borderRadius:16, maxWidth:880, width:'100%', overflow:'hidden', position:'relative', alignSelf:'flex-start' }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Barre actions */}
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', borderBottom:'1px solid #e2e8f0', background:'#f8fafc' }}>
-              <span style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>
-                Bulletin — {fmtMonth(viewing.month)} {viewing.year}
-              </span>
-              <div style={{ display:'flex', gap:8 }}>
-                <button onClick={() => window.print()}
-                  style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151' }}>
-                  <Printer size={14} /> Imprimer / PDF
-                </button>
-                <button onClick={() => setViewing(null)}
-                  style={{ display:'flex', alignItems:'center', justifyContent:'center', width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer' }}>
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
+        <>
+          <style>{`
+            @media print {
+              html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+              .no-print { display: none !important; }
+              @page { size: A4 portrait; margin: 0; }
+              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              .bulletin-modal-overlay { position: fixed !important; inset: 0 !important; background: #fff !important; z-index: 9999 !important; overflow: visible !important; padding: 0 !important; display: block !important; }
+              .bulletin-modal-box { border-radius: 0 !important; box-shadow: none !important; max-width: none !important; width: 210mm !important; min-height: 297mm !important; overflow: visible !important; }
+              .bulletin-modal-bar { display: none !important; }
+            }
+          `}</style>
 
-            {/* ✅ BulletinDisplay — gère template ET canvas automatiquement */}
-            <BulletinDisplay payroll={viewing} />
+          <div
+            className="bulletin-modal-overlay"
+            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:9999, overflowY:'auto', display:'flex', justifyContent:'center', padding:'40px 20px' }}
+            onClick={() => setViewing(null)}
+          >
+            <div
+              className="bulletin-modal-box"
+              style={{ background:'#fff', borderRadius:16, maxWidth:880, width:'100%', overflow:'hidden', position:'relative', alignSelf:'flex-start' }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Barre actions */}
+              <div
+                className="bulletin-modal-bar no-print"
+                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', borderBottom:'1px solid #e2e8f0', background:'#f8fafc' }}
+              >
+                <span style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>
+                  Bulletin — {fmtMonth(viewing.month)} {viewing.year}
+                </span>
+                <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                  <button
+                    onClick={() => downloadBulletinPDF(
+                      getBulletinRootId(viewing?.company?.bulletinTemplateId ?? 'default'),
+                      `bulletin-${fmtMonth(viewing.month).toLowerCase()}-${viewing.year}.pdf`
+                    )}
+                    style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'none', background:'#1e293b', cursor:'pointer', fontSize:12, fontWeight:700, color:'#fff' }}
+                  >
+                    <Download size={14} /> Télécharger PDF
+                  </button>
+                  <button
+                    onClick={printBulletin}
+                    style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151' }}
+                  >
+                    <Printer size={14} /> Imprimer
+                  </button>
+                  <button
+                    onClick={() => setViewing(null)}
+                    style={{ display:'flex', alignItems:'center', justifyContent:'center', width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer' }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Bulletin */}
+              <BulletinDisplay payroll={viewing} />
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -66,7 +66,7 @@ const C = (extra?: React.CSSProperties): React.CSSProperties => ({
   verticalAlign: 'middle', color: '#000', ...extra,
 });
 const CR = (extra?: React.CSSProperties): React.CSSProperties => ({
-  ...C(), textAlign: 'right', fontFamily: 'Courier New, monospace', ...extra,
+  ...C(), textAlign: 'right', fontFamily: 'Courier New, monospace', overflow: 'hidden', maxWidth: 120, ...extra,
 });
 const CC = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...C(), textAlign: 'center', ...extra,

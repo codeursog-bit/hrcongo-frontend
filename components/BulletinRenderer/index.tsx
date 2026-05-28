@@ -86,7 +86,7 @@ const CELL: React.CSSProperties = {
   verticalAlign: 'middle',
 };
 
-const CELL_RIGHT: React.CSSProperties = { ...CELL, textAlign: 'right' };
+const CELL_RIGHT: React.CSSProperties = { ...CELL, textAlign: 'right', fontFamily: 'Courier New, monospace', overflow: 'hidden', maxWidth: 120 };
 const CELL_CENTER: React.CSSProperties = { ...CELL, textAlign: 'center' };
 
 const TH: React.CSSProperties = {

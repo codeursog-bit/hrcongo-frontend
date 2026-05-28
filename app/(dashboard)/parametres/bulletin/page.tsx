@@ -238,18 +238,39 @@ export default function BulletinDesignerPage() {
 
   // ── Sauvegarde ──────────────────────────────────────────────────────────────
   const save = async () => {
-    setSaving(true);
-    try {
-      const payload = appMode === 'canvas'
-        ? { mode:'canvas', canvasLayout: canvas }
-        : { mode:'template', ...cfg };
-      await api.put('/companies/bulletin-template', payload);
-      invalidateBulletinTemplateCache();
-      flash('Bulletin enregistré — actif dans toute l\'application ✓', true);
-    } catch { flash('Erreur lors de l\'enregistrement. Réessayez.', false); }
-    finally { setSaving(false); }
-  };
+  setSaving(true);
+  try {
+    const payload = appMode === 'canvas'
+      ? { mode: 'canvas', canvasLayout: canvas }
+      : { mode: 'template', ...cfg };
 
+    await api.put('/companies/bulletin-template', payload);
+    invalidateBulletinTemplateCache(); // invalide + dispatche l'événement
+
+    // ✅ AJOUTER : recharger depuis la BDD pour que la page elle-même se mette à jour
+    const fresh = await api.get<{ config: any }>('/companies/bulletin-template');
+    if (fresh?.config) {
+      const saved = fresh.config;
+      if (saved.mode === 'canvas' && saved.canvasLayout) {
+        setAppMode('canvas');
+        setCanvas(saved.canvasLayout);
+      } else if (saved.templateId) {
+        const base = getBaseTemplate(saved.templateId ?? 'default');
+        setCfg({
+          ...base, ...saved,
+          style: { ...base.style, ...saved.style },
+          blocks: saved.blocks?.length ? saved.blocks : base.blocks,
+        });
+      }
+    }
+
+    flash('Bulletin enregistré — actif dans toute l\'application ✓', true);
+  } catch {
+    flash('Erreur lors de l\'enregistrement. Réessayez.', false);
+  } finally {
+    setSaving(false);
+  }
+};
   const flash = (msg:string, ok:boolean) => { setToast({msg,ok}); setTimeout(()=>setToast(null),3500); };
 
   // ── Mutations mode template ─────────────────────────────────────────────────

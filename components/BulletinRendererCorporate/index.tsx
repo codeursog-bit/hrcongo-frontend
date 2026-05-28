@@ -33,7 +33,7 @@ function seniority(hireDate?: string): string {
 function formatDate(d?: string): string { if (!d) return '—'; return new Date(d).toLocaleDateString('fr-FR'); }
 
 const C:  React.CSSProperties = { borderBottom: '1px solid #e2e8f0', padding: '5px 8px', fontSize: 10, verticalAlign: 'middle' };
-const CR: React.CSSProperties = { ...C, textAlign: 'right', fontFamily: 'monospace' };
+const CR: React.CSSProperties = { ...C, textAlign: 'right', fontFamily: 'monospace', overflow: 'hidden', maxWidth: 120 };
 const CC: React.CSSProperties = { ...C, textAlign: 'center' };
 
 export default function BulletinRendererCorporate({ payroll, template, previewMode = false }: BulletinRendererCorporateProps) {
