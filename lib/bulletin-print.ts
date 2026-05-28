@@ -1,107 +1,106 @@
 // ============================================================================
 // lib/bulletin-print.ts
-// Impression & téléchargement PDF — partagé entre les pages paie
+// ✅ downloadBulletinPDF  → vrai PDF téléchargé via html2canvas + jsPDF
+//    — AUCUN dialogue d'impression, fichier sauvegardé directement
+// ✅ printBulletin        → impression native window.print()
 // ============================================================================
 
 /**
  * Impression native — ouvre la boîte d'impression du navigateur.
- * Le CSS @media print dans chaque renderer gère A4, marges, masquage UI.
+ * Le CSS @media print dans chaque renderer gère le A4, les marges, le masquage UI.
  */
 export function printBulletin() {
   window.print();
 }
 
 /**
- * Téléchargement PDF réel via l'API window.print() dans un contexte isolé.
+ * Téléchargement PDF réel — html2canvas + jsPDF.
+ * Aucun dialogue d'impression. Le fichier est téléchargé directement.
  *
- * Stratégie : on crée un blob HTML complet avec le contenu du bulletin,
- * on l'ouvre dans un nouvel onglet configuré pour s'auto-imprimer et se fermer,
- * ce qui déclenche "Enregistrer en PDF" dans Chrome/Edge sans UI visible.
- *
- * Si le navigateur bloque les popups, on fallback sur window.print() normal.
+ * @param bulletinElementId  id du div racine du renderer (ex: "bulletin-root")
+ * @param filename           nom du fichier .pdf (ex: "bulletin-mai-2026.pdf")
  */
-export function downloadBulletinPDF(
+export async function downloadBulletinPDF(
   bulletinElementId: string,
   filename: string
-) {
+): Promise<void> {
   const el = document.getElementById(bulletinElementId);
   if (!el) {
-    window.print();
+    console.error(`[bulletin-print] Élément #${bulletinElementId} introuvable`);
     return;
   }
 
-  // Collecter tous les styles inline + feuilles de style
-  const styleSheetText = Array.from(document.styleSheets)
-    .map(ss => {
-      try {
-        return Array.from(ss.cssRules)
-          .map(r => r.cssText)
-          .join('\n');
-      } catch {
-        return '';
+  // Import dynamique pour ne pas alourdir le bundle initial
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
+
+  // A4 en pixels à 150 DPI (bon compromis qualité/performance)
+  // 210mm × 297mm = 1240 × 1754 px à 150dpi
+  const A4_W_PX = 1240;
+  const A4_H_PX = 1754;
+
+  // Capturer le bulletin en canvas haute résolution
+  const canvas = await html2canvas(el, {
+    scale:            2,           // 2× pour la netteté
+    useCORS:          true,        // autorise les images cross-origin (logo)
+    allowTaint:       true,
+    backgroundColor:  '#ffffff',
+    logging:          false,
+    width:            el.scrollWidth,
+    height:           el.scrollHeight,
+    windowWidth:      el.scrollWidth,
+    windowHeight:     el.scrollHeight,
+    onclone: (doc) => {
+      // Dans le clone utilisé par html2canvas, forcer fond blanc
+      const root = doc.getElementById(bulletinElementId);
+      if (root) {
+        root.style.background = '#fff';
+        root.style.width      = '210mm';
       }
-    })
-    .join('\n');
-
-  // HTML complet du bulletin isolé
-  const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>${filename}</title>
-  <style>
-    ${styleSheetText}
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #fff !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    @page {
-      size: A4 portrait;
-      margin: 0;
-    }
-    @media print {
-      html, body { margin: 0 !important; padding: 0 !important; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
-  </style>
-</head>
-<body>
-${el.outerHTML}
-<script>
-  // Dès que le document est prêt, lancer l'impression
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      window.print();
-      // Fermer l'onglet après impression (marche dans Chrome/Edge)
-      setTimeout(function() { window.close(); }, 500);
-    }, 300);
+    },
   });
-<\/script>
-</body>
-</html>`;
 
-  // Créer un Blob et ouvrir dans un nouvel onglet
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, '_blank');
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-  if (!win) {
-    // Popup bloqué → fallback impression normale
-    URL.revokeObjectURL(url);
-    window.print();
-    return;
+  // Créer le PDF A4 portrait
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit:        'mm',
+    format:      'a4',
+  });
+
+  const pdfW = pdf.internal.pageSize.getWidth();   // 210mm
+  const pdfH = pdf.internal.pageSize.getHeight();  // 297mm
+
+  // Calculer les dimensions de l'image pour qu'elle remplisse le A4
+  const imgW  = canvas.width;
+  const imgH  = canvas.height;
+  const ratio = imgW / imgH;
+
+  let finalW = pdfW;
+  let finalH = pdfW / ratio;
+
+  // Si le contenu dépasse une page → paginer
+  if (finalH > pdfH) {
+    let posY = 0;
+    while (posY < finalH) {
+      if (posY > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, -posY, finalW, finalH, '', 'FAST');
+      posY += pdfH;
+    }
+  } else {
+    // Une seule page — centrer verticalement
+    pdf.addImage(imgData, 'JPEG', 0, 0, finalW, finalH, '', 'FAST');
   }
 
-  // Nettoyer l'URL après usage
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  // Télécharger directement — AUCUN dialogue
+  pdf.save(filename);
 }
 
 /**
- * Retourne l'id du div racine du bulletin selon le templateId
+ * Retourne l'id du div racine selon le templateId
  */
 export function getBulletinRootId(templateId?: string): string {
   if (templateId === 'corporate') return 'bulletin-corp-root';

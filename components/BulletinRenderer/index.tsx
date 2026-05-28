@@ -588,33 +588,44 @@ function BulletinRendererDefault({ payroll, template, previewMode = false }: Bul
     <>
       <style>{`
         @media print {
+          /* A4 portrait, pleine page */
+          @page { size: A4 portrait; margin: 0; }
+          html, body { margin: 0 !important; padding: 0 !important; }
+          /* Masquer tout sauf le bulletin */
+          body > * { display: none !important; }
+          .payslip-sheet-wrap, .bulletin-modal-overlay {
+            display: block !important;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 99999 !important;
+            background: #fff !important;
+          }
+          /* Bulletin pleine page */
           #bulletin-root {
-            width: 210mm !important;
-            min-height: 297mm !important;
-            padding: 8mm 10mm !important;
-            margin: 0 !important;
-            font-size: 9.5px !important;
-            box-sizing: border-box !important;
+            width:     210mm !important;
+            min-height:297mm !important;
+            padding:   10mm 12mm !important;
+            margin:    0 !important;
+            box-shadow:none !important;
+            border:    none !important;
           }
           .no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
           .bulletin-legal    { display: none !important; }
-          @page { size: A4 portrait; margin: 0; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
-              `}</style>
+        `}</style>
 
       <div
         id="bulletin-root"
         style={{
-          fontFamily: '"Arial", "Helvetica Neue", sans-serif',
+          fontFamily: '"Segoe UI","Helvetica Neue",Arial,sans-serif',
           fontSize: 10,
           background: '#fff',
           color: '#000',
           width: '100%',
           boxSizing: 'border-box' as const,
-          padding: 16,
+          padding: '28px 34px',
           margin: '0 auto',
-          position: 'relative',
         }}
       >
         {/* En-tête */}

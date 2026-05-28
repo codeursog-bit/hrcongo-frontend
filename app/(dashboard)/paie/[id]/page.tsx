@@ -79,7 +79,8 @@ const CONFIRM_CONFIG = {
 export default function PayslipPage({ params }: { params: { id: string } }) {
   const router   = useRouter();
   const { bp }   = useBasePath();
-  const printRef = useRef<HTMLDivElement>(null);
+  const printRef     = useRef<HTMLDivElement>(null);
+  const [pdfLoading, setPdfLoading] = React.useState(false);
 
   const [data, setData]             = useState<PayrollData | null>(null);
   const [userRole, setUserRole]     = useState<string | null>(null);
@@ -236,10 +237,22 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             {isAdmin && data.status==='CANCELLED' && <button onClick={()=>setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl text-sm"><RotateCcw size={15}/> Restaurer</button>}
             <div className="w-px h-7 bg-gray-200 dark:bg-gray-700 hidden sm:block mx-1" />
             <button
-              onClick={() => downloadBulletinPDF(getBulletinRootId(data?.company?.bulletinTemplateId ?? 'default'), `bulletin-${MONTHS[(data?.month??1)-1].toLowerCase()}-${data?.year}.pdf`)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl text-sm hover:opacity-90 transition-opacity"
+              disabled={pdfLoading}
+              onClick={async () => {
+                setPdfLoading(true);
+                try {
+                  await downloadBulletinPDF(
+                    getBulletinRootId(data?.company?.bulletinTemplateId ?? 'default'),
+                    `bulletin-${MONTHS[(data?.month??1)-1].toLowerCase()}-${data?.year}.pdf`
+                  );
+                } finally {
+                  setPdfLoading(false);
+                }
+              }}
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 20px', borderRadius:12, fontWeight:700, fontSize:13, background: pdfLoading ? '#6b7280' : '#111827', color:'#fff', border:'none', cursor: pdfLoading ? 'not-allowed' : 'pointer', opacity: pdfLoading ? 0.7 : 1, transition:'all .2s' }}
             >
-              <Download size={15}/> Télécharger PDF
+              <Download size={15}/>
+              {pdfLoading ? 'Génération PDF…' : 'Télécharger PDF'}
             </button>
             <button
               onClick={printBulletin}
@@ -271,12 +284,31 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         {/* ── LAYOUT ── */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-6 items-start print:block">
 
-          {/* ✅ BULLETIN — BulletinDisplay gère template ET canvas automatiquement */}
-          <div className="payslip-sheet-wrap print:fixed print:inset-0 print:z-[9999]">
-          <div ref={printRef} className="payslip-sheet bg-white rounded-xl border border-gray-200 dark:border-gray-700" style={{ overflow:"visible" }}>
-            <BulletinDisplay payroll={payrollForDisplay as any} />
+          {/* ✅ BULLETIN A4 */}
+          <div className="payslip-sheet-wrap print:fixed print:inset-0 print:z-[9999] print:bg-white">
+
+            {/* Conteneur A4 : ratio exact 210/297, fond blanc, ombre de feuille */}
+            <div
+              ref={printRef}
+              id="bulletin-a4-frame"
+              className="payslip-sheet"
+              style={{
+                background:    '#fff',
+                width:         '100%',
+                maxWidth:      '210mm',
+                minHeight:     '297mm',
+                margin:        '0 auto',
+                boxShadow:     '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 40px -5px rgba(0,0,0,0.13)',
+                border:        '1px solid #e5e7eb',
+                borderRadius:  0,
+                overflow:      'visible',
+                position:      'relative',
+              }}
+            >
+              <BulletinDisplay payroll={payrollForDisplay as any} />
+            </div>
+
           </div>
-          </div> {/* payslip-sheet-wrap */}
 
           {/* ── SIDEBAR ── */}
           <div className="no-print space-y-4">

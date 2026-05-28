@@ -21,6 +21,7 @@ export default function MyPayrollsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [employee, setEmployee]   = useState<any>(null);
   const [viewing, setViewing]     = useState<any | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -235,13 +236,22 @@ export default function MyPayrollsPage() {
                 </span>
                 <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                   <button
-                    onClick={() => downloadBulletinPDF(
-                      getBulletinRootId(viewing?.company?.bulletinTemplateId ?? 'default'),
-                      `bulletin-${fmtMonth(viewing.month).toLowerCase()}-${viewing.year}.pdf`
-                    )}
-                    style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'none', background:'#1e293b', cursor:'pointer', fontSize:12, fontWeight:700, color:'#fff' }}
+                    disabled={pdfLoading}
+                    onClick={async () => {
+                      setPdfLoading(true);
+                      try {
+                        await downloadBulletinPDF(
+                          getBulletinRootId(viewing?.company?.bulletinTemplateId ?? 'default'),
+                          `bulletin-${fmtMonth(viewing.month).toLowerCase()}-${viewing.year}.pdf`
+                        );
+                      } finally {
+                        setPdfLoading(false);
+                      }
+                    }}
+                    style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'none', background: pdfLoading ? '#6b7280' : '#1e293b', cursor: pdfLoading ? 'not-allowed' : 'pointer', fontSize:12, fontWeight:700, color:'#fff', opacity: pdfLoading ? 0.7 : 1, transition:'all .2s' }}
                   >
-                    <Download size={14} /> Télécharger PDF
+                    <Download size={14} />
+                    {pdfLoading ? 'Génération…' : 'Télécharger PDF'}
                   </button>
                   <button
                     onClick={printBulletin}
@@ -258,8 +268,30 @@ export default function MyPayrollsPage() {
                 </div>
               </div>
 
-              {/* Bulletin */}
-              <BulletinDisplay payroll={viewing} />
+              {/* Bulletin — conteneur A4 exact */}
+              <div style={{
+                background:   '#f1f5f9',
+                padding:      '24px 20px',
+                overflowY:    'auto',
+                maxHeight:    'calc(100vh - 140px)',
+              }}>
+                <div
+                  id="bulletin-a4-frame"
+                  style={{
+                    background:   '#fff',
+                    width:        '100%',
+                    maxWidth:     '210mm',
+                    minHeight:    '297mm',
+                    margin:       '0 auto',
+                    boxShadow:    '0 4px 6px -1px rgba(0,0,0,0.1), 0 10px 40px -5px rgba(0,0,0,0.15)',
+                    border:       '1px solid #e5e7eb',
+                    borderRadius: 0,
+                    overflow:     'visible',
+                  }}
+                >
+                  <BulletinDisplay payroll={viewing} />
+                </div>
+              </div>
             </div>
           </div>
         </>
