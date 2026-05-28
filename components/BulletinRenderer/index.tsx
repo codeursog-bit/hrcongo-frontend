@@ -60,7 +60,12 @@ const CONTRACT: Record<string, string> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const fmt = (v: any) => Math.round(Number(v) || 0).toLocaleString('fr-FR');
+const fmt = (v: any) => {
+  const n = Math.round(Number(v) || 0);
+  // Valeur aberrante (bug API) → afficher '—'
+  if (Math.abs(n) > 999_999_999_999) return '—';
+  return n.toLocaleString('fr-FR');
+};
 
 function seniority(hireDate?: string): { years: number; months: number } {
   if (!hireDate) return { years: 0, months: 0 };
@@ -473,6 +478,9 @@ function BulletinRendererDefault({ payroll, template, previewMode = false }: Bul
       fontSize: 9,
       textAlign: 'center',
       padding: '3px 4px',
+      overflow: 'hidden',
+      maxWidth: 90,
+      whiteSpace: 'nowrap',
     };
 
     return (
@@ -583,16 +591,17 @@ function BulletinRendererDefault({ payroll, template, previewMode = false }: Bul
           #bulletin-root {
             width: 210mm !important;
             min-height: 297mm !important;
-            font-size: 10px !important;
-            padding: 10mm 12mm !important;
+            padding: 8mm 10mm !important;
             margin: 0 !important;
+            font-size: 9.5px !important;
+            box-sizing: border-box !important;
           }
           .no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
-          .bulletin-legal { display: none !important; }
+          .bulletin-legal    { display: none !important; }
           @page { size: A4 portrait; margin: 0; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
-      `}</style>
+              `}</style>
 
       <div
         id="bulletin-root"
@@ -601,10 +610,9 @@ function BulletinRendererDefault({ payroll, template, previewMode = false }: Bul
           fontSize: 10,
           background: '#fff',
           color: '#000',
-          width: previewMode ? '100%' : '210mm',
-          minHeight: previewMode ? 'auto' : '297mm',
-          boxSizing: 'border-box',
-          padding: previewMode ? 16 : '10mm 12mm',
+          width: '100%',
+          boxSizing: 'border-box' as const,
+          padding: 16,
           margin: '0 auto',
           position: 'relative',
         }}

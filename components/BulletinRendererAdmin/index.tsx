@@ -37,7 +37,11 @@ const MARITAL: Record<string,string> = { SINGLE:'Célibataire', MARRIED:'Marié(
 const PAYMENT: Record<string,string> = { BANK_TRANSFER:'Virement bancaire', CASH:'Espèces', MOBILE_MONEY:'Mobile Money', CHECK:'Chèque' };
 const CONTRACT: Record<string,string> = { CDI:'CDI', CDD:'CDD', STAGE:'Stage', CONSULTANT:'Consultant', PRESTATAIRE:'Prestataire', INTERIM:'Intérimaire', FREELANCE:'Freelance' };
 
-const fmt  = (v: any) => Math.round(Number(v) || 0).toLocaleString('fr-FR');
+const fmt = (v: any) => {
+  const n = Math.round(Number(v) || 0);
+  if (Math.abs(n) > 999_999_999_999) return '—';
+  return n.toLocaleString('fr-FR');
+};
 const fmtR = (v: any) => v != null && Number(v) !== 0 ? fmt(v) : '';
 
 function formatDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
@@ -202,25 +206,24 @@ export default function BulletinRendererAdmin({ payroll, template, previewMode =
             min-height: 297mm !important;
             padding: 8mm 10mm !important;
             margin: 0 !important;
-            font-size: 9px !important;
+            font-size: 9.5px !important;
+            box-sizing: border-box !important;
           }
           .adm-no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
           .adm-legal    { display: none !important; }
           @page { size: A4 portrait; margin: 0; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          table { border-collapse: collapse !important; }
         }
-      `}</style>
+              `}</style>
 
       <div id="bul-admin-root" style={{
         fontFamily: '"Segoe UI","Helvetica Neue",Arial,sans-serif',
         fontSize: 10,
         background: '#fff',
         color: '#000',
-        width:     previewMode ? '100%' : '210mm',
-        minHeight: previewMode ? 'auto'  : '297mm',
-        boxSizing: 'border-box',
-        padding:   previewMode ? 16 : '8mm 10mm',
+        width: '100%',
+        boxSizing: 'border-box' as const,
+        padding: 16,
         margin: '0 auto',
       }}>
 

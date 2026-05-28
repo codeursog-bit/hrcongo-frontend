@@ -191,12 +191,27 @@ export default function MyPayrollsPage() {
           <style>{`
             @media print {
               html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-              .no-print { display: none !important; }
+              .bulletin-modal-bar, .no-print { display: none !important; }
               @page { size: A4 portrait; margin: 0; }
               * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-              .bulletin-modal-overlay { position: fixed !important; inset: 0 !important; background: #fff !important; z-index: 9999 !important; overflow: visible !important; padding: 0 !important; display: block !important; }
-              .bulletin-modal-box { border-radius: 0 !important; box-shadow: none !important; max-width: none !important; width: 210mm !important; min-height: 297mm !important; overflow: visible !important; }
-              .bulletin-modal-bar { display: none !important; }
+              .bulletin-modal-overlay {
+                position: fixed !important;
+                inset: 0 !important;
+                z-index: 99999 !important;
+                background: #fff !important;
+                display: block !important;
+                padding: 0 !important;
+                overflow: visible !important;
+              }
+              .bulletin-modal-box {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                max-width: none !important;
+                width: 100% !important;
+                overflow: visible !important;
+              }
+              /* Masquer le reste de la page */
+              body > *:not(.bulletin-modal-overlay) { display: none !important; }
             }
           `}</style>
 
@@ -207,7 +222,7 @@ export default function MyPayrollsPage() {
           >
             <div
               className="bulletin-modal-box"
-              style={{ background:'#fff', borderRadius:16, maxWidth:880, width:'100%', overflow:'hidden', position:'relative', alignSelf:'flex-start' }}
+              style={{ background:'#fff', borderRadius:16, maxWidth:960, width:'100%', overflow:'visible', position:'relative', alignSelf:'flex-start' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Barre actions */}

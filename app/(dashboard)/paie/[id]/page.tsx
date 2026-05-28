@@ -168,26 +168,33 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     <>
       <style jsx global>{`
         @media print {
-          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-          .no-print { display: none !important; }
-          @page { size: A4 portrait; margin: 0; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .payslip-sheet {
-            width: 210mm !important;
-            min-height: 297mm !important;
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            overflow: visible !important;
+          html, body {
             margin: 0 !important;
             padding: 0 !important;
+            background: #fff !important;
           }
+          /* Masquer tout sauf le bulletin */
+          body > *:not(#__next) { display: none !important; }
+          .no-print { display: none !important; }
+          nav, header, aside, footer,
+          [class*="sidebar"], [class*="Sidebar"],
+          [class*="navbar"], [class*="Navbar"] {
+            display: none !important;
+          }
+          /* Le bulletin prend toute la page */
+          @page { size: A4 portrait; margin: 0; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .payslip-sheet-wrap {
+            display: block !important;
             position: fixed !important;
             inset: 0 !important;
-            z-index: 9999 !important;
+            z-index: 99999 !important;
             background: #fff !important;
-            display: block !important;
+          }
+          .payslip-sheet {
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
           }
         }
       `}</style>
@@ -266,7 +273,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
 
           {/* ✅ BULLETIN — BulletinDisplay gère template ET canvas automatiquement */}
           <div className="payslip-sheet-wrap print:fixed print:inset-0 print:z-[9999]">
-          <div ref={printRef} className="payslip-sheet bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+          <div ref={printRef} className="payslip-sheet bg-white rounded-xl border border-gray-200 dark:border-gray-700" style={{ overflow:"visible" }}>
             <BulletinDisplay payroll={payrollForDisplay as any} />
           </div>
           </div> {/* payslip-sheet-wrap */}

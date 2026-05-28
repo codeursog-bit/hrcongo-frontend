@@ -21,7 +21,12 @@ const MARITAL: Record<string,string> = { SINGLE:'Célibataire', MARRIED:'Marié(
 const PAYMENT: Record<string,string> = { BANK_TRANSFER:'Virement bancaire', CASH:'Espèces', MOBILE_MONEY:'Mobile Money', CHECK:'Chèque' };
 const CONTRACT: Record<string,string> = { CDI:'CDI', CDD:'CDD', STAGE:'Stage', CONSULTANT:'Consultant', PRESTATAIRE:'Prestataire', INTERIM:'Intérimaire', FREELANCE:'Freelance' };
 
-const fmt = (v: any) => Math.round(Number(v) || 0).toLocaleString('fr-FR');
+const fmt = (v: any) => {
+  const n = Math.round(Number(v) || 0);
+  // Valeur aberrante (bug API) → afficher '—'
+  if (Math.abs(n) > 999_999_999_999) return '—';
+  return n.toLocaleString('fr-FR');
+};
 
 function seniority(hireDate?: string): string {
   if (!hireDate) return '—';
@@ -97,20 +102,27 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
     <>
       <style>{`
         @media print {
-          #bulletin-corp-root { width:210mm!important; min-height:297mm!important; padding:0!important; margin:0!important; }
-          .corp-no-break { page-break-inside:avoid!important; break-inside:avoid!important; }
-          .bulletin-legal-corp { display:none!important; }
-          @page { size:A4 portrait; margin:0; }
-          * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+          #bulletin-corp-root {
+            width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 8mm 10mm !important;
+            margin: 0 !important;
+            font-size: 9.5px !important;
+            box-sizing: border-box !important;
+          }
+          .corp-no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
+          .bulletin-legal-corp    { display: none !important; }
+          @page { size: A4 portrait; margin: 0; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
-      `}</style>
+              `}</style>
 
       <div id="bulletin-corp-root" style={{
         fontFamily:'"Segoe UI","Helvetica Neue",Arial,sans-serif',
         fontSize:10, background:'#fff', color:'#1a1a2e',
-        width: previewMode ? '100%' : '210mm',
-        minHeight: previewMode ? 'auto' : '297mm',
-        boxSizing:'border-box', margin:'0 auto',
+        width: '100%',
+        boxSizing: 'border-box' as const,
+        margin: '0 auto',
       }}>
 
         {/* ── HEADER ── */}
@@ -293,7 +305,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
         </div>
 
         {/* ── CUMULS + NET ── */}
-        <div className="corp-no-break" style={{ padding:'0 24px', marginTop:10 }}>
+        <div className="corp-no-break" style={{ padding:'0 24px', marginTop:8 }}>
           <div style={{ display:'flex', alignItems:'stretch', borderTop:`2px solid ${primary}` }}>
             <table style={{ flex:1, borderCollapse:'collapse' }}>
               <thead>

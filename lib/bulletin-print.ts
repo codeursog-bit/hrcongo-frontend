@@ -1,88 +1,110 @@
 // ============================================================================
 // lib/bulletin-print.ts
-// Utilitaires impression & téléchargement PDF partagés entre les 2 pages
+// Impression & téléchargement PDF — partagé entre les pages paie
 // ============================================================================
 
 /**
- * Ouvre la boîte d'impression native du navigateur.
- * Le CSS @media print dans chaque renderer gère le reste (A4, marges, masquage).
+ * Impression native — ouvre la boîte d'impression du navigateur.
+ * Le CSS @media print dans chaque renderer gère A4, marges, masquage UI.
  */
 export function printBulletin() {
   window.print();
 }
 
 /**
- * Télécharge le bulletin en PDF sans boîte de dialogue via une iframe cachée.
- * - Copie le contenu HTML du bulletin dans une iframe
- * - Lance window.print() dans l'iframe → le navigateur propose "Enregistrer en PDF"
- * - Compatible Chrome, Edge, Firefox (natif)
+ * Téléchargement PDF réel via l'API window.print() dans un contexte isolé.
  *
- * @param elementId  — id du div qui contient le bulletin (ex: "bulletin-root")
- * @param filename   — nom du fichier suggéré (ex: "bulletin-mai-2026.pdf")
+ * Stratégie : on crée un blob HTML complet avec le contenu du bulletin,
+ * on l'ouvre dans un nouvel onglet configuré pour s'auto-imprimer et se fermer,
+ * ce qui déclenche "Enregistrer en PDF" dans Chrome/Edge sans UI visible.
+ *
+ * Si le navigateur bloque les popups, on fallback sur window.print() normal.
  */
-export function downloadBulletinPDF(elementId: string, filename: string) {
-  const el = document.getElementById(elementId);
-  if (!el) { window.print(); return; }
+export function downloadBulletinPDF(
+  bulletinElementId: string,
+  filename: string
+) {
+  const el = document.getElementById(bulletinElementId);
+  if (!el) {
+    window.print();
+    return;
+  }
 
-  // Récupérer tous les styles de la page
-  const styles = Array.from(document.styleSheets)
+  // Collecter tous les styles inline + feuilles de style
+  const styleSheetText = Array.from(document.styleSheets)
     .map(ss => {
       try {
-        return Array.from(ss.cssRules).map(r => r.cssText).join('\n');
-      } catch { return ''; }
+        return Array.from(ss.cssRules)
+          .map(r => r.cssText)
+          .join('\n');
+      } catch {
+        return '';
+      }
     })
     .join('\n');
 
+  // HTML complet du bulletin isolé
   const html = `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>${filename}</title>
   <style>
-    ${styles}
-    @page { size: A4 portrait; margin: 0; }
+    ${styleSheetText}
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
     @media print {
-      html, body { margin:0; padding:0; background:#fff; }
+      html, body { margin: 0 !important; padding: 0 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#fff;">
-  ${el.outerHTML}
+<body>
+${el.outerHTML}
+<script>
+  // Dès que le document est prêt, lancer l'impression
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      window.print();
+      // Fermer l'onglet après impression (marche dans Chrome/Edge)
+      setTimeout(function() { window.close(); }, 500);
+    }, 300);
+  });
+<\/script>
 </body>
 </html>`;
 
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;';
-  document.body.appendChild(iframe);
+  // Créer un Blob et ouvrir dans un nouvel onglet
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
 
-  const doc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!doc) { window.print(); document.body.removeChild(iframe); return; }
+  if (!win) {
+    // Popup bloqué → fallback impression normale
+    URL.revokeObjectURL(url);
+    window.print();
+    return;
+  }
 
-  doc.open();
-  doc.write(html);
-  doc.close();
-
-  // Attendre le rendu puis imprimer
-  iframe.onload = () => {
-    setTimeout(() => {
-      try {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      } catch { window.print(); }
-      // Nettoyer après fermeture de la boîte
-      setTimeout(() => {
-        try { document.body.removeChild(iframe); } catch {}
-      }, 2000);
-    }, 400);
-  };
+  // Nettoyer l'URL après usage
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 /**
- * Retourne le bon elementId selon le templateId actif
+ * Retourne l'id du div racine du bulletin selon le templateId
  */
 export function getBulletinRootId(templateId?: string): string {
   if (templateId === 'corporate') return 'bulletin-corp-root';
   if (templateId === 'admin')     return 'bul-admin-root';
-  return 'bulletin-root'; // default
+  return 'bulletin-root';
 }
