@@ -659,7 +659,7 @@ export default function ManuelPayrollPage() {
           {/* ════════════════════════════════════════════
               SECTION PRIMES (soumises CNSS + ITS)
           ════════════════════════════════════════════ */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-visible">
             <SectionHeader
               icon={<span className="text-violet-600 dark:text-violet-400 text-xs font-black">%</span>}
               title="Primes"
@@ -696,7 +696,7 @@ export default function ManuelPayrollPage() {
                   <AnimatePresence>
                     {showPrimeSugg && (
                       <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-                        className="absolute z-20 left-0 top-full mt-1.5 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3 space-y-1.5">
+                        className="absolute z-[999] left-0 top-full mt-1.5 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3 space-y-1.5">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Sélectionner</p>
                         <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                           {(dbPrimeSugg.length > 0
@@ -726,7 +726,7 @@ export default function ManuelPayrollPage() {
           {/* ════════════════════════════════════════════
               SECTION INDEMNITÉS (NON soumises)
           ════════════════════════════════════════════ */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-visible">
             <SectionHeader
               icon={<span className="text-emerald-600 dark:text-emerald-400 text-xs font-black">≠</span>}
               title="Indemnités"
@@ -760,7 +760,7 @@ export default function ManuelPayrollPage() {
                   <AnimatePresence>
                     {showIndemSugg && (
                       <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-                        className="absolute z-20 left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
+                        className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Sélectionner</p>
                         <div className="flex flex-wrap gap-1.5">
                           {(dbIndemSugg.length > 0
@@ -790,7 +790,7 @@ export default function ManuelPayrollPage() {
           {/* ════════════════════════════════════════════
               SECTION TAXES & RETENUES
           ════════════════════════════════════════════ */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-visible">
             <SectionHeader
               icon={<Building2 size={14} className="text-amber-600 dark:text-amber-400" />}
               title="Taxes & Retenues spécifiques"
@@ -825,7 +825,7 @@ export default function ManuelPayrollPage() {
                     <AnimatePresence>
                       {showTaxSugg && (
                         <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-                          className="absolute z-20 left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
+                          className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Taxes de l'entreprise</p>
                           <div className="space-y-1">
                             {companyTaxes.map(tax => {
