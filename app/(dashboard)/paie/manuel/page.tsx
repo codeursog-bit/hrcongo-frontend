@@ -71,9 +71,11 @@ interface Advance {
 // Ligne de saisie générique
 interface Row {
   localId: string;
-  refId?: string;   // id BDD si vient d'un template
+  refId?: string;
   label: string;
-  amount: number | '';
+  base: number | '';   // base saisie
+  rate: number | '';   // taux / coefficient
+  amount: number;      // base × rate — calculé en temps réel, affiché en lecture seule
 }
 
 interface SimResult {
@@ -174,48 +176,88 @@ const BLine = ({ label, value, cls, sm }: { label: string; value: string; cls?: 
 );
 
 // Ligne de saisie réutilisable (prime / indemnité / avance / prêt / taxe)
+// SimpleRow — pour taxes, prêts, avances (juste libellé + montant)
+const SimpleRow = ({ row, onChangeLabel, onChangeAmount, onRemove, placeholder = 'Libellé…', amountPlaceholder = '0' }: {
+  row: Row; onChangeLabel: (v:string)=>void; onChangeAmount: (v:number|'')=>void; onRemove: ()=>void; placeholder?: string; amountPlaceholder?: string;
+}) => (
+  <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }} className="group flex items-center gap-2">
+    <input type="text" value={row.label} onChange={e => onChangeLabel(e.target.value)} placeholder={placeholder}
+      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+    <div className="relative w-32 shrink-0">
+      <input type="number" value={row.amount || ''} onChange={e => onChangeAmount(e.target.value===''?'':Number(e.target.value))} placeholder={amountPlaceholder}
+        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
+      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">F</span>
+    </div>
+    <button onClick={onRemove} className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0"><Trash2 size={13} /></button>
+  </motion.div>
+);
+
 const InputRow = ({
-  row, onChangeLabel, onChangeAmount, onRemove,
-  amountLabel = 'F', placeholder = 'Libellé…', amountPlaceholder = '0',
+  row, onChangeLabel, onChangeBase, onChangeRate, onRemove, placeholder = 'Libellé…',
 }: {
   row: Row;
   onChangeLabel: (v: string) => void;
-  onChangeAmount: (v: number | '') => void;
+  onChangeBase: (v: number | '') => void;
+  onChangeRate: (v: number | '') => void;
   onRemove: () => void;
-  amountLabel?: string;
   placeholder?: string;
-  amountPlaceholder?: string;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-    className="flex items-center gap-2 group"
+    className="group grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 items-center"
   >
+    {/* Libellé */}
     <input
       type="text"
       value={row.label}
       onChange={e => onChangeLabel(e.target.value)}
       placeholder={placeholder}
-      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+      className="px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600 w-full"
     />
-    <div className="relative w-32 shrink-0">
+
+    {/* Base */}
+    <div className="relative">
       <input
         type="number"
-        value={row.amount}
-        onChange={e => onChangeAmount(e.target.value === '' ? '' : Number(e.target.value))}
-        placeholder={amountPlaceholder}
-        className="w-full pl-3 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
+        value={row.base}
+        onChange={e => onChangeBase(e.target.value === '' ? '' : Number(e.target.value))}
+        placeholder="Base"
+        className="w-full pl-2 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-right text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
       />
-      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">{amountLabel}</span>
+      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 pointer-events-none">F</span>
     </div>
+
+    {/* Taux */}
+    <input
+      type="number"
+      value={row.rate}
+      step="0.01"
+      onChange={e => onChangeRate(e.target.value === '' ? '' : Number(e.target.value))}
+      placeholder="Taux"
+      className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
+    />
+
+    {/* Gain = base × taux — lecture seule */}
+    <div className={`px-2 py-2 rounded-xl text-sm font-black font-mono text-right tabular-nums border transition-colors ${
+      row.amount > 0
+        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+        : 'bg-gray-50 dark:bg-gray-900/30 border-gray-100 dark:border-gray-700/50 text-gray-300 dark:text-gray-600'
+    }`}>
+      {row.amount > 0 ? row.amount.toLocaleString('fr-FR') : '—'}
+    </div>
+
+    {/* Supprimer */}
     <button
       onClick={onRemove}
-      className="p-1.5 text-gray-300 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0"
+      className="p-1.5 text-gray-300 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
     >
       <Trash2 size={13} />
     </button>
   </motion.div>
 );
 
+// ─── Page principale ─────────────────────────────────────────────────────────
+// ─── Page principale ─────────────────────────────────────────────────────────
 // ─── Page principale ─────────────────────────────────────────────────────────
 
 export default function ManuelPayrollPage() {
@@ -328,10 +370,16 @@ export default function ManuelPayrollPage() {
     : [];
 
   // ── Helpers lignes ────────────────────────────────────────────────────────
-  const newRow = (label = '', amount: number | '' = ''): Row => ({ localId: uid(), label, amount });
+  const newRow = (label = ''): Row => ({ localId: uid(), label, base: '', rate: 1, amount: 0 });
 
+  // updateRow : recalcule amount = base × rate à chaque changement
   const updateRow = (set: React.Dispatch<React.SetStateAction<Row[]>>, localId: string, patch: Partial<Row>) =>
-    set(prev => prev.map(r => r.localId === localId ? { ...r, ...patch } : r));
+    set(prev => prev.map(r => {
+      if (r.localId !== localId) return r;
+      const next = { ...r, ...patch };
+      next.amount = Math.round((Number(next.base) || 0) * (Number(next.rate) || 0));
+      return next;
+    }));
 
   const removeRow = (set: React.Dispatch<React.SetStateAction<Row[]>>, localId: string) =>
     set(prev => prev.filter(r => r.localId !== localId));
@@ -340,10 +388,10 @@ export default function ManuelPayrollPage() {
     set: React.Dispatch<React.SetStateAction<Row[]>>,
     rows: Row[],
     label: string,
-    amount = ''
+    defaultAmount = 0
   ) => {
     if (rows.some(r => r.label === label)) return;
-    set(prev => [...prev, newRow(label, amount as any)]);
+    set(prev => [...prev, { ...newRow(label), base: defaultAmount || '', rate: defaultAmount ? 1 : '', amount: defaultAmount || 0 }]);
   };
 
   // Ajouter une taxe depuis template BDD
@@ -382,12 +430,12 @@ export default function ManuelPayrollPage() {
 
     // Primes → soumises CNSS + ITS
     const primesPayload = primes.filter(p => n(p.amount) > 0).map(p => ({
-      bonusType: p.label || 'Prime', amount: n(p.amount),
+      bonusType: p.label || 'Prime', amount: p.amount, base: p.base || undefined, rate: p.rate || undefined,
       isTaxable: true, isCnss: true, fiscalType: 'TAXABLE_CNSS',
     }));
     // Indemnités → NON soumises
     const indemPayload = indemnites.filter(i => n(i.amount) > 0).map(i => ({
-      bonusType: i.label || 'Indemnité', amount: n(i.amount),
+      bonusType: i.label || 'Indemnité', amount: i.amount, base: i.base || undefined, rate: i.rate || undefined,
       isTaxable: false, isCnss: false, fiscalType: 'NON_TAXABLE',
     }));
 
@@ -421,11 +469,11 @@ export default function ManuelPayrollPage() {
     setSubmitting(true);
     try {
       const primesP = primes.filter(p => n(p.amount) > 0).map(p => ({
-        bonusType: p.label || 'Prime', amount: n(p.amount),
+        bonusType: p.label || 'Prime', amount: p.amount, base: p.base || undefined, rate: p.rate || undefined,
         isTaxable: true, isCnss: true, fiscalType: 'TAXABLE_CNSS',
       }));
       const indemP = indemnites.filter(i => n(i.amount) > 0).map(i => ({
-        bonusType: i.label || 'Indemnité', amount: n(i.amount),
+        bonusType: i.label || 'Indemnité', amount: i.amount, base: i.base || undefined, rate: i.rate || undefined,
         isTaxable: false, isCnss: false, fiscalType: 'NON_TAXABLE',
       }));
       const result: any = await api.post('/payrolls/manual', {
@@ -455,8 +503,8 @@ export default function ManuelPayrollPage() {
 
   // Computed
   const hasOt = [ot10,ot25,ot50,ot100].some(v => n(v) > 0);
-  const totalPrimes    = primes.reduce((s,r) => s+n(r.amount), 0);
-  const totalIndemnites= indemnites.reduce((s,r) => s+n(r.amount), 0);
+  const totalPrimes    = primes.reduce((s,r) => s + r.amount, 0);
+  const totalIndemnites= indemnites.reduce((s,r) => s + r.amount, 0);
   const totalTaxes     = taxes.reduce((s,r) => s+n(r.amount), 0);
   const totalLoans     = loans.reduce((s,r) => s+n(r.amount), 0);
   const totalAdvances  = advances.reduce((s,r) => s+n(r.amount), 0);
@@ -511,7 +559,7 @@ export default function ManuelPayrollPage() {
           </Card>
 
           {/* ── Employé ── */}
-          <Card className="overflow-hidden">
+          <Card className="overflow-visible">
             <div className="px-5 pt-5 pb-4">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Employé</p>
 
@@ -669,12 +717,19 @@ export default function ManuelPayrollPage() {
             />
 
             <div className="px-5 py-4 space-y-2">
+              {/* En-têtes colonnes */}
+              <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
+                {['Libellé','Base (F)','Taux','Gain (F)',''].map((h,i) => (
+                  <span key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
+                ))}
+              </div>
               <AnimatePresence initial={false}>
                 {primes.map(row => (
                   <InputRow key={row.localId} row={row}
                     placeholder="Ex : Prime d'ancienneté, de rendement…"
                     onChangeLabel={v => updateRow(setPrimes, row.localId, { label: v })}
-                    onChangeAmount={v => updateRow(setPrimes, row.localId, { amount: v })}
+                    onChangeBase={v => updateRow(setPrimes, row.localId, { base: v })}
+                    onChangeRate={v => updateRow(setPrimes, row.localId, { rate: v })}
                     onRemove={() => removeRow(setPrimes, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -736,12 +791,19 @@ export default function ManuelPayrollPage() {
             />
 
             <div className="px-5 py-4 space-y-2">
+              {/* En-têtes colonnes */}
+              <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
+                {['Libellé','Base (F)','Taux','Gain (F)',''].map((h,i) => (
+                  <span key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
+                ))}
+              </div>
               <AnimatePresence initial={false}>
                 {indemnites.map(row => (
                   <InputRow key={row.localId} row={row}
                     placeholder="Ex : Indemnité de transport, de logement…"
                     onChangeLabel={v => updateRow(setIndemnites, row.localId, { label: v })}
-                    onChangeAmount={v => updateRow(setIndemnites, row.localId, { amount: v })}
+                    onChangeBase={v => updateRow(setIndemnites, row.localId, { base: v })}
+                    onChangeRate={v => updateRow(setIndemnites, row.localId, { rate: v })}
                     onRemove={() => removeRow(setIndemnites, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -802,10 +864,10 @@ export default function ManuelPayrollPage() {
             <div className="px-5 py-4 space-y-2">
               <AnimatePresence initial={false}>
                 {taxes.map(row => (
-                  <InputRow key={row.localId} row={row}
+                  <SimpleRow key={row.localId} row={row}
                     placeholder="Ex : CAMU, TOL, Taxe d'apprentissage…"
                     onChangeLabel={v => updateRow(setTaxes, row.localId, { label: v })}
-                    onChangeAmount={v => updateRow(setTaxes, row.localId, { amount: v })}
+                    onChangeAmount={v => updateRow(setTaxes, row.localId, { amount: Number(v)||0 })}
                     onRemove={() => removeRow(setTaxes, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -878,11 +940,11 @@ export default function ManuelPayrollPage() {
               {/* Prêts manuels */}
               <AnimatePresence initial={false}>
                 {loans.map(row => (
-                  <InputRow key={row.localId} row={row}
+                  <SimpleRow key={row.localId} row={row}
                     placeholder="Ex : Remboursement prêt logement…"
                     amountPlaceholder="Mensualité"
                     onChangeLabel={v => updateRow(setLoans, row.localId, { label: v })}
-                    onChangeAmount={v => updateRow(setLoans, row.localId, { amount: v })}
+                    onChangeAmount={v => updateRow(setLoans, row.localId, { amount: Number(v)||0 })}
                     onRemove={() => removeRow(setLoans, row.localId)} />
                 ))}
               </AnimatePresence>
@@ -921,11 +983,11 @@ export default function ManuelPayrollPage() {
               {/* Avances manuelles */}
               <AnimatePresence initial={false}>
                 {advances.map(row => (
-                  <InputRow key={row.localId} row={row}
+                  <SimpleRow key={row.localId} row={row}
                     placeholder="Ex : Avance du 15 janvier…"
                     amountPlaceholder="Montant"
                     onChangeLabel={v => updateRow(setAdvances, row.localId, { label: v })}
-                    onChangeAmount={v => updateRow(setAdvances, row.localId, { amount: v })}
+                    onChangeAmount={v => updateRow(setAdvances, row.localId, { amount: Number(v)||0 })}
                     onRemove={() => removeRow(setAdvances, row.localId)} />
                 ))}
               </AnimatePresence>
