@@ -109,87 +109,27 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
           [class*="navbar"],[class*="Navbar"] { display: none !important; }
           .payslip-sheet-wrap { display: block !important; position: static !important; }
           #bulletin-corp-root {
-            width: 194mm !important; min-height: 281mm !important;
-            padding: 0 !important; margin: 0 !important;
-            box-shadow: none !important; border: none !important;
+            width: 194mm !important;
+            min-height: 281mm !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            /* PAS de border sur le root — évite le cadre noir */
+            border: none !important;
+            /* N&B : convertit tout en niveaux de gris automatiquement */
+            filter: grayscale(1) !important;
           }
+          /* Les fonds très foncés → gardent leur contraste en grayscale */
+          /* Les fonds colorés → convertis en gris proportionnel */
+          /* Les textes clairs sur fond foncé → restent lisibles */
           .corp-no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
           .bulletin-legal-corp { display: none !important; }
-
-          /* ═══ LISIBILITÉ N&B ═══
-             Chaque fond coloré → blanc ou gris clair
-             Chaque texte coloré → noir pur
-             Chaque bordure colorée → #000
-          */
-          /* En-tête bandeau bleu → noir avec texte blanc */
-          #bulletin-corp-root [style*="background:#1e3a5f"],
-          #bulletin-corp-root [style*="background: #1e3a5f"] {
-            background: #000 !important;
-            color: #fff !important;
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          /* Zone infos employé fond bleu clair → blanc avec bordure */
-          #bulletin-corp-root [style*="background:#f0f4f8"],
-          #bulletin-corp-root [style*="background: #f0f4f8"] {
-            background: #fff !important;
-            border-bottom: 2px solid #000 !important;
-          }
-          /* En-têtes tableau noirs → gardés noirs (déjà #1e293b) */
-          /* Fond total brut bleu → gris moyen */
-          #bulletin-corp-root [style*="background:#dbeafe"] {
-            background: #d0d0d0 !important;
-            color: #000 !important;
-          }
-          /* Section label gain vert → noir */
-          #bulletin-corp-root [style*="background:#eef2ff"],
-          #bulletin-corp-root [style*="bg:#eef2ff"] { background: #e0e0e0 !important; color: #000 !important; }
-          /* Section label cotis jaune → gris */
-          #bulletin-corp-root [style*="background:#fef3c7"] { background: #e8e8e8 !important; color: #000 !important; }
-          /* Total cotis jaune → gris */
-          /* Lignes alternées gain vert pâle → blanc */
-          #bulletin-corp-root [style*="background:#f0fdf4"],
-          #bulletin-corp-root [style*="background:#f9fffe"] { background: #fff !important; }
-          /* Lignes alternées cotis jaune pâle → blanc légèrement grisé */
-          #bulletin-corp-root [style*="background:#fffbeb"],
-          #bulletin-corp-root [style*="background:#fef9ee"],
-          #bulletin-corp-root [style*="background:#fff8f8"] { background: #f8f8f8 !important; }
-          /* Cellules patronales violet → blanc */
-          #bulletin-corp-root [style*="background:#faf5ff"] { background: #f0f0f0 !important; }
-          /* Cellules retenue rouge → blanc */
-          #bulletin-corp-root [style*="background:#fef2f2"] { background: #f0f0f0 !important; }
-          /* Header tableau sombre → noir */
-          #bulletin-corp-root [style*="background:#1e293b"],
-          #bulletin-corp-root [style*="background:#334155"] { background: #000 !important; color: #fff !important; }
-          /* Total gains/retenues fond gris */
-          #bulletin-corp-root [style*="background:#f8fafc"],
-          #bulletin-corp-root [style*="background:#f1f5f9"] { background: #e8e8e8 !important; }
-          /* NET À PAYER : fond bleu marine → noir */
-          #bulletin-corp-root [style*="background:#1e3a5f"] { background: #000 !important; color: #fff !important; }
-          /* Pied de page fond → blanc */
-          #bulletin-corp-root [style*="background:#f8fafc"] { background: #fff !important; }
-          /* Toutes les couleurs de texte → noir */
-          #bulletin-corp-root [style*="color:#166534"],
-          #bulletin-corp-root [style*="color:#991b1b"],
-          #bulletin-corp-root [style*="color:#7c3aed"],
-          #bulletin-corp-root [style*="color:#6d28d9"],
-          #bulletin-corp-root [style*="color:#92400e"],
-          #bulletin-corp-root [style*="color:#3730a3"] { color: #000 !important; }
-          /* Bordures colorées → noir */
-          #bulletin-corp-root [style*="border-top:2px solid #1e3a5f"],
-          #bulletin-corp-root [style*="border-bottom:2px solid #1e3a5f"],
-          #bulletin-corp-root [style*="borderTop:2px solid #1e3a5f"],
-          #bulletin-corp-root [style*="borderBottom:2px solid #1e3a5f"] {
-            border-color: #000 !important;
-          }
-          /* Tags contrat badge */
-          #bulletin-corp-root [style*="background:#1e3a5f"][style*="color:#fff"] {
-            background: #000 !important; color: #fff !important;
-          }
-          /* Ombres → supprimées */
-          #bulletin-corp-root * { box-shadow: none !important; }
-
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
-        `}</style>
+      `}</style>
 
       <div id="bulletin-corp-root" style={{
           fontFamily: '"Segoe UI","Helvetica Neue",Arial,sans-serif',

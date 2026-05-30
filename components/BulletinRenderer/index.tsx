@@ -78,7 +78,7 @@ const BD = '1px solid #000'; // bordure principale
 const BL = '1px solid #ccc'; // bordure légère
 
 const cell = (extra?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '2px 4px', fontSize: 9, verticalAlign: 'middle', ...extra,
+  border: BD, padding: '3px 5px', fontSize: 9.5, verticalAlign: 'middle', ...extra,
 });
 const cellR = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...cell(), textAlign: 'right', fontFamily: 'Courier New, monospace', ...extra,
@@ -87,7 +87,7 @@ const cellC = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...cell(), textAlign: 'center', ...extra,
 });
 const th = (extra?: React.CSSProperties): React.CSSProperties => ({
-  ...cell(), background: '#d0d0d0', fontWeight: 700, textAlign: 'center', fontSize: 8.5, padding: '3px 4px', ...extra,
+  ...cell(), background: '#d0d0d0', fontWeight: 700, textAlign: 'center', fontSize: 9, padding: '4px 5px', ...extra,
 });
 
 // ─── Composant ────────────────────────────────────────────────────────────────
@@ -538,6 +538,8 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
             box-shadow: none !important;
             border: none !important;
           }
+          /* N&B parfait — tous les fonds/textes convertis */
+          #bulletin-root { filter: none !important; }
           .bul-no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
           .bul-legal { display: none !important; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -546,11 +548,11 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
 
       <div id="bulletin-root" style={{
         fontFamily: '"Helvetica Neue", Arial, sans-serif',
-        fontSize: 9, background: '#fff', color: '#000',
+        fontSize: 10, background: '#fff', color: '#000',
         width: '210mm',           /* ✅ FIXÉ : fixe, pas 100% */
         minHeight: '297mm',
         boxSizing: 'border-box',
-        padding: '10mm 12mm',
+        padding: '8mm 10mm',
         margin: '0 auto',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.1)',
       }}>
