@@ -401,7 +401,7 @@ export default function ManuelPayrollPage() {
     const fixed = Number(tax.fixedEmployee);
     const rate  = Number(tax.employeeRate);
     const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate);
-    setTaxes(prev => [...prev, { localId: uid(), refId: tax.id, label: tax.name, amount: amt }]);
+   setTaxes(prev => [...prev, { localId: uid(), refId: tax.id, label: tax.name, base: '', rate: 1, amount: amt }]);
   };
 
   // Ajouter taxe custom depuis form
@@ -410,7 +410,7 @@ export default function ManuelPayrollPage() {
     const grossEst = sim?.grossSalary ?? n(empDetail?.baseSalary as any);
     const fixed = n(newTaxFixed); const rate = n(newTaxRate);
     const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate / 100);
-    setTaxes(prev => [...prev, { localId: uid(), label: newTaxLabel.trim(), amount: amt }]);
+    setTaxes(prev => [...prev, { localId: uid(), refId: tax.id, label: tax.name, base: '', rate: 1, amount: amt }]);
     setNewTaxLabel(''); setNewTaxCode(''); setNewTaxRate(''); setNewTaxFixed('');
   };
 
