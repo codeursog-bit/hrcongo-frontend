@@ -395,14 +395,7 @@ export default function ManuelPayrollPage() {
   };
 
   // Ajouter une taxe depuis template BDD
-  const addTaxFromTemplate = (tax: CompanyTax) => {
-    if (taxes.some(t => t.refId === tax.id)) return;
-    const grossEst = n(empDetail?.baseSalary as any) + primes.reduce((s,r) => s + n(r.amount), 0);
-    const fixed = Number(tax.fixedEmployee);
-    const rate  = Number(tax.employeeRate);
-    const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate);
-   setTaxes(prev => [...prev, { localId: uid(), refId: tax.id, label: tax.name, base: '', rate: 1, amount: amt }]);
-  };
+
 
   // Ajouter taxe custom depuis form
 const addTaxFromTemplate = (tax: CompanyTax) => {
