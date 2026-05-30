@@ -201,29 +201,91 @@ export default function BulletinRendererAdmin({ payroll, template, previewMode =
     <>
       <style>{`
         @media print {
-          /* A4 portrait, pleine page */
-          @page { size: A4 portrait; margin: 0; }
-          html, body { margin: 0 !important; padding: 0 !important; }
-          /* Masquer tout sauf le bulletin */
-          body > * { display: none !important; }
-          .payslip-sheet-wrap, .bulletin-modal-overlay {
-            display: block !important;
-            position: fixed !important;
-            inset: 0 !important;
-            z-index: 99999 !important;
-            background: #fff !important;
-          }
-          /* Bulletin pleine page */
+          @page { size: A4 portrait; margin: 8mm; }
+          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+          .no-print, nav, header, aside, footer,
+          [class*="sidebar"],[class*="Sidebar"],
+          [class*="navbar"],[class*="Navbar"] { display: none !important; }
+          .payslip-sheet-wrap { display: block !important; position: static !important; }
           #bul-admin-root {
-            width:     210mm !important;
-            min-height:297mm !important;
-            padding:   10mm 12mm !important;
-            margin:    0 !important;
-            box-shadow:none !important;
-            border:    none !important;
+            width: 194mm !important; min-height: 281mm !important;
+            padding: 0 !important; margin: 0 !important;
+            box-shadow: none !important; border: none !important;
           }
           .adm-no-break { page-break-inside: avoid !important; break-inside: avoid !important; }
-          .adm-legal    { display: none !important; }
+          .adm-legal { display: none !important; }
+
+          /* ═══ LISIBILITÉ N&B ═══ */
+
+          /* Bandeau en-tête marine #0f2544 → noir, texte blanc conservé */
+          #bul-admin-root [style*="background: #0f2544"],
+          #bul-admin-root [style*="background:#0f2544"] {
+            background: #000 !important;
+            color: #fff !important;
+          }
+          /* Bandeau cumuls #1e2e44 → noir */
+          #bul-admin-root [style*="background:'#1e2e44'"],
+          #bul-admin-root [style*="background: #1e2e44"],
+          #bul-admin-root [style*="background:#1e2e44"] {
+            background: #000 !important; color: #fff !important;
+          }
+          /* Section labels foncés (vert #0a3d1f, rouge #5a1a1a, brun #3a2800, vert #1a3a1a) → noir */
+          #bul-admin-root [style*="background:#0a3d1f"],
+          #bul-admin-root [style*="background:#5a1a1a"],
+          #bul-admin-root [style*="background:#3a2800"],
+          #bul-admin-root [style*="background:#1a3a1a"] {
+            background: #000 !important; color: #fff !important;
+          }
+          /* Lignes alternées fond crème/vert → blanc cassé */
+          #bul-admin-root [style*="background:#fdf8f0"],
+          #bul-admin-root [style*="background:#f5faf5"] {
+            background: #f8f8f8 !important;
+          }
+          /* Cellules patronales fond beige → gris très clair */
+          #bul-admin-root [style*="background:#f5f0e8"] {
+            background: #ebebeb !important;
+          }
+          /* Cellules fond blanc cassé → blanc */
+          #bul-admin-root [style*="background:#f9f9f9"] {
+            background: #f5f5f5 !important;
+          }
+          /* Total rows gris → gardés */
+          #bul-admin-root [style*="background:#e8e8e8"],
+          #bul-admin-root [style*="background:#eee"] {
+            background: #d8d8d8 !important; color: #000 !important;
+          }
+          /* Message footer fond jaune pâle → blanc */
+          #bul-admin-root [style*="background:#fffdf0"] {
+            background: #fff !important; border: 1px solid #000 !important;
+          }
+          /* Badge accent doré rgba(184,134,11,.3) → gris */
+          #bul-admin-root [style*="rgba(184,134,11"] {
+            background: #e0e0e0 !important; border-color: #000 !important;
+          }
+          /* Bordures dorées ACCENT #b8860b → noir */
+          #bul-admin-root [style*="border-left:4px solid #b8860b"],
+          #bul-admin-root [style*="borderLeft:4px solid #b8860b"],
+          #bul-admin-root [style*="border-top:2px solid #b8860b"],
+          #bul-admin-root [style*="borderTop:2px solid #b8860b"] {
+            border-color: #000 !important;
+          }
+          /* Textes colorés → noir */
+          #bul-admin-root [style*="color:#b8860b"],
+          #bul-admin-root [style*="color: #b8860b"] { color: #000 !important; }
+          /* NET À PAYER fond marine → noir */
+          #bul-admin-root [style*="background: #0f2544"],
+          #bul-admin-root [style*="background:#0f2544"] {
+            background: #000 !important; color: #fff !important;
+          }
+          /* Badges contrat fond marine → noir */
+          #bul-admin-root span[style*="background:#0f2544"] {
+            background: #000 !important; color: #fff !important;
+            border: 1px solid #000 !important;
+          }
+          /* Badges catégorie fond #eee → gardés */
+          /* Ombres supprimées */
+          #bul-admin-root * { box-shadow: none !important; }
+
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
         `}</style>
@@ -233,7 +295,7 @@ export default function BulletinRendererAdmin({ payroll, template, previewMode =
           fontSize: 10,
           background: '#fff',
           color: '#000',
-          width: '100%',
+          width: '210mm',
           boxSizing: 'border-box' as const,
           padding: '28px 34px',
           margin: '0 auto',

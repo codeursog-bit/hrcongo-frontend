@@ -5,7 +5,7 @@
 // ✅ Utilise BulletinDisplay — gère automatiquement mode template ET canvas
 // ============================================================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Printer, Download, Check, Ban,
@@ -79,7 +79,6 @@ const CONFIRM_CONFIG = {
 export default function PayslipPage({ params }: { params: { id: string } }) {
   const router   = useRouter();
   const { bp }   = useBasePath();
-  const printRef     = useRef<HTMLDivElement>(null);
   const [pdfLoading, setPdfLoading] = React.useState(false);
 
   const [data, setData]             = useState<PayrollData | null>(null);
@@ -169,34 +168,11 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
     <>
       <style jsx global>{`
         @media print {
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: #fff !important;
-          }
-          /* Masquer tout sauf le bulletin */
-          body > *:not(#__next) { display: none !important; }
-          .no-print { display: none !important; }
-          nav, header, aside, footer,
-          [class*="sidebar"], [class*="Sidebar"],
-          [class*="navbar"], [class*="Navbar"] {
-            display: none !important;
-          }
-          /* Le bulletin prend toute la page */
-          @page { size: A4 portrait; margin: 0; }
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .payslip-sheet-wrap {
-            display: block !important;
-            position: fixed !important;
-            inset: 0 !important;
-            z-index: 99999 !important;
-            background: #fff !important;
-          }
-          .payslip-sheet {
-            border: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-          }
+          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+          .no-print, nav, header, aside, footer,
+          [class*="sidebar"],[class*="Sidebar"],
+          [class*="navbar"],[class*="Navbar"] { display: none !important; }
+          .payslip-sheet-wrap { display: block !important; position: static !important; }
         }
       `}</style>
 
@@ -255,7 +231,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
               {pdfLoading ? 'Génération PDF…' : 'Télécharger PDF'}
             </button>
             <button
-              onClick={printBulletin}
+              onClick={() => printBulletin(getBulletinRootId(data?.company?.bulletinTemplateId ?? 'default'))}
               className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-bold rounded-xl text-sm hover:bg-gray-50 transition-colors"
             >
               <Printer size={15}/> Imprimer
@@ -285,29 +261,8 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-6 items-start print:block">
 
           {/* ✅ BULLETIN A4 */}
-          <div className="payslip-sheet-wrap print:fixed print:inset-0 print:z-[9999] print:bg-white">
-
-            {/* Conteneur A4 : ratio exact 210/297, fond blanc, ombre de feuille */}
-            <div
-              ref={printRef}
-              id="bulletin-a4-frame"
-              className="payslip-sheet"
-              style={{
-                background:    '#fff',
-                width:         '100%',
-                maxWidth:      '210mm',
-                minHeight:     '297mm',
-                margin:        '0 auto',
-                boxShadow:     '0 4px 6px -1px rgba(0,0,0,0.07), 0 10px 40px -5px rgba(0,0,0,0.13)',
-                border:        '1px solid #e5e7eb',
-                borderRadius:  0,
-                overflow:      'visible',
-                position:      'relative',
-              }}
-            >
+          <div className="payslip-sheet-wrap">
               <BulletinDisplay payroll={payrollForDisplay as any} />
-            </div>
-
           </div>
 
           {/* ── SIDEBAR ── */}

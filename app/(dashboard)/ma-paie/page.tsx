@@ -2,7 +2,10 @@
 
 // ============================================================================
 // app/(dashboard)/ma-paie/page.tsx
-// ✅ Utilise BulletinDisplay — gère automatiquement mode template ET canvas
+// ✅ Fix TypeScript : printBulletin wrappé dans une arrow function
+// ✅ Fix A4 : width: '210mm' fixe (pas maxWidth: 210mm + width: 100%)
+// ✅ Fix impression : pas de position:fixed dans @media print
+// ✅ Fix modal : printBulletin reçoit le bon id selon templateId
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -17,10 +20,10 @@ import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bul
 
 export default function MyPayrollsPage() {
   const router = useRouter();
-  const [payrolls, setPayrolls]   = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [employee, setEmployee]   = useState<any>(null);
-  const [viewing, setViewing]     = useState<any | null>(null);
+  const [payrolls, setPayrolls]     = useState<any[]>([]);
+  const [isLoading, setIsLoading]   = useState(true);
+  const [employee, setEmployee]     = useState<any>(null);
+  const [viewing, setViewing]       = useState<any | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
@@ -45,6 +48,9 @@ export default function MyPayrollsPage() {
   const currentYear         = new Date().getFullYear();
   const currentYearPayrolls = payrolls.filter(p => p.year === currentYear);
   const yearTotal           = currentYearPayrolls.reduce((s, p) => s + Number(p.netSalary || 0), 0);
+
+  // ── Id du bulletin actif (dépend du template de l'entreprise) ─────────────
+  const activeBulletinId = getBulletinRootId(viewing?.company?.bulletinTemplateId ?? 'default');
 
   return (
     <div className="max-w-[1200px] mx-auto pb-20 space-y-8">
@@ -189,18 +195,21 @@ export default function MyPayrollsPage() {
       {/* ── MODAL BULLETIN ── */}
       {viewing && (
         <>
+          {/*
+            ✅ CSS impression corrigé :
+            - Pas de position:fixed (cassait la preview Chrome/Firefox)
+            - Le BulletinRenderer gère lui-même @page et le masquage
+            - On masque juste la barre d'actions et l'overlay
+          */}
           <style>{`
             @media print {
               html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
-              .bulletin-modal-bar, .no-print { display: none !important; }
-              @page { size: A4 portrait; margin: 0; }
-              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              .bulletin-modal-bar,
+              .no-print { display: none !important; }
+              /* L'overlay et la box s'effacent — seul le bulletin reste */
               .bulletin-modal-overlay {
-                position: fixed !important;
-                inset: 0 !important;
-                z-index: 99999 !important;
+                position: static !important;
                 background: #fff !important;
-                display: block !important;
                 padding: 0 !important;
                 overflow: visible !important;
               }
@@ -208,11 +217,16 @@ export default function MyPayrollsPage() {
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 max-width: none !important;
-                width: 100% !important;
+                width: auto !important;
                 overflow: visible !important;
               }
-              /* Masquer le reste de la page */
-              body > *:not(.bulletin-modal-overlay) { display: none !important; }
+              .bulletin-modal-scroll {
+                background: #fff !important;
+                padding: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+              }
+              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
           `}</style>
 
@@ -223,72 +237,83 @@ export default function MyPayrollsPage() {
           >
             <div
               className="bulletin-modal-box"
-              style={{ background:'#fff', borderRadius:16, maxWidth:960, width:'100%', overflow:'visible', position:'relative', alignSelf:'flex-start' }}
+              style={{ background:'#f1f5f9', borderRadius:16, maxWidth:900, width:'100%', overflow:'visible', position:'relative', alignSelf:'flex-start' }}
               onClick={e => e.stopPropagation()}
             >
+
               {/* Barre actions */}
               <div
                 className="bulletin-modal-bar no-print"
-                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', borderBottom:'1px solid #e2e8f0', background:'#f8fafc' }}
+                style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', borderBottom:'1px solid #e2e8f0', background:'#f8fafc', borderRadius:'16px 16px 0 0' }}
               >
                 <span style={{ fontSize:13, fontWeight:700, color:'#0f172a' }}>
                   Bulletin — {fmtMonth(viewing.month)} {viewing.year}
                 </span>
                 <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                  {/* ✅ Fix TypeScript : arrow function, pas référence directe */}
                   <button
                     disabled={pdfLoading}
                     onClick={async () => {
                       setPdfLoading(true);
                       try {
                         await downloadBulletinPDF(
-                          getBulletinRootId(viewing?.company?.bulletinTemplateId ?? 'default'),
+                          activeBulletinId,
                           `bulletin-${fmtMonth(viewing.month).toLowerCase()}-${viewing.year}.pdf`
                         );
                       } finally {
                         setPdfLoading(false);
                       }
                     }}
-                    style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'none', background: pdfLoading ? '#6b7280' : '#1e293b', cursor: pdfLoading ? 'not-allowed' : 'pointer', fontSize:12, fontWeight:700, color:'#fff', opacity: pdfLoading ? 0.7 : 1, transition:'all .2s' }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:6,
+                      padding:'7px 14px', borderRadius:8, border:'none',
+                      background: pdfLoading ? '#6b7280' : '#1e293b',
+                      cursor: pdfLoading ? 'not-allowed' : 'pointer',
+                      fontSize:12, fontWeight:700, color:'#fff',
+                      opacity: pdfLoading ? 0.7 : 1, transition:'all .2s',
+                    }}
                   >
                     <Download size={14} />
                     {pdfLoading ? 'Génération…' : 'Télécharger PDF'}
                   </button>
+
+                  {/* ✅ Fix TypeScript + bon id */}
                   <button
-                    onClick={printBulletin}
-                    style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151' }}
+                    onClick={() => printBulletin(activeBulletinId)}
+                    style={{
+                      display:'flex', alignItems:'center', gap:6,
+                      padding:'7px 14px', borderRadius:8,
+                      border:'1px solid #e2e8f0', background:'#fff',
+                      cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151',
+                    }}
                   >
                     <Printer size={14} /> Imprimer
                   </button>
+
                   <button
                     onClick={() => setViewing(null)}
-                    style={{ display:'flex', alignItems:'center', justifyContent:'center', width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer' }}
+                    style={{
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      width:32, height:32, borderRadius:8,
+                      border:'1px solid #e2e8f0', background:'#fff', cursor:'pointer',
+                    }}
                   >
                     <X size={16} />
                   </button>
                 </div>
               </div>
 
-              {/* Bulletin — conteneur A4 exact */}
-              <div style={{
-                background:   '#f1f5f9',
-                padding:      '24px 20px',
-                overflowY:    'auto',
-                maxHeight:    'calc(100vh - 140px)',
-              }}>
-                <div
-                  id="bulletin-a4-frame"
-                  style={{
-                    background:   '#fff',
-                    width:        '100%',
-                    maxWidth:     '210mm',
-                    minHeight:    '297mm',
-                    margin:       '0 auto',
-                    boxShadow:    '0 4px 6px -1px rgba(0,0,0,0.1), 0 10px 40px -5px rgba(0,0,0,0.15)',
-                    border:       '1px solid #e5e7eb',
-                    borderRadius: 0,
-                    overflow:     'visible',
-                  }}
-                >
+              {/* Zone bulletin — fond gris, bulletin blanc centré en A4 */}
+              <div
+                className="bulletin-modal-scroll"
+                style={{ padding:'24px 20px', overflowY:'auto', maxHeight:'calc(100vh - 140px)' }}
+              >
+                {/*
+                  ✅ Fix A4 : width: '210mm' fixe (pas width:100% + maxWidth:210mm)
+                  Le BulletinDisplay rend lui-même le div #bulletin-root avec width:210mm
+                  Ce wrapper sert juste de centrage visuel dans la modal
+                */}
+                <div style={{ display:'flex', justifyContent:'center' }}>
                   <BulletinDisplay payroll={viewing} />
                 </div>
               </div>
