@@ -405,14 +405,19 @@ export default function ManuelPayrollPage() {
   };
 
   // Ajouter taxe custom depuis form
-  const addTaxCustom = () => {
-    if (!newTaxLabel.trim()) return;
-    const grossEst = sim?.grossSalary ?? n(empDetail?.baseSalary as any);
-    const fixed = n(newTaxFixed); const rate = n(newTaxRate);
-    const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate / 100);
-    setTaxes(prev => [...prev, { localId: uid(), refId: tax.id, label: tax.name, base: '', rate: 1, amount: amt }]);
-    setNewTaxLabel(''); setNewTaxCode(''); setNewTaxRate(''); setNewTaxFixed('');
-  };
+const addTaxFromTemplate = (tax: CompanyTax) => {
+  if (taxes.some(t => t.refId === tax.id)) return;
+  const grossEst = n(empDetail?.baseSalary as any) + primes.reduce((s,r) => s + n(r.amount), 0);
+  const fixed = Number(tax.fixedEmployee);
+  const rate  = Number(tax.employeeRate);
+  const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate);
+  
+  // ✅ Capturer les valeurs avant le callback
+  const id    = tax.id;
+  const name  = tax.name;
+  
+  setTaxes(prev => [...prev, { localId: uid(), refId: id, label: name, base: '', rate: 1, amount: amt }]);
+};
 
   // ── Simulation debounce ───────────────────────────────────────────────────
   useEffect(() => {
