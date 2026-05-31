@@ -8,7 +8,7 @@
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig } from '@/types/bulletin-template';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
-import { classifyItems, getCnssEmpTotal, getTusDgi, getTusCnss, getCtaxEmpItems, getTotalCotisSal, getTotalCotisPat, getEmpColsForItem } from '@/lib/bulletin-items-classifier';
+import { classifyItems, getTusDgi, getTusCnss, getCtaxEmpItems } from '@/lib/bulletin-items-classifier';
 
 export interface BulletinRendererCorporateProps {
   payroll:      BulletinPayroll;
@@ -21,6 +21,24 @@ const MARITAL: Record<string,string> = { SINGLE:'Célibataire', MARRIED:'Marié(
 const PAYMENT: Record<string,string> = { BANK_TRANSFER:'Virement bancaire', CASH:'Espèces', MOBILE_MONEY:'Mobile Money', CHECK:'Chèque' };
 const CONTRACT: Record<string,string> = { CDI:'CDI', CDD:'CDD', STAGE:'Stage', CONSULTANT:'Consultant', PRESTATAIRE:'Prestataire', INTERIM:'Intérimaire', FREELANCE:'Freelance' };
 
+// ─── fmtBase / fmtTaux — règle stricte ───────────────────────────────────────
+function fmtBase(item: any): string {
+  if (item.base == null || item.base === 0) return '—';
+  return Math.round(Number(item.base)).toLocaleString('fr-FR');
+}
+function fmtTaux(item: any): string {
+  const qty = item.quantity;
+  if (qty != null && qty !== 0) return String(qty);
+  if (item.rate == null || item.rate === 0) return '—';
+  const r = Number(item.rate);
+  if (r > 1 && r <= 3) return `×${r.toFixed(2).replace('.', ',')}`;
+  if (r > 0 && r < 1) {
+    const pct = r * 100;
+    const str = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(3).replace(/0+$/, '');
+    return `${str}%`;
+  }
+  return String(r);
+}
 const fmt = (v: any) => {
   const n = Math.round(Number(v) || 0);
   // Valeur aberrante (bug API) → afficher '—'
@@ -47,20 +65,16 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
   const e       = (payroll.employee ?? {}) as any;
   const co      = (payroll.company  ?? {}) as any;
   const items   = payroll.items ?? [];
-  const month   = payroll.month ?? 1;
-  const monthLabel = MONTHS[month - 1];
+  const ytd     = (payroll as any).ytd;
+  const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
 
   const { gainItems: gainLines, cotisItems: cotisLines, indemItems: indemLines, retenueItems, empItems } = useMemo(
     () => classifyItems(items), [items]
   );
 
-  const cnssEmpTotal  = getCnssEmpTotal(empItems, payroll);
-  const brutGains     = gainLines.reduce((s,i)=>s+Number(i.amount),0);
-  const totalCotisSal = getTotalCotisSal(cotisLines);
-  const totalCotisPat = getTotalCotisPat(empItems, payroll);
-  const totalGainsRow = brutGains + indemLines.reduce((s,i)=>s+Number(i.amount),0)
-                      + retenueItems.reduce((s,i)=>s+Number(i.amount),0);
-  const totalRetenues = totalCotisSal + retenueItems.reduce((s,i)=>s+Number(i.amount),0);
+  // cnssEmpTotal = payroll.cnssEmployer (fourni par le back)
+  // totaux lus depuis le back
+  // totalCotisPat = payroll.cnssEmployer (fourni par le back)
   const netSalary     = payroll.netSalary ?? 0;
 
   const TH = (extra?: React.CSSProperties): React.CSSProperties => ({
@@ -87,15 +101,17 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
   const fullName = [e.firstName, e.lastName].filter(Boolean).join(' ');
   const cat      = [e.professionalCategory, e.echelon ? `Echelon ${e.echelon}` : ''].filter(Boolean).join(' ');
 
+  const ytdNetImp = ytd ? (ytd.grossSalary - ytd.cnssSalarial) : null;
   const cumCols = [
-    { label:'Salaire brut',    period:payroll.grossSalary,   year:(payroll.grossSalary??0)*month },
-    { label:'Ch. salariales',  period:payroll.cnssSalarial,  year:(payroll.cnssSalarial??0)*month },
-    { label:'Ch. patronales',  period:cnssEmpTotal,          year:cnssEmpTotal*month },
+    { label:'Salaire brut',    period:payroll.grossSalary,  year: ytd?.grossSalary   ?? null },
+    { label:'Ch. salariales',  period:payroll.cnssSalarial, year: ytd?.cnssSalarial  ?? null },
+    { label:'Ch. patronales',  period: payroll.cnssEmployer ?? 0, year: ytd?.cnssEmployer ?? null },
     { label:'Avant. nature',   period:0,                     year:0 },
-    { label:'Net imposable',   period:(payroll.grossSalary??0)-(payroll.cnssSalarial??0), year:((payroll.grossSalary??0)-(payroll.cnssSalarial??0))*month },
-    { label:'H. travaillées',  period:(payroll.workedDays??0)*8, year:(payroll.workedDays??0)*8*month },
+    { label:'Net imposable',   period:(payroll.grossSalary??0)-(payroll.cnssSalarial??0), year: ytdNetImp },
+    { label:'H. travaillées',  period:(payroll.workedDays??0)*8, year: ytd ? (ytd.workedDays*8) : null },
     { label:'H. suppl.',       period:overTime,              year:0 },
-    { label:'Base Congés',     period:payroll.baseSalary,    year:(payroll.baseSalary??0)*month },
+    { label:'H. suppl.',       period:(payroll as any).totalOvertimeAmount ?? 0, year: ytd?.totalOvertimeAmount ?? null },
+    { label:'Base Congés',     period:payroll.baseSalary,    year: ytd?.baseSalary ?? null },
   ];
 
   return (
@@ -194,8 +210,8 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
             <div style={{ fontSize:8, fontWeight:700, textTransform:'uppercase', letterSpacing:1, color:'#333', marginBottom:7 }}>Période de travail</div>
             {row('Site', co.city||co.address||'Administration')}
             {row('Jours ouvrables', `${payroll.workDays??26} jours`)}
-            {row('Jours travaillés', `${payroll.workedDays??26} jours`)}
-            {row('Absences', `${payroll.absenceDays??0} jour(s)`)}
+            {row('Jours travaillés', payroll.workedDays != null ? `${payroll.workedDays} j` : '—')}
+            {row('Absences', payroll.absenceDays != null ? `${payroll.absenceDays} j` : '—')}
             {row('Heures suppl.', overTime > 0 ? `${overTime} h` : '—')}
             {row('Salaire base/j', payroll.baseSalary && payroll.workDays
               ? `${fmt(Math.round(Number(payroll.baseSalary)/(payroll.workDays??26)))} FCFA` : '—')}
@@ -230,8 +246,8 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
                 <tr key={item.id??idx} style={{ background: idx%2===0?'#fff':'#fafafa' }}>
                   <td style={{ ...CC, color:'#333', fontSize:9 }}>{(idx+1)*10}</td>
                   <td style={{ ...C, fontWeight: item.code==='SAL_BASE'?700:400 }}>{item.label}</td>
-                  <td style={CR}>{item.code==='SAL_BASE' ? fmt(payroll.workedDays??26) : ''}</td>
-                  <td style={CR}>{item.base ? fmt(item.base) : ''}</td>
+                  <td style={CR}>{fmtTaux(item)}</td>
+                  <td style={CR}>{fmtBase(item)}</td>
                   <td style={{ ...CC, fontSize:9, color:'#333' }}>{item.rate&&item.rate!==1 ? `${(item.rate*100).toFixed(0)}%` : '—'}</td>
                   <td style={{ ...CR, fontWeight:700, color:'#166534', background:'#f0fdf4' }}>{fmt(item.amount)}</td>
                   <td style={{ ...C, background:'#fef2f2' }} />
@@ -244,13 +260,14 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
               <tr style={{ background:'#dbeafe', borderTop:`2px solid ${primary}`, borderBottom:`2px solid ${primary}` }}>
                 <td colSpan={4} style={{ padding:'6px 8px', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:.5, color:primary }}>Total Brut</td>
                 <td style={{ background:'#dbeafe' }} />
-                <td style={{ padding:'6px 8px', fontSize:13, fontWeight:900, textAlign:'right', fontFamily:'monospace', color:primary, background:'#dbeafe' }}>{fmt(brutGains)}</td>
+                <td style={{ padding:'6px 8px', fontSize:13, fontWeight:900, textAlign:'right', fontFamily:'monospace', color:primary, background:'#dbeafe' }}>{fmt(payroll.grossSalary)}</td>
                 <td style={{ background:'#dbeafe' }} /><td style={{ background:'#dbeafe' }} /><td style={{ background:'#dbeafe' }} />
               </tr>
 
               <SectionLabel color="#92400e" bg="#fef3c7" border="#fcd34d">Cotisations &amp; Prélèvements</SectionLabel>
               {cotisLines.map((item:any, idx:number) => {
-                const { tauxPat: _tauxPat, retPat: _retPat } = getEmpColsForItem(item, empItems, payroll);
+                const _tauxPat = (item as any).empRate   ?? '—';
+                const _retPat  = (item as any).empAmount ? fmt((item as any).empAmount) : '—';
                 return (
                   <tr key={item.id??idx} style={{ background: idx%2===0?'#fffbeb':'#fef9ee' }}>
                     <td style={{ ...CC, color:'#333', fontSize:9 }}>{300+idx}</td>
@@ -269,9 +286,9 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
               <tr style={{ background:'#fef3c7', borderTop:'1.5px solid #d97706', borderBottom:'1.5px solid #d97706' }}>
                 <td colSpan={4} style={{ padding:'6px 8px', fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:.5, color:'#92400e' }}>Total Cotisations</td>
                 <td style={{ background:'#fef3c7' }} /><td style={{ background:'#fef3c7' }} />
-                <td style={{ padding:'6px 8px', fontSize:13, fontWeight:900, textAlign:'right', fontFamily:'monospace', color:'#991b1b' }}>{fmt(totalCotisSal)}</td>
+                <td style={{ padding:'6px 8px', fontSize:13, fontWeight:900, textAlign:'right', fontFamily:'monospace', color:'#991b1b' }}>{fmt(payroll.totalDeductions)}</td>
                 <td style={{ background:'#fef3c7' }} />
-                <td style={{ padding:'6px 8px', fontSize:13, fontWeight:900, textAlign:'right', fontFamily:'monospace', color:'#7c3aed', background:'#fef3c7' }}>{fmt(totalCotisPat)}</td>
+                <td style={{ padding:'6px 8px', fontSize:13, fontWeight:900, textAlign:'right', fontFamily:'monospace', color:'#7c3aed', background:'#fef3c7' }}>{fmt(payroll.cnssEmployer)}</td>
               </tr>
 
               {indemLines.length > 0 && <SectionLabel color="#166534" bg="#f0fdf4" border="#bbf7d0">Indemnités &amp; Avantages (hors brut)</SectionLabel>}
@@ -279,7 +296,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
                 <tr key={item.id??idx} style={{ background: idx%2===0?'#f9fffe':'#f0fdf4' }}>
                   <td style={{ ...CC, color:'#333', fontSize:9 }}>{400+idx}</td>
                   <td style={C}>{item.label}</td>
-                  <td style={CR}>{payroll.workedDays?fmt(payroll.workedDays):''}</td>
+                  <td style={CR}>{fmtTaux(item)}</td>
                   <td style={CR}>{item.base?fmt(item.base):''}</td>
                   <td style={{ ...CC, fontSize:9, color:'#333' }}>—</td>
                   <td style={{ ...CR, fontWeight:700, color:'#166534', background:'#f0fdf4' }}>{fmt(item.amount)}</td>
@@ -292,7 +309,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
                 <tr style={{ background:'#fff8f8' }}>
                   <td style={{ ...CC, color:'#333', fontSize:9 }}>ABS</td>
                   <td style={C}>Retenue absence</td>
-                  <td style={CR}>{payroll.absenceDays??0}</td>
+                  <td style={CR}>{payroll.absenceDays ?? '—'}</td>
                   <td style={CR}/><td style={CC}/>
                   <td style={{ ...C, background:'#f0fdf4' }}/>
                   <td style={{ ...CR, fontWeight:700, color:'#991b1b', background:'#fef2f2' }}>{fmt(payroll.absenceDeduction)}</td>
@@ -305,7 +322,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
                 <td style={{ ...CC, color:'#333', fontSize:9 }}>990</td>
                 <td style={{ ...C, fontWeight:900, fontSize:11 }}>TOTAL GAINS</td>
                 <td style={CR}/><td style={CR}/><td style={CC}/>
-                <td style={{ ...CR, fontWeight:900, fontSize:12, color:'#166534', background:'#f0fdf4' }}>{fmt(totalGainsRow)}</td>
+                <td style={{ ...CR, fontWeight:900, fontSize:12, color:'#166534', background:'#f0fdf4' }}>{fmt(payroll.grossSalary)}</td>
                 <td style={{ ...C, background:'#fef2f2' }}/><td style={{ ...C, background:'#faf5ff' }}/><td style={{ ...C, background:'#faf5ff' }}/>
               </tr>
               <tr style={{ background:'#f8fafc' }}>
@@ -313,7 +330,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
                 <td style={{ ...C, fontWeight:900, fontSize:11 }}>TOTAL RETENUES</td>
                 <td style={CR}/><td style={CR}/><td style={CC}/>
                 <td style={{ ...C, background:'#f0fdf4' }}/>
-                <td style={{ ...CR, fontWeight:900, fontSize:12, color:'#991b1b', background:'#fef2f2' }}>{fmt(totalCotisSal)}</td>
+                <td style={{ ...CR, fontWeight:900, fontSize:12, color:'#991b1b', background:'#fef2f2' }}>{fmt(payroll.totalDeductions)}</td>
                 <td style={{ ...C, background:'#faf5ff' }}/><td style={{ ...C, background:'#faf5ff' }}/>
               </tr>
 
@@ -338,7 +355,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
                 </tr>
                 <tr>
                   <td style={{ border:'1px solid #e2e8f0', fontSize:9, fontWeight:700, background:'#f1f5f9', padding:'4px 8px' }}>Année</td>
-                  {cumCols.map(c => <td key={c.label} style={{ border:'1px solid #e2e8f0', fontSize:9, textAlign:'center', padding:'4px 6px', fontFamily:'monospace', color:'#333' }}>{c.year!=null?fmt(c.year):'0'}</td>)}
+                  {cumCols.map(c => <td key={c.label} style={{ border:'1px solid #e2e8f0', fontSize:9, textAlign:'center', padding:'4px 6px', fontFamily:'monospace', color:'#333' }}>{c.year!=null?fmt(c.year):'—'}</td>)}
                 </tr>
               </tbody>
             </table>

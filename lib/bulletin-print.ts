@@ -9,7 +9,14 @@
  * Seul le bulletin s'affiche dans la preview — sidebar et UI masquées.
  */
 export function printBulletin(bulletinElementId = 'bulletin-root') {
-  const el = document.getElementById(bulletinElementId);
+  const BULLETIN_IDS = ['bulletin-root', 'bulletin-corp-root', 'bul-admin-root'];
+  let el = document.getElementById(bulletinElementId);
+  if (!el) {
+    for (const id of BULLETIN_IDS) {
+      const found = document.getElementById(id);
+      if (found) { el = found; break; }
+    }
+  }
   if (!el) { window.print(); return; }
 
   const iframe = document.createElement('iframe');
@@ -57,16 +64,24 @@ ${styleInlines}
 /**
  * Téléchargement PDF — html2canvas + jsPDF.
  *
- * FIX scrollHeight=0 : on clone l'élément dans un div visible temporaire
- * avant de capturer, ce qui garantit les dimensions correctes même en modal.
+ * Auto-détection de l'id : si l'id passé est introuvable, on cherche
+ * automatiquement parmi les 3 ids possibles.
+ * FIX scrollHeight=0 : clone dans un div temporaire visible hors écran.
  */
 export async function downloadBulletinPDF(bulletinElementId: string, filename: string): Promise<void> {
-  const el = document.getElementById(bulletinElementId);
+  // Auto-détection : chercher parmi les 3 ids possibles
+  const BULLETIN_IDS = ['bulletin-root', 'bulletin-corp-root', 'bul-admin-root'];
+  let el = document.getElementById(bulletinElementId);
   if (!el) {
-    console.error(`[bulletin-print] #${bulletinElementId} introuvable`);
-    // Debug : lister les ids disponibles
-    const ids = Array.from(document.querySelectorAll('[id]')).map(e => e.id).filter(id => id.includes('bulletin') || id.includes('bul-'));
-    console.info('[bulletin-print] Ids bulletin trouvés:', ids);
+    // L'id passé est incorrect (ex: bulletinTemplateId absent de la réponse API)
+    // → chercher le premier div bulletin présent dans le DOM
+    for (const id of BULLETIN_IDS) {
+      const found = document.getElementById(id);
+      if (found) { el = found; break; }
+    }
+  }
+  if (!el) {
+    console.error('[bulletin-print] Aucun div bulletin trouvé dans le DOM. Ids cherchés:', BULLETIN_IDS);
     return;
   }
 
