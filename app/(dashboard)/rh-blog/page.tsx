@@ -1,8 +1,7 @@
 'use client';
 // ============================================================================
-// 📁 app/(dashboard)/rh-blog/page.tsx — Mise à jour
-// Liens edit → /rh-blog/[slug]/edit
-// Liens nouveau → /rh-blog/nouveau
+// 📁 app/(dashboard)/rh-blog/page.tsx — VERSION CORRIGÉE
+// Fix : gestion erreurs visible + companyId guard + fallback propre
 // ============================================================================
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
@@ -10,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import {
   Plus, Search, Heart, Share2, Eye, PenLine,
   Trash2, Loader2, ChevronLeft, ChevronRight,
-  X, Check, BookOpen, Globe, Building2,
+  X, BookOpen, Globe, Building2, AlertCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '@/lib/services/authService';
@@ -44,21 +43,22 @@ function timeAgo(s: string) {
   if (d === 0) return 'Aujourd\'hui';
   if (d === 1) return 'Hier';
   if (d < 7)   return `Il y a ${d}j`;
-  return new Date(s).toLocaleDateString('fr-FR', { day:'numeric', month:'short' });
+  return new Date(s).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 }
 
+// ─── Post Card ────────────────────────────────────────────────────────────────
 function PostCard({
   post, userId, onLike, onDelete,
 }: {
-  post:      BlogPostSummary;
-  userId:    string;
-  onLike:    (slug: string) => void;
-  onDelete:  (slug: string, title: string) => void;
+  post:     BlogPostSummary;
+  userId:   string;
+  onLike:   (slug: string) => void;
+  onDelete: (slug: string, title: string) => void;
 }) {
   const [menu, setMenu] = useState(false);
-  const cc    = CAT_COLOR[post.category] || CAT_COLOR.GENERAL;
-  const isSA  = post.author.role === 'SUPER_ADMIN';
-  const isOwn = post.author.id === userId;
+  const cc       = CAT_COLOR[post.category] || CAT_COLOR.GENERAL;
+  const isSA     = post.author.role === 'SUPER_ADMIN';
+  const isOwn    = post.author.id === userId;
   const catLabel = CATS.find(c => c.value === post.category)?.label || post.category;
 
   async function share() {
@@ -68,7 +68,7 @@ function PostCard({
   }
 
   return (
-    <motion.div layout initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, scale:0.97 }}
+    <motion.div layout initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 hover:-translate-y-1 transition-all duration-200 flex flex-col">
 
       {post.coverImage ? (
@@ -81,12 +81,9 @@ function PostCard({
             {catLabel}
           </span>
           {isSA && <span className="absolute top-3 right-3 text-[10px] font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-500 px-2 py-0.5 rounded-full">Officiel</span>}
-          <span className="absolute bottom-3 right-3 flex items-center gap-1 text-[10px] font-bold text-slate-300 bg-black/50 px-2 py-0.5 rounded-full backdrop-blur-sm">
-            {post.scope === 'GLOBAL' ? <><Globe size={8}/> Global</> : <><Building2 size={8}/> Entreprise</>}
-          </span>
         </div>
       ) : (
-        <div className={`h-14 flex items-center px-4 flex-shrink-0 ${cc.bg} relative`}>
+        <div className={`h-14 flex items-center px-4 flex-shrink-0 ${cc.bg}`}>
           <span className={`text-xs font-bold uppercase tracking-wide ${cc.text}`}>{catLabel}</span>
           {isSA && <span className="ml-2 text-[10px] font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-500 px-2 py-0.5 rounded-full">Officiel</span>}
           <span className="ml-auto flex items-center gap-1 text-[10px] text-slate-400">
@@ -98,7 +95,7 @@ function PostCard({
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
-            {isSA ? 'K' : post.author.firstName[0]}
+            {isSA ? 'K' : post.author.firstName?.[0] || '?'}
           </div>
           <span className="text-xs font-semibold text-white/80">
             {isSA ? 'Konza RH' : `${post.author.firstName} ${post.author.lastName}`}
@@ -134,7 +131,6 @@ function PostCard({
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold text-cyan-400 hover:bg-cyan-500/10 transition-all no-underline">
               <Eye size={11}/> Lire
             </a>
-            {/* Menu actions — seulement pour l'auteur */}
             {isOwn && (
               <div className="relative">
                 <button onClick={() => setMenu(v => !v)}
@@ -144,7 +140,6 @@ function PostCard({
                 {menu && (
                   <div className="absolute right-0 top-7 z-20 bg-[#0F1E35] border border-white/10 rounded-xl shadow-xl py-1 w-36"
                     onMouseLeave={() => setMenu(false)}>
-                    {/* ✅ Lien vers /rh-blog/[slug]/edit */}
                     <Link href={`/rh-blog/${post.slug}/edit`}
                       className="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors no-underline">
                       <PenLine size={13}/> Modifier
@@ -164,10 +159,13 @@ function PostCard({
   );
 }
 
-function DeleteModal({ title, onConfirm, onCancel, loading }: { title:string; onConfirm:()=>void; onCancel:()=>void; loading:boolean }) {
+// ─── Modal suppression ────────────────────────────────────────────────────────
+function DeleteModal({ title, onConfirm, onCancel, loading }: {
+  title: string; onConfirm: () => void; onCancel: () => void; loading: boolean;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <motion.div initial={{ scale:0.95, opacity:0 }} animate={{ scale:1, opacity:1 }}
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         className="bg-[#0A1628] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
         <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
           <Trash2 size={20} className="text-red-400"/>
@@ -182,7 +180,7 @@ function DeleteModal({ title, onConfirm, onCancel, loading }: { title:string; on
             Annuler
           </button>
           <button onClick={onConfirm} disabled={loading}
-            className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+            className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 rounded-xl text-sm font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2">
             {loading ? <Loader2 size={14} className="animate-spin"/> : <Trash2 size={14}/>} Supprimer
           </button>
         </div>
@@ -191,6 +189,7 @@ function DeleteModal({ title, onConfirm, onCancel, loading }: { title:string; on
   );
 }
 
+// ─── PAGE ─────────────────────────────────────────────────────────────────────
 export default function RhBlogPage() {
   const router = useRouter();
   const user   = authService.getCurrentUser();
@@ -203,61 +202,95 @@ export default function RhBlogPage() {
   const [posts,     setPosts]     = useState<BlogPostSummary[]>([]);
   const [quota,     setQuota]     = useState<BlogQuota | null>(null);
   const [loading,   setLoading]   = useState(true);
+  const [apiError,  setApiError]  = useState('');           // ← erreur visible
   const [page,      setPage]      = useState(1);
   const [totalPgs,  setTotalPgs]  = useState(1);
   const [total,     setTotal]     = useState(0);
   const [cat,       setCat]       = useState<BlogCategory | ''>('');
   const [search,    setSearch]    = useState('');
   const [dSearch,   setDSearch]   = useState('');
-  const [delTarget, setDelTarget] = useState<{ slug:string; title:string } | null>(null);
+  const [delTarget, setDelTarget] = useState<{ slug: string; title: string } | null>(null);
   const [deleting,  setDeleting]  = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   const canPost = user && CAN_POST.includes(user.role);
 
+  // Debounce search
   useEffect(() => {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => { setDSearch(search); setPage(1); }, 400);
     return () => clearTimeout(timer.current);
   }, [search]);
 
+  // Quota
   useEffect(() => {
-    if (canPost) blogApi.quota().then(setQuota).catch(() => {});
+    if (!canPost) return;
+    blogApi.quota().then(setQuota).catch(err => {
+      console.warn('[quota error]', err);
+    });
   }, [canPost]);
 
+  // ─── Fetch posts ─────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true);
+    setApiError('');
     try {
-      const res = await blogApi.list({
-        page, limit: 9,
-        ...(cat    ? { category: cat }                      : {}),
-        ...(dSearch ? { q: dSearch }                        : {}),
-        ...(user?.companyId ? { companyId: user.companyId } : {}),
-      });
-      const likedSet = new Set<string>(JSON.parse(localStorage.getItem('kz_liked_posts') || '[]'));
-      setPosts(res.posts.map(p => ({ ...p, hasLiked: p.hasLiked || likedSet.has(p.slug) })));
+      // ⚠️ FIX : on n'envoie companyId QUE si c'est une string non vide
+      const params: Parameters<typeof blogApi.list>[0] = {
+        page,
+        limit: 9,
+      };
+      if (cat)                                        params.category   = cat;
+      if (dSearch)                                    params.q          = dSearch;
+      // companyId : seulement si défini et non vide
+      if (user?.companyId && user.companyId !== 'undefined') {
+        params.companyId = user.companyId;
+      }
+
+      const res = await blogApi.list(params);
+
+      const likedSet = new Set<string>(
+        JSON.parse(localStorage.getItem('kz_liked_posts') || '[]')
+      );
+
+      setPosts(
+        res.posts.map(p => ({ ...p, hasLiked: p.hasLiked || likedSet.has(p.slug) }))
+      );
       setTotalPgs(res.pagination.totalPages);
       setTotal(res.pagination.total);
-    } catch { setPosts([]); }
-    setLoading(false);
+
+    } catch (err: any) {
+      // ⚠️ FIX : on affiche l'erreur au lieu de la masquer
+      console.error('[rh-blog load error]', err);
+      setApiError(err?.message || 'Impossible de charger les articles. Vérifiez que le backend est démarré.');
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
   }, [page, cat, dSearch, user]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [cat, dSearch]);
 
+  // ─── Like ────────────────────────────────────────────────────────────────────
   async function handleLike(slug: string) {
-    setPosts(p => p.map(post => post.slug === slug
-      ? { ...post, hasLiked: !post.hasLiked, likesCount: post.hasLiked ? post.likesCount-1 : post.likesCount+1 }
-      : post));
+    setPosts(p => p.map(post =>
+      post.slug === slug
+        ? { ...post, hasLiked: !post.hasLiked, likesCount: post.hasLiked ? post.likesCount - 1 : post.likesCount + 1 }
+        : post
+    ));
     try {
       const res = await blogApi.like(slug);
-      setPosts(p => p.map(post => post.slug === slug ? { ...post, hasLiked: res.liked, likesCount: res.likesCount } : post));
+      setPosts(p => p.map(post =>
+        post.slug === slug ? { ...post, hasLiked: res.liked, likesCount: res.likesCount } : post
+      ));
       const set = new Set<string>(JSON.parse(localStorage.getItem('kz_liked_posts') || '[]'));
       if (res.liked) set.add(slug); else set.delete(slug);
-      localStorage.setItem('kz_liked_posts', JSON.stringify(Array.from(set)));
+      localStorage.setItem('kz_liked_posts', JSON.stringify([...set]));
     } catch { load(); }
   }
 
+  // ─── Delete ──────────────────────────────────────────────────────────────────
   async function handleDelete() {
     if (!delTarget) return;
     setDeleting(true);
@@ -265,7 +298,9 @@ export default function RhBlogPage() {
       await blogApi.delete(delTarget.slug);
       setPosts(p => p.filter(post => post.slug !== delTarget.slug));
       setDelTarget(null);
-    } catch (e: any) { alert(e.message || 'Erreur'); }
+    } catch (e: any) {
+      alert(e.message || 'Erreur lors de la suppression');
+    }
     setDeleting(false);
   }
 
@@ -288,7 +323,11 @@ export default function RhBlogPage() {
         </div>
         <div className="flex items-center gap-3">
           {canPost && quota && !quota.unlimited && (
-            <div className={`px-3 py-2 rounded-xl border text-center ${quotaFull ? 'bg-red-500/10 border-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
+            <div className={`px-3 py-2 rounded-xl border text-center ${
+              quotaFull
+                ? 'bg-red-500/10 border-red-500/20'
+                : 'bg-emerald-500/10 border-emerald-500/20'
+            }`}>
               <div className={`text-lg font-black font-mono leading-none ${quotaFull ? 'text-red-400' : 'text-emerald-400'}`}>
                 {quota.remaining}/{quota.limit}
               </div>
@@ -296,7 +335,6 @@ export default function RhBlogPage() {
             </div>
           )}
           {canPost && (
-            // ✅ Lien vers /rh-blog/nouveau
             <Link href="/rh-blog/nouveau"
               className={`flex items-center gap-2 px-4 py-2.5 font-bold text-sm rounded-xl transition-all no-underline ${
                 quotaFull
@@ -309,6 +347,7 @@ export default function RhBlogPage() {
         </div>
       </div>
 
+      {/* Quota épuisé */}
       {quotaFull && (
         <div className="flex items-center gap-3 px-4 py-3 bg-red-500/8 border border-red-500/20 rounded-xl text-sm text-red-400">
           <X size={15} className="flex-shrink-0"/>
@@ -322,7 +361,12 @@ export default function RhBlogPage() {
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"/>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..."
             className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-500 outline-none focus:border-cyan-500/50 transition-colors"/>
-          {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"><X size={13}/></button>}
+          {search && (
+            <button onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+              <X size={13}/>
+            </button>
+          )}
         </div>
         <div className="flex gap-2 flex-wrap">
           {CATS.map(c => (
@@ -338,17 +382,35 @@ export default function RhBlogPage() {
         </div>
       </div>
 
-      {/* Contenu */}
+      {/* ─── Contenu ──────────────────────────────────────────────────────── */}
+
+      {/* Erreur API visible */}
+      {apiError && !loading && (
+        <div className="flex items-start gap-3 px-4 py-4 bg-red-500/8 border border-red-500/20 rounded-xl">
+          <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5"/>
+          <div>
+            <p className="text-sm font-bold text-red-400 mb-1">Erreur de chargement</p>
+            <p className="text-xs text-slate-400 leading-relaxed">{apiError}</p>
+            <button onClick={load}
+              className="mt-3 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-slate-300 hover:text-white transition-all">
+              Réessayer
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 size={28} className="animate-spin text-cyan-500"/>
         </div>
-      ) : posts.length === 0 ? (
+      ) : !apiError && posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <BookOpen size={40} className="text-slate-600 mb-4"/>
           <h3 className="text-lg font-bold text-white mb-2">Aucun article</h3>
           <p className="text-sm text-slate-500 mb-6 max-w-sm">
-            {dSearch ? `Aucun résultat pour "${dSearch}"` : 'Aucun article disponible pour le moment.'}
+            {dSearch
+              ? `Aucun résultat pour "${dSearch}"`
+              : 'Aucun article disponible. Rédigez le premier !'}
           </p>
           {canPost && !quotaFull && (
             <Link href="/rh-blog/nouveau"
@@ -357,42 +419,61 @@ export default function RhBlogPage() {
             </Link>
           )}
         </div>
-      ) : (
+      ) : !apiError ? (
         <>
-          <p className="text-xs text-slate-500">{total} article{total > 1 ? 's' : ''}{dSearch ? ` pour "${dSearch}"` : ''}</p>
+          <p className="text-xs text-slate-500">
+            {total} article{total > 1 ? 's' : ''}{dSearch ? ` pour "${dSearch}"` : ''}
+          </p>
+
           <AnimatePresence mode="popLayout">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {posts.map(post => (
-                <PostCard key={post.id} post={post} userId={user!.id}
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  userId={user!.id}
                   onLike={handleLike}
-                  onDelete={(slug, title) => setDelTarget({ slug, title })}/>
+                  onDelete={(slug, title) => setDelTarget({ slug, title })}
+                />
               ))}
             </div>
           </AnimatePresence>
 
           {totalPgs > 1 && (
             <div className="flex items-center justify-center gap-2 pt-2">
-              <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 className="flex items-center gap-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-400 hover:text-white disabled:opacity-30 transition-all">
                 <ChevronLeft size={14}/> Préc.
               </button>
-              {Array.from({length:Math.min(5,totalPgs)},(_,i)=>{
-                const pg=Math.max(1,Math.min(totalPgs-4,page-2))+i;
-                return <button key={pg} onClick={()=>setPage(pg)}
-                  className={`w-9 h-9 rounded-xl text-sm font-bold border transition-all ${pg===page?'bg-cyan-500/20 border-cyan-500/40 text-cyan-400':'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}>{pg}</button>;
+              {Array.from({ length: Math.min(5, totalPgs) }, (_, i) => {
+                const pg = Math.max(1, Math.min(totalPgs - 4, page - 2)) + i;
+                return (
+                  <button key={pg} onClick={() => setPage(pg)}
+                    className={`w-9 h-9 rounded-xl text-sm font-bold border transition-all ${
+                      pg === page
+                        ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400'
+                        : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                    }`}>
+                    {pg}
+                  </button>
+                );
               })}
-              <button onClick={() => setPage(p => Math.min(totalPgs,p+1))} disabled={page===totalPgs}
+              <button onClick={() => setPage(p => Math.min(totalPgs, p + 1))} disabled={page === totalPgs}
                 className="flex items-center gap-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-sm text-slate-400 hover:text-white disabled:opacity-30 transition-all">
                 Suiv. <ChevronRight size={14}/>
               </button>
             </div>
           )}
         </>
-      )}
+      ) : null}
 
       {delTarget && (
-        <DeleteModal title={delTarget.title} loading={deleting}
-          onConfirm={handleDelete} onCancel={() => setDelTarget(null)}/>
+        <DeleteModal
+          title={delTarget.title}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setDelTarget(null)}
+        />
       )}
     </div>
   );
