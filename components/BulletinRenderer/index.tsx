@@ -106,18 +106,16 @@ function fmtTaux(item: any): string {
   return String(r);
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-// Principe : PAS de bordures verticales internes dans le tableau principal
-// Seule séparation = lignes horizontales fines
-const LINE  = '1px solid #ccc';   // séparateur léger
-const LINE_DARK = '1px solid #000'; // bordure forte (en-tête, total)
+// ─── Styles — fidèles au PDF IESM : grille complète ─────────────────────────
+const BD = '1px solid #000';  // bordure principale
+const BG = '1px solid #bbb';  // bordure grise (séparateur interne)
 
-// Cellule standard — PAS de border gauche/droite
+// Cellule standard — bordure complète comme IESM
 const td = (extra?: React.CSSProperties): React.CSSProperties => ({
-  padding: '3px 5px',
+  border: BD,
+  padding: '2.5px 4px',
   fontSize: 9,
   verticalAlign: 'middle',
-  borderBottom: LINE,
   ...extra,
 });
 const tdR = (extra?: React.CSSProperties): React.CSSProperties => ({
@@ -127,37 +125,29 @@ const tdC = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...td(), textAlign: 'center', ...extra,
 });
 
-// Cellule Part Patronale — encadrement léger pour distinguer du reste
+// Part Patronale — fond légèrement grisé
 const tdPat = (extra?: React.CSSProperties): React.CSSProperties => ({
-  ...tdR(),
-  borderLeft: '1px solid #bbb',
-  background: '#fafafa',
-  ...extra,
+  ...tdR(), background: '#f5f5f5', ...extra,
 });
 const tdPatC = (extra?: React.CSSProperties): React.CSSProperties => ({
-  ...tdC(),
-  borderLeft: '1px solid #bbb',
-  background: '#fafafa',
-  ...extra,
+  ...tdC(), background: '#f5f5f5', ...extra,
 });
 
 // En-tête colonne
 const th = (extra?: React.CSSProperties): React.CSSProperties => ({
-  padding: '4px 5px',
+  border: BD,
+  padding: '3px 4px',
   fontSize: 8.5,
   fontWeight: 700,
   textAlign: 'center',
-  background: '#e0e0e0',
-  borderBottom: LINE_DARK,
-  borderTop: LINE_DARK,
-  ...extra,
-});
-const thPat = (extra?: React.CSSProperties): React.CSSProperties => ({
-  ...th(),
-  borderLeft: '1px solid #bbb',
   background: '#d0d0d0',
   ...extra,
 });
+const thPat = (extra?: React.CSSProperties): React.CSSProperties => ({
+  ...th(), background: '#c0c0c0', ...extra,
+});
+// Alias pour compatibilité
+const LINE_DARK = BD;
 
 function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
   const tpl = template ?? getBaseTemplate('default');
@@ -224,14 +214,14 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
   // Style : label en gras, valeur à droite, séparateur fin entre chaque ligne
   const EmployeeInfo = () => {
     const Row = ({ label, val }: { label: string; val: string }) => (
-      <div style={{ display:'flex', justifyContent:'space-between', padding:'2.5px 0', borderBottom:'1px solid #e0e0e0', fontSize:9 }}>
-        <span style={{ fontWeight:700, color:'#333', minWidth:130 }}>{label}</span>
-        <span style={{ color:'#000' }}>{val || '—'}</span>
+      <div style={{ display:'grid', gridTemplateColumns:'120px 1fr', borderBottom:'1px solid #ccc', fontSize:9 }}>
+        <span style={{ fontWeight:700, padding:'2px 5px', background:'#f0f0f0', borderRight:'1px solid #ccc' }}>{label}</span>
+        <span style={{ padding:'2px 5px' }}>{val || '—'}</span>
       </div>
     );
 
     return (
-      <div style={{ marginBottom:8 }}>
+      <div style={{ border:'1px solid #000', marginBottom:8 }}>
         {/* Nom — plus grand, mis en avant */}
         <div style={{ borderTop:'1.5px solid #000', borderBottom:'1px solid #ccc', padding:'4px 0', marginBottom:4 }}>
           <span style={{ fontWeight:700, fontSize:9 }}>M &nbsp;</span>
@@ -263,7 +253,9 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
         <div style={{ display:'flex', gap:24, borderTop:'1px solid #e0e0e0', paddingTop:3, marginTop:2, fontSize:9 }}>
           <span><strong>N° Compte :</strong> {[co.bankCode||'30005', co.bankBranch||'00363', e.bankAccount||''].filter(Boolean).join('  ')}</span>
           <span><strong>Nombre de parts :</strong> {(e.numberOfChildren ?? 0) + 1}</span>
-          <span><strong>Jours travaillés :</strong> {payroll.workedDays ?? '—'} / {payroll.workDays ?? '—'}</span>
+          <span><strong>Jours ouvrables :</strong> {payroll.workDays ?? '—'}</span>
+          <span><strong>Jours travaillés :</strong> {payroll.workedDays ?? '—'}</span>
+          {Number(payroll.absenceDays??0) > 0 && <span style={{color:'#c00'}}><strong>Absences :</strong> {fmt(payroll.absenceDays)} j</span>}
         </div>
       </div>
     );
@@ -312,19 +304,31 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
           </tr>
         ))}
 
+        {/* ── ABSENCE — avant le brut ── */}
+          <tr key={item.id ?? `abs-${idx}`} style={{ background:'#fff8f8' }}>
+            <td style={tdC({ fontSize:8, color:'#888' })}>ABS</td>
+            <td style={td({ paddingLeft:6, color:'#c00' })}>{item.label}</td>
+            <td style={tdR({ color:'#c00' })}>{fmtBase(item)}</td>
+            <td style={tdC({ fontSize:8.5, color:'#c00' })}>{fmtTaux(item)}</td>
+            <td style={td()} />
+            <td style={tdR({ fontWeight:700, color:'#c00' })}>− {fmt(item.amount)}</td>
+            <td style={tdPatC()} /><td style={tdPat()} />
+          </tr>
+        ))}
+
         {/* TOTAL BRUT */}
-        <tr style={{ background:'#e8e8e8' }}>
-          <td colSpan={4} style={{ ...td({ borderBottom: LINE_DARK, borderTop: LINE_DARK, background:'#e8e8e8', fontWeight:900, textAlign:'center', fontSize:10 }) }}>
-            Total Brut
+        <tr>
+          <td colSpan={4} style={td({ fontWeight:900, textAlign:'center', fontSize:10, background:'#dedede' })}>
+            <strong>Total Brut</strong>
           </td>
-          <td style={tdR({ fontWeight:900, fontSize:11, background:'#e8e8e8', borderBottom:LINE_DARK, borderTop:LINE_DARK })}>{fmt(payroll.grossSalary)}</td>
-          <td style={td({ background:'#e8e8e8', borderBottom:LINE_DARK, borderTop:LINE_DARK })} />
-          <td style={tdPatC({ background:'#e0e0e0', borderBottom:LINE_DARK, borderTop:LINE_DARK })} />
-          <td style={tdPat({ background:'#e0e0e0', borderBottom:LINE_DARK, borderTop:LINE_DARK })} />
+          <td style={tdR({ fontWeight:900, fontSize:11, background:'#dedede' })}>{fmt(payroll.grossSalary)}</td>
+          <td style={td({ background:'#dedede' })} />
+          <td style={tdPatC({ background:'#d8d8d8' })} />
+          <td style={tdPat({ background:'#d8d8d8' })} />
         </tr>
 
-        {/* ── COTISATIONS ── */}
-        {cotisItems.map((item: any, idx: number) => {
+        {/* ── COTISATIONS (sans ABS déjà affichées avant brut) ── */}
+        {cotisItems.filter((i:any) => i.code !== "ABS_DEDUCT" && i.code !== "ABS_CONGE").map((item: any, idx: number) => {
           const tauxPat = (item as any).empRate   ?? '—';
           const retPat  = (item as any).empAmount ? fmt((item as any).empAmount) : '—';
           return (
@@ -380,23 +384,7 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
           </tr>
         ))}
 
-        {/* Absence */}
-        {(payroll.absenceDeduction ?? 0) > 0 && (
-          <tr>
-            <td style={tdC({ fontSize:8, color:'#555' })}>ABS</td>
-            <td style={td({ paddingLeft:6 })}>Retenue absence</td>
-            <td style={tdR()}>{payroll.absenceDays ?? '—'}</td>
-            <td style={tdC({ fontSize:8.5 })}>—</td>
-            <td style={td()} />
-            <td style={tdR({ fontWeight:700 })}>{fmt(payroll.absenceDeduction)}</td>
-            <td style={tdPatC()} /><td style={tdPat()} />
-          </tr>
-        )}
 
-        {/* Séparateur pointillé */}
-        <tr>
-          <td colSpan={8} style={{ padding:0, height:5, borderTop:'1px dashed #aaa', borderBottom:'none' }} />
-        </tr>
 
         {/* TOTAL GAINS */}
         <tr>
@@ -405,10 +393,6 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
           <td style={td()} /><td style={td()} />
           <td style={tdR({ fontWeight:900, fontSize:10 })}>{fmt(payroll.grossSalary)}</td>
           <td style={td()} /><td style={tdPatC()} /><td style={tdPat()} />
-        </tr>
-
-        <tr>
-          <td colSpan={8} style={{ padding:0, height:5, borderTop:'1px dashed #aaa', borderBottom:'none' }} />
         </tr>
 
         {/* TOTAL RETENUES */}
@@ -426,7 +410,9 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
 
   // ── CUMULS + NET À PAYER ────────────────────────────────────────────────────
   const Cumuls = () => {
-    const overTime = (payroll.overtimeHours10??0)+(payroll.overtimeHours25??0)+(payroll.overtimeHours50??0)+(payroll.overtimeHours100??0);
+    // H.suppl période = nb heures total (overtimeHoursXX = heures, pas montants)
+    const overTimeHours = Number(payroll.overtimeHours10??0)+Number(payroll.overtimeHours25??0)
+                        + Number(payroll.overtimeHours50??0)+Number(payroll.overtimeHours100??0);
     const ytdNetImp = ytd ? (ytd.grossSalary - ytd.cnssSalarial) : null;
     const cols = [
       { label:'Sal. brut',     p:payroll.grossSalary,                                    a: ytd?.grossSalary          ?? null },
@@ -435,7 +421,7 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
       { label:'Avt. nature',   p:0,                                                      a: 0                                },
       { label:'Net imposable', p:(payroll.grossSalary??0)-(payroll.cnssSalarial??0),      a: ytdNetImp                        },
       { label:'H. trav.',      p:(payroll.workedDays??0)*8,                              a: ytd ? (ytd.workedDays*8) : null  },
-      { label:'H. suppl.',     p:overTime,                                               a: ytd?.totalOvertimeAmount  ?? null },
+      { label:'H. suppl.',     p: overTimeHours > 0 ? overTimeHours : null,               a: ytd?.totalOvertimeAmount  ?? null },
       { label:'Base Congés',   p:payroll.baseSalary,                                    a: ytd?.baseSalary           ?? null },
     ];
 
@@ -505,7 +491,7 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
           [class*="navbar"],[class*="Navbar"] { display: none !important; }
           .payslip-sheet-wrap { display: block !important; position: static !important; }
           #bulletin-root {
-            width: 194mm !important; min-height: 281mm !important;
+            width: 194mm !important;
             padding: 0 !important; margin: 0 !important;
             box-shadow: none !important; border: none !important;
           }
@@ -518,7 +504,7 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
       <div id="bulletin-root" style={{
         fontFamily: '"Helvetica Neue", Arial, sans-serif',
         fontSize: 10, background: '#fff', color: '#000',
-        width: '210mm', minHeight: '297mm',
+        width: '210mm',
         boxSizing: 'border-box', padding: '8mm 10mm',
         margin: '0 auto',
         boxShadow: '0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.1)',

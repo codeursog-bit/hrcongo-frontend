@@ -149,6 +149,7 @@ export default function BulletinRendererAdmin({ payroll, template, previewMode =
     () => classifyItems(items), [items]
   );
 
+
   // ── Totaux depuis les champs calculés (source de vérité = API) ───────────
 
   const totalBrut  = payroll.grossSalary  ?? 0;
@@ -206,7 +207,7 @@ export default function BulletinRendererAdmin({ payroll, template, previewMode =
     { label:'Avt. nat.',    period: 0,                                   year: 0 },
     { label:'Net impos.',   period: (payroll.grossSalary??0)-(payroll.cnssSalarial??0), year: ytdNetImp },
     { label:'H. trav.',     period: (payroll.workedDays??0)*8, year: ytd ? (ytd.workedDays*8) : null },
-    { label:'H. suppl.',    period: (payroll as any).totalOvertimeAmount ?? 0, year: ytd?.totalOvertimeAmount ?? null },
+    { label:'H. suppl.',    period: Number(payroll.overtimeHours10??0)+Number(payroll.overtimeHours25??0)+Number(payroll.overtimeHours50??0)+Number(payroll.overtimeHours100??0) || null, year: ytd?.totalOvertimeAmount ?? null },
     { label:'Base cong.',   period: payroll.baseSalary,                   year: ytd?.baseSalary ?? null },
   ];
 

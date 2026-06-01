@@ -110,7 +110,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
     { label:'Net imposable',   period:(payroll.grossSalary??0)-(payroll.cnssSalarial??0), year: ytdNetImp },
     { label:'H. travaillées',  period:(payroll.workedDays??0)*8, year: ytd ? (ytd.workedDays*8) : null },
     { label:'H. suppl.',       period:overTime,              year:0 },
-    { label:'H. suppl.',       period:(payroll as any).totalOvertimeAmount ?? 0, year: ytd?.totalOvertimeAmount ?? null },
+    { label:'H. suppl.',       period: Number(payroll.overtimeHours10??0)+Number(payroll.overtimeHours25??0)+Number(payroll.overtimeHours50??0)+Number(payroll.overtimeHours100??0) || null, year: ytd?.totalOvertimeAmount ?? null },
     { label:'Base Congés',     period:payroll.baseSalary,    year: ytd?.baseSalary ?? null },
   ];
 
@@ -265,7 +265,7 @@ export default function BulletinRendererCorporate({ payroll, template, previewMo
               </tr>
 
               <SectionLabel color="#92400e" bg="#fef3c7" border="#fcd34d">Cotisations &amp; Prélèvements</SectionLabel>
-              {cotisLines.map((item:any, idx:number) => {
+              {cotisLines.filter((i:any) => i.code !== "ABS_DEDUCT" && i.code !== "ABS_CONGE").map((item:any, idx:number) => {
                 const _tauxPat = (item as any).empRate   ?? '—';
                 const _retPat  = (item as any).empAmount ? fmt((item as any).empAmount) : '—';
                 return (
