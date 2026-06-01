@@ -303,20 +303,7 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
             <td style={tdPatC()} /><td style={tdPat()} />
           </tr>
         ))}
-
-        {/* ── ABSENCE — avant le brut ── */}
-          <tr key={item.id ?? `abs-${idx}`} style={{ background:'#fff8f8' }}>
-            <td style={tdC({ fontSize:8, color:'#888' })}>ABS</td>
-            <td style={td({ paddingLeft:6, color:'#c00' })}>{item.label}</td>
-            <td style={tdR({ color:'#c00' })}>{fmtBase(item)}</td>
-            <td style={tdC({ fontSize:8.5, color:'#c00' })}>{fmtTaux(item)}</td>
-            <td style={td()} />
-            <td style={tdR({ fontWeight:700, color:'#c00' })}>− {fmt(item.amount)}</td>
-            <td style={tdPatC()} /><td style={tdPat()} />
-          </tr>
-        ))}
-
-        {/* TOTAL BRUT */}
+{/* TOTAL BRUT */}
         <tr>
           <td colSpan={4} style={td({ fontWeight:900, textAlign:'center', fontSize:10, background:'#dedede' })}>
             <strong>Total Brut</strong>
