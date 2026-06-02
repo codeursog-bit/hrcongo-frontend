@@ -265,7 +265,7 @@ export default function RhBlogPage() {
       ));
       const set = new Set<string>(JSON.parse(localStorage.getItem('kz_liked_posts') || '[]'));
       if (res.liked) set.add(slug); else set.delete(slug);
-      localStorage.setItem('kz_liked_posts', JSON.stringify([...set]));
+      localStorage.setItem('kz_liked_posts', JSON.stringify(Array.from(set)));
     } catch { /* like silencieux */ }
   }
 

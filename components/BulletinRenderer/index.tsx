@@ -334,7 +334,7 @@ function BulletinRendererDefault({ payroll, template }: BulletinRendererProps) {
 
         {/* TOTAL COTISATIONS */}
         <tr style={{ background:'#f0f0f0' }}>
-          <td colSpan={4} style={{ ...td({ fontWeight:900, textAlign:'center', fontSize:9.5, background:'#f0f0f0', borderBottom:LINE, borderTop:'1px solid #bbb' }) }}>
+          <td colSpan={4} style={{ ...td({ fontWeight:900, textAlign:'center', fontSize:9.5, background:'#f0f0f0', borderBottom:BD, borderTop:'1px solid #bbb' }) }}>
             Total Cotisations
           </td>
           <td style={td({ background:'#f0f0f0', borderTop:'1px solid #bbb' })} />
