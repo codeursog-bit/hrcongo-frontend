@@ -3,19 +3,18 @@
 // ============================================================================
 // components/BulletinRendererAdmin/index.tsx
 //
-// ✅ Toutes corrections 2026-06 :
-//  1. Base/Taux transparents (paie manuelle incluse) — taux=1 masqué
-//  2. Salaire Brut = ligne SEULE pleine largeur, sans colonnes vides
-//  3. ABS_DEDUCT masqué du tableau (info dans l'en-tête si absenceDays > 0)
-//  4. CNSS patronale : Pension 8% + Famille 10,03% + AT 2,25% — 3 lignes séparées
-//  5. TOL auto depuis employee.tolZone (VILLE=1000 / PERIPHERIE=5000)
-//  6. Absences : n'apparaît dans l'en-tête que si absenceDays > 0
-//  7. H.suppl en-tête : sanity check ≤ 300h (> 300 = bug données → '—')
-//  8. Total Cotisations = taxes/impôts uniquement (CNSS + ITS + custom)
-//  9. Total Retenues    = Total Cotisations + Prêts/Avances (= totalDeductions)
-// 10. Total Gains       = Brut + Indemnités hors brut
-// 11. LOAN/ADVANCE visibles dans section 4 si présents dans les items
-// 12. Bug opérateur priorité fmt(cnssSalarial ?? 0 + its ?? 0) corrigé
+// ✅ Corrections 2026-06 (v2) :
+//  1. Total Gains : addition numérique stricte (Number() sur chaque valeur)
+//  2. Labels épurés :
+//     - "Total cotisations" (sans "(CNSS + ITS + Taxes)")
+//     - "Total Gains" (sans décomposition Brut+Indemnités)
+//     - "Indemnités & Avantages" (sans "(non soumis à cotisations)")
+//     - "Total retenues" (sans sous-détail inline)
+//  3. Paie manuelle : base + taux affichés si présents dans l'item
+//     taux=1 → masqué (affichage "—"), taux > 1 affiché seulement si > 1
+//  4. Section 2 : colonnes employé (Retenue sal.) vs employeur (T.%/Ret.pat.)
+//     bien séparées — CNSS sal./ITS → col Retenue; CNSS pat./TUS/TOL → col Ret.pat.
+//  5. Indemnités/Primes manuelles : affichent base+taux depuis l'item (back)
 // ============================================================================
 
 import React, { useMemo } from 'react';
@@ -34,10 +33,17 @@ const MARITAL: Record<string,string> = { SINGLE:'Célibataire', MARRIED:'Marié(
 const PAYMENT: Record<string,string> = { BANK_TRANSFER:'Virement bancaire', CASH:'Espèces', MOBILE_MONEY:'Mobile Money', CHECK:'Chèque' };
 const CONTRACT: Record<string,string> = { CDI:'CDI', CDD:'CDD', STAGE:'Stage', CONSULTANT:'Consultant', PRESTATAIRE:'Prestataire', INTERIM:'Intérimaire', FREELANCE:'Freelance' };
 
+// ─── fmt : toujours numérique ────────────────────────────────────────────────
 const fmt = (v: any) => {
   const n = Math.round(Number(v) || 0);
   if (!isFinite(n) || Math.abs(n) > 999_999_999_999) return '—';
   return n.toLocaleString('fr-FR');
+};
+
+// ─── toNum : conversion stricte en nombre (évite la concaténation string) ───
+const toNum = (v: any): number => {
+  const n = Number(v);
+  return isFinite(n) ? n : 0;
 };
 
 function formatDate(d?: string) { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
@@ -50,21 +56,26 @@ function seniority(hireDate?: string) {
   return `${y} an${y>1?'s':''} · ${m} mois`;
 }
 
-// ─── fmtBase / fmtTaux stricts ─────────────────────────────────────────────
+// ─── fmtBase / fmtTaux stricts ──────────────────────────────────────────────
 function fmtBase(item: any): string {
-  if (item.base == null || Number(item.base) === 0) return '—';
-  return Math.round(Number(item.base)).toLocaleString('fr-FR');
+  if (item.base == null || toNum(item.base) === 0) return '—';
+  return Math.round(toNum(item.base)).toLocaleString('fr-FR');
 }
 
 function fmtTaux(item: any): string {
+  // Quantité (ex: nb jours) en priorité
   const qty = item.quantity;
-  if (qty != null && Number(qty) !== 0) return String(qty);
-  if (item.rate == null || Number(item.rate) === 0) return '—';
-  const r = Number(item.rate);
-  // taux=1 → montant fixe direct, on n'affiche pas le multiplicateur
+  if (qty != null && toNum(qty) !== 0) return String(qty);
+
+  if (item.rate == null || toNum(item.rate) === 0) return '—';
+  const r = toNum(item.rate);
+
+  // taux = 1 → montant fixe direct, on masque le multiplicateur
   if (r === 1) return '—';
+
   // Multiplicateur HS : ×1,10 / ×1,25 / ×1,50 / ×2,00
   if (r > 1 && r <= 3) return `×${r.toFixed(2).replace('.', ',')}`;
+
   // Pourcentage : 0.04 → 4%, 0.02025 → 2,025%
   if (r > 0 && r < 1) {
     const pct = r * 100;
@@ -74,7 +85,7 @@ function fmtTaux(item: any): string {
   return String(r);
 }
 
-// ─── Couleurs ───────────────────────────────────────────────────────────────
+// ─── Couleurs ────────────────────────────────────────────────────────────────
 const PRIMARY     = '#0f2544';
 const ACCENT      = '#b8860b';
 const SEC_GAIN    = '#0a3d1f';
@@ -82,7 +93,7 @@ const SEC_COTIS   = '#5a1a1a';
 const SEC_INDEM   = '#1a3a1a';
 const SEC_RETENUE = '#3a2800';
 
-// ─── Styles ─────────────────────────────────────────────────────────────────
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const C = (extra?: React.CSSProperties): React.CSSProperties => ({
   borderBottom: '0.5px solid #bbb', padding: '3.5px 6px', fontSize: 9,
   verticalAlign: 'middle', color: '#000', ...extra,
@@ -106,9 +117,7 @@ const SectionRow = ({ num, color, bg, children }: { num: string; color: string; 
   </tr>
 );
 
-// ── Ligne total pleine largeur — SEULE sans colonnes vides ──────────────────
-// col='gain'    → montant dans col gain  (colSpan 4 label / 4 montant)
-// col='retenue' → montant dans col ret   (colSpan 5 label / 3 montant)
+// ── Ligne total pleine largeur ───────────────────────────────────────────────
 const TotalRow = ({ label, amount, col }: { label: string; amount: string; col: 'gain' | 'retenue' }) => (
   <tr style={{ background:'#e8e8e8', borderTop:`2px solid ${PRIMARY}`, borderBottom:`2px solid ${PRIMARY}` }}>
     <td colSpan={col === 'gain' ? 4 : 5} style={{
@@ -128,7 +137,7 @@ const TotalRow = ({ label, amount, col }: { label: string; amount: string; col: 
   </tr>
 );
 
-// ─── Composant principal ────────────────────────────────────────────────────
+// ─── Composant principal ─────────────────────────────────────────────────────
 export default function BulletinRendererAdmin({ payroll, template }: BulletinRendererAdminProps) {
   const tpl  = template ?? getBaseTemplate('admin');
   const e    = (payroll.employee ?? {}) as any;
@@ -140,49 +149,45 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
     () => classifyItems(items), [items]
   );
 
-  // Filtrer ABS hors tableau — info déjà dans l'en-tête
+  // Filtrer ABS hors tableau
   const gainFiltered  = gainItems.filter((i: any) => i.code !== 'ABS_DEDUCT' && i.code !== 'ABS_CONGE');
   const cotisFiltered = cotisItems.filter((i: any) => i.code !== 'ABS_DEDUCT' && i.code !== 'ABS_CONGE');
 
-  // Prêts & avances = items DEDUCTION avec code LOAN ou ADVANCE
   const loanAdvItems  = retenueItems.filter((i: any) => i.code === 'LOAN' || i.code === 'ADVANCE');
-  // Autres retenues diverses (hors loans/avances)
   const otherRetItems = retenueItems.filter((i: any) => i.code !== 'LOAN' && i.code !== 'ADVANCE');
 
-  // Totaux — source de vérité = API
-  const totalBrut  = payroll.grossSalary     ?? 0;
-  const totalDed   = payroll.totalDeductions ?? 0;   // = cotis + prêts + avances
-  const netSalary  = payroll.netSalary       ?? 0;
+  // ── Totaux — conversion numérique stricte pour éviter la concaténation ────
+  const totalBrut  = toNum(payroll.grossSalary);
+  const totalDed   = toNum(payroll.totalDeductions);
+  const netSalary  = toNum(payroll.netSalary);
 
-  // Total cotisations salariales (= totalDeductions - montant prêts/avances)
-  const totalLoanAdv   = loanAdvItems.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+  const totalLoanAdv   = loanAdvItems.reduce((s: number, i: any) => s + toNum(i.amount), 0);
   const totalCotisOnly = totalDed - totalLoanAdv;
 
-  // Total Gains = brut + indemnités hors brut
-  const totalIndem = indemItems.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
-  const totalGains = totalBrut + totalIndem;
+  // Total Gains = brut + indemnités — addition strictement numérique
+  const totalIndem = indemItems.reduce((s: number, i: any) => s + toNum(i.amount), 0);
+  const totalGains = totalBrut + totalIndem;   // ← les deux sont des Number, pas de concaténation possible
 
   // CNSS Patronale détaillée
-  const cnssEmpPension  = Number(payroll.cnssEmployerPension  ?? 0);
-  const cnssEmpFamily   = Number(payroll.cnssEmployerFamily   ?? 0);
-  const cnssEmpAccident = Number(payroll.cnssEmployerAccident ?? 0);
+  const cnssEmpPension  = toNum(payroll.cnssEmployerPension);
+  const cnssEmpFamily   = toNum(payroll.cnssEmployerFamily);
+  const cnssEmpAccident = toNum(payroll.cnssEmployerAccident);
 
   const tusDgi       = getTusDgi(empItems, payroll);
   const tusCnss      = getTusCnss(empItems, payroll);
   const ctaxEmpItems = getCtaxEmpItems(empItems);
 
-  // TOL auto depuis l'employé (affichage uniquement si pas déjà dans les items)
+  // TOL
   const tolZone      = e.tolZone ?? 'VILLE';
   const tolAmount    = tolZone === 'PERIPHERIE' ? 5000 : 1000;
   const tolLabel     = `TOL ${tolZone === 'PERIPHERIE' ? 'Périphérie' : 'Ville'} (Taxe d'occupation des locaux)`;
   const hasTolInItems = items.some((i: any) => i.code?.includes('TOL') || i.label?.toLowerCase().includes('tol'));
 
-  // H.suppl : sanity check — > 300h/mois = données corrompues
-  const rawOT    = Number(payroll.overtimeHours10??0) + Number(payroll.overtimeHours25??0)
-                 + Number(payroll.overtimeHours50??0) + Number(payroll.overtimeHours100??0);
+  // H.suppl sanity check
+  const rawOT    = toNum(payroll.overtimeHours10) + toNum(payroll.overtimeHours25)
+                 + toNum(payroll.overtimeHours50) + toNum(payroll.overtimeHours100);
   const overTime = rawOT > 0 && rawOT <= 300 ? rawOT : null;
 
-  // Numérotation
   let ref1 = 99, ref2 = 200, ref3 = 300, ref4 = 400;
 
   const fullName = [e.firstName, e.lastName].filter(Boolean).join(' ');
@@ -202,17 +207,15 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
     </div>
   );
 
-  const ytdNetImp = ytd ? (ytd.grossSalary - ytd.cnssSalarial) : null;
+  const ytdNetImp = ytd ? (toNum(ytd.grossSalary) - toNum(ytd.cnssSalarial)) : null;
   const cumCols = [
     { label:'Sal. brut',  period: payroll.grossSalary,   year: ytd?.grossSalary       ?? null },
     { label:'Ch. sal.',   period: payroll.cnssSalarial,  year: ytd?.cnssSalarial      ?? null },
     { label:'Ch. pat.',   period: payroll.cnssEmployer ?? 0, year: ytd?.cnssEmployer  ?? null },
     { label:'Avt. nat.',  period: 0,                    year: 0 },
-    { label:'Net impos.', period: (payroll.grossSalary??0)-(payroll.cnssSalarial??0), year: ytdNetImp },
-    { label:'H. trav.',   period: (payroll.workedDays??0)*8, year: ytd ? (ytd.workedDays*8) : null },
-    // H.suppl : nb heures réelles saisies (pas un montant)
+    { label:'Net impos.', period: toNum(payroll.grossSalary) - toNum(payroll.cnssSalarial), year: ytdNetImp },
+    { label:'H. trav.',   period: toNum(payroll.workedDays)*8, year: ytd ? (toNum(ytd.workedDays)*8) : null },
     { label:'H. suppl.',  period: overTime,              year: null },
-    // Base congés : tirets — calculé lors de la génération congés, pas ici
     { label:'Base cong.', period: null,                  year: null },
   ];
 
@@ -244,7 +247,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
         padding: '28px 34px', margin: '0 auto',
       }}>
 
-        {/* ── EN-TÊTE ENTREPRISE ─────────────────────────────────────────── */}
+        {/* ── EN-TÊTE ENTREPRISE ──────────────────────────────────────────── */}
         <div className="adm-no-break" style={{
           background: PRIMARY, color: '#fff', padding: '14px 18px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
@@ -275,9 +278,8 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
           </div>
         </div>
 
-        {/* ── INFOS SALARIÉ — 3 colonnes ─────────────────────────────────── */}
+        {/* ── INFOS SALARIÉ ────────────────────────────────────────────────── */}
         <div className="adm-no-break" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', border:`1px solid #000`, borderTop:'none', marginBottom:10 }}>
-          {/* Col 1 — Identité */}
           <div style={{ padding:'10px 12px', borderRight:'1px solid #000' }}>
             <div style={{ fontSize:8.5, fontWeight:700, letterSpacing:2, color:'#444', textTransform:'uppercase', marginBottom:6 }}>Salarié</div>
             <div style={{ fontSize:12, fontWeight:700, color:'#000', marginBottom:2 }}>{fullName||'—'}</div>
@@ -288,7 +290,6 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
               {e.employeeNumber && <span style={{ background:'#eee', color:'#222', fontSize:8.5, padding:'2px 6px', border:'1px solid #999' }}>Mat. {e.employeeNumber}</span>}
             </div>
           </div>
-          {/* Col 2 — Contrat */}
           <div style={{ padding:'10px 12px', borderRight:'1px solid #000' }}>
             <div style={{ fontSize:8.5, fontWeight:700, letterSpacing:2, color:'#444', textTransform:'uppercase', marginBottom:6 }}>Contrat &amp; situation</div>
             <InfoRow label="Date d'embauche" value={formatDate(e.hireDate)} />
@@ -298,21 +299,18 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
             <InfoRow label="N° CNSS salarié" value={e.cnssNumber||'—'} />
             <InfoRow label="Convention" value={co.collectiveAgreement||'Commerce'} />
           </div>
-          {/* Col 3 — Période */}
           <div style={{ padding:'10px 12px' }}>
             <div style={{ fontSize:8.5, fontWeight:700, letterSpacing:2, color:'#444', textTransform:'uppercase', marginBottom:6 }}>Période de travail</div>
             <InfoRow label="Compte bancaire" value={e.bankAccount ? `…${String(e.bankAccount).slice(-4)}` : '—'} />
             <InfoRow label="Jours ouvrables" value={`${payroll.workDays??26} j`} />
             <InfoRow label="Jours travaillés" value={payroll.workedDays != null ? `${payroll.workedDays} j` : '—'} />
-            {/* Absences : affichées UNIQUEMENT si > 0 */}
-            {Number(payroll.absenceDays??0) > 0 && <InfoRow label="Absences" value={`${payroll.absenceDays} j`} />}
-            {/* H.suppl : affichées UNIQUEMENT si > 0 et ≤ 300 */}
+            {toNum(payroll.absenceDays) > 0 && <InfoRow label="Absences" value={`${payroll.absenceDays} j`} />}
             {overTime != null && <InfoRow label="Heures suppl." value={`${overTime} h`} />}
             <InfoRow label="Site" value={co.city||co.address||'Administration'} />
           </div>
         </div>
 
-        {/* ── TABLEAU PRINCIPAL ───────────────────────────────────────────── */}
+        {/* ── TABLEAU PRINCIPAL ────────────────────────────────────────────── */}
         <div className="adm-no-break">
           <table style={{ width:'100%', borderCollapse:'collapse', tableLayout:'fixed', border:'1px solid #000' }}>
             <colgroup>
@@ -331,15 +329,17 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 <th style={TH({ textAlign:'left', paddingLeft:8 })}>Désignation</th>
                 <th style={TH()}>Base</th>
                 <th style={TH()}>Taux</th>
+                {/* Colonnes salarié */}
                 <th style={TH({ background:'#1a3a1a' })}>Gain salarié</th>
                 <th style={TH({ background:'#5a1a1a' })}>Retenue sal.</th>
+                {/* Colonnes employeur */}
                 <th style={TH({ background:'#3a2800' })}>T.%</th>
                 <th style={TH({ background:'#3a2800' })}>Ret. pat.</th>
               </tr>
             </thead>
             <tbody>
 
-              {/* ══ SECTION 1 — GAINS & PRIMES ═══════════════════════════════ */}
+              {/* ══ SECTION 1 — GAINS & PRIMES ══════════════════════════════ */}
               <SectionRow num="1" color="#fff" bg={SEC_GAIN}>Rémunérations &amp; Primes</SectionRow>
 
               {gainFiltered.map((item: any) => {
@@ -349,17 +349,21 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                   <tr key={item.id||item.code} style={{ borderBottom:'0.5px solid #999' }}>
                     <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref1}</td>
                     <td style={C({ fontWeight: isBase ? 700 : 400, border:'0.5px solid #ddd', paddingLeft:8 })}>{item.label}</td>
+                    {/* Base et taux : depuis le back si présents, sinon '—' */}
                     <td style={CR({ border:'0.5px solid #ddd' })}>{fmtBase(item)}</td>
                     <td style={CC({ fontSize:8.5, fontWeight:600, border:'0.5px solid #ddd' })}>{fmtTaux(item)}</td>
+                    {/* Gain salarié */}
                     <td style={CR({ fontWeight:700, border:'0.5px solid #ddd' })}>{fmt(item.amount)}</td>
+                    {/* Retenue sal. — vide pour les gains */}
                     <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f9f9f9' }} />
+                    {/* T.% et Ret. pat. — vide pour les gains */}
                     <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f5f0e8' }} />
                     <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f5f0e8' }} />
                   </tr>
                 );
               })}
 
-              {/* SALAIRE BRUT — seul sur sa ligne pleine largeur */}
+              {/* SALAIRE BRUT */}
               <tr style={{ background:'#dedede', borderTop:`2px solid #000`, borderBottom:`2px solid #000` }}>
                 <td colSpan={8} style={{
                   padding:'6px 10px', fontSize:11, fontWeight:900,
@@ -370,30 +374,35 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 </td>
               </tr>
 
-              {/* ══ SECTION 2 — COTISATIONS SALARIALES & PATRONALES ══════════ */}
+              {/* ══ SECTION 2 — COTISATIONS ══════════════════════════════════ */}
               <SectionRow num="2" color="#fff" bg={SEC_COTIS}>Cotisations obligatoires (salariales &amp; patronales)</SectionRow>
 
-              {/* Cotisations salariales */}
+              {/* ── Cotisations SALARIALES (CNSS sal. + ITS) → col "Retenue sal." ── */}
               {cotisFiltered.map((item: any) => {
                 ref2++;
+                // Pour CNSS et ITS : afficher base + taux depuis le back
+                const baseFmt = item.base ? fmt(item.base) : '—';
                 const taux = item.rate
-                  ? `${(Number(item.rate)*100).toFixed(Number(item.rate)<0.1?3:2).replace('.',',')}%`
+                  ? `${(toNum(item.rate)*100).toFixed(toNum(item.rate)<0.1?3:2).replace('.',',')}%`
                   : (item.code==='ITS'||item.code==='BNC_SOURCE' ? 'Barème' : '—');
                 return (
                   <tr key={item.id||item.code} style={{ borderBottom:'0.5px solid #999', background: ref2%2===0?'#fdf8f0':'#fff' }}>
                     <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref2}</td>
                     <td style={C({ border:'0.5px solid #ddd', paddingLeft:8 })}>{item.label}</td>
-                    <td style={CR({ border:'0.5px solid #ddd' })}>{item.base ? fmt(item.base) : '—'}</td>
+                    <td style={CR({ border:'0.5px solid #ddd' })}>{baseFmt}</td>
                     <td style={CC({ fontWeight:600, fontSize:8.5, border:'0.5px solid #ddd' })}>{taux}</td>
+                    {/* Gain salarié — vide (c'est une retenue) */}
                     <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f9f9f9' }} />
+                    {/* Retenue salariale ← ici */}
                     <td style={CR({ fontWeight:700, border:'0.5px solid #ddd' })}>{fmt(item.amount)}</td>
+                    {/* T.% et Ret. pat. — vide car c'est salarial */}
                     <td style={CC({ border:'0.5px solid #ddd', background:'#f5f0e8' })} />
                     <td style={CR({ border:'0.5px solid #ddd', background:'#f5f0e8' })} />
                   </tr>
                 );
               })}
 
-              {/* CNSS Patronale — 3 branches séparées, chacune sur sa propre ligne */}
+              {/* ── CNSS Patronale — 3 branches → col "T.%" + "Ret. pat." ── */}
               {cnssEmpPension > 0 && (() => { ref2++; return (
                 <tr key="cnss_pat_pen" style={{ borderBottom:'0.5px solid #999', background: ref2%2===0?'#fdf8f0':'#fff' }}>
                   <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref2}</td>
@@ -431,7 +440,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 </tr>
               ); })()}
 
-              {/* TUS DGI */}
+              {/* ── TUS DGI → patronal ── */}
               {tusDgi > 0 && (() => { ref2++; return (
                 <tr key="tus_dgi" style={{ borderBottom:'0.5px solid #999', background: ref2%2===0?'#fdf8f0':'#fff' }}>
                   <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref2}</td>
@@ -445,7 +454,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 </tr>
               ); })()}
 
-              {/* TUS CNSS */}
+              {/* ── TUS CNSS → patronal ── */}
               {tusCnss > 0 && (() => { ref2++; return (
                 <tr key="tus_cnss" style={{ borderBottom:'0.5px solid #999', background: ref2%2===0?'#fdf8f0':'#fff' }}>
                   <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref2}</td>
@@ -459,7 +468,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 </tr>
               ); })()}
 
-              {/* TOL — si absent des items, on l'affiche depuis employee.tolZone */}
+              {/* ── TOL — si absent des items ── */}
               {!hasTolInItems && tolAmount > 0 && (() => { ref2++; return (
                 <tr key="tol_auto" style={{ borderBottom:'0.5px solid #999', background: ref2%2===0?'#fdf8f0':'#fff' }}>
                   <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref2}</td>
@@ -467,13 +476,14 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                   <td style={CR({ border:'0.5px solid #ddd' })}>—</td>
                   <td style={CC({ fontWeight:600, fontSize:8.5, border:'0.5px solid #ddd' })}>Fixe</td>
                   <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f9f9f9' }} />
+                  {/* TOL : retenue salariale */}
                   <td style={CR({ fontWeight:700, border:'0.5px solid #ddd' })}>{fmt(tolAmount)}</td>
                   <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f5f0e8' }} />
                   <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f5f0e8' }} />
                 </tr>
               ); })()}
 
-              {/* CTAX_EMP_* — charges patronales custom */}
+              {/* ── Charges patronales custom ── */}
               {ctaxEmpItems.map((item: any) => { ref2++; return (
                 <tr key={item.id||item.code} style={{ borderBottom:'0.5px solid #999', background: ref2%2===0?'#fdf8f0':'#fff' }}>
                   <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref2}</td>
@@ -487,22 +497,24 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 </tr>
               ); })}
 
-              {/* TOTAL COTISATIONS — taxes/impôts uniquement, seul sur sa ligne */}
+              {/* TOTAL COTISATIONS — label épuré, sans "(CNSS + ITS + Taxes)" */}
               <TotalRow
-                label="Total cotisations  (CNSS + ITS + Taxes)"
+                label="Total cotisations"
                 amount={fmt(totalCotisOnly)}
                 col="retenue"
               />
 
-              {/* ══ SECTION 3 — INDEMNITÉS HORS BRUT ════════════════════════ */}
+              {/* ══ SECTION 3 — INDEMNITÉS — label épuré ════════════════════ */}
               {indemItems.length > 0 && <>
-                <SectionRow num="3" color="#fff" bg={SEC_INDEM}>Indemnités &amp; Avantages (non soumis à cotisations)</SectionRow>
+                <SectionRow num="3" color="#fff" bg={SEC_INDEM}>Indemnités &amp; Avantages</SectionRow>
                 {indemItems.map((item: any) => { ref3++; return (
                   <tr key={item.id||item.code} style={{ borderBottom:'0.5px solid #999', background: ref3%2===0?'#f5faf5':'#fff' }}>
                     <td style={CC({ color:'#444', fontSize:8.5, border:'0.5px solid #ddd' })}>{ref3}</td>
                     <td style={C({ border:'0.5px solid #ddd', paddingLeft:8 })}>{item.label}</td>
+                    {/* Base et taux depuis le back (paie manuelle : base + rate stockés) */}
                     <td style={CR({ border:'0.5px solid #ddd' })}>{fmtBase(item)}</td>
                     <td style={CC({ fontSize:8.5, border:'0.5px solid #ddd' })}>{fmtTaux(item)}</td>
+                    {/* Gain salarié */}
                     <td style={CR({ fontWeight:700, border:'0.5px solid #ddd' })}>{fmt(item.amount)}</td>
                     <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f9f9f9' }} />
                     <td style={{ ...C({ border:'0.5px solid #ddd' }), background:'#f5f0e8' }} />
@@ -511,7 +523,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 ); })}
               </>}
 
-              {/* ══ SECTION 4 — PRÊTS & AVANCES ══════════════════════════════ */}
+              {/* ══ SECTION 4 — PRÊTS & AVANCES ═════════════════════════════ */}
               {loanAdvItems.length > 0 && <>
                 <SectionRow num="4" color="#fff" bg={SEC_RETENUE}>Prêts &amp; Avances sur salaire</SectionRow>
                 {loanAdvItems.map((item: any) => { ref4++; return (
@@ -528,7 +540,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
                 ); })}
               </>}
 
-              {/* Autres retenues diverses (hors loans/avances) */}
+              {/* Autres retenues diverses */}
               {otherRetItems.length > 0 && <>
                 {loanAdvItems.length === 0 && <SectionRow num="4" color="#fff" bg={SEC_RETENUE}>Retenues diverses</SectionRow>}
                 {otherRetItems.map((item: any) => { ref4++; return (
@@ -546,15 +558,17 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
               </>}
 
               {/* ══ TOTAUX FINAUX ════════════════════════════════════════════ */}
-              {/* Total Gains = Brut + Indemnités */}
+
+              {/* Total Gains — label épuré, sans "(Brut X + Indemnités Y)" */}
               <TotalRow
-                label={`Total gains${totalIndem > 0 ? `  (Brut ${fmt(totalBrut)} + Indemnités ${fmt(totalIndem)})` : ''}`}
+                label="Total Gains"
                 amount={fmt(totalGains)}
                 col="gain"
               />
-              {/* Total Retenues = Cotisations + Prêts + Avances = totalDeductions */}
+
+              {/* Total Retenues — label épuré */}
               <TotalRow
-                label={`Total retenues  (Cotisations${totalLoanAdv > 0 ? ` + Prêts/Avances ${fmt(totalLoanAdv)}` : ''})`}
+                label="Total retenues"
                 amount={fmt(totalDed)}
                 col="retenue"
               />
@@ -563,7 +577,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
           </table>
         </div>
 
-        {/* ── CUMULS + NET À PAYER ────────────────────────────────────────── */}
+        {/* ── CUMULS + NET À PAYER ─────────────────────────────────────────── */}
         <div className="adm-no-break" style={{ marginTop:8 }}>
           <div style={{ display:'flex', alignItems:'stretch', border:`1px solid #000`, borderTop:`2px solid ${PRIMARY}` }}>
             <table style={{ flex:1, borderCollapse:'collapse' }}>
@@ -611,14 +625,14 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
           </div>
         </div>
 
-        {/* ── MESSAGE EMPLOYEUR ───────────────────────────────────────────── */}
+        {/* ── MESSAGE EMPLOYEUR ─────────────────────────────────────────────── */}
         {tpl.style.footerMessage && (
           <div style={{ border:`1px solid ${ACCENT}`, padding:'6px 12px', marginTop:8, fontSize:9, fontStyle:'italic', color:'#333', background:'#fffdf0' }}>
             {tpl.style.footerMessage}
           </div>
         )}
 
-        {/* ── SIGNATURES ──────────────────────────────────────────────────── */}
+        {/* ── SIGNATURES ────────────────────────────────────────────────────── */}
         <div className="adm-no-break" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, padding:'12px 0 8px', borderTop:`1px solid #bbb`, marginTop:10 }}>
           {[
             { label:"Signature de l'Employé(e)", sub:"Lu et approuvé" },
@@ -632,7 +646,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
           ))}
         </div>
 
-        {/* ── PIED DE PAGE ────────────────────────────────────────────────── */}
+        {/* ── PIED DE PAGE ──────────────────────────────────────────────────── */}
         <div style={{ borderTop:`2px solid ${ACCENT}`, padding:'6px 0', marginTop:6, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ fontSize:8.5, color:'#444' }}>
             Code du Travail — Loi n°45-75 · CNSS 4% sal. · ITS barème 2026 · SMIG 70 400 FCFA · Décret 78-360 HS
