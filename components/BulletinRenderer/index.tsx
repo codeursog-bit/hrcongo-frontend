@@ -2,7 +2,7 @@
 // ============================================================================
 // BulletinRendererDefault v4
 // ✅ Reproduction FIDÈLE du bulletin physique Congo
-// ✅ A4 PAYSAGE (297mm × 210mm)
+// ✅ A4 PORTRAIT (210mm × 297mm) — ✅ CHANGÉ
 // ✅ Couleurs : en-têtes gris clair fond texte noir (pas fond noir)
 // ✅ En-tête : société + salarié côte à côte dans même tableau
 // ✅ Pas de SepRow fond noir — sections séparées par lignes total en gras
@@ -70,10 +70,9 @@ const SANS  = 'Arial,Helvetica,sans-serif';
 const BD    = '0.5px solid #999';
 const BDK   = '0.5px solid #000';
 
-// En-tête colonne : fond gris clair, texte noir — N&B safe (imprime gris)
-const TH_BG = '#c8c8c8';  // gris moyen — lisible N&B
-const TH_SAL_BG = '#b8b8b8'; // légèrement plus sombre pour Part Salariale
-const TH_PAT_BG = '#a8a8a8'; // encore légèrement plus sombre pour Part Patronale
+const TH_BG     = '#c8c8c8';
+const TH_SAL_BG = '#b8b8b8';
+const TH_PAT_BG = '#a8a8a8';
 
 const cell = (e?: React.CSSProperties): React.CSSProperties => ({
   border:BD, padding:'2px 4px', fontSize:8, verticalAlign:'middle',
@@ -86,14 +85,12 @@ const cellC = (e?: React.CSSProperties): React.CSSProperties => ({
   ...cell(), textAlign:'center', ...e,
 });
 
-// TH fond gris clair texte noir — IDENTIQUE au bulletin physique
 const th = (bg=TH_BG, e?: React.CSSProperties): React.CSSProperties => ({
   border:BDK, padding:'3px 4px', fontSize:7.5, fontWeight:700,
   textAlign:'center', background:bg, color:'#000',
   textTransform:'uppercase' as const, fontFamily:SANS, ...e,
 });
 
-// Ligne Total — fond gris clair, texte gras
 const TotalRow = ({ label, gain='', ret='', patMt='' }:
   { label:string; gain?:string; ret?:string; patMt?:string }) => (
   <tr style={{ background:'#e0e0e0', borderTop:'1.5px solid #000', borderBottom:'1.5px solid #000' }}>
@@ -108,7 +105,6 @@ const TotalRow = ({ label, gain='', ret='', patMt='' }:
   </tr>
 );
 
-// Ligne standard
 const Row = ({ rub, label, base='', taux='', gain='', ret='',
                patTaux='', patMt='', bold=false, zebra=false }:
   { rub:number|string; label:string; base?:string; taux?:string;
@@ -137,7 +133,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     () => classifyItems(items), [items],
   );
 
-  // Données du back
   const cnssSal         = nv(payroll.cnssSalarial);
   const itsAmount       = nv(payroll.its);
   const itsBase         = nv(payroll.grossSalary) - cnssSal;
@@ -150,37 +145,30 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const tusDgi          = nv((payroll as any).tusDgiAmount);
   const tusCnss         = nv((payroll as any).tusCnssAmount);
 
-  // Items classifiés
-  const gains = gainItems.filter((i:any)=>!['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
-  const indems = indemItems;
+  const gains     = gainItems.filter((i:any)=>!['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
+  const indems    = indemItems;
 
-  // Taxes salarié custom (DEDUCTION, hors CNSS/ITS/prêts)
   const ctaxEmp = cotisItems.filter((i:any)=>
     !['CNSS_SAL','CNSS','ITS','IRPP','BNC_SOURCE'].includes(i.code)&&
     !['LOAN','ADVANCE'].includes(i.code)
   ).concat(retenueItems.filter((i:any)=>!['LOAN','ADVANCE'].includes(i.code)));
 
-  // Taxes patronales custom (hors TUS)
   const ctaxPat = ((empItems??[]) as any[]).filter((i:any)=>
     !['TUS_DGI','TUS_CNSS'].includes(i.code)
   );
 
-  // Prêts & avances
   const loanItems = retenueItems.filter((i:any)=>['LOAN','ADVANCE'].includes(i.code));
 
-  // Totaux
   const totalPat = cnssEmpPension+cnssEmpFamily+cnssEmpAccident+tusCnss+tusDgi
     +ctaxPat.reduce((s:number,i:any)=>s+nv(i.amount),0);
   const totalRetenues = nv(payroll.totalDeductions);
 
-  // YTD
-  const ytdNetImp = nv(ytd.grossSalary)-nv(ytd.cnssSalarial);
+  const ytdNetImp  = nv(ytd.grossSalary)-nv(ytd.cnssSalarial);
   const monthLabel = MONTHS[(payroll.month??1)-1];
   const fullName   = [e.lastName?.toUpperCase(), e.firstName].filter(Boolean).join(' ');
   const cat        = [e.professionalCategory, e.echelon?`Ech.${e.echelon}`:null].filter(Boolean).join('/');
   const deptName   = e.department?.name ?? '';
 
-  // Numérotation
   let gainRef  = 1000;
   let patRef   = 3500;
   let indemRef = 5390;
@@ -190,25 +178,29 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     <>
       <style>{`
         @media print {
-          @page { size: A4 landscape; margin: 6mm; }
+          @page { size: A4 portrait; margin: 8mm; }
           html,body { margin:0!important;padding:0!important;background:#fff!important; }
           .no-print,nav,header,aside,footer,
           [class*="sidebar"],[class*="Sidebar"],
           [class*="navbar"],[class*="Navbar"] { display:none!important; }
           #bul-default {
-            width:285mm!important; min-height:195mm!important;
+            width:194mm!important;
             padding:0!important; margin:0!important;
             box-shadow:none!important; border:none!important;
             background:#fff!important;
           }
           .nb { page-break-inside:avoid!important; break-inside:avoid!important; }
-          * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+          * {
+            -webkit-print-color-adjust:exact!important;
+            print-color-adjust:exact!important;
+            color-adjust:exact!important;
+          }
         }
       `}</style>
 
       <div id="bul-default" style={{
         fontFamily:SANS, fontSize:8, background:'#fff', color:'#000',
-        width:'297mm', minHeight:'205mm',
+        width:'210mm', minHeight:'297mm',
         boxSizing:'border-box' as const,
         padding:'8px 10px',
         margin:'0 auto',
@@ -219,7 +211,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         {/* ══ EN-TÊTE : société + salarié côte à côte ══════════════════════ */}
         <table className="nb" style={{ width:'100%',borderCollapse:'collapse',marginBottom:3,border:'1px solid #000' }}>
           <tbody>
-            {/* Ligne 1 : Nom société | Nom salarié + affectation */}
             <tr>
               <td style={{ width:'35%',padding:'3px 6px',border:BDK,fontWeight:900,fontSize:11,textTransform:'uppercase' as const }}>
                 {co.tradeName||co.legalName||'—'}
@@ -233,7 +224,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={{ width:'12%',padding:'3px 6px',border:BDK,fontSize:8 }}>
                 Poste : <strong>{e.position||'—'}</strong>
               </td>
-              {/* Titre Bulletin — fond gris */}
               <td rowSpan={3} style={{ width:'8%',padding:'4px 6px',border:'1.5px solid #000',textAlign:'center',verticalAlign:'middle',background:TH_BG }}>
                 <div style={{ fontSize:6.5,fontWeight:700,letterSpacing:1.5,textTransform:'uppercase' as const }}>Bulletin de Paie</div>
                 <div style={{ fontSize:17,fontWeight:900,fontFamily:FONT,marginTop:2,letterSpacing:1 }}>
@@ -242,7 +232,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 <div style={{ fontSize:11,fontWeight:700,fontFamily:FONT }}>{payroll.year}</div>
               </td>
             </tr>
-            {/* Ligne 2 : Adresse | Cat/Ech + N°matricule */}
             <tr>
               <td style={{ padding:'2px 6px',border:BDK,fontSize:7.5 }}>
                 {[co.address,co.city].filter(Boolean).join(', ')}
@@ -258,7 +247,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 {e.paymentMethod==='BANK_TRANSFER'?'Virement bancaire':'Espèces'}
               </td>
             </tr>
-            {/* Ligne 3 : RCCM/CNSS | infos contrat */}
             <tr>
               <td style={{ padding:'2px 6px',border:BDK,fontSize:7.5 }}>
                 RCCM : <strong>{co.rccmNumber||'—'}</strong>
@@ -272,7 +260,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </tbody>
         </table>
 
-        {/* ══ TABLEAU INFO SALARIÉ — 1 seule ligne ═════════════════════════ */}
+        {/* ══ INFO SALARIÉ ═════════════════════════════════════════════════ */}
         <table className="nb" style={{ width:'100%',borderCollapse:'collapse',marginBottom:3 }}>
           <thead>
             <tr>
@@ -297,14 +285,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         {/* ══ TABLEAU PRINCIPAL ════════════════════════════════════════════ */}
         <table className="nb" style={{ width:'100%',borderCollapse:'collapse',tableLayout:'fixed',flex:1 }}>
           <colgroup>
-            <col style={{ width:'5%'  }} />{/* Rubrique */}
-            <col style={{ width:'24%' }} />{/* Libellé */}
-            <col style={{ width:'9%'  }} />{/* Nbre/Base */}
-            <col style={{ width:'4%'  }} />{/* Taux */}
-            <col style={{ width:'12%' }} />{/* Gains */}
-            <col style={{ width:'12%' }} />{/* Retenues */}
-            <col style={{ width:'5%'  }} />{/* Taux pat */}
-            <col style={{ width:'12%' }} />{/* Montant pat */}
+            <col style={{ width:'5%'  }} />
+            <col style={{ width:'24%' }} />
+            <col style={{ width:'9%'  }} />
+            <col style={{ width:'4%'  }} />
+            <col style={{ width:'12%' }} />
+            <col style={{ width:'12%' }} />
+            <col style={{ width:'5%'  }} />
+            <col style={{ width:'12%' }} />
           </colgroup>
           <thead>
             <tr>
@@ -324,7 +312,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </thead>
           <tbody>
 
-            {/* ── GAINS ──────────────────────────────────────────── */}
             {gains.map((item:any,idx:number)=>{
               gainRef++;
               return <Row key={item.id||item.code||idx} rub={gainRef} label={item.label}
@@ -334,13 +321,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
             <TotalRow label="Total Brut" gain={fmtZ(totalBrut)} />
 
-            {/* ── COTISATIONS SOCIALES ───────────────────────────── */}
-            {/* CNSS salariale — 2505 */}
             <Row rub={2505} label="CNSS (plafond 1.200.000)"
               base={fmtZ(Math.min(totalBrut,1_200_000))} taux="4,00"
               ret={fmt(cnssSal)} />
 
-            {/* CNSS patronale 3 branches */}
             {cnssEmpPension>0&&(()=>{ patRef+=10; return <Row key="cp" rub={patRef}
               label="CNSS (plafond 1.200.000)"
               base={fmtZ(Math.min(totalBrut,1_200_000))}
@@ -354,28 +338,22 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               base={fmtZ(Math.min(totalBrut,600_000))}
               patTaux="2,25" patMt={fmt(cnssEmpAccident)} zebra />; })()}
 
-            {/* TUS CNSS → cotisation patronale */}
             {tusCnss>0&&(()=>{ patRef+=10; return <Row key="tc" rub={patRef}
               label="Taxe unique sur salaire"
               base={fmtZ(totalBrut)} patTaux="5,475%" patMt={fmt(tusCnss)} />; })()}
 
-            {/* Taxes patronales custom */}
             {ctaxPat.map((item:any)=>{ patRef+=10; return <Row key={item.id||item.code}
               rub={patRef} label={item.label.replace(' (part patronale)','')}
               base={itemBase(item)} patTaux={itemTaux(item)} patMt={fmt(item.amount)} zebra />; })}
 
             <TotalRow label="Total cotisations" ret={fmtZ(cnssSal)} patMt={fmtZ(totalPat)} />
 
-            {/* ── ITS + TUS DGI + TAXES SALARIÉ + PRÊTS ─────────── */}
-            {/* ITS — 4520 */}
             {itsAmount>0&&<Row rub={4520} label="ITS / IRPP Mois"
               base={fmt(itsBase)} taux="Barème" ret={fmt(itsAmount)} />}
 
-            {/* TUS DGI — patronal, affiché après ITS */}
             {tusDgi>0&&<Row rub={4700} label="Taxe unique sur salaire (DGI)"
               base={fmtZ(totalBrut)} patTaux="2,025%" patMt={fmt(tusDgi)} zebra />}
 
-            {/* Taxes custom : CTAX_* salarié + CTAX_EMP_* patronal → une ligne par taxe */}
             {(()=>{
               const taxMap = new Map<string,{emp:any|null,pat:any|null}>();
               ctaxEmp.forEach((i:any)=>{
@@ -391,7 +369,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               let rub=4600;
               return Array.from(taxMap.entries()).map(([k,{emp,pat}],idx)=>{
                 rub++;
-                // Rubriques fixes connues
                 const fixedRub: Record<string,number> = {TOL:4601,CAMU:4650};
                 const r = fixedRub[k] ?? rub;
                 const label=emp?.label??pat?.label?.replace(' (part patronale)','')?? k;
@@ -405,13 +382,11 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               });
             })()}
 
-            {/* Prêts & Avances */}
             {loanItems.map((item:any)=>{ loanRef++; return <Row key={item.id||item.code}
               rub={loanRef} label={item.label}
               base={itemBase(item)} taux={itemTaux(item)}
               ret={fmt(item.amount)} zebra />; })}
 
-            {/* ── INDEMNITÉS & AVANTAGES ─────────────────────────── */}
             {indems.map((item:any,idx:number)=>{ indemRef+=10; return <Row
               key={item.id||item.code} rub={indemRef} label={item.label}
               base={itemBase(item)} taux={itemTaux(item)}
@@ -423,13 +398,13 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         {/* ══ BAS DU BULLETIN ══════════════════════════════════════════════ */}
         <table className="nb" style={{ width:'100%',borderCollapse:'collapse',marginTop:3,tableLayout:'fixed' }}>
           <colgroup>
-            <col style={{ width:'14%' }} />{/* Mode règlement label */}
-            <col style={{ width:'22%' }} />{/* Banque + N° compte */}
-            <col style={{ width:'9%'  }} />{/* Virement */}
-            <col style={{ width:'13%' }} />{/* Net à payer label */}
-            <col style={{ width:'13%' }} />{/* Net à payer montant */}
-            <col style={{ width:'10%' }} />{/* 2ème banque */}
-            <col style={{ width:'19%' }} />{/* Droits annuels */}
+            <col style={{ width:'14%' }} />
+            <col style={{ width:'22%' }} />
+            <col style={{ width:'9%'  }} />
+            <col style={{ width:'13%' }} />
+            <col style={{ width:'13%' }} />
+            <col style={{ width:'10%' }} />
+            <col style={{ width:'19%' }} />
           </colgroup>
           <tbody>
             <tr>
@@ -460,14 +435,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         {/* ══ CUMULS + SIGNATURES ══════════════════════════════════════════ */}
         <table style={{ width:'100%',borderCollapse:'collapse',marginTop:0,tableLayout:'fixed' }}>
           <colgroup>
-            <col style={{ width:'40%' }} />{/* Signature employé */}
-            <col style={{ width:'8%'  }} />{/* Label Cumuls */}
-            <col style={{ width:'10%' }} />{/* Brut */}
-            <col style={{ width:'10%' }} />{/* Net imposable */}
-            <col style={{ width:'8%'  }} />{/* Ch.Sal */}
-            <col style={{ width:'8%'  }} />{/* Ch.Pat */}
-            <col style={{ width:'8%'  }} />{/* Droits */}
-            <col style={{ width:'8%'  }} />{/* Solde */}
+            <col style={{ width:'40%' }} />
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'10%' }} />
+            <col style={{ width:'10%' }} />
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'8%'  }} />
           </colgroup>
           <thead>
             <tr>
@@ -482,9 +457,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             </tr>
           </thead>
           <tbody>
-            {/* Ligne Mois */}
             <tr>
-              {/* Signature employé — rowSpan 2 */}
               <td rowSpan={3} style={{ padding:'4px 8px',borderTop:'1px solid #000',verticalAlign:'top' }}>
                 <div style={{ fontSize:8,fontWeight:700,textTransform:'uppercase' as const }}>
                   Signature de l'Employé(e)
@@ -499,7 +472,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={cell()} />
               <td style={cell()} />
             </tr>
-            {/* Ligne Année */}
             <tr>
               <td style={cell({ fontWeight:700,fontSize:8 })}>Année</td>
               <td style={cellR({ fontWeight:700,fontSize:8 })}>{fmtD(ytd.grossSalary)}</td>
@@ -509,20 +481,15 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={cell()} />
               <td style={cell()} />
             </tr>
-            {/* Signature employeur */}
             <tr>
               <td colSpan={7} style={{ padding:'4px 8px',borderTop:'1px solid #000',verticalAlign:'top' }}>
                 <div style={{ display:'flex',justifyContent:'flex-end',gap:40 }}>
                   <div style={{ textAlign:'center' }}>
-                    <div style={{ fontSize:7.5,fontWeight:700,textTransform:'uppercase' as const }}>
-                      Chef Département
-                    </div>
+                    <div style={{ fontSize:7.5,fontWeight:700,textTransform:'uppercase' as const }}>Chef Département</div>
                     <div style={{ height:24,borderBottom:'1px solid #000',width:80,marginTop:14 }} />
                   </div>
                   <div style={{ textAlign:'center' }}>
-                    <div style={{ fontSize:7.5,fontWeight:700,textTransform:'uppercase' as const }}>
-                      DRH / Direction
-                    </div>
+                    <div style={{ fontSize:7.5,fontWeight:700,textTransform:'uppercase' as const }}>DRH / Direction</div>
                     <div style={{ height:24,borderBottom:'1px solid #000',width:80,marginTop:14 }} />
                   </div>
                 </div>
