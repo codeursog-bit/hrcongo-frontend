@@ -470,37 +470,51 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         </table>
 
         {/* ══ CUMULS + SIGNATURES ══════════════════════════════════════════
-            Layout exact du screenshot :
-            [Signature Employé(e)]  [Cumuls|Brut|NetImp|ChgSal|ChgPat|Droits|Solde]  [DRH/Direction]
+            Structure fidèle bulletin physique :
+            ┌──────────────────┬───────┬──────────┬───────────────┬───────────┬───────────┬───────────────────────┬────────────────────┐
+            │                  │       │          │               │           │           │   Congés annuels      │                    │
+            │ Sig. Employé(e)  │CUMULS │  Brut    │ Net imposable │Charges Sal│Charges Pat├────────┬──────┬───────┤  DRH / Direction   │
+            │                  │       │          │               │           │           │ Droits │ Pris │ Solde │                    │
+            │                  │ Mois  │xxxxxxx   │  xxxxxxx      │  xxxxx    │  xxxxxx   │        │      │       │                    │
+            │                  │ Année │xxxxxxx   │  xxxxxxx      │  xxxxx    │  xxxxxx   │        │      │       │                    │
+            └──────────────────┴───────┴──────────┴───────────────┴───────────┴───────────┴────────┴──────┴───────┴────────────────────┘
         ════════════════════════════════════════════════════════════════════ */}
         <table style={{ width:'100%', borderCollapse:'collapse', marginTop:2, border:'1px solid #000' }}>
           <colgroup>
-            <col style={{ width:'22%' }} /> {/* Signature Employé */}
-            <col style={{ width:'6%'  }} /> {/* Cumuls label */}
+            <col style={{ width:'20%' }} /> {/* Signature Employé */}
+            <col style={{ width:'5%'  }} /> {/* CUMULS */}
             <col style={{ width:'9%'  }} /> {/* Brut */}
             <col style={{ width:'10%' }} /> {/* Net imposable */}
             <col style={{ width:'8%'  }} /> {/* Charges Sal */}
             <col style={{ width:'8%'  }} /> {/* Charges Pat */}
-            <col style={{ width:'7%'  }} /> {/* Droits ann. */}
-            <col style={{ width:'7%'  }} /> {/* Solde */}
+            <col style={{ width:'6%'  }} /> {/* Droits */}
+            <col style={{ width:'5%'  }} /> {/* Pris */}
+            <col style={{ width:'6%'  }} /> {/* Solde */}
             <col style={{ width:'23%' }} /> {/* Signature DRH */}
           </colgroup>
           <thead>
             <tr>
+              {/* Ligne 1 d'en-tête */}
               <th style={{ border:'none', background:'transparent' }} />
-              <th style={th(TH_BG,{ fontSize:7 })}>Cumuls</th>
-              <th style={th(TH_BG,{ fontSize:7 })}>Brut</th>
-              <th style={th(TH_BG,{ fontSize:7 })}>Net imposable</th>
-              <th style={th(TH_BG,{ fontSize:7 })}>Charges Sal</th>
-              <th style={th(TH_BG,{ fontSize:7 })}>Charges Pat</th>
-              <th style={th(TH_BG,{ fontSize:7 })}>Droits ann.</th>
-              <th style={th(TH_BG,{ fontSize:7 })}>Solde</th>
+              <th rowSpan={2} style={th(TH_BG,{ fontSize:7, verticalAlign:'middle' })}>Cumuls</th>
+              <th rowSpan={2} style={th(TH_BG,{ fontSize:7, verticalAlign:'middle' })}>Brut</th>
+              <th rowSpan={2} style={th(TH_BG,{ fontSize:7, verticalAlign:'middle' })}>Net imposable</th>
+              <th rowSpan={2} style={th(TH_BG,{ fontSize:7, verticalAlign:'middle' })}>Charges Sal</th>
+              <th rowSpan={2} style={th(TH_BG,{ fontSize:7, verticalAlign:'middle' })}>Charges Pat</th>
+              <th colSpan={3} style={th(TH_BG,{ fontSize:7 })}>Congés annuels</th>
+              <th style={{ border:'none', background:'transparent' }} />
+            </tr>
+            <tr>
+              <th style={{ border:'none', background:'transparent' }} />
+              <th style={th(TH_BG,{ fontSize:6.5 })}>Droits</th>
+              <th style={th(TH_BG,{ fontSize:6.5 })}>Pris</th>
+              <th style={th(TH_BG,{ fontSize:6.5 })}>Solde</th>
               <th style={{ border:'none', background:'transparent' }} />
             </tr>
           </thead>
           <tbody>
+            {/* Ligne Mois */}
             <tr>
-              {/* Colonne gauche : Signature Employé */}
               <td rowSpan={2} style={{
                 padding:'4px 8px',
                 borderRight:'1px solid #000',
@@ -509,9 +523,8 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 <div style={{ fontSize:7.5, fontWeight:700, textTransform:'uppercase' as const }}>
                   Signature de l'Employé(e)
                 </div>
-                <div style={{ height:26, borderBottom:'1px solid #000', marginTop:18 }} />
+                <div style={{ height:26, borderBottom:'1px solid #000', marginTop:20 }} />
               </td>
-              {/* Ligne Mois */}
               <td style={cellC({ fontWeight:700, fontSize:8, borderLeft:COL_BD })}>Mois</td>
               <td style={cellR({ fontWeight:700, fontSize:8, borderLeft:COL_BD })}>{fmtZ(totalBrut)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
@@ -519,7 +532,8 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={cellR({ fontSize:8, borderLeft:COL_BD })}>{fmtD(totalPat)}</td>
               <td style={cell({ borderLeft:COL_BD })} />
               <td style={cell({ borderLeft:COL_BD })} />
-              {/* Colonne droite : Signature DRH uniquement */}
+              <td style={cell({ borderLeft:COL_BD })} />
+              {/* Signature DRH — rowSpan 2 */}
               <td rowSpan={2} style={{
                 padding:'4px 8px',
                 borderLeft:'1px solid #000',
@@ -529,7 +543,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 <div style={{ fontSize:7.5, fontWeight:700, textTransform:'uppercase' as const }}>
                   DRH / Direction
                 </div>
-                <div style={{ height:26, borderBottom:'1px solid #000', marginTop:18, width:'80%', margin:'18px auto 0' }} />
+                <div style={{ height:26, borderBottom:'1px solid #000', marginTop:20, width:'75%', marginLeft:'auto', marginRight:'auto' }} />
               </td>
             </tr>
             {/* Ligne Année */}
@@ -539,6 +553,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={cellR({ fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>{fmtD(ytdNetImp)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>{fmtD(ytd.cnssSalarial)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>{fmtD(ytd.cnssEmployer)}</td>
+              <td style={cell({ borderLeft:COL_BD, borderTop:'1px solid #000' })} />
               <td style={cell({ borderLeft:COL_BD, borderTop:'1px solid #000' })} />
               <td style={cell({ borderLeft:COL_BD, borderTop:'1px solid #000' })} />
             </tr>
