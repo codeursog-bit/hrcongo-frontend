@@ -75,7 +75,8 @@ const cell = (e?: React.CSSProperties): React.CSSProperties => ({
   borderRight: NO_BD,
   borderTop: NO_BD,
   borderBottom: NO_BD,
-  padding: '1.5px 4px',
+  padding: '0px 3px',
+  lineHeight: '14px',
   fontSize: 8,
   verticalAlign: 'middle',
   color: '#000',
@@ -98,7 +99,7 @@ const cellC = (e?: React.CSSProperties): React.CSSProperties => ({
 // En-tête de colonne — avec bordure complète
 const th = (bg=TH_BG, e?: React.CSSProperties): React.CSSProperties => ({
   border: `0.5px solid #000`,
-  padding: '3px 4px',
+  padding: '2px 3px',
   fontSize: 7.5,
   fontWeight: 700,
   textAlign: 'center',
@@ -468,18 +469,21 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </tbody>
         </table>
 
-        {/* ══ CUMULS + DOUBLE SIGNATURE (Employé gauche | Employeur droite) ═ */}
+        {/* ══ CUMULS + SIGNATURES ══════════════════════════════════════════
+            Layout exact du screenshot :
+            [Signature Employé(e)]  [Cumuls|Brut|NetImp|ChgSal|ChgPat|Droits|Solde]  [DRH/Direction]
+        ════════════════════════════════════════════════════════════════════ */}
         <table style={{ width:'100%', borderCollapse:'collapse', marginTop:2, border:'1px solid #000' }}>
           <colgroup>
-            <col style={{ width:'28%' }} />  {/* Signature Employé */}
-            <col style={{ width:'7%'  }} />  {/* Cumuls label */}
-            <col style={{ width:'10%' }} />  {/* Brut */}
-            <col style={{ width:'10%' }} />  {/* Net imposable */}
-            <col style={{ width:'8%'  }} />  {/* Charges Sal */}
-            <col style={{ width:'8%'  }} />  {/* Charges Pat */}
-            <col style={{ width:'7%'  }} />  {/* Droits ann. */}
-            <col style={{ width:'7%'  }} />  {/* Solde */}
-            <col style={{ width:'15%' }} />  {/* Signature Chef Dép */}
+            <col style={{ width:'22%' }} /> {/* Signature Employé */}
+            <col style={{ width:'6%'  }} /> {/* Cumuls label */}
+            <col style={{ width:'9%'  }} /> {/* Brut */}
+            <col style={{ width:'10%' }} /> {/* Net imposable */}
+            <col style={{ width:'8%'  }} /> {/* Charges Sal */}
+            <col style={{ width:'8%'  }} /> {/* Charges Pat */}
+            <col style={{ width:'7%'  }} /> {/* Droits ann. */}
+            <col style={{ width:'7%'  }} /> {/* Solde */}
+            <col style={{ width:'23%' }} /> {/* Signature DRH */}
           </colgroup>
           <thead>
             <tr>
@@ -495,46 +499,42 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             </tr>
           </thead>
           <tbody>
-            {/* Ligne Mois */}
             <tr>
+              {/* Colonne gauche : Signature Employé */}
               <td rowSpan={2} style={{
-                padding:'6px 8px',
+                padding:'4px 8px',
                 borderRight:'1px solid #000',
-                verticalAlign:'bottom',
+                verticalAlign:'top',
               }}>
-                <div style={{ fontSize:8, fontWeight:700, textTransform:'uppercase' as const, marginBottom:4 }}>
+                <div style={{ fontSize:7.5, fontWeight:700, textTransform:'uppercase' as const }}>
                   Signature de l'Employé(e)
                 </div>
-                <div style={{ height:28, borderBottom:'1px solid #000', marginTop:16 }} />
+                <div style={{ height:26, borderBottom:'1px solid #000', marginTop:18 }} />
               </td>
-              <td style={{ ...cellC({ fontWeight:700, fontSize:8, borderLeft:COL_BD })}}>Mois</td>
+              {/* Ligne Mois */}
+              <td style={cellC({ fontWeight:700, fontSize:8, borderLeft:COL_BD })}>Mois</td>
               <td style={cellR({ fontWeight:700, fontSize:8, borderLeft:COL_BD })}>{fmtZ(totalBrut)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD })}>{fmtD(cnssSal)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD })}>{fmtD(totalPat)}</td>
               <td style={cell({ borderLeft:COL_BD })} />
               <td style={cell({ borderLeft:COL_BD })} />
+              {/* Colonne droite : Signature DRH uniquement */}
               <td rowSpan={2} style={{
-                padding:'6px 8px',
+                padding:'4px 8px',
                 borderLeft:'1px solid #000',
-                verticalAlign:'bottom',
+                verticalAlign:'top',
+                textAlign:'center',
               }}>
-                {/* Signatures Employeur côte à côte */}
-                <div style={{ display:'flex', justifyContent:'space-around', alignItems:'flex-end', height:'100%' }}>
-                  <div style={{ textAlign:'center' }}>
-                    <div style={{ fontSize:7.5, fontWeight:700, textTransform:'uppercase' as const, marginBottom:2 }}>Chef Département</div>
-                    <div style={{ height:24, borderBottom:'1px solid #000', width:70, marginTop:12 }} />
-                  </div>
-                  <div style={{ textAlign:'center' }}>
-                    <div style={{ fontSize:7.5, fontWeight:700, textTransform:'uppercase' as const, marginBottom:2 }}>DRH / Direction</div>
-                    <div style={{ height:24, borderBottom:'1px solid #000', width:70, marginTop:12 }} />
-                  </div>
+                <div style={{ fontSize:7.5, fontWeight:700, textTransform:'uppercase' as const }}>
+                  DRH / Direction
                 </div>
+                <div style={{ height:26, borderBottom:'1px solid #000', marginTop:18, width:'80%', margin:'18px auto 0' }} />
               </td>
             </tr>
             {/* Ligne Année */}
             <tr>
-              <td style={{ ...cellC({ fontWeight:700, fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}}>Année</td>
+              <td style={cellC({ fontWeight:700, fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>Année</td>
               <td style={cellR({ fontWeight:700, fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>{fmtD(ytd.grossSalary)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>{fmtD(ytdNetImp)}</td>
               <td style={cellR({ fontSize:8, borderLeft:COL_BD, borderTop:'1px solid #000' })}>{fmtD(ytd.cnssSalarial)}</td>
