@@ -872,10 +872,10 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
           <tbody>
             <tr>
               <td style={cell({ fontWeight:700, fontSize:9, width:'30%', paddingBottom:1 })}>{fullName||'—'}</td>
-              <td style={cell({ width:'20%', fontSize:7.5 })}>Affectation : <strong>{e.department||co.tradeName||'—'}</strong></td>
+              <td style={cell({ width:'20%', fontSize:7.5 })}>Affectation : <strong>{e.department?.name||co.tradeName||'—'}</strong></td>
               <td style={cell({ width:'20%', fontSize:7.5 })}>Poste : <strong>{e.position||'—'}</strong></td>
               <td style={cell({ width:'15%', fontSize:7.5 })}>Cat/Ech : <strong>{cat||'—'}</strong></td>
-              <td style={cell({ width:'15%', fontSize:7.5 })}>Dép. : <strong>{e.department||'—'}</strong></td>
+              <td style={cell({ width:'15%', fontSize:7.5 })}>Dép. : <strong>{e.department?.name||'—'}</strong></td>
             </tr>
           </tbody>
         </table>
