@@ -244,8 +244,19 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         }
       `}</style>
 
+      {/* Reset total CSS externe — bloque tout héritage de l'app */}
+      <div style={{
+        all: 'initial' as any,
+        display: 'block',
+        fontFamily: SANS,
+        fontSize: '9px',
+        lineHeight: '1.5',
+        color: '#000',
+        background: '#fff',
+      }}>
       <div id="bul-default" style={{
-        fontFamily: SANS, fontSize: 8, background: '#fff', color: '#000',
+        fontFamily: SANS, fontSize: '9px', lineHeight: '1.5',
+        background: '#fff', color: '#000',
         width: '210mm', minHeight: '297mm',
         boxSizing: 'border-box' as const,
         padding: '8px 10px',
@@ -361,9 +372,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <th style={th('#a0a0a0')}>Montant</th>
             </tr>
           </thead>
-          <tbody>
-
-            {/* ── GAINS ─────────────────────────────────────────────── */}
+          <tbody style={{ fontSize:'9px', lineHeight:'1.5' }}>
             {gains.map((item:any,idx:number)=>{
               gainRef++;
               return <Row key={item.id||item.code||idx} rub={gainRef} label={item.label}
@@ -582,6 +591,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         </div>
 
       </div>
+      </div> {/* end all:initial reset wrapper */}
     </>
   );
 }
