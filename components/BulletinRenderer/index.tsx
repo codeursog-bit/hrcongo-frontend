@@ -55,10 +55,12 @@ function cleanLabel(label: string): string {
 function itemBase(item: any): string {
   if (item.base==null||nv(item.base)===0) return '';
   const base=nv(item.base), rate=nv(item.rate);
-  const isOT=/OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'');
+  const label = item.label ?? '';
+  const isOT = /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'')
+             || /heure[s]?\s+suppl/i.test(label);
   if (isOT) {
-    // Lire le % directement dans le label original (avant cleanLabel) : +10%, +25%, +50%...
-    const matchPct = (item.label??'').match(/\+(\d+)%/);
+    // Lire le % dans le label original : +10%, +25%, +50%...
+    const matchPct = label.match(/\+(\d+)%/);
     if (matchPct) return Math.round(base * (1 + parseInt(matchPct[1],10)/100)).toLocaleString('fr-FR');
     // Fallback sur rate
     if (rate > 1) return Math.round(base * rate).toLocaleString('fr-FR');
@@ -67,7 +69,9 @@ function itemBase(item: any): string {
   return Math.round(base).toLocaleString('fr-FR');
 }
 function itemTaux(item: any): string {
-  const isOT=/OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'');
+  const label = item.label ?? '';
+  const isOT = /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'')
+             || /heure[s]?\s+suppl/i.test(label);
   if (isOT){const q=nv(item.quantity); if(q>0) return String(q);}
   const qty=item.quantity; if(qty!=null&&nv(qty)!==0) return String(nv(qty));
   const r=nv(item.rate); if(!r||r===1) return '';
