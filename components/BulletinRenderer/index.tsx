@@ -76,8 +76,9 @@ const cell = (e?: React.CSSProperties): React.CSSProperties => ({
   borderTop: NO_BD,
   borderBottom: NO_BD,
   padding: '0px 3px',
-  lineHeight: '14px',
-  fontSize: 8,
+  lineHeight: '11px',
+  height: '11px',
+  fontSize: 7.5,
   verticalAlign: 'middle',
   color: '#000',
   fontFamily: SANS,
@@ -140,7 +141,7 @@ const Row = ({ rub, label, base='', taux='', gain='', ret='',
                patTaux='', patMt='', bold=false }:
   { rub:number|string; label:string; base?:string; taux?:string;
     gain?:string; ret?:string; patTaux?:string; patMt?:string; bold?:boolean }) => (
-  <tr style={{ background: '#fff' }}>
+  <tr style={{ background: '#fff', height:'13px', maxHeight:'13px' }}>
     <td style={cellC({ fontFamily:FONT, fontSize:7.5, borderLeft:COL_BD })}>{rub}</td>
     <td style={cell({ paddingLeft:5, fontWeight:bold?700:400, borderLeft:COL_BD })}>{label}</td>
     <td style={cellR({ borderLeft:COL_BD })}>{base}</td>
@@ -232,6 +233,19 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             color-adjust:exact!important;
           }
         }
+        #bul-default table.main-table tbody tr {
+          height: 13px !important;
+          max-height: 13px !important;
+          overflow: hidden;
+        }
+        #bul-default table.main-table tbody td {
+          height: 13px !important;
+          line-height: 11px !important;
+          padding-top: 0px !important;
+          padding-bottom: 0px !important;
+          overflow: hidden;
+          white-space: nowrap;
+        }
       `}</style>
 
       <div id="bul-default" style={{
@@ -320,7 +334,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
         {/* ══ TABLEAU PRINCIPAL ════════════════════════════════════════════ */}
         {/* Bordure extérieure du tableau : gauche + droite + haut + bas */}
-        <table className="nb" style={{
+        <table className="nb main-table" style={{
           width:'100%', borderCollapse:'collapse', tableLayout:'fixed', flex:1,
           border:'1px solid #000',
         }}>
