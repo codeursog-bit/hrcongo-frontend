@@ -115,24 +115,13 @@ const th = (bg=TH_BG, e?: React.CSSProperties): React.CSSProperties => ({
 const TotalRow = ({ label, gain='', ret='', patMt='' }:
   { label:string; gain?:string; ret?:string; patMt?:string }) => (
   <tr style={{ background: '#e8e8e8', borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
-    <td colSpan={4} style={{
-      ...cell({ fontWeight:900, fontSize:8.5,
-        textTransform:'uppercase' as const, background:'#e8e8e8',
-        borderTop:'1px solid #000', borderBottom:'1px solid #000',
-        borderLeft: COL_BD,
-      }),
-    }}>
+    <td colSpan={4} style={{ borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD, padding:'2px 5px', fontSize:8.5, lineHeight:'14px', fontWeight:900, textTransform:'uppercase' as const, background:'#e8e8e8', color:'#000', fontFamily:SANS, verticalAlign:'middle' }}>
       {label}
     </td>
-    <td style={cellR({ fontWeight:900, fontSize:9, background:'#e8e8e8',
-      borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD })}>{gain}</td>
-    <td style={cellR({ fontWeight:900, fontSize:9, background:'#e8e8e8',
-      borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD })}>{ret}</td>
-    <td style={cellC({ background:'#e8e8e8',
-      borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD })} />
-    <td style={cellR({ fontWeight:900, fontSize:9, background:'#e8e8e8',
-      borderTop:'1px solid #000', borderBottom:'1px solid #000',
-      borderLeft:COL_BD, borderRight:COL_BD })}>{patMt}</td>
+    <td style={{ borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD, padding:'2px 3px', fontSize:9, lineHeight:'14px', fontWeight:900, textAlign:'right', fontFamily:FONT, background:'#e8e8e8', color:'#000', verticalAlign:'middle' }}>{gain}</td>
+    <td style={{ borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD, padding:'2px 3px', fontSize:9, lineHeight:'14px', fontWeight:900, textAlign:'right', fontFamily:FONT, background:'#e8e8e8', color:'#000', verticalAlign:'middle' }}>{ret}</td>
+    <td style={{ borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD, background:'#e8e8e8' }} />
+    <td style={{ borderTop:'1px solid #000', borderBottom:'1px solid #000', borderLeft:COL_BD, borderRight:COL_BD, padding:'2px 3px', fontSize:9, lineHeight:'14px', fontWeight:900, textAlign:'right', fontFamily:FONT, background:'#e8e8e8', color:'#000', verticalAlign:'middle' }}>{patMt}</td>
   </tr>
 );
 
@@ -141,15 +130,15 @@ const Row = ({ rub, label, base='', taux='', gain='', ret='',
                patTaux='', patMt='', bold=false }:
   { rub:number|string; label:string; base?:string; taux?:string;
     gain?:string; ret?:string; patTaux?:string; patMt?:string; bold?:boolean }) => (
-  <tr style={{ background: '#fff', height:'13px', maxHeight:'13px' }}>
-    <td style={cellC({ fontFamily:FONT, fontSize:7.5, borderLeft:COL_BD })}>{rub}</td>
-    <td style={cell({ paddingLeft:5, fontWeight:bold?700:400, borderLeft:COL_BD })}>{label}</td>
-    <td style={cellR({ borderLeft:COL_BD })}>{base}</td>
-    <td style={cellC({ borderLeft:COL_BD })}>{taux}</td>
-    <td style={cellR({ fontWeight:gain?600:400, borderLeft:COL_BD })}>{gain}</td>
-    <td style={cellR({ fontWeight:ret?600:400, borderLeft:COL_BD })}>{ret}</td>
-    <td style={cellC({ fontWeight:patTaux?600:400, borderLeft:COL_BD })}>{patTaux}</td>
-    <td style={cellR({ fontWeight:patMt?600:400, borderLeft:COL_BD, borderRight:COL_BD })}>{patMt}</td>
+  <tr style={{ background: '#fff' }}>
+    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'center', fontFamily:FONT, verticalAlign:'middle', color:'#000' }}>{rub}</td>
+    <td style={{ borderLeft:COL_BD, padding:'1px 5px', fontSize:7.5, lineHeight:'13px', fontWeight:bold?700:400, verticalAlign:'middle', color:'#000', fontFamily:SANS }}>{label}</td>
+    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, verticalAlign:'middle', color:'#000' }}>{base}</td>
+    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'center', verticalAlign:'middle', color:'#000', fontFamily:SANS }}>{taux}</td>
+    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, fontWeight:gain?600:400, verticalAlign:'middle', color:'#000' }}>{gain}</td>
+    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, fontWeight:ret?600:400, verticalAlign:'middle', color:'#000' }}>{ret}</td>
+    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'center', fontWeight:patTaux?600:400, verticalAlign:'middle', color:'#000', fontFamily:SANS }}>{patTaux}</td>
+    <td style={{ borderLeft:COL_BD, borderRight:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, fontWeight:patMt?600:400, verticalAlign:'middle', color:'#000' }}>{patMt}</td>
   </tr>
 );
 
