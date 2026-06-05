@@ -129,18 +129,26 @@ const TotalRow = ({ label, gain='', ret='', patMt='' }:
 const Row = ({ rub, label, base='', taux='', gain='', ret='',
                patTaux='', patMt='', bold=false }:
   { rub:number|string; label:string; base?:string; taux?:string;
-    gain?:string; ret?:string; patTaux?:string; patMt?:string; bold?:boolean }) => (
-  <tr style={{ background: '#fff' }}>
-    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'center', fontFamily:FONT, verticalAlign:'middle', color:'#000' }}>{rub}</td>
-    <td style={{ borderLeft:COL_BD, padding:'1px 5px', fontSize:7.5, lineHeight:'13px', fontWeight:bold?700:400, verticalAlign:'middle', color:'#000', fontFamily:SANS }}>{label}</td>
-    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, verticalAlign:'middle', color:'#000' }}>{base}</td>
-    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'center', verticalAlign:'middle', color:'#000', fontFamily:SANS }}>{taux}</td>
-    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, fontWeight:gain?600:400, verticalAlign:'middle', color:'#000' }}>{gain}</td>
-    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, fontWeight:ret?600:400, verticalAlign:'middle', color:'#000' }}>{ret}</td>
-    <td style={{ borderLeft:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'center', fontWeight:patTaux?600:400, verticalAlign:'middle', color:'#000', fontFamily:SANS }}>{patTaux}</td>
-    <td style={{ borderLeft:COL_BD, borderRight:COL_BD, padding:'1px 3px', fontSize:7.5, lineHeight:'13px', textAlign:'right', fontFamily:FONT, whiteSpace:'nowrap' as const, fontWeight:patMt?600:400, verticalAlign:'middle', color:'#000' }}>{patMt}</td>
-  </tr>
-);
+    gain?:string; ret?:string; patTaux?:string; patMt?:string; bold?:boolean }) => {
+  const td: React.CSSProperties = {
+    padding: '0 3px', margin: 0, fontSize: 7.5, lineHeight: '13px',
+    verticalAlign: 'middle', color: '#000', borderLeft: COL_BD,
+    borderTop: 'none', borderBottom: 'none', borderRight: 'none',
+    whiteSpace: 'nowrap' as const, overflow: 'hidden',
+  };
+  return (
+    <tr style={{ background:'#fff', lineHeight:'13px' }}>
+      <td style={{ ...td, textAlign:'center', fontFamily:FONT }}>{rub}</td>
+      <td style={{ ...td, paddingLeft:5, fontWeight:bold?700:400, fontFamily:SANS, whiteSpace:'normal' as const }}>{label}</td>
+      <td style={{ ...td, textAlign:'right', fontFamily:FONT }}>{base}</td>
+      <td style={{ ...td, textAlign:'center', fontFamily:SANS }}>{taux}</td>
+      <td style={{ ...td, textAlign:'right', fontFamily:FONT, fontWeight:gain?600:400 }}>{gain}</td>
+      <td style={{ ...td, textAlign:'right', fontFamily:FONT, fontWeight:ret?600:400 }}>{ret}</td>
+      <td style={{ ...td, textAlign:'center', fontFamily:SANS, fontWeight:patTaux?600:400 }}>{patTaux}</td>
+      <td style={{ ...td, textAlign:'right', fontFamily:FONT, fontWeight:patMt?600:400, borderRight:COL_BD }}>{patMt}</td>
+    </tr>
+  );
+};
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProps) {
@@ -222,18 +230,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             color-adjust:exact!important;
           }
         }
-        #bul-default table.main-table tbody tr {
-          height: 13px !important;
-          max-height: 13px !important;
-          overflow: hidden;
+        .main-table tbody tr td {
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+          line-height: 13px !important;
+          font-size: 7.5px !important;
         }
-        #bul-default table.main-table tbody td {
-          height: 13px !important;
-          line-height: 11px !important;
-          padding-top: 0px !important;
-          padding-bottom: 0px !important;
-          overflow: hidden;
-          white-space: nowrap;
+        .main-table tbody tr {
+          line-height: 13px !important;
         }
       `}</style>
 
@@ -323,6 +327,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
         {/* ══ TABLEAU PRINCIPAL ════════════════════════════════════════════ */}
         {/* Bordure extérieure du tableau : gauche + droite + haut + bas */}
+        <div style={{ lineHeight:'normal', fontSize:'0' }}>
         <table className="nb main-table" style={{
           width:'100%', borderCollapse:'collapse', tableLayout:'fixed', flex:1,
           border:'1px solid #000',
@@ -440,6 +445,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
           </tbody>
         </table>
+        </div>
 
         {/* ══ BAS DU BULLETIN — Mode règlement + Net à payer ═══════════════ */}
         <table className="nb" style={{ width:'100%', borderCollapse:'collapse', marginTop:3, border:'1px solid #000' }}>
