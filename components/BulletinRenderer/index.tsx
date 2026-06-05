@@ -1,12 +1,10 @@
 'use client';
 // ============================================================================
-// BulletinRendererDefault v7
-// ✅ Impression correcte — pas de page blanche
-// ✅ Colonnes A4 fixes — occupent toute la hauteur avec ou sans contenu
-// ✅ Contenu collé en haut, pas de vide artificiel
-// ✅ Textes 11px normal / 12-13px totaux / 14px net à payer
-// ✅ Tout en noir, bg gris uniquement pour en-têtes
-// ✅ Flexible : primes/cotisations s'ajoutent sans casser le layout
+// BulletinRendererDefault v8
+// ✅ Cumuls Année : grossSalary + cnssSalarial + cnssEmployer + its depuis ytd
+// ✅ Charges Sal Année = ytd.cnssSalarial + ytd.its  (CNSS + ITS cumulés)
+// ✅ Net imposable Année = ytd.grossSalary - ytd.cnssSalarial
+// ✅ Tout le reste identique v7 — design intact
 // ============================================================================
 
 import React, { useMemo } from 'react';
@@ -92,12 +90,12 @@ const BDB   = '1px solid #000';
 const TH_BG = '#d0d0d0';
 const K     = '#000';
 
-const ROW_H   = 21;   // px — ligne normale
-const TOT_H   = 26;   // px — ligne total
-const HEAD_H  = 17;   // px — en-tête colonne
-const FS      = 11;   // px — texte normal
-const FS_TOT  = 12;   // px — texte total
-const FS_NET  = 15;   // px — net à payer
+const ROW_H   = 21;
+const TOT_H   = 26;
+const HEAD_H  = 17;
+const FS      = 11;
+const FS_TOT  = 12;
+const FS_NET  = 15;
 
 // ── Helpers styles ────────────────────────────────────────────────────────────
 const base_td = (o?: React.CSSProperties): React.CSSProperties => ({
@@ -176,6 +174,16 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const tusDgi          = nv((payroll as any).tusDgiAmount);
   const tusCnss         = nv((payroll as any).tusCnssAmount);
 
+  // ── Cumuls annuels ─────────────────────────────────────────────────────────
+  // Tous les champs viennent du backend (somme réelle Jan → mois actuel)
+  // Le front ne calcule RIEN — il lit et affiche.
+  const ytdGross      = nv(ytd.grossSalary);
+  const ytdCnss       = nv(ytd.cnssSalarial);
+  const ytdIts        = nv(ytd.its);
+  const ytdCnssEmp    = nv(ytd.cnssEmployer);
+  const ytdNetImp     = ytdGross - ytdCnss;          // Net imposable = Brut - CNSS sal
+  const ytdChargesSal = ytdCnss + ytdIts;            // Charges sal = CNSS + ITS cumulés
+
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
   const indems = indemItems;
 
@@ -187,13 +195,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const isCnssPatSummary = (item: any) => {
     const lbl  = (item.label ?? '').toLowerCase();
     const code = (item.code  ?? '').toLowerCase();
-    // Résumé multi-branches
     if (lbl.includes('pension') && (lbl.includes('famil') || lbl.includes('accident'))) return true;
-    // Codes blacklistés
     if (CNSS_PAT_SUMMARY.includes(item.code)) return true;
     if (CNSS_PAT_INDIVIDUAL.some(c => code.includes(c.toLowerCase()))) return true;
-    // Doublons back : "CNSS patronale — Prestations familiales / Accidents du travail"
-    // déjà affichés via cnssEmpFamily / cnssEmpAccident / cnssEmpPension
     if (lbl.includes('cnss patronale') && lbl.includes('famil'))    return true;
     if (lbl.includes('cnss patronale') && lbl.includes('accident')) return true;
     if (lbl.includes('cnss patronale') && lbl.includes('pension'))  return true;
@@ -217,7 +221,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const totalPat = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
     + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
-  const ytdNetImp  = nv(ytd.grossSalary) - nv(ytd.cnssSalarial);
   const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
   const fullName   = [e.lastName?.toUpperCase(), e.firstName].filter(Boolean).join(' ');
   const cat        = [e.professionalCategory, e.echelon ? `Ech.${e.echelon}` : null].filter(Boolean).join('/');
@@ -231,39 +234,29 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   return (
     <>
       <style>{`
-        /* ══════════════════════════════════════════════════════
-           IMPRESSION — règles critiques
-        ══════════════════════════════════════════════════════ */
         @media print {
           @page {
             size: A4 portrait;
             margin: 8mm 6mm;
           }
-
-          /* Masquer TOUT sauf le bulletin — sans toucher au positionnement */
           body {
             visibility: hidden !important;
             background: #fff !important;
             margin: 0 !important;
             padding: 0 !important;
           }
-
-          /* Rendre visible uniquement le bulletin et tous ses enfants */
           #bul-wrap,
           #bul-wrap * {
             visibility: visible !important;
           }
-
           #bul-wrap {
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             width: 100% !important;
           }
-
           #bul-default {
             width: 195mm !important;
-            /* Reproduire exactement ce qui est affiché à l'écran */
             height: 277mm !important;
             min-height: unset !important;
             padding: 6mm 7mm !important;
@@ -272,60 +265,39 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             border: none !important;
             overflow: hidden !important;
           }
-
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
           }
-
           .nobreak { page-break-inside: avoid !important; break-inside: avoid !important; }
           tr        { page-break-inside: avoid !important; break-inside: avoid !important; }
         }
-
-        /* ══════════════════════════════════════════════════════
-           FORCER LIGHT MODE — dark mode app ne doit pas passer
-        ══════════════════════════════════════════════════════ */
         #bul-wrap {
           color-scheme: light;
           forced-color-adjust: none;
         }
-
-        /* ══════════════════════════════════════════════════════
-           TABLEAU PRINCIPAL — grille A4
-           Le tbody doit remplir la hauteur restante.
-           On utilise display:block + overflow:hidden sur le
-           conteneur et height:100% sur la table.
-        ══════════════════════════════════════════════════════ */
         #main-grid {
           width: 100%;
           table-layout: fixed;
           border-collapse: collapse;
           border: ${BD};
-          /* La table prend toute la hauteur du div parent */
           height: 100%;
         }
-
-        /* Les colonnes ont des bordures gauche permanentes —
-           visibles même si les cellules sont vides */
         #main-grid td, #main-grid th {
           color: #000 !important;
         }
-
-        /* Dernière cellule "vide" du tbody absorbe l'espace restant */
         #grid-spacer {
           height: auto;
         }
       `}</style>
 
-      {/* ── Wrapper racine : light mode forcé ─────────────────────── */}
       <div id="bul-wrap" style={{
         colorScheme: 'light',
         forcedColorAdjust: 'none',
         background: '#fff',
       } as React.CSSProperties}>
 
-      {/* ── Bulletin A4 ───────────────────────────────────────────── */}
       <div id="bul-default" style={{
         fontFamily: SANS,
         fontSize: `${FS}px`,
@@ -333,8 +305,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         background: '#fff',
         color: K,
         width: '210mm',
-        /* Hauteur fixe A4 — le contenu ne la dépasse pas normalement.
-           Si jamais plus de lignes, overflow:hidden protège l'impression */
         height: '297mm',
         boxSizing: 'border-box',
         padding: '6mm 7mm',
@@ -422,23 +392,18 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </tbody>
         </table>
 
-        {/* ══ TABLEAU PRINCIPAL — occupe tout l'espace vertical restant ══
-            Le div flex:1 donne sa hauteur à la table.
-            La table height:100% remplit ce div.
-            Le tbody contient une dernière ligne #grid-spacer qui absorbe
-            l'espace vide — ses cellules ont les bordures verticales visibles.
-        ══════════════════════════════════════════════════════════════ */}
+        {/* ══ TABLEAU PRINCIPAL ══════════════════════════════════════ */}
         <div style={{ flex:1, minHeight:0, position:'relative' }}>
           <table id="main-grid">
             <colgroup>
-              <col style={{ width:'5%'  }} /> {/* Rubrique */}
-              <col style={{ width:'27%' }} /> {/* Libellé */}
-              <col style={{ width:'10%' }} /> {/* Base */}
-              <col style={{ width:'5%'  }} /> {/* Taux */}
-              <col style={{ width:'13%' }} /> {/* Gains */}
-              <col style={{ width:'13%' }} /> {/* Retenues */}
-              <col style={{ width:'6%'  }} /> {/* Taux Pat */}
-              <col style={{ width:'21%' }} /> {/* Montant Pat */}
+              <col style={{ width:'5%'  }} />
+              <col style={{ width:'27%' }} />
+              <col style={{ width:'10%' }} />
+              <col style={{ width:'5%'  }} />
+              <col style={{ width:'13%' }} />
+              <col style={{ width:'13%' }} />
+              <col style={{ width:'6%'  }} />
+              <col style={{ width:'21%' }} />
             </colgroup>
             <thead>
               <tr>
@@ -547,9 +512,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                   base={itemBase(item)} taux={itemTaux(item)} gain={fmt(item.amount)} />;
               })}
 
-              {/* ── Ligne spacer — absorbe l'espace vide,
-                  maintient les bordures de colonnes visibles ─────────
-                  background blanc, bordures verticales uniquement      */}
+              {/* ── Spacer ──────────────────────────────────────────── */}
               <tr id="grid-spacer" style={{ background:'#fff' }}>
                 <td style={{ borderLeft:BD, borderRight:'none', borderTop:'none', borderBottom:'none', background:'#fff' }} />
                 <td style={{ borderLeft:BD, background:'#fff' }} />
@@ -594,17 +557,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </tbody>
         </table>
 
-        {/* ══ LIGNE MOIS ══════════════════════════════════════════════
-            Brut | Net imposable | Charges Sal | Charges Pat
-            (pas de congés — congés = annuel uniquement)
-        ════════════════════════════════════════════════════════════ */}
+        {/* ══ LIGNE MOIS ══════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginTop:4, border:BDB, flexShrink:0 }}>
           <colgroup>
-            <col style={{ width:'8%'  }} /> {/* label Mois */}
-            <col style={{ width:'23%' }} /> {/* Brut */}
-            <col style={{ width:'23%' }} /> {/* Net imposable */}
-            <col style={{ width:'23%' }} /> {/* Charges Sal */}
-            <col style={{ width:'23%' }} /> {/* Charges Pat */}
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'23%' }} />
+            <col style={{ width:'23%' }} />
+            <col style={{ width:'23%' }} />
+            <col style={{ width:'23%' }} />
           </colgroup>
           <thead>
             <tr>
@@ -637,19 +597,20 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         </div>
 
         {/* ══ LIGNE ANNÉE + CONGÉS ANNUELS ════════════════════════════
-            Brut | Net imposable | Charges Sal | Charges Pat | Congés annuels (Droits|Pris|Solde)
+            Brut YTD | Net imposable YTD | Charges Sal YTD | Charges Pat YTD
+            Toutes les valeurs = somme réelle Jan → mois actuel (backend)
         ════════════════════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', border:BDB, borderTop:'none', flexShrink:0 }}>
           <colgroup>
-            <col style={{ width:'7%'  }} /> {/* label Année */}
-            <col style={{ width:'16%' }} /> {/* Brut */}
-            <col style={{ width:'16%' }} /> {/* Net imposable */}
-            <col style={{ width:'14%' }} /> {/* Charges Sal */}
-            <col style={{ width:'14%' }} /> {/* Charges Pat */}
-            <col style={{ width:'11%' }} /> {/* Congés — header colspan */}
-            <col style={{ width:'8%'  }} /> {/* Droits */}
-            <col style={{ width:'7%'  }} /> {/* Pris */}
-            <col style={{ width:'7%'  }} /> {/* Solde */}
+            <col style={{ width:'7%'  }} />
+            <col style={{ width:'16%' }} />
+            <col style={{ width:'16%' }} />
+            <col style={{ width:'14%' }} />
+            <col style={{ width:'14%' }} />
+            <col style={{ width:'11%' }} />
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'7%'  }} />
+            <col style={{ width:'7%'  }} />
           </colgroup>
           <thead>
             <tr>
@@ -675,10 +636,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           <tbody>
             <tr>
               <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD })}>Année</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytd.grossSalary)}</td>
+              {/* Brut cumulé Jan → mois actuel */}
+              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytdGross)}</td>
+              {/* Net imposable = Brut YTD - CNSS sal YTD */}
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdNetImp)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytd.cnssSalarial)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytd.cnssEmployer)}</td>
+              {/* Charges salariales = CNSS sal YTD + ITS YTD */}
+              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdChargesSal)}</td>
+              {/* Charges patronales = cnssEmployer YTD */}
+              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdCnssEmp)}</td>
               <td style={base_td({ borderLeft:BD })} />
               <td style={base_td({ borderLeft:BD })} />
               <td style={base_td({ borderLeft:BD })} />
