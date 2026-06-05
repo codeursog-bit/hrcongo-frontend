@@ -131,13 +131,13 @@ const Row = ({ rub, label, base='', taux='', gain='', ret='',
   { rub:number|string; label:string; base?:string; taux?:string;
     gain?:string; ret?:string; patTaux?:string; patMt?:string; bold?:boolean }) => {
   const td: React.CSSProperties = {
-    padding: '0 3px', margin: 0, fontSize: 7.5, lineHeight: '13px',
+    padding: '0 3px', margin: 0, fontSize: 7.5, lineHeight: '1',
     verticalAlign: 'middle', color: '#000', borderLeft: COL_BD,
     borderTop: 'none', borderBottom: 'none', borderRight: 'none',
     whiteSpace: 'nowrap' as const, overflow: 'hidden',
   };
   return (
-    <tr style={{ background:'#fff', lineHeight:'13px' }}>
+    <tr style={{ background:'#fff', lineHeight:'1' }}>
       <td style={{ ...td, textAlign:'center', fontFamily:FONT }}>{rub}</td>
       <td style={{ ...td, paddingLeft:5, fontWeight:bold?700:400, fontFamily:SANS, whiteSpace:'normal' as const }}>{label}</td>
       <td style={{ ...td, textAlign:'right', fontFamily:FONT }}>{base}</td>
@@ -230,14 +230,17 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             color-adjust:exact!important;
           }
         }
-        .main-table tbody tr td {
-          padding-top: 0 !important;
-          padding-bottom: 0 !important;
-          line-height: 13px !important;
+        .main-table, .main-table tr, .main-table td, .main-table th {
+          line-height: 1 !important;
+        }
+        .main-table tbody td {
+          padding-top: 1px !important;
+          padding-bottom: 1px !important;
           font-size: 7.5px !important;
+          line-height: 1 !important;
         }
         .main-table tbody tr {
-          line-height: 13px !important;
+          line-height: 1 !important;
         }
       `}</style>
 
@@ -327,10 +330,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
         {/* ══ TABLEAU PRINCIPAL ════════════════════════════════════════════ */}
         {/* Bordure extérieure du tableau : gauche + droite + haut + bas */}
-        <div style={{ lineHeight:'normal', fontSize:'0' }}>
+        <div style={{ lineHeight:'1' }}>
         <table className="nb main-table" style={{
           width:'100%', borderCollapse:'collapse', tableLayout:'fixed', flex:1,
-          border:'1px solid #000',
+          border:'1px solid #000', lineHeight:'1', fontSize:'7.5px',
         }}>
           <colgroup>
             <col style={{ width:'5%'  }} />
