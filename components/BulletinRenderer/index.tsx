@@ -145,7 +145,7 @@ const Row = ({ rub, label, base = '', taux = '', gain = '', ret = '',
     <td style={tdC({ fontFamily: FONT })}>{rub}</td>
     <td style={base_td({ paddingLeft: 5, fontWeight: bold ? 700 : 400, whiteSpace: 'normal', overflow: 'hidden' })}>{label}</td>
     <td style={tdR()}>{base}</td>
-    <td style={tdC()}>{taux}</td>
+    <td style={tdC({ fontSize: 9, overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 2px' })}>{taux}</td>
     <td style={tdR({ fontWeight: gain ? 600 : 400 })}>{gain}</td>
     <td style={tdR({ fontWeight: ret  ? 600 : 400 })}>{ret}</td>
     <td style={tdC({ fontWeight: patTaux ? 600 : 400 })}>{patTaux}</td>
@@ -254,12 +254,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
           #bul-default {
             width: 195mm !important;
-            min-height: auto !important;
-            height: auto !important;
-            padding: 4mm 5mm !important;
+            /* Reproduire exactement ce qui est affiché à l'écran */
+            height: 277mm !important;
+            min-height: unset !important;
+            padding: 6mm 7mm !important;
             margin: 0 auto !important;
             box-shadow: none !important;
             border: none !important;
+            overflow: hidden !important;
           }
 
           * {
@@ -431,10 +433,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             </colgroup>
             <thead>
               <tr>
-                <th rowSpan={2} style={TH()}>Rubrique</th>
+                <th rowSpan={2} style={TH()}>Rub.</th>
                 <th rowSpan={2} style={TH(TH_BG, { textAlign:'left', paddingLeft:5 })}>Libellé</th>
                 <th rowSpan={2} style={TH()}>Nbre / Base</th>
-                <th rowSpan={2} style={TH()}>Taux</th>
+                <th rowSpan={2} style={TH(TH_BG, { fontSize: 7.5, overflow: 'hidden' })}>Taux</th>
                 <th colSpan={2} style={TH('#bbb', { fontSize:9 })}>Part Salariale</th>
                 <th colSpan={2} style={TH('#a8a8a8', { fontSize:9 })}>Part Patronale</th>
               </tr>
