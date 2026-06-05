@@ -43,11 +43,27 @@ function seniority(h?: string): string {
   return `${y} an${y!==1?'s':''} et ${String(m).padStart(2,'0')} mois`;
 }
 
+function cleanLabel(label: string): string {
+  if (!label) return label;
+  return label
+    .replace(/\s*[\(\-—–].*(heure|heures|h\b).*/i, '')
+    .replace(/\s*(premières?|suivante?s?|supplémentaire?s?\s+suivante?s?)\s*$/i, '')
+    .replace(/\s*\(\d+h\)/i, '')
+    .replace(/\s*—\s*$/, '')
+    .trim();
+}
 function itemBase(item: any): string {
   if (item.base==null||nv(item.base)===0) return '';
   const base=nv(item.base), rate=nv(item.rate);
   const isOT=/OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'');
-  if (isOT&&rate>0&&rate<1) return Math.round(base*(1+rate)).toLocaleString('fr-FR');
+  if (isOT) {
+    // Lire le % directement dans le label original (avant cleanLabel) : +10%, +25%, +50%...
+    const matchPct = (item.label??'').match(/\+(\d+)%/);
+    if (matchPct) return Math.round(base * (1 + parseInt(matchPct[1],10)/100)).toLocaleString('fr-FR');
+    // Fallback sur rate
+    if (rate > 1) return Math.round(base * rate).toLocaleString('fr-FR');
+    if (rate > 0 && rate < 1) return Math.round(base * (1+rate)).toLocaleString('fr-FR');
+  }
   return Math.round(base).toLocaleString('fr-FR');
 }
 function itemTaux(item: any): string {
@@ -177,19 +193,36 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const indems = indemItems;
 
   // Filtrer les items CTAX — exclure les résumés CNSS patronale et TUS (gérés séparément)
-  const CNSS_PAT_SUMMARY_CODES = ['CNSS_PAT_SUMMARY','CNSS_PATRON_SUMMARY'];
+  const CNSS_PAT_SUMMARY_CODES = ['CNSS_PAT_SUMMARY','CNSS_PATRON_SUMMARY','CNSS_PAT','CNSS_EMPLOYER_TOTAL'];
+
+  // Codes CNSS patronaux individuels déjà affichés séparément — exclure tout doublon
+  const CNSS_PAT_INDIVIDUAL_CODES = ['CNSS_EMP_PENSION','CNSS_EMP_FAMILY','CNSS_EMP_ACCIDENT',
+    'CNSS_PENSION','CNSS_FAMILY','CNSS_ACCIDENT','CNSS_VIEILLESSE','CNSS_FAMILLE','CNSS_AT'];
+
+  const isCnssPatSummary = (item: any) => {
+    const label: string = (item.label ?? '').toLowerCase();
+    const code: string  = (item.code  ?? '').toLowerCase();
+    // Exclure si c'est un résumé CNSS patronal (contient pension ET famille OU accident dans le label)
+    const hasPension  = label.includes('pension');
+    const hasFamille  = label.includes('famil');
+    const hasAccident = label.includes('accident') || label.includes(' at ') || label.includes('at 1');
+    if (hasPension && (hasFamille || hasAccident)) return true;
+    if (CNSS_PAT_SUMMARY_CODES.includes(item.code)) return true;
+    if (CNSS_PAT_INDIVIDUAL_CODES.some(c => code.includes(c.toLowerCase()))) return true;
+    return false;
+  };
   const TUS_CODES = ['TUS_DGI','TUS_CNSS'];
 
   const ctaxEmp = cotisItems.filter((i:any)=>
     !['CNSS_SAL','CNSS','ITS','IRPP','BNC_SOURCE'].includes(i.code) &&
     !['LOAN','ADVANCE'].includes(i.code) &&
-    !CNSS_PAT_SUMMARY_CODES.includes(i.code) &&
+    !isCnssPatSummary(i) &&
     !TUS_CODES.includes(i.code)
   ).concat(retenueItems.filter((i:any)=>!['LOAN','ADVANCE'].includes(i.code)));
 
   const ctaxPat = ((empItems??[]) as any[]).filter((i:any)=>
     !TUS_CODES.includes(i.code) &&
-    !CNSS_PAT_SUMMARY_CODES.includes(i.code)
+    !isCnssPatSummary(i)
   );
 
   const loanItems = retenueItems.filter((i:any)=>['LOAN','ADVANCE'].includes(i.code));
@@ -375,7 +408,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           <tbody style={{ fontSize:'9px', lineHeight:'1.5' }}>
             {gains.map((item:any,idx:number)=>{
               gainRef++;
-              return <Row key={item.id||item.code||idx} rub={gainRef} label={item.label}
+              return <Row key={item.id||item.code||idx} rub={gainRef} label={cleanLabel(item.label)}
                 base={itemBase(item)} taux={itemTaux(item)} gain={fmt(item.amount)}
                 bold={item.code==='SAL_BASE'} />;
             })}
@@ -411,7 +444,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
             {/* ── Autres cotisations patronales ─────────────────────── */}
             {ctaxPat.map((item:any)=>{ patRef+=10; return <Row key={item.id||item.code}
-              rub={patRef} label={item.label.replace(' (part patronale)','')}
+              rub={patRef} label={cleanLabel(item.label.replace(' (part patronale)',''))}
               base={itemBase(item)} patTaux={itemTaux(item)} patMt={fmt(item.amount)} />; })}
 
             <TotalRow label="Total cotisations" ret={fmtZ(cnssSal)} patMt={fmtZ(totalPat)} />
@@ -433,7 +466,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 rub++;
                 const fixedRub: Record<string,number> = {TOL:4601,CAMU:4650};
                 const r = fixedRub[k] ?? rub;
-                const label=emp?.label??pat?.label?.replace(' (part patronale)','')?? k;
+                const label=cleanLabel(emp?.label??pat?.label?.replace(' (part patronale)','')?? k);
                 return <Row key={k} rub={r} label={label}
                   base={emp?itemBase(emp):(pat?itemBase(pat):'')}
                   taux={emp?itemTaux(emp):''}
@@ -445,13 +478,13 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
             {/* ── Prêts / Avances ───────────────────────────────────── */}
             {loanItems.map((item:any)=>{ loanRef++; return <Row key={item.id||item.code}
-              rub={loanRef} label={item.label}
+              rub={loanRef} label={cleanLabel(item.label)}
               base={itemBase(item)} taux={itemTaux(item)}
               ret={fmt(item.amount)} />; })}
 
             {/* ── Indemnités ────────────────────────────────────────── */}
             {indems.map((item:any,idx:number)=>{ indemRef+=10; return <Row
-              key={item.id||item.code} rub={indemRef} label={item.label}
+              key={item.id||item.code} rub={indemRef} label={cleanLabel(item.label)}
               base={itemBase(item)} taux={itemTaux(item)}
               gain={fmt(item.amount)} />; })}
 
