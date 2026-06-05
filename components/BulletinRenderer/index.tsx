@@ -46,33 +46,38 @@ function seniority(h?: string): string {
 function cleanLabel(label: string): string {
   if (!label) return label;
   return label
-    .replace(/\s*[\(\-—–].*(heure|heures|h\b).*/i, '')
-    .replace(/\s*(premières?|suivante?s?|supplémentaire?s?\s+suivante?s?)\s*$/i, '')
-    .replace(/\s*\(\d+h\)/i, '')
-    .replace(/\s*—\s*$/, '')
+    // Supprimer "(Xh) — ..." ou "— X premières heures" etc. APRES le pourcentage
+    .replace(/\s*\(\d+h\)\s*—[^%]*/i, '')    // (5h) — 5 premières heures
+    .replace(/\s*—\s*(5\s*premières?|heures?\s+suivantes?|nuit[^)]*|dimanche[^)]*)[^)]*$/i, '')
+    .replace(/\s*\(\d+h\)/i, '')              // (5h) résiduel
+    .replace(/\s*—\s*$/, '')                  // tiret final
     .trim();
 }
 function itemBase(item: any): string {
   if (item.base==null||nv(item.base)===0) return '';
   const base=nv(item.base), rate=nv(item.rate);
   const label = item.label ?? '';
-  const isOT = /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'')
+  // Codes back réels : HS_10, HS_25, HS_50, HS_100
+  const isOT = /^HS_\d+$/i.test(item.code??'')
+             || /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'')
              || /heure[s]?\s+suppl/i.test(label);
   if (isOT) {
-    // Lire le % dans le label original : +10%, +25%, +50%...
-    const matchPct = label.match(/\+(\d+)%/);
-    if (matchPct) return Math.round(base * (1 + parseInt(matchPct[1],10)/100)).toLocaleString('fr-FR');
-    // Fallback sur rate
+    // rate envoyé par le back : 1.10, 1.25, 1.50, 2.00
     if (rate > 1) return Math.round(base * rate).toLocaleString('fr-FR');
+    // fallback label +X%
+    const matchPct = label.match(/\+\s*(\d+)\s*%/);
+    if (matchPct) return Math.round(base * (1 + parseInt(matchPct[1],10)/100)).toLocaleString('fr-FR');
     if (rate > 0 && rate < 1) return Math.round(base * (1+rate)).toLocaleString('fr-FR');
   }
   return Math.round(base).toLocaleString('fr-FR');
 }
 function itemTaux(item: any): string {
   const label = item.label ?? '';
-  const isOT = /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'')
+  const isOT = /^HS_\d+$/i.test(item.code??'')
+             || /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code??'')
              || /heure[s]?\s+suppl/i.test(label);
-  if (isOT){const q=nv(item.quantity); if(q>0) return String(q);}
+  // Pour les OT : taux = nb heures (quantity)
+  if (isOT){ const q=nv(item.quantity); if(q>0) return String(q); }
   const qty=item.quantity; if(qty!=null&&nv(qty)!==0) return String(nv(qty));
   const r=nv(item.rate); if(!r||r===1) return '';
   if(r>1&&r<=3) return r.toFixed(2).replace('.',',');
