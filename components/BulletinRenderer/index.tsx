@@ -187,9 +187,18 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const isCnssPatSummary = (item: any) => {
     const lbl  = (item.label ?? '').toLowerCase();
     const code = (item.code  ?? '').toLowerCase();
-    if ((lbl.includes('pension') && (lbl.includes('famil') || lbl.includes('accident')))) return true;
+    // Résumé multi-branches
+    if (lbl.includes('pension') && (lbl.includes('famil') || lbl.includes('accident'))) return true;
+    // Codes blacklistés
     if (CNSS_PAT_SUMMARY.includes(item.code)) return true;
     if (CNSS_PAT_INDIVIDUAL.some(c => code.includes(c.toLowerCase()))) return true;
+    // Doublons back : "CNSS patronale — Prestations familiales / Accidents du travail"
+    // déjà affichés via cnssEmpFamily / cnssEmpAccident / cnssEmpPension
+    if (lbl.includes('cnss patronale') && lbl.includes('famil'))    return true;
+    if (lbl.includes('cnss patronale') && lbl.includes('accident')) return true;
+    if (lbl.includes('cnss patronale') && lbl.includes('pension'))  return true;
+    if (lbl.includes('prestations familiales'))                      return true;
+    if (lbl.includes('accidents du travail'))                        return true;
     return false;
   };
 
@@ -585,69 +594,119 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </tbody>
         </table>
 
-        {/* ══ CUMULS + SIGNATURES ════════════════════════════════════ */}
+        {/* ══ LIGNE MOIS ══════════════════════════════════════════════
+            Brut | Net imposable | Charges Sal | Charges Pat
+            (pas de congés — congés = annuel uniquement)
+        ════════════════════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginTop:4, border:BDB, flexShrink:0 }}>
           <colgroup>
-            <col style={{ width:'19%' }} />
-            <col style={{ width:'5%'  }} />
-            <col style={{ width:'10%' }} />
-            <col style={{ width:'11%' }} />
-            <col style={{ width:'9%'  }} />
-            <col style={{ width:'9%'  }} />
-            <col style={{ width:'6%'  }} />
-            <col style={{ width:'5%'  }} />
-            <col style={{ width:'6%'  }} />
-            <col style={{ width:'20%' }} />
+            <col style={{ width:'8%'  }} /> {/* label Mois */}
+            <col style={{ width:'23%' }} /> {/* Brut */}
+            <col style={{ width:'23%' }} /> {/* Net imposable */}
+            <col style={{ width:'23%' }} /> {/* Charges Sal */}
+            <col style={{ width:'23%' }} /> {/* Charges Pat */}
           </colgroup>
           <thead>
             <tr>
-              <th style={{ border:'none', background:'transparent' }} />
-              <th rowSpan={2} style={TH(TH_BG, { fontSize:8, verticalAlign:'middle' })}>Cumuls</th>
-              <th rowSpan={2} style={TH(TH_BG, { fontSize:8, verticalAlign:'middle' })}>Brut</th>
-              <th rowSpan={2} style={TH(TH_BG, { fontSize:8, verticalAlign:'middle' })}>Net imposable</th>
-              <th rowSpan={2} style={TH(TH_BG, { fontSize:8, verticalAlign:'middle' })}>Charges Sal</th>
-              <th rowSpan={2} style={TH(TH_BG, { fontSize:8, verticalAlign:'middle' })}>Charges Pat</th>
-              <th colSpan={3} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
-              <th style={{ border:'none', background:'transparent' }} />
-            </tr>
-            <tr>
-              <th style={{ border:'none', background:'transparent' }} />
-              <th style={TH(TH_BG, { fontSize:7.5 })}>Droits</th>
-              <th style={TH(TH_BG, { fontSize:7.5 })}>Pris</th>
-              <th style={TH(TH_BG, { fontSize:7.5 })}>Solde</th>
-              <th style={{ border:'none', background:'transparent' }} />
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Brut</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Net imposable</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td rowSpan={2} style={{ padding:'6px 8px', borderRight:BDB, verticalAlign:'top', color:K }}>
+              <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>Mois</td>
+              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(totalBrut)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(cnssSal)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD, borderRight:BD })}>{fmtD(totalPat)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* ══ SÉPARATEUR CUMULS ═══════════════════════════════════════ */}
+        <div style={{
+          width:'100%', textAlign:'center', fontSize:8, fontWeight:700,
+          color:K, background:TH_BG, border:BDB, borderTop:'none',
+          padding:'3px 0', textTransform:'uppercase', letterSpacing:2,
+          flexShrink:0,
+        }}>
+          Cumuls
+        </div>
+
+        {/* ══ LIGNE ANNÉE + CONGÉS ANNUELS ════════════════════════════
+            Brut | Net imposable | Charges Sal | Charges Pat | Congés annuels (Droits|Pris|Solde)
+        ════════════════════════════════════════════════════════════ */}
+        <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', border:BDB, borderTop:'none', flexShrink:0 }}>
+          <colgroup>
+            <col style={{ width:'7%'  }} /> {/* label Année */}
+            <col style={{ width:'16%' }} /> {/* Brut */}
+            <col style={{ width:'16%' }} /> {/* Net imposable */}
+            <col style={{ width:'14%' }} /> {/* Charges Sal */}
+            <col style={{ width:'14%' }} /> {/* Charges Pat */}
+            <col style={{ width:'11%' }} /> {/* Congés — header colspan */}
+            <col style={{ width:'8%'  }} /> {/* Droits */}
+            <col style={{ width:'7%'  }} /> {/* Pris */}
+            <col style={{ width:'7%'  }} /> {/* Solde */}
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Brut</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Net imposable</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
+              <th colSpan={4} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
+            </tr>
+            <tr>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
+              <th style={TH(TH_BG, { fontSize:7 })}>Droits</th>
+              <th style={TH(TH_BG, { fontSize:7 })}>Pris</th>
+              <th style={TH(TH_BG, { fontSize:7 })}>Solde</th>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD })}>Année</td>
+              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytd.grossSalary)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdNetImp)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytd.cnssSalarial)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytd.cnssEmployer)}</td>
+              <td style={base_td({ borderLeft:BD })} />
+              <td style={base_td({ borderLeft:BD })} />
+              <td style={base_td({ borderLeft:BD })} />
+              <td style={base_td({ borderLeft:BD, borderRight:BD })} />
+            </tr>
+          </tbody>
+        </table>
+
+        {/* ══ SIGNATURES ══════════════════════════════════════════════ */}
+        <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', border:BDB, borderTop:'none', flexShrink:0 }}>
+          <colgroup>
+            <col style={{ width:'50%' }} />
+            <col style={{ width:'50%' }} />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td style={{ padding:'6px 10px', borderRight:BDB, verticalAlign:'top', color:K, height:48 }}>
                 <div style={{ fontSize:8.5, fontWeight:700, textTransform:'uppercase', color:K }}>
                   Signature de l'Employé(e)
                 </div>
-                <div style={{ height:28, borderBottom:BD, marginTop:24 }} />
+                <div style={{ height:28, borderBottom:BD, marginTop:20 }} />
               </td>
-              <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD })}>Mois</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtZ(totalBrut)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(cnssSal)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(totalPat)}</td>
-              <td style={base_td({ borderLeft:BD })} />
-              <td style={base_td({ borderLeft:BD })} />
-              <td style={base_td({ borderLeft:BD })} />
-              <td rowSpan={2} style={{ padding:'6px 8px', borderLeft:BDB, verticalAlign:'top', textAlign:'center', color:K }}>
-                <div style={{ fontSize:8.5, fontWeight:700, textTransform:'uppercase', color:K }}>DRH / Direction</div>
-                <div style={{ height:28, borderBottom:BD, marginTop:24, width:'70%', marginLeft:'auto', marginRight:'auto' }} />
+              <td style={{ padding:'6px 10px', verticalAlign:'top', textAlign:'center', color:K, height:48 }}>
+                <div style={{ fontSize:8.5, fontWeight:700, textTransform:'uppercase', color:K }}>
+                  DRH / Direction
+                </div>
+                <div style={{ height:28, borderBottom:BD, marginTop:20, width:'60%', marginLeft:'auto', marginRight:'auto' }} />
               </td>
-            </tr>
-            <tr>
-              <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>Année</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(ytd.grossSalary)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(ytdNetImp)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(ytd.cnssSalarial)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(ytd.cnssEmployer)}</td>
-              <td style={base_td({ borderLeft:BD, borderTop:BD })} />
-              <td style={base_td({ borderLeft:BD, borderTop:BD })} />
-              <td style={base_td({ borderLeft:BD, borderTop:BD })} />
             </tr>
           </tbody>
         </table>
