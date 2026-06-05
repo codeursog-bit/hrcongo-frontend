@@ -75,10 +75,10 @@ const cell = (e?: React.CSSProperties): React.CSSProperties => ({
   borderRight: NO_BD,
   borderTop: NO_BD,
   borderBottom: NO_BD,
-  padding: '0px 3px',
-  lineHeight: '11px',
-  height: '11px',
-  fontSize: 7.5,
+  padding: '2px 3px',
+  lineHeight: '16px',
+  height: '20px',
+  fontSize: 9,
   verticalAlign: 'middle',
   color: '#000',
   fontFamily: SANS,
@@ -100,8 +100,8 @@ const cellC = (e?: React.CSSProperties): React.CSSProperties => ({
 // En-tête de colonne — avec bordure complète
 const th = (bg=TH_BG, e?: React.CSSProperties): React.CSSProperties => ({
   border: `0.5px solid #000`,
-  padding: '2px 3px',
-  fontSize: 7.5,
+  padding: '3px 4px',
+  fontSize: 8,
   fontWeight: 700,
   textAlign: 'center',
   background: bg,
@@ -131,13 +131,13 @@ const Row = ({ rub, label, base='', taux='', gain='', ret='',
   { rub:number|string; label:string; base?:string; taux?:string;
     gain?:string; ret?:string; patTaux?:string; patMt?:string; bold?:boolean }) => {
   const td: React.CSSProperties = {
-    padding: '0 3px', margin: 0, fontSize: 7.5, lineHeight: '1',
+    padding: '2px 3px', margin: 0, fontSize: 9, lineHeight: '16px',
     verticalAlign: 'middle', color: '#000', borderLeft: COL_BD,
     borderTop: 'none', borderBottom: 'none', borderRight: 'none',
     whiteSpace: 'nowrap' as const, overflow: 'hidden',
   };
   return (
-    <tr style={{ background:'#fff', lineHeight:'1' }}>
+    <tr style={{ background:'#fff', lineHeight:'16px' }}>
       <td style={{ ...td, textAlign:'center', fontFamily:FONT }}>{rub}</td>
       <td style={{ ...td, paddingLeft:5, fontWeight:bold?700:400, fontFamily:SANS, whiteSpace:'normal' as const }}>{label}</td>
       <td style={{ ...td, textAlign:'right', fontFamily:FONT }}>{base}</td>
@@ -231,16 +231,16 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           }
         }
         .main-table, .main-table tr, .main-table td, .main-table th {
-          line-height: 1 !important;
+          line-height: 16px !important;
         }
         .main-table tbody td {
-          padding-top: 1px !important;
-          padding-bottom: 1px !important;
-          font-size: 7.5px !important;
-          line-height: 1 !important;
+          padding-top: 2px !important;
+          padding-bottom: 2px !important;
+          font-size: 9px !important;
+          line-height: 16px !important;
         }
         .main-table tbody tr {
-          line-height: 1 !important;
+          line-height: 16px !important;
         }
       `}</style>
 
@@ -333,7 +333,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         <div style={{ lineHeight:'1' }}>
         <table className="nb main-table" style={{
           width:'100%', borderCollapse:'collapse', tableLayout:'fixed', flex:1,
-          border:'1px solid #000', lineHeight:'1', fontSize:'7.5px',
+          border:'1px solid #000', lineHeight:'16px', fontSize:'9px',
         }}>
           <colgroup>
             <col style={{ width:'5%'  }} />
