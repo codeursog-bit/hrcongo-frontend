@@ -43,7 +43,7 @@ interface CompanyTax {
   id: string;
   name: string;
   code: string;
-  employeeRate: number;  // already as decimal e.g. 0.01 = 1%
+  employeeRate: number;
   fixedEmployee: number;
   isActive: boolean;
 }
@@ -68,14 +68,13 @@ interface Advance {
   employee?: { id?: string };
 }
 
-// Ligne de saisie générique
 interface Row {
   localId: string;
   refId?: string;
   label: string;
-  base: number | '';   // base saisie
-  rate: number | '';   // taux / coefficient
-  amount: number;      // base × rate — calculé en temps réel, affiché en lecture seule
+  base: number | '';
+  rate: number | '';
+  amount: number;
 }
 
 interface SimResult {
@@ -97,7 +96,6 @@ interface SimResult {
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
-// Suggestions primes — toutes soumises CNSS + ITS (viennent avant le brut)
 const PRIME_SUGGESTIONS = [
   "Prime d'ancienneté","Prime d'assiduité","Prime de confiance",
   "Prime de garde","Prime de motivation","Prime de précaire",
@@ -106,7 +104,6 @@ const PRIME_SUGGESTIONS = [
   "Prime de résultat","Prime de fin d'année",
 ];
 
-// Suggestions indemnités — NON soumises CNSS ni ITS (viennent après le brut)
 const INDEMNITE_SUGGESTIONS = [
   "Indemnité de transport","Indemnité de logement","Indemnité de panier",
   "Indemnité kilométrique","Indemnité de représentation","Indemnité vestimentaire",
@@ -122,7 +119,6 @@ const uid  = () => Math.random().toString(36).slice(2, 9);
 const fmt  = (v: number) => Math.round(v || 0).toLocaleString('fr-FR');
 const n    = (v: number | '') => Number(v) || 0;
 
-// Calcul ancienneté depuis hireDate
 const seniority = (hireDate?: string) => {
   if (!hireDate) return null;
   const hire = new Date(hireDate);
@@ -175,8 +171,6 @@ const BLine = ({ label, value, cls, sm }: { label: string; value: string; cls?: 
   </div>
 );
 
-// Ligne de saisie réutilisable (prime / indemnité / avance / prêt / taxe)
-// SimpleRow — pour taxes, prêts, avances (juste libellé + montant)
 const SimpleRow = ({ row, onChangeLabel, onChangeAmount, onRemove, placeholder = 'Libellé…', amountPlaceholder = '0' }: {
   row: Row; onChangeLabel: (v:string)=>void; onChangeAmount: (v:number|'')=>void; onRemove: ()=>void; placeholder?: string; amountPlaceholder?: string;
 }) => (
@@ -206,7 +200,6 @@ const InputRow = ({
     initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
     className="group grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 items-center"
   >
-    {/* Libellé */}
     <input
       type="text"
       value={row.label}
@@ -214,8 +207,6 @@ const InputRow = ({
       placeholder={placeholder}
       className="px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600 w-full"
     />
-
-    {/* Base */}
     <div className="relative">
       <input
         type="number"
@@ -226,8 +217,6 @@ const InputRow = ({
       />
       <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 pointer-events-none">F</span>
     </div>
-
-    {/* Taux */}
     <input
       type="number"
       value={row.rate}
@@ -236,8 +225,6 @@ const InputRow = ({
       placeholder="Taux"
       className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
     />
-
-    {/* Gain = base × taux — lecture seule */}
     <div className={`px-2 py-2 rounded-xl text-sm font-black font-mono text-right tabular-nums border transition-colors ${
       row.amount > 0
         ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
@@ -245,8 +232,6 @@ const InputRow = ({
     }`}>
       {row.amount > 0 ? row.amount.toLocaleString('fr-FR') : '—'}
     </div>
-
-    {/* Supprimer */}
     <button
       onClick={onRemove}
       className="p-1.5 text-gray-300 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
@@ -257,14 +242,11 @@ const InputRow = ({
 );
 
 // ─── Page principale ─────────────────────────────────────────────────────────
-// ─── Page principale ─────────────────────────────────────────────────────────
-// ─── Page principale ─────────────────────────────────────────────────────────
 
 export default function ManuelPayrollPage() {
   const router = useRouter();
   const now    = new Date();
 
-  // ── Sélection ─────────────────────────────────────────────────────────────
   const [employees, setEmployees]       = useState<Employee[]>([]);
   const [empSearch, setEmpSearch]       = useState('');
   const [showDrop, setShowDrop]         = useState(false);
@@ -280,45 +262,31 @@ export default function ManuelPayrollPage() {
   const [ot50, setOt50]   = useState<number | ''>(0);
   const [ot100, setOt100] = useState<number | ''>(0);
 
-  // ── Données BDD ───────────────────────────────────────────────────────────
   const [bonusTemplates, setBonusTemplates] = useState<BonusTemplate[]>([]);
   const [companyTaxes, setCompanyTaxes]     = useState<CompanyTax[]>([]);
   const [empLoans, setEmpLoans]             = useState<Loan[]>([]);
   const [empAdvances, setEmpAdvances]       = useState<Advance[]>([]);
 
-  // ── Lignes saisies ────────────────────────────────────────────────────────
   const [primes, setPrimes]         = useState<Row[]>([]);
   const [indemnites, setIndemnites] = useState<Row[]>([]);
   const [taxes, setTaxes]           = useState<Row[]>([]);
-  const [loans, setLoans]           = useState<Row[]>([]);   // prêts manuels
-  const [advances, setAdvances]     = useState<Row[]>([]);   // avances manuelles
+  const [loans, setLoans]           = useState<Row[]>([]);
+  const [advances, setAdvances]     = useState<Row[]>([]);
 
-  // ── Panneaux suggestions ──────────────────────────────────────────────────
-  const [showPrimeSugg, setShowPrimeSugg]       = useState(false);
-  const [showIndemSugg, setShowIndemSugg]       = useState(false);
-  const [showTaxSugg, setShowTaxSugg]           = useState(false);
-  const [showLoanSugg, setShowLoanSugg]         = useState(false);
-  const [showAdvanceSugg, setShowAdvanceSugg]   = useState(false);
+  const [showPrimeSugg, setShowPrimeSugg]     = useState(false);
+  const [showIndemSugg, setShowIndemSugg]     = useState(false);
+  const [showTaxSugg, setShowTaxSugg]         = useState(false);
 
-  // Taxe custom form
-  const [newTaxLabel, setNewTaxLabel]   = useState('');
-  const [newTaxCode, setNewTaxCode]     = useState('');
-  const [newTaxRate, setNewTaxRate]     = useState<number | ''>('');
-  const [newTaxFixed, setNewTaxFixed]   = useState<number | ''>('');
-
-  // ── Simulation ────────────────────────────────────────────────────────────
-  const [sim, setSim]           = useState<SimResult | null>(null);
+  const [sim, setSim]               = useState<SimResult | null>(null);
   const [simLoading, setSimLoading] = useState(false);
   const [simError, setSimError]     = useState<string | null>(null);
   const [showEmpCost, setShowEmpCost] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess]       = useState(false);
   const [createdId, setCreatedId]   = useState<string | null>(null);
 
-  // ── Load liste employés ───────────────────────────────────────────────────
   useEffect(() => {
     api.get<any>('/employees/simple')
       .then(r => setEmployees(Array.isArray(r) ? r : (r?.data ?? [])))
@@ -326,7 +294,6 @@ export default function ManuelPayrollPage() {
       .finally(() => setLoadingEmp(false));
   }, []);
 
-  // ── Load bonus templates + taxes ─────────────────────────────────────────
   useEffect(() => {
     Promise.all([
       api.get<any>('/bonus-templates').catch(() => []),
@@ -337,7 +304,6 @@ export default function ManuelPayrollPage() {
     });
   }, []);
 
-  // ── Quand employé sélectionné ─────────────────────────────────────────────
   useEffect(() => {
     if (!selectedEmp) {
       setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
@@ -361,7 +327,6 @@ export default function ManuelPayrollPage() {
     }).finally(() => setLoadingDetail(false));
   }, [selectedEmp]);
 
-  // ── Autocomplete ──────────────────────────────────────────────────────────
   const filtered = empSearch.length >= 1
     ? employees.filter(e =>
         `${e.firstName} ${e.lastName} ${e.employeeNumber ?? ''}`.toLowerCase()
@@ -369,10 +334,8 @@ export default function ManuelPayrollPage() {
       ).slice(0, 8)
     : [];
 
-  // ── Helpers lignes ────────────────────────────────────────────────────────
   const newRow = (label = ''): Row => ({ localId: uid(), label, base: '', rate: 1, amount: 0 });
 
-  // updateRow : recalcule amount = base × rate à chaque changement
   const updateRow = (set: React.Dispatch<React.SetStateAction<Row[]>>, localId: string, patch: Partial<Row>) =>
     set(prev => prev.map(r => {
       if (r.localId !== localId) return r;
@@ -394,25 +357,33 @@ export default function ManuelPayrollPage() {
     set(prev => [...prev, { ...newRow(label), base: defaultAmount || '', rate: defaultAmount ? 1 : '', amount: defaultAmount || 0 }]);
   };
 
-  // Ajouter une taxe depuis template BDD
+  const addTaxFromTemplate = (tax: CompanyTax) => {
+    if (taxes.some(t => t.refId === tax.id)) return;
+    const grossEst = n(empDetail?.baseSalary as any) + primes.reduce((s,r) => s + n(r.amount), 0);
+    const fixed = Number(tax.fixedEmployee);
+    const rate  = Number(tax.employeeRate);
+    const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate);
+    const id    = tax.id;
+    const name  = tax.name;
+    setTaxes(prev => [...prev, { localId: uid(), refId: id, label: name, base: '', rate: 1, amount: amt }]);
+  };
 
+  // ── ✅ Helper payload — base toujours renseignée, rate seulement si significatif ──
+  const buildBonusPayload = (rows: Row[], taxable: boolean) =>
+    rows.filter(r => n(r.amount) > 0).map(r => ({
+      bonusType:  r.label || (taxable ? 'Prime' : 'Indemnité'),
+      amount:     r.amount,
+      // ✅ Si base non saisie → base = amount (gain direct sans calcul)
+      base:       n(r.base) > 0 ? n(r.base) : r.amount,
+      // ✅ Rate seulement si saisi et différent de 0 et 1
+      // Si pas de taux ou taux=1 → gain=base, on n'envoie pas rate
+      // Les HS ont leur propre logique dans payroll-items_service, pas touchées ici
+      rate:       n(r.rate) > 0 && n(r.rate) !== 1 ? n(r.rate) : undefined,
+      isTaxable:  taxable,
+      isCnss:     taxable,
+      fiscalType: taxable ? 'TAXABLE_CNSS' : 'NON_TAXABLE',
+    }));
 
-  // Ajouter taxe custom depuis form
-const addTaxFromTemplate = (tax: CompanyTax) => {
-  if (taxes.some(t => t.refId === tax.id)) return;
-  const grossEst = n(empDetail?.baseSalary as any) + primes.reduce((s,r) => s + n(r.amount), 0);
-  const fixed = Number(tax.fixedEmployee);
-  const rate  = Number(tax.employeeRate);
-  const amt   = fixed > 0 ? fixed : Math.round(grossEst * rate);
-  
-  // ✅ Capturer les valeurs avant le callback
-  const id    = tax.id;
-  const name  = tax.name;
-  
-  setTaxes(prev => [...prev, { localId: uid(), refId: id, label: name, base: '', rate: 1, amount: amt }]);
-};
-
-  // ── Simulation debounce ───────────────────────────────────────────────────
   useEffect(() => {
     if (!selectedEmp || !empDetail) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -426,16 +397,10 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
     const baseSal = n(empDetail.baseSalary as any);
     if (!baseSal) return;
 
-    // Primes → soumises CNSS + ITS
-    const primesPayload = primes.filter(p => n(p.amount) > 0).map(p => ({
-      bonusType: p.label || 'Prime', amount: p.amount, base: p.base || undefined, rate: p.rate || undefined,
-      isTaxable: true, isCnss: true, fiscalType: 'TAXABLE_CNSS',
-    }));
-    // Indemnités → NON soumises
-    const indemPayload = indemnites.filter(i => n(i.amount) > 0).map(i => ({
-      bonusType: i.label || 'Indemnité', amount: i.amount, base: i.base || undefined, rate: i.rate || undefined,
-      isTaxable: false, isCnss: false, fiscalType: 'NON_TAXABLE',
-    }));
+    // ✅ Utilise buildBonusPayload — base et rate toujours présents
+    const primesPayload = buildBonusPayload(primes, true);
+    const indemPayload  = buildBonusPayload(indemnites, false);
+    const manualBonuses = [...primesPayload, ...indemPayload];
 
     setSimLoading(true); setSimError(null);
     try {
@@ -448,9 +413,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
         overtimeHours25:  n(ot25),
         overtimeHours50:  n(ot50),
         overtimeHours100: n(ot100),
-        manualBonuses: [...primesPayload, ...indemPayload].length > 0
-          ? [...primesPayload, ...indemPayload]
-          : undefined,
+        manualBonuses: manualBonuses.length > 0 ? manualBonuses : undefined,
       });
       setSim(result);
     } catch (e: any) {
@@ -461,19 +424,14 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
     }
   };
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   const submit = async () => {
     if (!selectedEmp || !sim || !empDetail) return;
     setSubmitting(true);
     try {
-      const primesP = primes.filter(p => n(p.amount) > 0).map(p => ({
-        bonusType: p.label || 'Prime', amount: p.amount, base: p.base || undefined, rate: p.rate || undefined,
-        isTaxable: true, isCnss: true, fiscalType: 'TAXABLE_CNSS',
-      }));
-      const indemP = indemnites.filter(i => n(i.amount) > 0).map(i => ({
-        bonusType: i.label || 'Indemnité', amount: i.amount, base: i.base || undefined, rate: i.rate || undefined,
-        isTaxable: false, isCnss: false, fiscalType: 'NON_TAXABLE',
-      }));
+      // ✅ Même helper — cohérence simulate / create
+      const primesP = buildBonusPayload(primes, true);
+      const indemP  = buildBonusPayload(indemnites, false);
+
       const result: any = await api.post('/payrolls/manual', {
         employeeId: selectedEmp.id,
         month: MONTHS.findIndex(m => m === month) + 1,
@@ -499,19 +457,16 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]);
   };
 
-  // Computed
   const hasOt = [ot10,ot25,ot50,ot100].some(v => n(v) > 0);
-  const totalPrimes    = primes.reduce((s,r) => s + r.amount, 0);
-  const totalIndemnites= indemnites.reduce((s,r) => s + r.amount, 0);
-  const totalTaxes     = taxes.reduce((s,r) => s+n(r.amount), 0);
-  const totalLoans     = loans.reduce((s,r) => s+n(r.amount), 0);
-  const totalAdvances  = advances.reduce((s,r) => s+n(r.amount), 0);
+  const totalPrimes     = primes.reduce((s,r) => s + r.amount, 0);
+  const totalIndemnites = indemnites.reduce((s,r) => s + r.amount, 0);
+  const totalTaxes      = taxes.reduce((s,r) => s+n(r.amount), 0);
+  const totalLoans      = loans.reduce((s,r) => s+n(r.amount), 0);
+  const totalAdvances   = advances.reduce((s,r) => s+n(r.amount), 0);
 
-  // Suggestions non encore ajoutées
   const dbPrimeSugg = bonusTemplates.filter(t => t.isTaxable);
   const dbIndemSugg = bonusTemplates.filter(t => !t.isTaxable);
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-[1380px] mx-auto pb-28 px-4 pt-1">
 
@@ -563,7 +518,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
 
               {selectedEmp ? (
                 <div>
-                  {/* Card employé sélectionné */}
                   <div className="flex items-start justify-between p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-sky-200 dark:bg-sky-800 flex items-center justify-center text-sky-700 dark:text-sky-300 font-black text-sm shrink-0">
@@ -583,30 +537,14 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     </div>
                   </div>
 
-                  {/* Infos clés employé */}
                   {empDetail && (
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        {
-                          icon: <BadgeCheck size={13} />,
-                          label: 'Matricule',
-                          value: empDetail.employeeNumber || '—',
-                        },
-                        {
-                          icon: <Briefcase size={13} />,
-                          label: 'Contrat',
-                          value: empDetail.contractType || '—',
-                        },
-                        {
-                          icon: <Calendar size={13} />,
-                          label: 'Ancienneté',
-                          value: seniority(empDetail.hireDate) ?? '—',
-                        },
-                        {
-                          icon: <Users size={13} />,
-                          label: 'Situation',
-                          value: `${MARITAL_LABELS[empDetail.maritalStatus ?? ''] ?? '—'}${empDetail.numberOfChildren ? ` · ${empDetail.numberOfChildren} enf.` : ''}`,
-                        },
+                        { icon: <BadgeCheck size={13} />, label: 'Matricule',   value: empDetail.employeeNumber || '—' },
+                        { icon: <Briefcase  size={13} />, label: 'Contrat',     value: empDetail.contractType   || '—' },
+                        { icon: <Calendar   size={13} />, label: 'Ancienneté',  value: seniority(empDetail.hireDate) ?? '—' },
+                        { icon: <Users      size={13} />, label: 'Situation',
+                          value: `${MARITAL_LABELS[empDetail.maritalStatus ?? ''] ?? '—'}${empDetail.numberOfChildren ? ` · ${empDetail.numberOfChildren} enf.` : ''}` },
                       ].map(({ icon, label, value }) => (
                         <div key={label} className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-900/40 rounded-xl">
                           <span className="text-gray-400 dark:text-gray-500 shrink-0">{icon}</span>
@@ -616,8 +554,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                           </div>
                         </div>
                       ))}
-
-                      {/* Salaire de base — lecture seule */}
                       <div className="col-span-2 flex items-center justify-between px-3 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl">
                         <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Salaire de base</span>
                         <span className="text-sm font-black font-mono text-emerald-700 dark:text-emerald-300">
@@ -661,7 +597,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
               )}
             </div>
 
-            {/* Jours travaillés */}
             {selectedEmp && (
               <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700/50 pt-4">
                 <SLabel>Jours travaillés <span className="font-normal text-gray-400">/ 26 jours théoriques</span></SLabel>
@@ -702,9 +637,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
             </div>
           </Card>
 
-          {/* ════════════════════════════════════════════
-              SECTION PRIMES (soumises CNSS + ITS)
-          ════════════════════════════════════════════ */}
+          {/* ── Primes ── */}
           <Card className="overflow-visible">
             <SectionHeader
               icon={<span className="text-violet-600 dark:text-violet-400 text-xs font-black">%</span>}
@@ -713,9 +646,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
               total={totalPrimes}
               color="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 text-violet-600"
             />
-
             <div className="px-5 py-4 space-y-2">
-              {/* En-têtes colonnes */}
               <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
                 {['Libellé','Base (F)','Taux','Gain (F)',''].map((h,i) => (
                   <span key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
@@ -731,20 +662,15 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     onRemove={() => removeRow(setPrimes, row.localId)} />
                 ))}
               </AnimatePresence>
-
-              {/* Actions */}
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setPrimes(p => [...p, newRow()])}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/30 rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une prime
                 </button>
-
-                {/* Suggestions (BDD ou liste par défaut) */}
                 <div className="relative">
                   <button onClick={() => setShowPrimeSugg(v => !v)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                    Suggestions
-                    <ChevronDown size={9} className={`transition-transform ${showPrimeSugg ? 'rotate-180':''}`} />
+                    Suggestions <ChevronDown size={9} className={`transition-transform ${showPrimeSugg ? 'rotate-180':''}`} />
                   </button>
                   <AnimatePresence>
                     {showPrimeSugg && (
@@ -776,9 +702,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
             </div>
           </Card>
 
-          {/* ════════════════════════════════════════════
-              SECTION INDEMNITÉS (NON soumises)
-          ════════════════════════════════════════════ */}
+          {/* ── Indemnités ── */}
           <Card className="overflow-visible">
             <SectionHeader
               icon={<span className="text-emerald-600 dark:text-emerald-400 text-xs font-black">≠</span>}
@@ -787,9 +711,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
               total={totalIndemnites}
               color="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-600"
             />
-
             <div className="px-5 py-4 space-y-2">
-              {/* En-têtes colonnes */}
               <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
                 {['Libellé','Base (F)','Taux','Gain (F)',''].map((h,i) => (
                   <span key={i} className={`text-[10px] font-bold text-gray-400 uppercase tracking-wide ${i===3?'text-right':''}`}>{h}</span>
@@ -805,13 +727,11 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     onRemove={() => removeRow(setIndemnites, row.localId)} />
                 ))}
               </AnimatePresence>
-
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setIndemnites(p => [...p, newRow()])}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une indemnité
                 </button>
-
                 <div className="relative">
                   <button onClick={() => setShowIndemSugg(v => !v)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
@@ -847,9 +767,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
             </div>
           </Card>
 
-          {/* ════════════════════════════════════════════
-              SECTION TAXES & RETENUES
-          ════════════════════════════════════════════ */}
+          {/* ── Taxes ── */}
           <Card className="overflow-visible">
             <SectionHeader
               icon={<Building2 size={14} className="text-amber-600 dark:text-amber-400" />}
@@ -858,7 +776,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
               total={totalTaxes}
               color="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
             />
-
             <div className="px-5 py-4 space-y-2">
               <AnimatePresence initial={false}>
                 {taxes.map(row => (
@@ -869,13 +786,11 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     onRemove={() => removeRow(setTaxes, row.localId)} />
                 ))}
               </AnimatePresence>
-
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setTaxes(p => [...p, newRow()])}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une taxe
                 </button>
-
                 {companyTaxes.length > 0 && (
                   <div className="relative">
                     <button onClick={() => setShowTaxSugg(v => !v)}
@@ -911,9 +826,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
             </div>
           </Card>
 
-          {/* ════════════════════════════════════════════
-              SECTION PRÊTS
-          ════════════════════════════════════════════ */}
+          {/* ── Prêts ── */}
           <Card className="overflow-hidden">
             <SectionHeader
               icon={<CreditCard size={14} className="text-orange-600 dark:text-orange-400" />}
@@ -922,9 +835,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
               total={[...empLoans.map(l => Number(l.monthlyRepayment)), ...loans.map(r => n(r.amount))].reduce((s,v)=>s+v,0)}
               color="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
             />
-
             <div className="px-5 py-4 space-y-2">
-              {/* Prêts depuis BDD */}
               {empLoans.map(loan => (
                 <div key={loan.id} className="flex items-center justify-between px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/40 rounded-xl">
                   <div>
@@ -934,8 +845,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                   <span className="text-sm font-mono font-black text-orange-600 dark:text-orange-400">−{fmt(Number(loan.monthlyRepayment))} F</span>
                 </div>
               ))}
-
-              {/* Prêts manuels */}
               <AnimatePresence initial={false}>
                 {loans.map(row => (
                   <SimpleRow key={row.localId} row={row}
@@ -946,7 +855,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     onRemove={() => removeRow(setLoans, row.localId)} />
                 ))}
               </AnimatePresence>
-
               <button onClick={() => setLoans(p => [...p, newRow()])}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter un prêt manuellement
@@ -954,9 +862,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
             </div>
           </Card>
 
-          {/* ════════════════════════════════════════════
-              SECTION AVANCES
-          ════════════════════════════════════════════ */}
+          {/* ── Avances ── */}
           <Card className="overflow-hidden">
             <SectionHeader
               icon={<Wallet size={14} className="text-red-600 dark:text-red-400" />}
@@ -965,9 +871,7 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
               total={[...empAdvances.map(a => Number(a.amount)), ...advances.map(r => n(r.amount))].reduce((s,v)=>s+v,0)}
               color="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
             />
-
             <div className="px-5 py-4 space-y-2">
-              {/* Avances depuis BDD */}
               {empAdvances.map(adv => (
                 <div key={adv.id} className="flex items-center justify-between px-3 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-xl">
                   <div>
@@ -977,8 +881,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                   <span className="text-sm font-mono font-black text-red-600 dark:text-red-400">−{fmt(Number(adv.amount))} F</span>
                 </div>
               ))}
-
-              {/* Avances manuelles */}
               <AnimatePresence initial={false}>
                 {advances.map(row => (
                   <SimpleRow key={row.localId} row={row}
@@ -989,7 +891,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     onRemove={() => removeRow(setAdvances, row.localId)} />
                 ))}
               </AnimatePresence>
-
               <button onClick={() => setAdvances(p => [...p, newRow()])}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter une avance manuellement
@@ -1055,8 +956,8 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                   <BLine label="ITS / IRPP"
                     value={sim.employee.isSubjectToIrpp ? `−${fmt(sim.its)} F` : '0 F (exempté)'}
                     cls={sim.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'} />
-                  {sim.totalLoanDeduction    > 0 && <BLine label={`Prêts`}   value={`−${fmt(sim.totalLoanDeduction)} F`}    cls="text-red-500" sm />}
-                  {sim.totalAdvanceDeduction > 0 && <BLine label="Avances"   value={`−${fmt(sim.totalAdvanceDeduction)} F`} cls="text-red-500" sm />}
+                  {sim.totalLoanDeduction    > 0 && <BLine label="Prêts"   value={`−${fmt(sim.totalLoanDeduction)} F`}    cls="text-red-500" sm />}
+                  {sim.totalAdvanceDeduction > 0 && <BLine label="Avances" value={`−${fmt(sim.totalAdvanceDeduction)} F`} cls="text-red-500" sm />}
 
                   <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
                     <div className="flex justify-between items-end">
@@ -1068,7 +969,6 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                     </div>
                   </div>
 
-                  {/* Coût employeur */}
                   <div className="mt-3 border border-orange-200 dark:border-orange-800/40 rounded-xl overflow-hidden">
                     <button onClick={() => setShowEmpCost(v => !v)}
                       className="w-full flex items-center justify-between px-4 py-2.5 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100/50 transition-colors">
@@ -1084,11 +984,11 @@ const addTaxFromTemplate = (tax: CompanyTax) => {
                       {showEmpCost && (
                         <motion.div initial={{ height:0 }} animate={{ height:'auto' }} exit={{ height:0 }} className="overflow-hidden">
                           <div className="px-4 py-3 bg-white dark:bg-gray-800/50 space-y-0.5">
-                            <BLine label="CNSS Pensions (8%)"       value={`+${fmt(sim.cnssEmployerPension)} F`}  cls="text-orange-500" sm />
-                            <BLine label="CNSS Famille (10,03%)"    value={`+${fmt(sim.cnssEmployerFamily)} F`}   cls="text-orange-500" sm />
-                            <BLine label="CNSS Accident (2,25%)"    value={`+${fmt(sim.cnssEmployerAccident)} F`} cls="text-orange-500" sm />
-                            <BLine label="TUS DGI (2,025%)"         value={`+${fmt(sim.tusDgiAmount)} F`}         cls="text-amber-500"  sm />
-                            <BLine label="TUS CNSS (5,475%)"        value={`+${fmt(sim.tusCnssAmount)} F`}        cls="text-amber-500"  sm />
+                            <BLine label="CNSS Pensions (8%)"    value={`+${fmt(sim.cnssEmployerPension)} F`}  cls="text-orange-500" sm />
+                            <BLine label="CNSS Famille (10,03%)" value={`+${fmt(sim.cnssEmployerFamily)} F`}   cls="text-orange-500" sm />
+                            <BLine label="CNSS Accident (2,25%)" value={`+${fmt(sim.cnssEmployerAccident)} F`} cls="text-orange-500" sm />
+                            <BLine label="TUS DGI (2,025%)"      value={`+${fmt(sim.tusDgiAmount)} F`}         cls="text-amber-500"  sm />
+                            <BLine label="TUS CNSS (5,475%)"     value={`+${fmt(sim.tusCnssAmount)} F`}        cls="text-amber-500"  sm />
                           </div>
                         </motion.div>
                       )}

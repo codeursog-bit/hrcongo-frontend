@@ -43,6 +43,17 @@ function seniority(h?: string): string {
   return `${y} an${y !== 1 ? 's' : ''} et ${String(m).padStart(2,'0')} mois`;
 }
 
+function formatCategorie(code: string | null | undefined): string {
+  if (!code) return '—';
+  // "PH5-E2" / "C5-E2" / "I11-E1" → "Cat.5 Éch.2" / "Cat.11 Éch.1"
+  const m = code.match(/^[A-Z]+(\d+)-E(\d+)$/i);
+  if (m) return `Cat.${m[1]} Éch.${m[2]}`;
+  // BTP employés : "E8-1" → "Cat.8 Éch.1"
+  const m2 = code.match(/^E(\d+)-(\d+)$/i);
+  if (m2) return `Cat.${m2[1]} Éch.${m2[2]}`;
+  return code; // fallback : affiche tel quel
+}
+
 function cleanLabel(label: string): string {
   if (!label) return label;
   return label
@@ -223,7 +234,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
   const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
   const fullName   = [e.lastName?.toUpperCase(), e.firstName].filter(Boolean).join(' ');
-  const cat        = [e.professionalCategory, e.echelon ? `Ech.${e.echelon}` : null].filter(Boolean).join('/');
+  const cat        = formatCategorie(e.professionalCategory);
   const deptName   = e.department?.name ?? '';
 
   let gainRef  = 1000;
@@ -369,7 +380,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginBottom:3, border:BDB }}>
           <thead>
             <tr>
-              {['Date embauche','N° CNSS/CRF','Sit. familiale','Nbr Enfant','Ancienneté','Nbr part IRPP','Type de contrat'].map(h => (
+              {['Date embauche','N° CNSS/CRF','Sit. familiale','Nbr Enfant','Ancienneté','Nbr part ITS','Type de contrat'].map(h => (
                 <th key={h} style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>{h}</th>
               ))}
             </tr>
@@ -469,7 +480,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
               {/* ── ITS ─────────────────────────────────────────────── */}
               {itsAmount > 0 && (
-                <Row rub={4520} label="ITS / IRPP Mois"
+                <Row rub={4520} label="ITS Mois"
                   base={fmt(itsBase)} taux="Barème" ret={fmt(itsAmount)} />
               )}
 
