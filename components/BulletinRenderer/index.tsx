@@ -337,7 +337,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 {fullName || '—'}
               </td>
               <td style={{ width:'14%', padding:'4px 6px', borderRight: BDB, fontSize:9, color:K }}>
-                Affectation : <strong>{deptName || '—'}</strong>
+                Affectation : <strong>{'—' || '—'}</strong>
               </td>
               <td style={{ width:'12%', padding:'4px 6px', borderRight: BDB, fontSize:9, color:K }}>
                 Poste : <strong>{e.position || '—'}</strong>
