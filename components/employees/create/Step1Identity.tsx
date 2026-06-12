@@ -201,6 +201,19 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
         <SectionLabel icon={FileText} label="Documents administratifs · optionnel" />
 
+        <Field
+          label="Matricule"
+          hint="Laissez vide pour une génération automatique (EMP-AAAA-XXX)"
+        >
+          <Input
+            name="employeeNumber"
+            value={formData.employeeNumber || ''}
+            onChange={onInputChange}
+            placeholder="Généré automatiquement"
+            className="font-mono text-sm"
+          />
+        </Field>
+
         <div className="grid grid-cols-2 gap-4">
           <Field label="N° CNI / Passeport">
             <Input
@@ -217,6 +230,24 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
               value={formData.cnssNumber}
               onChange={onInputChange}
               placeholder="123456789"
+              className="font-mono text-sm"
+            />
+          </Field>
+          <Field label="NIU">
+            <Input
+              name="niu"
+              value={formData.niu || ''}
+              onChange={onInputChange}
+              placeholder="NIU de l'employé"
+              className="font-mono text-sm"
+            />
+          </Field>
+          <Field label="N° Fiscal">
+            <Input
+              name="taxNumber"
+              value={formData.taxNumber || ''}
+              onChange={onInputChange}
+              placeholder="Numéro d'impôt individuel"
               className="font-mono text-sm"
             />
           </Field>

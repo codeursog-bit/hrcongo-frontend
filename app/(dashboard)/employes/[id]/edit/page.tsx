@@ -85,7 +85,7 @@
 //   const alert  = useAlert();
 //   const [isSaving, setIsSaving]   = useState(false);
 //   const [isLoading, setIsLoading] = useState(true);
-//   const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal'>('identity');
+//   const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal' | 'statut'>('identity');
 //   const [departments, setDepartments]         = useState<any[]>([]);
 //   const [companyConvention, setCompanyConvention]       = useState<string | null>(null);
 //   const [conventionCategories, setConventionCategories] = useState<any[]>([]);
@@ -401,13 +401,13 @@
 //                     {companyConvention && conventionCategories.length > 0 && (
 //                       <div className="md:col-span-2 p-5 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-700 rounded-xl">
 //                         <div className="flex items-center gap-2 mb-3"><Award size={18} className="text-purple-500" />
-//                           <h4 className="font-bold text-purple-900 dark:text-purple-100 text-sm">Convention : {companyConvention}</h4>
+//                           <h4 className="font-bold text-purple-900 dark:text-purple-100 text-sm">Grade conventionnel · {companyConvention}</h4>
 //                         </div>
 //                         <select value={formData.professionalCategory} onChange={(e) => handleCategoryChange(e.target.value)}
 //                           className="w-full p-3 bg-white dark:bg-purple-900/20 border border-purple-300 dark:border-purple-600 rounded-xl font-medium text-gray-900 dark:text-white focus:border-purple-500 outline-none">
-//                           <option value="">Sélectionner une catégorie...</option>
+//                           <option value="">Sélectionner le grade...</option>
 //                           {conventionCategories.map((cat) => (
-//                             <option key={cat.code} value={cat.code}>{cat.label} — {cat.minSalary.toLocaleString()} FCFA min.</option>
+//                             <option key={cat.code} value={cat.code}>{cat.label}{cat.minSalary > 0 ? ` — ${cat.minSalary.toLocaleString()} FCFA min.` : ''}</option>
 //                           ))}
 //                         </select>
 //                       </div>
@@ -512,7 +512,7 @@ import {
   ArrowLeft, Save, Loader2, User, Briefcase, Heart, Shield,
   Wallet, AlertCircle, Phone, Mail, MapPin, Calendar,
   Building2, DollarSign, Smartphone, CreditCard,
-  Award, Hash, Check, CalendarDays, Clock,
+  Award, Hash, Check, CalendarDays, Clock, BadgeCheck, Power, XCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays, format } from 'date-fns';
@@ -586,7 +586,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const alert  = useAlert();
   const [isSaving, setIsSaving]   = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal'>('identity');
+  const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal' | 'statut'>('identity');
   const [departments, setDepartments]         = useState<any[]>([]);
   const [companyConvention, setCompanyConvention]       = useState<string | null>(null);
   const [conventionCategories, setConventionCategories] = useState<any[]>([]);
@@ -594,12 +594,15 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', dateOfBirth: '', placeOfBirth: '',
     gender: 'MALE', phone: '', email: '', address: '', city: '',
-    nationalIdNumber: '', cnssNumber: '',
+    nationalIdNumber: '', cnssNumber: '', niu: '', taxNumber: '',
+    trialPeriodDays: '0', trialEndDate: '',
+    status: 'ACTIVE', terminationDate: '', terminationReason: '',
     maritalStatus: 'SINGLE', numberOfChildren: 0,
     hireDate: '', contractType: 'CDI',
     contractEndDate: '',  // 🆕
     position: '', departmentId: '',
     baseSalary: '', professionalCategory: '', echelon: '',
+    employeeNumber: '',
     paymentMethod: 'CASH', bankName: '', bankAccountNumber: '',
     mobileMoneyOperator: 'MTN', mobileMoneyNumber: '',
     isSubjectToIrpp: true, isSubjectToCnss: true, taxExemptionReason: '',
@@ -634,6 +637,13 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           city:                employee.city || '',
           nationalIdNumber:    employee.nationalIdNumber || '',
           cnssNumber:          employee.cnssNumber || '',
+          niu:                 employee.niu || '',
+          taxNumber:           employee.taxNumber || '',
+          trialPeriodDays:     employee.trialPeriodDays?.toString() || '0',
+          trialEndDate:        employee.trialEndDate?.split('T')[0] || '',
+          status:              employee.status || 'ACTIVE',
+          terminationDate:     employee.terminationDate?.split('T')[0] || '',
+          terminationReason:   employee.terminationReason || '',
           maritalStatus:       employee.maritalStatus || 'SINGLE',
           numberOfChildren:    employee.numberOfChildren || 0,
           hireDate:            employee.hireDate?.split('T')[0] || '',
@@ -644,6 +654,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           baseSalary:          employee.baseSalary?.toString() || '',
           professionalCategory:employee.professionalCategory || '',
           echelon:             employee.echelon || '',
+          employeeNumber:      employee.employeeNumber || '',
           paymentMethod:       employee.paymentMethod || 'CASH',
           bankName:            employee.bankName || '',
           bankAccountNumber:   employee.bankAccountNumber || '',
@@ -691,8 +702,10 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
   const handleCategoryChange = (code: string) => {
     handleSelect('professionalCategory', code);
+    // code = cat+éch combinés (é.g. "Cat.3 Éch.4", "C5-E2") → on le stocke aussi dans echelon
+    handleSelect('echelon', code);
     const cat = conventionCategories.find((c) => c.code === code);
-    if (cat?.minSalary && (!formData.baseSalary || parseFloat(formData.baseSalary) < cat.minSalary)) {
+    if (cat?.minSalary && cat.minSalary > 0 && (!formData.baseSalary || parseFloat(formData.baseSalary) < cat.minSalary)) {
       handleSelect('baseSalary', cat.minSalary.toString());
       alert.info('Salaire ajusté', `Minimum conventionnel : ${cat.minSalary.toLocaleString()} FCFA`);
     }
@@ -708,6 +721,12 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         address: formData.address, city: formData.city,
         nationalIdNumber: formData.nationalIdNumber || null,
         cnssNumber: formData.cnssNumber || null,
+        niu: formData.niu?.trim() || null,
+        taxNumber: formData.taxNumber?.trim() || null,
+        trialPeriodDays: parseInt(formData.trialPeriodDays as string) || 0,
+        status: formData.status,
+        terminationDate: formData.status !== 'ACTIVE' && formData.terminationDate ? formData.terminationDate : null,
+        terminationReason: formData.status !== 'ACTIVE' ? formData.terminationReason || null : null,
         maritalStatus: formData.maritalStatus,
         numberOfChildren: parseInt(formData.numberOfChildren as any) || 0,
         hireDate: formData.hireDate, contractType: formData.contractType,
@@ -716,6 +735,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         baseSalary: parseFloat(formData.baseSalary),
         professionalCategory: formData.professionalCategory || null,
         echelon: formData.echelon || null,
+        employeeNumber: formData.employeeNumber?.trim() || undefined,
         paymentMethod: formData.paymentMethod,
         bankName: formData.bankName || null, bankAccountNumber: formData.bankAccountNumber || null,
         mobileMoneyOperator: formData.mobileMoneyOperator || null, mobileMoneyNumber: formData.mobileMoneyNumber || null,
@@ -738,6 +758,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     { id: 'contract', label: 'Contrat',            icon: Briefcase,color: 'text-purple-500' },
     { id: 'payment',  label: 'Paiement',           icon: Wallet,   color: 'text-emerald-500' },
     { id: 'fiscal',   label: 'Fiscalité',          icon: Shield,   color: 'text-amber-500' },
+    { id: 'statut',   label: 'Statut',              icon: BadgeCheck, color: 'text-rose-500'  },
   ];
 
   const inputClass  = "w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition-all";
@@ -807,6 +828,9 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     <div><label className={labelClass}>Ville</label><input name="city" value={formData.city} onChange={handleChange} className={inputClass} /></div>
                     <div><label className={labelClass}><Hash size={13} className="inline mr-1" />N° CNI <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="nationalIdNumber" value={formData.nationalIdNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
                     <div><label className={labelClass}><Shield size={13} className="inline mr-1" />N° CNSS <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="cnssNumber" value={formData.cnssNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}>Matricule <span className="text-xs text-gray-400 font-normal">(optionnel — généré auto si vide)</span></label><input name="employeeNumber" value={formData.employeeNumber} onChange={handleChange} placeholder="Généré automatiquement" className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}>NIU <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="niu" value={formData.niu} onChange={handleChange} placeholder="NIU de l'employé" className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}>N° Fiscal <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="taxNumber" value={formData.taxNumber} onChange={handleChange} placeholder="Numéro d'impôt individuel" className={inputClass + ' font-mono text-sm'} /></div>
                   </div>
                 </div>
               )}
@@ -891,6 +915,26 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                       </AnimatePresence>
                     </div>
 
+                    {/* Période d'essai */}
+                    {['CDI', 'CDD'].includes(formData.contractType) && (
+                      <div className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Clock size={14} className="text-gray-400" />
+                          <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Période d'essai <span className="font-normal text-gray-400">(optionnel)</span></span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className={labelClass}>Durée (jours)</label>
+                            <input type="number" min="0" max="90" name="trialPeriodDays" value={formData.trialPeriodDays} onChange={handleChange} className={inputClass} placeholder="0" />
+                          </div>
+                          <div>
+                            <label className={labelClass}>Fin de période d'essai</label>
+                            <input type="date" name="trialEndDate" value={formData.trialEndDate} onChange={handleChange} className={inputClass} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Salaire */}
                     <div className="md:col-span-2">
                       <label className={labelClass}><DollarSign size={13} className="inline mr-1 text-purple-500" />Salaire de base *</label>
@@ -914,6 +958,12 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                             <option key={cat.code} value={cat.code}>{cat.label} — {cat.minSalary.toLocaleString()} FCFA min.</option>
                           ))}
                         </select>
+                        {formData.professionalCategory && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1.5">
+                            <span className="font-mono bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded font-bold">{formData.professionalCategory}</span>
+                            enregistré comme grade
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1012,6 +1062,58 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
               )}
 
             </motion.div>
+
+              {/* ── STATUT ── */}
+              {activeSection === 'statut' && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8 space-y-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><Power size={20} className="text-rose-500" /> Statut de l'employé</h2>
+
+                  {/* Statut actif / inactif */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {([
+                      { value: 'ACTIVE',     label: 'Actif',     icon: BadgeCheck, desc: 'Employé en poste',          color: 'emerald' },
+                      { value: 'INACTIVE',   label: 'Inactif',   icon: XCircle,    desc: 'Contrat terminé / archivé', color: 'rose'    },
+                    ] as const).map(({ value, label, icon: Icon, desc, color }) => (
+                      <button key={value} type="button" onClick={() => handleSelect('status', value)}
+                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                          formData.status === value
+                            ? color === 'emerald'
+                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                              : 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                        }`}>
+                        <Icon size={18} className={formData.status === value ? (color === 'emerald' ? 'text-emerald-600' : 'text-rose-600') : 'text-gray-400'} />
+                        <p className="font-bold text-gray-900 dark:text-white mt-2 text-sm">{label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Champs conditionnels si INACTIVE */}
+                  {formData.status !== 'ACTIVE' && (
+                    <div className="space-y-4 p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800 rounded-xl">
+                      <div>
+                        <label className={labelClass}>Date de fin de contrat effective</label>
+                        <input type="date" name="terminationDate" value={formData.terminationDate} onChange={handleChange} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Motif</label>
+                        <select name="terminationReason" value={formData.terminationReason} onChange={handleChange} className={inputClass}>
+                          <option value="">Sélectionner un motif…</option>
+                          <option value="Démission">Démission</option>
+                          <option value="Licenciement">Licenciement</option>
+                          <option value="Rupture conventionnelle">Rupture conventionnelle</option>
+                          <option value="Fin de contrat CDD">Fin de contrat CDD</option>
+                          <option value="Départ à la retraite">Départ à la retraite</option>
+                          <option value="Décès">Décès</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
           </AnimatePresence>
 
           <div className="mt-6 flex justify-end">

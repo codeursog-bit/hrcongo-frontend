@@ -238,8 +238,10 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
 
   const handleCategoryChange = (categoryCode: string) => {
     onSelectChange('professionalCategory', categoryCode);
+    // Le code contient déjà cat+éch : on le stocke aussi dans echelon pour la paie
+    onSelectChange('echelon', categoryCode);
     const cat = conventionCategories.find((c) => c.code === categoryCode);
-    if (cat?.minSalary && (!formData.baseSalary || parseFloat(formData.baseSalary) < cat.minSalary)) {
+    if (cat?.minSalary && cat.minSalary > 0 && (!formData.baseSalary || parseFloat(formData.baseSalary) < cat.minSalary)) {
       onSelectChange('baseSalary', cat.minSalary.toString());
       alert.info('Salaire ajusté', `Minimum pour ${cat.label} : ${cat.minSalary.toLocaleString()} FCFA`);
     }
@@ -325,7 +327,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-gray-500" />
                 <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
-                  Convention collective · {companyConvention}
+                  Grade conventionnel · {companyConvention}
                 </span>
               </div>
               <select
@@ -333,13 +335,19 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full px-3.5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
               >
-                <option value="">Sélectionner une catégorie…</option>
+                <option value="">Sélectionner le grade…</option>
                 {conventionCategories.map((cat) => (
                   <option key={cat.code} value={cat.code}>
-                    {cat.label} — {cat.minSalary.toLocaleString()} FCFA min.
+                    {cat.label}{cat.minSalary > 0 ? ` — ${cat.minSalary.toLocaleString()} FCFA min.` : ''}
                   </option>
                 ))}
               </select>
+              {formData.professionalCategory && (
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                  <span className="font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300">{formData.professionalCategory}</span>
+                  <span>enregistré comme grade de l’employé</span>
+                </p>
+              )}
             </div>
           )}
 

@@ -505,7 +505,7 @@ const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.
               {/* ── ITS ─────────────────────────────────────────────── */}
               {itsAmount > 0 && (
                 <Row rub={4520} label="ITS Mois"
-                  base={fmt(itsBase)} taux="Barème" ret={fmt(itsAmount)} />
+                  base={fmt(itsBase)} taux="" ret={fmt(itsAmount)} />
               )}
 
               {/* ── Cotisations salariales supplémentaires ──────────── */}
