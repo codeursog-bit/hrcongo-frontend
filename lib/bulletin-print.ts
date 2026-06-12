@@ -1,22 +1,53 @@
 // ============================================================================
 // lib/bulletin-print.ts
-// ✅ printBulletin  — iframe isolé → preview navigateur correcte
-// ✅ downloadBulletinPDF — html2canvas + jsPDF fiable (fix scrollHeight=0)
+// ✅ printBulletin      — iframe isolé → preview navigateur correcte
+// ✅ downloadBulletinPDF — html2canvas + jsPDF fiable
+// ✅ Détection robuste : id explicite → data-bulletin-root → fallback ids
+// ============================================================================
+
+// Tous les ids possibles de bulletins dans le DOM
+const BULLETIN_IDS = [
+  'bulletin-root',
+  'bulletin-corp-root',
+  'bul-admin-root',
+  'bul-wrap',        // BulletinRendererDefault
+  'bul-default',
+];
+
+/**
+ * Trouve le div bulletin dans le DOM.
+ * Ordre : id explicite → data-bulletin-root → liste des ids connus
+ */
+function findBulletinElement(bulletinElementId?: string): HTMLElement | null {
+  // 1. Id explicite passé en paramètre
+  if (bulletinElementId) {
+    const el = document.getElementById(bulletinElementId);
+    if (el) return el;
+  }
+
+  // 2. Attribut data-bulletin-root (BulletinRendererDefault v8+)
+  const byAttr = document.querySelector<HTMLElement>('[data-bulletin-root="true"]');
+  if (byAttr) return byAttr;
+
+  // 3. Fallback : chercher parmi tous les ids connus
+  for (const id of BULLETIN_IDS) {
+    const el = document.getElementById(id);
+    if (el) return el;
+  }
+
+  return null;
+}
+
+// ============================================================================
+// IMPRESSION
 // ============================================================================
 
 /**
  * Impression native via iframe isolé.
  * Seul le bulletin s'affiche dans la preview — sidebar et UI masquées.
  */
-export function printBulletin(bulletinElementId = 'bulletin-root') {
-  const BULLETIN_IDS = ['bulletin-root', 'bulletin-corp-root', 'bul-admin-root'];
-  let el = document.getElementById(bulletinElementId);
-  if (!el) {
-    for (const id of BULLETIN_IDS) {
-      const found = document.getElementById(id);
-      if (found) { el = found; break; }
-    }
-  }
+export function printBulletin(bulletinElementId?: string) {
+  const el = findBulletinElement(bulletinElementId);
   if (!el) { window.print(); return; }
 
   const iframe = document.createElement('iframe');
@@ -34,19 +65,32 @@ export function printBulletin(bulletinElementId = 'bulletin-root') {
 ${styleLinks}
 ${styleInlines}
 <style>
-  @page { size: A4 portrait; margin: 8mm; }
-  html,body { margin:0;padding:0;background:#fff;font-family:"Helvetica Neue",Arial,sans-serif; }
-  #${bulletinElementId} {
-    width:194mm !important;
-    padding:0 !important;
-    margin:0 !important;
-    box-shadow:none !important;
-    border:none !important;
+  @page { size: A4 portrait; margin: 8mm 6mm; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
   }
-  .bul-legal,.bulletin-legal,.adm-legal,.bulletin-legal-corp { display:none !important; }
-  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  /* Forcer light mode — dark mode app ne doit pas passer */
+  * { color-scheme: light !important; }
+  /* Masquer tout sauf le bulletin */
+  body > *:not(#bul-print-target) { display: none !important; }
+  #bul-print-target {
+    width: 210mm !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+  }
+  /* Masquer mentions légales */
+  .bul-legal, .bulletin-legal, .adm-legal, .bulletin-legal-corp { display: none !important; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
 </style>
-</head><body>${el.outerHTML}</body></html>`);
+</head><body>
+<div id="bul-print-target">${el.outerHTML}</div>
+</body></html>`);
   doc.close();
 
   const win = iframe.contentWindow;
@@ -54,34 +98,34 @@ ${styleInlines}
 
   const doPrint = () => {
     try { win.focus(); win.print(); } catch { window.print(); }
-    setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 1500);
+    setTimeout(() => {
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 1500);
   };
 
-  if (doc.readyState === 'complete') setTimeout(doPrint, 250);
-  else { win.addEventListener('load', () => setTimeout(doPrint, 250), { once: true }); setTimeout(doPrint, 1200); }
+  if (doc.readyState === 'complete') setTimeout(doPrint, 300);
+  else {
+    win.addEventListener('load', () => setTimeout(doPrint, 300), { once: true });
+    setTimeout(doPrint, 1500);
+  }
 }
+
+// ============================================================================
+// TÉLÉCHARGEMENT PDF
+// ============================================================================
 
 /**
  * Téléchargement PDF — html2canvas + jsPDF.
- *
- * Auto-détection de l'id : si l'id passé est introuvable, on cherche
- * automatiquement parmi les 3 ids possibles.
- * FIX scrollHeight=0 : clone dans un div temporaire visible hors écran.
+ * Clone dans un div temporaire visible hors écran (fix scrollHeight=0).
  */
-export async function downloadBulletinPDF(bulletinElementId: string, filename: string): Promise<void> {
-  // Auto-détection : chercher parmi les 3 ids possibles
-  const BULLETIN_IDS = ['bulletin-root', 'bulletin-corp-root', 'bul-admin-root'];
-  let el = document.getElementById(bulletinElementId);
+export async function downloadBulletinPDF(
+  bulletinElementId: string,
+  filename: string,
+): Promise<void> {
+  const el = findBulletinElement(bulletinElementId);
   if (!el) {
-    // L'id passé est incorrect (ex: bulletinTemplateId absent de la réponse API)
-    // → chercher le premier div bulletin présent dans le DOM
-    for (const id of BULLETIN_IDS) {
-      const found = document.getElementById(id);
-      if (found) { el = found; break; }
-    }
-  }
-  if (!el) {
-    console.error('[bulletin-print] Aucun div bulletin trouvé dans le DOM. Ids cherchés:', BULLETIN_IDS);
+    console.error('[bulletin-print] Aucun div bulletin trouvé. Ids cherchés:', BULLETIN_IDS);
+    alert('Impossible de générer le PDF : bulletin non trouvé.');
     return;
   }
 
@@ -90,38 +134,59 @@ export async function downloadBulletinPDF(bulletinElementId: string, filename: s
     import('jspdf'),
   ]);
 
-  // Créer un conteneur temporaire visible (hors écran) pour éviter scrollHeight=0
+  // Conteneur temporaire visible hors écran — évite scrollHeight=0
   const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
+  container.style.cssText = [
+    'position:fixed',
+    'left:-9999px',
+    'top:0',
+    'width:210mm',
+    'background:#fff',
+    'z-index:-1',
+    'overflow:visible',
+  ].join(';');
+
   const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.width       = '210mm';
-  clone.style.minHeight   = '297mm';
-  clone.style.padding     = '8mm 10mm';
-  clone.style.boxSizing   = 'border-box';
-  clone.style.boxShadow   = 'none';
-  clone.style.border      = 'none';
-  clone.style.margin      = '0';
-  clone.style.background  = '#fff';
-  // Masquer les mentions légales
-  clone.querySelectorAll<HTMLElement>('.bul-legal,.bulletin-legal,.adm-legal,.bulletin-legal-corp')
-    .forEach(n => { n.style.display = 'none'; });
+
+  // Forcer dimensions A4 sur le clone
+  clone.style.cssText = [
+    'width:210mm',
+    'min-height:297mm',
+    'padding:0',
+    'margin:0',
+    'box-shadow:none',
+    'border:none',
+    'background:#fff',
+    'box-sizing:border-box',
+    'color-scheme:light',
+  ].join(';');
+
+  // Masquer mentions légales dans le clone
+  clone.querySelectorAll<HTMLElement>(
+    '.bul-legal,.bulletin-legal,.adm-legal,.bulletin-legal-corp'
+  ).forEach(n => { n.style.display = 'none'; });
+
   container.appendChild(clone);
   document.body.appendChild(container);
 
   try {
-    // Petite pause pour que le DOM soit rendu
-    await new Promise(r => setTimeout(r, 100));
+    // Laisser le DOM se rendre
+    await new Promise(r => setTimeout(r, 200));
+
+    // Dimensions réelles — px à 96dpi : 210mm ≈ 794px, 297mm ≈ 1123px
+    const W = clone.scrollWidth  || clone.offsetWidth  || 794;
+    const H = clone.scrollHeight || clone.offsetHeight || 1123;
 
     const canvas = await html2canvas(clone, {
-      scale:            2,          // haute résolution
-      useCORS:          true,
-      allowTaint:       true,
-      backgroundColor:  '#ffffff',
-      logging:          false,
-      width:            clone.scrollWidth  || 794,
-      height:           clone.scrollHeight || 1123,
-      windowWidth:      794,
-      windowHeight:     1123,
+      scale:           2,        // haute résolution
+      useCORS:         true,
+      allowTaint:      true,
+      backgroundColor: '#ffffff',
+      logging:         false,
+      width:           W,
+      height:          H,
+      windowWidth:     794,
+      windowHeight:    1123,
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -129,11 +194,13 @@ export async function downloadBulletinPDF(bulletinElementId: string, filename: s
     const pdfW    = pdf.internal.pageSize.getWidth();   // 210mm
     const pdfH    = pdf.internal.pageSize.getHeight();  // 297mm
 
-    const ratio  = canvas.width / canvas.height;
-    const finalW = pdfW;
-    const finalH = pdfW / ratio;
+    // Ratio image → dimensions PDF
+    const imgRatio = canvas.width / canvas.height;
+    const finalW   = pdfW;
+    const finalH   = pdfW / imgRatio;
 
     if (finalH > pdfH) {
+      // Bulletin multi-page (rare mais géré)
       let posY = 0;
       while (posY < finalH) {
         if (posY > 0) pdf.addPage();
@@ -145,17 +212,28 @@ export async function downloadBulletinPDF(bulletinElementId: string, filename: s
     }
 
     pdf.save(filename);
+  } catch (err) {
+    console.error('[bulletin-print] Erreur génération PDF:', err);
+    alert('Erreur lors de la génération du PDF. Essayez l\'impression navigateur.');
   } finally {
-    // Toujours nettoyer
-    document.body.removeChild(container);
+    // Toujours nettoyer le DOM
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
+    }
   }
 }
 
+// ============================================================================
+// HELPER
+// ============================================================================
+
 /**
- * Retourne l'id du div racine selon le templateId
+ * Retourne l'id du div racine selon le templateId.
+ * Avec le nouveau renderer default, on passe par data-bulletin-root
+ * donc n'importe quel id fonctionne — on garde pour compatibilité.
  */
 export function getBulletinRootId(templateId?: string): string {
   if (templateId === 'corporate') return 'bulletin-corp-root';
   if (templateId === 'admin')     return 'bul-admin-root';
-  return 'bulletin-root';
+  return 'bul-wrap'; // BulletinRendererDefault
 }

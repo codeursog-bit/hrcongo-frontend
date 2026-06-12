@@ -27,6 +27,11 @@ interface Employee {
   department?: { name: string };
   isSubjectToCnss?: boolean;
   isSubjectToIrpp?: boolean;
+  tolZone?: string;
+}
+
+interface CompanyInfo {
+  email?: string;
 }
 
 interface BonusTemplate {
@@ -75,6 +80,12 @@ interface Row {
   base: number | '';
   rate: number | '';
   amount: number;
+}
+
+interface ManualDeduction {
+  localId: string;
+  label: string;
+  amount: number | '';
 }
 
 interface SimResult {
@@ -266,16 +277,20 @@ export default function ManuelPayrollPage() {
   const [companyTaxes, setCompanyTaxes]     = useState<CompanyTax[]>([]);
   const [empLoans, setEmpLoans]             = useState<Loan[]>([]);
   const [empAdvances, setEmpAdvances]       = useState<Advance[]>([]);
+  const [companyInfo, setCompanyInfo]       = useState<CompanyInfo>({});
 
-  const [primes, setPrimes]         = useState<Row[]>([]);
-  const [indemnites, setIndemnites] = useState<Row[]>([]);
-  const [taxes, setTaxes]           = useState<Row[]>([]);
-  const [loans, setLoans]           = useState<Row[]>([]);
-  const [advances, setAdvances]     = useState<Row[]>([]);
+  const [primes, setPrimes]           = useState<Row[]>([]);
+  const [indemnites, setIndemnites]   = useState<Row[]>([]);
+  const [taxes, setTaxes]             = useState<Row[]>([]);
+  const [loans, setLoans]             = useState<Row[]>([]);
+  const [advances, setAdvances]       = useState<Row[]>([]);
+  const [retenues, setRetenues]       = useState<ManualDeduction[]>([]);  // ✅ retenues libres
 
   const [showPrimeSugg, setShowPrimeSugg]     = useState(false);
   const [showIndemSugg, setShowIndemSugg]     = useState(false);
   const [showTaxSugg, setShowTaxSugg]         = useState(false);
+  const [primeSuggSearch, setPrimeSuggSearch] = useState('');
+  const [indemSuggSearch, setIndemSuggSearch] = useState('');
 
   const [sim, setSim]               = useState<SimResult | null>(null);
   const [simLoading, setSimLoading] = useState(false);
@@ -298,11 +313,16 @@ export default function ManuelPayrollPage() {
     Promise.all([
       api.get<any>('/bonus-templates').catch(() => []),
       api.get<any>('/company-taxes').catch(() => []),
-    ]).then(([bt, ct]) => {
+      api.get<any>('/company/info').catch(() => ({})),
+    ]).then(([bt, ct, ci]) => {
       setBonusTemplates((Array.isArray(bt) ? bt : []).filter((t: BonusTemplate) => t.isActive));
       setCompanyTaxes((Array.isArray(ct) ? ct : []).filter((t: CompanyTax) => t.isActive));
+      setCompanyInfo(ci ?? {});
     });
   }, []);
+
+  // ✅ Vérifier si c'est l'entreprise parafifi — logique ancienneté/gratif/congés spéciale
+  const isParafifi = companyInfo?.email === 'admin@parafifi.cg';
 
   useEffect(() => {
     if (!selectedEmp) {
@@ -369,6 +389,70 @@ export default function ManuelPayrollPage() {
   };
 
   // ── ✅ Helper payload — base toujours renseignée, rate seulement si significatif ──
+  // ── Calculs spéciaux Parafifi ──────────────────────────────────────────────
+
+  // Ancienneté en années complètes (ex: 5 ans → 0.05, 29 ans → 0.29)
+  const getSeniorityRate = (hireDate?: string): number => {
+    if (!hireDate) return 0;
+    const hire = new Date(hireDate);
+    const now  = new Date();
+    let years  = now.getFullYear() - hire.getFullYear();
+    const m    = now.getMonth() - hire.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < hire.getDate())) years--;
+    return Math.max(0, years) / 100; // 5 ans → 0.05
+  };
+
+  const getSeniorityYears = (hireDate?: string): number => {
+    if (!hireDate) return 0;
+    const hire = new Date(hireDate);
+    const now  = new Date();
+    let years  = now.getFullYear() - hire.getFullYear();
+    const m    = now.getMonth() - hire.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < hire.getDate())) years--;
+    return Math.max(0, years);
+  };
+
+  // Ajouter prime d'ancienneté auto (Parafifi) : base = salaire de base, rate = années/100
+  const addAnciennete = () => {
+    if (!empDetail?.baseSalary || !empDetail?.hireDate) return;
+    const base  = Number(empDetail.baseSalary);
+    const years = getSeniorityYears(empDetail.hireDate);
+    if (years === 0) return;
+    const rate   = years / 100;  // 5 ans → 0.05 → affiché "0,05"
+    const amount = Math.round(base * rate);
+    const label  = "Prime d'ancienneté";
+    if (primes.some(p => p.label === label)) return;
+    setPrimes(prev => [...prev, { localId: uid(), label, base, rate, amount }]);
+  };
+
+  // Gratification = salaire de base / 2 (base brute, pas ajustée)
+  const addGratification = () => {
+    if (!empDetail?.baseSalary) return;
+    const base   = Number(empDetail.baseSalary);
+    const amount = Math.round(base / 2);
+    const label  = 'Gratification';
+    if (primes.some(p => p.label === label)) return;
+    setPrimes(prev => [...prev, { localId: uid(), label, base, rate: 0.5, amount }]);
+  };
+
+  // Congés payés (Parafifi) :
+  // Gratification = baseSalary / 2
+  // Brut annuel   = brut mois en cours × 12
+  // Base congé    = (gratification + brut annuel) / 12
+  const addCongesPaies = () => {
+    if (!empDetail?.baseSalary) return;
+    const baseSal      = Number(empDetail.baseSalary);
+    const gratif       = baseSal / 2;
+    // brut mois = baseSalary + toutes les primes déjà saisies
+    const brutMois     = baseSal + primes.reduce((s, p) => s + p.amount, 0);
+    const brutAnnuel   = brutMois * 12;
+    const baseConge    = Math.round((gratif + brutAnnuel) / 12);
+    const label        = 'Congés payés';
+    if (primes.some(p => p.label === label)) return;
+    // rate=1 car base = montant direct (pas de multiplicateur)
+    setPrimes(prev => [...prev, { localId: uid(), label, base: baseConge, rate: 1, amount: baseConge }]);
+  };
+
   const buildBonusPayload = (rows: Row[], taxable: boolean) =>
     rows.filter(r => n(r.amount) > 0).map(r => ({
       bonusType:  r.label || (taxable ? 'Prime' : 'Indemnité'),
@@ -397,10 +481,11 @@ export default function ManuelPayrollPage() {
     const baseSal = n(empDetail.baseSalary as any);
     if (!baseSal) return;
 
-    // ✅ Utilise buildBonusPayload — base et rate toujours présents
     const primesPayload = buildBonusPayload(primes, true);
     const indemPayload  = buildBonusPayload(indemnites, false);
     const manualBonuses = [...primesPayload, ...indemPayload];
+    const manualDeductionsPayload = retenues.filter(r => n(r.amount) > 0)
+      .map(r => ({ label: r.label || 'Retenue', amount: n(r.amount) }));
 
     setSimLoading(true); setSimError(null);
     try {
@@ -413,7 +498,8 @@ export default function ManuelPayrollPage() {
         overtimeHours25:  n(ot25),
         overtimeHours50:  n(ot50),
         overtimeHours100: n(ot100),
-        manualBonuses: manualBonuses.length > 0 ? manualBonuses : undefined,
+        manualBonuses:     manualBonuses.length > 0 ? manualBonuses : undefined,
+        manualDeductions:  manualDeductionsPayload.length > 0 ? manualDeductionsPayload : undefined,
       });
       setSim(result);
     } catch (e: any) {
@@ -432,6 +518,8 @@ export default function ManuelPayrollPage() {
       const primesP = buildBonusPayload(primes, true);
       const indemP  = buildBonusPayload(indemnites, false);
 
+      const manualDedP = retenues.filter(r => n(r.amount) > 0)
+        .map(r => ({ label: r.label || 'Retenue', amount: n(r.amount) }));
       const result: any = await api.post('/payrolls/manual', {
         employeeId: selectedEmp.id,
         month: MONTHS.findIndex(m => m === month) + 1,
@@ -439,7 +527,8 @@ export default function ManuelPayrollPage() {
         baseSalary: n(empDetail.baseSalary as any),
         overtimeHours10:  n(ot10), overtimeHours25: n(ot25),
         overtimeHours50:  n(ot50), overtimeHours100: n(ot100),
-        manualBonuses: [...primesP, ...indemP],
+        manualBonuses:    [...primesP, ...indemP],
+        manualDeductions: manualDedP.length > 0 ? manualDedP : undefined,
       });
       setCreatedId(result?.id || null);
       setSuccess(true);
@@ -454,7 +543,7 @@ export default function ManuelPayrollPage() {
     setSuccess(false); setSim(null); setSelectedEmp(null); setEmpSearch('');
     setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
     setWorkedDays(26); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
-    setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]);
+    setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
   };
 
   const hasOt = [ot10,ot25,ot50,ot100].some(v => n(v) > 0);
@@ -463,6 +552,7 @@ export default function ManuelPayrollPage() {
   const totalTaxes      = taxes.reduce((s,r) => s+n(r.amount), 0);
   const totalLoans      = loans.reduce((s,r) => s+n(r.amount), 0);
   const totalAdvances   = advances.reduce((s,r) => s+n(r.amount), 0);
+  const totalRetenues   = retenues.reduce((s,r) => s+n(r.amount), 0);
 
   const dbPrimeSugg = bonusTemplates.filter(t => t.isTaxable);
   const dbIndemSugg = bonusTemplates.filter(t => !t.isTaxable);
@@ -676,12 +766,15 @@ export default function ManuelPayrollPage() {
                     {showPrimeSugg && (
                       <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
                         className="absolute z-[999] left-0 top-full mt-1.5 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3 space-y-1.5">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Sélectionner</p>
+                        <input type="text" value={primeSuggSearch} onChange={e => setPrimeSuggSearch(e.target.value)}
+                          placeholder="Rechercher une prime…"
+                          className="w-full px-3 py-1.5 mb-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-700 dark:text-gray-300" />
                         <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                           {(dbPrimeSugg.length > 0
                             ? dbPrimeSugg.map(t => ({ name: t.name, amount: t.defaultAmount ? String(Number(t.defaultAmount)) : '' }))
                             : PRIME_SUGGESTIONS.map(s => ({ name: s, amount: '' }))
-                          ).map(({ name, amount }) => {
+                          ).filter(({ name }) => !primeSuggSearch || name.toLowerCase().includes(primeSuggSearch.toLowerCase()))
+                          .map(({ name, amount }) => {
                             const added = primes.some(r => r.label === name);
                             return (
                               <button key={name}
@@ -741,12 +834,15 @@ export default function ManuelPayrollPage() {
                     {showIndemSugg && (
                       <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
                         className="absolute z-[999] left-0 top-full mt-1.5 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Sélectionner</p>
+                        <input type="text" value={indemSuggSearch} onChange={e => setIndemSuggSearch(e.target.value)}
+                          placeholder="Rechercher une indemnité…"
+                          className="w-full px-3 py-1.5 mb-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400/30 text-gray-700 dark:text-gray-300" />
                         <div className="flex flex-wrap gap-1.5">
                           {(dbIndemSugg.length > 0
                             ? dbIndemSugg.map(t => ({ name: t.name, amount: t.defaultAmount ? String(Number(t.defaultAmount)) : '' }))
                             : INDEMNITE_SUGGESTIONS.map(s => ({ name: s, amount: '' }))
-                          ).map(({ name, amount }) => {
+                          ).filter(({ name }) => !indemSuggSearch || name.toLowerCase().includes(indemSuggSearch.toLowerCase()))
+                          .map(({ name, amount }) => {
                             const added = indemnites.some(r => r.label === name);
                             return (
                               <button key={name}
@@ -898,6 +994,88 @@ export default function ManuelPayrollPage() {
             </div>
           </Card>
 
+          {/* ════ SECTION RETENUES LIBRES ════ */}
+          <Card className="overflow-hidden">
+            <SectionHeader
+              icon={<span className="text-rose-600 dark:text-rose-400 text-xs font-black">−</span>}
+              title="Autres retenues"
+              subtitle="Retenues sans pré-enregistrement — déduites du net"
+              total={totalRetenues}
+              color="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800"
+            />
+            <div className="px-5 py-4 space-y-2">
+              <AnimatePresence initial={false}>
+                {retenues.map(r => (
+                  <motion.div key={r.localId} initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }}
+                    className="group flex items-center gap-2">
+                    <input type="text" value={r.label}
+                      onChange={e => setRetenues(prev => prev.map(x => x.localId === r.localId ? { ...x, label: e.target.value } : x))}
+                      placeholder="Ex : Remboursement, Trop-perçu, Cotisation…"
+                      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+                    <div className="relative w-32 shrink-0">
+                      <input type="number" value={r.amount || ''}
+                        onChange={e => setRetenues(prev => prev.map(x => x.localId === r.localId ? { ...x, amount: e.target.value === '' ? '' : Number(e.target.value) } : x))}
+                        placeholder="Montant"
+                        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400/30" />
+                      <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">F</span>
+                    </div>
+                    <button onClick={() => setRetenues(prev => prev.filter(x => x.localId !== r.localId))}
+                      className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0">
+                      <Trash2 size={13} />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              <button onClick={() => setRetenues(prev => [...prev, { localId: uid(), label: '', amount: '' }])}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition-colors mt-1">
+                <Plus size={11} /> Ajouter une retenue
+              </button>
+            </div>
+          </Card>
+
+          {/* ════ SUGGESTIONS PARAFIFI ════ */}
+          {isParafifi && empDetail && (
+            <Card className="overflow-visible border-2 border-dashed border-indigo-200 dark:border-indigo-800">
+              <div className="px-5 py-4">
+                <p className="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mb-3">
+                  🏢 Éléments spéciaux — Parafifi
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {/* Prime ancienneté */}
+                  <button onClick={addAnciennete}
+                    disabled={!empDetail.hireDate || getSeniorityYears(empDetail.hireDate) === 0 || primes.some(p => p.label === "Prime d'ancienneté")}
+                    className="flex flex-col items-start px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Prime d'ancienneté</span>
+                    <span className="text-[10px] text-indigo-500 mt-0.5">
+                      {empDetail.hireDate
+                        ? `${getSeniorityYears(empDetail.hireDate)} ans → taux ${(getSeniorityRate(empDetail.hireDate) * 100).toFixed(0)}% → ${Math.round(Number(empDetail.baseSalary) * getSeniorityRate(empDetail.hireDate)).toLocaleString('fr-FR')} F`
+                        : 'Date embauche manquante'}
+                    </span>
+                  </button>
+                  {/* Gratification */}
+                  <button onClick={addGratification}
+                    disabled={primes.some(p => p.label === 'Gratification')}
+                    className="flex flex-col items-start px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Gratification</span>
+                    <span className="text-[10px] text-indigo-500 mt-0.5">
+                      Salaire base ÷ 2 = {Math.round(Number(empDetail.baseSalary) / 2).toLocaleString('fr-FR')} F
+                    </span>
+                  </button>
+                  {/* Congés payés */}
+                  <button onClick={addCongesPaies}
+                    disabled={primes.some(p => p.label === 'Indemnité de congés payés')}
+                    className="flex flex-col items-start px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Congés payés</span>
+                    <span className="text-[10px] text-indigo-500 mt-0.5">
+                      Salaire base ÷ 2 = {Math.round(Number(empDetail.baseSalary) / 2).toLocaleString('fr-FR')} F
+                    </span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-indigo-400 mt-3">Ces éléments sont soumis à CNSS et ITS — ajoutés dans la section Primes.</p>
+              </div>
+            </Card>
+          )}
+
           {!selectedEmp && (
             <div className="flex items-center gap-3 px-4 py-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl">
               <AlertCircle size={14} className="text-sky-500 shrink-0" />
@@ -958,6 +1136,7 @@ export default function ManuelPayrollPage() {
                     cls={sim.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'} />
                   {sim.totalLoanDeduction    > 0 && <BLine label="Prêts"   value={`−${fmt(sim.totalLoanDeduction)} F`}    cls="text-red-500" sm />}
                   {sim.totalAdvanceDeduction > 0 && <BLine label="Avances" value={`−${fmt(sim.totalAdvanceDeduction)} F`} cls="text-red-500" sm />}
+                  {(sim as any).manualDeductionTotal > 0 && <BLine label="Autres retenues" value={`−${fmt((sim as any).manualDeductionTotal)} F`} cls="text-red-500" sm />}
 
                   <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
                     <div className="flex justify-between items-end">
