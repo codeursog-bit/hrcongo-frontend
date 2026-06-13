@@ -252,6 +252,121 @@ const InputRow = ({
   </motion.div>
 );
 
+
+// ─── Composant Calculatrice Cumuls ───────────────────────────────────────────
+// L'user tape "135040 + 128000 + 142000" → Enter ou "=" → résultat stocké
+
+interface CumulVals {
+  brut: number|''; netImp: number|''; chargesSal: number|''; chargesPat: number|'';
+  droits: number|''; pris: number|''; solde: number|'';
+}
+
+function evalExpr(expr: string): number {
+  // Évalue une expression simple avec + et -
+  // ex: "135040 + 128000 + 142000" → 405040
+  try {
+    const sanitized = expr.replace(/[^0-9+\-.\s]/g, '').trim();
+    if (!sanitized) return 0;
+    return sanitized.split('+').reduce((acc, part) => {
+      return acc + part.split('-').reduce((a, b, i) => i === 0 ? Number(b)||0 : a - (Number(b)||0), 0);
+    }, 0);
+  } catch { return 0; }
+}
+
+const CALC_FIELDS: { key: keyof CumulVals; label: string; color: string }[] = [
+  { key:'brut',        label:'Brut annuel',   color:'text-emerald-600 dark:text-emerald-400' },
+  { key:'netImp',      label:'Net imposable', color:'text-sky-600 dark:text-sky-400' },
+  { key:'chargesSal',  label:'Charges sal.',  color:'text-rose-600 dark:text-rose-400' },
+  { key:'chargesPat',  label:'Charges pat.',  color:'text-orange-600 dark:text-orange-400' },
+];
+
+const CONGE_FIELDS: { key: keyof CumulVals; label: string }[] = [
+  { key:'droits', label:'Droits' },
+  { key:'pris',   label:'Pris' },
+  { key:'solde',  label:'Solde' },
+];
+
+function CumulCalculatrice({ onValidate, values }: {
+  onValidate: (v: CumulVals) => void;
+  values: CumulVals;
+}) {
+  const [exprs, setExprs] = React.useState<Record<string, string>>({
+    brut:'', netImp:'', chargesSal:'', chargesPat:'', droits:'', pris:'', solde:'',
+  });
+  const [results, setResults] = React.useState<Record<string, number>>({});
+
+  const compute = (key: string, expr: string) => {
+    const val = evalExpr(expr);
+    const newResults = { ...results, [key]: val };
+    setResults(newResults);
+    // Notifier le parent avec toutes les valeurs
+    const merged: any = { ...values };
+    Object.entries(newResults).forEach(([k, v]) => { merged[k] = v || ''; });
+    onValidate(merged);
+  };
+
+  const handleKey = (key: string, expr: string, e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === '=') {
+      e.preventDefault();
+      compute(key, expr);
+    }
+  };
+
+  const handleBlur = (key: string, expr: string) => {
+    if (expr.trim()) compute(key, expr);
+  };
+
+  const renderField = (fieldKey: string, label: string, colorCls = '') => {
+    const expr   = exprs[fieldKey] ?? '';
+    const result = results[fieldKey];
+    const stored = (values as any)[fieldKey];
+    const display = result != null ? result : (stored ? Number(stored) : null);
+
+    return (
+      <div key={fieldKey}>
+        <p className={`text-[10px] font-bold mb-1 ${colorCls || 'text-gray-400'}`}>{label}</p>
+        <div className="relative">
+          <input
+            type="text"
+            value={expr}
+            onChange={e => setExprs(prev => ({ ...prev, [fieldKey]: e.target.value }))}
+            onKeyDown={e => handleKey(fieldKey, expr, e)}
+            onBlur={() => handleBlur(fieldKey, expr)}
+            placeholder="ex: 135040 + 128000 + 142000"
+            className="w-full pl-3 pr-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+          />
+        </div>
+        {display != null && display > 0 && (
+          <p className="text-right text-xs font-black font-mono text-sky-600 dark:text-sky-400 mt-0.5">
+            = {Math.round(display).toLocaleString('fr-FR')} F
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[10px] text-gray-400">
+        Tapez les montants séparés par <strong>+</strong> puis appuyez sur <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[9px]">Entrée</kbd> ou <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[9px]">=</kbd>
+      </p>
+
+      {/* Cumuls principaux */}
+      <div className="grid grid-cols-2 gap-3">
+        {CALC_FIELDS.map(({ key, label, color }) => renderField(key, label, color))}
+      </div>
+
+      {/* Congés */}
+      <div className="pt-2 border-t border-gray-100 dark:border-gray-700/50">
+        <p className="text-[10px] font-bold text-gray-400 mb-2">Congés annuels (jours)</p>
+        <div className="grid grid-cols-3 gap-2">
+          {CONGE_FIELDS.map(({ key, label }) => renderField(key, label))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page principale ─────────────────────────────────────────────────────────
 
 export default function ManuelPayrollPage() {
@@ -1132,51 +1247,29 @@ export default function ManuelPayrollPage() {
                   {(['auto','manuel'] as const).map(m => (
                     <button key={m} onClick={() => setCumulMode(m)}
                       className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${cumulMode===m?'bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-100 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>
-                      {m === 'auto' ? 'Auto (YTD)' : 'Manuel'}
+                      {m === 'auto' ? 'Auto (YTD)' : 'Calculatrice'}
                     </button>
                   ))}
                 </div>
               </div>
 
               {cumulMode === 'manuel' ? (
-                <div className="space-y-3">
-                  <p className="text-[10px] text-gray-400">Saisissez les cumuls à afficher sur le bulletin (Jan → mois actuel)</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      { label:'Brut annuel',     val:cumulBrut,       set:setCumulBrut },
-                      { label:'Net imposable',   val:cumulNetImp,     set:setCumulNetImp },
-                      { label:'Charges sal.',    val:cumulChargesSal, set:setCumulChargesSal },
-                      { label:'Charges pat.',    val:cumulChargesPat, set:setCumulChargesPat },
-                    ] as const).map(({ label, val, set }) => (
-                      <div key={label}>
-                        <p className="text-[10px] text-gray-400 mb-1">{label}</p>
-                        <div className="relative">
-                          <input type="number" value={val}
-                            onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
-                            placeholder="0"
-                            className="w-full pl-3 pr-7 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
-                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">F</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-gray-400 pt-1">Congés annuels</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([
-                      { label:'Droits', val:congesDroits, set:setCongesDroits },
-                      { label:'Pris',   val:congesPris,   set:setCongesPris },
-                      { label:'Solde',  val:congesSolde,  set:setCongesSolde },
-                    ] as const).map(({ label, val, set }) => (
-                      <div key={label}>
-                        <p className="text-[10px] text-gray-400 mb-1">{label}</p>
-                        <input type="number" value={val}
-                          onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
-                          placeholder="0"
-                          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <CumulCalculatrice
+                  onValidate={(vals) => {
+                    setCumulBrut(vals.brut);
+                    setCumulNetImp(vals.netImp);
+                    setCumulChargesSal(vals.chargesSal);
+                    setCumulChargesPat(vals.chargesPat);
+                    setCongesDroits(vals.droits);
+                    setCongesPris(vals.pris);
+                    setCongesSolde(vals.solde);
+                  }}
+                  values={{
+                    brut: cumulBrut, netImp: cumulNetImp,
+                    chargesSal: cumulChargesSal, chargesPat: cumulChargesPat,
+                    droits: congesDroits, pris: congesPris, solde: congesSolde,
+                  }}
+                />
               ) : (
                 <p className="text-xs text-gray-400 text-center py-4">
                   Les cumuls seront calculés automatiquement depuis les bulletins validés (Jan → mois actuel).
