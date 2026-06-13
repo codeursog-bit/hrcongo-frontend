@@ -2046,7 +2046,7 @@ export default function ManuelPayrollPage() {
       // ✅ Rate seulement si saisi et différent de 0 et 1
       // Si pas de taux ou taux=1 → gain=base, on n'envoie pas rate
       // Les HS ont leur propre logique dans payroll-items_service, pas touchées ici
-      rate:       n(r.rate) > 0 && n(r.rate) !== 1 ? n(r.rate) : undefined,
+      rate: n(r.rate) > 0 ? n(r.rate) : undefined,
       isTaxable:  taxable,
       isCnss:     taxable,
       fiscalType: taxable ? 'TAXABLE_CNSS' : 'NON_TAXABLE',
