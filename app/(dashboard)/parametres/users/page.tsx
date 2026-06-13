@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -192,7 +191,7 @@ export default function UserManagementPage() {
          </div>
          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
             <p className="text-xs text-gray-500 uppercase font-bold">Administrateurs</p>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{users.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length}</p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{users.filter(u => u.role === 'ADMIN').length}</p>
          </div>
          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
             <p className="text-xs text-gray-500 uppercase font-bold">Actifs</p>
@@ -225,7 +224,7 @@ export default function UserManagementPage() {
                   className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium"
                >
                   <option value="All">Tous les rôles</option>
-                  {Object.keys(ROLE_CONFIG).map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
+                  {Object.keys(ROLE_CONFIG).filter(r => r !== 'SUPER_ADMIN').map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
                </select>
             </div>
          </div>
@@ -304,7 +303,7 @@ export default function UserManagementPage() {
                         <div>
                             <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Rôle système</label>
                             <div className="grid grid-cols-1 gap-2">
-                                {Object.entries(ROLE_CONFIG).map(([key, config]) => (
+                                {Object.entries(ROLE_CONFIG).filter(([key]) => key !== 'SUPER_ADMIN').map(([key, config]) => (
                                     <label 
                                         key={key} 
                                         className={`

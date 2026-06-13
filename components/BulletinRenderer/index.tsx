@@ -93,8 +93,13 @@ function itemTaux(item: any): string {
   if (item.rate == null || item.rate === undefined) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
-  // ✅ Rate entre 0 et 1 → décimal (ancienneté 0,05 / 0,29 / gratif 0,50)
-  if (r > 0 && r < 1) return r.toFixed(2).replace('.', ',');
+  // ✅ Rate entre 0 et 1 :
+  // - Ancienneté (rate=années/100, ex: 0.11) → afficher "11 ans"
+  // - Autres (gratification 0.5 etc.) → afficher décimal "0,50"
+  if (r > 0 && r < 1) {
+    if (/anc[iè]/i.test(label)) return `${Math.round(r * 100)} ans`;
+    return r.toFixed(2).replace('.', ',');
+  }
   // ✅ Rate = 1 → afficher "1" (congés, montant fixe avec base)
   if (r === 1) return '1';
   // Rate > 1 (multiplicateur HS)
@@ -213,8 +218,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const indems = indemItems;
 
   // ── Totaux pour la ligne "Total" avant net à payer ──────────────────────
-  const totalGains = gains.reduce((s: number, i: any) => s + nv(i.amount), 0)
-    + indems.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
 
   const CNSS_PAT_SUMMARY   = ['CNSS_PAT_SUMMARY','CNSS_PATRON_SUMMARY','CNSS_PAT','CNSS_EMPLOYER_TOTAL'];
@@ -246,8 +249,11 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     !TUS_CODES.includes(i.code) && !isCnssPatSummary(i)
   );
 
-const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.code));
+  const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.code));
 
+  // ✅ Totaux pour ligne "Total" — déclarés après ctaxEmp et loanItems
+  const totalGains    = gains.reduce((s: number, i: any) => s + nv(i.amount), 0)
+    + indems.reduce((s: number, i: any) => s + nv(i.amount), 0);
   const totalRetenues = cnssSal + itsAmount
     + ctaxEmp.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0);
@@ -258,7 +264,8 @@ const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.
   const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
   const fullName   = [e.lastName?.toUpperCase(), e.firstName].filter(Boolean).join(' ');
   const cat        = formatCategorie(e.professionalCategory);
-  const deptName   = e.department?.name ?? '';
+  const rawDept  = e.department?.name ?? '';
+  const deptName = /no.dep/i.test(rawDept) || rawDept.trim() === '' ? '' : rawDept;
 
   let gainRef  = 1000;
   let patRef   = 3500;
@@ -360,7 +367,7 @@ const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.
                 {fullName || '—'}
               </td>
               <td style={{ width:'14%', padding:'4px 6px', borderRight: BDB, fontSize:9, color:K }}>
-                Affectation : <strong>{deptName || '—'}</strong>
+                {deptName ? <>Affectation : <strong>{deptName}</strong></> : null}
               </td>
               <td style={{ width:'12%', padding:'4px 6px', borderRight: BDB, fontSize:9, color:K }}>
                 Poste : <strong>{e.position || '—'}</strong>
@@ -505,7 +512,7 @@ const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.
               {/* ── ITS ─────────────────────────────────────────────── */}
               {itsAmount > 0 && (
                 <Row rub={4520} label="ITS Mois"
-                  base={fmt(itsBase)} taux="" ret={fmt(itsAmount)} />
+                  base={fmt(itsBase)} taux="Barème" ret={fmt(itsAmount)} />
               )}
 
               {/* ── Cotisations salariales supplémentaires ──────────── */}
@@ -558,39 +565,17 @@ const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.
                 <td style={{ borderLeft:BD, background:'#fff' }} />
                 <td style={{ borderLeft:BD, borderRight:BD, background:'#fff' }} />
               </tr>
+
+              {/* ✅ Ligne Total — dans tbody pour respecter colonnes main-grid */}
+              <TotalRow
+                label="Total"
+                gain={fmtZ(totalBrut + indems.reduce((s: number, i: any) => s + nv(i.amount), 0))}
+                ret={fmtZ(totalRetenues)}
+                patMt={fmtZ(totalPat)}
+              />
             </tbody>
           </table>
         </div>
-
-        {/* ══ LIGNE TOTAL GAINS / RETENUES ════════════════════════════ */}
-        <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', border:BDB, borderTop:'none', flexShrink:0 }}>
-          <tbody>
-            <tr style={{ background:'#e2e2e2' }}>
-              <td colSpan={4} style={{ borderLeft:BD, borderTop:'none', borderBottom:'none', borderRight:'none',
-                padding:'3px 5px', fontSize:FS_TOT, fontWeight:900, color:K, fontFamily:SANS,
-                textTransform:'uppercase', height:TOT_H, lineHeight:`${TOT_H}px`, verticalAlign:'middle' }}>
-                Total
-              </td>
-              <td style={{ borderLeft:BD, borderTop:'none', borderBottom:'none', borderRight:'none',
-                textAlign:'right', fontFamily:FONT, fontSize:FS_TOT, fontWeight:900, color:K,
-                height:TOT_H, lineHeight:`${TOT_H}px`, verticalAlign:'middle', padding:'0 5px' }}>
-                {fmtZ(totalBrut + indems.reduce((s: number, i: any) => s + nv(i.amount), 0))}
-              </td>
-              <td style={{ borderLeft:BD, borderTop:'none', borderBottom:'none', borderRight:'none',
-                textAlign:'right', fontFamily:FONT, fontSize:FS_TOT, fontWeight:900, color:K,
-                height:TOT_H, lineHeight:`${TOT_H}px`, verticalAlign:'middle', padding:'0 5px' }}>
-                {fmtZ(totalRetenues)}
-              </td>
-              <td style={{ borderLeft:BD, borderTop:'none', borderBottom:'none', borderRight:'none',
-                height:TOT_H }} />
-              <td style={{ borderLeft:BD, borderTop:'none', borderBottom:'none', borderRight:BD,
-                textAlign:'right', fontFamily:FONT, fontSize:FS_TOT, fontWeight:900, color:K,
-                height:TOT_H, lineHeight:`${TOT_H}px`, verticalAlign:'middle', padding:'0 5px' }}>
-                {fmtZ(totalPat)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
 
         {/* ══ MODE RÈGLEMENT + NET À PAYER ════════════════════════════ */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginTop:4, border:BDB, flexShrink:0 }}>

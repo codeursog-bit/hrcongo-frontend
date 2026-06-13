@@ -286,6 +286,16 @@ export default function ManuelPayrollPage() {
   const [advances, setAdvances]       = useState<Row[]>([]);
   const [retenues, setRetenues]       = useState<ManualDeduction[]>([]);  // ✅ retenues libres
 
+  // ── Cumuls annuels — mode auto (ytd BDD) ou manuel (saisie) ─────────────
+  const [cumulMode, setCumulMode]             = useState<'auto'|'manuel'>('manuel');
+  const [cumulBrut, setCumulBrut]             = useState<number|''>('');
+  const [cumulNetImp, setCumulNetImp]         = useState<number|''>('');
+  const [cumulChargesSal, setCumulChargesSal] = useState<number|''>('');
+  const [cumulChargesPat, setCumulChargesPat] = useState<number|''>('');
+  const [congesDroits, setCongesDroits]       = useState<number|''>('');
+  const [congesPris, setCongesPris]           = useState<number|''>('');
+  const [congesSolde, setCongesSolde]         = useState<number|''>('');
+
   const [showPrimeSugg, setShowPrimeSugg]     = useState(false);
   const [showIndemSugg, setShowIndemSugg]     = useState(false);
   const [showTaxSugg, setShowTaxSugg]         = useState(false);
@@ -386,6 +396,31 @@ export default function ManuelPayrollPage() {
     const id    = tax.id;
     const name  = tax.name;
     setTaxes(prev => [...prev, { localId: uid(), refId: id, label: name, base: '', rate: 1, amount: amt }]);
+  };
+
+  // ── Détection auto prime par label — universel ──────────────────────────────
+  const applyAutoIfNeeded = (localId: string, label: string) => {
+    if (!empDetail?.baseSalary) return;
+    const l    = label.toLowerCase().trim();
+    const base = Number(empDetail.baseSalary);
+    if (/anc[iè]/i.test(l)) {
+      const years = getSeniorityYears(empDetail.hireDate);
+      if (years > 0) {
+        const rate = years / 100;
+        setPrimes(prev => prev.map(r => r.localId === localId ? { ...r, base, rate, amount: Math.round(base * rate) } : r));
+      }
+      return;
+    }
+    if (/gratif/i.test(l)) {
+      setPrimes(prev => prev.map(r => r.localId === localId ? { ...r, base, rate: 0.5, amount: Math.round(base / 2) } : r));
+      return;
+    }
+    if (/cong[eé]/i.test(l)) {
+      const brutMois  = base + primes.filter(p => p.localId !== localId).reduce((s, p) => s + p.amount, 0);
+      const baseConge = Math.round((base / 2 + brutMois * 12) / 12);
+      setPrimes(prev => prev.map(r => r.localId === localId ? { ...r, base: baseConge, rate: 1, amount: baseConge } : r));
+      return;
+    }
   };
 
   // ── ✅ Helper payload — base toujours renseignée, rate seulement si significatif ──
@@ -528,6 +563,13 @@ export default function ManuelPayrollPage() {
         overtimeHours10:  n(ot10), overtimeHours25: n(ot25),
         overtimeHours50:  n(ot50), overtimeHours100: n(ot100),
         manualBonuses:    [...primesP, ...indemP],
+        cumulBrut:        cumulMode === 'manuel' ? (n(cumulBrut) || undefined)       : undefined,
+        cumulNetImp:      cumulMode === 'manuel' ? (n(cumulNetImp) || undefined)     : undefined,
+        cumulChargesSal:  cumulMode === 'manuel' ? (n(cumulChargesSal) || undefined) : undefined,
+        cumulChargesPat:  cumulMode === 'manuel' ? (n(cumulChargesPat) || undefined) : undefined,
+        congesDroits:     n(congesDroits) || undefined,
+        congesPris:       n(congesPris)   || undefined,
+        congesSolde:      n(congesSolde)  || undefined,
         manualDeductions: manualDedP.length > 0 ? manualDedP : undefined,
       });
       setCreatedId(result?.id || null);
@@ -544,6 +586,8 @@ export default function ManuelPayrollPage() {
     setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
     setWorkedDays(26); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
+    setCumulBrut(''); setCumulNetImp(''); setCumulChargesSal(''); setCumulChargesPat('');
+    setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setCumulMode('manuel');
   };
 
   const hasOt = [ot10,ot25,ot50,ot100].some(v => n(v) > 0);
@@ -746,7 +790,10 @@ export default function ManuelPayrollPage() {
                 {primes.map(row => (
                   <InputRow key={row.localId} row={row}
                     placeholder="Ex : Prime d'ancienneté, de rendement…"
-                    onChangeLabel={v => updateRow(setPrimes, row.localId, { label: v })}
+                    onChangeLabel={v => {
+                      updateRow(setPrimes, row.localId, { label: v });
+                      applyAutoIfNeeded(row.localId, v);
+                    }}
                     onChangeBase={v => updateRow(setPrimes, row.localId, { base: v })}
                     onChangeRate={v => updateRow(setPrimes, row.localId, { rate: v })}
                     onRemove={() => removeRow(setPrimes, row.localId)} />
@@ -1073,6 +1120,68 @@ export default function ManuelPayrollPage() {
                 </div>
                 <p className="text-[10px] text-indigo-400 mt-3">Ces éléments sont soumis à CNSS et ITS — ajoutés dans la section Primes.</p>
               </div>
+            </Card>
+          )}
+
+          {/* ════ CUMULS ANNUELS + CONGÉS ════ */}
+          {selectedEmp && (
+            <Card className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Cumuls annuels &amp; Congés</p>
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5">
+                  {(['auto','manuel'] as const).map(m => (
+                    <button key={m} onClick={() => setCumulMode(m)}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${cumulMode===m?'bg-white dark:bg-gray-600 text-gray-800 dark:text-gray-100 shadow-sm':'text-gray-400 hover:text-gray-600'}`}>
+                      {m === 'auto' ? 'Auto (YTD)' : 'Manuel'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {cumulMode === 'manuel' ? (
+                <div className="space-y-3">
+                  <p className="text-[10px] text-gray-400">Saisissez les cumuls à afficher sur le bulletin (Jan → mois actuel)</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { label:'Brut annuel',     val:cumulBrut,       set:setCumulBrut },
+                      { label:'Net imposable',   val:cumulNetImp,     set:setCumulNetImp },
+                      { label:'Charges sal.',    val:cumulChargesSal, set:setCumulChargesSal },
+                      { label:'Charges pat.',    val:cumulChargesPat, set:setCumulChargesPat },
+                    ] as const).map(({ label, val, set }) => (
+                      <div key={label}>
+                        <p className="text-[10px] text-gray-400 mb-1">{label}</p>
+                        <div className="relative">
+                          <input type="number" value={val}
+                            onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
+                            placeholder="0"
+                            className="w-full pl-3 pr-7 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">F</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-gray-400 pt-1">Congés annuels</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { label:'Droits', val:congesDroits, set:setCongesDroits },
+                      { label:'Pris',   val:congesPris,   set:setCongesPris },
+                      { label:'Solde',  val:congesSolde,  set:setCongesSolde },
+                    ] as const).map(({ label, val, set }) => (
+                      <div key={label}>
+                        <p className="text-[10px] text-gray-400 mb-1">{label}</p>
+                        <input type="number" value={val}
+                          onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
+                          placeholder="0"
+                          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 text-center py-4">
+                  Les cumuls seront calculés automatiquement depuis les bulletins validés (Jan → mois actuel).
+                </p>
+              )}
             </Card>
           )}
 
