@@ -513,7 +513,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               {/* ── ITS ─────────────────────────────────────────────── */}
               {itsAmount > 0 && (
                 <Row rub={4520} label="ITS Mois"
-                  base={fmt(itsBase)} taux=" ret={fmt(itsAmount)} />
+                  base={fmt(itsBase)} taux="" ret={fmt(itsAmount)} />
               )}
 
               {/* ── Cotisations salariales supplémentaires ──────────── */}
@@ -556,7 +556,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               })}
 
               {/* ── Spacer ──────────────────────────────────────────── */}
-              <tr id="grid-spacer" style={{ background:'#fff' }}>
+              <tr id="grid-spacer" style={{ background: '#fff' }}>
                 <td style={{ borderLeft:BD, borderRight:'none', borderTop:'none', borderBottom:'none', background:'#fff' }} />
                 <td style={{ borderLeft:BD, background:'#fff' }} />
                 <td style={{ borderLeft:BD, background:'#fff' }} />
