@@ -779,7 +779,7 @@ export default function ManuelPayrollPage() {
                       {soldeConge}j de congés disponibles
                     </p>
                     <p className="text-[10px] text-amber-600 dark:text-amber-400">
-                      Base congé : <strong>{baseCongeCalc.toLocaleString('fr-FR')} F</strong> (ytd ÷ 12)
+                      Indemnité congé : <strong>{baseCongeCalc.toLocaleString('fr-FR')} F/an</strong> (ytd ÷ 12)
                     </p>
                   </div>
                 </div>
@@ -1234,7 +1234,7 @@ export default function ManuelPayrollPage() {
               </button>
               {(n(carryOverBrut) > 0) && (
                 <p className="text-[10px] text-center text-gray-400 mt-2">
-                  Base congé estimée : <strong className="text-emerald-600">{Math.round(n(carryOverBrut) / 12).toLocaleString('fr-FR')} F/mois</strong>
+                  Indemnité congé estimée : <strong className="text-emerald-600">{Math.round(n(carryOverBrut) / 12).toLocaleString('fr-FR')} F/an</strong>
                 </p>
               )}
             </Card>
