@@ -519,10 +519,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               {/* ── TUS ─────────────────────────────────────────────── */}
               {tusCnss > 0 && (()=>{ patRef+=10; return <Row key="tc" rub={patRef}
                 label="Taxe unique sur salaire (CNSS)"
-                base={fmtZ(totalBrut)} patTaux="5,475%" patMt={fmt(tusCnss)} />; })()}
+                base={fmtZ(totalBrut)} patTaux="5,475" patMt={fmt(tusCnss)} />; })()}
               {tusDgi  > 0 && (()=>{ patRef+=10; return <Row key="td" rub={patRef}
                 label="Taxe unique sur salaire (DGI)"
-                base={fmtZ(totalBrut)} patTaux="2,025%" patMt={fmt(tusDgi)} />; })()}
+                base={fmtZ(totalBrut)} patTaux="2,025" patMt={fmt(tusDgi)} />; })()}
 
               {/* ── Autres cotisations patronales ───────────────────── */}
               {ctaxPat.map((item: any) => {
