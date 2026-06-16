@@ -206,7 +206,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   // ✅ Congés depuis LeaveBalance (via ytd.droitsConge) — noms corrects
   const congesDroits  = nv(ytd.droitsConge ?? (payroll as any).congesDroits ?? 0);
   const congesPris    = nv(ytd.priseConge  ?? (payroll as any).congesPris   ?? 0);
-  const congesSolde   = nv(ytd.soldeConge  ?? (payroll as any).congesSolde  ?? 0);
+  const _soldeRaw     = nv(ytd.soldeConge  ?? (payroll as any).congesSolde  ?? 0);
+  // ✅ Si solde=0 mais droits>0 et pris>0 → calculer solde = droits - pris
+  const congesSolde   = _soldeRaw > 0 ? _soldeRaw : Math.max(0, congesDroits - congesPris);
 
   const ytdGross      = nv(ytd.grossSalary);
   const ytdCnss       = nv(ytd.cnssSalarial);
@@ -630,19 +632,17 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         {/* ══ LIGNE MOIS ══════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginTop:4, border:BDB, flexShrink:0 }}>
           <colgroup>
-            <col style={{ width:'7%'  }} />
-            <col style={{ width:'19%' }} />
-            <col style={{ width:'19%' }} />
-            <col style={{ width:'19%' }} />
-            <col style={{ width:'18%' }} />
-            <col style={{ width:'18%' }} />
+            <col style={{ width:'8%'  }} />
+            <col style={{ width:'23%' }} />
+            <col style={{ width:'23%' }} />
+            <col style={{ width:'23%' }} />
+            <col style={{ width:'23%' }} />
           </colgroup>
           <thead>
             <tr>
               <th style={TH(TH_BG, { fontSize:8 })}> </th>
               <th style={TH(TH_BG, { fontSize:8 })}>Brut</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Net imposable</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Net à payer</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
             </tr>
@@ -652,7 +652,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>Mois</td>
               <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(totalBrut)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(netSalary)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(cnssSal)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD, borderRight:BD })}>{fmtD(cnssPatOnly)}</td>
             </tr>
@@ -690,7 +689,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <th style={TH(TH_BG, { fontSize:8 })}> </th>
               <th style={TH(TH_BG, { fontSize:8 })}>Brut</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Net imposable</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Net annuel</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
               <th colSpan={3} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
@@ -712,7 +710,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD })}>Année</td>
               <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytdGross)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdNetImp)}</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytdNetSalary)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdChargesSal)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdCnssEmp)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{congesDroits > 0 ? fmtD(congesDroits) : ''}</td>
