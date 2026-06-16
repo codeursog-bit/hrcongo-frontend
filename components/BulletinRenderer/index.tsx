@@ -1,12 +1,10 @@
 'use client';
 // ============================================================================
-// BulletinRendererDefault v9
-// ✅ Fix en-tête : colonnes info salarié dans le bon ordre (sans .map décalé)
-// ✅ Entreprise (RCCM, NIU, Conv., CNSS Ent.) → lignes dédiées entreprise
-// ✅ Employé (Matr., N° CNSS/CRF) → ligne dédiée employé
-// ✅ RCCM seul sur sa ligne (CNSS Ent. déplacé sur ligne Conv.)
-// ✅ Département masqué si vide ou "no departement"
-// ✅ Tout le reste identique v8 — design intact
+// BulletinRendererDefault v8
+// ✅ Cumuls Année : grossSalary + cnssSalarial + cnssEmployer + its depuis ytd
+// ✅ Charges Sal Année = ytd.cnssSalarial uniquement (CNSS 4% — pas ITS ni TOL)
+// ✅ Net imposable Année = ytd.grossSalary - ytd.cnssSalarial
+// ✅ Tout le reste identique v7 — design intact
 // ============================================================================
 
 import React, { useMemo } from 'react';
@@ -47,15 +45,18 @@ function seniority(h?: string): string {
 
 function formatCategorie(code: string | null | undefined): string {
   if (!code) return '—';
+  // "PH5-E2" / "C5-E2" / "I11-E1" → "Cat.5 Éch.2" / "Cat.11 Éch.1"
   const m = code.match(/^[A-Z]+(\d+)-E(\d+)$/i);
   if (m) return `Cat.${m[1]} Éch.${m[2]}`;
+  // BTP employés : "E8-1" → "Cat.8 Éch.1"
   const m2 = code.match(/^E(\d+)-(\d+)$/i);
   if (m2) return `Cat.${m2[1]} Éch.${m2[2]}`;
-  return code;
+  return code; // fallback : affiche tel quel
 }
 
 function cleanLabel(label: string): string {
   if (!label) return label;
+  // ✅ TOL : raccourcir le label pour éviter le débordement
   if (/taxe.{0,10}occupation.{0,10}locaux/i.test(label)) return 'T.O.L.';
   return label
     .replace(/\s*\(\d+h\)\s*—[^%]*/i, '')
@@ -88,14 +89,20 @@ function itemTaux(item: any): string {
     || /heure[s]?\s+suppl/i.test(label);
   if (isOT) { const q = nv(item.quantity); if (q > 0) return String(q); }
   const qty = item.quantity; if (qty != null && nv(qty) !== 0) return String(nv(qty));
+  // ✅ Si rate absent ou null → rien (gain = base direct, pas de calcul)
   if (item.rate == null || item.rate === undefined) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
+  // ✅ Rate entre 0 et 1 :
+  // - Ancienneté (rate=années/100, ex: 0.11) → afficher "11 ans"
+  // - Autres (gratification 0.5 etc.) → afficher décimal "0,50"
   if (r > 0 && r < 1) {
     if (/anc[iè]/i.test(label)) return String(Math.round(r * 100));
     return r.toFixed(2).replace('.', ',');
   }
+  // ✅ Rate = 1 → afficher "1" (congés, montant fixe avec base)
   if (r === 1) return '1';
+  // Rate > 1 (multiplicateur HS)
   if (r > 1 && r <= 3) return r.toFixed(2).replace('.', ',');
   return String(r);
 }
@@ -192,23 +199,31 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const tusDgi          = nv((payroll as any).tusDgiAmount);
   const tusCnss         = nv((payroll as any).tusCnssAmount);
 
-  // ── Congés annuels ─────────────────────────────────────────────────────────
+  // ── Cumuls annuels ─────────────────────────────────────────────────────────
+  // Tous les champs viennent du backend (somme réelle Jan → mois actuel)
+  // Le front ne calcule RIEN — il lit et affiche.
+  // Congés annuels — depuis ytd si disponibles
+  // ✅ Congés depuis LeaveBalance (via ytd.droitsConge) — noms corrects
   const congesDroits  = nv(ytd.droitsConge ?? (payroll as any).congesDroits ?? 0);
   const congesPris    = nv(ytd.priseConge  ?? (payroll as any).congesPris   ?? 0);
   const _soldeRaw     = nv(ytd.soldeConge  ?? (payroll as any).congesSolde  ?? 0);
+  // ✅ Si solde=0 mais droits>0 et pris>0 → calculer solde = droits - pris
   const congesSolde   = _soldeRaw > 0 ? _soldeRaw : Math.max(0, congesDroits - congesPris);
 
-  // ── Cumuls annuels ─────────────────────────────────────────────────────────
   const ytdGross      = nv(ytd.grossSalary);
   const ytdCnss       = nv(ytd.cnssSalarial);
   const ytdIts        = nv(ytd.its);
   const ytdCnssEmp    = nv(ytd.cnssEmployer);
-  const ytdNetImp    = nv(ytd.netImposable)   || (ytdGross - ytdCnss);
-  const ytdNetSalary = nv(ytd.netSalaryAnnual) || nv(ytd.netSalary);
-  const ytdChargesSal = ytdCnss;
+  // ✅ Net imposable et Net annuel — viennent du back (carryOver inclus)
+  const ytdNetImp    = nv(ytd.netImposable)   || (ytdGross - ytdCnss);  // back calcule, fallback local
+  const ytdNetSalary = nv(ytd.netSalaryAnnual) || nv(ytd.netSalary);   // net à payer annuel
+  const ytdChargesSal = ytdCnss;  // ✅ Charges sal = CNSS salariale uniquement (4%)
 
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
   const indems = indemItems;
+
+  // ── Totaux pour la ligne "Total" avant net à payer ──────────────────────
+
 
   const CNSS_PAT_SUMMARY   = ['CNSS_PAT_SUMMARY','CNSS_PATRON_SUMMARY','CNSS_PAT','CNSS_EMPLOYER_TOTAL'];
   const CNSS_PAT_INDIVIDUAL = ['CNSS_EMP_PENSION','CNSS_EMP_FAMILY','CNSS_EMP_ACCIDENT',
@@ -229,6 +244,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     return false;
   };
 
+  // ✅ Autres retenues manuelles — affichage direct sans base/taux
   const manualDeductions = retenueItems.filter((i: any) => i.code === 'MANUAL_DEDUCTION');
 
   const ctaxEmp = cotisItems.filter((i: any) =>
@@ -245,6 +261,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
   const loanItems = retenueItems.filter((i: any) => ['LOAN','ADVANCE'].includes(i.code));
 
+  // ✅ Totaux pour ligne "Total" — déclarés après ctaxEmp et loanItems
   const totalGains    = gains.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + indems.reduce((s: number, i: any) => s + nv(i.amount), 0);
   const totalRetenues = cnssSal + itsAmount
@@ -254,23 +271,15 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
 
   const totalPat    = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
     + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
+  // ✅ Charges Pat colonne = CNSS patron seul (pension+famille+accident) — pas TUS ni DGI
+  // ✅ Charges Pat = CNSS patron (pension+famille+accident) + TUS CNSS — pas TUS DGI
   const cnssPatOnly = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss;
 
   const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
   const fullName   = [e.lastName?.toUpperCase(), e.firstName].filter(Boolean).join(' ');
   const cat        = formatCategorie(e.professionalCategory);
-
-  // ✅ Département : masquer si vide ou "no departement"
   const rawDept  = e.department?.name ?? '';
   const deptName = /no.dep/i.test(rawDept) || rawDept.trim() === '' ? '' : rawDept;
-  const showDept = deptName.length > 0;
-
-  // ✅ Infos employé propres
-  const nbEnfants      = nv(e.numberOfChildren);  // entier, peut être 0
-  const nbEnfantsStr   = nbEnfants > 0 ? String(nbEnfants) : '—';
-  const contractLabel  = CONTRACT[e.contractType ?? ''] || e.contractType || '—';
-  const maritalLabel   = MARITAL[e.maritalStatus ?? ''] || '—';
-  const paymentLabel   = e.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Espèces';
 
   let gainRef  = 1000;
   let patRef   = 3500;
@@ -361,159 +370,91 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         overflow: 'hidden',
       }}>
 
-        {/* ══ EN-TÊTE : SOCIÉTÉ (lignes 1-2) + EMPLOYÉ (lignes 1-2) + BULLETIN ══ */}
-        {/*
-          Structure :
-          ┌─────────────────┬──────────────────┬──────────┬──────────┬─────────┐
-          │ Nom société     │ Nom employé      │ Affect.  │ Poste    │ BULL.   │
-          ├─────────────────┼──────────────────┼──────────┼──────────┤ PAIE   │ (rowspan 3)
-          │ Adresse · Tél   │ Cat/Éch          │ Matr.    │ Paiement │ JANV   │
-          ├─────────────────┼──────────────────┴──────────┴──────────┤ 2026   │
-          │ RCCM · NIU      │ Conv. · CNSS Ent. · N°CNSS/CRF        │        │
-          └─────────────────┴───────────────────────────────────────┴─────────┘
-
-          Règle :
-          - Ligne 1 col 1 : société (nom)
-          - Ligne 1 col 2 : employé (nom complet)
-          - Ligne 1 col 3 : Affectation (masqué si vide/no dept)
-          - Ligne 1 col 4 : Poste
-          - Ligne 2 col 1 : société (adresse, tél)
-          - Ligne 2 col 2 : Cat/Éch employé
-          - Ligne 2 col 3 : Matricule employé
-          - Ligne 2 col 4 : Mode paiement employé
-          - Ligne 3 col 1 : RCCM · NIU (société)
-          - Ligne 3 col 2-4 : Conv. · CNSS Ent. (société) · N°CNSS/CRF (employé)
-        */}
+        {/* ══ EN-TÊTE SOCIÉTÉ ═══════════════════════════════════════ */}
+        {/* Ligne 1 : Nom société | Nom employé | Affectation | Poste | Bulletin */}
+        {/* Ligne 2 : Adresse société | Cat/Ech employé | Matricule | Paiement */}
+        {/* Ligne 3 : RCCM société | Convention société */}
         <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 3, border: BDB }}>
           <tbody>
-            {/* ── Ligne 1 ── */}
+            {/* Ligne 1 */}
             <tr>
-              {/* Nom société */}
-              <td style={{ width:'34%', padding:'4px 6px', borderRight: BDB, fontWeight:900, fontSize:13, textTransform:'uppercase', color:K }}>
+              <td style={{ width:'34%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:13, textTransform:'uppercase', color:K }}>
                 {co.tradeName || co.legalName || '—'}
               </td>
-              {/* Nom employé */}
-              <td style={{ width:'28%', padding:'4px 6px', borderRight: BDB, fontWeight:900, fontSize:11, color:K }}>
+              <td style={{ width:'28%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:11, color:K }}>
                 {fullName || '—'}
               </td>
-              {/* Affectation — masquée si pas de département */}
-              <td style={{ width:'14%', padding:'4px 6px', borderRight: BDB, fontSize:9, color:K }}>
-                {showDept ? <>Affectation : <strong>{deptName}</strong></> : null}
+              <td style={{ width:'14%', padding:'4px 6px', borderRight:BDB, fontSize:9, color:K }}>
+{deptName && <><span style={{color:'#888',fontSize:8}}>Affect. :</span> <strong>{deptName}</strong></>}
               </td>
-              {/* Poste */}
-              <td style={{ width:'12%', padding:'4px 6px', borderRight: BDB, fontSize:9, color:K }}>
+              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, fontSize:9, color:K }}>
                 Poste : <strong>{e.position || '—'}</strong>
               </td>
-              {/* Bulletin — rowSpan 3 */}
               <td rowSpan={3} style={{ width:'12%', padding:'5px 4px', textAlign:'center', verticalAlign:'middle', background:TH_BG, color:K }}>
                 <div style={{ fontSize:7, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', color:K }}>Bulletin de Paie</div>
                 <div style={{ fontSize:20, fontWeight:900, fontFamily:FONT, marginTop:2, color:K }}>{monthLabel.slice(0,4).toUpperCase()}</div>
                 <div style={{ fontSize:13, fontWeight:700, fontFamily:FONT, color:K }}>{payroll.year}</div>
               </td>
             </tr>
-
-            {/* ── Ligne 2 ── */}
-            <tr style={{ borderTop: BDB }}>
-              {/* Adresse société */}
+            {/* Ligne 2 — données SOCIÉTÉ uniquement */}
+            <tr style={{ borderTop:BDB }}>
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
                 {[co.address, co.city].filter(Boolean).join(', ')}
                 {co.phone && <span> · Tél : {co.phone}</span>}
               </td>
-              {/* Cat/Éch employé */}
+              {/* Données EMPLOYÉ sur cette ligne */}
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
-                Cat / Éch : <strong>{cat || '—'}</strong>
+                Cat / Ech : <strong>{cat || '—'}</strong>
               </td>
-              {/* Matricule employé */}
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
                 Matr. : <strong>{e.employeeNumber || '—'}</strong>
               </td>
-              {/* Mode paiement employé */}
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
-                {paymentLabel}
+                {e.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Espèces'}
               </td>
             </tr>
-
-            {/* ── Ligne 3 ── */}
-            <tr style={{ borderTop: BDB }}>
-              {/* RCCM + NIU — société uniquement, sans CNSS Ent. */}
+            {/* Ligne 3 — RCCM société | Convention société */}
+            <tr style={{ borderTop:BDB }}>
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
                 RCCM : <strong>{co.rccmNumber || '—'}</strong>
-                {co.nif && <span> · NIU : <strong>{co.nif}</strong></span>}
               </td>
-              {/* Convention (société) + CNSS Ent (société) + N°CNSS/CRF (employé) */}
               <td colSpan={3} style={{ padding:'2px 6px', fontSize:8, color:K }}>
                 Conv. : <strong>{co.collectiveAgreement || '—'}</strong>
-                {co.cnssNumber && <span> · CNSS Ent. : <strong>{co.cnssNumber}</strong></span>}
-                {e.cnssNumber  && <span> · N° CNSS/CRF Sal. : <strong>{e.cnssNumber}</strong></span>}
+                {co.nif && <span> · NIU : <strong>{co.nif}</strong></span>}
               </td>
             </tr>
           </tbody>
         </table>
 
-        {/* ══ INFO SALARIÉ — tableau séparé, colonnes fixes, pas de .map() ═════ */}
-        {/*
-          Colonnes : Date embauche | N°CNSS/CRF | Sit. familiale | Nbr Enfant | Ancienneté | Nbr Part ITS | Type contrat
-
-          ✅ Chaque <td> est écrit explicitement → impossible d'avoir un décalage
-          ✅ Nbr Enfant = e.numberOfChildren (entier), pas fiscalParts
-          ✅ Nbr Part ITS = fiscalParts (décimal ex: 2.5)
-          ✅ Type contrat = CDI/CDD/Stage etc.
-        */}
+        {/* ══ INFO SALARIÉ ════════════════════════════════════════════ */}
+        {/* 6 colonnes : Date embauche | N° CNSS | Sit. familiale | Nbr Enfant | Ancienneté | Nbr part ITS | Contrat */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginBottom:3, border:BDB }}>
           <thead>
             <tr>
-              <th style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>Date embauche</th>
-              <th style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>Sit. familiale</th>
-              <th style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>Nbr Enfant</th>
-              <th style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>Ancienneté</th>
-              <th style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>Nbr Part ITS</th>
-              <th style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>Type de contrat</th>
+              {['Date embauche','N° CNSS','Sit. familiale','Nbr Enfant','Ancienneté','Nbr part ITS','Type de contrat'].map(h => (
+                <th key={h} style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             <tr>
-              {/* Date embauche */}
-              <td style={{
-                ...tdC({ fontSize:9, height:22, lineHeight:'22px' }),
-                borderLeft: BD, borderBottom: BD,
-              }}>
-                {fmtDate(e.hireDate)}
-              </td>
-              {/* Situation familiale */}
-              <td style={{
-                ...tdC({ fontSize:9, height:22, lineHeight:'22px' }),
-                borderLeft: BD, borderBottom: BD,
-              }}>
-                {maritalLabel}
-              </td>
-              {/* Nombre d'enfants — entier, 0 → '—' */}
-              <td style={{
-                ...tdC({ fontSize:9, height:22, lineHeight:'22px' }),
-                borderLeft: BD, borderBottom: BD,
-              }}>
-                {nbEnfantsStr}
-              </td>
-              {/* Ancienneté */}
-              <td style={{
-                ...tdC({ fontSize:9, height:22, lineHeight:'22px' }),
-                borderLeft: BD, borderBottom: BD,
-              }}>
-                {seniority(e.hireDate)}
-              </td>
-              {/* Parts fiscales ITS */}
-              <td style={{
-                ...tdC({ fontSize:9, height:22, lineHeight:'22px', fontWeight:700 }),
-                borderLeft: BD, borderBottom: BD,
-              }}>
-                {fiscalParts}
-              </td>
-              {/* Type de contrat */}
-              <td style={{
-                ...tdC({ fontSize:9, height:22, lineHeight:'22px' }),
-                borderLeft: BD, borderBottom: BD, borderRight: BD,
-              }}>
-                {contractLabel}
-              </td>
+              {[
+                fmtDate(e.hireDate),
+                e.cnssNumber || '—',
+                MARITAL[e.maritalStatus??''] || '—',
+                nv(e.numberOfChildren) || '—',
+                seniority(e.hireDate),
+                fiscalParts,
+                CONTRACT[e.contractType??''] || e.contractType || '—',
+              ].map((val, idx) => (
+                <td key={idx} style={{
+                  ...tdC({ fontSize:9, height:22, lineHeight:'22px', fontWeight: idx===5?700:400 }),
+                  borderLeft: BD, borderBottom: BD,
+                  borderRight: idx === 6 ? BD : 'none',
+                }}>
+                  {val}
+                </td>
+              ))}
             </tr>
           </tbody>
         </table>
@@ -638,7 +579,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                   base={itemBase(item)} taux={itemTaux(item)} gain={fmt(item.amount)} />;
               })}
 
-              {/* ── Autres retenues manuelles ── */}
+              {/* ── Autres retenues manuelles — montant direct, pas de base/taux ── */}
               {manualDeductions.map((item: any, idx: number) => (
                 <Row key={item.id || item.code || idx}
                   rub={6800 + idx}
@@ -658,7 +599,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 <td style={{ borderLeft:BD, borderRight:BD, background:'#fff' }} />
               </tr>
 
-              {/* ── Ligne Total ── */}
+              {/* ✅ Ligne Total — dans tbody pour respecter colonnes main-grid */}
               <TotalRow
                 label="Total"
                 gain={fmtZ(totalBrut + indems.reduce((s: number, i: any) => s + nv(i.amount), 0))}
@@ -681,7 +622,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 {e.bankAccountNumber && <div style={{ fontSize:8, color:K }}>N° : <strong>{e.bankAccountNumber}</strong></div>}
               </td>
               <td style={{ width:'10%', padding:'4px 6px', borderRight:BDB, fontSize:10, color:K }}>
-                {paymentLabel}
+                {e.paymentMethod === 'BANK_TRANSFER' ? 'Virement' : 'Espèces'}
               </td>
               <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:TH_BG, fontWeight:700, textAlign:'center', fontSize:10, color:K }}>
                 Net à payer
@@ -738,7 +679,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           Cumuls
         </div>
 
-        {/* ══ LIGNE ANNÉE + CONGÉS ANNUELS ════════════════════════════ */}
+        {/* ══ LIGNE ANNÉE + CONGÉS ANNUELS ════════════════════════════
+            Brut YTD | Net imposable YTD | Charges Sal YTD | Charges Pat YTD
+            Toutes les valeurs = somme réelle Jan → mois actuel (backend)
+        ════════════════════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', border:BDB, borderTop:'none', flexShrink:0 }}>
           <colgroup>
             <col style={{ width:'7%'  }} />

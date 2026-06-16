@@ -27,7 +27,6 @@ async function getBlogSlugs(): Promise<Array<{ slug: string; updatedAt: string }
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogPosts = await getBlogSlugs();
 
-  // ── Pages statiques ──────────────────────────────────────────────────────
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
@@ -39,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/simulateur`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.95, // ← Outil interactif public = priorité max
+      priority: 0.95,
     },
     {
       url: `${SITE_URL}/blog`,
@@ -65,7 +64,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.5,
     },
-    // Pages outils SEO futures
     {
       url: `${SITE_URL}/outils`,
       lastModified: new Date(),
@@ -96,9 +94,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    {
+      url: `${SITE_URL}/outils/calcul-tus-congo`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
   ];
 
-  // ── Pages d'articles blog ────────────────────────────────────────────────
   const blogPages: MetadataRoute.Sitemap = blogPosts.map(({ slug, updatedAt }) => ({
     url: `${SITE_URL}/blog/${slug}`,
     lastModified: new Date(updatedAt),

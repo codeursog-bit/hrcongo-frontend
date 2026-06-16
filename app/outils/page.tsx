@@ -6,7 +6,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
   title: 'Outils RH & Paie Congo-Brazzaville 2026 — Calculateurs gratuits',

@@ -34,10 +34,8 @@ export default function robots(): MetadataRoute.Robots {
           '/pme/',
           '/cabinet/',
           '/api/',
-          '/(dashboard)/',
         ],
       },
-      // Autoriser Googlebot explicitement pour les pages clés
       {
         userAgent: 'Googlebot',
         allow: '/',

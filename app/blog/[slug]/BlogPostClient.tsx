@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.konza-rh.cg';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Post = {
