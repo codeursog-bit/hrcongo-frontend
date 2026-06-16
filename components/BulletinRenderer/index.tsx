@@ -203,9 +203,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   // Tous les champs viennent du backend (somme réelle Jan → mois actuel)
   // Le front ne calcule RIEN — il lit et affiche.
   // Congés annuels — depuis ytd si disponibles
-  const congesDroits  = nv((payroll as any).congesDroits  ?? ytd.congesDroits);
-  const congesPris    = nv((payroll as any).congesPris    ?? ytd.congesPris);
-  const congesSolde   = nv((payroll as any).congesSolde   ?? ytd.congesSolde);
+  // ✅ Congés depuis LeaveBalance (via ytd.droitsConge) — noms corrects
+  const congesDroits  = nv(ytd.droitsConge ?? (payroll as any).congesDroits ?? 0);
+  const congesPris    = nv(ytd.priseConge  ?? (payroll as any).congesPris   ?? 0);
+  const congesSolde   = nv(ytd.soldeConge  ?? (payroll as any).congesSolde  ?? 0);
 
   const ytdGross      = nv(ytd.grossSalary);
   const ytdCnss       = nv(ytd.cnssSalarial);
@@ -502,10 +503,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               {/* ── TUS ─────────────────────────────────────────────── */}
               {tusCnss > 0 && (()=>{ patRef+=10; return <Row key="tc" rub={patRef}
                 label="Taxe unique sur salaire (CNSS)"
-                base={fmtZ(totalBrut)} patTaux="5,475%" patMt={fmt(tusCnss)} />; })()}
+                base={fmtZ(totalBrut)} patTaux="5,475" patMt={fmt(tusCnss)} />; })()}
               {tusDgi  > 0 && (()=>{ patRef+=10; return <Row key="td" rub={patRef}
                 label="Taxe unique sur salaire (DGI)"
-                base={fmtZ(totalBrut)} patTaux="2,025%" patMt={fmt(tusDgi)} />; })()}
+                base={fmtZ(totalBrut)} patTaux="2,025" patMt={fmt(tusDgi)} />; })()}
 
               {/* ── Autres cotisations patronales ───────────────────── */}
               {ctaxPat.map((item: any) => {
@@ -692,6 +693,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <th colSpan={3} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
             </tr>
             <tr>
+              <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
