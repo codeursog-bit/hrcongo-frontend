@@ -18,6 +18,13 @@ export const metadata: Metadata = {
     description: 'ITS, CNSS, CAMU, TUS, heures sup — Tous les calculs RH Congo en un clic.',
     url: `${SITE_URL}/outils`,
     type: 'website',
+    images: [{ url: `${SITE_URL}/og/outils.png`, width: 1200, height: 630, alt: 'Outils RH & Paie Congo' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Outils RH & Paie Congo 2026 — Calculateurs gratuits',
+    description: 'ITS, CNSS, CAMU, TUS, heures sup — Tous les calculs RH Congo en un clic.',
+    images: [`${SITE_URL}/og/outils.png`],
   },
 };
 
