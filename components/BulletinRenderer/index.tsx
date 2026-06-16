@@ -2,7 +2,7 @@
 // ============================================================================
 // BulletinRendererDefault v8
 // ✅ Cumuls Année : grossSalary + cnssSalarial + cnssEmployer + its depuis ytd
-// ✅ Charges Sal Année = ytd.cnssSalarial + ytd.its  (CNSS + ITS cumulés)
+// ✅ Charges Sal Année = ytd.cnssSalarial uniquement (CNSS 4% — pas ITS ni TOL)
 // ✅ Net imposable Année = ytd.grossSalary - ytd.cnssSalarial
 // ✅ Tout le reste identique v7 — design intact
 // ============================================================================
@@ -215,7 +215,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   // ✅ Net imposable et Net annuel — viennent du back (carryOver inclus)
   const ytdNetImp    = nv(ytd.netImposable)   || (ytdGross - ytdCnss);  // back calcule, fallback local
   const ytdNetSalary = nv(ytd.netSalaryAnnual) || nv(ytd.netSalary);   // net à payer annuel
-  const ytdChargesSal = ytdCnss + ytdIts;            // Charges sal = CNSS + ITS cumulés
+  const ytdChargesSal = ytdCnss;  // ✅ Charges sal = CNSS salariale uniquement (4%)
 
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
   const indems = indemItems;
@@ -267,8 +267,11 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
-  const totalPat = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
+  const totalPat    = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
     + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
+  // ✅ Charges Pat colonne = CNSS patron seul (pension+famille+accident) — pas TUS ni DGI
+  // ✅ Charges Pat = CNSS patron (pension+famille+accident) + TUS CNSS — pas TUS DGI
+  const cnssPatOnly = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss;
 
   const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
   const fullName   = [e.lastName?.toUpperCase(), e.firstName].filter(Boolean).join(' ');
@@ -503,10 +506,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               {/* ── TUS ─────────────────────────────────────────────── */}
               {tusCnss > 0 && (()=>{ patRef+=10; return <Row key="tc" rub={patRef}
                 label="Taxe unique sur salaire (CNSS)"
-                base={fmtZ(totalBrut)} patTaux="5,475" patMt={fmt(tusCnss)} />; })()}
+                base={fmtZ(totalBrut)} patTaux="5,475%" patMt={fmt(tusCnss)} />; })()}
               {tusDgi  > 0 && (()=>{ patRef+=10; return <Row key="td" rub={patRef}
                 label="Taxe unique sur salaire (DGI)"
-                base={fmtZ(totalBrut)} patTaux="2,025" patMt={fmt(tusDgi)} />; })()}
+                base={fmtZ(totalBrut)} patTaux="2,025%" patMt={fmt(tusDgi)} />; })()}
 
               {/* ── Autres cotisations patronales ───────────────────── */}
               {ctaxPat.map((item: any) => {
@@ -651,7 +654,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
               <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(netSalary)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(cnssSal)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD, borderRight:BD })}>{fmtD(totalPat)}</td>
+              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD, borderRight:BD })}>{fmtD(cnssPatOnly)}</td>
             </tr>
           </tbody>
         </table>
