@@ -709,7 +709,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}>Droits</th>
               <th style={TH(TH_BG, { fontSize:7 })}>Pris</th>
               <th style={TH(TH_BG, { fontSize:7 })}>Solde</th>
