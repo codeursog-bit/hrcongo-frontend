@@ -97,7 +97,7 @@ function itemTaux(item: any): string {
   // - Ancienneté (rate=années/100, ex: 0.11) → afficher "11 ans"
   // - Autres (gratification 0.5 etc.) → afficher décimal "0,50"
   if (r > 0 && r < 1) {
-    if (/anc[iè]/i.test(label)) return `${Math.round(r * 100)} ans`;
+    if (/anc[iè]/i.test(label)) return String(Math.round(r * 100));
     return r.toFixed(2).replace('.', ',');
   }
   // ✅ Rate = 1 → afficher "1" (congés, montant fixe avec base)
@@ -211,8 +211,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const ytdCnss       = nv(ytd.cnssSalarial);
   const ytdIts        = nv(ytd.its);
   const ytdCnssEmp    = nv(ytd.cnssEmployer);
-  const ytdNetImp     = ytdGross - ytdCnss;          // Net imposable = Brut - CNSS sal
-  const ytdNetSalary  = nv(ytd.netSalary);             // Net annuel = somme nets bulletins + carryOver
+  // ✅ Net imposable et Net annuel — viennent du back (carryOver inclus)
+  const ytdNetImp    = nv(ytd.netImposable)   || (ytdGross - ytdCnss);  // back calcule, fallback local
+  const ytdNetSalary = nv(ytd.netSalaryAnnual) || nv(ytd.netSalary);   // net à payer annuel
   const ytdChargesSal = ytdCnss + ytdIts;            // Charges sal = CNSS + ITS cumulés
 
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
@@ -240,11 +241,16 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     return false;
   };
 
+  // ✅ Autres retenues manuelles — affichage direct sans base/taux
+  const manualDeductions = retenueItems.filter((i: any) => i.code === 'MANUAL_DEDUCTION');
+
   const ctaxEmp = cotisItems.filter((i: any) =>
     !['CNSS_SAL','CNSS','ITS','IRPP','BNC_SOURCE'].includes(i.code) &&
     !['LOAN','ADVANCE'].includes(i.code) &&
     !isCnssPatSummary(i) && !TUS_CODES.includes(i.code)
-  ).concat(retenueItems.filter((i: any) => !['LOAN','ADVANCE'].includes(i.code)));
+  ).concat(retenueItems.filter((i: any) =>
+    !['LOAN','ADVANCE'].includes(i.code) && i.code !== 'MANUAL_DEDUCTION'
+  ));
 
   const ctaxPat = ((empItems ?? []) as any[]).filter((i: any) =>
     !TUS_CODES.includes(i.code) && !isCnssPatSummary(i)
@@ -257,7 +263,8 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     + indems.reduce((s: number, i: any) => s + nv(i.amount), 0);
   const totalRetenues = cnssSal + itsAmount
     + ctaxEmp.reduce((s: number, i: any) => s + nv(i.amount), 0)
-    + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0);
+    + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0)
+    + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
   const totalPat = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
     + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
@@ -513,7 +520,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               {/* ── ITS ─────────────────────────────────────────────── */}
               {itsAmount > 0 && (
                 <Row rub={4520} label="ITS Mois"
-                  base={fmt(itsBase)} taux="" ret={fmt(itsAmount)} />
+                  base={fmt(itsBase)} ret={fmt(itsAmount)} />
               )}
 
               {/* ── Cotisations salariales supplémentaires ──────────── */}
@@ -555,8 +562,16 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                   base={itemBase(item)} taux={itemTaux(item)} gain={fmt(item.amount)} />;
               })}
 
+              {/* ── Autres retenues manuelles — montant direct, pas de base/taux ── */}
+              {manualDeductions.map((item: any, idx: number) => (
+                <Row key={item.id || item.code || idx}
+                  rub={6800 + idx}
+                  label={cleanLabel(item.label)}
+                  ret={fmt(item.amount)} />
+              ))}
+
               {/* ── Spacer ──────────────────────────────────────────── */}
-              <tr id="grid-spacer" style={{ background: '#fff' }}>
+              <tr id="grid-spacer" style={{ background:'#fff' }}>
                 <td style={{ borderLeft:BD, borderRight:'none', borderTop:'none', borderBottom:'none', background:'#fff' }} />
                 <td style={{ borderLeft:BD, background:'#fff' }} />
                 <td style={{ borderLeft:BD, background:'#fff' }} />
@@ -657,15 +672,14 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', border:BDB, borderTop:'none', flexShrink:0 }}>
           <colgroup>
             <col style={{ width:'7%'  }} />
-            <col style={{ width:'13%' }} />
+            <col style={{ width:'15%' }} />
+            <col style={{ width:'14%' }} />
             <col style={{ width:'13%' }} />
             <col style={{ width:'12%' }} />
-            <col style={{ width:'11%' }} />
-            <col style={{ width:'11%' }} />
+            <col style={{ width:'12%' }} />
             <col style={{ width:'9%'  }} />
-            <col style={{ width:'8%'  }} />
-            <col style={{ width:'8%'  }} />
-            <col style={{ width:'8%'  }} />
+            <col style={{ width:'9%'  }} />
+            <col style={{ width:'9%'  }} />
           </colgroup>
           <thead>
             <tr>
@@ -675,10 +689,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <th style={TH(TH_BG, { fontSize:8 })}>Net annuel</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
               <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
-              <th colSpan={4} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
+              <th colSpan={3} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
             </tr>
             <tr>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
               <th style={TH(TH_BG, { fontSize:7 })}> </th>
@@ -687,7 +700,6 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <th style={TH(TH_BG, { fontSize:7 })}>Droits</th>
               <th style={TH(TH_BG, { fontSize:7 })}>Pris</th>
               <th style={TH(TH_BG, { fontSize:7 })}>Solde</th>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
             </tr>
           </thead>
           <tbody>
@@ -698,11 +710,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytdNetSalary)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdChargesSal)}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdCnssEmp)}</td>
-              <td style={base_td({ borderLeft:BD })} />
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{congesDroits > 0 ? fmtD(congesDroits) : ''}</td>
               <td style={tdR({ fontSize:9, borderLeft:BD })}>{congesPris   > 0 ? fmtD(congesPris)   : ''}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{congesSolde  > 0 ? fmtD(congesSolde)  : ''}</td>
-              <td style={base_td({ borderLeft:BD, borderRight:BD })} />
+              <td style={tdR({ fontSize:9, borderLeft:BD, borderRight:BD })}>{congesSolde > 0 ? fmtD(congesSolde) : ''}</td>
             </tr>
           </tbody>
         </table>

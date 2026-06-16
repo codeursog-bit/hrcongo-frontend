@@ -292,9 +292,12 @@ export default function ManuelPayrollPage() {
   const [congesDroits, setCongesDroits]       = useState<number|''>('');
   const [congesPris, setCongesPris]           = useState<number|''>('');
   const [congesSolde, setCongesSolde]         = useState<number|''>('');
+  const [joursCongesPris, setJoursCongesPris] = useState<number|''>('');  // jours consommés ce mois
 
   // ── CarryOver — point de départ historique ────────────────────────────────
   const [carryOverBrut, setCarryOverBrut]             = useState<number|''>('');
+  const [carryOverNetImp, setCarryOverNetImp]         = useState<number|''>('');
+  const [carryOverNetSalary, setCarryOverNetSalary]   = useState<number|''>('');
   const [carryOverChargesSal, setCarryOverChargesSal] = useState<number|''>('');
   const [carryOverChargesPat, setCarryOverChargesPat] = useState<number|''>('');
   const [savingCarryOver, setSavingCarryOver]         = useState(false);
@@ -425,6 +428,8 @@ export default function ManuelPayrollPage() {
     try {
       await api.patch(`/employees/${selectedEmp.id}`, {
         ytdCarryOverBrut:       n(carryOverBrut)       || null,
+        ytdCarryOverNetImp:     n(carryOverNetImp)     || null,
+        ytdCarryOverNetSalary:  n(carryOverNetSalary)  || null,
         ytdCarryOverChargesSal: n(carryOverChargesSal) || null,
         ytdCarryOverChargesPat: n(carryOverChargesPat) || null,
         ytdCarryOverDate:       new Date(`${year}-01-01`).toISOString(),
@@ -539,7 +544,9 @@ export default function ManuelPayrollPage() {
       // ✅ Rate seulement si saisi et différent de 0 et 1
       // Si pas de taux ou taux=1 → gain=base, on n'envoie pas rate
       // Les HS ont leur propre logique dans payroll-items_service, pas touchées ici
-      rate:       n(r.rate) > 0 && n(r.rate) !== 1 ? n(r.rate) : undefined,
+      // ✅ Toujours envoyer rate si base présente — 1 = montant fixe (s'affiche sur bulletin)
+      // undefined = pas de taux ni base (montant direct sans calcul)
+      rate:       n(r.rate) > 0 ? n(r.rate) : (n(r.base) > 0 ? 1 : undefined),
       isTaxable:  taxable,
       isCnss:     taxable,
       fiscalType: taxable ? 'TAXABLE_CNSS' : 'NON_TAXABLE',
@@ -605,9 +612,11 @@ export default function ManuelPayrollPage() {
         overtimeHours10:  n(ot10), overtimeHours25: n(ot25),
         overtimeHours50:  n(ot50), overtimeHours100: n(ot100),
         manualBonuses:    [...primesP, ...indemP],
-        congesDroits:     n(congesDroits) || undefined,
-        congesPris:       n(congesPris)   || undefined,
-        congesSolde:      n(congesSolde)  || undefined,
+        congesDroits:     n(congesDroits)     || undefined,
+        congesPris:       n(congesPris)       || undefined,
+        congesSolde:      n(congesSolde)      || undefined,
+        // ✅ Jours consommés ce mois — pour déduire du LeaveBalance
+        joursCongesPris:  n(joursCongesPris)  || undefined,
         manualDeductions: manualDedP.length > 0 ? manualDedP : undefined,
       });
       setCreatedId(result?.id || null);
@@ -624,8 +633,8 @@ export default function ManuelPayrollPage() {
     setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
     setWorkedDays(26); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
-    setCarryOverBrut(''); setCarryOverChargesSal(''); setCarryOverChargesPat('');
-    setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setCarryOverSaved(false);
+    setCarryOverBrut(''); setCarryOverNetImp(''); setCarryOverNetSalary(''); setCarryOverChargesSal(''); setCarryOverChargesPat('');
+    setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setJoursCongesPris(''); setCarryOverSaved(false);
   };
 
   const hasOt = [ot10,ot25,ot50,ot100].some(v => n(v) > 0);
@@ -1205,11 +1214,13 @@ export default function ManuelPayrollPage() {
                 Saisissez les cumuls <strong>avant</strong> ce mois (bulletins papier ou anciens systèmes).
                 Ces valeurs s'ajouteront automatiquement aux cumuls annuels sur tous les bulletins.
               </p>
-              <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 {([
-                  { label:'Brut historique',  val:carryOverBrut,       set:setCarryOverBrut,       color:'emerald' },
-                  { label:'Charges sal. hist.',val:carryOverChargesSal, set:setCarryOverChargesSal, color:'rose' },
-                  { label:'Charges pat. hist.',val:carryOverChargesPat, set:setCarryOverChargesPat, color:'orange' },
+                  { label:'Brut historique',     val:carryOverBrut,       set:setCarryOverBrut,       color:'emerald' },
+                  { label:'Net imposable hist.', val:carryOverNetImp,     set:setCarryOverNetImp,     color:'sky'     },
+                  { label:'Net annuel hist.',     val:carryOverNetSalary,  set:setCarryOverNetSalary,  color:'indigo'  },
+                  { label:'Charges sal. hist.',  val:carryOverChargesSal, set:setCarryOverChargesSal, color:'rose'    },
+                  { label:'Charges pat. hist.',  val:carryOverChargesPat, set:setCarryOverChargesPat, color:'orange'  },
                 ] as const).map(({ label, val, set, color }) => (
                   <div key={label}>
                     <p className="text-[10px] text-gray-400 mb-1">{label}</p>
@@ -1219,6 +1230,8 @@ export default function ManuelPayrollPage() {
                         placeholder="0"
                         className={`w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 text-gray-800 dark:text-gray-200
                           ${color==='emerald'?'border-emerald-200 dark:border-emerald-800 focus:ring-emerald-400/30':
+                            color==='sky'    ?'border-sky-200 dark:border-sky-800 focus:ring-sky-400/30':
+                            color==='indigo' ?'border-indigo-200 dark:border-indigo-800 focus:ring-indigo-400/30':
                             color==='rose'   ?'border-rose-200 dark:border-rose-800 focus:ring-rose-400/30':
                                               'border-orange-200 dark:border-orange-800 focus:ring-orange-400/30'}`} />
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">F</span>
@@ -1262,6 +1275,22 @@ export default function ManuelPayrollPage() {
               <p className="text-[10px] text-gray-400 mt-2 text-center">
                 Ces valeurs s'affichent dans la section congés annuels du bulletin.
               </p>
+
+              {/* ✅ Jours pris ce mois — visible si congés payés dans les primes */}
+              {primes.some(p => /cong[eé]/i.test(p.label)) && (
+                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                  <p className="text-xs font-bold text-amber-700 dark:text-amber-300 mb-2">
+                    🏖️ Congés payés détectés — combien de jours part-il ?
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input type="number" value={joursCongesPris} min={1} max={78}
+                      onChange={e => setJoursCongesPris(e.target.value===''?'':Number(e.target.value))}
+                      placeholder="ex: 26"
+                      className="w-24 px-3 py-2 bg-white dark:bg-gray-900/50 border border-amber-300 dark:border-amber-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-400/30" />
+                    <span className="text-xs text-amber-600">jours — le cycle brut/charges repart à 0 après ce bulletin</span>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
