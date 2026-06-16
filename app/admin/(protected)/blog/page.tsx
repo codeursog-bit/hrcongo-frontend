@@ -238,7 +238,7 @@ export default function AdminBlogPage() {
             Vue complète · Tous les articles de toutes les entreprises · {total} posts
           </p>
         </div>
-        <a href="/blog/nouveau"
+        <a href="/admin/blog/nouveau"
           className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 no-underline">
           <Plus size={16}/> Publier une annonce officielle
         </a>
