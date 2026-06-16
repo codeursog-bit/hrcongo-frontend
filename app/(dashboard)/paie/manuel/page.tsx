@@ -445,7 +445,7 @@ export default function ManuelPayrollPage() {
 
   // ── Bannière congé — solde >= 26j ───────────────────────────────────────────
   const soldeConge     = (sim as any)?.ytd?.soldeConge   ?? 0;
-  const baseCongeCalc  = (sim as any)?.ytd?.baseConge    ?? 0;
+  const baseCongeCalc  = (sim as any)?.ytd?.baseConge ?? 0;
   const showCongeBanner = soldeConge >= 26 && selectedEmp && empDetail;
 
   // ── Détection auto prime par label — universel ──────────────────────────────
@@ -466,12 +466,10 @@ export default function ManuelPayrollPage() {
       return;
     }
     if (/cong[eé]/i.test(l)) {
-      // ✅ Base congé = ytd.grossSalary / 12 (méthode 1/12e Congo)
-      // Vient du sim si disponible, sinon approximation depuis carryOverBrut
-      const baseConge = (sim as any)?.ytd?.baseConge
-        || (n(carryOverBrut) > 0 ? Math.round(n(carryOverBrut) / 12) : 0);
+      // ✅ Base congé = brut annuel M-1 / 12 (méthode 1/12e Congo)
+      // Le backend calcule le vrai YTD du mois précédent et le retourne dans sim.ytd.baseConge
+      const baseConge = (sim as any)?.ytd?.baseConge ?? 0;
       if (!baseConge) return;
-      // Trier après mise à jour — congés en dernier
       setPrimes(prev => sortPrimes(prev.map(r => r.localId === localId ? { ...r, base: baseConge, rate: 1, amount: baseConge } : r)));
       return;
     }
@@ -527,8 +525,8 @@ export default function ManuelPayrollPage() {
   // Congés payés — base = ytd.grossSalary / 12 (méthode 1/12e Congo)
   // Vient du back via sim.ytd.baseConge ou approximation depuis carryOverBrut
   const addCongesPaies = () => {
-    const baseConge = (sim as any)?.ytd?.baseConge
-      || (n(carryOverBrut) > 0 ? Math.round(n(carryOverBrut) / 12) : 0);
+    // ✅ Base congé = brut annuel M-1 / 12 — calculé par le backend dans sim.ytd.baseConge
+    const baseConge = (sim as any)?.ytd?.baseConge ?? 0;
     if (!baseConge) return;
     const label = 'Congés payés';
     if (primes.some(p => p.label === label)) return;
