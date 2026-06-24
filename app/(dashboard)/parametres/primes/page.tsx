@@ -94,14 +94,6 @@ const CONVENTIONAL_PRESETS: Omit<BonusTemplate, 'id' | 'createdAt' | 'isActive'>
     unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: true,
     description: 'Prime liée à la performance — imposable ITS, exonérée CNSS',
   },
-  {
-    name: "Prime de fin d'année",
-    defaultAmount: null, defaultPercentage: null, baseCalculation: null,
-    isRecurring: false, isTaxable: true, isCnss: false,
-    fiscalType: 'TAXABLE_NO_CNSS',
-    unitAmount: null, quantityMode: null, defaultQuantity: null, isProratized: true,
-    description: '13ème mois — imposable ITS, exonéré CNSS',
-  },
 ];
 
 // 🆕 Labels et configs des modes de quantité
@@ -256,12 +248,34 @@ export default function CataloguePrimesPage() {
   const [form,        setForm]        = useState(emptyForm());
   const [showPresets, setShowPresets] = useState(false);
 
+  // 🆕 Prime d'ancienneté — config générale entreprise (formule linéaire)
+  const [seniorityEnabled,    setSeniorityEnabled]    = useState(false);
+  const [seniorityStartYear,  setSeniorityStartYear]  = useState<number | ''>(2);
+  const [seniorityStartRate,  setSeniorityStartRate]  = useState<number | ''>(2);
+  const [seniorityRatePerYr,  setSeniorityRatePerYr]  = useState<number | ''>(1);
+  const [seniorityCapPercent, setSeniorityCapPercent] = useState<number | ''>('');
+  const [savingSeniority,     setSavingSeniority]     = useState(false);
+  const [senioritySaved,      setSenioritySaved]      = useState(false);
+
   const load = useCallback(async () => {
     try {
       const res = await api.get<any>('/bonus-templates');
       const list: BonusTemplate[] = Array.isArray(res) ? res : res?.data || [];
       setTemplates(list);
-    } catch { /* non bloquant */ } finally { setIsLoading(false); }
+    } catch { /* non bloquant */ }
+    try {
+      // 🆕 Config générale ancienneté — stockée sur Company
+      const ci = await api.get<any>('/companies/mine');
+      const cfg = ci?.seniorityLinearConfig;
+      if (cfg && typeof cfg === 'object') {
+        setSeniorityEnabled(!!cfg.enabled);
+        setSeniorityStartYear(cfg.startYear   ?? 2);
+        setSeniorityStartRate(cfg.startRate   ?? 2);
+        setSeniorityRatePerYr(cfg.ratePerYear ?? 1);
+        setSeniorityCapPercent(cfg.capPercent ?? '');
+      }
+    } catch { /* non bloquant */ }
+    finally { setIsLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -270,6 +284,28 @@ export default function CataloguePrimesPage() {
   const setFiscalType = (ft: 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE') => {
     const cfg = FISCAL_TYPES.find(f => f.value === ft)!;
     setForm(p => ({ ...p, fiscalType: ft, isTaxable: cfg.isTaxable, isCnss: cfg.isCnss }));
+  };
+
+  // 🆕 Ancienneté — sauvegarde config générale entreprise
+  const saveSeniorityConfig = async () => {
+    setSavingSeniority(true);
+    try {
+      const payload = {
+        enabled:     seniorityEnabled,
+        startYear:   Number(seniorityStartYear) || 2,
+        startRate:   Number(seniorityStartRate) || 0,
+        ratePerYear: Number(seniorityRatePerYr) || 0,
+        capPercent:  seniorityCapPercent === '' ? null : Number(seniorityCapPercent),
+      };
+      await api.patch('/companies', { seniorityLinearConfig: payload });
+      setSenioritySaved(true);
+      alert.success('Enregistré', "Configuration générale de la prime d'ancienneté mise à jour.");
+      setTimeout(() => setSenioritySaved(false), 3000);
+    } catch (e: any) {
+      alert.error('Erreur', e?.message || 'Impossible de sauvegarder la configuration.');
+    } finally {
+      setSavingSeniority(false);
+    }
   };
 
   // ── Modaux ───────────────────────────────────────────────────────────────
@@ -437,6 +473,79 @@ export default function CataloguePrimesPage() {
           Les primes <strong>Quantité libre</strong> demandent une saisie rapide au moment du bulletin.
         </p>
       </div>
+
+      {/* 🆕 Prime d'ancienneté — config générale entreprise */}
+      <section className="glass-panel rounded-2xl p-6 border border-violet-200 dark:border-violet-800 bg-violet-50/30 dark:bg-violet-900/10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-violet-500 rounded-lg flex items-center justify-center">
+              <TrendingUp size={16} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Prime d'ancienneté — formule générale</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">S'applique à tous les employés, sauf override personnel sur leur fiche.</p>
+            </div>
+          </div>
+          <button onClick={() => setSeniorityEnabled(v => !v)}
+            className={`relative w-11 h-6 rounded-full transition-colors ${seniorityEnabled ? 'bg-violet-500' : 'bg-slate-300 dark:bg-slate-700'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${seniorityEnabled ? 'translate-x-5' : ''}`} />
+          </button>
+        </div>
+
+        {!seniorityEnabled && (
+          <p className="text-xs text-slate-400 italic">
+            Désactivée — l'ancienneté utilise les paliers de la convention collective (si configurés), sinon aucune prime auto.
+          </p>
+        )}
+
+        {seniorityEnabled && (
+          <>
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Dès l'année</p>
+                <input type="number" min={0} value={seniorityStartYear}
+                  onChange={e => setSeniorityStartYear(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Taux de départ %</p>
+                <input type="number" step="0.1" value={seniorityStartRate}
+                  onChange={e => setSeniorityStartRate(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">+ % / an suppl.</p>
+                <input type="number" step="0.1" value={seniorityRatePerYr}
+                  onChange={e => setSeniorityRatePerYr(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1">Plafond % (optionnel)</p>
+                <input type="number" step="0.1" value={seniorityCapPercent} placeholder="aucun"
+                  onChange={e => setSeniorityCapPercent(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+              </div>
+            </div>
+            <p className="text-[11px] text-violet-600 dark:text-violet-300 bg-violet-100/50 dark:bg-violet-900/20 rounded-lg px-3 py-2 mb-3">
+              Exemple : {seniorityStartYear || 2} ans = {seniorityStartRate || 0}%, puis +{seniorityRatePerYr || 0}%/an
+              {' '}→ 29 ans = {(() => {
+                const sy = Number(seniorityStartYear) || 0, sr = Number(seniorityStartRate) || 0, ry = Number(seniorityRatePerYr) || 0;
+                const cap = seniorityCapPercent === '' ? null : Number(seniorityCapPercent);
+                let r = 29 >= sy ? sr + (29 - sy) * ry : 0;
+                if (cap != null) r = Math.min(r, cap);
+                return Math.round(r * 100) / 100;
+              })()}%
+            </p>
+          </>
+        )}
+
+        <button onClick={saveSeniorityConfig} disabled={savingSeniority}
+          className="w-full py-2 bg-violet-500 hover:bg-violet-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+          {savingSeniority ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :
+           senioritySaved  ? <><Check size={12}/>Sauvegardé ✓</> :
+                             'Enregistrer'}
+        </button>
+      </section>
 
       {/* 🆕 Légende fiscale */}
       <div className="grid grid-cols-3 gap-3">

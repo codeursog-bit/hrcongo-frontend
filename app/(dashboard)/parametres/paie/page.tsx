@@ -27,13 +27,13 @@ import {
   ArrowLeft, Save, AlertTriangle, Calculator, Percent, Clock,
   Calendar, Shield, Info, Loader2, CheckCircle2, Moon, Sun,
   ToggleLeft, ToggleRight, Zap, ChevronRight, FileText,
-  Users, Gift, Banknote, ClipboardList, Landmark, X
+  Users, Gift, Banknote, ClipboardList, Landmark, X, Palmtree
 } from 'lucide-react';
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type TabId = 'cnss' | 'overtime' | 'nightshift' | 'its' | 'calendar';
+type TabId = 'cnss' | 'overtime' | 'nightshift' | 'its' | 'calendar' | 'conges';
 
 interface PayrollSettings {
   // CNSS
@@ -165,6 +165,10 @@ export default function PayrollSettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [saved, setSaved]           = useState(false);
 
+  // 🆕 Config congés — stockée sur Company (pas PayrollSettings)
+  const [leaveMethod, setLeaveMethod] = useState<'AVERAGE_12M' | 'CURRENT_SALARY'>('AVERAGE_12M');
+  const [leaveCycle,  setLeaveCycle]  = useState<'JANUARY' | 'HIRE_DATE' | 'JUNE'>('JANUARY');
+
   // Simulateur ITS
   const [simIncome, setSimIncome]   = useState(450000);
   const [simResult, setSimResult]   = useState<any>(null);
@@ -207,6 +211,12 @@ export default function PayrollSettingsPage() {
       }
     };
     fetchSettings();
+
+    // 🆕 Charger la config congés depuis Company
+    api.get<any>('/companies/mine').then(ci => {
+      if (ci?.leaveIndemnityMethod) setLeaveMethod(ci.leaveIndemnityMethod);
+      if (ci?.leaveReferenceCycle)  setLeaveCycle(ci.leaveReferenceCycle);
+    }).catch(() => {});
   }, []);
 
   const set = useCallback((key: keyof PayrollSettings, val: any) => {
@@ -226,17 +236,36 @@ export default function PayrollSettingsPage() {
 const handleSave = async () => {
     setIsSaving(true);
     try {
-      // ✅ Supprimer les champs qui appartiennent au modèle Company (pas PayrollSettings)
-      // pour éviter l'erreur "property X should not exist" côté backend NestJS
+      // ✅ CNSS et ITS : lecture seule — exclus du payload pour ne pas écraser les taux légaux
       const {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         payrollPaymentDay,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         payrollCloseDay,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        cnssSalarialRate,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        cnssEmployerRate,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        cnssPensionCeiling,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        cnssSocialCeiling,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        fiscalMode,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        forfaitItsRate,
         ...payrollPayload
       } = settings as any;
- 
+
+      // 1. Paramètres de paie (heures sup, nuit, calendrier, arrondi)
       await api.patch('/payroll-settings', payrollPayload);
+
+      // 2. 🆕 Config congés → Company
+      await api.patch('/companies', {
+        leaveIndemnityMethod: leaveMethod,
+        leaveReferenceCycle:  leaveCycle,
+      });
+
       setShowConfirm(false);
       setSaved(true);
     } catch (e: any) {
@@ -275,6 +304,7 @@ const handleSave = async () => {
     { id: 'nightshift', label: 'Nuit',            icon: Moon,      badge: settings.nightShiftEnabled ? 'ON' : undefined },
     { id: 'its',        label: 'ITS / IRPP',      icon: Calculator },
     { id: 'calendar',   label: 'Calendrier',      icon: Calendar },
+    { id: 'conges',     label: 'Congés',          icon: Palmtree },
   ];
 
   if (isLoading) {
@@ -350,27 +380,36 @@ const handleSave = async () => {
             <div className="space-y-5">
               {/* Part salariale */}
               <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
-                  <Shield size={18} className="text-blue-500" /> CNSS Salariale
-                </h3>
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Shield size={18} className="text-blue-500" /> CNSS Salariale
+                  </h3>
+                  <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 font-bold">
+                    Taux légaux — lecture seule
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Taux salarié (%)</label>
-                    <input type="number" min={0} max={20} step={0.01}
-                      value={settings.cnssSalarialRate}
-                      onChange={e => set('cnssSalarialRate', +e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Retenu sur le salaire brut</p>
+                    <div className="relative">
+                      <input type="number" readOnly disabled
+                        value={settings.cnssSalarialRate}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      />
+                      <span className="absolute right-3 top-3 text-[10px] text-gray-400">% — fixe</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Décret Congo — non modifiable</p>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Taux patronal (%)</label>
-                    <input type="number" min={0} max={40} step={0.01}
-                      value={settings.cnssEmployerRate}
-                      onChange={e => set('cnssEmployerRate', +e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Charge totale employeur (3 branches)</p>
+                    <div className="relative">
+                      <input type="number" readOnly disabled
+                        value={settings.cnssEmployerRate}
+                        className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      />
+                      <span className="absolute right-3 top-3 text-[10px] text-gray-400">% — fixe</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Décret n°99-284 — 3 branches incluses</p>
                   </div>
                 </div>
               </div>
@@ -648,43 +687,35 @@ const handleSave = async () => {
             <div className="space-y-5">
               {/* Mode fiscal */}
               <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Calculator size={18} className="text-orange-500" /> Mode fiscal
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Calculator size={18} className="text-orange-500" /> Mode fiscal
+                  </h3>
+                  <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 font-bold">
+                    Barème légal — lecture seule
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pointer-events-none opacity-70">
                   {[
                     { v: 'AUTO',         label: 'Auto (recommandé)',    desc: 'Détection automatique ITS 2026' },
                     { v: 'ITS_2026',     label: 'ITS 2026',             desc: 'Nouveau barème Congo 2026' },
                     { v: 'IRPP_LEGACY',  label: 'IRPP Ancien',          desc: 'Barème IRPP historique' },
                     { v: 'FORFAIT',      label: 'Taux forfaitaire',     desc: 'Taux unique configurable' },
                   ].map(({ v, label, desc }) => (
-                    <button key={v} onClick={() => set('fiscalMode', v as any)}
-                      className={`flex flex-col items-start px-4 py-3 rounded-xl border-2 transition-all text-left ${
+                    <div key={v}
+                      className={`flex flex-col items-start px-4 py-3 rounded-xl border-2 text-left ${
                         settings.fiscalMode === v
                           ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                          : 'border-gray-200 dark:border-gray-700'
                       }`}>
                       <p className={`font-bold text-sm ${settings.fiscalMode === v ? 'text-sky-700 dark:text-sky-300' : 'text-gray-800 dark:text-white'}`}>
                         {label}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                    </button>
+                    </div>
                   ))}
                 </div>
-
-                {settings.fiscalMode === 'FORFAIT' && (
-                  <div className="mt-4">
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Taux forfaitaire (%)</label>
-                    <div className="flex items-center gap-2">
-                      <input type="number" min={0} max={100} step={0.5}
-                        value={Math.round(settings.forfaitItsRate * 100 * 10) / 10}
-                        onChange={e => set('forfaitItsRate', +e.target.value / 100)}
-                        className="w-32 px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 font-mono font-bold text-gray-900 dark:text-white focus:border-sky-500"
-                      />
-                      <span className="text-gray-500 font-bold">%</span>
-                    </div>
-                  </div>
-                )}
+                <p className="text-xs text-gray-400 mt-3 italic">Le mode fiscal est défini par votre configuration légale Congo. Contactez le support pour toute modification.</p>
               </div>
 
               {/* Barème ITS */}
@@ -809,6 +840,87 @@ const handleSave = async () => {
               </div>
             </div>
           )}
+
+          {/* ════ ONGLET CONGÉS ════ */}
+          {activeTab === 'conges' && (
+            <div className="space-y-5">
+
+              {/* Méthode de calcul de l'indemnité */}
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                  <Calculator size={18} className="text-emerald-500" /> Méthode de calcul de l'indemnité
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">Les deux méthodes sont légales au Congo. L'entreprise choisit celle qu'elle applique dans son règlement intérieur.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    {
+                      v: 'AVERAGE_12M',
+                      label: '1/12e annuel (défaut)',
+                      desc: 'Indemnité = total brut 12 mois de référence ÷ 12 ÷ 26 × jours. Avantage si primes variables.',
+                    },
+                    {
+                      v: 'CURRENT_SALARY',
+                      label: 'Maintien de salaire',
+                      desc: 'Indemnité = dernier brut mensuel ÷ 26 × jours. Simple et lisible.',
+                    },
+                  ].map(({ v, label, desc }) => (
+                    <button key={v} onClick={() => setLeaveMethod(v as any)}
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                        leaveMethod === v
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                      }`}>
+                      <p className={`font-bold text-sm mb-1 ${leaveMethod === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-white'}`}>{label}</p>
+                      <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Période de référence */}
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                  <Calendar size={18} className="text-emerald-500" /> Période de référence
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">Détermine les 12 mois utilisés pour calculer le brut de référence. À indiquer dans votre règlement intérieur.</p>
+                <div className="space-y-2">
+                  {[
+                    { v: 'JANUARY',   label: 'Cycle calendaire',   desc: '1er janvier → 31 décembre de l\'année précédente' },
+                    { v: 'HIRE_DATE', label: 'Cycle anniversaire', desc: 'Date d\'embauche → date anniversaire (propre à chaque employé)' },
+                    { v: 'JUNE',      label: 'Cycle scolaire',     desc: '1er juin → 31 mai (cycle historique Congo)' },
+                  ].map(({ v, label, desc }) => (
+                    <button key={v} onClick={() => setLeaveCycle(v as any)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all flex items-start gap-3 ${
+                        leaveCycle === v
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                      }`}>
+                      <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${leaveCycle === v ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                      <div>
+                        <p className={`font-bold text-sm ${leaveCycle === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-white'}`}>{label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rappel règles légales */}
+              <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                  <Info size={13} /> Règles légales Congo — non modifiables
+                </p>
+                <ul className="text-xs text-emerald-700 dark:text-emerald-400 space-y-1">
+                  <li>• 26 jours ouvrables / an — acquisition : 2,16 j/mois</li>
+                  <li>• Plafond de report : 78 jours (3 ans)</li>
+                  <li>• Base de calcul : brut total (primes incluses) ÷ 26</li>
+                  <li>• L'indemnité est soumise à ITS et CNSS comme un salaire</li>
+                </ul>
+              </div>
+
+            </div>
+          )}
+
         </div>
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}

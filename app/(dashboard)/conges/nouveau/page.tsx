@@ -463,22 +463,32 @@ export default function NewLeaveRequestPage() {
     const end   = new Date(formData.endDate);
     if (end < start) return null;
 
-    let businessDays = 0, weekendDays = 0, totalDays = 0;
+    // ✅ Jours OUVRABLES Congo : lun-sam inclus, seul dimanche exclu
+    // L'article Congo est explicite : base = jours ouvrables, pas jours ouvrés (lun-ven)
+    let ouvrables = 0, dimanchesDays = 0, totalDays = 0;
     const cur = new Date(start);
     while (cur <= end) {
       const day = cur.getDay();
       totalDays++;
-      if (day === 0 || day === 6) weekendDays++;
-      else businessDays++;
+      if (day === 0) dimanchesDays++; // dimanche uniquement
+      else ouvrables++;               // lun (1) à sam (6) = jours ouvrables
       cur.setDate(cur.getDate() + 1);
     }
+    const businessDays = ouvrables; // alias pour compatibilité avec le reste du code
 
-    // 🆕 Vérification solde insuffisant
+    // ✅ Détection multi-cycles : si l'employé n'a pas pris ses congés pendant plusieurs années,
+    // le solde peut dépasser 26j. On informe visuellement de combien de cycles il consomme.
+    const cyclesUsed   = selectedBalance ? Math.ceil(ouvrables / 26) : 1;
+    const fullCycles   = selectedBalance ? Math.floor(ouvrables / 26) : 0;
+    const remainingDays= ouvrables % 26;
+    const isMultiCycle = fullCycles >= 1 && ouvrables > 26;
+
+    // Vérification solde insuffisant
     const insufficientBalance = formData.type === 'ANNUAL' && selectedBalance
-      ? businessDays > Number(selectedBalance.annualRemaining)
+      ? ouvrables > Number(selectedBalance.annualRemaining)
       : false;
 
-    return { businessDays, weekendDays, totalDays, insufficientBalance };
+    return { businessDays, ouvrables, dimanchesDays, totalDays, insufficientBalance, cyclesUsed, fullCycles, remainingDays, isMultiCycle };
   }, [formData.startDate, formData.endDate, formData.type, selectedBalance]);
 
   const handleSubmit = async () => {
@@ -530,7 +540,7 @@ export default function NewLeaveRequestPage() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Demande Envoyée !</h2>
               <p className="text-gray-500 dark:text-gray-400 mb-4">
-                Votre demande de <strong>{calculationDetails?.businessDays} jours</strong> a été transmise.
+                Votre demande de <strong>{calculationDetails?.ouvrables} jours</strong> a été transmise.
               </p>
               <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
                 <motion.div className="h-full bg-sky-500" initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2.5 }} />
@@ -662,7 +672,7 @@ export default function NewLeaveRequestPage() {
             <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
               <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
               <p className="text-sm text-red-600 dark:text-red-400">
-                Solde insuffisant : vous demandez <strong>{calculationDetails.businessDays} jours</strong> mais il vous en reste <strong>{Number(selectedBalance?.annualRemaining ?? 0).toFixed(1)}</strong>.
+                Solde insuffisant : vous demandez <strong>{calculationDetails.ouvrables} jours</strong> mais il vous en reste <strong>{Number(selectedBalance?.annualRemaining ?? 0).toFixed(1)}</strong>.
               </p>
             </div>
           )}
@@ -705,9 +715,10 @@ export default function NewLeaveRequestPage() {
               <div className="space-y-5">
                 <div className="text-center">
                   <span className={`text-5xl font-extrabold ${calculationDetails.insufficientBalance ? 'text-red-400' : ''}`}>
-                    {calculationDetails.businessDays}
+                    {calculationDetails.ouvrables}
                   </span>
-                  <p className="text-sm text-gray-400 font-medium mt-1">Jours ouvrés décomptés</p>
+                  <p className="text-sm text-gray-400 font-medium mt-1">Jours ouvrables décomptés</p>
+                  <p className="text-xs text-gray-500 mt-0.5">(lun → sam, dimanches exclus)</p>
                 </div>
 
                 <div className="bg-white/10 rounded-xl p-4 space-y-3">
@@ -716,8 +727,8 @@ export default function NewLeaveRequestPage() {
                     <span className="font-bold">{calculationDetails.totalDays} jours</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Week-ends</span>
-                    <span className="font-bold text-emerald-400">-{calculationDetails.weekendDays} jours</span>
+                    <span className="text-gray-300">Dimanches exclus</span>
+                    <span className="font-bold text-emerald-400">−{calculationDetails.dimanchesDays} jour{calculationDetails.dimanchesDays > 1 ? 's' : ''}</span>
                   </div>
                   {selectedBalance?.canTakeAnnualLeave && formData.type === 'ANNUAL' && (
                     <>
@@ -725,7 +736,7 @@ export default function NewLeaveRequestPage() {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-300">Solde après</span>
                         <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-sky-300'}`}>
-                          {(Number(selectedBalance.annualRemaining) - calculationDetails.businessDays).toFixed(1)}j
+                          {(Number(selectedBalance.annualRemaining) - calculationDetails.ouvrables).toFixed(1)}j
                         </span>
                       </div>
                     </>
@@ -734,10 +745,22 @@ export default function NewLeaveRequestPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-white font-bold">Impact Solde</span>
                     <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-orange-400'}`}>
-                      -{calculationDetails.businessDays}j
+                      −{calculationDetails.ouvrables}j
                     </span>
                   </div>
                 </div>
+
+                {/* Info multi-cycle */}
+                {calculationDetails.isMultiCycle && formData.type === 'ANNUAL' && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
+                    <p className="text-xs text-amber-300 font-bold mb-1">Congés sur plusieurs années</p>
+                    <p className="text-xs text-amber-200/80 leading-relaxed">
+                      {calculationDetails.fullCycles} année{calculationDetails.fullCycles > 1 ? 's' : ''} complète{calculationDetails.fullCycles > 1 ? 's' : ''} (26j × {calculationDetails.fullCycles})
+                      {calculationDetails.remainingDays > 0 && ` + ${calculationDetails.remainingDays}j`}.
+                      L'indemnité sera calculée cycle par cycle selon la base de référence de chaque année.
+                    </p>
+                  </div>
+                )}
 
                 {/* Type info */}
                 <div className="flex items-start gap-2 text-xs text-gray-400 leading-relaxed">
@@ -745,7 +768,7 @@ export default function NewLeaveRequestPage() {
                   <p>
                     {formData.type === 'UNPAID'
                       ? 'Congé sans solde : aucune indemnité, déduction pure du salaire.'
-                      : 'Congé payé : indemnité calculée sur la moyenne de vos 12 derniers mois.'}
+                      : 'Congé payé : indemnité calculée sur la base brute de référence ÷ 26.'}
                   </p>
                 </div>
               </div>

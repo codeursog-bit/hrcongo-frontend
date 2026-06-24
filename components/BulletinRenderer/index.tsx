@@ -34,9 +34,11 @@ const fmtZ = (v: any): string  => Math.round(nv(v)).toLocaleString('fr-FR');
 const fmtD = (v: any): string  => { const x = Math.round(nv(v)); return x === 0 ? '—' : x.toLocaleString('fr-FR'); };
 const fmtDate = (d?: string)   => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
-function seniority(h?: string): string {
+function seniority(h?: string, asOf?: Date): string {
   if (!h) return '—';
-  const hire = new Date(h), now = new Date();
+  // ✅ Ancrée sur la période du bulletin (fin de mois payé), pas sur la date d'affichage.
+  // Sinon un bulletin de janvier consulté en juin affiche l'ancienneté "au jour de juin".
+  const hire = new Date(h), now = asOf ?? new Date();
   let y = now.getFullYear() - hire.getFullYear();
   let m = now.getMonth()    - hire.getMonth();
   if (m < 0) { y--; m += 12; }
@@ -443,7 +445,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 e.cnssNumber || '—',
                 MARITAL[e.maritalStatus??''] || '—',
                 nv(e.numberOfChildren) || '—',
-                seniority(e.hireDate),
+                seniority(e.hireDate, new Date(payroll.year, payroll.month, 0)),
                 fiscalParts,
                 CONTRACT[e.contractType??''] || e.contractType || '—',
               ].map((val, idx) => (

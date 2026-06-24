@@ -33,6 +33,7 @@ interface Employee {
 
 interface CompanyInfo {
   email?: string;
+  cnssEmployerRate?: number;
 }
 
 interface BonusTemplate {
@@ -295,13 +296,13 @@ export default function ManuelPayrollPage() {
   const [joursCongesPris, setJoursCongesPris] = useState<number|''>('');  // jours consommés ce mois
 
   // ── CarryOver — point de départ historique ────────────────────────────────
-  const [carryOverBrut, setCarryOverBrut]             = useState<number|''>('');
-  const [carryOverNetImp, setCarryOverNetImp]         = useState<number|''>('');
-  const [carryOverNetSalary, setCarryOverNetSalary]   = useState<number|''>('');
-  const [carryOverChargesSal, setCarryOverChargesSal] = useState<number|''>('');
-  const [carryOverChargesPat, setCarryOverChargesPat] = useState<number|''>('');
-  const [savingCarryOver, setSavingCarryOver]         = useState(false);
-  const [carryOverSaved, setCarryOverSaved]           = useState(false);
+  // ✅ Simplifié : seul le brut annuel est saisi. Le reste (CNSS sal. 4%, net
+  // imposable, charges pat.) est dérivé automatiquement. Le taux patronal est
+  // pré-rempli depuis la config entreprise (20.28% par défaut) mais reste éditable.
+  const [carryOverBrut, setCarryOverBrut]       = useState<number|''>('');
+  const [carryOverTauxPat, setCarryOverTauxPat] = useState<number|''>('');
+  const [savingCarryOver, setSavingCarryOver]   = useState(false);
+  const [carryOverSaved, setCarryOverSaved]     = useState(false);
 
   const [showPrimeSugg, setShowPrimeSugg]     = useState(false);
   const [showIndemSugg, setShowIndemSugg]     = useState(false);
@@ -335,6 +336,8 @@ export default function ManuelPayrollPage() {
       setBonusTemplates((Array.isArray(bt) ? bt : []).filter((t: BonusTemplate) => t.isActive));
       setCompanyTaxes((Array.isArray(ct) ? ct : []).filter((t: CompanyTax) => t.isActive));
       setCompanyInfo(ci ?? {});
+      // ✅ Pré-remplit le taux patronal carryOver depuis la config entreprise (sinon 20.28% par défaut)
+      setCarryOverTauxPat(Number(ci?.cnssEmployerRate) || 20.28);
     });
   }, []);
 
@@ -422,16 +425,24 @@ export default function ManuelPayrollPage() {
   // On détecte via sim : si c'est jan OU si le brut du cycle précédent = 0
   const isCarryOverMonth = month === 'Janvier' || (sim && (sim as any).ytd?.grossSalary === 0);
 
+  // ── Dérivés du carryOver, calculés depuis le seul brut annuel saisi ────────
+  const CARRYOVER_CNSS_SAL_RATE = 0.04; // CNSS salarié 4% (taux fixe légal)
+  const carryOverChargesSal = Math.round(n(carryOverBrut) * CARRYOVER_CNSS_SAL_RATE);
+  const carryOverNetImp     = Math.round(n(carryOverBrut) - carryOverChargesSal);
+  const carryOverChargesPat = Math.round(n(carryOverBrut) * (n(carryOverTauxPat) / 100));
+  // Net annuel historique — pas d'ITS connu sur l'historique, on aligne sur le net imposable
+  const carryOverNetSalary  = carryOverNetImp;
+
   const saveCarryOver = async () => {
     if (!selectedEmp) return;
     setSavingCarryOver(true);
     try {
       await api.patch(`/employees/${selectedEmp.id}`, {
         ytdCarryOverBrut:       n(carryOverBrut)       || null,
-        ytdCarryOverNetImp:     n(carryOverNetImp)     || null,
-        ytdCarryOverNetSalary:  n(carryOverNetSalary)  || null,
-        ytdCarryOverChargesSal: n(carryOverChargesSal) || null,
-        ytdCarryOverChargesPat: n(carryOverChargesPat) || null,
+        ytdCarryOverNetImp:     carryOverNetImp        || null,
+        ytdCarryOverNetSalary:  carryOverNetSalary      || null,
+        ytdCarryOverChargesSal: carryOverChargesSal     || null,
+        ytdCarryOverChargesPat: carryOverChargesPat     || null,
         ytdCarryOverDate:       new Date(`${year}-01-01`).toISOString(),
       });
       setCarryOverSaved(true);
@@ -631,7 +642,7 @@ export default function ManuelPayrollPage() {
     setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
     setWorkedDays(26); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
-    setCarryOverBrut(''); setCarryOverNetImp(''); setCarryOverNetSalary(''); setCarryOverChargesSal(''); setCarryOverChargesPat('');
+    setCarryOverBrut(''); setCarryOverTauxPat(Number(companyInfo?.cnssEmployerRate) || 20.28);
     setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setJoursCongesPris(''); setCarryOverSaved(false);
   };
 
@@ -1209,34 +1220,47 @@ export default function ManuelPayrollPage() {
                 </div>
               </div>
               <p className="text-[10px] text-gray-400 mb-3">
-                Saisissez les cumuls <strong>avant</strong> ce mois (bulletins papier ou anciens systèmes).
-                Ces valeurs s'ajouteront automatiquement aux cumuls annuels sur tous les bulletins.
+                Saisissez le <strong>brut annuel</strong> cumulé <strong>avant</strong> ce mois (bulletins papier ou anciens systèmes).
+                Le reste (CNSS, net imposable, charges patronales) est calculé automatiquement.
               </p>
               <div className="grid grid-cols-2 gap-2 mb-3">
-                {([
-                  { label:'Brut historique',     val:carryOverBrut,       set:setCarryOverBrut,       color:'emerald' },
-                  { label:'Net imposable hist.', val:carryOverNetImp,     set:setCarryOverNetImp,     color:'sky'     },
-                  { label:'Net annuel hist.',     val:carryOverNetSalary,  set:setCarryOverNetSalary,  color:'indigo'  },
-                  { label:'Charges sal. hist.',  val:carryOverChargesSal, set:setCarryOverChargesSal, color:'rose'    },
-                  { label:'Charges pat. hist.',  val:carryOverChargesPat, set:setCarryOverChargesPat, color:'orange'  },
-                ] as const).map(({ label, val, set, color }) => (
-                  <div key={label}>
-                    <p className="text-[10px] text-gray-400 mb-1">{label}</p>
-                    <div className="relative">
-                      <input type="number" value={val}
-                        onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
-                        placeholder="0"
-                        className={`w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 text-gray-800 dark:text-gray-200
-                          ${color==='emerald'?'border-emerald-200 dark:border-emerald-800 focus:ring-emerald-400/30':
-                            color==='sky'    ?'border-sky-200 dark:border-sky-800 focus:ring-sky-400/30':
-                            color==='indigo' ?'border-indigo-200 dark:border-indigo-800 focus:ring-indigo-400/30':
-                            color==='rose'   ?'border-rose-200 dark:border-rose-800 focus:ring-rose-400/30':
-                                              'border-orange-200 dark:border-orange-800 focus:ring-orange-400/30'}`} />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">F</span>
-                    </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Brut annuel historique</p>
+                  <div className="relative">
+                    <input type="number" value={carryOverBrut}
+                      onChange={e => setCarryOverBrut(e.target.value===''?'':Number(e.target.value))}
+                      placeholder="0"
+                      className="w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-emerald-400/30 text-gray-800 dark:text-gray-200" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">F</span>
                   </div>
-                ))}
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Taux patronal CNSS</p>
+                  <div className="relative">
+                    <input type="number" step="0.01" value={carryOverTauxPat}
+                      onChange={e => setCarryOverTauxPat(e.target.value===''?'':Number(e.target.value))}
+                      placeholder="20.28"
+                      className="w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-orange-200 dark:border-orange-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-orange-400/30 text-gray-800 dark:text-gray-200" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">%</span>
+                  </div>
+                </div>
               </div>
+              {n(carryOverBrut) > 0 && (
+                <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+                  <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-sky-500">Net imposable</p>
+                    <p className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{carryOverNetImp.toLocaleString('fr-FR')}</p>
+                  </div>
+                  <div className="bg-rose-50 dark:bg-rose-900/20 rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-rose-500">CNSS sal. (4%)</p>
+                    <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300">{carryOverChargesSal.toLocaleString('fr-FR')}</p>
+                  </div>
+                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-orange-500">Charges pat.</p>
+                    <p className="text-[10px] font-bold text-orange-700 dark:text-orange-300">{carryOverChargesPat.toLocaleString('fr-FR')}</p>
+                  </div>
+                </div>
+              )}
               <button onClick={saveCarryOver} disabled={savingCarryOver}
                 className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 {savingCarryOver ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :

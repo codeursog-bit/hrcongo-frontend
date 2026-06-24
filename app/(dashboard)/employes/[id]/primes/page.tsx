@@ -178,6 +178,17 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
   const [savedQty,      setSavedQty]      = useState<Record<string, boolean>>({});
   const [monthlyQtys,   setMonthlyQtys]   = useState<MonthlyQty[]>([]);
 
+  // 🆕 Ancienneté — override personnel (prioritaire sur la config entreprise générale)
+  // mode: INHERIT = pas d'override (hérite de l'entreprise) | CUSTOM = formule perso | EXCLUDED = pas de prime auto
+  type SeniorityMode = 'INHERIT' | 'CUSTOM' | 'EXCLUDED';
+  const [seniorityOvMode,     setSeniorityOvMode]     = useState<SeniorityMode>('INHERIT');
+  const [seniorityStartYear,  setSeniorityStartYear]  = useState<number | ''>(2);
+  const [seniorityStartRate,  setSeniorityStartRate]  = useState<number | ''>(2);
+  const [seniorityRatePerYr,  setSeniorityRatePerYr]  = useState<number | ''>(1);
+  const [seniorityCapPercent, setSeniorityCapPercent] = useState<number | ''>('');
+  const [savingSeniority,     setSavingSeniority]     = useState(false);
+  const [senioritySaved,      setSenioritySaved]      = useState(false);
+
   // ── Chargement ───────────────────────────────────────────────────────────
   useEffect(() => {
     const load = async () => {
@@ -188,6 +199,15 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           api.get<any>('/bonus-templates'),
         ]);
         setEmployee(emp);
+        // 🆕 Pré-remplit le formulaire d'override ancienneté depuis l'employé
+        const ov = emp?.seniorityLinearOverride;
+        if (ov && typeof ov === 'object') {
+          setSeniorityOvMode(ov.enabled === false ? 'EXCLUDED' : 'CUSTOM');
+          setSeniorityStartYear(ov.startYear   ?? 2);
+          setSeniorityStartRate(ov.startRate   ?? 2);
+          setSeniorityRatePerYr(ov.ratePerYear ?? 1);
+          setSeniorityCapPercent(ov.capPercent ?? '');
+        }
         const all: Bonus[] = Array.isArray(bonusData) ? bonusData : bonusData?.data || [];
         setBonuses(all);
         const tmplList: BonusTemplate[] = Array.isArray(tmpls) ? tmpls : tmpls?.data || [];
@@ -246,6 +266,32 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       alert.error('Erreur', e?.message || 'Impossible de sauvegarder la quantité.');
     } finally {
       setSavingQty(p => ({ ...p, [bonusId]: false }));
+    }
+  };
+
+  // ── Ancienneté — override personnel ─────────────────────────────────────
+  const saveSeniorityOverride = async () => {
+    setSavingSeniority(true);
+    try {
+      const payload =
+        seniorityOvMode === 'INHERIT'
+          ? null // pas d'override → hérite de la config entreprise générale
+          : {
+              enabled:     seniorityOvMode === 'CUSTOM',
+              startYear:   Number(seniorityStartYear)  || 2,
+              startRate:   Number(seniorityStartRate)  || 0,
+              ratePerYear: Number(seniorityRatePerYr)  || 0,
+              capPercent:  seniorityCapPercent === '' ? null : Number(seniorityCapPercent),
+            };
+      await api.patch(`/employees/${params.id}`, { seniorityLinearOverride: payload });
+      setEmployee((p: any) => p ? { ...p, seniorityLinearOverride: payload } : p);
+      setSenioritySaved(true);
+      alert.success('Enregistré', "Configuration d'ancienneté mise à jour.");
+      setTimeout(() => setSenioritySaved(false), 3000);
+    } catch (e: any) {
+      alert.error('Erreur', e?.message || 'Impossible de sauvegarder la configuration.');
+    } finally {
+      setSavingSeniority(false);
     }
   };
 
@@ -421,6 +467,112 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           </div>
           <CheckCircle2 size={22} className="text-cyan-500 shrink-0" />
         </div>
+      )}
+
+      {/* 🆕 Ancienneté — override personnel (prioritaire sur la config entreprise) */}
+      {employee && (
+        <section className="glass-panel rounded-2xl p-6 border border-violet-200 dark:border-violet-800 bg-violet-50/30 dark:bg-violet-900/10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-violet-500 rounded-lg flex items-center justify-center">
+              <TrendingUp size={16} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Prime d'ancienneté — configuration</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Calculée et affichée automatiquement sur le bulletin. Par défaut, suit la config générale de l'entreprise.</p>
+            </div>
+          </div>
+
+          {/* Sélecteur de mode */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {([
+              { key: 'INHERIT',  label: 'Config. entreprise', desc: 'Par défaut' },
+              { key: 'CUSTOM',   label: 'Personnalisée',      desc: 'Formule propre à cet employé' },
+              { key: 'EXCLUDED', label: 'Exclu(e)',           desc: 'Pas de prime auto' },
+            ] as const).map(opt => (
+              <button key={opt.key} onClick={() => setSeniorityOvMode(opt.key)}
+                className={`text-left p-3 rounded-xl border-2 transition-all ${
+                  seniorityOvMode === opt.key
+                    ? 'border-violet-500 bg-violet-100 dark:bg-violet-900/30'
+                    : 'border-slate-200 dark:border-slate-700 hover:border-violet-300'
+                }`}>
+                <p className="text-xs font-bold text-slate-900 dark:text-white">{opt.label}</p>
+                <p className="text-[10px] text-slate-400">{opt.desc}</p>
+              </button>
+            ))}
+          </div>
+
+          {seniorityOvMode === 'INHERIT' && (
+            <p className="text-xs text-slate-400 italic">
+              Cet employé suit la formule d'ancienneté générale configurée dans les Paramètres entreprise.
+            </p>
+          )}
+
+          {seniorityOvMode === 'EXCLUDED' && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 italic">
+              Cet employé ne recevra <strong>aucune</strong> prime d'ancienneté automatique, même si l'entreprise en a une configurée.
+            </p>
+          )}
+
+          {seniorityOvMode === 'CUSTOM' && (
+            <>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Dès l'année</p>
+                  <input type="number" min={0} value={seniorityStartYear}
+                    onChange={e => setSeniorityStartYear(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Taux de départ %</p>
+                  <input type="number" step="0.1" value={seniorityStartRate}
+                    onChange={e => setSeniorityStartRate(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">+ % / an suppl.</p>
+                  <input type="number" step="0.1" value={seniorityRatePerYr}
+                    onChange={e => setSeniorityRatePerYr(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-1">Plafond % (optionnel)</p>
+                  <input type="number" step="0.1" value={seniorityCapPercent} placeholder="aucun"
+                    onChange={e => setSeniorityCapPercent(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                </div>
+              </div>
+
+              {employee.hireDate && (() => {
+                const hire = new Date(employee.hireDate);
+                const today = new Date();
+                let years = today.getFullYear() - hire.getFullYear();
+                const m = today.getMonth() - hire.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < hire.getDate())) years--;
+                const sy = Number(seniorityStartYear) || 0;
+                const sr = Number(seniorityStartRate) || 0;
+                const ry = Number(seniorityRatePerYr) || 0;
+                const cap = seniorityCapPercent === '' ? null : Number(seniorityCapPercent);
+                let rate = years >= sy ? sr + (years - sy) * ry : 0;
+                if (cap != null) rate = Math.min(rate, cap);
+                rate = Math.round(rate * 100) / 100;
+                const amount = Math.round((rate / 100) * Number(employee.baseSalary ?? 0));
+                return (
+                  <p className="text-[11px] text-violet-600 dark:text-violet-300 bg-violet-100/50 dark:bg-violet-900/20 rounded-lg px-3 py-2">
+                    Aperçu aujourd'hui : <strong>{years} ans</strong> d'ancienneté → taux <strong>{rate}%</strong> →
+                    {' '}<strong>{amount.toLocaleString('fr-FR')} FCFA/mois</strong>
+                  </p>
+                );
+              })()}
+            </>
+          )}
+
+          <button onClick={saveSeniorityOverride} disabled={savingSeniority}
+            className="mt-4 w-full py-2 bg-violet-500 hover:bg-violet-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {savingSeniority ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :
+             senioritySaved  ? <><CheckCircle2 size={12}/>Sauvegardé ✓</> :
+                               'Enregistrer'}
+          </button>
+        </section>
       )}
 
       {/* Stats rapides */}
