@@ -12,6 +12,7 @@ export interface PayrollItem {
   type: 'GAIN' | 'DEDUCTION' | 'EMPLOYER_COST';
   base?: number;
   rate?: number;
+  quantity?: number;   // ← ajouter cette ligne
   amount: number;
   isTaxable: boolean;
   isCnss: boolean;
