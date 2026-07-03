@@ -117,12 +117,12 @@ const BDB   = '1px solid #000';
 const TH_BG = '#d0d0d0';
 const K     = '#000';
 
-const ROW_H   = 21;
-const TOT_H   = 26;
-const HEAD_H  = 17;
-const FS      = 11;
-const FS_TOT  = 12;
-const FS_NET  = 15;
+const ROW_H   = 23;
+const TOT_H   = 29;
+const HEAD_H  = 19;
+const FS      = 12;
+const FS_TOT  = 13;
+const FS_NET  = 17;
 
 // ── Helpers styles ────────────────────────────────────────────────────────────
 const base_td = (o?: React.CSSProperties): React.CSSProperties => ({
@@ -135,7 +135,7 @@ const tdR = (o?: React.CSSProperties) => base_td({ textAlign: 'right', fontFamil
 const tdC = (o?: React.CSSProperties) => base_td({ textAlign: 'center', ...o });
 
 const TH = (bg = TH_BG, o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '0 3px', fontSize: 8.5, fontWeight: 700,
+  border: BD, padding: '0 4px', fontSize: 9.5, fontWeight: 700,
   textAlign: 'center', background: bg, color: K,
   textTransform: 'uppercase', fontFamily: SANS,
   height: HEAD_H, lineHeight: `${HEAD_H}px`, verticalAlign: 'middle',
@@ -147,16 +147,17 @@ const TotalRow = ({ label, gain = '', ret = '', patMt = '' }:
   { label: string; gain?: string; ret?: string; patMt?: string }) => {
   const s: React.CSSProperties = {
     borderTop: BDB, borderBottom: BDB, height: TOT_H, lineHeight: `${TOT_H}px`,
-    fontSize: FS_TOT, fontWeight: 900, color: K, background: '#e2e2e2',
-    verticalAlign: 'middle', padding: '0 5px',
+    fontSize: FS_TOT, fontWeight: 900, color: K, background: '#d0d0d0',
+    verticalAlign: 'middle', padding: '0 6px',
+    letterSpacing: 0.3,
   };
   return (
     <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
       <td colSpan={4} style={{ ...s, borderLeft: BD, fontFamily: SANS, textTransform: 'uppercase' }}>{label}</td>
-      <td style={{ ...s, borderLeft: BD, textAlign: 'right', fontFamily: FONT }}>{gain}</td>
-      <td style={{ ...s, borderLeft: BD, textAlign: 'right', fontFamily: FONT }}>{ret}</td>
+      <td style={{ ...s, borderLeft: BD, textAlign: 'right', fontFamily: FONT, fontSize: FS_TOT + 1 }}>{gain}</td>
+      <td style={{ ...s, borderLeft: BD, textAlign: 'right', fontFamily: FONT, fontSize: FS_TOT + 1 }}>{ret}</td>
       <td style={{ ...s, borderLeft: BD }} />
-      <td style={{ ...s, borderLeft: BD, borderRight: BD, textAlign: 'right', fontFamily: FONT }}>{patMt}</td>
+      <td style={{ ...s, borderLeft: BD, borderRight: BD, textAlign: 'right', fontFamily: FONT, fontSize: FS_TOT + 1 }}>{patMt}</td>
     </tr>
   );
 };
@@ -222,6 +223,8 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const ytdChargesSal = ytdCnss;  // ✅ Charges sal = CNSS salariale uniquement (4%)
 
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
+  // ✅ ABS_DEDUCT affiché juste après SAL_BASE dans la section principale
+  const absDeductItem = [...gainItems, ...retenueItems].find((i: any) => i.code === 'ABS_DEDUCT') ?? null;
   const indems = indemItems;
 
   // ── Totaux pour la ligne "Total" avant net à payer ──────────────────────
@@ -254,7 +257,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
     !['LOAN','ADVANCE'].includes(i.code) &&
     !isCnssPatSummary(i) && !TUS_CODES.includes(i.code)
   ).concat(retenueItems.filter((i: any) =>
-    !['LOAN','ADVANCE'].includes(i.code) && i.code !== 'MANUAL_DEDUCTION'
+    !['LOAN','ADVANCE'].includes(i.code) &&
+    i.code !== 'MANUAL_DEDUCTION' &&
+    i.code !== 'ABS_DEDUCT'   // ✅ géré séparément juste après SAL_BASE
   ));
 
   const ctaxPat = ((empItems ?? []) as any[]).filter((i: any) =>
@@ -266,10 +271,12 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   // ✅ Totaux pour ligne "Total" — déclarés après ctaxEmp et loanItems
   const totalGains    = gains.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + indems.reduce((s: number, i: any) => s + nv(i.amount), 0);
+  const absDeductAmount = absDeductItem ? nv(absDeductItem.amount) : 0;
   const totalRetenues = cnssSal + itsAmount
     + ctaxEmp.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + loanItems.reduce((s: number, i: any) => s + nv(i.amount), 0)
-    + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0);
+    + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0)
+    + absDeductAmount;  // ✅ ABS_DEDUCT dans totalRetenues
 
   const totalPat    = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
     + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
@@ -393,9 +400,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                 Poste : <strong>{e.position || '—'}</strong>
               </td>
               <td rowSpan={3} style={{ width:'12%', padding:'5px 4px', textAlign:'center', verticalAlign:'middle', background:TH_BG, color:K }}>
-                <div style={{ fontSize:7, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', color:K }}>Bulletin de Paie</div>
-                <div style={{ fontSize:20, fontWeight:900, fontFamily:FONT, marginTop:2, color:K }}>{monthLabel.slice(0,4).toUpperCase()}</div>
-                <div style={{ fontSize:13, fontWeight:700, fontFamily:FONT, color:K }}>{payroll.year}</div>
+                <div style={{ fontSize:8, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', color:K }}>Bulletin de Paie</div>
+                <div style={{ fontSize:23, fontWeight:900, fontFamily:FONT, marginTop:2, color:K }}>{monthLabel.slice(0,4).toUpperCase()}</div>
+                <div style={{ fontSize:15, fontWeight:900, fontFamily:FONT, color:K }}>{payroll.year}</div>
               </td>
             </tr>
             {/* Ligne 2 — données SOCIÉTÉ uniquement */}
@@ -500,6 +507,17 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
                   base={itemBase(item)} taux={itemTaux(item)}
                   gain={fmt(item.amount)} bold={item.code==='SAL_BASE'} />;
               })}
+
+              {/* ✅ Déduction absence — juste après SAL_BASE, avant Total Brut */}
+              {absDeductItem && (
+                <Row
+                  rub={1002}
+                  label={cleanLabel(absDeductItem.label)}
+                  base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
+                  taux={absDeductItem.quantity ? String(absDeductItem.quantity) : ''}
+                  ret={fmt(absDeductItem.amount)}
+                />
+              )}
 
               <TotalRow label="Total Brut" gain={fmtZ(totalBrut)} />
 
@@ -626,10 +644,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={{ width:'10%', padding:'4px 6px', borderRight:BDB, fontSize:10, color:K }}>
                 {e.paymentMethod === 'BANK_TRANSFER' ? 'Virement' : 'Espèces'}
               </td>
-              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:TH_BG, fontWeight:700, textAlign:'center', fontSize:10, color:K }}>
+              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:TH_BG, fontWeight:900, textAlign:'center', fontSize:11, color:K, letterSpacing:0.3 }}>
                 Net à payer
               </td>
-              <td style={{ width:'16%', padding:'4px 10px', borderRight:BDB, fontWeight:900, fontSize:FS_NET, textAlign:'right', fontFamily:FONT, background:'#efefef', color:K }}>
+              <td style={{ width:'16%', padding:'4px 10px', borderRight:BDB, fontWeight:900, fontSize:FS_NET, textAlign:'right', fontFamily:FONT, background:'#e0e0e0', color:K, letterSpacing:0.5 }}>
                 {fmtZ(netSalary)}
               </td>
               <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, textAlign:'center', fontSize:9, color:K }}>
@@ -653,27 +671,27 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </colgroup>
           <thead>
             <tr>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Brut</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Net imposable</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
+              <th style={TH(TH_BG, { fontSize:9 })}> </th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Brut</th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Net imposable</th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Charges Sal</th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Charges Pat</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>Mois</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(totalBrut)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD })}>{fmtD(cnssSal)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderTop:BD, borderRight:BD })}>{fmtD(cnssPatOnly)}</td>
+              <td style={tdC({ fontWeight:900, fontSize:11, borderLeft:BD, borderTop:BD })}>Mois</td>
+              <td style={tdR({ fontWeight:900, fontSize:12, borderLeft:BD, borderTop:BD })}>{fmtZ(totalBrut)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD, borderTop:BD })}>{fmtZ(nv(payroll.grossSalary)-cnssSal)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD, borderTop:BD })}>{fmtD(cnssSal)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD, borderTop:BD, borderRight:BD })}>{fmtD(cnssPatOnly)}</td>
             </tr>
           </tbody>
         </table>
 
         {/* ══ SÉPARATEUR CUMULS ═══════════════════════════════════════ */}
         <div style={{
-          width:'100%', textAlign:'center', fontSize:8, fontWeight:700,
+          width:'100%', textAlign:'center', fontSize:9.5, fontWeight:700,
           color:K, background:TH_BG, border:BDB, borderTop:'none',
           padding:'3px 0', textTransform:'uppercase', letterSpacing:2,
           flexShrink:0,
@@ -698,34 +716,34 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </colgroup>
           <thead>
             <tr>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Brut</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Net imposable</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Charges Sal</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Charges Pat</th>
-              <th colSpan={3} style={TH(TH_BG, { fontSize:8 })}>Congés annuels</th>
+              <th style={TH(TH_BG, { fontSize:9 })}> </th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Brut</th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Net imposable</th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Charges Sal</th>
+              <th style={TH(TH_BG, { fontSize:9 })}>Charges Pat</th>
+              <th colSpan={3} style={TH(TH_BG, { fontSize:9 })}>Congés annuels</th>
             </tr>
             <tr>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
-              <th style={TH(TH_BG, { fontSize:7 })}> </th>
-              <th style={TH(TH_BG, { fontSize:7 })}>Droits</th>
-              <th style={TH(TH_BG, { fontSize:7 })}>Pris</th>
-              <th style={TH(TH_BG, { fontSize:7 })}>Solde</th>
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}> </th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Droits</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Pris</th>
+              <th style={TH(TH_BG, { fontSize:8 })}>Solde</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={tdC({ fontWeight:700, fontSize:9, borderLeft:BD })}>Année</td>
-              <td style={tdR({ fontWeight:700, fontSize:9, borderLeft:BD })}>{fmtD(ytdGross)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdNetImp)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdChargesSal)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{fmtD(ytdCnssEmp)}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{congesDroits > 0 ? fmtD(congesDroits) : ''}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD })}>{congesPris   > 0 ? fmtD(congesPris)   : ''}</td>
-              <td style={tdR({ fontSize:9, borderLeft:BD, borderRight:BD })}>{congesSolde > 0 ? fmtD(congesSolde) : ''}</td>
+              <td style={tdC({ fontWeight:900, fontSize:11, borderLeft:BD })}>Année</td>
+              <td style={tdR({ fontWeight:900, fontSize:12, borderLeft:BD })}>{fmtD(ytdGross)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{fmtD(ytdNetImp)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{fmtD(ytdChargesSal)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{fmtD(ytdCnssEmp)}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{congesDroits > 0 ? fmtD(congesDroits) : ''}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{congesPris   > 0 ? fmtD(congesPris)   : ''}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD, borderRight:BD })}>{congesSolde > 0 ? fmtD(congesSolde) : ''}</td>
             </tr>
           </tbody>
         </table>

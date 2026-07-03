@@ -14,6 +14,7 @@ export interface ConventionStatus {
   conventionCode: string | null;
   conventionName: string | null;
   categories:     Array<{ code: string; label: string; minSalary: number }>;
+  entrepriseId?:  string;   // ← ajouter cette ligne
 }
 
 export interface PredefinedConvention {
