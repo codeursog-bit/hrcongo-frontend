@@ -6,7 +6,7 @@ import {
   ArrowLeft, Plus, Trash2, Loader2, CheckCircle2,
   Search, X, Calculator, AlertCircle, ChevronDown,
   ChevronUp, Building2, Check, CreditCard, Wallet,
-  Calendar, Briefcase, Users, BadgeCheck,
+  Calendar, Briefcase, Users, BadgeCheck, History, RotateCcw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -123,6 +123,26 @@ const INDEMNITE_SUGGESTIONS = [
   "Indemnité de déplacement","Indemnité de téléphone",
 ];
 
+// ── Autocomplete labels primes & indemnités ──────────────────────────────────
+const ALL_PRIME_LABELS = [
+  "Prime d'ancienneté", "Prime d'assiduité", "Prime de confiance",
+  "Prime de garde", "Prime de motivation", "Prime de précaire",
+  "Prime de responsabilité", "Prime de risque", "Prime de base congé",
+  "Prime de diplôme", "Prime de technicité", "Prime de rendement",
+  "Prime de résultat", "Prime de fin d'année", "Prime de performance",
+  "Prime exceptionnelle", "Prime de poste", "Prime de nuit",
+  "Prime de dimanche", "Prime de caisse", "Gratification",
+  "13ème mois", "Prime d'intéressement",
+];
+
+const ALL_INDEM_LABELS = [
+  "Indemnité de transport", "Indemnité de logement", "Indemnité de panier",
+  "Indemnité kilométrique", "Indemnité de représentation", "Indemnité vestimentaire",
+  "Indemnité de déplacement", "Indemnité de téléphone", "Indemnité de salissure",
+  "Indemnité de fonction", "Indemnité de stage", "Indemnité d'expatriation",
+  "Indemnité de licenciement", "Indemnité compensatrice de congés",
+];
+
 const MARITAL_LABELS: Record<string, string> = {
   SINGLE: 'Célibataire', MARRIED: 'Marié(e)',
   DIVORCED: 'Divorcé(e)', WIDOWED: 'Veuf/Veuve',
@@ -200,7 +220,7 @@ const SimpleRow = ({ row, onChangeLabel, onChangeAmount, onRemove, placeholder =
 );
 
 const InputRow = ({
-  row, onChangeLabel, onChangeBase, onChangeRate, onRemove, placeholder = 'Libellé…',
+  row, onChangeLabel, onChangeBase, onChangeRate, onRemove, placeholder = 'Libellé…', suggestions = [],
 }: {
   row: Row;
   onChangeLabel: (v: string) => void;
@@ -208,17 +228,17 @@ const InputRow = ({
   onChangeRate: (v: number | '') => void;
   onRemove: () => void;
   placeholder?: string;
+  suggestions?: string[];
 }) => (
   <motion.div
     initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
     className="group grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 items-center"
   >
-    <input
-      type="text"
+    <LabelInput
       value={row.label}
-      onChange={e => onChangeLabel(e.target.value)}
+      onChange={onChangeLabel}
       placeholder={placeholder}
-      className="px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600 w-full"
+      suggestions={suggestions}
     />
     <div className="relative">
       <input
@@ -254,6 +274,91 @@ const InputRow = ({
   </motion.div>
 );
 
+
+// ─── LabelInput — input avec autocomplete contextuel ────────────────────────
+// Suggestions filtrées par ce qui est tapé, insensibles à la casse.
+// L'utilisateur peut taper n'importe quoi (pas limité aux suggestions).
+
+const LabelInput = ({
+  value, onChange, placeholder, suggestions, className = '',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  suggestions: string[];
+  className?: string;
+}) => {
+  const [open, setOpen]   = React.useState(false);
+  const [query, setQuery] = React.useState(value);
+  const ref               = React.useRef<HTMLDivElement>(null);
+
+  // Sync externe → interne
+  React.useEffect(() => { setQuery(value); }, [value]);
+
+  // Fermer si clic extérieur
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = query.length >= 1
+    ? suggestions.filter(s => s.toLowerCase().includes(query.toLowerCase())).slice(0, 8)
+    : [];
+
+  const handleChange = (v: string) => {
+    setQuery(v);
+    onChange(v);
+    setOpen(true);
+  };
+
+  const handleSelect = (s: string) => {
+    setQuery(s);
+    onChange(s);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <input
+        type="text"
+        value={query}
+        onChange={e => handleChange(e.target.value)}
+        onFocus={() => query.length >= 1 && setOpen(true)}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+      />
+      <AnimatePresence>
+        {open && filtered.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+            className="absolute z-[999] left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+          >
+            {filtered.map(s => (
+              <button key={s} onMouseDown={() => handleSelect(s)}
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+                {/* Highlight la partie matchée */}
+                {(() => {
+                  const idx = s.toLowerCase().indexOf(query.toLowerCase());
+                  if (idx === -1) return s;
+                  return (
+                    <>
+                      {s.slice(0, idx)}
+                      <span className="font-bold text-sky-600 dark:text-sky-400">{s.slice(idx, idx + query.length)}</span>
+                      {s.slice(idx + query.length)}
+                    </>
+                  );
+                })()}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 // ─── Page principale ─────────────────────────────────────────────────────────
 
@@ -319,6 +424,11 @@ export default function ManuelPayrollPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess]       = useState(false);
   const [createdId, setCreatedId]   = useState<string | null>(null);
+
+  // ── Toggle "Utiliser données précédentes" ────────────────────────────────
+  const [usePrevData, setUsePrevData]       = useState(false);
+  const [loadingPrev, setLoadingPrev]       = useState(false);
+  const [prevDataLoaded, setPrevDataLoaded] = useState(false);
 
   useEffect(() => {
     api.get<any>('/employees/simple')
@@ -637,6 +747,100 @@ export default function ManuelPayrollPage() {
     }
   };
 
+  // ── Charger les données du bulletin M-1 ──────────────────────────────────
+  const loadPrevData = async () => {
+    if (!selectedEmp) return;
+    setLoadingPrev(true);
+    try {
+      // Calculer le mois précédent
+      const currentMonthIdx = MONTHS.findIndex(m => m === month);
+      const prevMonthIdx    = currentMonthIdx === 0 ? 11 : currentMonthIdx - 1;
+      const prevYear        = currentMonthIdx === 0 ? year - 1 : year;
+      const prevMonthNum    = prevMonthIdx + 1;
+
+      // Récupérer le bulletin du mois précédent pour cet employé
+      // ✅ Endpoint existant : GET /payrolls?employeeId=X&month=Y&year=Z
+      const res: any = await api.get(
+        `/payrolls?employeeId=${selectedEmp.id}&month=${prevMonthNum}&year=${prevYear}`
+      ).catch(() => null);
+      // findAll retourne un tableau — on prend le premier bulletin trouvé
+      const prev: any = Array.isArray(res) ? res[0] : (res?.data?.[0] ?? res);
+
+      if (!prev || !prev.items) {
+        alert(`Aucun bulletin trouvé pour ${MONTHS[prevMonthIdx]} ${prevYear}`);
+        setUsePrevData(false);
+        return;
+      }
+
+      // ── Extraire les données du bulletin précédent ──────────────────────
+
+      // Jours travaillés
+      if (prev.workedDays) setWorkedDays(prev.workedDays);
+
+      // Heures sup
+      setOt10(Number(prev.overtimeHours10  ?? 0));
+      setOt25(Number(prev.overtimeHours25  ?? 0));
+      setOt50(Number(prev.overtimeHours50  ?? 0));
+      setOt100(Number(prev.overtimeHours100 ?? 0));
+
+      // Primes (GAIN isTaxable) depuis les items du bulletin
+      const prevPrimes: Row[] = (prev.items ?? [])
+        .filter((i: any) => i.type === 'GAIN' && i.isTaxable && !['SAL_BASE','INDEM_CONGE'].includes(i.code))
+        .map((i: any) => ({
+          localId: uid(),
+          label:   i.label ?? '',
+          base:    i.base  ? Number(i.base)  : '',
+          rate:    i.quantity ? Number(i.quantity) : (i.rate ? Number(i.rate) : 1),
+          amount:  Number(i.amount ?? 0),
+        }));
+      if (prevPrimes.length > 0) setPrimes(sortPrimes(prevPrimes));
+
+      // Indemnités (GAIN !isTaxable && !isCnss) depuis les items
+      const prevIndem: Row[] = (prev.items ?? [])
+        .filter((i: any) => i.type === 'GAIN' && !i.isTaxable && !i.isCnss)
+        .map((i: any) => ({
+          localId: uid(),
+          label:   i.label ?? '',
+          base:    i.base  ? Number(i.base)  : '',
+          rate:    i.quantity ? Number(i.quantity) : (i.rate ? Number(i.rate) : 1),
+          amount:  Number(i.amount ?? 0),
+        }));
+      if (prevIndem.length > 0) setIndemnites(prevIndem);
+
+      // Retenues libres (MANUAL_DEDUCTION)
+      const prevRetenues: ManualDeduction[] = (prev.items ?? [])
+        .filter((i: any) => i.code === 'MANUAL_DEDUCTION')
+        .map((i: any) => ({
+          localId: uid(),
+          label:   i.label ?? '',
+          amount:  Number(i.amount ?? 0),
+        }));
+      if (prevRetenues.length > 0) setRetenues(prevRetenues);
+
+      // Congés — snapshot du bulletin précédent
+      const congeItem = (prev.items ?? []).find((i: any) => i.code === 'CONGES_SNAPSHOT' || i.code === 'ABS_CONGE');
+      if (prev.congesDroits != null)   setCongesDroits(Number(prev.congesDroits));
+      if (prev.congesPris   != null)   setCongesPris(Number(prev.congesPris));
+      if (prev.congesSolde  != null)   setCongesSolde(Number(prev.congesSolde));
+
+      setPrevDataLoaded(true);
+    } catch (e: any) {
+      alert(`Erreur chargement données précédentes : ${e?.message}`);
+      setUsePrevData(false);
+    } finally {
+      setLoadingPrev(false);
+    }
+  };
+
+  // ── Réinitialiser les données quand toggle désactivé ─────────────────────
+  const clearPrevData = () => {
+    setPrimes([]); setIndemnites([]); setRetenues([]);
+    setOt10(0); setOt25(0); setOt50(0); setOt100(0);
+    setWorkedDays(26);
+    setCongesDroits(''); setCongesPris(''); setCongesSolde('');
+    setPrevDataLoaded(false);
+  };
+
   const resetPage = () => {
     setSuccess(false); setSim(null); setSelectedEmp(null); setEmpSearch('');
     setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
@@ -644,6 +848,7 @@ export default function ManuelPayrollPage() {
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
     setCarryOverBrut(''); setCarryOverTauxPat(Number(companyInfo?.cnssEmployerRate) || 20.28);
     setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setJoursCongesPris(''); setCarryOverSaved(false);
+    setUsePrevData(false); setPrevDataLoaded(false);
   };
 
   const hasOt = [ot10,ot25,ot50,ot100].some(v => n(v) > 0);
@@ -810,6 +1015,56 @@ export default function ManuelPayrollPage() {
               </div>
             )}
 
+            {/* ✅ Toggle "Utiliser données précédentes" */}
+            {selectedEmp && empDetail && (
+              <div className="mx-5 mb-4 mt-3">
+                <div className="flex items-center justify-between px-4 py-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl">
+                  <div className="flex items-center gap-2.5">
+                    <History size={15} className="text-sky-500 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-sky-700 dark:text-sky-300">Utiliser les données du mois précédent</p>
+                      <p className="text-[10px] text-sky-500 dark:text-sky-400">
+                        {(() => {
+                          const idx = MONTHS.findIndex(m => m === month);
+                          const prevIdx = idx === 0 ? 11 : idx - 1;
+                          const prevYr  = idx === 0 ? year - 1 : year;
+                          return `Primes, indemnités, HS de ${MONTHS[prevIdx]} ${prevYr}`;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {prevDataLoaded && (
+                      <button onClick={clearPrevData}
+                        className="flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-gray-500 hover:text-red-500 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors">
+                        <RotateCcw size={9} /> Vider
+                      </button>
+                    )}
+                    {loadingPrev
+                      ? <Loader2 size={16} className="animate-spin text-sky-500" />
+                      : (
+                        <button
+                          onClick={() => {
+                            const next = !usePrevData;
+                            setUsePrevData(next);
+                            if (next) loadPrevData();
+                            else clearPrevData();
+                          }}
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${usePrevData ? 'bg-sky-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                          <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${usePrevData ? 'translate-x-5' : ''}`} />
+                        </button>
+                      )
+                    }
+                  </div>
+                </div>
+                {prevDataLoaded && (
+                  <p className="text-[10px] text-sky-600 dark:text-sky-400 mt-1.5 px-1 flex items-center gap-1">
+                    <CheckCircle2 size={9} /> Données chargées — modifiez librement avant de confirmer
+                  </p>
+                )}
+              </div>
+            )}
+
             {selectedEmp && (
               <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700/50 pt-4">
                 <SLabel>Jours travaillés <span className="font-normal text-gray-400">/ 26 jours théoriques</span></SLabel>
@@ -869,6 +1124,7 @@ export default function ManuelPayrollPage() {
                 {primes.map(row => (
                   <InputRow key={row.localId} row={row}
                     placeholder="Ex : Prime d'ancienneté, de rendement…"
+                    suggestions={ALL_PRIME_LABELS}
                     onChangeLabel={v => {
                       updateRow(setPrimes, row.localId, { label: v });
                       applyAutoIfNeeded(row.localId, v);
@@ -940,6 +1196,7 @@ export default function ManuelPayrollPage() {
                 {indemnites.map(row => (
                   <InputRow key={row.localId} row={row}
                     placeholder="Ex : Indemnité de transport, de logement…"
+                    suggestions={ALL_INDEM_LABELS}
                     onChangeLabel={v => updateRow(setIndemnites, row.localId, { label: v })}
                     onChangeBase={v => updateRow(setIndemnites, row.localId, { base: v })}
                     onChangeRate={v => updateRow(setIndemnites, row.localId, { rate: v })}
