@@ -68,45 +68,28 @@ function cleanLabel(label: string): string {
     .trim();
 }
 
+// ── itemBase / itemTaux — lecture DIRECTE depuis la BDD ─────────────────────
+// ✅ Le front n'invente rien. Tout vient de payroll_items (base, rate, quantity).
+// Les heures sup ont leur base stockée côté back (taux horaire majoré).
+// Les primes ont leur base reconstituée dans payroll-items.service.ts.
 function itemBase(item: any): string {
   if (item.base == null || nv(item.base) === 0) return '';
-  const base = nv(item.base), rate = nv(item.rate);
-  const label = item.label ?? '';
-  const isOT = /^HS_\d+$/i.test(item.code ?? '')
-    || /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code ?? '')
-    || /heure[s]?\s+suppl/i.test(label);
-  if (isOT) {
-    if (rate > 1) return Math.round(base * rate).toLocaleString('fr-FR');
-    const m = label.match(/\+\s*(\d+)\s*%/);
-    if (m) return Math.round(base * (1 + parseInt(m[1], 10) / 100)).toLocaleString('fr-FR');
-    if (rate > 0 && rate < 1) return Math.round(base * (1 + rate)).toLocaleString('fr-FR');
-  }
-  return Math.round(base).toLocaleString('fr-FR');
+  return Math.round(nv(item.base)).toLocaleString('fr-FR');
 }
 
 function itemTaux(item: any): string {
-  const label = item.label ?? '';
-  const isOT = /^HS_\d+$/i.test(item.code ?? '')
-    || /OT|OVER|HSUP|H_SUP|HEURE_SUP/i.test(item.code ?? '')
-    || /heure[s]?\s+suppl/i.test(label);
-  if (isOT) { const q = nv(item.quantity); if (q > 0) return String(q); }
-  const qty = item.quantity; if (qty != null && nv(qty) !== 0) return String(nv(qty));
-  // ✅ Si rate absent ou null → rien (gain = base direct, pas de calcul)
+  // 1. quantity prioritaire (nb jours, nb heures, nb unités)
+  if (item.quantity != null && nv(item.quantity) !== 0) {
+    return String(nv(item.quantity));
+  }
+  // 2. rate — affiché tel quel depuis la BDD
   if (item.rate == null || item.rate === undefined) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
-  // ✅ Rate entre 0 et 1 :
-  // - Ancienneté (rate=années/100, ex: 0.11) → afficher "11 ans"
-  // - Autres (gratification 0.5 etc.) → afficher décimal "0,50"
-  if (r > 0 && r < 1) {
-    if (/anc[iè]/i.test(label)) return String(Math.round(r * 100));
-    return r.toFixed(2).replace('.', ',');
-  }
-  // ✅ Rate = 1 → afficher "1" (congés, montant fixe avec base)
-  if (r === 1) return '1';
-  // Rate > 1 (multiplicateur HS)
-  if (r > 1 && r <= 3) return r.toFixed(2).replace('.', ',');
-  return String(r);
+  // Taux en % (ex: 0.08 → 8%, 0.05 → 5%) stocké en décimal
+  if (r > 0 && r < 1) return (r * 100).toFixed(2).replace('.', ',').replace(/,?0+$/, '');
+  // Taux entier ou décimal > 1 (ex: 4.00, 10.03, 1.10)
+  return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 
 // ── Tokens visuels ────────────────────────────────────────────────────────────
