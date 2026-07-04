@@ -188,7 +188,7 @@ const COTIS_CODES = new Set([
   'ITS',
   'BNC_SOURCE',
   'ABS_CONGE',
-  'ABS_DEDUCT',
+  // ✅ ABS_DEDUCT retiré — affiché juste après SAL_BASE dans gainItems
   'INDEM_CONGE', // cas particulier : GAIN mais côté déduction pour absence congé
 ]);
 
@@ -222,6 +222,12 @@ export function classifyItems(items: PayrollItem[]): ClassifiedItems {
 
     // ── DEDUCTION ─────────────────────────────────────────────────────────
     if (item.type === 'DEDUCTION') {
+      // ✅ ABS_DEDUCT → gainItems (affiché juste après SAL_BASE, pas dans cotisations)
+      if (item.code === 'ABS_DEDUCT') {
+        gainItems.push(item);
+        continue;
+      }
+
       const isRetenue = RETENUE_CODES.has(item.code)
         || item.code.startsWith('LOAN')
         || item.code.startsWith('ADVANCE');
@@ -229,7 +235,7 @@ export function classifyItems(items: PayrollItem[]): ClassifiedItems {
       if (isRetenue) {
         retenueItems.push(item);
       } else {
-        // CNSS_SAL, ITS, BNC_SOURCE, ABS_*, CTAX_* → cotisations
+        // CNSS_SAL, ITS, BNC_SOURCE, ABS_CONGE, CTAX_* → cotisations
         cotisItems.push(item);
       }
     }

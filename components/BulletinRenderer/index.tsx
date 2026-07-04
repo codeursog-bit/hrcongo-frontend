@@ -205,9 +205,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
   const ytdNetSalary = nv(ytd.netSalaryAnnual) || nv(ytd.netSalary);   // net à payer annuel
   const ytdChargesSal = ytdCnss;  // ✅ Charges sal = CNSS salariale uniquement (4%)
 
+  // ✅ ABS_DEDUCT est maintenant dans gainItems (classifié par bulletin-items-classifier)
+  // On l'extrait séparément pour l'afficher juste après SAL_BASE avec ret= au lieu de gain=
+  const absDeductItem = gainItems.find((i: any) => i.code === 'ABS_DEDUCT') ?? null;
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
-  // ✅ ABS_DEDUCT affiché juste après SAL_BASE dans la section principale
-  const absDeductItem = [...gainItems, ...retenueItems].find((i: any) => i.code === 'ABS_DEDUCT') ?? null;
   const indems = indemItems;
 
   // ── Totaux pour la ligne "Total" avant net à payer ──────────────────────
