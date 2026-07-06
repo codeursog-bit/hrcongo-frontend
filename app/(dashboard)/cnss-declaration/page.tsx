@@ -345,7 +345,7 @@ export default function CnssDeclarationPage() {
                     </div>
                     {/* Total cotisations */}
                     <div className="flex justify-between items-center py-2 font-bold border-b-2 border-blue-200 dark:border-blue-800">
-                      <span className="text-slate-800 dark:text-slate-200">Total cotisations CNSS (24,28%)</span>
+                      <span className="text-slate-800 dark:text-slate-200">Total cotisations globales (24,28%)</span>
                       <span className="text-blue-600 dark:text-blue-400 tabular-nums">{fmt(recap.totals.totalCotisations)}</span>
                     </div>
                     {/* TUS */}
