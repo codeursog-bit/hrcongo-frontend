@@ -758,16 +758,26 @@ export default function ManuelPayrollPage() {
       const prevYear        = currentMonthIdx === 0 ? year - 1 : year;
       const prevMonthNum    = prevMonthIdx + 1;
 
-      // Récupérer le bulletin du mois précédent pour cet employé
-      // ✅ Endpoint existant : GET /payrolls?employeeId=X&month=Y&year=Z
-      const res: any = await api.get(
+      // ✅ Étape 1 — trouver l'ID du bulletin du mois précédent
+      // findAll retourne un tableau SANS items (infos de base seulement)
+      const list: any = await api.get(
         `/payrolls?employeeId=${selectedEmp.id}&month=${prevMonthNum}&year=${prevYear}`
       ).catch(() => null);
-      // findAll retourne un tableau — on prend le premier bulletin trouvé
-      const prev: any = Array.isArray(res) ? res[0] : (res?.data?.[0] ?? res);
+
+      const listArr   = Array.isArray(list) ? list : (list?.data ?? []);
+      const prevMeta  = listArr[0] ?? null;
+
+      if (!prevMeta?.id) {
+        alert(`Aucun bulletin trouvé pour ${MONTHS[prevMonthIdx]} ${prevYear}`);
+        setUsePrevData(false);
+        return;
+      }
+
+      // ✅ Étape 2 — charger le bulletin complet avec tous ses items
+      const prev: any = await api.get(`/payrolls/${prevMeta.id}`).catch(() => null);
 
       if (!prev || !prev.items) {
-        alert(`Aucun bulletin trouvé pour ${MONTHS[prevMonthIdx]} ${prevYear}`);
+        alert(`Impossible de charger les données de ${MONTHS[prevMonthIdx]} ${prevYear}`);
         setUsePrevData(false);
         return;
       }
