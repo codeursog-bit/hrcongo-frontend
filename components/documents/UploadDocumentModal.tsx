@@ -218,7 +218,7 @@ export function UploadDocumentModal({ isOpen, onClose, onSuccess, preselectedEmp
   const loadEmployees = async () => {
     setLoadingEmp(true);
     try {
-      const data = await api.get<any[]>('/employees');
+      const data = await api.get<any[]>('/employees/simple');
       setEmployees(Array.isArray(data) ? data : []);
     } catch { setEmployees([]); }
     finally { setLoadingEmp(false); }

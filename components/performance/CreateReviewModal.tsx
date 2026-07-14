@@ -71,7 +71,7 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
 
   const loadEmployees = async () => {
     setLE(true);
-    try { setEmp(Array.isArray(await api.get<any[]>('/employees')) ? await api.get<any[]>('/employees') : []); }
+    try { const res = await api.get<any[]>('/employees/simple'); setEmp(Array.isArray(res) ? res : []); }
     catch { setEmp([]); }
     finally { setLE(false); }
   };

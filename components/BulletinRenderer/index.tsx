@@ -486,22 +486,29 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               {/* ── Gains ───────────────────────────────────────────── */}
               {gains.map((item: any, idx: number) => {
                 gainRef++;
-                return <Row key={item.id||item.code||idx}
+                const row = <Row key={item.id||item.code||idx}
                   rub={gainRef} label={cleanLabel(item.label)}
                   base={itemBase(item)} taux={itemTaux(item)}
                   gain={fmt(item.amount)} bold={item.code==='SAL_BASE'} />;
-              })}
 
-              {/* ✅ Déduction absence — juste après SAL_BASE, avant Total Brut */}
-              {absDeductItem && (
-                <Row
-                  rub={1002}
-                  label={cleanLabel(absDeductItem.label)}
-                  base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
-                  taux={absDeductItem.quantity ? String(absDeductItem.quantity) : ''}
-                  ret={fmt(absDeductItem.amount)}
-                />
-              )}
+                // ✅ ABS_DEDUCT s'intercale IMMÉDIATEMENT après SAL_BASE
+                if (item.code === 'SAL_BASE' && absDeductItem) {
+                  gainRef++;
+                  return (
+                    <React.Fragment key={`sal-group-${idx}`}>
+                      {row}
+                      <Row
+                        rub={gainRef}
+                        label={cleanLabel(absDeductItem.label)}
+                        base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
+                        taux={absDeductItem.quantity ? String(absDeductItem.quantity) : ''}
+                        ret={fmt(absDeductItem.amount)}
+                      />
+                    </React.Fragment>
+                  );
+                }
+                return row;
+              })}
 
               <TotalRow label="Total Brut" gain={fmtZ(totalBrut)} />
 
