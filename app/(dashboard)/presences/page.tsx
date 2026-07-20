@@ -13,6 +13,7 @@ import WeeklyView from './WeeklyView';
 import MonthlyView from './MonthlyView';
 import CorrectionsView from './CorrectionsView';
 import EmployeeView from './EmployeeView';
+import PresenceSubNav from '@/components/PresenceSubNav';
 import { useBasePath } from '@/hooks/useBasePath';
 
 type TabType = 'monthly' | 'daily' | 'weekly' | 'corrections' | 'myview';
@@ -150,6 +151,8 @@ export default function AttendancePage() {
   if (userRole === 'EMPLOYEE') {
     return (
       <div className="min-h-screen pb-20 space-y-6">
+        <PresenceSubNav userRole={userRole} />
+
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -192,6 +195,8 @@ export default function AttendancePage() {
 
   return (
     <div className="min-h-screen pb-20 space-y-6">
+      <PresenceSubNav userRole={userRole} />
+
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -209,6 +214,10 @@ export default function AttendancePage() {
           
           <Link href={bp("/presences/pointage")} className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
             <Fingerprint size={20} /> Ma Pointeuse
+          </Link>
+
+          <Link href={bp("/presences/absences")} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <FileText size={20} /> Absences
           </Link>
           
           <div className="bg-white dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center">

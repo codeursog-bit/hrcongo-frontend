@@ -1,4 +1,3 @@
-
 // 'use client';
 
 // import React, { useState, useEffect } from 'react';
@@ -178,6 +177,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
+import CongeSubNav from '@/components/CongeSubNav';
 
 type LeaveType = 'ANNUAL' | 'SICK' | 'MATERNITY' | 'PATERNITY' | 'UNPAID' | 'SPECIAL';
 
@@ -325,6 +325,7 @@ export default function CalendarPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
+      <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">

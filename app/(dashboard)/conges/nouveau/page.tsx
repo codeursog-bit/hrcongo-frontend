@@ -364,6 +364,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { useBasePath } from '@/hooks/useBasePath';
+import CongeSubNav from '@/components/CongeSubNav';
 
 // ✅ CONGO : 26j/an = 2.1667j/mois (pas 2.5)
 const CONGO_MONTHLY_RATE = (26 / 12).toFixed(2); // "2.17"
@@ -549,6 +550,8 @@ export default function NewLeaveRequestPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CongeSubNav userRole={currentUser?.role || ''} />
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">

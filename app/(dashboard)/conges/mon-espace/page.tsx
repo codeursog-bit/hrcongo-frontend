@@ -1,6 +1,3 @@
-
-
-
 // 'use client';
 
 // import React, { useState, useEffect, useMemo } from 'react';
@@ -369,6 +366,7 @@ import {
 import { api } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBasePath } from '@/hooks/useBasePath';
+import CongeSubNav from '@/components/CongeSubNav';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -433,6 +431,14 @@ export default function MyLeaveSpacePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showHelp, setShowHelp]   = useState(false);
   const [myEmpId, setMyEmpId]     = useState<string | null>(null);
+  const [userRole, setUserRole]   = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setUserRole(JSON.parse(stored).role || '');
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -486,6 +492,7 @@ export default function MyLeaveSpacePage() {
 
   return (
     <div className="max-w-[1200px] mx-auto pb-20 space-y-8">
+      <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex items-center gap-4">
@@ -758,7 +765,7 @@ export default function MyLeaveSpacePage() {
                       </div>
 
                       {/* Statut */}
-                      <div className="shrink-0">
+                      <div className="shrink-0 flex items-center gap-2">
                         {item.status === 'APPROVED' && (
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-100">
                             <CheckCircle2 size={13} /> Validé
@@ -780,6 +787,13 @@ export default function MyLeaveSpacePage() {
                             Annulé
                           </span>
                         )}
+                        <Link
+                          href={bp(`/conges/${item.id}`)}
+                          title="Voir le détail"
+                          className="p-2 rounded-full border border-gray-200 dark:border-gray-600 text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-sky-500 transition-colors"
+                        >
+                          <ArrowRight size={14} />
+                        </Link>
                       </div>
                     </motion.div>
                   );

@@ -10,6 +10,7 @@ import {
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import CongeSubNav from '@/components/CongeSubNav';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,14 @@ export default function LeaveBalancesAdminPage() {
   const [search, setSearch]        = useState('');
   const [filterAlert, setFilterAlert] = useState<'ALL' | 'CRITICAL' | 'WARNING' | 'LOCKED'>('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setUserRole(JSON.parse(stored).role || '');
+    } catch {}
+  }, []);
 
   const load = async () => {
     try {
@@ -145,6 +154,7 @@ export default function LeaveBalancesAdminPage() {
 
   return (
     <div className="max-w-[1400px] mx-auto pb-24 space-y-8">
+      <CongeSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
