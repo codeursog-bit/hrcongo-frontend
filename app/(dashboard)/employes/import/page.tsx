@@ -38,6 +38,15 @@ const DB_FIELDS: Record<string, string> = {
   numberOfChildren: 'Nombre Enfants', address: 'Adresse', city: 'Ville',
   position: 'Poste', departmentName: 'Département', hireDate: 'Date Embauche',
   taxNumber: 'N° Fiscal', bankName: 'Banque', bankAccountNumber: 'N° Compte',
+  // 🆕 Convention collective
+  professionalCategory: 'Catégorie (convention)', echelon: 'Échelon (convention)',
+  // 🆕 Fiche ORCA — Informations complémentaires
+  bloodType: 'Groupe Sanguin', pathology: 'Pathologie', educationLevel: "Niveau d'Études",
+  fatherName: 'Nom du Père', motherName: 'Nom de la Mère',
+  emergencyContactName: 'Contact Urgence — Nom', emergencyContactRelation: 'Contact Urgence — Lien',
+  emergencyContactPhone: 'Contact Urgence — Téléphone',
+  hasDrivingLicense: 'Permis de Conduire (Oui/Non)', drivingLicenseNumber: 'N° Permis',
+  foreignLanguages: 'Langue Étrangère', uniformSize: 'Taille Tenue', shoeSize: 'Pointure',
 };
 
 // ─── Step config ─────────────────────────────────────────────────────────────

@@ -8,7 +8,7 @@ import {
   ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle,
 
   ClipboardList, LayoutDashboard,UsersRound,
-  UmbrellaOff,BookOpen
+  UmbrellaOff,BookOpen,UserCircle,BarChart3
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -112,6 +112,9 @@ export default function PayrollAnalyticsPage() {
           { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
           { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign , active:true },
           { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
+          { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
+          { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
+          { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
           { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
           { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
         ].map((item) => (

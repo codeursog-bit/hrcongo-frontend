@@ -14,7 +14,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, UserCircle, Plus, Stethoscope,
-  FileText, Sparkles, Wallet, Paperclip, Info,
+  FileText, Sparkles, Wallet, Paperclip, Info, Lock, Unlock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -22,6 +22,8 @@ import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
 import { printAbsenceRequest } from '@/lib/absence-print';
 import PresenceSubNav from '@/components/PresenceSubNav';
+import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
+import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -52,6 +54,9 @@ export default function AbsenceManagementPage() {
   const [userRole, setUserRole] = useState('');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
+  const [showPrintAuthModal, setShowPrintAuthModal] = useState(false);
+  const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
+  const [docData, setDocData] = useState<any>(null);
 
   useEffect(() => {
     try {
@@ -77,7 +82,19 @@ export default function AbsenceManagementPage() {
     })();
   }, []);
 
-  const canApprove = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(userRole);
+  const canApprove = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
+
+  useEffect(() => {
+    if (!selectedId) { setDocData(null); return; }
+    (async () => {
+      try {
+        setDocData(await api.get(`/absence-requests/${selectedId}/document-data`));
+      } catch (e) {
+        console.error('Erreur chargement document-data', e);
+        setDocData(null);
+      }
+    })();
+  }, [selectedId]);
 
   const filtered = useMemo(() => {
     let list = filter === 'PENDING' ? requests.filter(r => r.status === 'PENDING') : requests;
@@ -116,6 +133,19 @@ export default function AbsenceManagementPage() {
       alert(e?.message || 'Erreur lors de la mise à jour');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleSetPrintAuthorization = async (authorized: boolean) => {
+    if (!selected) return;
+    setIsTogglingPrintAuth(true);
+    try {
+      await api.patch(`/absence-requests/${selected.id}/print-authorization`, { authorized });
+      setRequests(prev => prev.map(r => r.id === selected.id ? { ...r, printAuthorized: authorized } : r));
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de la mise à jour de l'autorisation d'impression");
+    } finally {
+      setIsTogglingPrintAuth(false);
     }
   };
 
@@ -328,6 +358,24 @@ export default function AbsenceManagementPage() {
                     </div>
                   )}
 
+                  {selected.status === 'APPROVED' && canApprove && (
+                    <div className="pt-1 pb-1 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        {selected.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
+                        <span className="text-gray-600 dark:text-gray-300">
+                          {selected.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setShowPrintAuthModal(true)}
+                        disabled={isTogglingPrintAuth}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                      >
+                        {selected.printAuthorized ? 'Modifier' : 'Autoriser'}
+                      </button>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
                     className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -339,7 +387,25 @@ export default function AbsenceManagementPage() {
                 {/* Aperçu imprimable */}
                 <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-3 overflow-hidden border border-gray-200 dark:border-gray-700">
                   <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                    {printData && <AbsenceRequestPrintable data={printData as any} />}
+                    {docData?.company?.documentTemplate === 'ORCA' ? (
+                      <OrcaLeaveAbsenceDocument
+                        id="absence-print-root"
+                        variant="ABSENCE"
+                        reference={`DEA-${selected.id.slice(0, 8).toUpperCase()}`}
+                        employee={docData.employee}
+                        responsableName={docData.responsableName}
+                        type={docData.type}
+                        isPaid={docData.isPaid}
+                        startDate={docData.startDate}
+                        endDate={docData.endDate}
+                        daysCount={docData.workingDays}
+                        reason={docData.reason}
+                        status={docData.status}
+                        company={docData.company}
+                      />
+                    ) : (
+                      printData && <AbsenceRequestPrintable data={printData as any} />
+                    )}
                   </div>
                 </div>
               </div>
@@ -347,6 +413,13 @@ export default function AbsenceManagementPage() {
           )}
         </div>
       </div>
+
+      <PrintAuthorizationModal
+        isOpen={showPrintAuthModal}
+        onClose={() => setShowPrintAuthModal(false)}
+        onConfirm={handleSetPrintAuthorization}
+        employeeName={`${selected?.employee?.firstName || ''} ${selected?.employee?.lastName || ''}`.trim()}
+      />
     </div>
   );
 }

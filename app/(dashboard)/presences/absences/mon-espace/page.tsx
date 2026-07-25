@@ -12,7 +12,7 @@ import Link from 'next/link';
 import {
   Plus, Loader2, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, X, Paperclip, Info, Wallet,
-  Stethoscope, FileText, Sparkles,
+  Stethoscope, FileText, Sparkles, Lock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -242,12 +242,18 @@ export default function MonEspaceAbsencesPage() {
                     )}
 
                     <div className="flex gap-2 pt-2">
-                      <button
-                        onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
-                        className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        <Printer size={16} /> Imprimer
-                      </button>
+                      {selected.status === 'APPROVED' && !selected.printAuthorized ? (
+                        <div className="flex-1 py-2.5 border border-dashed border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-400 flex items-center justify-center gap-2">
+                          <Lock size={14} /> Impression non autorisée par le RH
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
+                          className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <Printer size={16} /> Imprimer
+                        </button>
+                      )}
                       {selected.status === 'PENDING' && (
                         <button
                           onClick={() => handleCancel(selected.id)}

@@ -513,6 +513,7 @@ import {
   Wallet, AlertCircle, Phone, Mail, MapPin, Calendar,
   Building2, DollarSign, Smartphone, CreditCard,
   Award, Hash, Check, CalendarDays, Clock, BadgeCheck, Power, XCircle,
+  HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle, Flag,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays, format } from 'date-fns';
@@ -586,7 +587,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const alert  = useAlert();
   const [isSaving, setIsSaving]   = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal' | 'statut'>('identity');
+  const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal' | 'additional' | 'statut'>('identity');
   const [departments, setDepartments]         = useState<any[]>([]);
   const [companyConvention, setCompanyConvention]       = useState<string | null>(null);
   const [conventionCategories, setConventionCategories] = useState<any[]>([]);
@@ -607,6 +608,13 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     mobileMoneyOperator: 'MTN', mobileMoneyNumber: '',
     isSubjectToIrpp: true, isSubjectToCnss: true, taxExemptionReason: '',
     tolZone: 'VILLE' as 'VILLE' | 'PERIPHERIE',
+    nationality: '',
+    // 🆕 Fiche ORCA — Informations complémentaires
+    bloodType: '', pathology: '', fatherName: '', motherName: '',
+    educationLevel: '',
+    emergencyContactName: '', emergencyContactRelation: '', emergencyContactPhone: '',
+    hasDrivingLicense: false, drivingLicenseNumber: '',
+    foreignLanguages: '', uniformSize: '', shoeSize: '',
   });
 
   useEffect(() => {
@@ -664,6 +672,21 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           isSubjectToCnss:     employee.isSubjectToCnss ?? true,
           taxExemptionReason:  employee.taxExemptionReason || '',
           tolZone:             employee.tolZone || 'VILLE',
+          nationality:         employee.nationality || '',
+          // 🆕 Fiche ORCA — Informations complémentaires
+          bloodType:                employee.bloodType || '',
+          pathology:                employee.pathology || '',
+          fatherName:               employee.fatherName || '',
+          motherName:               employee.motherName || '',
+          educationLevel:           employee.educationLevel || '',
+          emergencyContactName:     employee.emergencyContactName || '',
+          emergencyContactRelation: employee.emergencyContactRelation || '',
+          emergencyContactPhone:    employee.emergencyContactPhone || '',
+          hasDrivingLicense:        employee.hasDrivingLicense ?? false,
+          drivingLicenseNumber:     employee.drivingLicenseNumber || '',
+          foreignLanguages:         employee.foreignLanguages || '',
+          uniformSize:              employee.uniformSize || '',
+          shoeSize:                 employee.shoeSize || '',
         });
       } catch {
         alert.error('Erreur', 'Impossible de charger les données');
@@ -742,6 +765,21 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         isSubjectToIrpp: formData.isSubjectToIrpp, isSubjectToCnss: formData.isSubjectToCnss,
         taxExemptionReason: formData.taxExemptionReason || null,
         tolZone: formData.tolZone,
+        nationality: formData.nationality || null,
+        // 🆕 Fiche ORCA — Informations complémentaires
+        bloodType: formData.bloodType || null,
+        pathology: formData.pathology || null,
+        fatherName: formData.fatherName || null,
+        motherName: formData.motherName || null,
+        educationLevel: formData.educationLevel || null,
+        emergencyContactName: formData.emergencyContactName || null,
+        emergencyContactRelation: formData.emergencyContactRelation || null,
+        emergencyContactPhone: formData.emergencyContactPhone || null,
+        hasDrivingLicense: !!formData.hasDrivingLicense,
+        drivingLicenseNumber: formData.hasDrivingLicense ? (formData.drivingLicenseNumber || null) : null,
+        foreignLanguages: formData.foreignLanguages || null,
+        uniformSize: formData.uniformSize || null,
+        shoeSize: formData.shoeSize || null,
       });
       alert.success('Dossier mis à jour', 'Les modifications ont été enregistrées.');
       router.push(bp(`/employes/${params.id}`));
@@ -758,6 +796,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     { id: 'contract', label: 'Contrat',            icon: Briefcase,color: 'text-purple-500' },
     { id: 'payment',  label: 'Paiement',           icon: Wallet,   color: 'text-emerald-500' },
     { id: 'fiscal',   label: 'Fiscalité',          icon: Shield,   color: 'text-amber-500' },
+    { id: 'additional', label: 'Compléments',       icon: HeartPulse, color: 'text-pink-500' },
     { id: 'statut',   label: 'Statut',              icon: BadgeCheck, color: 'text-rose-500'  },
   ];
 
@@ -831,6 +870,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     <div><label className={labelClass}>Matricule <span className="text-xs text-gray-400 font-normal">(optionnel — généré auto si vide)</span></label><input name="employeeNumber" value={formData.employeeNumber} onChange={handleChange} placeholder="Généré automatiquement" className={inputClass + ' font-mono text-sm'} /></div>
                     <div><label className={labelClass}>NIU <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="niu" value={formData.niu} onChange={handleChange} placeholder="NIU de l'employé" className={inputClass + ' font-mono text-sm'} /></div>
                     <div><label className={labelClass}>N° Fiscal <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="taxNumber" value={formData.taxNumber} onChange={handleChange} placeholder="Numéro d'impôt individuel" className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}><Flag size={13} className="inline mr-1 text-sky-500" />Nationalité <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="nationality" value={formData.nationality} onChange={handleChange} placeholder="CG, FR, US, CM…" className={inputClass} /></div>
                   </div>
                 </div>
               )}
@@ -1058,6 +1098,59 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              )}
+
+              {/* ── COMPLÉMENTS (Fiche ORCA) 🆕 ── */}
+              {activeSection === 'additional' && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8 space-y-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><HeartPulse size={20} className="text-pink-500" /> Informations complémentaires</h2>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><FancySelect label="Groupe sanguin" value={formData.bloodType} onChange={(v) => handleSelect('bloodType', v)} icon={HeartPulse}
+                      options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((b) => ({ value: b, label: b }))} /></div>
+                    <div><label className={labelClass}>Niveau d'études / diplôme</label><input name="educationLevel" value={formData.educationLevel} onChange={handleChange} className={inputClass} placeholder="BEPC, BAC, Licence…" /></div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Pathologie / maladie habituelle <span className="text-xs text-gray-400 font-normal">(laisser vide si aucune)</span></label>
+                    <textarea name="pathology" value={formData.pathology} onChange={handleChange} rows={2} className={inputClass + ' resize-none'} placeholder="Ex : Asthme, diabète…" />
+                  </div>
+
+                  <div className="border-t border-gray-100 dark:border-gray-700 pt-5">
+                    <p className={labelClass}><Users size={13} className="inline mr-1 text-gray-400" />Filiation</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div><label className={labelClass}>Nom & prénom(s) du père</label><input name="fatherName" value={formData.fatherName} onChange={handleChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>Nom & prénom(s) de la mère</label><input name="motherName" value={formData.motherName} onChange={handleChange} className={inputClass} /></div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 dark:border-gray-700 pt-5">
+                    <p className={labelClass}><AlertTriangle size={13} className="inline mr-1 text-gray-400" />Personne à contacter en cas d'urgence</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div><label className={labelClass}>Nom & prénom</label><input name="emergencyContactName" value={formData.emergencyContactName} onChange={handleChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>Lien de parenté</label><input name="emergencyContactRelation" value={formData.emergencyContactRelation} onChange={handleChange} className={inputClass} /></div>
+                      <div><label className={labelClass}>Téléphone</label><input name="emergencyContactPhone" value={formData.emergencyContactPhone} onChange={handleChange} className={inputClass} /></div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 dark:border-gray-700 pt-5 space-y-4">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={formData.hasDrivingLicense} onChange={(e) => handleSelect('hasDrivingLicense', e.target.checked)}
+                        className="w-6 h-6 rounded border-gray-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5"><Car size={16} className="text-gray-400" /> Permis de conduire</span>
+                    </label>
+                    {formData.hasDrivingLicense && (
+                      <div><label className={labelClass}>N° du permis</label><input name="drivingLicenseNumber" value={formData.drivingLicenseNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-gray-100 dark:border-gray-700 pt-5">
+                    <div><label className={labelClass}><Languages size={13} className="inline mr-1 text-gray-400" />Langue étrangère</label><input name="foreignLanguages" value={formData.foreignLanguages} onChange={handleChange} className={inputClass} placeholder="Anglais, Lingala…" /></div>
+                    <div><FancySelect label="Taille de la tenue" value={formData.uniformSize} onChange={(v) => handleSelect('uniformSize', v)} icon={Shirt}
+                      options={['S', 'M', 'L', 'XL', 'XXL'].map((s) => ({ value: s, label: s }))} /></div>
+                    <div><label className={labelClass}>Pointure de chaussures</label><input name="shoeSize" value={formData.shoeSize} onChange={handleChange} className={inputClass} placeholder="42" /></div>
+                  </div>
                 </div>
               )}
 

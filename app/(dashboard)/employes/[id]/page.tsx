@@ -750,6 +750,7 @@ import {
   Laptop, Plus, Loader2, Shield, Award,
   BookOpen, Hash, CreditCard, ChevronRight,
   Gift, TrendingUp, Star, CalendarDays,
+  HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
@@ -798,6 +799,28 @@ interface EmployeeDetail {
   // BNC
   isResident?: boolean;
   nationality?: string | null;
+  // 🆕 Champs réellement saisis à la création mais jamais affichés ici
+  bankName?: string | null;
+  bankAccountNumber?: string | null;
+  mobileMoneyOperator?: string | null;
+  mobileMoneyNumber?: string | null;
+  taxNumber?: string | null;
+  niu?: string | null;
+  tolZone?: string | null;
+  // 🆕 Fiche ORCA — Informations complémentaires
+  bloodType?: string | null;
+  pathology?: string | null;
+  fatherName?: string | null;
+  motherName?: string | null;
+  educationLevel?: string | null;
+  emergencyContactName?: string | null;
+  emergencyContactRelation?: string | null;
+  emergencyContactPhone?: string | null;
+  hasDrivingLicense?: boolean;
+  drivingLicenseNumber?: string | null;
+  foreignLanguages?: string | null;
+  uniformSize?: string | null;
+  shoeSize?: string | null;
 }
 
 function getRoleFromStorage(): string {
@@ -809,6 +832,20 @@ function getRoleFromStorage(): string {
   } catch {
     return 'EMPLOYEE';
   }
+}
+
+// 🆕 Calcule l'âge à partir de la date de naissance
+function calculateAge(dateOfBirth?: string | null): number | string {
+  if (!dateOfBirth) return '—';
+  const birth = new Date(dateOfBirth);
+  if (isNaN(birth.getTime())) return '—';
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const hasHadBirthdayThisYear =
+    today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!hasHadBirthdayThisYear) age--;
+  return age;
 }
 
 // 🆕 Composant durée + jours restants pour contrats temporaires
@@ -1014,6 +1051,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <p className="font-medium text-gray-900 dark:text-white">{new Date(employee.dateOfBirth).toLocaleDateString('fr-FR')}</p>
                 </div>
                 <div>
+                  <p className="text-xs text-gray-500 mb-1">Âge</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{calculateAge(employee.dateOfBirth)} ans</p>
+                </div>
+                <div>
                   <p className="text-xs text-gray-500 mb-1">Lieu de naissance</p>
                   <p className="font-medium text-gray-900 dark:text-white">{employee.placeOfBirth}</p>
                 </div>
@@ -1064,6 +1105,77 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Shield size={11} /> N° CNSS</p>
                   <p className="font-semibold font-mono text-gray-900 dark:text-white">{employee.cnssNumber || <span className="text-gray-400 italic text-sm font-sans font-normal">Non renseigné</span>}</p>
                 </div>
+              </div>
+            </section>
+
+            {/* 🆕 Informations complémentaires (Fiche ORCA) */}
+            <section>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <HeartPulse size={20} className="text-pink-500" /> Informations Complémentaires
+              </h3>
+              <div className="bg-gray-50 dark:bg-gray-750/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Groupe sanguin</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.bloodType || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><GraduationCap size={11} /> Niveau d'études</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.educationLevel || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-gray-500 mb-1">Pathologie / maladie habituelle</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.pathology || <span className="text-gray-400 italic text-sm">Aucune renseignée</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Users size={11} /> Nom & prénom(s) du père</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.fatherName || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Users size={11} /> Nom & prénom(s) de la mère</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.motherName || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Languages size={11} /> Langue étrangère</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.foreignLanguages || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Car size={11} /> Permis de conduire</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {employee.hasDrivingLicense
+                        ? `Oui${employee.drivingLicenseNumber ? ` — ${employee.drivingLicenseNumber}` : ''}`
+                        : <span className="text-gray-400 italic text-sm">Non</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Shirt size={11} /> Taille de la tenue</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.uniformSize || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Pointure de chaussures</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{employee.shoeSize || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                  </div>
+                </div>
+
+                {(employee.emergencyContactName || employee.emergencyContactPhone) && (
+                  <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-500 mb-2 flex items-center gap-1"><AlertTriangle size={11} /> Personne à contacter en cas d'urgence</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-[11px] text-gray-400">Nom</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{employee.emergencyContactName || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-400">Lien de parenté</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{employee.emergencyContactRelation || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-400">Téléphone</p>
+                        <p className="font-semibold font-mono text-gray-900 dark:text-white">{employee.emergencyContactPhone || '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -1185,6 +1297,42 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <p className="font-medium text-gray-900 dark:text-white">
                     {employee.paymentMethod === 'CASH' ? 'Espèces' : employee.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Mobile Money'}
                   </p>
+                </div>
+                {employee.paymentMethod === 'BANK_TRANSFER' && (
+                  <>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Banque</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{employee.bankName || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">N° de compte</p>
+                      <p className="font-medium text-gray-900 dark:text-white font-mono">{employee.bankAccountNumber || <span className="text-gray-400 italic text-sm font-sans">Non renseigné</span>}</p>
+                    </div>
+                  </>
+                )}
+                {employee.paymentMethod === 'MOBILE_MONEY' && (
+                  <>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Opérateur Mobile Money</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{employee.mobileMoneyOperator || <span className="text-gray-400 italic text-sm">Non renseigné</span>}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">N° Mobile Money</p>
+                      <p className="font-medium text-gray-900 dark:text-white font-mono">{employee.mobileMoneyNumber || <span className="text-gray-400 italic text-sm font-sans">Non renseigné</span>}</p>
+                    </div>
+                  </>
+                )}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">N° Fiscal</p>
+                  <p className="font-medium text-gray-900 dark:text-white font-mono">{employee.taxNumber || <span className="text-gray-400 italic text-sm font-sans">Non renseigné</span>}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">NIU</p>
+                  <p className="font-medium text-gray-900 dark:text-white font-mono">{employee.niu || <span className="text-gray-400 italic text-sm font-sans">Non renseigné</span>}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Zone (transport / TOL)</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{employee.tolZone === 'PERIPHERIE' ? 'Périphérie' : 'Ville'}</p>
                 </div>
 
                 {/* 🆕 Durée contrat pour CDD/STAGE/INTERIM/CONSULTANT */}

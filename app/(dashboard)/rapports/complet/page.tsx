@@ -7,7 +7,7 @@ import {
   Clock, Calendar, AlertCircle, CheckCircle, Download, Printer,
   DollarSign, Shield, FileBarChart, Award, Target, Loader2,
   ArrowUpRight, ArrowDownRight, Info, Zap, ClipboardList, LayoutDashboard,UsersRound,
-  UmbrellaOff,BookOpen
+  UmbrellaOff,BookOpen,UserCircle,BarChart3
 
 } from 'lucide-react';
 import { 
@@ -144,6 +144,9 @@ export default function CompleteHRReport() {
   { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList,active:true   },
   { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
   { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
+  { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
+  { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
+  { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
   { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
   { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
         ].map((item) => (

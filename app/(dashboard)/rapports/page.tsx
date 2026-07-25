@@ -8,7 +8,7 @@ import {
   FileText, ChevronRight, BadgeCheck,
   Receipt, Landmark, FileX, FilePlus, AlertTriangle,
   LayoutDashboard, ClipboardList, DollarSign,
-  UsersRound, UmbrellaOff, BookOpen,
+  UsersRound, UmbrellaOff, BookOpen, Building2, UserCircle, BarChart3,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -23,6 +23,9 @@ const NAV_ITEMS = [
   { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
   { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
   { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
+  { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
+  { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
+  { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
   { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
   { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
 ];

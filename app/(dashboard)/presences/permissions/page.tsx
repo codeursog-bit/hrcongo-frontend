@@ -76,7 +76,7 @@ export default function PermissionsManagementPage() {
     })();
   }, []);
 
-  const canApprove = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(userRole);
+  const canApprove = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
 
   const filtered = useMemo(() => {
     let list = filter === 'PENDING' ? tickets.filter(t => t.status === 'PENDING') : tickets;

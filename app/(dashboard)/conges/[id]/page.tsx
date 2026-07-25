@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Loader2, ArrowLeft, Check, X, Clock, CheckCircle2, XCircle, Ban,
-  Calendar, ArrowRight, Printer, Download, Wallet, Info, FileText, ScrollText,
+  Calendar, ArrowRight, Printer, Download, Wallet, Info, FileText, ScrollText, Lock, Unlock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -21,6 +21,8 @@ import CongeSubNav from '@/components/CongeSubNav';
 import LeaveRequestFormPrintable from '@/components/LeaveRequestFormPrintable';
 import LeaveAuthorizationLetterPrintable from '@/components/LeaveAuthorizationLetterPrintable';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
+import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
+import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -31,7 +33,8 @@ const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }>
   CANCELLED: { label: 'Annulé',     badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
 };
 
-const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'];
+// ✅ Pour l'instant seuls RH/Admin valident — pas de délégation "chef de service"
+const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 export default function LeaveDetailPage() {
   const params = useParams();
@@ -40,6 +43,7 @@ export default function LeaveDetailPage() {
   const id = params?.id as string;
 
   const [leave, setLeave] = useState<any>(null);
+  const [docData, setDocData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState('');
   const [rejectMode, setRejectMode] = useState(false);
@@ -49,12 +53,19 @@ export default function LeaveDetailPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeDoc, setActiveDoc] = useState<'form' | 'letter'>('form');
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [showPrintAuthModal, setShowPrintAuthModal] = useState(false);
+  const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
 
   const load = async () => {
     try {
       const data: any = await api.get(`/leaves/${id}`);
       setLeave(data);
       if (data.status === 'APPROVED') setActiveDoc('letter');
+      try {
+        setDocData(await api.get(`/leaves/${id}/document-data`));
+      } catch (e) {
+        console.error('Erreur chargement document-data', e);
+      }
     } catch (e) {
       console.error('Erreur chargement du congé', e);
     } finally {
@@ -108,12 +119,26 @@ export default function LeaveDetailPage() {
     }
   };
 
+  const handleSetPrintAuthorization = async (authorized: boolean) => {
+    if (!leave) return;
+    setIsTogglingPrintAuth(true);
+    try {
+      await api.patch(`/leaves/${leave.id}/print-authorization`, { authorized });
+      await load();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de la mise à jour de l'autorisation d'impression");
+    } finally {
+      setIsTogglingPrintAuth(false);
+    }
+  };
+
   if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
   if (!leave) return <div className="text-center py-24 text-gray-400">Demande introuvable.</div>;
 
   const FORM_ID = 'leave-form-print-root';
   const LETTER_ID = 'leave-letter-print';
   const reference = `CGE-${leave.id.slice(0, 8).toUpperCase()}`;
+  const isOrca = docData?.company?.documentTemplate === 'ORCA';
 
   const formData = {
     reference,
@@ -143,6 +168,27 @@ export default function LeaveDetailPage() {
   };
 
   const activeId = activeDoc === 'form' ? FORM_ID : LETTER_ID;
+
+  const renderFormDocument = (elementId: string) =>
+    isOrca && docData ? (
+      <OrcaLeaveAbsenceDocument
+        id={elementId}
+        variant="CONGE"
+        reference={reference}
+        employee={docData.employee}
+        responsableName={docData.responsableName}
+        type={docData.type}
+        isPaid={leave.type !== 'UNPAID'}
+        startDate={docData.startDate}
+        endDate={docData.endDate}
+        daysCount={docData.daysCount}
+        reason={docData.reason}
+        status={docData.status}
+        company={docData.company}
+      />
+    ) : (
+      <LeaveRequestFormPrintable data={formData as any} />
+    );
 
   const handleDownloadPdf = async () => {
     setIsExportingPdf(true);
@@ -252,6 +298,26 @@ export default function LeaveDetailPage() {
                 Annuler cette demande
               </button>
             )}
+
+            {leave.status === 'APPROVED' && canApprove && (
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    {leave.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {leave.printAuthorized ? "Impression autorisée pour l'employé" : "Impression non autorisée"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setShowPrintAuthModal(true)}
+                    disabled={isTogglingPrintAuth}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                  >
+                    {leave.printAuthorized ? 'Modifier' : 'Autoriser'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sélecteur de document */}
@@ -267,14 +333,31 @@ export default function LeaveDetailPage() {
             <p className="text-[11px] text-gray-400 -mt-2 px-1">La lettre officielle n&apos;est disponible qu&apos;une fois la demande approuvée.</p>
           )}
 
-          <div className="flex gap-2">
-            <button onClick={() => setTimeout(() => printLeaveDocument(activeId), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
-              <Printer size={16} /> Imprimer
-            </button>
-            <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
-              {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
-            </button>
-          </div>
+          {(() => {
+            // RH/Admin/Manager peuvent toujours imprimer (archivage, remise en main propre).
+            // L'employé ne peut imprimer que si le RH l'a explicitement autorisé sur cette demande APPROUVÉE.
+            const canPrint = canApprove || (leave.status === 'APPROVED' && !!leave.printAuthorized);
+            return (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => canPrint && setTimeout(() => printLeaveDocument(activeId), 50)}
+                  disabled={!canPrint}
+                  title={!canPrint ? "Impression non autorisée par le RH" : undefined}
+                  className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Printer size={16} /> Imprimer
+                </button>
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={isExportingPdf || !canPrint}
+                  title={!canPrint ? "Impression non autorisée par le RH" : undefined}
+                  className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
+                </button>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Aperçu */}
@@ -282,7 +365,7 @@ export default function LeaveDetailPage() {
           <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-4 overflow-auto max-h-[85vh] border border-gray-200 dark:border-gray-700">
             <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
               {activeDoc === 'form'
-                ? <LeaveRequestFormPrintable data={formData as any} />
+                ? renderFormDocument(FORM_ID)
                 : <LeaveAuthorizationLetterPrintable id={LETTER_ID} data={letterData as any} />}
             </div>
           </div>
@@ -292,9 +375,16 @@ export default function LeaveDetailPage() {
       {/* Racine cachée pour le formulaire (id fixe requis par le composant) */}
       {activeDoc !== 'form' && (
         <div style={{ position: 'fixed', top: -99999, left: -99999 }}>
-          <LeaveRequestFormPrintable data={formData as any} />
+          {renderFormDocument(FORM_ID)}
         </div>
       )}
+
+      <PrintAuthorizationModal
+        isOpen={showPrintAuthModal}
+        onClose={() => setShowPrintAuthModal(false)}
+        onConfirm={handleSetPrintAuthorization}
+        employeeName={`${leave.employee?.firstName || ''} ${leave.employee?.lastName || ''}`.trim()}
+      />
     </div>
   );
 }

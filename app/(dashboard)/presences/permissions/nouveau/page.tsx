@@ -36,7 +36,7 @@ const MISSION_OPTIONS = [
   { value: 'AUTRE',              label: 'Autre mission' },
 ];
 
-const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'];
+const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 function nowLocal(offsetMinutes = 0) {
   const d = new Date(Date.now() + offsetMinutes * 60000);

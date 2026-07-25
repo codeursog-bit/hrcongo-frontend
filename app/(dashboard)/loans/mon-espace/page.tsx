@@ -10,13 +10,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Plus, Loader2, Clock, CheckCircle2, XCircle, Ban, ArrowRight,
-  Printer, Download, X, Banknote, Package, HelpCircle, Wallet,
+  Printer, Download, X, Banknote, Package, HelpCircle, Wallet, Lock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
+import OrcaLoanDocument from '@/components/documents/orca/OrcaLoanDocument';
+import OrcaAdvanceDocument from '@/components/documents/orca/OrcaAdvanceDocument';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 
 const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
@@ -86,6 +88,22 @@ export default function MonEspacePretsAvancesPage() {
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
   const paginated = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const selected = items.find(i => i.id === selectedId) || null;
+  const [docData, setDocData] = useState<any>(null);
+
+  useEffect(() => {
+    if (!selected) { setDocData(null); return; }
+    (async () => {
+      try {
+        const path = selected.kind === 'loan'
+          ? `/loans/${selected.id}/document-data`
+          : `/loans/advances/${selected.id}/document-data`;
+        setDocData(await api.get(path));
+      } catch (e) {
+        console.error('Erreur chargement document-data', e);
+        setDocData(null);
+      }
+    })();
+  }, [selectedId]);
 
   const handleCancel = async (item: Item) => {
     if (!confirm('Annuler cette demande ?')) return;
@@ -209,14 +227,52 @@ export default function MonEspacePretsAvancesPage() {
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                      {selected.data.printAuthorized ? (
+                        <>
+                          <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
+                          <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                        </>
+                      ) : (
+                        <div className="flex-1 py-2.5 border border-dashed border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-400 flex items-center justify-center gap-2">
+                          <Lock size={14} /> Impression non autorisée par le RH
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-3 overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                      {printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />}
+                      {docData?.company?.documentTemplate === 'ORCA' ? (
+                        selected.kind === 'loan' ? (
+                          <OrcaLoanDocument
+                            id={PRINT_ID}
+                            reference={reference}
+                            loanType={docData.loanType}
+                            employee={docData.employee}
+                            amount={docData.amount}
+                            monthlyRepayment={docData.monthlyRepayment}
+                            startDate={docData.startDate}
+                            endDate={selected.data.endDate}
+                            status={docData.status}
+                            drhDecision={docData.drhDecision}
+                            dgDecision={docData.dgDecision}
+                            company={docData.company}
+                          />
+                        ) : (
+                          <OrcaAdvanceDocument
+                            id={PRINT_ID}
+                            reference={reference}
+                            employee={docData.employee}
+                            amount={docData.amount}
+                            reason={selected.data.reason}
+                            requestDate={selected.data.createdAt}
+                            status={docData.status}
+                            company={docData.company}
+                          />
+                        )
+                      ) : (
+                        printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
+                      )}
                     </div>
                   </div>
                 </div>

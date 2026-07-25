@@ -16,7 +16,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
-  ArrowRight, Info, ShieldCheck, Landmark,
+  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -25,6 +25,9 @@ import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
 import EmployeeLoanHistorySidebar, { EmployeeLoanHistoryData } from '@/components/EmployeeLoanHistorySidebar';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
+import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
+import OrcaLoanDocument from '@/components/documents/orca/OrcaLoanDocument';
+import OrcaAdvanceDocument from '@/components/documents/orca/OrcaAdvanceDocument';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const DG_ROLES  = ['ADMIN', 'SUPER_ADMIN'];
@@ -68,6 +71,9 @@ export default function LoansManagementPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [historyEmployee, setHistoryEmployee] = useState<EmployeeLoanHistoryData | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [printAuthModal, setPrintAuthModal] = useState<'loan' | 'advance' | null>(null);
+  const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
+  const [docData, setDocData] = useState<any>(null);
 
   // Formulaire retenue diverse
   const [newDeduction, setNewDeduction] = useState({ employeeId: '', label: '', amount: '', month: new Date().getMonth() + 1, year: new Date().getFullYear() });
@@ -106,6 +112,20 @@ export default function LoansManagementPage() {
 
   const selectedLoan = loans.find(l => l.id === selectedLoanId) || null;
   const selectedAdvance = advances.find(a => a.id === selectedAdvanceId) || null;
+
+  useEffect(() => {
+    const id = tab === 'loans' ? selectedLoanId : selectedAdvanceId;
+    if (!id) { setDocData(null); return; }
+    (async () => {
+      try {
+        const path = tab === 'loans' ? `/loans/${id}/document-data` : `/loans/advances/${id}/document-data`;
+        setDocData(await api.get(path));
+      } catch (e) {
+        console.error('Erreur chargement document-data', e);
+        setDocData(null);
+      }
+    })();
+  }, [tab, selectedLoanId, selectedAdvanceId]);
 
   const openEmployeeHistory = (emp: any) => {
     setHistoryEmployee({
@@ -177,6 +197,25 @@ export default function LoansManagementPage() {
   const handleDeleteAdvance = async (id: string) => {
     if (!confirm('Supprimer cette avance ?')) return;
     try { await api.delete(`/loans/advances/${id}`); await load(); } catch (e: any) { alert(e?.message || 'Erreur'); }
+  };
+
+  // ── Autorisation d'impression ───────────────────────────────────────────────
+
+  const handleSetPrintAuthorization = async (authorized: boolean) => {
+    if (!printAuthModal) return;
+    setIsTogglingPrintAuth(true);
+    try {
+      if (printAuthModal === 'loan' && selectedLoan) {
+        await api.patch(`/loans/${selectedLoan.id}/print-authorization`, { authorized });
+      } else if (printAuthModal === 'advance' && selectedAdvance) {
+        await api.patch(`/loans/advances/${selectedAdvance.id}/print-authorization`, { authorized });
+      }
+      await load();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de la mise à jour de l'autorisation d'impression");
+    } finally {
+      setIsTogglingPrintAuth(false);
+    }
   };
 
   // ── Actions retenues ───────────────────────────────────────────────────────
@@ -351,6 +390,24 @@ export default function LoansManagementPage() {
                       </button>
                     )}
 
+                    {['ACTIVE', 'PAID'].includes(selectedLoan.status) && DRH_ROLES.includes(userRole) && (
+                      <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          {selectedLoan.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {selectedLoan.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setPrintAuthModal('loan')}
+                          disabled={isTogglingPrintAuth}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                        >
+                          {selectedLoan.printAuthorized ? 'Modifier' : 'Autoriser'}
+                        </button>
+                      </div>
+                    )}
+
                     <div className="flex gap-2 pt-2">
                       {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedLoan.status === 'PENDING') && (
                         <button onClick={() => handleDeleteLoan(selectedLoan.id)} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
@@ -368,7 +425,24 @@ export default function LoansManagementPage() {
 
                   <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-3 overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                      {printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />}
+                      {docData?.company?.documentTemplate === 'ORCA' ? (
+                        <OrcaLoanDocument
+                          id={PRINT_ID}
+                          reference={printReference}
+                          loanType={docData.loanType}
+                          employee={docData.employee}
+                          amount={docData.amount}
+                          monthlyRepayment={docData.monthlyRepayment}
+                          startDate={docData.startDate}
+                          endDate={selectedLoan.endDate}
+                          status={docData.status}
+                          drhDecision={docData.drhDecision}
+                          dgDecision={docData.dgDecision}
+                          company={docData.company}
+                        />
+                      ) : (
+                        printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -448,6 +522,24 @@ export default function LoansManagementPage() {
                       </button>
                     )}
 
+                    {['APPROVED', 'PAID', 'DEDUCTED'].includes(selectedAdvance.status) && DRH_ROLES.includes(userRole) && (
+                      <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          {selectedAdvance.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {selectedAdvance.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setPrintAuthModal('advance')}
+                          disabled={isTogglingPrintAuth}
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                        >
+                          {selectedAdvance.printAuthorized ? 'Modifier' : 'Autoriser'}
+                        </button>
+                      </div>
+                    )}
+
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedAdvance.status === 'PENDING') && (
                       <button onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="w-full py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
                     )}
@@ -460,7 +552,20 @@ export default function LoansManagementPage() {
 
                   <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-3 overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                      {printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />}
+                      {docData?.company?.documentTemplate === 'ORCA' ? (
+                        <OrcaAdvanceDocument
+                          id={PRINT_ID}
+                          reference={printReference}
+                          employee={docData.employee}
+                          amount={docData.amount}
+                          reason={selectedAdvance.reason}
+                          requestDate={selectedAdvance.createdAt}
+                          status={docData.status}
+                          company={docData.company}
+                        />
+                      ) : (
+                        printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -517,6 +622,17 @@ export default function LoansManagementPage() {
       )}
 
       <EmployeeLoanHistorySidebar open={!!historyEmployee} onClose={() => setHistoryEmployee(null)} data={historyEmployee} />
+
+      <PrintAuthorizationModal
+        isOpen={!!printAuthModal}
+        onClose={() => setPrintAuthModal(null)}
+        onConfirm={handleSetPrintAuthorization}
+        employeeName={
+          printAuthModal === 'loan'
+            ? `${selectedLoan?.employee?.firstName || ''} ${selectedLoan?.employee?.lastName || ''}`.trim()
+            : `${selectedAdvance?.employee?.firstName || ''} ${selectedAdvance?.employee?.lastName || ''}`.trim()
+        }
+      />
     </div>
   );
 }

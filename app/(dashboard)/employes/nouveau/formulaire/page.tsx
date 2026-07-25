@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User, Briefcase, Check, ChevronRight, ChevronLeft, Loader2, BadgeCheck,
   ShieldCheck, Heart, Sparkles, ArrowRight, Star, Copy, Eye, EyeOff, KeyRound,
+  HeartPulse,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -14,13 +15,15 @@ import { Step1Identity } from '@/components/employees/create/Step1Identity';
 import { Step2Family } from '@/components/employees/create/Step2Family';
 import { Step3Contract } from '@/components/employees/create/Step3Contract';
 import { Step4Validation } from '@/components/employees/create/Step4Validation';
+import { Step5Additional } from '@/components/employees/create/Step5Additional';
 
 // ─── Steps config ──────────────────────────────────────────────────────────────
 const STEPS = [
   { id: 1, label: 'Identité',   icon: User,      color: 'from-sky-400 to-cyan-500',     desc: 'Informations personnelles' },
   { id: 2, label: 'Famille',    icon: Heart,      color: 'from-violet-400 to-purple-500', desc: 'Situation familiale & fiscalité' },
   { id: 3, label: 'Contrat',    icon: Briefcase,  color: 'from-emerald-400 to-teal-500',  desc: 'Poste, salaire & contrat' },
-  { id: 4, label: 'Validation', icon: ShieldCheck, color: 'from-amber-400 to-orange-500', desc: 'Vérification finale' },
+  { id: 4, label: 'Compléments', icon: HeartPulse, color: 'from-rose-400 to-pink-500',    desc: 'Santé, urgence & divers' },
+  { id: 5, label: 'Validation', icon: ShieldCheck, color: 'from-amber-400 to-orange-500', desc: 'Vérification finale' },
 ];
 
 // ─── Génération mot de passe ────────────────────────────────────────────────────
@@ -45,6 +48,7 @@ const CELEBRATIONS = [
   { step: 1, headline: 'Identité enregistrée !',     sub: 'Les bases du dossier sont posées.',        color: 'from-sky-400 to-cyan-500' },
   { step: 2, headline: 'Situation familiale OK !',    sub: 'Fiscalité configurée avec soin.',          color: 'from-violet-400 to-purple-500' },
   { step: 3, headline: 'Contrat défini !',            sub: "Les conditions d'emploi sont claires.",    color: 'from-emerald-400 to-teal-500' },
+  { step: 4, headline: 'Compléments enregistrés !',   sub: 'Le dossier est presque complet.',          color: 'from-rose-400 to-pink-500' },
 ];
 
 function StepCelebrationToast({ show, step }: { show: boolean; step: number }) {
@@ -75,9 +79,9 @@ function StepCelebrationToast({ show, step }: { show: boolean; step: number }) {
                   cx="18" cy="18" r="15"
                   fill="none" strokeWidth="2.5" strokeLinecap="round"
                   stroke="url(#toastGrad)"
-                  strokeDasharray={`${(step / 3) * 94.25} 94.25`}
+                  strokeDasharray={`${(step / 4) * 94.25} 94.25`}
                   initial={{ strokeDasharray: '0 94.25' }}
-                  animate={{ strokeDasharray: `${(step / 3) * 94.25} 94.25` }}
+                  animate={{ strokeDasharray: `${(step / 4) * 94.25} 94.25` }}
                   transition={{ duration: 0.6, ease: 'easeOut' }}
                 />
                 <defs>
@@ -88,7 +92,7 @@ function StepCelebrationToast({ show, step }: { show: boolean; step: number }) {
                 </defs>
               </svg>
               <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white dark:text-gray-800">
-                {Math.round((step / 3) * 100)}%
+                {Math.round((step / 4) * 100)}%
               </span>
             </div>
           </div>
@@ -438,6 +442,20 @@ function CreateEmployeeFormInner() {
     bankAccountNumber:   '',
     mobileMoneyOperator: 'MTN',
     mobileMoneyNumber:   '',
+    // 🆕 Fiche ORCA — Informations complémentaires
+    bloodType:                '',
+    pathology:                '',
+    fatherName:               '',
+    motherName:               '',
+    educationLevel:           '',
+    emergencyContactName:     '',
+    emergencyContactRelation: '',
+    emergencyContactPhone:    '',
+    hasDrivingLicense:        false,
+    drivingLicenseNumber:     '',
+    foreignLanguages:         '',
+    uniformSize:              '',
+    shoeSize:                 '',
   });
 
   useEffect(() => {
@@ -498,6 +516,11 @@ function CreateEmployeeFormInner() {
     return true;
   };
 
+  const validateStep4 = () => {
+    // Étape "Compléments" — tous les champs sont optionnels
+    return true;
+  };
+
   const triggerCelebration = (step: number) => {
     setCelebrationStep(step);
     setShowCelebration(true);
@@ -510,7 +533,8 @@ function CreateEmployeeFormInner() {
     if (currentStep === 1 && !validateStep1()) return;
     if (currentStep === 2 && !validateStep2()) return;
     if (currentStep === 3 && !validateStep3()) return;
-    if (currentStep < 4) {
+    if (currentStep === 4 && !validateStep4()) return;
+    if (currentStep < 5) {
       setDirection(1);
       await triggerCelebration(currentStep);
       setCurrentStep(curr => curr + 1);
@@ -562,6 +586,20 @@ function CreateEmployeeFormInner() {
         isSubjectToIrpp:     formData.isSubjectToIrpp,
         isSubjectToCnss:     formData.isSubjectToCnss,
         taxExemptionReason:  formData.taxExemptionReason || null,
+        // 🆕 Fiche ORCA — Informations complémentaires
+        bloodType:                formData.bloodType || null,
+        pathology:                formData.pathology || null,
+        fatherName:               formData.fatherName || null,
+        motherName:               formData.motherName || null,
+        educationLevel:           formData.educationLevel || null,
+        emergencyContactName:     formData.emergencyContactName || null,
+        emergencyContactRelation: formData.emergencyContactRelation || null,
+        emergencyContactPhone:    formData.emergencyContactPhone || null,
+        hasDrivingLicense:        !!formData.hasDrivingLicense,
+        drivingLicenseNumber:     formData.hasDrivingLicense ? (formData.drivingLicenseNumber || null) : null,
+        foreignLanguages:         formData.foreignLanguages || null,
+        uniformSize:              formData.uniformSize || null,
+        shoeSize:                 formData.shoeSize || null,
       };
 
       const createdEmployee = await api.post<any>('/employees', payload);
@@ -709,6 +747,13 @@ function CreateEmployeeFormInner() {
                     />
                   )}
                   {currentStep === 4 && (
+                    <Step5Additional
+                      formData={formData}
+                      onInputChange={handleInputChange}
+                      onSelectChange={handleSelectChange}
+                    />
+                  )}
+                  {currentStep === 5 && (
                     <Step4Validation
                       formData={formData}
                       departments={departments}
@@ -755,17 +800,17 @@ function CreateEmployeeFormInner() {
 
               {/* Next / Submit */}
               <button
-                onClick={currentStep === 4 ? handleSubmit : nextStep}
+                onClick={currentStep === 5 ? handleSubmit : nextStep}
                 disabled={isLoading || (currentStep === 1 && imageUpload.uploading)}
                 className={`flex items-center gap-2 px-7 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                  currentStep === 4
+                  currentStep === 5
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/20'
                     : 'bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 shadow-sky-500/20'
                 }`}
               >
                 {isLoading ? (
                   <><Loader2 className="animate-spin" size={16} /> Création…</>
-                ) : currentStep === 4 ? (
+                ) : currentStep === 5 ? (
                   <><BadgeCheck size={16} /> Créer l'employé</>
                 ) : (
                   <>Suivant <ChevronRight size={16} /></>

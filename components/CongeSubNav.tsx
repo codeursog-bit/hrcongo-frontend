@@ -21,7 +21,7 @@ interface CongeSubNavProps {
   userRole: string;
 }
 
-const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'];
+const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const HR_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 export default function CongeSubNav({ userRole }: CongeSubNavProps) {

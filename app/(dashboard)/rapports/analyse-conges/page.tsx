@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import {
   TrendingUp, Users, Award, AlertCircle, XCircle,
 
   ClipboardList, LayoutDashboard,UsersRound,
-  UmbrellaOff,BookOpen,DollarSign
+  UmbrellaOff,BookOpen,DollarSign,Building2,UserCircle,BarChart3
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -85,6 +84,9 @@ export default function LeaveAnalyticsPage() {
         { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
         { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
         { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
+        { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
+        { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
+        { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
         { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff , active:true},
         { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
         ].map((item) => (

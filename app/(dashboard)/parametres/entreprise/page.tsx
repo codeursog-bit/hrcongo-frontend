@@ -10,7 +10,7 @@ import {
   Navigation, Smartphone, Users, ShieldCheck, AlertCircle,
   HardHat, ShoppingCart, Factory, Flame, Truck,
   Utensils, Leaf, Wifi, HeartPulse, GraduationCap, Award,
-  Banknote, Info,ImageIcon, Upload, X, Trash2
+  Banknote, Info,ImageIcon, Upload, X, Trash2, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/components/providers/AlertProvider';
@@ -43,6 +43,9 @@ interface CompanySettings {
   // 🆕 Calendrier de paie
   payrollPaymentDay:     number;
   payrollCloseDay:       number;
+  // 🆕 Pied de page légal des documents imprimables (congé, absence, prêt...)
+  documentFooterText?:   string;
+  documentTemplate?:     string; // 'DEFAULT' | 'ORCA' — affiché "Modèle par défaut" / "Modèle 1" côté écran
 }
 
 // 🆕 Multi-sites
@@ -104,6 +107,8 @@ const DEFAULT_COMPANY: CompanySettings = {
   collectiveAgreement: '',
   payrollPaymentDay:   10,  // valeur par défaut schema Prisma
   payrollCloseDay:     25,  // valeur par défaut schema Prisma
+  documentFooterText:  '',
+  documentTemplate:    'DEFAULT',
 };
 
 const DEFAULT_PAYROLL: PayrollSettings = {
@@ -143,6 +148,11 @@ export default function CompanySettingsPage() {
   const [currentLogo,   setCurrentLogo]   = useState<string | null>(null);
   const [logoPreview,   setLogoPreview]   = useState<string | null>(null);
   const [logoFile,      setLogoFile]      = useState<File | null>(null);
+  const [currentCachet, setCurrentCachet] = useState<string | null>(null);
+  const [cachetPreview, setCachetPreview] = useState<string | null>(null);
+  const [cachetFile,    setCachetFile]    = useState<File | null>(null);
+  const [cachetUploading, setCachetUploading] = useState(false);
+  const cachetInputRef = React.useRef<HTMLInputElement>(null);
 
   // 🆕 Multi-sites
   const [sites,         setSites]         = useState<CompanySite[]>([]);
@@ -183,12 +193,17 @@ export default function CompanySettingsPage() {
             // 🆕 Calendrier de paie — valeurs BDD avec fallback schéma Prisma
             payrollPaymentDay:    company.payrollPaymentDay   ?? 10,
             payrollCloseDay:      company.payrollCloseDay     ?? 25,
+            // 🆕 Pied de page légal libre affiché sur les documents imprimables (congé, absence, prêt...)
+            documentFooterText:   company.documentFooterText  || '',
+            documentTemplate:     company.documentTemplate    || 'DEFAULT',
           });
         }
 
         setCompanyId(company.id || null);
         setCurrentLogo(company.logo || null);
         setLogoPreview(company.logo || null);
+        setCurrentCachet(company.cachetUrl || null);
+        setCachetPreview(company.cachetUrl || null);
 
         // 🆕 Charger les sites multi-pointage
         try {
@@ -298,6 +313,52 @@ const handleLogoDelete = async () => {
 };
 
 const cancelLogoSelection = () => { setLogoFile(null); setLogoPreview(currentLogo); };
+
+const handleCachetSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert.error('Fichier trop grand', 'Max 2 MB'); return; }
+  setCachetFile(file);
+  const reader = new FileReader();
+  reader.onload = (ev) => setCachetPreview(ev.target?.result as string);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+};
+
+const handleCachetUpload = async () => {
+  if (!cachetFile || !companyId) return;
+  setCachetUploading(true);
+  try {
+    const form = new FormData();
+    form.append('cachet', cachetFile);
+    const data = await api.postFormData<any>(`/companies/${companyId}/cachet`, form);
+    setCurrentCachet(data.cachetUrl);
+    setCachetFile(null);
+    alert.success('Cachet enregistré', "Apparaîtra sur les documents une fois la demande validée.");
+  } catch (e: any) {
+    alert.error('Erreur upload cachet', e.message);
+  } finally {
+    setCachetUploading(false);
+  }
+};
+
+const handleCachetDelete = async () => {
+  if (!companyId) return;
+  setCachetUploading(true);
+  try {
+    await api.delete(`/companies/${companyId}/cachet`);
+    setCurrentCachet(null);
+    setCachetPreview(null);
+    setCachetFile(null);
+    alert.success('Cachet supprimé', '');
+  } catch (e: any) {
+    alert.error('Erreur', e.message);
+  } finally {
+    setCachetUploading(false);
+  }
+};
+
+const cancelCachetSelection = () => { setCachetFile(null); setCachetPreview(currentCachet); };
 
   // ── Multi-sites handlers ────────────────────────────────────────────────────
   const getSiteCurrentLocation = () => {
@@ -621,6 +682,94 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
   </div>
   <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml"
     className="hidden" onChange={handleLogoSelect} />
+</div>
+
+              {/* ── Cachet & signature ── */}
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+    <ImageIcon size={20} className="text-sky-500" /> Cachet &amp; signature
+  </h3>
+  <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+    S'affiche automatiquement sur les documents imprimables (congé, absence, prêt...) une fois la demande validée par le RH. Format JPG, PNG ou WEBP — max 2 MB.
+  </p>
+  <div className="flex items-start gap-6">
+    <div className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-750">
+      {cachetPreview
+        ? <img src={cachetPreview} alt="Cachet" className="w-full h-full object-contain p-1" />
+        : <ImageIcon size={32} className="text-gray-300" />
+      }
+    </div>
+    <div className="flex-1 space-y-3">
+      {!cachetFile ? (
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => cachetInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-xl text-sm font-bold hover:bg-sky-100 transition-colors">
+            <Upload size={15} /> Choisir un cachet
+          </button>
+          {currentCachet && (
+            <button onClick={handleCachetDelete} disabled={cachetUploading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl text-sm font-bold hover:bg-red-100 transition-colors disabled:opacity-50">
+              {cachetUploading ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+              Supprimer
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-xs text-gray-500">Fichier sélectionné : <strong>{cachetFile.name}</strong></p>
+          <div className="flex gap-2">
+            <button onClick={handleCachetUpload} disabled={cachetUploading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors">
+              {cachetUploading ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+              {cachetUploading ? 'Upload...' : 'Enregistrer'}
+            </button>
+            <button onClick={cancelCachetSelection}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">
+              <X size={15} /> Annuler
+            </button>
+          </div>
+        </div>
+      )}
+      <p className="text-xs text-gray-400">Recommandé : fond transparent (PNG), cachet + signature scannés ensemble</p>
+    </div>
+  </div>
+  <input ref={cachetInputRef} type="file" accept="image/jpeg,image/png,image/webp"
+    className="hidden" onChange={handleCachetSelect} />
+</div>
+
+              {/* ── Modèle de document ── */}
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-sky-500" /> Modèle de document
+  </h3>
+  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+    Mise en page utilisée pour les documents imprimables (congé, absence, prêt, avance...).
+  </p>
+  <select
+    value={companyData.documentTemplate}
+    onChange={(e) => setCompanyData({ ...companyData, documentTemplate: e.target.value })}
+    className="w-full md:w-72 p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+  >
+    <option value="DEFAULT">Modèle par défaut</option>
+    <option value="ORCA">Modèle 1</option>
+  </select>
+</div>
+
+              {/* ── Pied de page légal des documents ── */}
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-sky-500" /> Pied de page des documents
+  </h3>
+  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+    Texte affiché en bas des documents imprimables (congé, absence, prêt...). Laissez vide pour une composition automatique à partir de la raison sociale, du RCCM, du NIU, de l'adresse et du téléphone ci-dessus.
+  </p>
+  <textarea
+    value={companyData.documentFooterText}
+    onChange={(e) => setCompanyData({ ...companyData, documentFooterText: e.target.value })}
+    rows={4}
+    placeholder={"Ex. : ORCA DECO CONGO S.A\nSociété Anonyme à Responsabilité Limitée (SARL) au capital de 100 000 000 CFA\nRCCM CG/PNR/14 B 197 · NIU : M2014 110000707066 · Tél : +242 22 294 16 42\nSiège social : Avenue Marien Ngouabi, Pointe-Noire"}
+    className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white resize-y"
+  />
 </div>
               </motion.div>
             )}
