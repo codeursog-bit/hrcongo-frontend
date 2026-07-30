@@ -145,7 +145,7 @@ function CheckGroup({ options, selected }: { options: string[]; selected?: strin
     <View style={styles.checkGroup}>
       {options.map((opt) => (
         <View key={opt} style={styles.checkOption}>
-          <View style={[styles.checkBox, selected === opt ? styles.checkBoxOn : undefined]} />
+          <View style={[styles.checkBox, selected === opt ? styles.checkBoxOn : {}]} />
           <Text style={styles.checkLabel}>{opt}</Text>
         </View>
       ))}
@@ -155,7 +155,7 @@ function CheckGroup({ options, selected }: { options: string[]; selected?: strin
 
 function Row({ label, value, alt }: { label: string; value?: React.ReactNode; alt?: boolean }) {
   return (
-    <View style={[styles.row, alt ? styles.rowAlt : undefined]}>
+    <View style={[styles.row, alt ? styles.rowAlt : {}]}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.value}>
         {typeof value === 'string' || typeof value === 'undefined'
@@ -274,11 +274,11 @@ export function FicheEmployePdf({ employee, company }: { employee: FicheEmployeD
           <Text style={styles.label}>Permis de conduire</Text>
           <View style={styles.checkGroup}>
             <View style={styles.checkOption}>
-              <View style={[styles.checkBox, employee.hasDrivingLicense ? styles.checkBoxOn : undefined]} />
+              <View style={[styles.checkBox, employee.hasDrivingLicense ? styles.checkBoxOn : {}]} />
               <Text style={styles.checkLabel}>Oui</Text>
             </View>
             <View style={styles.checkOption}>
-              <View style={[styles.checkBox, !employee.hasDrivingLicense ? styles.checkBoxOn : undefined]} />
+              <View style={[styles.checkBox, !employee.hasDrivingLicense ? styles.checkBoxOn : {}]} />
               <Text style={styles.checkLabel}>Non</Text>
             </View>
             {employee.hasDrivingLicense && employee.drivingLicenseNumber && (
