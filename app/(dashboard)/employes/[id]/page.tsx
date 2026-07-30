@@ -946,6 +946,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [companyConvention, setCompanyConvention] = useState<string | null>(null);
+  const [companyInfo, setCompanyInfo] = useState<{ name?: string; logoUrl?: string | null }>({});
+  const [isGeneratingFiche, setIsGeneratingFiche] = useState(false);
 
   const [userRole, setUserRole] = useState('EMPLOYEE');
   const canDelete = ['SUPER_ADMIN', 'ADMIN'].includes(userRole);
@@ -968,6 +970,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         try {
           const company: any = await api.get('/companies/mine');
           if (company?.collectiveAgreement) setCompanyConvention(company.collectiveAgreement);
+          setCompanyInfo({ name: company?.name, logoUrl: company?.logoUrl });
         } catch {}
       } catch (e) {
         console.error('Error fetching employee', e);
@@ -1009,6 +1012,69 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       alert(err?.message || 'Erreur lors de la suppression');
       setIsDeleting(false);
       setShowDeleteModal(false);
+    }
+  };
+
+  // 🆕 Génère et télécharge la fiche de renseignement en PDF (inspirée du modèle ORCA)
+  const handleDownloadFiche = async () => {
+    if (!employee) return;
+    setIsGeneratingFiche(true);
+    try {
+      const [{ pdf }, { FicheEmployePdf }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('@/components/employees/FicheEmployePdf'),
+      ]);
+      const doc = (
+        <FicheEmployePdf
+          employee={{
+            employeeNumber: employee.employeeNumber,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            dateOfBirth: employee.dateOfBirth,
+            placeOfBirth: employee.placeOfBirth,
+            bloodType: employee.bloodType,
+            pathology: employee.pathology,
+            address: employee.address,
+            phone: employee.phone,
+            email: employee.email,
+            fatherName: employee.fatherName,
+            motherName: employee.motherName,
+            maritalStatus: employee.maritalStatus,
+            numberOfChildren: employee.numberOfChildren,
+            position: employee.position,
+            departmentName: employee.department?.name,
+            educationLevel: employee.educationLevel,
+            emergencyContactName: employee.emergencyContactName,
+            emergencyContactRelation: employee.emergencyContactRelation,
+            emergencyContactPhone: employee.emergencyContactPhone,
+            hasDrivingLicense: employee.hasDrivingLicense,
+            drivingLicenseNumber: employee.drivingLicenseNumber,
+            foreignLanguages: employee.foreignLanguages,
+            bankAccountNumber: employee.bankAccountNumber,
+            cnssNumber: employee.cnssNumber,
+            nationalIdNumber: employee.nationalIdNumber,
+            uniformSize: employee.uniformSize,
+            shoeSize: employee.shoeSize,
+            hireDate: employee.hireDate,
+          }}
+          company={companyInfo}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const safeName = `${employee.lastName}_${employee.firstName}`.replace(/\s+/g, '_');
+      a.href = url;
+      a.download = `fiche_${safeName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      console.error('Erreur génération fiche PDF', err);
+      alert("Impossible de générer la fiche PDF pour le moment.");
+    } finally {
+      setIsGeneratingFiche(false);
     }
   };
 
@@ -1485,6 +1551,21 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   </div>
                   <ChevronRight size={16} className="text-gray-400 group-hover:text-sky-500 transition-colors" />
                 </Link>
+                <button
+                  onClick={handleDownloadFiche}
+                  disabled={isGeneratingFiche}
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-all group disabled:opacity-60"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                      {isGeneratingFiche ? <Loader2 size={16} className="text-indigo-500 animate-spin" /> : <FileText size={16} className="text-indigo-500" />}
+                    </div>
+                    <span className="font-bold text-sm text-gray-900 dark:text-white">
+                      {isGeneratingFiche ? 'Génération…' : 'Fiche de renseignement (PDF)'}
+                    </span>
+                  </div>
+                  <Download size={16} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                </button>
                 <button onClick={() => setActiveTab('paie')}
                   className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group">
                   <div className="flex items-center gap-3">

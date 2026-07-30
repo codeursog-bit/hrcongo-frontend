@@ -47,6 +47,7 @@ const DB_FIELDS: Record<string, string> = {
   emergencyContactPhone: 'Contact Urgence — Téléphone',
   hasDrivingLicense: 'Permis de Conduire (Oui/Non)', drivingLicenseNumber: 'N° Permis',
   foreignLanguages: 'Langue Étrangère', uniformSize: 'Taille Tenue', shoeSize: 'Pointure',
+  nationality: 'Nationalité',
 };
 
 // ─── Step config ─────────────────────────────────────────────────────────────

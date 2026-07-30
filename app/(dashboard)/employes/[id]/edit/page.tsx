@@ -513,7 +513,7 @@ import {
   Wallet, AlertCircle, Phone, Mail, MapPin, Calendar,
   Building2, DollarSign, Smartphone, CreditCard,
   Award, Hash, Check, CalendarDays, Clock, BadgeCheck, Power, XCircle,
-  HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle, Flag,
+  HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle, Flag, UserCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays, format } from 'date-fns';
@@ -522,6 +522,9 @@ import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { useBasePath } from '@/hooks/useBasePath';
+import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { ImageUploader } from '@/components/employees/ImageUploader';
 
 const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'];
 
@@ -591,6 +594,10 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const [departments, setDepartments]         = useState<any[]>([]);
   const [companyConvention, setCompanyConvention]       = useState<string | null>(null);
   const [conventionCategories, setConventionCategories] = useState<any[]>([]);
+  const imageUpload = useImageUpload(); // 🆕 Photo employé
+  // 🆕 Auto-service employé
+  const [selfService, setSelfService] = useState<{ enabled: boolean; at?: string | null; by?: string | null }>({ enabled: false });
+  const [isTogglingSelfService, setIsTogglingSelfService] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', dateOfBirth: '', placeOfBirth: '',
@@ -604,6 +611,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     position: '', departmentId: '',
     baseSalary: '', professionalCategory: '', echelon: '',
     employeeNumber: '',
+    photoUrl: '', // 🆕 Photo existante (avant remplacement éventuel)
     paymentMethod: 'CASH', bankName: '', bankAccountNumber: '',
     mobileMoneyOperator: 'MTN', mobileMoneyNumber: '',
     isSubjectToIrpp: true, isSubjectToCnss: true, taxExemptionReason: '',
@@ -626,6 +634,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           api.get<any>('/companies/mine'),
         ]);
         setDepartments(depts || []);
+        setSelfService({ enabled: !!employee.selfServiceEnabled, at: employee.selfServiceEnabledAt, by: employee.selfServiceEnabledBy });
         if (company?.collectiveAgreement) {
           setCompanyConvention(company.collectiveAgreement);
           try {
@@ -673,6 +682,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           taxExemptionReason:  employee.taxExemptionReason || '',
           tolZone:             employee.tolZone || 'VILLE',
           nationality:         employee.nationality || '',
+          photoUrl:            employee.photoUrl || '',
           // 🆕 Fiche ORCA — Informations complémentaires
           bloodType:                employee.bloodType || '',
           pathology:                employee.pathology || '',
@@ -734,6 +744,20 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     }
   };
 
+  // 🆕 Autoriser / révoquer l'auto-service employé (action immédiate, indépendante de "Enregistrer")
+  const handleToggleSelfService = async () => {
+    setIsTogglingSelfService(true);
+    try {
+      const next = !selfService.enabled;
+      const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
+      setSelfService({ enabled: !!res.selfServiceEnabled, at: res.selfServiceEnabledAt, by: res.selfServiceEnabledBy });
+    } catch (err: any) {
+      alert(err?.message || "Erreur lors de la mise à jour de l'accès");
+    } finally {
+      setIsTogglingSelfService(false);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -766,6 +790,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         taxExemptionReason: formData.taxExemptionReason || null,
         tolZone: formData.tolZone,
         nationality: formData.nationality || null,
+        // 🆕 Photo : nouvelle image uploadée si choisie, sinon on garde/retire l'existante
+        photoUrl: imageUpload.uploadedUrl || formData.photoUrl || null,
         // 🆕 Fiche ORCA — Informations complémentaires
         bloodType: formData.bloodType || null,
         pathology: formData.pathology || null,
@@ -818,7 +844,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-sky-500 transition-colors">
           <ArrowLeft size={16} /> Retour au profil
         </button>
-        <button onClick={handleSave} disabled={isSaving}
+        <button onClick={handleSave} disabled={isSaving || imageUpload.uploading}
           className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 transition-all">
           {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
           {isSaving ? 'Sauvegarde...' : 'Enregistrer'}
@@ -855,6 +881,18 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
               {activeSection === 'identity' && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8 space-y-6">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2"><User size={20} className="text-sky-500" /> Identité & Coordonnées</h2>
+
+                  {/* 🆕 Photo de l'employé */}
+                  <div className="flex justify-center pb-2 border-b border-gray-100 dark:border-gray-700">
+                    <ImageUploader
+                      preview={imageUpload.preview || formData.photoUrl || null}
+                      uploading={imageUpload.uploading}
+                      progress={imageUpload.progress}
+                      onFileSelect={imageUpload.handleFileSelect}
+                      onClear={() => { imageUpload.clearImage(); setFormData(prev => ({ ...prev, photoUrl: '' })); }}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><label className={labelClass}>Prénom *</label><input name="firstName" value={formData.firstName} onChange={handleChange} className={inputClass} /></div>
                     <div><label className={labelClass}>Nom *</label><input name="lastName" value={formData.lastName} onChange={handleChange} className={inputClass} /></div>
@@ -870,7 +908,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     <div><label className={labelClass}>Matricule <span className="text-xs text-gray-400 font-normal">(optionnel — généré auto si vide)</span></label><input name="employeeNumber" value={formData.employeeNumber} onChange={handleChange} placeholder="Généré automatiquement" className={inputClass + ' font-mono text-sm'} /></div>
                     <div><label className={labelClass}>NIU <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="niu" value={formData.niu} onChange={handleChange} placeholder="NIU de l'employé" className={inputClass + ' font-mono text-sm'} /></div>
                     <div><label className={labelClass}>N° Fiscal <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="taxNumber" value={formData.taxNumber} onChange={handleChange} placeholder="Numéro d'impôt individuel" className={inputClass + ' font-mono text-sm'} /></div>
-                    <div><label className={labelClass}><Flag size={13} className="inline mr-1 text-sky-500" />Nationalité <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><input name="nationality" value={formData.nationality} onChange={handleChange} placeholder="CG, FR, US, CM…" className={inputClass} /></div>
+                    <div><label className={labelClass}><Flag size={13} className="inline mr-1 text-sky-500" />Nationalité <span className="text-xs text-gray-400 font-normal">(optionnel)</span></label><FancySelect label="" value={formData.nationality} onChange={(v) => handleSelect('nationality', v)} icon={Flag} placeholder="Sélectionner un pays…" options={NATIONALITY_OPTIONS} /></div>
                   </div>
                 </div>
               )}
@@ -1204,13 +1242,44 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                       </div>
                     </div>
                   )}
+
+                  {/* 🆕 Auto-service employé */}
+                  <div className={`p-5 rounded-xl border-2 transition-all ${selfService.enabled ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-700' : 'border-gray-200 dark:border-gray-700'}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                          <UserCheck size={16} className={selfService.enabled ? 'text-emerald-600' : 'text-gray-400'} />
+                          Modification du profil par l'employé
+                        </h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md">
+                          Autorise temporairement l'employé à mettre à jour lui-même ses informations personnelles
+                          (coordonnées, situation familiale, contact d'urgence, etc.) depuis "Mon Profil" — jamais le
+                          contrat, le poste, le salaire ou les informations de paie. Repasse la bascule une fois les
+                          modifications validées pour reverrouiller l'accès.
+                        </p>
+                        {selfService.enabled && selfService.at && (
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-2 font-medium">
+                            Accès accordé le {new Date(selfService.at).toLocaleDateString('fr-FR')}{selfService.by ? ` par ${selfService.by}` : ''}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleToggleSelfService}
+                        disabled={isTogglingSelfService}
+                        className={`shrink-0 relative w-14 h-8 rounded-full transition-colors disabled:opacity-50 ${selfService.enabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                      >
+                        <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${selfService.enabled ? 'translate-x-7' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
           </AnimatePresence>
 
           <div className="mt-6 flex justify-end">
-            <button onClick={handleSave} disabled={isSaving}
+            <button onClick={handleSave} disabled={isSaving || imageUpload.uploading}
               className="px-8 py-3 bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 disabled:opacity-50 transition-all">
               {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               {isSaving ? 'Sauvegarde...' : 'Enregistrer les modifications'}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import {
@@ -8,8 +8,12 @@ import {
   Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Briefcase,
   BadgeCheck, Building2, X, Lock,FileText,
-  Loader2, AlertCircle
+  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon,
 } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, Legend,
+} from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
@@ -71,10 +75,12 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const ContractBadge = ({ type }: { type: string }) => {
   const colors: Record<string, string> = {
-    CDI:        'border-sky-200 text-sky-700 dark:border-sky-800 dark:text-sky-400',
-    CDD:        'border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400',
-    STAGE:      'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-400',
-    CONSULTANT: 'border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-400',
+    CDI:         'border-sky-200 text-sky-700 dark:border-sky-800 dark:text-sky-400',
+    CDD:         'border-purple-200 text-purple-700 dark:border-purple-800 dark:text-purple-400',
+    STAGE:       'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-400',
+    INTERIM:     'border-orange-200 text-orange-700 dark:border-orange-800 dark:text-orange-400',
+    CONSULTANT:  'border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-400',
+    PRESTATAIRE: 'border-teal-200 text-teal-700 dark:border-teal-800 dark:text-teal-400',
   };
   return (
     <span className={`px-2 py-0.5 rounded border text-[10px] uppercase font-bold tracking-wide ${colors[type] || colors.CDI}`}>
@@ -188,10 +194,21 @@ export default function EmployeeListPage() {
   const [totalPages, setTotalPages]         = useState(0);
   const [departments, setDepartments]       = useState<any[]>([]);
   const [searchQuery, setSearchQuery]       = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters]               = useState({ department: 'Tous', contract: 'Tous' });
   const [currentPage, setCurrentPage]       = useState(1);
   const [userRole, setUserRole]             = useState('EMPLOYEE');
   const itemsPerPage = 12;
+
+  // 🆕 Debounce de la recherche (300ms) pour ne pas envoyer une requête à chaque frappe
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  // 🆕 Revenir à la page 1 dès qu'une recherche ou un filtre change — sinon on peut se
+  // retrouver sur une page qui n'existe plus pour les nouveaux résultats
+  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filters.department, filters.contract]);
 
   // 🆕 États modal
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
@@ -215,6 +232,11 @@ export default function EmployeeListPage() {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({ page: currentPage.toString(), limit: itemsPerPage.toString() });
+      // 🆕 La recherche/les filtres portent sur TOUS les employés de l'entreprise
+      // (traités côté serveur), pas seulement ceux de la page actuellement affichée.
+      if (debouncedSearch)              params.set('search', debouncedSearch);
+      if (filters.department !== 'Tous') params.set('department', filters.department);
+      if (filters.contract !== 'Tous')   params.set('contractType', filters.contract);
       const [empResponse, deptData] = await Promise.all([
         api.get<PaginatedResponse<Employee>>(`/employees?${params}`),
         api.get<any[]>('/departments'),
@@ -229,26 +251,39 @@ export default function EmployeeListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage]);
+  }, [currentPage, debouncedSearch, filters.department, filters.contract]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const filteredEmployees = useMemo(() => {
-    let result = [...employees];
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(emp =>
-        emp.firstName.toLowerCase().includes(q) ||
-        emp.lastName.toLowerCase().includes(q) ||
-        emp.employeeNumber?.toLowerCase().includes(q) ||
-        emp.email.toLowerCase().includes(q) ||
-        emp.position.toLowerCase().includes(q),
-      );
-    }
-    if (filters.department !== 'Tous') result = result.filter(emp => emp.department?.name === filters.department);
-    if (filters.contract !== 'Tous')   result = result.filter(emp => emp.contractType === filters.contract);
-    return result;
-  }, [employees, searchQuery, filters]);
+  // 🆕 Récap comparatif — respecte les mêmes filtres/recherche que la liste
+  const [summary, setSummary] = useState<any>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setSummaryLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (debouncedSearch)              params.set('search', debouncedSearch);
+        if (filters.department !== 'Tous') params.set('department', filters.department);
+        if (filters.contract !== 'Tous')   params.set('contractType', filters.contract);
+        const data = await api.get<any>(`/employees/summary?${params}`);
+        setSummary(data);
+      } catch (error) {
+        console.error('Erreur chargement récapitulatif', error);
+        setSummary(null);
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [debouncedSearch, filters.department, filters.contract]);
+
+  const SUMMARY_COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#F97316', '#14B8A6'];
+
+  // 🆕 Le filtrage se fait maintenant côté serveur (voir fetchData) — `employees`
+  // contient déjà exactement les résultats de la recherche/des filtres actifs.
+  const filteredEmployees = employees;
 
   const hasActiveFilters = filters.department !== 'Tous' || filters.contract !== 'Tous' || searchQuery !== '';
   const resetFilters = () => { setFilters({ department: 'Tous', contract: 'Tous' }); setSearchQuery(''); };
@@ -373,12 +408,14 @@ export default function EmployeeListPage() {
                 />
               </div>
             )}
-            <div className="w-40">
+            <div className="w-48">
               <FancySelect value={filters.contract} onChange={v => setFilters(prev => ({ ...prev, contract: v }))} icon={Briefcase} placeholder="Contrat"
                 options={[
                   { value: 'Tous', label: 'Tous' }, { value: 'CDI', label: 'CDI' },
                   { value: 'CDD', label: 'CDD' }, { value: 'STAGE', label: 'Stage' },
+                  { value: 'INTERIM', label: 'Intérim' },
                   { value: 'CONSULTANT', label: 'Consultant' },
+                  { value: 'PRESTATAIRE', label: 'Prestataire' },
                 ]}
               />
             </div>
@@ -395,6 +432,13 @@ export default function EmployeeListPage() {
           </div>
         </div>
       </div>
+
+      {/* 🆕 Résultat de recherche/filtre — porte sur tous les employés, pas la page actuelle */}
+      {hasActiveFilters && !isLoading && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="font-bold text-gray-900 dark:text-white">{totalEmployees}</span> employé{totalEmployees > 1 ? 's' : ''} trouvé{totalEmployees > 1 ? 's' : ''} pour cette recherche
+        </p>
+      )}
 
       {/* ── CONTENU ── */}
       <AnimatePresence mode="wait">
@@ -519,6 +563,120 @@ export default function EmployeeListPage() {
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={18} /></button>
             <span className="px-4 text-sm font-bold text-gray-700 dark:text-gray-300">Page {currentPage} / {totalPages || 1}</span>
             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages || totalPages === 0} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronRight size={18} /></button>
+          </div>
+        </div>
+      )}
+
+      {/* 🆕 APERÇU DE L'EFFECTIF — respecte les mêmes filtres/recherche que la liste ci-dessus */}
+      {!summaryLoading && summary && summary.total > 0 && (
+        <div className="pt-8 mt-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2 mb-1">
+            <PieChartIcon size={18} className="text-sky-500" />
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Aperçu de l'effectif</h2>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            {hasActiveFilters ? `Sur les ${summary.total} employé${summary.total > 1 ? 's' : ''} correspondant à la recherche/aux filtres actifs` : `Sur l'ensemble des ${summary.total} employé${summary.total > 1 ? 's' : ''}`}
+          </p>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+            {/* Par département */}
+            {summary.byDepartment?.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Building2 size={15} className="text-sky-500" /> Effectif par département</h3>
+                {summary.byDepartment.length > 1 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byDepartment[0].name}</strong> en tête ({summary.byDepartment[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byDepartment[summary.byDepartment.length - 1].name}</strong> en retrait ({summary.byDepartment[summary.byDepartment.length - 1].count})
+                  </p>
+                )}
+                <div style={{ height: Math.max(180, summary.byDepartment.length * 34) }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={summary.byDepartment} margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide allowDecimals={false} />
+                      <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        {summary.byDepartment.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Par type de contrat */}
+            {summary.byContractType?.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Briefcase size={15} className="text-emerald-500" /> Effectif par type de contrat</h3>
+                {summary.byContractType.length > 1 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byContractType[0].label}</strong> en tête ({summary.byContractType[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byContractType[summary.byContractType.length - 1].label}</strong> en retrait ({summary.byContractType[summary.byContractType.length - 1].count})
+                  </p>
+                )}
+                <div style={{ height: Math.max(180, summary.byContractType.length * 34) }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={summary.byContractType} margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide allowDecimals={false} />
+                      <YAxis dataKey="label" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        {summary.byContractType.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Par genre */}
+            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Users size={15} className="text-violet-500" /> Répartition par genre</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                {summary.byGender?.[0]?.count || 0} homme{(summary.byGender?.[0]?.count || 0) > 1 ? 's' : ''} · {summary.byGender?.[1]?.count || 0} femme{(summary.byGender?.[1]?.count || 0) > 1 ? 's' : ''}
+              </p>
+              <div style={{ height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={summary.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={50} outerRadius={80} label>
+                      <Cell fill="#0EA5E9" />
+                      <Cell fill="#EC4899" />
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Par catégorie/échelon conventionnel */}
+            {summary.hasConvention && summary.byCategory?.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><BadgeCheck size={15} className="text-amber-500" /> Effectif par catégorie / échelon</h3>
+                {summary.byCategory.length > 1 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byCategory[0].label}</strong> en tête ({summary.byCategory[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byCategory[summary.byCategory.length - 1].label}</strong> en retrait ({summary.byCategory[summary.byCategory.length - 1].count})
+                  </p>
+                )}
+                <div style={{ height: Math.max(180, summary.byCategory.length * 30), maxHeight: 320, overflowY: summary.byCategory.length > 10 ? 'auto' : 'visible' }}>
+                  <ResponsiveContainer width="100%" height={Math.max(180, summary.byCategory.length * 30)}>
+                    <BarChart layout="vertical" data={summary.byCategory} margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide allowDecimals={false} />
+                      <YAxis dataKey="label" type="category" width={120} axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        {summary.byCategory.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -5,7 +5,7 @@ import {
   Building2, Wallet, Smartphone, Briefcase, Calendar, DollarSign,
   CreditCard, AlertCircle, Plus, X, Loader2, Save, Network,
   Sparkles, Clock, CalendarDays, Check,
-  Infinity, CalendarCheck, GraduationCap, UserCheck, Handshake, RefreshCw,
+  Infinity, CalendarCheck, GraduationCap, UserCheck, Handshake, RefreshCw, Flag,
 } from 'lucide-react';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { differenceInDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
 
 interface Step3ContractProps {
   formData: any;
@@ -639,11 +640,13 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
 
                 {/* Nationalité */}
                 <Field label="Nationalité (optionnel)">
-                  <Input
-                    name="nationality"
-                    value={formData.nationality as string || ''}
-                    onChange={onInputChange}
-                    placeholder="CG, FR, US, CM…"
+                  <FancySelect
+                    label=""
+                    value={(formData.nationality as string) || ''}
+                    onChange={(v) => onSelectChange('nationality', v)}
+                    icon={Flag}
+                    placeholder="Sélectionner un pays…"
+                    options={NATIONALITY_OPTIONS}
                   />
                 </Field>
 
