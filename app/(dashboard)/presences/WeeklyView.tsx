@@ -14,10 +14,14 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  BarChart3, ChevronLeft, ChevronRight, CheckCircle2, Clock, XCircle,
-  Home, CalendarClock, TrendingUp, AlertTriangle, ThumbsUp, Printer,
+  BarChart3, ChevronLeft, ChevronRight,
+  TrendingUp, Printer,
   Download, Loader2,
 } from 'lucide-react';
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, LineChart, Line,
+} from 'recharts';
 import { api } from '@/services/api';
 import DepartmentDetailSidebar, { DepartmentDetail } from '@/components/DepartmentDetailSidebar';
 import WeeklyAttendanceReportPrintable from '@/components/WeeklyAttendanceReportPrintable';
@@ -149,6 +153,41 @@ export default function WeeklyView({ userRole, userDepartment, date }: WeeklyVie
     return Array.from(deptMap.values());
   }, [employeeMap, userRole, userDepartment, weekDays]);
 
+  /** ✅ Un seul graphique — tous les départements ensemble, en pourcentage */
+  const departmentChartData = useMemo(() => departmentStats.map(d => ({
+    name:      d.name,
+    'Présence': d.total > 0 ? Math.round((d.present / d.total) * 1000) / 10 : 0,
+    'Retards':  d.total > 0 ? Math.round((d.late / d.total) * 1000) / 10 : 0,
+    'Absences': d.total > 0 ? Math.round((d.absent / d.total) * 1000) / 10 : 0,
+    'Remote':   d.total > 0 ? Math.round((d.remote / d.total) * 1000) / 10 : 0,
+    'Congés':   d.total > 0 ? Math.round((d.leave / d.total) * 1000) / 10 : 0,
+  })), [departmentStats]);
+
+  /** ✅ Courbe d'évolution — taux Présence/Absence/Congé jour par jour sur la semaine */
+  const dailyStats = useMemo(() => {
+    return weekDays.map((day, i) => {
+      let present = 0, late = 0, absent = 0, remote = 0, leave = 0, total = 0;
+      employeeMap.forEach(({ employee: emp, statusByDate }) => {
+        const deptName = emp.department?.name || 'Non assigné';
+        if (userRole === 'MANAGER' && userDepartment && deptName !== userDepartment) return;
+        const ds = statusByDate.get(toDateStr(day));
+        if (!ds || EXCLUDED.has(ds.status)) return;
+        total++;
+        if (ds.status === 'PRESENT') present++;
+        else if (ds.status === 'LATE') late++;
+        else if (ds.status === 'ABSENT_UNPAID') absent++;
+        else if (ds.status === 'REMOTE') remote++;
+        else if (ds.status === 'LEAVE' || ds.status === 'ON_LEAVE') leave++;
+      });
+      return {
+        jour: DAY_LABELS[i],
+        'Présence': total > 0 ? Math.round(((present + late + remote) / total) * 1000) / 10 : 0,
+        'Absence':  total > 0 ? Math.round((absent / total) * 1000) / 10 : 0,
+        'Congé':    total > 0 ? Math.round((leave / total) * 1000) / 10 : 0,
+      };
+    });
+  }, [employeeMap, userRole, userDepartment, weekDays]);
+
   /** Grille jour-par-jour par employé — pour la sidebar département et le rapport imprimable */
   const employeeWeekRows = useMemo(() => {
     const rows: Array<{ id: string; name: string; department?: string; position?: string; photoUrl?: string | null; days: Array<{ label: string; status: string }>; totalHours: number; present: number; late: number; absent: number; remote: number; leave: number }> = [];
@@ -270,99 +309,60 @@ export default function WeeklyView({ userRole, userDepartment, date }: WeeklyVie
             <p className="text-gray-500">Aucune donnée disponible pour cette semaine</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {departmentStats.map(dept => {
-              const presenceRate = dept.total > 0 ? ((dept.present / dept.total) * 100).toFixed(1) : '0';
-              const lateRate = dept.total > 0 ? ((dept.late / dept.total) * 100).toFixed(1) : '0';
-              const absentRate = dept.total > 0 ? ((dept.absent / dept.total) * 100).toFixed(1) : '0';
-              const remoteRate = dept.total > 0 ? ((dept.remote / dept.total) * 100).toFixed(1) : '0';
-              const leaveRate = dept.total > 0 ? ((dept.leave / dept.total) * 100).toFixed(1) : '0';
-              const isHealthy = dept.present + dept.late + dept.remote > dept.absent;
+          <div className="space-y-6">
+            {/* Tous les départements ensemble — en pourcentage */}
+            <div>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <BarChart3 size={16} className="text-sky-500" /> Taux par Département (%)
+              </h4>
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={departmentChartData} onClick={(e: any) => e?.activeLabel && openDepartmentDetail(e.activeLabel)}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(v: number) => `${v}%`} />
+                  <Legend />
+                  <Bar dataKey="Présence" fill="#10b981" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Retards" fill="#f97316" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Absences" fill="#ef4444" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Remote" fill="#a855f7" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Congés" fill="#0ea5e9" radius={[4, 4, 0, 0]} cursor="pointer" />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="text-xs text-gray-400 mt-2">Cliquez sur une barre pour voir le détail du département.</p>
+            </div>
 
-              return (
+            {/* Courbe d'évolution sur les 7 jours de la semaine */}
+            <div>
+              <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <TrendingUp size={16} className="text-emerald-500" /> Évolution sur la Semaine
+              </h4>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={dailyStats}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                  <XAxis dataKey="jour" tick={{ fontSize: 12 }} />
+                  <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(v: number) => `${v}%`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="Présence" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Absence" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Congé" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Accès rapide au détail de chaque département */}
+            <div className="flex flex-wrap gap-2">
+              {departmentStats.map(dept => (
                 <button
                   key={dept.name}
                   onClick={() => openDepartmentDetail(dept.name)}
-                  className="w-full text-left border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-700 transition-all bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-850"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h4 className="font-bold text-lg text-gray-900 dark:text-white">{dept.name}</h4>
-                      <p className="text-sm text-gray-500">{dept.total} pointages comptabilisés cette semaine</p>
-                    </div>
-                    <div className="text-right flex items-center gap-2">
-                      <div>
-                        <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{presenceRate}%</div>
-                        <p className="text-xs text-gray-500">Taux de présence</p>
-                      </div>
-                      <TrendingUp size={20} className="text-gray-300" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800">
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1 font-semibold flex items-center gap-1"><CheckCircle2 size={12} /> Présents</p>
-                      <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{dept.present}</p>
-                      <p className="text-xs text-emerald-500 mt-1">{presenceRate}%</p>
-                    </div>
-                    <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
-                      <p className="text-xs text-orange-600 dark:text-orange-400 mb-1 font-semibold flex items-center gap-1"><Clock size={12} /> Retards</p>
-                      <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{dept.late}</p>
-                      <p className="text-xs text-orange-500 mt-1">{lateRate}%</p>
-                    </div>
-                    <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
-                      <p className="text-xs text-red-600 dark:text-red-400 mb-1 font-semibold flex items-center gap-1"><XCircle size={12} /> Absents</p>
-                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">{dept.absent}</p>
-                      <p className="text-xs text-red-500 mt-1">{absentRate}%</p>
-                    </div>
-                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
-                      <p className="text-xs text-purple-600 dark:text-purple-400 mb-1 font-semibold flex items-center gap-1"><Home size={12} /> Remote</p>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{dept.remote}</p>
-                      <p className="text-xs text-purple-500 mt-1">{remoteRate}%</p>
-                    </div>
-                    <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-3 border border-sky-200 dark:border-sky-800">
-                      <p className="text-xs text-sky-600 dark:text-sky-400 mb-1 font-semibold flex items-center gap-1"><CalendarClock size={12} /> Congés</p>
-                      <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">{dept.leave}</p>
-                      <p className="text-xs text-sky-500 mt-1">{leaveRate}%</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-100 dark:bg-gray-900 rounded-full h-4 overflow-hidden">
-                    <div className="h-full flex">
-                      {[
-                        { value: dept.present, color: 'bg-emerald-500' },
-                        { value: dept.late, color: 'bg-orange-500' },
-                        { value: dept.absent, color: 'bg-red-500' },
-                        { value: dept.remote, color: 'bg-purple-500' },
-                        { value: dept.leave, color: 'bg-sky-500' },
-                      ].map((seg, i) => (
-                        <div
-                          key={i}
-                          className={`${seg.color} transition-all duration-500 flex items-center justify-center`}
-                          style={{ width: dept.total > 0 ? `${(seg.value / dept.total) * 100}%` : '0%' }}
-                        >
-                          {seg.value > 0 && dept.total > 0 && (seg.value / dept.total) > 0.1 && (
-                            <span className="text-[10px] font-bold text-white">{seg.value}</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className={`flex items-center gap-1.5 font-semibold ${isHealthy ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                        {isHealthy ? <ThumbsUp size={13} /> : <AlertTriangle size={13} />}
-                        {isHealthy ? 'Performance satisfaisante' : 'Nécessite attention'}
-                      </span>
-                      <span className="text-gray-500">
-                        {dept.total > 0 ? (((dept.present + dept.remote) / dept.total) * 100).toFixed(0) : 0}% effectifs productifs
-                      </span>
-                    </div>
-                  </div>
+                  {dept.name} · voir le détail
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
         )}
       </div>
