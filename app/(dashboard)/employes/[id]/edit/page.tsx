@@ -745,14 +745,14 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   };
 
   // 🆕 Autoriser / révoquer l'auto-service employé (action immédiate, indépendante de "Enregistrer")
-  const handleToggleSelfService = async () => {
+ const handleToggleSelfService = async () => {
     setIsTogglingSelfService(true);
     try {
       const next = !selfService.enabled;
       const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
       setSelfService({ enabled: !!res.selfServiceEnabled, at: res.selfServiceEnabledAt, by: res.selfServiceEnabledBy });
     } catch (err: any) {
-      showAlert(err?.message || "Erreur lors de la mise à jour de l'accès");
+      alert.error('Erreur', err?.message || "Erreur lors de la mise à jour de l'accès");
     } finally {
       setIsTogglingSelfService(false);
     }
