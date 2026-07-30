@@ -752,7 +752,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
       const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
       setSelfService({ enabled: !!res.selfServiceEnabled, at: res.selfServiceEnabledAt, by: res.selfServiceEnabledBy });
     } catch (err: any) {
-      alert(err?.message || "Erreur lors de la mise à jour de l'accès");
+      alert.error(err?.message || "Erreur lors de la mise à jour de l'accès");
     } finally {
       setIsTogglingSelfService(false);
     }
