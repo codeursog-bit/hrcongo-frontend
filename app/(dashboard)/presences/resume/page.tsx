@@ -20,7 +20,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import PresenceSubNav from '@/components/PresenceSubNav';
 
 // ============================================================================
-// ✅ Interface alignée sur MonthlyReportItem (backend) — Décret 78-360
+// ✅ Interface alignée sur MonthlyReportItem  — Décret 78-360
 // ============================================================================
 interface DayDetail {
   date:         string;
