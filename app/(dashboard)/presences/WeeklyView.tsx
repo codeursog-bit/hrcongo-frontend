@@ -256,8 +256,8 @@ export default function WeeklyView({ userRole, userDepartment, date }: WeeklyVie
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-center items-center min-h-[600px]">
+        <Loader2 className="animate-spin text-sky-500" size={48} />
       </div>
     );
   }

@@ -76,10 +76,9 @@ export default function AttendancePage() {
     if (!currentUser) return;
     
     if (activeTab === 'monthly') fetchMonthlyData();
-    else if (activeTab === 'weekly') fetchWeeklyData();
     else if (activeTab === 'corrections') fetchCorrectionsData();
     else if (activeTab === 'myview') fetchMyAttendances();
-    else if (activeTab === 'daily') setIsLoading(false);
+    else if (activeTab === 'daily' || activeTab === 'weekly') setIsLoading(false);
   }, [activeTab, date, currentUser, employeeProfile]);
 
   const fetchMonthlyData = async () => {
@@ -89,18 +88,6 @@ export default function AttendancePage() {
       setData(res);
     } catch (e) {
       console.error('Erreur chargement données mensuelles:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchWeeklyData = async () => {
-    setIsLoading(true);
-    try {
-      const res: any = await api.get(`/attendance/report?month=${date.getMonth() + 1}&year=${date.getFullYear()}`);
-      setData(res);
-    } catch (e) {
-      console.error('Erreur chargement données hebdomadaires:', e);
     } finally {
       setIsLoading(false);
     }
