@@ -745,14 +745,14 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   };
 
   // 🆕 Autoriser / révoquer l'auto-service employé (action immédiate, indépendante de "Enregistrer")
- const handleToggleSelfService = async () => {
+  const handleToggleSelfService = async () => {
     setIsTogglingSelfService(true);
     try {
       const next = !selfService.enabled;
       const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
       setSelfService({ enabled: !!res.selfServiceEnabled, at: res.selfServiceEnabledAt, by: res.selfServiceEnabledBy });
     } catch (err: any) {
-      alert.error('Erreur', err?.message || "Erreur lors de la mise à jour de l'accès");
+      alert(err?.message || "Erreur lors de la mise à jour de l'accès");
     } finally {
       setIsTogglingSelfService(false);
     }
@@ -1269,7 +1269,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                         disabled={isTogglingSelfService}
                         className={`shrink-0 relative w-14 h-8 rounded-full transition-colors disabled:opacity-50 ${selfService.enabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                       >
-                        <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-transform ${selfService.enabled ? 'translate-x-7' : 'translate-x-1'}`} />
+                        <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${selfService.enabled ? 'translate-x-6' : 'translate-x-0'}`} />
                       </button>
                     </div>
                   </div>

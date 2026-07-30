@@ -14,22 +14,31 @@ import {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
+    paddingTop: 36,
+    paddingBottom: 50,
+    paddingHorizontal: 36,
     fontSize: 10,
     fontFamily: 'Helvetica',
     color: '#1f2937',
   },
-  headerRow: {
+  headerBand: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 14,
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 18,
+    borderRadius: 6,
+    borderBottomWidth: 3,
+    borderBottomColor: '#0ea5e9',
   },
   logo: {
-    width: 46,
-    height: 46,
+    width: 42,
+    height: 42,
     marginRight: 10,
     objectFit: 'contain',
+    borderRadius: 4,
   },
   companyBlock: {
     flexDirection: 'row',
@@ -38,6 +47,12 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 13,
     fontWeight: 700,
+    color: '#0f172a',
+  },
+  companyTagline: {
+    fontSize: 8,
+    color: '#64748b',
+    marginTop: 1,
   },
   metaBox: {
     alignItems: 'flex-end',
@@ -128,15 +143,21 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: 'absolute',
-    bottom: 24,
-    left: 36,
-    right: 36,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 10,
+    paddingHorizontal: 36,
+    borderTopWidth: 2,
+    borderTopColor: '#0ea5e9',
+  },
+  footerText: {
     fontSize: 8,
-    color: '#9ca3af',
-    textAlign: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingTop: 6,
+    color: '#64748b',
   },
 });
 
@@ -145,7 +166,7 @@ function CheckGroup({ options, selected }: { options: string[]; selected?: strin
     <View style={styles.checkGroup}>
       {options.map((opt) => (
         <View key={opt} style={styles.checkOption}>
-          <View style={[styles.checkBox, selected === opt ? styles.checkBoxOn : {}]} />
+          <View style={[styles.checkBox, selected === opt ? styles.checkBoxOn : undefined]} />
           <Text style={styles.checkLabel}>{opt}</Text>
         </View>
       ))}
@@ -155,7 +176,7 @@ function CheckGroup({ options, selected }: { options: string[]; selected?: strin
 
 function Row({ label, value, alt }: { label: string; value?: React.ReactNode; alt?: boolean }) {
   return (
-    <View style={[styles.row, alt ? styles.rowAlt : {}]}>
+    <View style={[styles.row, alt ? styles.rowAlt : undefined]}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.value}>
         {typeof value === 'string' || typeof value === 'undefined'
@@ -222,11 +243,14 @@ export function FicheEmployePdf({ employee, company }: { employee: FicheEmployeD
     <Document title={`Fiche_${employee.lastName}_${employee.firstName}`}>
       <Page size="A4" style={styles.page}>
 
-        {/* En-tête */}
-        <View style={styles.headerRow}>
+        {/* En-tête — bandeau pleine largeur */}
+        <View style={styles.headerBand} fixed>
           <View style={styles.companyBlock}>
             {company?.logoUrl && <Image src={company.logoUrl} style={styles.logo} />}
-            <Text style={styles.companyName}>{company?.name || 'Entreprise'}</Text>
+            <View>
+              <Text style={styles.companyName}>{company?.name || 'Entreprise'}</Text>
+              <Text style={styles.companyTagline}>Dossier du personnel</Text>
+            </View>
           </View>
           <View style={styles.metaBox}>
             <Text style={styles.metaLine}><Text style={styles.metaLabel}>Fiche N° : </Text>{employee.employeeNumber || '—'}</Text>
@@ -274,11 +298,11 @@ export function FicheEmployePdf({ employee, company }: { employee: FicheEmployeD
           <Text style={styles.label}>Permis de conduire</Text>
           <View style={styles.checkGroup}>
             <View style={styles.checkOption}>
-              <View style={[styles.checkBox, employee.hasDrivingLicense ? styles.checkBoxOn : {}]} />
+              <View style={[styles.checkBox, employee.hasDrivingLicense ? styles.checkBoxOn : undefined]} />
               <Text style={styles.checkLabel}>Oui</Text>
             </View>
             <View style={styles.checkOption}>
-              <View style={[styles.checkBox, !employee.hasDrivingLicense ? styles.checkBoxOn : {}]} />
+              <View style={[styles.checkBox, !employee.hasDrivingLicense ? styles.checkBoxOn : undefined]} />
               <Text style={styles.checkLabel}>Non</Text>
             </View>
             {employee.hasDrivingLicense && employee.drivingLicenseNumber && (
@@ -300,7 +324,11 @@ export function FicheEmployePdf({ employee, company }: { employee: FicheEmployeD
         <Row label="Pointure de chaussures" value={employee.shoeSize || undefined} />
         <Row label="Date de recrutement" value={fmtDate(employee.hireDate)} alt />
 
-        <Text style={styles.footer} render={({ pageNumber, totalPages }) => `Généré le ${today} — Page ${pageNumber} / ${totalPages}`} fixed />
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>{company?.name || 'Entreprise'}</Text>
+          <Text style={styles.footerText}>Document confidentiel — usage interne uniquement</Text>
+          <Text style={styles.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} />
+        </View>
       </Page>
     </Document>
   );
