@@ -6,7 +6,7 @@
 //    depuis la page de gestion /loans. KPI (dû / payé / reste à payer /
 //    mensualité en cours), historique complet, détail au clic dans un petit
 //    modal, et — si `canManage` — bouton paiement espèces par ligne (réservé
-//    admin/RH, jamais visible à l'employé lui-même).
+//    admin/RH, jamais visible à l'employé lui-même)
 // ============================================================================
 
 import React, { useMemo, useState } from 'react';
