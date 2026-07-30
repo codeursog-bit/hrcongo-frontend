@@ -750,7 +750,7 @@ import {
   Laptop, Plus, Loader2, Shield, Award,
   BookOpen, Hash, CreditCard, ChevronRight,
   Gift, TrendingUp, Star, CalendarDays,
-  HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle,
+  HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle, UserCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
@@ -821,6 +821,7 @@ interface EmployeeDetail {
   foreignLanguages?: string | null;
   uniformSize?: string | null;
   shoeSize?: string | null;
+  selfServiceEnabled?: boolean;
 }
 
 function getRoleFromStorage(): string {
@@ -948,6 +949,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   const [companyConvention, setCompanyConvention] = useState<string | null>(null);
   const [companyInfo, setCompanyInfo] = useState<{ name?: string; logoUrl?: string | null }>({});
   const [isGeneratingFiche, setIsGeneratingFiche] = useState(false);
+  const [isTogglingSelfService, setIsTogglingSelfService] = useState(false);
 
   const [userRole, setUserRole] = useState('EMPLOYEE');
   const canDelete = ['SUPER_ADMIN', 'ADMIN'].includes(userRole);
@@ -1016,6 +1018,21 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   };
 
   // 🆕 Génère et télécharge la fiche de renseignement en PDF (inspirée du modèle ORCA)
+  // 🆕 Autoriser / révoquer l'auto-service employé (édition de son propre profil)
+  const handleToggleSelfService = async () => {
+    if (!employee) return;
+    setIsTogglingSelfService(true);
+    try {
+      const next = !employee.selfServiceEnabled;
+      const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
+      setEmployee(prev => prev ? { ...prev, selfServiceEnabled: !!res.selfServiceEnabled } : prev);
+    } catch (err: any) {
+      alert(err?.message || "Erreur lors de la mise à jour de l'accès");
+    } finally {
+      setIsTogglingSelfService(false);
+    }
+  };
+
   const handleDownloadFiche = async () => {
     if (!employee) return;
     setIsGeneratingFiche(true);
@@ -1565,6 +1582,32 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     </span>
                   </div>
                   <Download size={16} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                </button>
+                <button
+                  onClick={handleToggleSelfService}
+                  disabled={isTogglingSelfService}
+                  className={`w-full flex items-center justify-between p-4 border rounded-xl transition-all group disabled:opacity-60 ${
+                    employee?.selfServiceEnabled
+                      ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800'
+                      : 'bg-gray-50 dark:bg-gray-750/50 border-gray-100 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${employee?.selfServiceEnabled ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                      {isTogglingSelfService ? <Loader2 size={16} className="text-emerald-500 animate-spin" /> : <UserCheck size={16} className={employee?.selfServiceEnabled ? 'text-emerald-500' : 'text-gray-400'} />}
+                    </div>
+                    <div className="text-left">
+                      <span className="font-bold text-sm text-gray-900 dark:text-white block">
+                        {employee?.selfServiceEnabled ? "Auto-service activé" : "Autoriser l'employé à modifier son profil"}
+                      </span>
+                      <span className="text-[11px] text-gray-400">
+                        {employee?.selfServiceEnabled ? "Cliquer pour reverrouiller" : 'Cliquer pour accorder un accès temporaire'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={`shrink-0 relative w-11 h-6 rounded-full transition-colors ${employee?.selfServiceEnabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${employee?.selfServiceEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
                 </button>
                 <button onClick={() => setActiveTab('paie')}
                   className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-750/50 border border-gray-100 dark:border-gray-700 rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group">

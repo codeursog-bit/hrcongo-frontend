@@ -8,7 +8,7 @@ import {
   Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Briefcase,
   BadgeCheck, Building2, X, Lock,FileText,
-  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon,
+  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon, Clock,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -189,6 +189,7 @@ export default function EmployeeListPage() {
   const router = useRouter();
   const [viewMode, setViewMode]             = useState<'grid' | 'table'>('grid');
   const [isLoading, setIsLoading]           = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // 🆕 uniquement au tout premier chargement
   const [employees, setEmployees]           = useState<Employee[]>([]);
   const [totalEmployees, setTotalEmployees] = useState(0);
   const [totalPages, setTotalPages]         = useState(0);
@@ -237,23 +238,25 @@ export default function EmployeeListPage() {
       if (debouncedSearch)              params.set('search', debouncedSearch);
       if (filters.department !== 'Tous') params.set('department', filters.department);
       if (filters.contract !== 'Tous')   params.set('contractType', filters.contract);
-      const [empResponse, deptData] = await Promise.all([
-        api.get<PaginatedResponse<Employee>>(`/employees?${params}`),
-        api.get<any[]>('/departments'),
-      ]);
+      const empResponse = await api.get<PaginatedResponse<Employee>>(`/employees?${params}`);
       setEmployees(empResponse.data || []);
       setTotalEmployees(empResponse.total || 0);
       setTotalPages(empResponse.totalPages || 0);
-      setDepartments(deptData || []);
     } catch (error) {
       console.error('Erreur chargement employés', error);
       setEmployees([]);
     } finally {
       setIsLoading(false);
+      setIsInitialLoading(false); // 🆕 seul le tout premier chargement affiche l'écran de chargement plein écran
     }
   }, [currentPage, debouncedSearch, filters.department, filters.contract]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // 🆕 Départements chargés une seule fois (ne dépend pas de la recherche/des filtres)
+  useEffect(() => {
+    api.get<any[]>('/departments').then(setDepartments).catch(() => setDepartments([]));
+  }, []);
 
   // 🆕 Récap comparatif — respecte les mêmes filtres/recherche que la liste
   const [summary, setSummary] = useState<any>(null);
@@ -324,7 +327,7 @@ export default function EmployeeListPage() {
     }
   };
 
-  if (isLoading) return <GlobalLoader />;
+  if (isInitialLoading) return <GlobalLoader />;
 
   return (
     <div className="space-y-6 min-h-screen pb-20">
@@ -397,8 +400,12 @@ export default function EmployeeListPage() {
               placeholder="Rechercher par nom, poste, matricule..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-gray-900 dark:text-white"
+              className="w-full pl-10 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-gray-900 dark:text-white"
             />
+            {/* 🆕 Petit indicateur discret pendant la recherche/le filtre — ne bloque plus toute la page */}
+            {isLoading && !isInitialLoading && (
+              <Loader2 size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sky-400 animate-spin" />
+            )}
           </div>
           <div className="flex items-center gap-3 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0">
             {!isManager && (
@@ -441,6 +448,7 @@ export default function EmployeeListPage() {
       )}
 
       {/* ── CONTENU ── */}
+      <div className={`transition-opacity duration-200 ${isLoading && !isInitialLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       <AnimatePresence mode="wait">
         {filteredEmployees.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-20 text-center">
@@ -566,6 +574,7 @@ export default function EmployeeListPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* 🆕 APERÇU DE L'EFFECTIF — respecte les mêmes filtres/recherche que la liste ci-dessus */}
       {!summaryLoading && summary && summary.total > 0 && (
@@ -672,6 +681,48 @@ export default function EmployeeListPage() {
                       <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
                         {summary.byCategory.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* 🆕 Pyramide des âges */}
+            {summary.agePyramid?.some((b: any) => b.male + b.female > 0) && (
+              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Users size={15} className="text-indigo-500" /> Pyramide des âges</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Répartition par tranche d'âge et par genre</p>
+                <div style={{ height: 220 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={summary.agePyramid} margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide allowDecimals={false} />
+                      <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Legend />
+                      <Bar dataKey="male" name="Hommes" fill="#0EA5E9" radius={[0, 8, 8, 0]} />
+                      <Bar dataKey="female" name="Femmes" fill="#EC4899" radius={[0, 8, 8, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* 🆕 Pyramide de l'ancienneté */}
+            {summary.seniorityPyramid?.some((b: any) => b.male + b.female > 0) && (
+              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Clock size={15} className="text-teal-500" /> Pyramide de l'ancienneté</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Depuis combien de temps l'effectif est en poste</p>
+                <div style={{ height: 220 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={summary.seniorityPyramid} margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide allowDecimals={false} />
+                      <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Legend />
+                      <Bar dataKey="male" name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
+                      <Bar dataKey="female" name="Femmes" fill="#F59E0B" radius={[0, 8, 8, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
