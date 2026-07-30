@@ -12,6 +12,8 @@
 // ============================================================================
 
 import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useBasePath } from '@/hooks/useBasePath';
 import {
   TrendingUp, Wallet, Banknote, PiggyBank, Filter, ChevronRight, Users2,
 } from 'lucide-react';
@@ -34,6 +36,7 @@ type Props = {
 };
 
 export default function LoansOverview({ loans, advances, onSelectEmployee, onGoToRequest }: Props) {
+  const { bp } = useBasePath();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [typeFilter, setTypeFilter] = useState('');
@@ -133,6 +136,12 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
 
   const displayedRequests = showAll ? filtered : filtered.slice(0, 10);
 
+  const recentlyValidatedLoans = useMemo(() =>
+    loans.filter(l => ['ACTIVE', 'PAID'].includes(l.status))
+      .sort((a, b) => new Date(b.approvedAt ?? b.createdAt).getTime() - new Date(a.approvedAt ?? a.createdAt).getTime())
+      .slice(0, 5),
+  [loans]);
+
   return (
     <div className="space-y-6">
       {/* ══════════════════ KPI ══════════════════ */}
@@ -194,6 +203,42 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
             </button>
           </div>
         )}
+      </div>
+
+      {/* ══════════════════ DERNIERS PRÊTS VALIDÉS ══════════════════ */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Derniers prêts validés</p>
+        </div>
+        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+          {recentlyValidatedLoans.length === 0 ? (
+            <p className="text-center py-10 text-gray-400 text-sm">Aucun prêt validé pour le moment.</p>
+          ) : recentlyValidatedLoans.map(l => (
+            <button key={l.id} onClick={() => onSelectEmployee(l.employee)} className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/40 text-left">
+              <div>
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{l.employee?.firstName} {l.employee?.lastName}</p>
+                <p className="text-xs text-gray-400">{TYPE_LABEL[l.type] ?? l.type} · validé le {new Date(l.approvedAt ?? l.createdAt).toLocaleDateString('fr-FR')}</p>
+              </div>
+              <span className="font-semibold text-sm text-emerald-600 whitespace-nowrap">{fmt(Number(l.amount))}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════ NAVIGATION ══════════════════ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Link href={bp('/loans/suivi-dettes')} className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/25 hover:shadow-xl hover:shadow-sky-500/30 transition-all">
+          <TrendingUp className="absolute -right-3 -bottom-3 opacity-20 group-hover:scale-110 transition-transform" size={110} />
+          <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Suivi</p>
+          <p className="text-lg font-bold mb-1">Suivi des dettes →</p>
+          <p className="text-xs opacity-80">Qui doit combien, par employé, avec historique et paiement</p>
+        </Link>
+        <Link href={bp('/loans/validations')} className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30 transition-all">
+          <Filter className="absolute -right-3 -bottom-3 opacity-20 group-hover:scale-110 transition-transform" size={110} />
+          <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Décisions</p>
+          <p className="text-lg font-bold mb-1">Validations →</p>
+          <p className="text-xs opacity-80">Toutes les demandes, valider ou refuser en un clic</p>
+        </Link>
       </div>
 
       {/* ══════════════════ GRAPHIQUES ══════════════════ */}
