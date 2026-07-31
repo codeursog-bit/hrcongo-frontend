@@ -18,8 +18,6 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import OrcaLoanDocument from '@/components/documents/orca/OrcaLoanDocument';
-import OrcaAdvanceDocument from '@/components/documents/orca/OrcaAdvanceDocument';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 
@@ -99,18 +97,27 @@ export default function MonEspacePretsAvancesPage() {
   const paginated = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const selected = items.find(i => i.id === selectedId) || null;
   const [docData, setDocData] = useState<any>(null);
+  const [orcaHtml, setOrcaHtml] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!selected) { setDocData(null); return; }
+    if (!selected) { setDocData(null); setOrcaHtml(null); return; }
     (async () => {
       try {
         const path = selected.kind === 'loan'
           ? `/loans/${selected.id}/document-data`
           : `/loans/advances/${selected.id}/document-data`;
-        setDocData(await api.get(path));
+        const data = await api.get(path);
+        setDocData(data);
+        if ((data as any)?.company?.documentTemplate === 'ORCA') {
+          const htmlPath = selected.kind === 'loan' ? `/loans/${selected.id}/document/orca-html` : `/loans/advances/${selected.id}/document/orca-html`;
+          const res: any = await api.get(htmlPath);
+          setOrcaHtml(res?.html ?? null);
+        } else {
+          setOrcaHtml(null);
+        }
       } catch (e) {
         console.error('Erreur chargement document-data', e);
-        setDocData(null);
+        setDocData(null); setOrcaHtml(null);
       }
     })();
   }, [selectedId]);
@@ -353,36 +360,10 @@ export default function MonEspacePretsAvancesPage() {
                     )}
                   </div>
 
-                  {/* Rendu réel hors-écran : nécessaire pour la capture html2canvas (Imprimer/PDF) des clients non-Orca */}
+                  {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {docData?.company?.documentTemplate === 'ORCA' ? (
-                      selected.kind === 'loan' ? (
-                        <OrcaLoanDocument
-                          id={PRINT_ID}
-                          reference={reference}
-                          loanType={docData.loanType}
-                          employee={docData.employee}
-                          amount={docData.amount}
-                          monthlyRepayment={docData.monthlyRepayment}
-                          startDate={docData.startDate}
-                          endDate={selected.data.endDate}
-                          status={docData.status}
-                          drhDecision={docData.drhDecision}
-                          dgDecision={docData.dgDecision}
-                          company={docData.company}
-                        />
-                      ) : (
-                        <OrcaAdvanceDocument
-                          id={PRINT_ID}
-                          reference={reference}
-                          employee={docData.employee}
-                          amount={docData.amount}
-                          reason={selected.data.reason}
-                          requestDate={selected.data.createdAt}
-                          status={docData.status}
-                          company={docData.company}
-                        />
-                      )
+                      orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -451,33 +432,7 @@ export default function MonEspacePretsAvancesPage() {
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {selected && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
-            selected.kind === 'loan' ? (
-              <OrcaLoanDocument
-                id="my-doc-preview"
-                reference={reference}
-                loanType={docData.loanType}
-                employee={docData.employee}
-                amount={docData.amount}
-                monthlyRepayment={docData.monthlyRepayment}
-                startDate={docData.startDate}
-                endDate={selected.data.endDate}
-                status={docData.status}
-                drhDecision={docData.drhDecision}
-                dgDecision={docData.dgDecision}
-                company={docData.company}
-              />
-            ) : (
-              <OrcaAdvanceDocument
-                id="my-doc-preview"
-                reference={reference}
-                employee={docData.employee}
-                amount={docData.amount}
-                reason={selected.data.reason}
-                requestDate={selected.data.createdAt}
-                status={docData.status}
-                company={docData.company}
-              />
-            )
+            orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : (
             printData && <LoanRequestPrintable id="my-doc-preview" data={printData as any} />
           )

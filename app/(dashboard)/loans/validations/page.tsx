@@ -19,9 +19,8 @@ import {
 import { api } from '@/services/api';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import OrcaLoanDocument from '@/components/documents/orca/OrcaLoanDocument';
-import OrcaAdvanceDocument from '@/components/documents/orca/OrcaAdvanceDocument';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
+import { printLoanDocument } from '@/lib/loan-print';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
@@ -52,6 +51,7 @@ export default function ValidationsPage() {
 
   const [selected, setSelected] = useState<{ kind: 'loan' | 'advance'; item: any } | null>(null);
   const [docData, setDocData] = useState<any>(null);
+  const [orcaHtml, setOrcaHtml] = useState<string | null>(null);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [recoverViaPayroll, setRecoverViaPayroll] = useState(true);
@@ -76,12 +76,20 @@ export default function ValidationsPage() {
   }, []);
 
   useEffect(() => {
-    if (!selected) { setDocData(null); return; }
+    if (!selected) { setDocData(null); setOrcaHtml(null); return; }
     (async () => {
       try {
         const path = selected.kind === 'loan' ? `/loans/${selected.item.id}/document-data` : `/loans/advances/${selected.item.id}/document-data`;
-        setDocData(await api.get(path));
-      } catch { setDocData(null); }
+        const data = await api.get(path);
+        setDocData(data);
+        if ((data as any)?.company?.documentTemplate === 'ORCA') {
+          const htmlPath = selected.kind === 'loan' ? `/loans/${selected.item.id}/document/orca-html` : `/loans/advances/${selected.item.id}/document/orca-html`;
+          const res: any = await api.get(htmlPath);
+          setOrcaHtml(res?.html ?? null);
+        } else {
+          setOrcaHtml(null);
+        }
+      } catch { setDocData(null); setOrcaHtml(null); }
     })();
   }, [selected]);
 
@@ -377,13 +385,20 @@ export default function ValidationsPage() {
               <Eye size={14} /> Aperçu de la fiche
             </button>
             <div className="flex gap-2">
-              {docData?.company?.documentTemplate === 'ORCA' ? (
-                <>
-                  <button onClick={handlePrintOrcaPdf} disabled={isPreparingPrint} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isPreparingPrint ? <Loader2 size={13} className="animate-spin" /> : <Printer size={13} />} Imprimer</button>
-                  <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Fiche Excel</button>
-                </>
-              ) : (
-                <p className="text-[11px] text-gray-400 text-center w-full">Impression standard disponible via l'onglet Gestion.</p>
+              <button onClick={() => setTimeout(() => printLoanDocument('val-print-target'), 50)} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-1.5 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={13} /> Imprimer</button>
+              {docData?.company?.documentTemplate === 'ORCA' && (
+                <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-1.5 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} Fiche Excel</button>
+              )}
+            </div>
+
+            {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
+            <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
+              {selected && docData && (
+                docData.company?.documentTemplate === 'ORCA' ? (
+                  orcaHtml && <div id="val-print-target" dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+                ) : (
+                  printData && <LoanRequestPrintable id="val-print-target" data={printData as any} />
+                )
               )}
             </div>
           </div>
@@ -393,11 +408,7 @@ export default function ValidationsPage() {
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {selected && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
-            selected.kind === 'loan' ? (
-              <OrcaLoanDocument id="val-doc-preview" reference={reference} loanType={docData.loanType} employee={docData.employee} amount={docData.amount} monthlyRepayment={docData.monthlyRepayment} startDate={docData.startDate} endDate={selected.item.endDate} status={docData.status} drhDecision={docData.drhDecision} dgDecision={docData.dgDecision} company={docData.company} />
-            ) : (
-              <OrcaAdvanceDocument id="val-doc-preview" reference={reference} employee={docData.employee} amount={docData.amount} reason={selected.item.reason} requestDate={selected.item.createdAt} status={docData.status} company={docData.company} />
-            )
+            orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : (
             printData && <LoanRequestPrintable id="val-doc-preview" data={printData as any} />
           )
