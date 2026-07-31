@@ -947,7 +947,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [companyConvention, setCompanyConvention] = useState<string | null>(null);
-  const [companyInfo, setCompanyInfo] = useState<{ name?: string; logoUrl?: string | null }>({});
+  const [companyInfo, setCompanyInfo] = useState<{ name?: string; logoUrl?: string | null; address?: string | null; rccmNumber?: string | null }>({});
   const [isGeneratingFiche, setIsGeneratingFiche] = useState(false);
   const [isTogglingSelfService, setIsTogglingSelfService] = useState(false);
 
@@ -972,7 +972,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         try {
           const company: any = await api.get('/companies/mine');
           if (company?.collectiveAgreement) setCompanyConvention(company.collectiveAgreement);
-          setCompanyInfo({ name: company?.tradeName || company?.legalName, logoUrl: company?.logo });
+          setCompanyInfo({
+            name: company?.tradeName || company?.legalName,
+            logoUrl: company?.logo,
+            address: company?.address ? `${company.address}${company?.city ? `, ${company.city}` : ''}` : undefined,
+            rccmNumber: company?.rccmNumber,
+          });
         } catch {}
       } catch (e) {
         console.error('Error fetching employee', e);

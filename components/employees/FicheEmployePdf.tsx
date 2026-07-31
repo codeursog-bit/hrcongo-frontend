@@ -34,9 +34,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#0ea5e9',
   },
   logo: {
-    width: 42,
-    height: 42,
-    marginRight: 10,
+    width: 60,
+    height: 60,
+    marginRight: 12,
     objectFit: 'contain',
     borderRadius: 4,
   },
@@ -150,14 +150,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#f1f5f9',
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 36,
     borderTopWidth: 2,
     borderTopColor: '#0ea5e9',
   },
+  footerCol: {
+    flexDirection: 'column',
+  },
   footerText: {
     fontSize: 8,
-    color: '#64748b',
+    fontWeight: 700,
+    color: '#374151',
+  },
+  footerSubText: {
+    fontSize: 7,
+    color: '#94a3b8',
+    marginTop: 1,
   },
 });
 
@@ -226,6 +235,8 @@ export interface FicheEmployeData {
 export interface FicheCompanyData {
   name?: string;
   logoUrl?: string | null;
+  address?: string | null;
+  rccmNumber?: string | null;
 }
 
 function fmtDate(d?: string) {
@@ -325,7 +336,14 @@ export function FicheEmployePdf({ employee, company }: { employee: FicheEmployeD
         <Row label="Date de recrutement" value={fmtDate(employee.hireDate)} alt />
 
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>{company?.name || 'Entreprise'}</Text>
+          <View style={styles.footerCol}>
+            <Text style={styles.footerText}>{company?.name || 'Entreprise'}</Text>
+            {(company?.address || company?.rccmNumber) && (
+              <Text style={styles.footerSubText}>
+                {company?.address || ''}{company?.address && company?.rccmNumber ? '  —  ' : ''}{company?.rccmNumber ? `RCCM : ${company.rccmNumber}` : ''}
+              </Text>
+            )}
+          </View>
           <Text style={styles.footerText}>Document confidentiel — usage interne uniquement</Text>
           <Text style={styles.footerText} render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`} />
         </View>
