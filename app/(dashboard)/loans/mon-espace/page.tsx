@@ -13,6 +13,7 @@ import {
   Printer, Download, X, Banknote, Package, HelpCircle, Wallet, Lock, Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
@@ -57,6 +58,8 @@ export default function MonEspacePretsAvancesPage() {
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [mySpaceTab, setMySpaceTab] = useState<'validations' | 'suivi'>('validations');
+  const [historyByLoan, setHistoryByLoan] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     try {
@@ -75,6 +78,12 @@ export default function MonEspacePretsAvancesPage() {
         setAdvances(a || []);
         setEmployee(emp);
         setCompany(me?.company ?? null);
+
+        const relevant = (l || []).filter((x: any) => ['ACTIVE', 'PAID'].includes(x.status));
+        const histories = await Promise.all(relevant.map((x: any) => api.get(`/loans/${x.id}/history`).catch(() => [])));
+        const map: Record<string, any[]> = {};
+        relevant.forEach((x: any, i: number) => { map[x.id] = histories[i] || []; });
+        setHistoryByLoan(map);
       } catch (e) { console.error('Erreur chargement de mes prêts/avances', e); }
       finally { setIsLoading(false); }
     })();
@@ -192,6 +201,33 @@ export default function MonEspacePretsAvancesPage() {
     return { totalDue, totalPaid: paidLoans + paidAdvances, totalRemaining, monthlyLoad };
   }, [loans, advances]);
 
+  // ── KPI "Validations" : nombre de demandes, validées, en attente, montant total demandé ──
+  const myRequestKpis = useMemo(() => {
+    const notCounted = ['REJECTED', 'CANCELLED'];
+    const total = items.length;
+    const validated = items.filter(i => ['ACTIVE', 'PAID', 'APPROVED', 'DEDUCTED'].includes(i.data.status)).length;
+    const pending = items.filter(i => ['PENDING', 'PENDING_DG'].includes(i.data.status)).length;
+    const totalAmount = items.filter(i => !notCounted.includes(i.data.status)).reduce((s, i) => s + Number(i.data.amount), 0);
+    return { total, validated, pending, totalAmount };
+  }, [items]);
+
+  // ── Courbe "Suivi" : emprunté vs remboursé, 12 derniers mois ─────────────
+  const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const trendData = useMemo(() => {
+    const months: { key: string; label: string; year: number; month: number }[] = [];
+    const ref = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+      months.push({ key: `${d.getFullYear()}-${d.getMonth() + 1}`, label: `${MONTHS_FR[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, year: d.getFullYear(), month: d.getMonth() + 1 });
+    }
+    const allLogs = Object.values(historyByLoan).flat();
+    return months.map(m => {
+      const emprunte = items.filter(i => { const d = new Date(i.data.createdAt); return d.getFullYear() === m.year && d.getMonth() + 1 === m.month; }).reduce((s, i) => s + Number(i.data.amount), 0);
+      const rembourse = allLogs.filter((log: any) => log.year === m.year && log.month === m.month).reduce((s: number, log: any) => s + Number(log.amount), 0);
+      return { mois: m.label, Emprunté: Math.round(emprunte), Remboursé: Math.round(rembourse) };
+    });
+  }, [items, historyByLoan]);
+
   if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
 
   return (
@@ -208,12 +244,19 @@ export default function MonEspacePretsAvancesPage() {
         </Link>
       </div>
 
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Mes validations</button>
+        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Suivi de mes dettes</button>
+      </div>
+
+      {mySpaceTab === 'validations' && (
+      <>
       {items.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <MyKpiCard label="Montant dû (total)" value={myKpis.totalDue} tone="slate" />
-          <MyKpiCard label="Déjà payé" value={myKpis.totalPaid} tone="emerald" />
-          <MyKpiCard label="Reste à payer" value={myKpis.totalRemaining} tone="amber" />
-          <MyKpiCard label="Mensualité en cours" value={myKpis.monthlyLoad} tone="sky" />
+          <MyKpiCard label="Total de mes demandes" value={myRequestKpis.total} tone="slate" isCount />
+          <MyKpiCard label="Validées" value={myRequestKpis.validated} tone="emerald" isCount />
+          <MyKpiCard label="En attente" value={myRequestKpis.pending} tone="amber" isCount />
+          <MyKpiCard label="Montant total demandé" value={myRequestKpis.totalAmount} tone="sky" />
         </div>
       )}
 
@@ -354,6 +397,60 @@ export default function MonEspacePretsAvancesPage() {
           </div>
         </div>
       )}
+      </>
+      )}
+
+      {mySpaceTab === 'suivi' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <MyKpiCard label="Montant dû (total)" value={myKpis.totalDue} tone="slate" />
+            <MyKpiCard label="Déjà payé" value={myKpis.totalPaid} tone="emerald" />
+            <MyKpiCard label="Reste à payer" value={myKpis.totalRemaining} tone="amber" />
+            <MyKpiCard label="Mensualité en cours" value={myKpis.monthlyLoad} tone="sky" />
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Évolution de mes dettes (12 derniers mois)</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis dataKey="mois" fontSize={12} />
+                <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
+                <Tooltip formatter={(v: number) => `${Math.round(v).toLocaleString('fr-FR')} FCFA`} />
+                <Legend />
+                <Line type="monotone" dataKey="Emprunté" stroke="#0ea5e9" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="Remboursé" stroke="#10b981" strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Historique complet</p>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {items.length === 0 ? (
+                <p className="text-center py-12 text-gray-400 text-sm">Aucune dette pour l&apos;instant.</p>
+              ) : items.map(item => {
+                const isLoan = item.kind === 'loan';
+                const cfg = isLoan ? (LOAN_STATUS_CFG[item.data.status] ?? LOAN_STATUS_CFG.PENDING) : (ADVANCE_STATUS_CFG[item.data.status] ?? ADVANCE_STATUS_CFG.PENDING);
+                const StatusIcon = cfg.icon;
+                return (
+                  <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        {new Date(item.data.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {isLoan ? `Prêt ${item.data.type?.toLowerCase()}` : 'Avance sur salaire'} · {Number(item.data.amount).toLocaleString('fr-FR')} FCFA
+                      </p>
+                      {item.data.reason && <p className="text-xs text-gray-400 mt-0.5">{item.data.reason}</p>}
+                    </div>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><StatusIcon size={10} /> {cfg.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {selected && docData && (
@@ -394,7 +491,7 @@ export default function MonEspacePretsAvancesPage() {
   );
 }
 
-function MyKpiCard({ label, value, tone }: { label: string; value: number; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
+function MyKpiCard({ label, value, tone, isCount }: { label: string; value: number; tone: 'slate' | 'emerald' | 'amber' | 'sky'; isCount?: boolean }) {
   const cls: Record<string, string> = {
     slate: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-100 dark:border-gray-700',
     emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
@@ -404,7 +501,7 @@ function MyKpiCard({ label, value, tone }: { label: string; value: number; tone:
   return (
     <div className={`rounded-2xl border p-4 ${cls[tone]}`}>
       <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70 mb-1">{label}</p>
-      <p className="text-lg font-bold">{Math.round(value).toLocaleString('fr-FR')} FCFA</p>
+      <p className="text-lg font-bold">{isCount ? value : `${Math.round(value).toLocaleString('fr-FR')} FCFA`}</p>
     </div>
   );
 }

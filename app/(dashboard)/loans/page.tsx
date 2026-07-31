@@ -16,7 +16,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
-  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,
+  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,PiggyBank,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -30,6 +30,7 @@ import OrcaLoanDocument from '@/components/documents/orca/OrcaLoanDocument';
 import OrcaAdvanceDocument from '@/components/documents/orca/OrcaAdvanceDocument';
 import LoansOverview from '@/components/loans/LoansOverview';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
+import CashPaymentModal from '@/components/loans/CashPaymentModal';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const DG_ROLES  = ['ADMIN', 'SUPER_ADMIN'];
@@ -168,13 +169,15 @@ export default function LoansManagementPage() {
     try { await api.patch(`/loans/${id}/cancel`, {}); await load(); } catch (e: any) { alert(e?.message || 'Erreur'); }
   };
 
-  const handleCashRepayment = async (loanId: string, remainingBalance: number) => {
-    const input = prompt(`Montant payé en espèces (reste dû : ${Math.round(remainingBalance).toLocaleString('fr-FR')} FCFA) :`);
-    if (!input) return;
-    const amount = Number(input.replace(/[^\d.]/g, ''));
-    if (!amount || amount <= 0) { alert('Montant invalide'); return; }
+  const [payModal, setPayModal] = useState<{ loanId: string; remaining: number } | null>(null);
+  const handleCashRepayment = (loanId: string, remainingBalance: number) => {
+    setPayModal({ loanId, remaining: remainingBalance });
+  };
+  const confirmCashRepayment = async (amount: number) => {
+    if (!payModal) return;
     try {
-      await api.post(`/loans/${loanId}/cash-repayment`, { amount });
+      await api.post(`/loans/${payModal.loanId}/cash-repayment`, { amount });
+      setPayModal(null);
       await load();
     } catch (e: any) { alert(e?.message || 'Erreur'); }
   };
@@ -409,10 +412,15 @@ export default function LoansManagementPage() {
               <div className="h-full min-h-[300px] flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-400 text-sm">Sélectionnez un prêt</div>
             ) : (
               <motion.div key={selectedLoan.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedLoan.employee?.firstName} {selectedLoan.employee?.lastName}</h2>
-                    <p className="text-sm text-gray-400">{selectedLoan.employee?.position}{selectedLoan.employee?.department ? ` · ${selectedLoan.employee.department.name}` : ''}</p>
+                <div className="p-6 bg-gradient-to-br from-sky-50 to-white dark:from-gray-900 dark:to-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-base font-bold text-sky-600 overflow-hidden shrink-0">
+                      {selectedLoan.employee?.photoUrl ? <img src={selectedLoan.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : `${selectedLoan.employee?.firstName?.[0] ?? ''}${selectedLoan.employee?.lastName?.[0] ?? ''}`}
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedLoan.employee?.firstName} {selectedLoan.employee?.lastName}</h2>
+                      <p className="text-sm text-gray-400">{selectedLoan.employee?.position}{selectedLoan.employee?.department ? ` · ${selectedLoan.employee.department.name}` : ''}</p>
+                    </div>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 flex items-center gap-1 ${(LOAN_STATUS_CFG[selectedLoan.status] ?? LOAN_STATUS_CFG.PENDING).cls}`}>
                     {(LOAN_STATUS_CFG[selectedLoan.status] ?? LOAN_STATUS_CFG.PENDING).label}
@@ -421,11 +429,11 @@ export default function LoansManagementPage() {
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Montant</p><p className="font-bold text-gray-900 dark:text-white">{Number(selectedLoan.amount).toLocaleString('fr-FR')} FCFA</p></div>
-                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Mensualité</p><p className="font-bold text-gray-900 dark:text-white">{Number(selectedLoan.monthlyRepayment).toLocaleString('fr-FR')} FCFA</p></div>
-                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Solde restant</p><p className="font-bold text-gray-900 dark:text-white">{Number(selectedLoan.remainingBalance).toLocaleString('fr-FR')} FCFA</p></div>
-                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Type</p><p className="font-bold text-gray-900 dark:text-white">{selectedLoan.type}</p></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <DetailTile icon={Banknote} label="Montant" value={`${Number(selectedLoan.amount).toLocaleString('fr-FR')} FCFA`} tone="slate" />
+                      <DetailTile icon={Wallet} label="Mensualité" value={`${Number(selectedLoan.monthlyRepayment).toLocaleString('fr-FR')} FCFA`} tone="sky" />
+                      <DetailTile icon={PiggyBank} label="Solde restant" value={`${Number(selectedLoan.remainingBalance).toLocaleString('fr-FR')} FCFA`} tone={Number(selectedLoan.remainingBalance) === 0 ? 'emerald' : 'amber'} />
+                      <DetailTile icon={Receipt} label="Type" value={selectedLoan.type} tone="violet" />
                     </div>
 
                     {selectedLoan.reason && <div className="text-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p><p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3 rounded-xl">{selectedLoan.reason}</p></div>}
@@ -458,8 +466,8 @@ export default function LoansManagementPage() {
                     )}
 
                     {selectedLoan.status === 'ACTIVE' && DRH_ROLES.includes(userRole) && (
-                      <button onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        💵 Enregistrer un paiement en espèces
+                      <button onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
+                        <Wallet size={16} /> Enregistrer un paiement
                       </button>
                     )}
 
@@ -579,18 +587,25 @@ export default function LoansManagementPage() {
               <div className="h-full min-h-[300px] flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-400 text-sm">Sélectionnez une avance</div>
             ) : (
               <motion.div key={selectedAdvance.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedAdvance.employee?.firstName} {selectedAdvance.employee?.lastName}</h2>
-                    <p className="text-sm text-gray-400">{selectedAdvance.employee?.position}</p>
+                <div className="p-6 bg-gradient-to-br from-sky-50 to-white dark:from-gray-900 dark:to-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-base font-bold text-sky-600 overflow-hidden shrink-0">
+                      {selectedAdvance.employee?.photoUrl ? <img src={selectedAdvance.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : `${selectedAdvance.employee?.firstName?.[0] ?? ''}${selectedAdvance.employee?.lastName?.[0] ?? ''}`}
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedAdvance.employee?.firstName} {selectedAdvance.employee?.lastName}</h2>
+                      <p className="text-sm text-gray-400">{selectedAdvance.employee?.position}</p>
+                    </div>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(ADVANCE_STATUS_CFG[selectedAdvance.status] ?? ADVANCE_STATUS_CFG.PENDING).cls}`}>{(ADVANCE_STATUS_CFG[selectedAdvance.status] ?? ADVANCE_STATUS_CFG.PENDING).label}</span>
                 </div>
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Montant</p><p className="font-bold text-gray-900 dark:text-white">{Number(selectedAdvance.amount).toLocaleString('fr-FR')} FCFA</p></div>
-                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Déduction prévue</p><p className="font-bold text-gray-900 dark:text-white">{selectedAdvance.deductMonth}/{selectedAdvance.deductYear}</p></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <DetailTile icon={Banknote} label="Montant" value={`${Number(selectedAdvance.amount).toLocaleString('fr-FR')} FCFA`} tone="slate" />
+                      <DetailTile icon={Wallet} label="Déduction prévue" value={`${selectedAdvance.deductMonth}/${selectedAdvance.deductYear}`} tone="sky" />
+                    </div>
                     {selectedAdvance.reason && <div className="text-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p><p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3 rounded-xl">{selectedAdvance.reason}</p></div>}
 
                     {selectedAdvance.status === 'PENDING' && DRH_ROLES.includes(userRole) && (
@@ -766,6 +781,13 @@ export default function LoansManagementPage() {
         )}
       </DocumentPreviewModal>
 
+      <CashPaymentModal
+        open={!!payModal}
+        onClose={() => setPayModal(null)}
+        remaining={payModal?.remaining ?? 0}
+        onConfirm={confirmCashRepayment}
+      />
+
       <EmployeeLoanHistorySidebar
         open={!!historyEmployee}
         onClose={() => setHistoryEmployee(null)}
@@ -784,6 +806,23 @@ export default function LoansManagementPage() {
             : `${selectedAdvance?.employee?.firstName || ''} ${selectedAdvance?.employee?.lastName || ''}`.trim()
         }
       />
+    </div>
+  );
+}
+
+function DetailTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'sky' | 'emerald' | 'amber' | 'violet' }) {
+  const cls: Record<string, string> = {
+    slate: 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200',
+    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+    amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
+    violet: 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300',
+  };
+  return (
+    <div className={`p-3 rounded-xl ${cls[tone]}`}>
+      <Icon size={14} className="opacity-60 mb-1.5" />
+      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</p>
+      <p className="font-bold">{value}</p>
     </div>
   );
 }

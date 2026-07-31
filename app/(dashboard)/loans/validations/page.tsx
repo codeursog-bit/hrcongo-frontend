@@ -11,7 +11,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Loader2, Check, X, Clock, CheckCircle2, XCircle, Ban, Filter, Users2,
-  Eye, Printer, Download, ShieldCheck, Landmark,
+  Eye, Printer, Download, ShieldCheck, Landmark, LayoutGrid, List,
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -48,6 +48,7 @@ export default function ValidationsPage() {
   const [statusFilter, setStatusFilter] = useState<'' | 'PENDING' | 'VALIDATED' | 'REJECTED'>('');
   const [typeFilter, setTypeFilter] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const [selected, setSelected] = useState<{ kind: 'loan' | 'advance'; item: any } | null>(null);
   const [docData, setDocData] = useState<any>(null);
@@ -251,13 +252,20 @@ export default function ValidationsPage() {
       </div>
 
       {/* ══════════════════ FILTRES ══════════════════ */}
-      <div className="flex flex-wrap gap-2">
-        <FilterSelect icon={Filter} value={statusFilter} onChange={(v: any) => setStatusFilter(v)} placeholder="Tous les statuts" options={[['PENDING', 'En attente'], ['VALIDATED', 'Validées'], ['REJECTED', 'Refusées']]} />
-        <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
-        {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          <FilterSelect icon={Filter} value={statusFilter} onChange={(v: any) => setStatusFilter(v)} placeholder="Tous les statuts" options={[['PENDING', 'En attente'], ['VALIDATED', 'Validées'], ['REJECTED', 'Refusées']]} />
+          <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
+          {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
+        </div>
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg shrink-0">
+          <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`} title="Vue grille"><LayoutGrid size={16} /></button>
+          <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`} title="Vue liste"><List size={16} /></button>
+        </div>
       </div>
 
-      {/* ══════════════════ GRILLE DES DEMANDES ══════════════════ */}
+      {/* ══════════════════ DEMANDES : GRILLE ══════════════════ */}
+      {viewMode === 'grid' && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.length === 0 ? (
           <div className="col-span-full text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-sm text-gray-400">Aucune demande pour ce filtre.</div>
@@ -288,6 +296,38 @@ export default function ValidationsPage() {
           );
         })}
       </div>
+      )}
+
+      {/* ══════════════════ DEMANDES : LISTE ══════════════════ */}
+      {viewMode === 'list' && (
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 text-sm text-gray-400">Aucune demande pour ce filtre.</div>
+        ) : filtered.map(r => {
+          const cfg = STATUS_CFG[r.status] ?? STATUS_CFG.PENDING;
+          const Icon = cfg.icon;
+          const isPending = bucket(r.status) === 'PENDING';
+          return (
+            <button key={`${r.kind}-${r.id}`} onClick={() => setSelected({ kind: r.kind, item: r })} className="w-full text-left flex flex-col sm:flex-row sm:items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm">{r.employee?.firstName} {r.employee?.lastName}</p>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
+                </div>
+                <p className="text-xs text-gray-400">{r.employee?.department?.name || '—'} · {TYPE_LABEL[r.requestType] ?? r.requestType} · {new Date(r.createdAt).toLocaleDateString('fr-FR')}</p>
+              </div>
+              <p className="font-bold text-gray-900 dark:text-white text-sm shrink-0">{fmt(Number(r.amount))}</p>
+              {isPending && DRH_ROLES.includes(userRole) && (
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={(e) => quickDecide(r, r.kind === 'loan' ? 'OUI' : 'APPROVED', e)} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1"><Check size={13} /> Valider</button>
+                  <button onClick={(e) => quickDecide(r, r.kind === 'loan' ? 'NON' : 'REJECTED', e)} className="px-3 py-1.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      )}
 
       {/* ══════════════════ MODAL DÉTAIL + DÉCISION ══════════════════ */}
       {selected && (

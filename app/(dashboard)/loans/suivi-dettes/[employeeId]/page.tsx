@@ -20,6 +20,7 @@ import {
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
+import CashPaymentModal from '@/components/loans/CashPaymentModal';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
@@ -48,8 +49,6 @@ export default function EmployeeDebtDetailPage() {
   const [userRole, setUserRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [payModal, setPayModal] = useState<{ loanId: string; remaining: number } | null>(null);
-  const [payAmount, setPayAmount] = useState('');
-  const [isPaying, setIsPaying] = useState(false);
 
   const load = async () => {
     try {
@@ -108,16 +107,13 @@ export default function EmployeeDebtDetailPage() {
     });
   }, [history, historyByLoan]);
 
-  const handlePay = async () => {
+  const handlePay = async (amount: number) => {
     if (!payModal) return;
-    const amount = Number(payAmount.replace(/[^\d.]/g, ''));
-    if (!amount || amount <= 0) { alert('Montant invalide'); return; }
-    setIsPaying(true);
     try {
       await api.post(`/loans/${payModal.loanId}/cash-repayment`, { amount });
-      setPayModal(null); setPayAmount('');
+      setPayModal(null);
       await load();
-    } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsPaying(false); }
+    } catch (e: any) { alert(e?.message || 'Erreur'); }
   };
 
   if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
@@ -203,31 +199,12 @@ export default function EmployeeDebtDetailPage() {
         </div>
       </div>
 
-      {/* ══════════════════ MODAL PAIEMENT ══════════════════ */}
-      {payModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setPayModal(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
-            <div className="flex items-center justify-between mb-1">
-              <p className="font-bold text-gray-900 dark:text-white text-lg">Enregistrer un paiement</p>
-              <button onClick={() => setPayModal(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-            </div>
-            <p className="text-sm text-gray-500 mb-4">Reste dû : <span className="font-semibold text-amber-600">{fmt(payModal.remaining)}</span></p>
-            <input
-              type="text" inputMode="numeric" autoFocus value={payAmount} onChange={e => setPayAmount(e.target.value)}
-              placeholder="Montant payé (FCFA)"
-              className="w-full text-lg font-semibold p-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 mb-3"
-            />
-            <button onClick={() => setPayAmount(String(payModal.remaining))} className="text-xs font-semibold text-sky-600 hover:underline mb-4">
-              Solder toute la dette ({fmt(payModal.remaining)})
-            </button>
-            <div className="flex gap-2">
-              <button onClick={handlePay} disabled={isPaying} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
-                {isPaying ? <Loader2 size={16} className="animate-spin" /> : <WalletIcon size={16} />} Confirmer le paiement
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CashPaymentModal
+        open={!!payModal}
+        onClose={() => setPayModal(null)}
+        remaining={payModal?.remaining ?? 0}
+        onConfirm={handlePay}
+      />
     </div>
   );
 }
