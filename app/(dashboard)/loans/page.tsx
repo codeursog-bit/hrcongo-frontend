@@ -16,7 +16,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
-  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,PiggyBank,
+  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye, PiggyBank,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -499,11 +499,8 @@ export default function LoansManagementPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      {docData?.company?.documentTemplate === 'ORCA' ? (
-                        <button onClick={handlePrintOrcaPdf} disabled={isPreparingPrint} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isPreparingPrint ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} Imprimer</button>
-                      ) : (
-                        <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
-                      )}
+                      {/* Impression 100% côté navigateur (aucune dépendance serveur) — marche pour Orca comme pour les autres, puisque PRINT_ID contient déjà le bon rendu (OrcaLoanDocument/OrcaAdvanceDocument ou LoanRequestPrintable). */}
+                      <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
                       {docData?.company?.documentTemplate === 'ORCA' ? (
                         <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
                       ) : (
@@ -656,11 +653,8 @@ export default function LoansManagementPage() {
                     )}
 
                     <div className="flex gap-2">
-                      {docData?.company?.documentTemplate === 'ORCA' ? (
-                        <button onClick={handlePrintOrcaPdf} disabled={isPreparingPrint} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isPreparingPrint ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} Imprimer</button>
-                      ) : (
-                        <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
-                      )}
+                      {/* Impression 100% côté navigateur (aucune dépendance serveur) — marche pour Orca comme pour les autres, puisque PRINT_ID contient déjà le bon rendu (OrcaLoanDocument/OrcaAdvanceDocument ou LoanRequestPrintable). */}
+                      <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
                       {docData?.company?.documentTemplate === 'ORCA' ? (
                         <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
                       ) : (
