@@ -358,8 +358,9 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Send, Loader2, Info, CheckCircle2, Calculator,
   CalendarDays, User, Umbrella, Stethoscope, Baby, Ban, Star,
-  AlertTriangle, Lock
+  AlertTriangle, Lock, Zap
 } from 'lucide-react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
@@ -395,6 +396,25 @@ export default function NewLeaveRequestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [returnCalc, setReturnCalc] = useState<any>(null);
+  const [desiredDays, setDesiredDays] = useState('');
+  const [isCalculatingReturn, setIsCalculatingReturn] = useState(false);
+
+  const handleCalculateReturn = async () => {
+    if (!formData.employeeId || !formData.startDate || !desiredDays) return;
+    setIsCalculatingReturn(true);
+    try {
+      const result: any = await api.get(
+        `/leaves/calculate-return-date?employeeId=${formData.employeeId}&startDate=${formData.startDate}&days=${desiredDays}`,
+      );
+      setFormData((f: any) => ({ ...f, endDate: result.lastLeaveDay }));
+      setReturnCalc(result);
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors du calcul de la date de retour");
+    } finally {
+      setIsCalculatingReturn(false);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -484,8 +504,10 @@ export default function NewLeaveRequestPage() {
     const remainingDays= ouvrables % 26;
     const isMultiCycle = fullCycles >= 1 && ouvrables > 26;
 
-    // Vérification solde insuffisant
-    const insufficientBalance = formData.type === 'ANNUAL' && selectedBalance
+    // Vérification solde insuffisant — s'applique aux deux types (Annuel et
+    // Anticipé) : les deux consomment le solde accumulé, l'Anticipé est
+    // justement plafonné à ce qui est déjà accumulé à ce jour.
+    const insufficientBalance = ['ANNUAL', 'ANNUAL_ANTICIPATED'].includes(formData.type) && selectedBalance
       ? ouvrables > Number(selectedBalance.annualRemaining)
       : false;
 
@@ -517,7 +539,8 @@ export default function NewLeaveRequestPage() {
   const displayName = myEmployee
     ? `${myEmployee.firstName} ${myEmployee.lastName}` : '—';
 
-  // Vérification éligibilité congé annuel
+  // Vérification éligibilité congé annuel — l'anticipé existe précisément
+  // pour déroger à cette règle des 12 mois, donc il n'est jamais bloqué ici.
   const notEligible = formData.type === 'ANNUAL' && selectedBalance &&
     !selectedBalance.canTakeAnnualLeave;
 
@@ -619,7 +642,7 @@ export default function NewLeaveRequestPage() {
           )}
 
           {/* 🆕 Solde disponible */}
-          {formData.type === 'ANNUAL' && selectedBalance?.canTakeAnnualLeave && (
+          {['ANNUAL', 'ANNUAL_ANTICIPATED'].includes(formData.type) && selectedBalance?.canTakeAnnualLeave && (
             <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl">
               <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
               <p className="text-sm text-emerald-700 dark:text-emerald-300">
@@ -628,31 +651,86 @@ export default function NewLeaveRequestPage() {
             </div>
           )}
 
-          {/* Type d'absence */}
+          {/* Type de congé — restreint à Annuel / Annuel Anticipé depuis la restructuration.
+              Maladie, Maternité, Paternité, Mariage, Décès, etc. passent par le module Absences. */}
           <FancySelect
-            label="Type d'absence"
+            label="Type de congé"
             value={formData.type}
             onChange={(v) => setFormData({ ...formData, type: v })}
             icon={Umbrella}
             options={[
-              { value: 'ANNUAL',    label: 'Congés Annuels (Payés)',         icon: Umbrella },
-              { value: 'SICK',      label: 'Maladie (Justificatif requis)',  icon: Stethoscope },
-              { value: 'MATERNITY', label: 'Maternité (min. 15 semaines)',   icon: Baby },
-              { value: 'PATERNITY', label: 'Paternité',                      icon: User },
-              { value: 'UNPAID',    label: 'Sans Solde (0 indemnité)',       icon: Ban },
-              { value: 'SPECIAL',   label: 'Événement Familial',             icon: Star },
+              { value: 'ANNUAL',             label: 'Congé Annuel (fin de cycle)',              icon: Umbrella },
+              { value: 'ANNUAL_ANTICIPATED', label: 'Congé Annuel Anticipé (avant fin de cycle)', icon: Zap },
             ]}
           />
 
-          {/* Note congé sans solde */}
-          {formData.type === 'UNPAID' && (
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-xl">
-              <Info size={16} className="text-gray-400 mt-0.5 shrink-0" />
-              <p className="text-xs text-gray-500">
-                Le congé sans solde ne génère aucune indemnité. Les jours d'absence seront déduits intégralement du salaire.
+          <div className="flex items-start gap-3 p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 rounded-xl">
+            <Info size={16} className="text-sky-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-sky-700 dark:text-sky-300">
+              Maladie, maternité, paternité, mariage, décès et autres événements se déclarent désormais depuis{' '}
+              <Link href={bp('/presences/absences/nouveau')} className="font-bold underline">le module Absences</Link>.
+            </p>
+          </div>
+
+          {/* Note congé anticipé */}
+          {formData.type === 'ANNUAL_ANTICIPATED' && (
+            <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+              <Zap size={16} className="text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Congé pris avant la fin du cycle d'acquisition en cours — plafonné au solde déjà accumulé à ce jour. Le reste du solde sera disponible normalement à la date de fin de cycle.
               </p>
             </div>
           )}
+
+          {/* 🆕 Calcul automatique de la date de retour */}
+          <div className="p-4 bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800 rounded-xl space-y-3">
+            <label className="block text-sm font-bold text-sky-700 dark:text-sky-300">
+              Calculer la date de retour automatiquement
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number" min="1" step="0.5"
+                placeholder="Nombre de jours"
+                value={desiredDays}
+                onChange={e => setDesiredDays(e.target.value)}
+                className="flex-1 p-3 border border-sky-200 dark:border-sky-700 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleCalculateReturn}
+                disabled={isCalculatingReturn || !formData.employeeId || !formData.startDate || !desiredDays}
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
+              >
+                {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} />}
+                Calculer
+              </button>
+            </div>
+            {!formData.startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous.</p>}
+
+            {returnCalc && (
+              <div className="pt-3 border-t border-sky-100 dark:border-sky-800 space-y-2">
+                <p className="text-sm text-sky-700 dark:text-sky-300">
+                  Date de reprise du travail : <strong>{new Date(returnCalc.returnDate).toLocaleDateString('fr-FR')}</strong>
+                </p>
+                {(returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
+                  <details className="text-xs text-sky-600 dark:text-sky-400">
+                    <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
+                    <div className="mt-2 space-y-1 pl-2">
+                      <p>{returnCalc.sundaysSkipped} dimanche(s) exclu(s) de la période</p>
+                      {returnCalc.excludedHolidays?.length > 0 && (
+                        <>
+                          <p className="font-semibold mt-1">Jours fériés exclus :</p>
+                          {returnCalc.excludedHolidays.map((h: any) => (
+                            <p key={h.date}>— {new Date(h.date).toLocaleDateString('fr-FR')} : {h.name}</p>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-6">
@@ -733,7 +811,7 @@ export default function NewLeaveRequestPage() {
                     <span className="text-gray-300">Dimanches exclus</span>
                     <span className="font-bold text-emerald-400">−{calculationDetails.dimanchesDays} jour{calculationDetails.dimanchesDays > 1 ? 's' : ''}</span>
                   </div>
-                  {selectedBalance?.canTakeAnnualLeave && formData.type === 'ANNUAL' && (
+                  {selectedBalance?.canTakeAnnualLeave && ['ANNUAL', 'ANNUAL_ANTICIPATED'].includes(formData.type) && (
                     <>
                       <div className="h-px bg-white/20" />
                       <div className="flex justify-between text-sm">
@@ -754,7 +832,7 @@ export default function NewLeaveRequestPage() {
                 </div>
 
                 {/* Info multi-cycle */}
-                {calculationDetails.isMultiCycle && formData.type === 'ANNUAL' && (
+                {calculationDetails.isMultiCycle && ['ANNUAL', 'ANNUAL_ANTICIPATED'].includes(formData.type) && (
                   <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
                     <p className="text-xs text-amber-300 font-bold mb-1">Congés sur plusieurs années</p>
                     <p className="text-xs text-amber-200/80 leading-relaxed">
@@ -769,9 +847,9 @@ export default function NewLeaveRequestPage() {
                 <div className="flex items-start gap-2 text-xs text-gray-400 leading-relaxed">
                   <CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" />
                   <p>
-                    {formData.type === 'UNPAID'
-                      ? 'Congé sans solde : aucune indemnité, déduction pure du salaire.'
-                      : 'Congé payé : indemnité calculée sur la base brute de référence ÷ 26.'}
+                    {formData.type === 'ANNUAL_ANTICIPATED'
+                      ? 'Congé anticipé : payé et déduit du solde comme un congé annuel classique — plafonné à ce qui est déjà accumulé à ce jour.'
+                      : 'Congé annuel : indemnité calculée sur la base brute de référence ÷ 26.'}
                   </p>
                 </div>
               </div>

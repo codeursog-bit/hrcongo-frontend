@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Search, Loader2, AlertTriangle, AlertCircle,
-  CheckCircle2, Lock, TrendingUp, Filter, ChevronRight, RefreshCw
+  CheckCircle2, Lock, TrendingUp, Filter, ChevronRight, RefreshCw, Pencil, X, Check
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -27,6 +27,8 @@ interface EmployeeBalance {
   annualTaken:         number;
   annualRemaining:     number;
   carriedForward:      number;
+  seniorityDays:       number;
+  cycleEndDate?:       string | null;
   year:                number;
 }
 
@@ -58,6 +60,41 @@ export default function LeaveBalancesAdminPage() {
   const [filterAlert, setFilterAlert] = useState<'ALL' | 'CRITICAL' | 'WARNING' | 'LOCKED'>('ALL');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const [adjusting, setAdjusting] = useState<EmployeeBalance | null>(null);
+  const [adjustEntitled, setAdjustEntitled] = useState('');
+  const [adjustTaken, setAdjustTaken] = useState('');
+  const [adjustNote, setAdjustNote] = useState('');
+  const [isSavingAdjust, setIsSavingAdjust] = useState(false);
+
+  const canAdjust = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
+
+  const openAdjust = (bal: EmployeeBalance) => {
+    setAdjusting(bal);
+    setAdjustEntitled(String(bal.annualEntitled));
+    setAdjustTaken(String(bal.annualTaken));
+    setAdjustNote('');
+  };
+
+  const saveAdjust = async () => {
+    if (!adjusting) return;
+    const entitled = parseFloat(adjustEntitled);
+    const taken = parseFloat(adjustTaken) || 0;
+    if (isNaN(entitled) || entitled < 0) { alert('Solde acquis invalide'); return; }
+    setIsSavingAdjust(true);
+    try {
+      await api.patch(`/leaves/balance/${adjusting.employeeId}`, {
+        annualEntitled: entitled,
+        annualTaken: taken,
+        note: adjustNote || undefined,
+      });
+      setAdjusting(null);
+      await load();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de l'ajustement du solde");
+    } finally {
+      setIsSavingAdjust(false);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -70,28 +107,28 @@ export default function LeaveBalancesAdminPage() {
     try {
       // Récupérer tous les employés actifs avec leurs soldes
       const employees = await api.get<any[]>('/employees/simple');
-      const year = new Date().getFullYear();
 
       // Charger les soldes en parallèle
       const results = await Promise.allSettled(
         employees.map(async (emp: any) => {
           try {
-            const bal = await api.get<any>(`/leaves/balance/${emp.id}?year=${year}`);
-            const myBal = await api.get<any>(`/leaves/me/balance`).catch(() => null);
+            const bal = await api.get<any>(`/leaves/balance/${emp.id}`);
             return {
               employeeId:          emp.id,
               employeeName:        `${emp.firstName} ${emp.lastName}`,
               position:            emp.position,
               departmentName:      emp.department?.name,
               hireDate:            emp.hireDate,
-              monthsWorked:        myBal?.monthsWorked ?? 0,
-              canTakeAnnualLeave:  myBal?.canTakeAnnualLeave ?? true,
-              monthsUntilEligible: myBal?.monthsUntilEligible ?? 0,
+              monthsWorked:        bal?.monthsWorked ?? 0,
+              canTakeAnnualLeave:  bal?.canTakeAnnualLeave ?? true,
+              monthsUntilEligible: bal?.monthsUntilEligible ?? 0,
               annualEntitled:      Number(bal.annualEntitled  ?? 0),
               annualTaken:         Number(bal.annualTaken     ?? 0),
               annualRemaining:     Number(bal.annualRemaining ?? 0),
               carriedForward:      Number(bal.carriedForward  ?? 0),
-              year,
+              seniorityDays:       Number(bal.seniorityDays   ?? 0),
+              cycleEndDate:        bal?.cycleEndDate ?? null,
+              year:                bal?.year ?? new Date().getFullYear(), // année de démarrage du cycle en cours
             } as EmployeeBalance;
           } catch {
             return null;
@@ -298,7 +335,13 @@ export default function LeaveBalancesAdminPage() {
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
                       Acquis {bal.annualEntitled.toFixed(1)}j · Pris {bal.annualTaken.toFixed(1)}j
+                      {bal.seniorityDays > 0 && <span> (dont {bal.seniorityDays.toFixed(1)}j ancienneté)</span>}
                     </p>
+                    {bal.cycleEndDate && (
+                      <p className="text-xs text-gray-400">
+                        Fin de cycle prévue : {new Date(bal.cycleEndDate).toLocaleDateString('fr-FR')}
+                      </p>
+                    )}
                   </td>
 
                   {/* Report */}
@@ -322,12 +365,23 @@ export default function LeaveBalancesAdminPage() {
 
                   {/* Action */}
                   <td className="px-5 py-4">
-                    <Link
-                      href={bp(`/employes/${bal.employeeId}`)}
-                      className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center"
-                    >
-                      <ChevronRight size={14} className="text-gray-400" />
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      {canAdjust && (
+                        <button
+                          onClick={() => openAdjust(bal)}
+                          title="Ajuster le solde"
+                          className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center"
+                        >
+                          <Pencil size={14} className="text-gray-400" />
+                        </button>
+                      )}
+                      <Link
+                        href={bp(`/employes/${bal.employeeId}`)}
+                        className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center"
+                      >
+                        <ChevronRight size={14} className="text-gray-400" />
+                      </Link>
+                    </div>
                   </td>
                 </motion.tr>
               );
@@ -335,6 +389,64 @@ export default function LeaveBalancesAdminPage() {
           </tbody>
         </table>
       </div>
+
+      {/* ── Modale d'ajustement manuel du solde ── */}
+      {adjusting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Ajuster le solde</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+              {adjusting.employeeName} — cycle en cours (débute {adjusting.year}). Utile pour reprendre un solde déjà acquis avant l'utilisation de l'application.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Solde acquis (jours)</label>
+                <input
+                  type="number" step="0.5" min="0"
+                  value={adjustEntitled}
+                  onChange={(e) => setAdjustEntitled(e.target.value)}
+                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Déjà pris (jours)</label>
+                <input
+                  type="number" step="0.5" min="0"
+                  value={adjustTaken}
+                  onChange={(e) => setAdjustTaken(e.target.value)}
+                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Note (optionnel)</label>
+                <input
+                  type="text"
+                  value={adjustNote}
+                  onChange={(e) => setAdjustNote(e.target.value)}
+                  placeholder="Ex. : solde repris de l'ancien système"
+                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={() => setAdjusting(null)}
+                disabled={isSavingAdjust}
+                className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold disabled:opacity-50"
+              >
+                <X size={15} className="inline mr-1" /> Annuler
+              </button>
+              <button
+                onClick={saveAdjust}
+                disabled={isSavingAdjust}
+                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSavingAdjust ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

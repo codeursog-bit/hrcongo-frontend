@@ -10,7 +10,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Stethoscope, FileText, Sparkles, Calendar, Send, Loader2,
+  Stethoscope, Sparkles, Calendar, Send, Loader2,
   Paperclip, CheckCircle2, ArrowLeft, Wallet, Info,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,13 +20,28 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
 import PresenceSubNav from '@/components/PresenceSubNav';
 
-type AbsenceType = 'MALADIE' | 'CONVENTIONNELLE' | 'EXCEPTIONNELLE';
+type AbsenceType = 'CONVENTIONNELLE' | 'EXCEPTIONNELLE';
+type AbsenceSubType = 'MALADIE' | 'MATERNITE' | 'PATERNITE' | 'MARIAGE' | 'DECES' | 'NAISSANCE' | 'AUTRE';
 
 const TYPE_OPTIONS: Array<{ value: AbsenceType; label: string; icon: any; hint: string }> = [
-  { value: 'MALADIE',         label: 'Maladie',         icon: Stethoscope, hint: 'Certificat médical recommandé' },
-  { value: 'CONVENTIONNELLE', label: 'Conventionnelle', icon: FileText,    hint: 'Mariage, décès, naissance…' },
-  { value: 'EXCEPTIONNELLE',  label: 'Exceptionnelle',  icon: Sparkles,    hint: 'Cas particulier, à motiver' },
+  { value: 'CONVENTIONNELLE', label: 'Conventionnelle', icon: Stethoscope, hint: 'Maladie, maternité, paternité' },
+  { value: 'EXCEPTIONNELLE',  label: 'Exceptionnelle',  icon: Sparkles,    hint: 'Mariage, décès, naissance, autre' },
 ];
+
+const SUBTYPE_OPTIONS: Record<AbsenceType, Array<{ value: AbsenceSubType; label: string }>> = {
+  CONVENTIONNELLE: [
+    { value: 'MALADIE',   label: 'Maladie' },
+    { value: 'MATERNITE', label: 'Maternité' },
+    { value: 'PATERNITE', label: 'Paternité' },
+    { value: 'AUTRE',     label: 'Autre' },
+  ],
+  EXCEPTIONNELLE: [
+    { value: 'MARIAGE',   label: 'Mariage' },
+    { value: 'DECES',     label: 'Décès' },
+    { value: 'NAISSANCE', label: 'Naissance' },
+    { value: 'AUTRE',     label: 'Autre' },
+  ],
+};
 
 function workingDaysBetween(start?: string, end?: string): number {
   if (!start || !end) return 0;
@@ -50,7 +65,8 @@ export default function NouvelleAbsencePage() {
   const [company, setCompany]   = useState<any>(null);
   const [userRole, setUserRole] = useState('');
 
-  const [type, setType]           = useState<AbsenceType>('MALADIE');
+  const [type, setType]           = useState<AbsenceType>('CONVENTIONNELLE');
+  const [subType, setSubType]     = useState<AbsenceSubType>('MALADIE');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate]     = useState('');
   const [reason, setReason]       = useState('');
@@ -59,6 +75,25 @@ export default function NouvelleAbsencePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone]             = useState(false);
   const [error, setError]               = useState<string | null>(null);
+  const [returnCalc, setReturnCalc] = useState<any>(null);
+  const [desiredDays, setDesiredDays] = useState('');
+  const [isCalculatingReturn, setIsCalculatingReturn] = useState(false);
+
+  const handleCalculateReturn = async () => {
+    if (!employee?.id || !startDate || !desiredDays) return;
+    setIsCalculatingReturn(true);
+    try {
+      const result: any = await api.get(
+        `/absence-requests/calculate-return-date?employeeId=${employee.id}&startDate=${startDate}&days=${desiredDays}`,
+      );
+      setEndDate(result.lastLeaveDay);
+      setReturnCalc(result);
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors du calcul de la date de retour");
+    } finally {
+      setIsCalculatingReturn(false);
+    }
+  };
 
   const { uploadedUrl, uploading, preview, handleFileSelect } = useImageUpload({ folder: 'absences' });
 
@@ -81,9 +116,14 @@ export default function NouvelleAbsencePage() {
     })();
   }, []);
 
+  const handleTypeChange = (t: AbsenceType) => {
+    setType(t);
+    setSubType(SUBTYPE_OPTIONS[t][0].value);
+  };
+
   const workingDays = useMemo(() => workingDaysBetween(startDate, endDate), [startDate, endDate]);
 
-  const canSubmit = type && startDate && endDate && reason.trim().length >= 3 && workingDays > 0 && !isSubmitting;
+  const canSubmit = type && subType && startDate && endDate && reason.trim().length >= 3 && workingDays > 0 && !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -92,6 +132,7 @@ export default function NouvelleAbsencePage() {
     try {
       await api.post('/absence-requests', {
         type,
+        subType,
         startDate,
         endDate,
         reason: reason.trim(),
@@ -124,6 +165,7 @@ export default function NouvelleAbsencePage() {
       responsableName: undefined,
     },
     type,
+    subType,
     reason: reason || 'Motif de l\u2019absence…',
     isPaid,
     startDate: startDate || new Date(),
@@ -183,7 +225,7 @@ export default function NouvelleAbsencePage() {
                 return (
                   <button
                     key={opt.value}
-                    onClick={() => setType(opt.value)}
+                    onClick={() => handleTypeChange(opt.value)}
                     className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
                       active ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'
                     }`}
@@ -199,6 +241,71 @@ export default function NouvelleAbsencePage() {
                 );
               })}
             </div>
+
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2 block">Motif précis</label>
+            <div className="flex flex-wrap gap-2">
+              {SUBTYPE_OPTIONS[type].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSubType(opt.value)}
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    subType === opt.value
+                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800 rounded-2xl p-4 space-y-3">
+            <label className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider block">
+              Calculer la date de reprise automatiquement
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number" min="1" step="0.5"
+                placeholder="Nombre de jours"
+                value={desiredDays}
+                onChange={e => setDesiredDays(e.target.value)}
+                className="flex-1 px-3 py-2.5 rounded-xl border border-sky-200 dark:border-sky-700 dark:bg-gray-900 text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleCalculateReturn}
+                disabled={isCalculatingReturn || !employee?.id || !startDate || !desiredDays}
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
+              >
+                {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
+                Calculer
+              </button>
+            </div>
+            {!startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous.</p>}
+            {returnCalc && (
+              <div className="pt-2 border-t border-sky-100 dark:border-sky-800 space-y-1.5">
+                <p className="text-sm text-sky-700 dark:text-sky-300">
+                  Reprise du travail : <strong>{new Date(returnCalc.returnDate).toLocaleDateString('fr-FR')}</strong>
+                </p>
+                {(returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
+                  <details className="text-xs text-sky-600 dark:text-sky-400">
+                    <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
+                    <div className="mt-2 space-y-1 pl-2">
+                      <p>{returnCalc.sundaysSkipped} dimanche(s) exclu(s) de la période</p>
+                      {returnCalc.excludedHolidays?.length > 0 && (
+                        <>
+                          <p className="font-semibold mt-1">Jours fériés exclus :</p>
+                          {returnCalc.excludedHolidays.map((h: any) => (
+                            <p key={h.date}>— {new Date(h.date).toLocaleDateString('fr-FR')} : {h.name}</p>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </details>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">

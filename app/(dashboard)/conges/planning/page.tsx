@@ -30,6 +30,7 @@ export default function LeavePlanningPage() {
     return { month: d.getMonth() + 1, year: d.getFullYear() };
   });
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [yearlyTrend, setYearlyTrend] = useState<{ month: number; count: number; totalDays: number }[]>([]);
 
   useEffect(() => {
     try {
@@ -57,6 +58,17 @@ export default function LeavePlanningPage() {
     })();
   }, [cursor]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const trend = await api.get<any>(`/leaves/yearly-trend?year=${cursor.year}`);
+        setYearlyTrend(trend || []);
+      } catch (e) {
+        console.error('Erreur chargement tendance annuelle', e);
+      }
+    })();
+  }, [cursor.year]);
+
   const monthLabel = `${MONTHS[cursor.month - 1]} ${cursor.year}`;
   const REPORT_ID = 'leave-planning-print';
 
@@ -64,6 +76,17 @@ export default function LeavePlanningPage() {
     const totalDays = rows.reduce((s, r) => s + Number(r.daysCount || 0), 0);
     const totalIndemnity = rows.reduce((s, r) => s + Number(r.indemnityAmount || 0), 0);
     return { count: rows.length, totalDays, totalIndemnity };
+  }, [rows]);
+
+  const deptBreakdown = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of rows) {
+      const name = r.employee?.department?.name || 'Sans département';
+      map.set(name, (map.get(name) || 0) + Number(r.daysCount || 0));
+    }
+    return Array.from(map.entries())
+      .map(([name, days]) => ({ name, days }))
+      .sort((a, b) => b.days - a.days);
   }, [rows]);
 
   const goPrevMonth = () => setCursor(c => c.month === 1 ? { month: 12, year: c.year - 1 } : { month: c.month - 1, year: c.year });
@@ -137,6 +160,60 @@ export default function LeavePlanningPage() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center"><Wallet size={20} /></div>
               <div><p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(stats.totalIndemnity).toLocaleString('fr-FR')}</p><p className="text-xs text-gray-400">FCFA d&apos;indemnités estimées</p></div>
+            </div>
+          </div>
+
+          {/* 🆕 Graphiques RH — tendance annuelle + répartition par département */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Jours de congé posés par mois — {cursor.year}</p>
+              {yearlyTrend.every(m => m.totalDays === 0) ? (
+                <p className="text-sm text-gray-400 py-8 text-center">Aucun congé posé sur {cursor.year}.</p>
+              ) : (
+                <div className="flex items-end gap-1.5 h-40">
+                  {yearlyTrend.map(m => {
+                    const max = Math.max(...yearlyTrend.map(x => x.totalDays), 1);
+                    const heightPct = (m.totalDays / max) * 100;
+                    const isCurrent = m.month === cursor.month;
+                    return (
+                      <div key={m.month} className="flex-1 flex flex-col items-center gap-1.5 group">
+                        <div className="w-full flex items-end h-32 relative">
+                          <div
+                            title={`${m.totalDays}j — ${m.count} congé(s)`}
+                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-sky-500' : 'bg-sky-200 dark:bg-sky-800 group-hover:bg-sky-300 dark:group-hover:bg-sky-700'}`}
+                            style={{ height: `${Math.max(heightPct, m.totalDays > 0 ? 4 : 0)}%` }}
+                          />
+                        </div>
+                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-sky-600' : 'text-gray-400'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par département — {monthLabel}</p>
+              {deptBreakdown.length === 0 ? (
+                <p className="text-sm text-gray-400 py-8 text-center">Aucun département ce mois-ci.</p>
+              ) : (
+                <div className="space-y-3">
+                  {deptBreakdown.map(d => {
+                    const max = deptBreakdown[0].days || 1;
+                    return (
+                      <div key={d.name}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-medium text-gray-600 dark:text-gray-300 truncate">{d.name}</span>
+                          <span className="text-gray-400 shrink-0 ml-2">{d.days}j</span>
+                        </div>
+                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-violet-400 dark:bg-violet-600 rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
