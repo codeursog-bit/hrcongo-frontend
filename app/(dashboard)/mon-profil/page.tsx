@@ -72,7 +72,7 @@ interface AuthUser {
 // doit rester en miroir strict de SelfServiceUpdateEmployeeDto côté backend.
 interface EditableFields {
   phone: string; email: string; address: string; city: string; nationality: string;
-  maritalStatus: string; numberOfChildren: number;
+  gender: string; maritalStatus: string; numberOfChildren: number;
   bloodType: string; pathology: string; fatherName: string; motherName: string; educationLevel: string;
   emergencyContactName: string; emergencyContactRelation: string; emergencyContactPhone: string;
   hasDrivingLicense: boolean; drivingLicenseNumber: string;
@@ -82,7 +82,7 @@ interface EditableFields {
 
 const EMPTY_FORM: EditableFields = {
   phone: '', email: '', address: '', city: '', nationality: '',
-  maritalStatus: 'SINGLE', numberOfChildren: 0,
+  gender: 'MALE', maritalStatus: 'SINGLE', numberOfChildren: 0,
   bloodType: '', pathology: '', fatherName: '', motherName: '', educationLevel: '',
   emergencyContactName: '', emergencyContactRelation: '', emergencyContactPhone: '',
   hasDrivingLicense: false, drivingLicenseNumber: '',
@@ -93,7 +93,7 @@ const EMPTY_FORM: EditableFields = {
 function formStateFromEmployee(e: EmployeeProfile): EditableFields {
   return {
     phone: e.phone || '', email: e.email || '', address: e.address || '', city: e.city || '',
-    nationality: e.nationality || '',
+    nationality: e.nationality || '', gender: e.gender || 'MALE',
     maritalStatus: e.maritalStatus || 'SINGLE', numberOfChildren: e.numberOfChildren ?? 0,
     bloodType: e.bloodType || '', pathology: e.pathology || '', fatherName: e.fatherName || '',
     motherName: e.motherName || '', educationLevel: e.educationLevel || '',
@@ -120,6 +120,7 @@ const CONTRACT_LABELS: Record<string, string> = {
   CDI: 'CDI', CDD: 'CDD', STAGE: 'Stagiaire', INTERIM: 'Intérimaire', CONSULTANT: 'Consultant', PRESTATAIRE: 'Prestataire',
 };
 const GENDER_LABELS: Record<string, string> = { MALE: 'Masculin', FEMALE: 'Féminin' };
+const GENDER_OPTIONS = [{ value: 'MALE', label: 'Masculin' }, { value: 'FEMALE', label: 'Féminin' }];
 const MARITAL_OPTIONS = [
   { value: 'SINGLE', label: 'Célibataire' }, { value: 'MARRIED', label: 'Marié(e)' },
   { value: 'DIVORCED', label: 'Divorcé(e)' }, { value: 'WIDOWED', label: 'Veuf/Veuve' },
@@ -455,7 +456,9 @@ export default function MonProfilPage() {
           <Field icon={Calendar} label="Date de naissance" value={fmtDate(employee?.dateOfBirth)} />
           <Field icon={Cake} label="Âge" value={employee?.dateOfBirth ? `${calculateAge(employee.dateOfBirth)} ans` : undefined} />
           <Field icon={Flag} label="Lieu de naissance" value={employee?.placeOfBirth} />
-          <Field icon={Users} label="Genre" value={employee?.gender ? GENDER_LABELS[employee.gender] : undefined} />
+          <Field icon={Users} label="Genre" value={employee?.gender ? GENDER_LABELS[employee.gender] : undefined} editing={isEditing}>
+            <FancySelect label="" value={form.gender} onChange={(v) => set('gender', v)} icon={Users} options={GENDER_OPTIONS} />
+          </Field>
           <Field icon={Flag} label="Nationalité" value={employee?.nationality} editing={isEditing}>
             <FancySelect label="" value={form.nationality} onChange={(v) => set('nationality', v)} icon={Flag} placeholder="Sélectionner…" options={NATIONALITY_OPTIONS} />
           </Field>

@@ -45,6 +45,13 @@ const ROLE_CONFIG: Record<string, { label: string, color: string, bg: string }> 
 export default function UserManagementPage() {
   const router = useRouter();
   const alert = useAlert()
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setCurrentUserId(JSON.parse(stored)?.id || null);
+    } catch {}
+  }, []);
   
   // -- State --
   const [users, setUsers] = useState<User[]>([]);
@@ -95,6 +102,45 @@ export default function UserManagementPage() {
   }, []);
 
   // -- Invite Actions --
+  // 🆕 Après une invitation réussie, on garde la modale ouverte pour proposer le partage
+  const [inviteSuccessInfo, setInviteSuccessInfo] = useState<{ firstName: string; lastName: string; email: string; password: string } | null>(null);
+  const [copiedInviteMsg, setCopiedInviteMsg] = useState(false);
+
+  const buildInviteMessage = (info: { firstName: string; lastName: string; email: string; password: string }) => {
+    const loginUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/login` : '';
+    return `Bonjour ${info.firstName} ${info.lastName},\n` +
+      `Voici tes identifiants pour accéder à konza-rh :\n` +
+      `Lien de connexion : ${loginUrl}\n` +
+      `Email : ${info.email}\n` +
+      `Mot de passe temporaire : ${info.password}\n` +
+      `⚠️ Important : Lors de ta première connexion, l'application te demandera de modifier ton mot de passe. Ton nouveau mot de passe devra contenir au moins 8 caractères, incluant une majuscule, une minuscule et un chiffre.\n` +
+      `N'hésite pas si tu as des questions.\n` +
+      `Bonne prise en main !`;
+  };
+
+  const handleShareWhatsApp = (info: { firstName: string; lastName: string; email: string; password: string }) => {
+    const text = encodeURIComponent(buildInviteMessage(info));
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+  const handleShareSms = (info: { firstName: string; lastName: string; email: string; password: string }) => {
+    const text = encodeURIComponent(buildInviteMessage(info));
+    window.open(`sms:?body=${text}`, '_blank');
+  };
+  const handleCopyInviteMessage = async (info: { firstName: string; lastName: string; email: string; password: string }) => {
+    try {
+      await navigator.clipboard.writeText(buildInviteMessage(info));
+      setCopiedInviteMsg(true);
+      setTimeout(() => setCopiedInviteMsg(false), 2500);
+    } catch {
+      alert.error('Erreur', "Impossible de copier le message.");
+    }
+  };
+  const closeInviteModal = () => {
+    setInviteModal(false);
+    setInviteSuccessInfo(null);
+    setCopiedInviteMsg(false);
+  };
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsInviting(true);
@@ -104,7 +150,8 @@ export default function UserManagementPage() {
         if (payload.role !== 'MANAGER') delete (payload as any).departmentId;
 
         await api.post('/users/invite', payload);
-        setInviteModal(false);
+        // 🆕 On garde la modale ouverte pour proposer le partage des identifiants
+        setInviteSuccessInfo({ firstName: inviteForm.firstName, lastName: inviteForm.lastName, email: inviteForm.email, password: inviteForm.password });
         setInviteForm({ email: '', firstName: '', lastName: '', role: 'EMPLOYEE', password: '', departmentId: '' });
         alert.success('Utilisateur invité ', 'Utilisateur invité avec succès !');
         fetchUsers(); // Refresh list
@@ -144,6 +191,24 @@ export default function UserManagementPage() {
   );
 }finally {
         setIsSaving(false);
+    }
+  };
+
+  // 🆕 Suppression d'un utilisateur
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const handleDelete = async (user: User) => {
+    if (!window.confirm(`Supprimer définitivement ${user.firstName} ${user.lastName} ?\n\nCette action est irréversible. Si vous voulez juste bloquer son accès temporairement, préférez "Désactiver" via Modifier.`)) {
+      return;
+    }
+    setDeletingId(user.id);
+    try {
+      await api.delete(`/users/${user.id}`);
+      alert.success('Utilisateur supprimé', `${user.firstName} ${user.lastName} a été supprimé.`);
+      fetchUsers();
+    } catch (err: any) {
+      alert.error('Erreur de suppression', err.message || "Impossible de supprimer cet utilisateur.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -247,13 +312,25 @@ export default function UserManagementPage() {
                         </div>
                      </div>
                      
-                     <button 
-                        onClick={() => openEditModal(user)}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-sky-500 transition-colors"
-                        title="Modifier le rôle/statut"
-                     >
-                        <Edit size={18} />
-                     </button>
+                     <div className="flex items-center gap-1">
+                       <button 
+                          onClick={() => openEditModal(user)}
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-sky-500 transition-colors"
+                          title="Modifier le rôle/statut"
+                       >
+                          <Edit size={18} />
+                       </button>
+                       {user.id !== currentUserId && (
+                         <button
+                            onClick={() => handleDelete(user)}
+                            disabled={deletingId === user.id}
+                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                            title="Supprimer définitivement"
+                         >
+                            {deletingId === user.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                         </button>
+                       )}
+                     </div>
                   </div>
 
                   <div className="space-y-4">
@@ -376,10 +453,53 @@ export default function UserManagementPage() {
                     className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700"
                 >
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Inviter un collaborateur</h2>
-                        <button onClick={() => setInviteModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{inviteSuccessInfo ? 'Partager les identifiants' : 'Inviter un collaborateur'}</h2>
+                        <button onClick={closeInviteModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
                     </div>
 
+                    {inviteSuccessInfo ? (
+                        <div className="space-y-5">
+                            <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                                <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    <strong>{inviteSuccessInfo.firstName} {inviteSuccessInfo.lastName}</strong> a été invité(e) avec succès. Partage-lui maintenant ses identifiants.
+                                </p>
+                            </div>
+
+                            <div className="p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl">
+                                <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Aperçu du message</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed">{buildInviteMessage(inviteSuccessInfo)}</p>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                {/* Partage prioritaire : WhatsApp choisit le contact lui-même */}
+                                <button
+                                    onClick={() => handleShareWhatsApp(inviteSuccessInfo)}
+                                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl shadow-lg transition-colors"
+                                >
+                                    <Smartphone size={18} /> Partager sur WhatsApp
+                                </button>
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    <button
+                                        onClick={() => handleShareSms(inviteSuccessInfo)}
+                                        className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        <Mail size={16} /> SMS
+                                    </button>
+                                    <button
+                                        onClick={() => handleCopyInviteMessage(inviteSuccessInfo)}
+                                        className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        {copiedInviteMsg ? <><Check size={16} className="text-emerald-500" /> Copié !</> : <>Copier le message</>}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button onClick={closeInviteModal} className="w-full py-3 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                Fermer sans partager
+                            </button>
+                        </div>
+                    ) : (
                     <form onSubmit={handleInvite} className="space-y-5">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -434,12 +554,13 @@ export default function UserManagementPage() {
                         </div>
 
                         <div className="pt-4 flex gap-3">
-                            <button type="button" onClick={() => setInviteModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
+                            <button type="button" onClick={closeInviteModal} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
                             <button type="submit" disabled={isInviting} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
                                 {isInviting ? <Loader2 className="animate-spin" size={20}/> : <><Mail size={18}/> Envoyer l'invitation</>}
                             </button>
                         </div>
                     </form>
+                    )}
                 </motion.div>
             </motion.div>
         )}
