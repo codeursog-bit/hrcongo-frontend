@@ -12,13 +12,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Stethoscope, Briefcase, HelpCircle, Send, Loader2, CheckCircle2,
-  ArrowLeft, MapPin, Search,
+  ArrowLeft, MapPin, Search, Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceSubNav from '@/components/PresenceSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
+import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 
 type PermType = 'URGENCE' | 'MISSION' | 'AUTRE';
 
@@ -66,6 +67,7 @@ export default function NouveauTicketPage() {
   const [expectedReturnTime, setExpectedReturnTime] = useState(nowLocal(120));
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,8 +175,8 @@ export default function NouveauTicketPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-3 space-y-5">
+      <div className="max-w-2xl mx-auto space-y-5">
+        <div className="space-y-5">
 
           {isApprover && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
@@ -267,21 +269,21 @@ export default function NouveauTicketPage() {
 
           {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
 
-          <button onClick={handleSubmit} disabled={!canSubmit} className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 transition-all">
-            {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-            {onBehalf ? 'Créer le ticket' : 'Envoyer la demande'}
-          </button>
-        </div>
-
-        <div className="xl:col-span-2">
-          <div className="sticky top-6">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Aperçu du ticket</p>
-            <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-6 flex justify-center border border-gray-200 dark:border-gray-700">
-              <PermissionTicketPrintable id="preview-ticket" data={previewData as any} />
-            </div>
+          <div className="flex gap-2">
+            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 transition-all">
+              {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+              {onBehalf ? 'Créer le ticket' : 'Envoyer la demande'}
+            </button>
+            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 shrink-0">
+              <Eye size={18} />
+            </button>
           </div>
         </div>
       </div>
+
+      <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
+        <PermissionTicketPrintable id="preview-ticket" data={previewData as any} />
+      </DocumentPreviewModal>
     </div>
   );
 }

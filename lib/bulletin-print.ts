@@ -60,8 +60,14 @@ export function printBulletin(bulletinElementId?: string) {
   const styleLinks   = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.outerHTML).join('\n');
   const styleInlines = Array.from(document.querySelectorAll('style')).map(s => `<style>${s.innerHTML}</style>`).join('\n');
 
+  // ✅ Base absolue par robustesse générale (le logo entreprise est sur
+  //    Cloudinary donc déjà en URL absolue — ceci couvre d'éventuels autres
+  //    assets en chemin relatif dans les feuilles de style copiées)
+  const baseHref = window.location.origin + '/';
+
   doc.open();
   doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<base href="${baseHref}">
 ${styleLinks}
 ${styleInlines}
 <style>
@@ -170,6 +176,21 @@ export async function downloadBulletinPDF(
   document.body.appendChild(container);
 
   try {
+    // ✅ Le logo entreprise vient de Cloudinary (URL absolue, cross-origin).
+    //    html2canvas ne peut lire les pixels d'une image cross-origin que si
+    //    elle est chargée en mode crossOrigin="anonymous" — sinon elle
+    //    ressort vide/blanche dans le PDF, silencieusement. On force donc un
+    //    rechargement CORS + cache-bust et on attend avant de capturer.
+    const logoImgs = Array.from(clone.querySelectorAll<HTMLImageElement>('img'));
+    await Promise.all(logoImgs.map((img) => new Promise<void>((resolve) => {
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve();
+      img.onerror = () => resolve(); // ne bloque jamais la génération du PDF
+      const src = img.getAttribute('src') || '';
+      img.src = src + (src.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+      setTimeout(resolve, 2500); // filet de sécurité
+    })));
+
     // Laisser le DOM se rendre
     await new Promise(r => setTimeout(r, 200));
 

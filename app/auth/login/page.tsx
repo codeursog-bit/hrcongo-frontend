@@ -56,8 +56,14 @@ interface PasswordChangeResponse {
 // SCHEMAS
 // =============================================================================
 
+// ✅ Accepte soit un email valide, soit un numéro de téléphone (au moins 8 chiffres)
 const loginSchema = z.object({
-  email:      z.string().email("Format d'email invalide").min(1, "L'email est requis"),
+  email: z.string()
+    .min(1, "L'email ou le téléphone est requis")
+    .refine(
+      (val) => /\S+@\S+\.\S+/.test(val) || /^[0-9+\s-]{8,20}$/.test(val),
+      "Entrez un email valide ou un numéro de téléphone"
+    ),
   password:   z.string().min(1, "Le mot de passe est requis"),
   rememberMe: z.boolean().optional(),
 });
@@ -471,7 +477,7 @@ function LoginContent() {
     } catch (error: any) {
       const msg = error.message?.toLowerCase() || '';
       if (msg.includes('incorrect') || msg.includes('invalid'))
-        setServerError('❌ Email ou mot de passe incorrect');
+        setServerError('❌ Email/téléphone ou mot de passe incorrect');
       else if (msg.includes('désactivé') || msg.includes('disabled'))
         setServerError('🚫 Votre compte a été désactivé. Contactez votre administrateur.');
       else if (msg.includes('verrouillé') || msg.includes('locked'))
@@ -610,16 +616,17 @@ function LoginContent() {
 
             <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-5" onSubmit={handleSubmit(onSubmit)}>
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-1.5">Email</label>
+                <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-1.5">Email ou téléphone</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
                     <Mail className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.email ? 'text-red-400' : 'text-gray-500 group-focus-within:text-cyan-400'}`} />
                   </div>
                   <input
                     {...register('email')}
-                    type="email"
+                    type="text"
+                    autoComplete="username"
                     className={`block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/50'}`}
-                    placeholder="admin@hrcongo.com"
+                    placeholder="admin@konza-rh.cg ou 06 xxx xx xx"
                   />
                 </div>
                 {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}

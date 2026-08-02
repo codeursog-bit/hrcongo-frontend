@@ -210,6 +210,7 @@ export interface FicheEmployeData {
   pathology?: string | null;
   address?: string;
   phone?: string;
+  secondaryPhone?: string | null;
   email?: string;
   fatherName?: string | null;
   motherName?: string | null;
@@ -278,6 +279,9 @@ export function FicheEmployePdf({ employee, company }: { employee: FicheEmployeD
         <Row label="Pathologie (maladie habituelle)" value={employee.pathology || 'Aucune renseignée'} alt />
         <Row label="Adresse" value={employee.address} />
         <Row label="Téléphone" value={employee.phone} alt />
+        {employee.secondaryPhone && (
+          <Row label="Téléphone secondaire" value={employee.secondaryPhone} />
+        )}
         <Row label="Adresse mail (e-mail)" value={employee.email} />
         <Row label="Nom(s) & prénom(s) du père" value={employee.fatherName || undefined} alt />
         <Row label="Nom(s) & prénom(s) de la mère" value={employee.motherName || undefined} />

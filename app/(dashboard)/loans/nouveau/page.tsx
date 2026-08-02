@@ -49,7 +49,7 @@ export default function NouvellePretAvancePage() {
 
   const [type, setType] = useState<ReqType>('ARGENT');
   const [amount, setAmount] = useState('');
-  const [monthlyRepayment, setMonthlyRepayment] = useState('');
+  const [durationMonthsInput, setDurationMonthsInput] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [reason, setReason] = useState('');
   const deductDefault = nextMonthDefault();
@@ -90,7 +90,8 @@ export default function NouvellePretAvancePage() {
 
   const targetEmployee = onBehalf ? employeesList.find(e => e.id === selectedEmployeeId) : employee;
 
-  const durationMonths = amount && monthlyRepayment ? Math.ceil(Number(amount) / Number(monthlyRepayment)) : undefined;
+  const durationMonths = durationMonthsInput ? Number(durationMonthsInput) : undefined;
+  const monthlyRepayment = amount && durationMonths ? Math.ceil(Number(amount) / durationMonths) : undefined;
   const endDate = useMemo(() => {
     if (!durationMonths) return startDate;
     const d = new Date(startDate);
@@ -99,7 +100,7 @@ export default function NouvellePretAvancePage() {
   }, [startDate, durationMonths]);
 
   const canSubmit = !!amount && Number(amount) > 0 && reason.trim().length >= 3
-    && (isAdvance || (!!monthlyRepayment && Number(monthlyRepayment) > 0))
+    && (isAdvance || (!!durationMonthsInput && Number(durationMonthsInput) > 0))
     && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
 
   const handleSubmit = async () => {
@@ -156,7 +157,7 @@ export default function NouvellePretAvancePage() {
         <p className="text-gray-400 text-sm mb-8">Votre demande a été transmise pour validation.</p>
         <div className="flex gap-3 justify-center">
           <button onClick={() => router.push(bp('/loans/mon-espace'))} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm">Voir mes demandes</button>
-          <button onClick={() => { setIsDone(false); setAmount(''); setMonthlyRepayment(''); setReason(''); }} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-sm text-gray-600 dark:text-gray-300">Nouvelle demande</button>
+          <button onClick={() => { setIsDone(false); setAmount(''); setDurationMonthsInput(''); setReason(''); }} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-sm text-gray-600 dark:text-gray-300">Nouvelle demande</button>
         </div>
       </div>
     );
@@ -227,14 +228,14 @@ export default function NouvellePretAvancePage() {
             {!isAdvance ? (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Mensualité (FCFA)</label>
-                  <input type="number" min="1" value={monthlyRepayment} onChange={e => setMonthlyRepayment(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Durée (en mois)</label>
+                  <input type="number" min="1" value={durationMonthsInput} onChange={e => setDurationMonthsInput(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Date de départ</label>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
                 </div>
-                {durationMonths && <p className="text-xs text-sky-600 dark:text-sky-400 col-span-2">Durée estimée : {durationMonths} mois (jusqu&apos;au {new Date(endDate).toLocaleDateString('fr-FR')})</p>}
+                {monthlyRepayment && <p className="text-xs text-sky-600 dark:text-sky-400 col-span-2">Mensualité estimée : {monthlyRepayment.toLocaleString('fr-FR')} FCFA/mois (jusqu&apos;au {new Date(endDate).toLocaleDateString('fr-FR')})</p>}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">

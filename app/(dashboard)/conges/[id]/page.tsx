@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Loader2, ArrowLeft, Check, X, Clock, CheckCircle2, XCircle, Ban,
-  Calendar, ArrowRight, Printer, Download, Wallet, Info, FileText, ScrollText, Lock, Unlock,
+  Calendar, ArrowRight, Printer, Download, Wallet, Info, FileText, ScrollText, Lock, Unlock, FileDown,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -55,6 +55,7 @@ export default function LeaveDetailPage() {
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showPrintAuthModal, setShowPrintAuthModal] = useState(false);
   const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
+  const [isConfirmingReturn, setIsConfirmingReturn] = useState(false);
 
   const load = async () => {
     try {
@@ -129,6 +130,19 @@ export default function LeaveDetailPage() {
       alert(e?.message || "Erreur lors de la mise à jour de l'autorisation d'impression");
     } finally {
       setIsTogglingPrintAuth(false);
+    }
+  };
+
+  const handleConfirmReturn = async () => {
+    if (!leave) return;
+    setIsConfirmingReturn(true);
+    try {
+      await api.patch(`/leaves/${leave.id}/confirm-return`, {});
+      await load();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de la confirmation du retour");
+    } finally {
+      setIsConfirmingReturn(false);
     }
   };
 
@@ -318,6 +332,29 @@ export default function LeaveDetailPage() {
                 </div>
               </div>
             )}
+
+            {leave.status === 'APPROVED' && canApprove && new Date(leave.endDate) < new Date() && (
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+                {leave.returnConfirmed ? (
+                  <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 size={14} /> Retour confirmé
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <Clock size={14} /> Retour à confirmer
+                    </div>
+                    <button
+                      onClick={handleConfirmReturn}
+                      disabled={isConfirmingReturn}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 disabled:opacity-40 flex items-center gap-1.5"
+                    >
+                      {isConfirmingReturn ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Confirmer le retour
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sélecteur de document */}
@@ -355,6 +392,16 @@ export default function LeaveDetailPage() {
                 >
                   {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
                 </button>
+                {isOrca && (
+                  <button
+                    onClick={() => canPrint && window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/${leave.id}/document.docx`, '_blank')}
+                    disabled={!canPrint}
+                    title={!canPrint ? "Impression non autorisée par le RH" : "Télécharger le fichier Word original rempli"}
+                    className="flex-1 py-2.5 border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 text-sm font-semibold rounded-xl text-sky-700 dark:text-sky-300 flex items-center justify-center gap-2 hover:bg-sky-100 dark:hover:bg-sky-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <FileDown size={16} /> .docx
+                  </button>
+                )}
               </div>
             );
           })()}

@@ -526,13 +526,27 @@ import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { ImageUploader } from '@/components/employees/ImageUploader';
 
-const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT'];
+const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
 
 const SUGGESTED_DURATIONS: Record<string, { label: string; months: number }[]> = {
   STAGE:      [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
   CDD:        [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
   INTERIM:    [{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }],
   CONSULTANT: [{ label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }, { label: '1 an', months: 12 }],
+  PRESTATAIRE:[{ label: '1 mois', months: 1 }, { label: '3 mois', months: 3 }, { label: '6 mois', months: 6 }],
+};
+
+// ✅ AJOUT : mêmes constantes BNC que la page de création (Step3Contract.tsx),
+// pour garder un comportement identique création/édition.
+const BNC_CONTRACTS = ['CONSULTANT', 'PRESTATAIRE'];
+
+const CONTRACT_INFO: Record<string, { cnss: string; impot: string; tus: string; alertes: string[] }> = {
+  CDI:         { cnss: 'CNSS 4% sal. + 20,28% pat.', impot: 'ITS barème',      tus: 'TUS 7,5%',     alertes: [] },
+  CDD:         { cnss: 'CNSS identique CDI',          impot: 'ITS barème',      tus: 'TUS 7,5%',     alertes: ['Max 2 ans renouvellement inclus'] },
+  STAGE:       { cnss: 'AT patronale 2,25% seulement', impot: 'ITS si > SMIG',  tus: 'Aucun',        alertes: ['Convention tripartite obligatoire', 'Max 6 mois'] },
+  CONSULTANT:  { cnss: 'Aucune CNSS',                  impot: 'BNC à la source', tus: 'Aucun',        alertes: ['Facture HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  PRESTATAIRE: { cnss: 'Aucune CNSS',                  impot: 'BNC à la source', tus: 'Aucun',        alertes: ['Facture HT — pas de bulletin', 'BNC reversé DGI avant le 15'] },
+  INTERIM:     { cnss: "Géré par l'agence",            impot: "Géré par l'agence", tus: "Géré par l'agence", alertes: ["Pas de bulletin — suivi mission uniquement"] },
 };
 
 // ─── Aperçu durée ─────────────────────────────────────────────────────────
@@ -601,7 +615,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', dateOfBirth: '', placeOfBirth: '',
-    gender: 'MALE', phone: '', email: '', address: '', city: '',
+    gender: 'MALE', phone: '', secondaryPhone: '', email: '', address: '', city: '',
     nationalIdNumber: '', cnssNumber: '', niu: '', taxNumber: '',
     trialPeriodDays: '0', trialEndDate: '',
     status: 'ACTIVE', terminationDate: '', terminationReason: '',
@@ -610,6 +624,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     contractEndDate: '',  // 🆕
     position: '', departmentId: '',
     baseSalary: '', professionalCategory: '', echelon: '',
+    isResident: 'true', // ✅ AJOUT : nécessaire pour le calcul BNC (CONSULTANT / PRESTATAIRE)
     employeeNumber: '',
     photoUrl: '', // 🆕 Photo existante (avant remplacement éventuel)
     paymentMethod: 'CASH', bankName: '', bankAccountNumber: '',
@@ -649,6 +664,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           placeOfBirth:        employee.placeOfBirth || '',
           gender:              employee.gender || 'MALE',
           phone:               employee.phone || '',
+          secondaryPhone:      employee.secondaryPhone || '', // ✅ AJOUT
           email:               employee.email || '',
           address:             employee.address || '',
           city:                employee.city || '',
@@ -671,6 +687,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           baseSalary:          employee.baseSalary?.toString() || '',
           professionalCategory:employee.professionalCategory || '',
           echelon:             employee.echelon || '',
+          isResident:          employee.isResident === false ? 'false' : 'true', // ✅ AJOUT
           employeeNumber:      employee.employeeNumber || '',
           paymentMethod:       employee.paymentMethod || 'CASH',
           bankName:            employee.bankName || '',
@@ -720,6 +737,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const handleContractTypeChange = (type: string) => {
     handleSelect('contractType', type);
     if (type === 'CDI') handleSelect('contractEndDate', '');
+    if (BNC_CONTRACTS.includes(type) && !formData.isResident) handleSelect('isResident', 'true');
   };
 
   // Raccourcis durée
@@ -764,7 +782,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
       await api.patch(`/employees/${params.id}`, {
         firstName: formData.firstName, lastName: formData.lastName,
         dateOfBirth: formData.dateOfBirth, placeOfBirth: formData.placeOfBirth,
-        gender: formData.gender, phone: formData.phone, email: formData.email,
+        gender: formData.gender, phone: formData.phone, secondaryPhone: formData.secondaryPhone?.trim() || null, email: formData.email,
         address: formData.address, city: formData.city,
         nationalIdNumber: formData.nationalIdNumber || null,
         cnssNumber: formData.cnssNumber || null,
@@ -782,6 +800,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         baseSalary: parseFloat(formData.baseSalary),
         professionalCategory: formData.professionalCategory || null,
         echelon: formData.echelon || null,
+        isResident: formData.isResident !== 'false', // ✅ AJOUT
         employeeNumber: formData.employeeNumber?.trim() || undefined,
         paymentMethod: formData.paymentMethod,
         bankName: formData.bankName || null, bankAccountNumber: formData.bankAccountNumber || null,
@@ -830,6 +849,15 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const labelClass  = "block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2";
   const needsEndDate = REQUIRES_END_DATE.includes(formData.contractType);
   const suggestions  = SUGGESTED_DURATIONS[formData.contractType] ?? [];
+
+  // ✅ AJOUT : mêmes calculs que la page de création (Step3Contract.tsx)
+  const isBncContract = BNC_CONTRACTS.includes(formData.contractType);
+  const contractMeta  = CONTRACT_INFO[formData.contractType] ?? CONTRACT_INFO['CDI'];
+  const isResidentBool = formData.isResident !== 'false';
+  const montantHT  = parseFloat(formData.baseSalary as string) || 0;
+  const bncTaux    = isResidentBool ? 0.10 : 0.20;
+  const bncMontant = isBncContract && montantHT > 0 ? Math.round(montantHT * bncTaux) : 0;
+  const bncNet     = montantHT - bncMontant;
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -900,6 +928,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     <div><label className={labelClass}>Lieu de naissance</label><input name="placeOfBirth" value={formData.placeOfBirth} onChange={handleChange} className={inputClass} /></div>
                     <div><FancySelect label="Genre" value={formData.gender} onChange={(v) => handleSelect('gender', v)} icon={User} options={[{ value: 'MALE', label: 'Homme' }, { value: 'FEMALE', label: 'Femme' }]} /></div>
                     <div><label className={labelClass}><Phone size={13} className="inline mr-1 text-sky-500" />Téléphone</label><input name="phone" value={formData.phone} onChange={handleChange} className={inputClass} /></div>
+                    <div><label className={labelClass}><Phone size={13} className="inline mr-1 text-sky-500" />Téléphone secondaire</label><input name="secondaryPhone" value={formData.secondaryPhone} onChange={handleChange} className={inputClass} placeholder="Optionnel" /></div>
                     <div className="md:col-span-2"><label className={labelClass}><Mail size={13} className="inline mr-1 text-sky-500" />Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className={inputClass} /></div>
                     <div><label className={labelClass}><MapPin size={13} className="inline mr-1 text-sky-500" />Adresse</label><input name="address" value={formData.address} onChange={handleChange} className={inputClass} /></div>
                     <div><label className={labelClass}>Ville</label><input name="city" value={formData.city} onChange={handleChange} className={inputClass} /></div>
@@ -943,7 +972,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     <div>
                       <label className={labelClass}>Type de contrat</label>
                       <div className="grid grid-cols-3 gap-2">
-                        {['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'INTERIM'].map((type) => (
+                        {['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'].map((type) => (
                           <button key={type} type="button" onClick={() => handleContractTypeChange(type)}
                             className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
                               formData.contractType === type
@@ -954,6 +983,33 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                           </button>
                         ))}
                       </div>
+
+                      {/* ✅ AJOUT : résumé fiscal inline (même logique que la création) */}
+                      {formData.contractType && (
+                        <div className="mt-2 p-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                          <div className="grid grid-cols-3 gap-3 text-[11px]">
+                            {[
+                              { label: 'CNSS',  value: contractMeta?.cnss },
+                              { label: 'Impôt', value: contractMeta?.impot },
+                              { label: 'TUS',   value: contractMeta?.tus },
+                            ].map(({ label, value }) => (
+                              <div key={label}>
+                                <p className="font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
+                                <p className="font-semibold text-gray-700 dark:text-gray-300 text-[11px] leading-tight">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                          {contractMeta?.alertes.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                              {contractMeta.alertes.map((a, i) => (
+                                <p key={i} className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                  <AlertCircle size={10} className="shrink-0" /> {a}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* 🆕 DATE DE FIN CONDITIONNELLE */}
@@ -1015,13 +1071,72 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
                     {/* Salaire */}
                     <div className="md:col-span-2">
-                      <label className={labelClass}><DollarSign size={13} className="inline mr-1 text-purple-500" />Salaire de base *</label>
+                      <label className={labelClass}><DollarSign size={13} className="inline mr-1 text-purple-500" />{isBncContract ? 'Montant HT de la prestation *' : 'Salaire de base *'}</label>
                       <div className="relative">
                         <input type="number" name="baseSalary" value={formData.baseSalary} onChange={handleChange}
                           className="w-full px-4 py-4 pr-20 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-sky-500 outline-none font-bold text-2xl" />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">FCFA</span>
                       </div>
                     </div>
+
+                    {/* ✅ AJOUT : bloc BNC (Consultant / Prestataire) — même logique que la création */}
+                    {isBncContract && (
+                      <div className="md:col-span-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4">
+                        <div className="flex items-center gap-2">
+                          <UserCheck size={13} className="text-gray-500" />
+                          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Retenue BNC · Résidence fiscale
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                          CGI Congo art. 47 ter &amp; art. 44 — le taux dépend du statut de résidence.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: 'true',  label: 'Résident / Congolais',  sub: 'BNC 10%', active: isResidentBool },
+                            { value: 'false', label: 'Étranger non résident', sub: 'BNC 20%', active: !isResidentBool },
+                          ].map(({ value, label, sub, active }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => handleSelect('isResident', value)}
+                              className={`p-3 rounded-xl border text-center transition-all ${
+                                active
+                                  ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
+                                  : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400'
+                              }`}
+                            >
+                              <p className="text-[11px] font-bold">{label}</p>
+                              <p className={`text-base font-black mt-0.5 ${active ? '' : 'text-gray-400'}`}>{sub}</p>
+                            </button>
+                          ))}
+                        </div>
+
+                        {montantHT > 0 && (
+                          <div className="p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2 text-xs">
+                            <p className="font-bold text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                              <DollarSign size={11} /> Calcul BNC
+                            </p>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                              <span>Montant HT</span>
+                              <span className="font-bold text-gray-900 dark:text-white">{montantHT.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                              <span>BNC retenu ({bncTaux * 100}%)</span>
+                              <span className="font-bold text-red-500">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                            <div className="flex justify-between border-t border-gray-100 dark:border-gray-700 pt-2">
+                              <span className="font-bold text-gray-700 dark:text-gray-300">Net versé</span>
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 pt-0.5">
+                              Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Convention collective */}
                     {companyConvention && conventionCategories.length > 0 && (

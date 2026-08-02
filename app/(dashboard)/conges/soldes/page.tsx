@@ -61,36 +61,40 @@ export default function LeaveBalancesAdminPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [adjusting, setAdjusting] = useState<EmployeeBalance | null>(null);
-  const [adjustEntitled, setAdjustEntitled] = useState('');
-  const [adjustTaken, setAdjustTaken] = useState('');
-  const [adjustNote, setAdjustNote] = useState('');
+  const [lastLeaveType, setLastLeaveType] = useState<'ANNUAL' | 'ANNUAL_ANTICIPATED'>('ANNUAL');
+  const [lastLeaveStart, setLastLeaveStart] = useState('');
+  const [lastLeaveEnd, setLastLeaveEnd] = useState('');
+  const [remainingDays, setRemainingDays] = useState('');
   const [isSavingAdjust, setIsSavingAdjust] = useState(false);
 
   const canAdjust = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
 
   const openAdjust = (bal: EmployeeBalance) => {
     setAdjusting(bal);
-    setAdjustEntitled(String(bal.annualEntitled));
-    setAdjustTaken(String(bal.annualTaken));
-    setAdjustNote('');
+    setLastLeaveType('ANNUAL');
+    setLastLeaveStart('');
+    setLastLeaveEnd('');
+    setRemainingDays('');
   };
 
   const saveAdjust = async () => {
     if (!adjusting) return;
-    const entitled = parseFloat(adjustEntitled);
-    const taken = parseFloat(adjustTaken) || 0;
-    if (isNaN(entitled) || entitled < 0) { alert('Solde acquis invalide'); return; }
+    if (!lastLeaveStart || !lastLeaveEnd) { alert('Renseigne les dates de départ et de retour du dernier congé'); return; }
+    if (lastLeaveType === 'ANNUAL_ANTICIPATED' && remainingDays === '') {
+      alert('Renseigne le solde de jours restants pour un congé anticipé'); return;
+    }
     setIsSavingAdjust(true);
     try {
-      await api.patch(`/leaves/balance/${adjusting.employeeId}`, {
-        annualEntitled: entitled,
-        annualTaken: taken,
-        note: adjustNote || undefined,
+      await api.post(`/leaves/employee/${adjusting.employeeId}/seed-from-last-leave`, {
+        lastLeaveType,
+        startDate: lastLeaveStart,
+        endDate: lastLeaveEnd,
+        remainingDays: lastLeaveType === 'ANNUAL_ANTICIPATED' ? parseFloat(remainingDays) : undefined,
       });
       setAdjusting(null);
       await load();
     } catch (e: any) {
-      alert(e?.message || "Erreur lors de l'ajustement du solde");
+      alert(e?.message || "Erreur lors de la reprise du solde");
     } finally {
       setIsSavingAdjust(false);
     }
@@ -390,43 +394,71 @@ export default function LeaveBalancesAdminPage() {
         </table>
       </div>
 
-      {/* ── Modale d'ajustement manuel du solde ── */}
+      {/* ── Modale de reprise du solde (dernier congé connu) ── */}
       {adjusting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Ajuster le solde</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Reprendre le solde</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-              {adjusting.employeeName} — cycle en cours (débute {adjusting.year}). Utile pour reprendre un solde déjà acquis avant l'utilisation de l'application.
+              {adjusting.employeeName} — indique son dernier congé connu avant Konza RH. Le système calcule ensuite le solde réel lui-même à partir de cette date, au lieu d'un chiffre figé.
             </p>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Solde acquis (jours)</label>
-                <input
-                  type="number" step="0.5" min="0"
-                  value={adjustEntitled}
-                  onChange={(e) => setAdjustEntitled(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
-                />
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Type de ce dernier congé</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setLastLeaveType('ANNUAL')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border ${lastLeaveType === 'ANNUAL' ? 'bg-sky-600 border-sky-600 text-white' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLastLeaveType('ANNUAL_ANTICIPATED')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border ${lastLeaveType === 'ANNUAL_ANTICIPATED' ? 'bg-sky-600 border-sky-600 text-white' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'}`}
+                  >
+                    Anticipé
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  {lastLeaveType === 'ANNUAL'
+                    ? "Congé normal : il clôturait son cycle, le compteur repart de 0 à sa date de retour."
+                    : "Congé pris avant la fin de son cycle : le cycle en cours continue, seul le solde restant doit être précisé."}
+                </p>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Déjà pris (jours)</label>
-                <input
-                  type="number" step="0.5" min="0"
-                  value={adjustTaken}
-                  onChange={(e) => setAdjustTaken(e.target.value)}
-                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Date de départ</label>
+                  <input
+                    type="date"
+                    value={lastLeaveStart}
+                    onChange={(e) => setLastLeaveStart(e.target.value)}
+                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Date de retour</label>
+                  <input
+                    type="date"
+                    value={lastLeaveEnd}
+                    onChange={(e) => setLastLeaveEnd(e.target.value)}
+                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Note (optionnel)</label>
-                <input
-                  type="text"
-                  value={adjustNote}
-                  onChange={(e) => setAdjustNote(e.target.value)}
-                  placeholder="Ex. : solde repris de l'ancien système"
-                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
-                />
-              </div>
+              {lastLeaveType === 'ANNUAL_ANTICIPATED' && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 block">Jours restants après ce congé anticipé</label>
+                  <input
+                    type="number" step="0.5" min="0"
+                    value={remainingDays}
+                    onChange={(e) => setRemainingDays(e.target.value)}
+                    placeholder="Ex. : 14"
+                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+                  />
+                </div>
+              )}
             </div>
             <div className="flex gap-3 justify-end mt-6">
               <button

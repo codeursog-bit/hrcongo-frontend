@@ -189,7 +189,7 @@ export default function BulletinRendererCorporate({ payroll, template }: Bulleti
         <div className="corp-no-break" style={{ background:primary, color:'#fff', padding:'18px 24px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
             {co.logo
-              ? <img src={co.logo} alt="Logo" style={{ width:52, height:52, objectFit:'contain', background:'#fff', borderRadius:6, padding:4, flexShrink:0 }} />
+              ? <img src={co.logo} alt="Logo" crossOrigin="anonymous" style={{ width:52, height:52, objectFit:'contain', background:'#fff', borderRadius:6, padding:4, flexShrink:0 }} />
               : <div style={{ width:52, height:52, background:'#fff', borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:11, color:primary, letterSpacing:1, flexShrink:0 }}>
                   {(co.tradeName||co.legalName||'ENT').slice(0,4).toUpperCase()}
                 </div>

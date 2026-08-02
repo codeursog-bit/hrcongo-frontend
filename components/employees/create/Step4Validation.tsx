@@ -137,6 +137,9 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
           <Row label="Né(e) le" value={formData.dateOfBirth ? new Date(formData.dateOfBirth).toLocaleDateString('fr-FR') : '—'} />
           <Row label="Lieu" value={formData.placeOfBirth || '—'} />
           <Row label="Téléphone" value={formData.phone || '—'} mono />
+          {formData.secondaryPhone && (
+            <Row label="Tél. secondaire" value={formData.secondaryPhone} mono />
+          )}
           <Row label="Email" value={
             <span className="truncate block max-w-[180px]">{formData.email || '—'}</span>
           } />

@@ -768,6 +768,7 @@ interface EmployeeDetail {
   lastName: string;
   email: string;
   phone: string;
+  secondaryPhone?: string | null; // ✅ AJOUT
   address: string;
   city: string;
   placeOfBirth: string;
@@ -1154,6 +1155,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Phone size={11} /> Téléphone</p>
                   <p className="font-medium font-mono text-gray-900 dark:text-white">{employee.phone}</p>
                 </div>
+                {employee.secondaryPhone && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Phone size={11} /> Téléphone secondaire</p>
+                    <p className="font-medium font-mono text-gray-900 dark:text-white">{employee.secondaryPhone}</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Mail size={11} /> Email</p>
                   <p className="font-medium text-gray-900 dark:text-white truncate">{employee.email}</p>

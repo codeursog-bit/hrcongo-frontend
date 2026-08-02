@@ -103,30 +103,31 @@ export default function UserManagementPage() {
 
   // -- Invite Actions --
   // 🆕 Après une invitation réussie, on garde la modale ouverte pour proposer le partage
-  const [inviteSuccessInfo, setInviteSuccessInfo] = useState<{ firstName: string; lastName: string; email: string; password: string } | null>(null);
+  const [inviteSuccessInfo, setInviteSuccessInfo] = useState<{ firstName: string; lastName: string; email: string; password: string; phone?: string | null } | null>(null);
   const [copiedInviteMsg, setCopiedInviteMsg] = useState(false);
 
-  const buildInviteMessage = (info: { firstName: string; lastName: string; email: string; password: string }) => {
+  const buildInviteMessage = (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
     const loginUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/login` : '';
     return `Bonjour ${info.firstName} ${info.lastName},\n` +
       `Voici tes identifiants pour accéder à konza-rh :\n` +
       `Lien de connexion : ${loginUrl}\n` +
       `Email : ${info.email}\n` +
+      (info.phone ? `Téléphone : ${info.phone} (tu peux aussi te connecter avec ce numéro)\n` : '') +
       `Mot de passe temporaire : ${info.password}\n` +
       `⚠️ Important : Lors de ta première connexion, l'application te demandera de modifier ton mot de passe. Ton nouveau mot de passe devra contenir au moins 8 caractères, incluant une majuscule, une minuscule et un chiffre.\n` +
       `N'hésite pas si tu as des questions.\n` +
       `Bonne prise en main !`;
   };
 
-  const handleShareWhatsApp = (info: { firstName: string; lastName: string; email: string; password: string }) => {
+  const handleShareWhatsApp = (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
     const text = encodeURIComponent(buildInviteMessage(info));
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
-  const handleShareSms = (info: { firstName: string; lastName: string; email: string; password: string }) => {
+  const handleShareSms = (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
     const text = encodeURIComponent(buildInviteMessage(info));
     window.open(`sms:?body=${text}`, '_blank');
   };
-  const handleCopyInviteMessage = async (info: { firstName: string; lastName: string; email: string; password: string }) => {
+  const handleCopyInviteMessage = async (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
     try {
       await navigator.clipboard.writeText(buildInviteMessage(info));
       setCopiedInviteMsg(true);
@@ -149,9 +150,10 @@ export default function UserManagementPage() {
         const payload = { ...inviteForm };
         if (payload.role !== 'MANAGER') delete (payload as any).departmentId;
 
-        await api.post('/users/invite', payload);
+        // ✅ On récupère la réponse (newUser) pour savoir si un téléphone a été lié automatiquement
+        const created = await api.post<{ phone?: string | null }>('/users/invite', payload);
         // 🆕 On garde la modale ouverte pour proposer le partage des identifiants
-        setInviteSuccessInfo({ firstName: inviteForm.firstName, lastName: inviteForm.lastName, email: inviteForm.email, password: inviteForm.password });
+        setInviteSuccessInfo({ firstName: inviteForm.firstName, lastName: inviteForm.lastName, email: inviteForm.email, password: inviteForm.password, phone: created?.phone ?? null });
         setInviteForm({ email: '', firstName: '', lastName: '', role: 'EMPLOYEE', password: '', departmentId: '' });
         alert.success('Utilisateur invité ', 'Utilisateur invité avec succès !');
         fetchUsers(); // Refresh list

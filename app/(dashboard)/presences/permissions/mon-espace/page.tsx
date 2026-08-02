@@ -6,17 +6,22 @@
 //    impression, annulation, marquage du retour.
 // ============================================================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   Plus, Loader2, Clock, CheckCircle2, XCircle, Ban, ArrowRight,
-  Printer, Download, X, LogOut, Stethoscope, Briefcase, HelpCircle,
+  Printer, Download, X, LogOut, Stethoscope, Briefcase, HelpCircle, Eye, Ticket,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceSubNav from '@/components/PresenceSubNav';
+import PermissionsSubNav from '@/components/PermissionsSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
+import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket, downloadTicketPDF } from '@/lib/ticket-print';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
@@ -47,6 +52,8 @@ export default function MonEspacePermissionsPage() {
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [mySpaceTab, setMySpaceTab] = useState<'validations' | 'suivi'>('validations');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   useEffect(() => {
     try {
@@ -109,11 +116,35 @@ export default function MonEspacePermissionsPage() {
     finally { setIsExportingPdf(false); }
   };
 
+  // ── KPI "Mes validations" ────────────────────────────────────────────────
+  const myRequestKpis = useMemo(() => ({
+    total: tickets.length,
+    approved: tickets.filter(t => t.status === 'APPROVED').length,
+    pending: tickets.filter(t => t.status === 'PENDING').length,
+    rejected: tickets.filter(t => t.status === 'REJECTED').length,
+  }), [tickets]);
+
+  // ── Courbe "Suivi" : 12 derniers mois ────────────────────────────────────
+  const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const trendData = useMemo(() => {
+    const months: { label: string; year: number; month: number }[] = [];
+    const ref = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+      months.push({ label: `${MONTHS_FR[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, year: d.getFullYear(), month: d.getMonth() + 1 });
+    }
+    return months.map(m => {
+      const inMonth = tickets.filter(t => { const d = new Date(t.createdAt); return d.getFullYear() === m.year && d.getMonth() + 1 === m.month; });
+      return { mois: m.label, Demandés: inMonth.length, Autorisés: inMonth.filter(t => t.status === 'APPROVED').length };
+    });
+  }, [tickets]);
+
   if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <PresenceSubNav userRole={userRole} />
+      <PermissionsSubNav userRole={userRole} />
 
       <div className="flex items-center justify-between">
         <div>
@@ -124,6 +155,22 @@ export default function MonEspacePermissionsPage() {
           <Plus size={18} /> Nouveau ticket
         </Link>
       </div>
+
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Mes validations</button>
+        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Suivi de mes permissions</button>
+      </div>
+
+      {mySpaceTab === 'validations' && (
+      <>
+      {tickets.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <MyKpiCard icon={Ticket} label="Total de mes demandes" value={myRequestKpis.total} tone="slate" />
+          <MyKpiCard icon={CheckCircle2} label="Autorisées" value={myRequestKpis.approved} tone="emerald" />
+          <MyKpiCard icon={Clock} label="En attente" value={myRequestKpis.pending} tone="amber" />
+          <MyKpiCard icon={XCircle} label="Refusées" value={myRequestKpis.rejected} tone="sky" />
+        </div>
+      )}
 
       {tickets.length === 0 ? (
         <div className="text-center py-24 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
@@ -221,7 +268,13 @@ export default function MonEspacePermissionsPage() {
                     </div>
                   </div>
 
-                  <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-4 flex justify-center border border-gray-200 dark:border-gray-700">
+                    <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <Eye size={16} /> Aperçu du ticket
+                    </button>
+                  </div>
+
+                  {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
+                  <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {printData && <PermissionTicketPrintable id={TICKET_ID} data={printData as any} />}
                   </div>
                 </div>
@@ -230,6 +283,83 @@ export default function MonEspacePermissionsPage() {
           </div>
         </div>
       )}
+      </>
+      )}
+
+      {mySpaceTab === 'suivi' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <MyKpiCard icon={Ticket} label="Total de mes demandes" value={myRequestKpis.total} tone="slate" />
+            <MyKpiCard icon={CheckCircle2} label="Autorisées" value={myRequestKpis.approved} tone="emerald" />
+            <MyKpiCard icon={Clock} label="En attente" value={myRequestKpis.pending} tone="amber" />
+            <MyKpiCard icon={XCircle} label="Refusées" value={myRequestKpis.rejected} tone="sky" />
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Évolution de mes sorties (12 derniers mois)</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis dataKey="mois" fontSize={12} />
+                <YAxis fontSize={12} allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="Demandés" stroke="#0ea5e9" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="Autorisés" stroke="#10b981" strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Historique complet</p>
+            </div>
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              {tickets.length === 0 ? (
+                <p className="text-center py-12 text-gray-400 text-sm">Aucun ticket pour l&apos;instant.</p>
+              ) : tickets.map(t => {
+                const tCfg = TYPE_CONFIG[t.type] ?? TYPE_CONFIG.AUTRE;
+                const sCfg = STATUS_CONFIG[t.status as Status] ?? STATUS_CONFIG.PENDING;
+                const Icon = tCfg.icon;
+                return (
+                  <div key={t.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Icon size={14} className="text-gray-400" />
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                          {new Date(t.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {tCfg.label}
+                        </p>
+                        {t.reason && <p className="text-xs text-gray-400 mt-0.5">{t.reason}</p>}
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${sCfg.badge}`}>{sCfg.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
+        {printData && <PermissionTicketPrintable id="my-perm-doc-preview" data={printData as any} />}
+      </DocumentPreviewModal>
+    </div>
+  );
+}
+
+function MyKpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
+  const cls: Record<string, string> = {
+    slate: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-100 dark:border-gray-700',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
+    amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900',
+    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900',
+  };
+  return (
+    <div className={`rounded-2xl border p-4 ${cls[tone]}`}>
+      <Icon size={16} className="opacity-60 mb-2" />
+      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70 mb-1">{label}</p>
+      <p className="text-lg font-bold">{value}</p>
     </div>
   );
 }

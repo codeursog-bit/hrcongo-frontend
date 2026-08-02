@@ -14,7 +14,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, UserCircle, Plus, Stethoscope,
-  FileText, Sparkles, Wallet, Paperclip, Info, Lock, Unlock,
+  FileText, Sparkles, Wallet, Paperclip, Info, Lock, Unlock, FileDown,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -382,6 +382,16 @@ export default function AbsenceManagementPage() {
                   >
                     <Printer size={16} /> Imprimer le formulaire
                   </button>
+
+                  {docData?.company?.documentTemplate === 'ORCA' && (
+                    <button
+                      onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/absence-requests/${selected.id}/document.docx`, '_blank')}
+                      className="w-full py-2.5 border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 text-sm font-semibold rounded-xl text-sky-700 dark:text-sky-300 flex items-center justify-center gap-2 hover:bg-sky-100 dark:hover:bg-sky-900/40"
+                      title="Télécharger le fichier Word original rempli"
+                    >
+                      <FileDown size={16} /> Télécharger .docx
+                    </button>
+                  )}
                 </div>
 
                 {/* Aperçu imprimable */}

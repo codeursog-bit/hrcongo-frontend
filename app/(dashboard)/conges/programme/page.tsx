@@ -10,7 +10,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, Filter, Umbrella, Zap, Stethoscope, Sparkles, Lock, Unlock, Download } from 'lucide-react';
+import { Loader2, Filter, Umbrella, Zap, Stethoscope, Sparkles, Lock, Unlock, Download, FileDown } from 'lucide-react';
 import { api } from '@/services/api';
 import CongeSubNav from '@/components/CongeSubNav';
 
@@ -55,6 +55,7 @@ function fmtDate(d: string) {
 
 export default function ProgrammeCongesPage() {
   const [userRole, setUserRole] = useState('');
+  const [company, setCompany] = useState<any>(null);
   const [events, setEvents] = useState<LeaveEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,6 +70,14 @@ export default function ProgrammeCongesPage() {
       const raw = localStorage.getItem('user');
       if (raw) setUserRole(JSON.parse(raw)?.role || '');
     } catch {}
+    (async () => {
+      try {
+        const me: any = await api.get('/auth/me');
+        setCompany(me?.company ?? null);
+      } catch (e) {
+        console.error('Erreur chargement entreprise', e);
+      }
+    })();
   }, []);
 
   const load = async () => {
@@ -127,13 +136,24 @@ export default function ProgrammeCongesPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planning des congés</h1>
           <p className="text-sm text-gray-400">Programme des départs confirmés — {totalDays} jour(s) au total sur la période</p>
         </div>
-        <button
-          onClick={handleExportCsv}
-          disabled={!events.length}
-          className="flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40"
-        >
-          <Download size={15} /> Exporter (CSV)
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCsv}
+            disabled={!events.length}
+            className="flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40"
+          >
+            <Download size={15} /> Exporter (CSV)
+          </button>
+          {company?.documentTemplate === 'ORCA' && (
+            <button
+              onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/planning/document.xlsx?month=${month}&year=${year}`, '_blank')}
+              className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 rounded-xl text-sm font-bold hover:bg-sky-100 dark:hover:bg-sky-900/40"
+              title="Télécharger le fichier Excel original rempli"
+            >
+              <FileDown size={15} /> Programme (.xlsx)
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filtres */}

@@ -10,7 +10,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Plus, UserCircle, LineChart, CheckSquare } from 'lucide-react';
+import { LayoutGrid, Plus, UserCircle, LineChart, CheckSquare, FileBarChart } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
 const FINANCE_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
@@ -24,6 +24,7 @@ export default function FinanceSubNav({ userRole }: { userRole: string }) {
     ...(canManage ? [{ href: '/loans', label: 'Gestion', icon: LayoutGrid }] : []),
     ...(canManage ? [{ href: '/loans/suivi-dettes', label: 'Suivi des dettes', icon: LineChart }] : []),
     ...(canManage ? [{ href: '/loans/validations', label: 'Validations', icon: CheckSquare }] : []),
+    ...(canManage ? [{ href: '/loans/rapport', label: 'Rapport', icon: FileBarChart }] : []),
     { href: '/loans/nouveau',    label: 'Nouvelle demande', icon: Plus },
     { href: '/loans/mon-espace', label: 'Mon espace',       icon: UserCircle },
   ];

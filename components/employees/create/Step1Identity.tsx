@@ -173,6 +173,20 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
           </div>
         </Field>
 
+        {/* ✅ AJOUT : téléphone secondaire — informatif, jamais utilisé pour se connecter */}
+        <Field label="Téléphone secondaire" hint="Optionnel — non utilisé pour la connexion">
+          <div className="relative">
+            <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Input
+              name="secondaryPhone"
+              value={formData.secondaryPhone || ''}
+              onChange={onInputChange}
+              placeholder="+242 05 987 65 43"
+              className="pl-9"
+            />
+          </div>
+        </Field>
+
         <div className="grid grid-cols-2 gap-4">
           <Field label="Adresse" required>
             <div className="relative">

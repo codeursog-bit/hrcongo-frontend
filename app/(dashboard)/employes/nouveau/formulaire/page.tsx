@@ -411,6 +411,7 @@ function CreateEmployeeFormInner() {
     placeOfBirth:     '',
     gender:           'MALE',
     phone:            prefill.phone,
+    secondaryPhone:   '', // ✅ AJOUT : numéro secondaire, informatif uniquement
     email:            prefill.email,
     address:          '',
     city:             'Brazzaville',
@@ -557,6 +558,7 @@ function CreateEmployeeFormInner() {
         maritalStatus:       formData.maritalStatus,
         numberOfChildren:    parseInt(formData.numberOfChildren as any) || 0,
         phone:               formData.phone,
+        secondaryPhone:      (formData.secondaryPhone as string)?.trim() || null, // ✅ AJOUT
         email:               formData.email,
         address:             formData.address,
         city:                formData.city,

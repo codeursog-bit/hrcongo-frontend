@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import RapportsSubNav from '@/components/RapportsSubNav';
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
 
@@ -98,34 +99,7 @@ export default function DepartmentTraceabilityPage() {
       </div>
 
       {/* NAVIGATION RAPPORTS */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-        {[
-          { href: '/rapports',                label: "Vue d'ensemble", Icon: LayoutDashboard },
-          { href: '/rapports/complet',        label: 'Rapport Complet', Icon: ClipboardList },
-          { href: '/rapports/analyse-paie',   label: 'Paie & Coûts',   Icon: DollarSign },
-          { href: '/rapports/effectifs',      label: 'Effectifs',       Icon: UsersRound },
-          { href: '/rapports/departements',   label: 'Départements',    Icon: Building2, active: true },
-          { href: '/rapports/employes',       label: 'Employés',        Icon: UserCircle },
-          { href: '/rapports/indicateurs',    label: 'Indicateurs RH',  Icon: BarChart3 },
-          { href: '/rapports/analyse-conges', label: 'Congés',          Icon: UmbrellaOff },
-          { href: '/rapports/comptabilite',   label: 'Comptabilité',    Icon: BookOpen },
-        ].map((item) => (
-          <button
-            key={item.href}
-            onClick={() => router.push(item.href)}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
-              ${item.active
-                ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-sky-300'
-              }
-            `}
-          >
-            <item.Icon size={16} />
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <RapportsSubNav active="/rapports/departements" />
 
       {/* ALERTES */}
       {(data?.alerts?.length || 0) > 0 && (

@@ -275,7 +275,7 @@ export default function BulletinRendererAdmin({ payroll, template }: BulletinRen
         <div className="no-break" style={{ background:PRIMARY, color:'#fff', padding:'14px 18px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', borderBottom:'4px solid #000' }}>
           <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
             {co.logo
-              ? <img src={co.logo} alt="" style={{ width:48, height:48, objectFit:'contain', background:'#fff', borderRadius:4, padding:3 }} />
+              ? <img src={co.logo} alt="" crossOrigin="anonymous" style={{ width:48, height:48, objectFit:'contain', background:'#fff', borderRadius:4, padding:3 }} />
               : <div style={{ width:48, height:48, background:'#fff', borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:10, color:PRIMARY }}>{(co.tradeName||co.legalName||'ENT').slice(0,4).toUpperCase()}</div>
             }
             <div>

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import RapportsSubNav from '@/components/RapportsSubNav';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface JournalEntry {
@@ -30,19 +31,6 @@ interface JournalResponse {
   totalEntries: number;
   entries:      JournalEntry[];
 }
-
-// ─── Navigation commune ──────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { href:'/rapports',                label:"Vue d'ensemble", Icon:LayoutDashboard},
-  { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
-  { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
-  { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
-  { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
-  { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
-  { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
-  { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
-  { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen , active:true  },
-];
 
 const MONTHS = [
   'Janvier','Février','Mars','Avril','Mai','Juin',
@@ -263,22 +251,7 @@ export default function AccountingPage() {
       </div>
 
       {/* ── NAV ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.href}
-            onClick={() => router.push(item.href)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
-              ${item.active
-                ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-sky-300'
-              }`}
-          >
-            <span><item.Icon size={16} /></span>
-            <span className="hidden sm:inline">{item.label}</span>
-          </button>
-        ))}
-      </div>
+      <RapportsSubNav active="/rapports/comptabilite" />
 
       {/* ── CONTENU PRINCIPAL ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

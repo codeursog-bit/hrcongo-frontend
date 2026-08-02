@@ -16,8 +16,7 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
-
-// Couleurs cohérentes
+import RapportsSubNav from '@/components/RapportsSubNav';
 const COLORS = {
   primary: '#0EA5E9',
   success: '#10B981',
@@ -138,34 +137,7 @@ export default function CompleteHRReport() {
       </div>
 
       {/* ✅ NAVIGATION RAPPORTS */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
-        {[
-  { href:'/rapports',                label:"Vue d'ensemble", Icon:LayoutDashboard},
-  { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList,active:true   },
-  { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
-  { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
-  { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
-  { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
-  { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
-  { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
-  { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
-        ].map((item) => (
-          <button
-            key={item.href}
-            onClick={() => router.push(item.href)}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
-              ${item.active 
-                ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' 
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-sky-300'
-              }
-            `}
-          >
-            <span><item.Icon size={16} /></span>
-            <span className="hidden sm:inline">{item.label}</span>
-          </button>
-        ))}
-      </div>
+      <RapportsSubNav active="/rapports/complet" />
 
       {/* ========================================
           SECTION 1 : COMPARAISON AVEC MOIS PRÉCÉDENT

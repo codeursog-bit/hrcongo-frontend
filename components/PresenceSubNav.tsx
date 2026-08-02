@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutGrid, Fingerprint, KeyRound, FileText, CalendarClock,
-  BarChart3, Ticket,
+  BarChart3, Ticket, CalendarDays,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -33,7 +33,8 @@ export default function PresenceSubNav({ userRole }: PresenceSubNavProps) {
     { href: '/presences',                  label: 'Vue d\u2019ensemble', icon: LayoutGrid },
     { href: '/presences/pointage',         label: 'Ma pointeuse',       icon: Fingerprint },
     ...(canManage ? [{ href: '/presences/pointage-manuel', label: 'Pointage manuel', icon: KeyRound }] : []),
-    { href: '/presences/absences',         label: 'Absences',           icon: FileText },
+    { href: '/presences/absences',         label: 'Demande d\u2019absence', icon: FileText },
+    { href: '/presences/absences/suivi',   label: 'Suivi des absences', icon: CalendarDays },
     { href: '/presences/permissions',      label: 'Permissions',        icon: Ticket },
     ...(canManage ? [{ href: '/presences/shifts', label: 'Shifts', icon: CalendarClock }] : []),
     { href: '/presences/resume',           label: 'Mon résumé',         icon: BarChart3 },
@@ -41,7 +42,14 @@ export default function PresenceSubNav({ userRole }: PresenceSubNavProps) {
 
   const isActive = (href: string) => {
     const target = bp(href);
-    return pathname === target || (href !== '/presences' && pathname?.startsWith(target));
+    if (pathname === target) return true;
+    if (href === '/presences') return false;
+    // ✅ '/presences/absences' ne doit pas matcher '/presences/absences/suivi'
+    //    (routes distinctes désormais : demande vs suivi)
+    if (href === '/presences/absences') {
+      return pathname?.startsWith(target) && !pathname?.startsWith(bp('/presences/absences/suivi'));
+    }
+    return pathname?.startsWith(target);
   };
 
   return (

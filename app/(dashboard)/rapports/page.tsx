@@ -15,20 +15,10 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import RapportsSubNav from '@/components/RapportsSubNav';
 
 const C = { sky:'#0EA5E9', emerald:'#10B981', amber:'#F59E0B', rose:'#EF4444', violet:'#8B5CF6' };
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const NAV_ITEMS = [
-  { href:'/rapports',                label:"Vue d'ensemble", Icon:LayoutDashboard, active:true },
-  { href:'/rapports/complet',        label:'Rapport Complet', Icon:ClipboardList },
-  { href:'/rapports/analyse-paie',   label:'Paie & Coûts',   Icon:DollarSign },
-  { href:'/rapports/effectifs',      label:'Effectifs',       Icon:UsersRound },
-  { href:'/rapports/departements',   label:'Départements',    Icon:Building2 },
-  { href:'/rapports/employes',       label:'Employés',        Icon:UserCircle },
-  { href:'/rapports/indicateurs',    label:'Indicateurs RH',  Icon:BarChart3 },
-  { href:'/rapports/analyse-conges', label:'Congés',          Icon:UmbrellaOff },
-  { href:'/rapports/comptabilite',   label:'Comptabilité',    Icon:BookOpen },
-];
 const fcfa = (v:number) => v>=1_000_000 ? `${(v/1_000_000).toFixed(2)} M FCFA` : `${Math.round(v).toLocaleString('fr-FR')} FCFA`;
 
 function KpiCard({ icon:Icon, label, value, sub, color=C.sky, trend, trendUp }:any) {
@@ -144,15 +134,7 @@ export default function RapportsPage() {
       </div>
 
       {/* NAV */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-        {NAV_ITEMS.map(item=>(
-          <button key={item.href} onClick={()=>router.push(item.href)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all
-              ${item.active?'bg-sky-500 text-white shadow-lg shadow-sky-500/30':'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-sky-300'}`}>
-            <item.Icon size={14} className="shrink-0"/><span className="hidden sm:inline">{item.label}</span>
-          </button>
-        ))}
-      </div>
+      <RapportsSubNav active="/rapports" />
 
       {/* ═══ KPI GLOBAUX ═══════════════════════════════════════════════════ */}
       <div>
