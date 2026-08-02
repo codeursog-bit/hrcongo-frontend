@@ -268,16 +268,17 @@ export default function MonEspacePermissionsPage() {
                     </div>
                   </div>
 
+                  <div className="space-y-3">
                     <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
                       <Eye size={16} /> Aperçu du ticket
                     </button>
                   </div>
+                </div>
 
                   {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {printData && <PermissionTicketPrintable id={TICKET_ID} data={printData as any} />}
                   </div>
-                </div>
               </motion.div>
             )}
           </div>
