@@ -16,7 +16,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
-  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,
+  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,PiggyBank,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -129,7 +129,7 @@ export default function LoansManagementPage() {
         const path = tab === 'loans' ? `/loans/${id}/document-data` : `/loans/advances/${id}/document-data`;
         const data = await api.get(path);
         setDocData(data);
-        if (data?.company?.documentTemplate === 'ORCA') {
+        if ((data as any)?.company?.documentTemplate === 'ORCA') {
           const htmlPath = tab === 'loans' ? `/loans/${id}/document/orca-html` : `/loans/advances/${id}/document/orca-html`;
           const res: any = await api.get(htmlPath);
           setOrcaHtml(res?.html ?? null);
