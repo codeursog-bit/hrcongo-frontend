@@ -15,13 +15,16 @@ import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, UserCircle, Plus, Stethoscope,
   FileText, Sparkles, Wallet, Paperclip, Info, Lock, Unlock, FileDown,
+  LayoutDashboard, ListChecks,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
 import { printAbsenceRequest } from '@/lib/absence-print';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import AbsenceSubNav from '@/components/AbsenceSubNav';
+import AbsencesOverview from '@/components/absences/AbsencesOverview';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
 
@@ -42,6 +45,7 @@ const TYPE_CONFIG: Record<string, { label: string; icon: any; dot: string }> = {
 
 export default function AbsenceManagementPage() {
   const { bp } = useBasePath();
+  const [tab, setTab] = useState<'overview' | 'demandes'>('overview');
   const [requests, setRequests] = useState<any[]>([]);
   const [company, setCompany]   = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -149,6 +153,17 @@ export default function AbsenceManagementPage() {
     }
   };
 
+  const handleSelectEmployeeFromOverview = (emp: any) => {
+    const req = requests.find(r =>
+      r.employee?.employeeNumber === emp?.employeeNumber &&
+      r.employee?.firstName === emp?.firstName &&
+      r.employee?.lastName === emp?.lastName
+    );
+    setTab('demandes');
+    setFilter('ALL');
+    if (req) setSelectedId(req.id);
+  };
+
   const printData = selected ? {
     reference: `DEA-${selected.id.slice(0, 8).toUpperCase()}`,
     company: {
@@ -174,7 +189,8 @@ export default function AbsenceManagementPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
+      <AbsenceSubNav userRole={userRole} />
 
       {/* ── HEADER ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -193,6 +209,25 @@ export default function AbsenceManagementPage() {
         </div>
       </div>
 
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'overview' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+          <LayoutDashboard size={14} /> Vue d&apos;ensemble
+        </button>
+        <button onClick={() => setTab('demandes')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'demandes' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+          <ListChecks size={14} /> Demandes
+          {pendingCount > 0 && <span className="bg-orange-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+        </button>
+      </div>
+
+      {tab === 'overview' && (
+        <AbsencesOverview
+          requests={requests}
+          onSelectEmployee={handleSelectEmployeeFromOverview}
+          onGoToRequest={(id) => { setTab('demandes'); setFilter('ALL'); if (id) setSelectedId(id); }}
+        />
+      )}
+
+      {tab === 'demandes' && (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ── LISTE (MAÎTRE) ── */}
         <div className="lg:col-span-4 space-y-4">
@@ -423,6 +458,7 @@ export default function AbsenceManagementPage() {
           )}
         </div>
       </div>
+      )}
 
       <PrintAuthorizationModal
         isOpen={showPrintAuthModal}

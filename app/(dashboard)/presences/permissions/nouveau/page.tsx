@@ -17,7 +17,8 @@ import {
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import PermissionsSubNav from '@/components/PermissionsSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 
@@ -163,7 +164,8 @@ export default function NouveauTicketPage() {
 
   return (
     <div className="max-w-[1300px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
+      <PermissionsSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
         <button onClick={() => router.push(bp('/presences/permissions'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">

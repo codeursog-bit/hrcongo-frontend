@@ -14,7 +14,7 @@ import {
   CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { api } from '@/services/api';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -106,7 +106,7 @@ export default function PermissionsReportPage() {
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
       <div>
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Rapport — Permissions</h1>

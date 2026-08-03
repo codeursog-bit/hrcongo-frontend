@@ -136,7 +136,7 @@ export default function ProgrammeCongesPage() {
   const handleDownloadPdf = async () => {
     setIsExportingPdf(true);
     try {
-      await downloadLeaveDocumentPDF(REPORT_ID, `programme-conges-${year}-${String(month).padStart(2, '0')}.pdf`);
+      await downloadLeaveDocumentPDF(REPORT_ID, `programme-conges-${year}-${String(month).padStart(2, '0')}.pdf`, 'landscape');
     } finally {
       setIsExportingPdf(false);
     }
@@ -183,7 +183,7 @@ export default function ProgrammeCongesPage() {
           <p className="text-sm text-gray-400 mt-1">Qui part en congé, et quand — {monthLabel}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
             <Printer size={16} /> Imprimer
           </button>
           <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">

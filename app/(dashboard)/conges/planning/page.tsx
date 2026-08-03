@@ -73,7 +73,8 @@ export default function LeavePlanningPage() {
   const REPORT_ID = 'leave-planning-print';
 
   const stats = useMemo(() => {
-    const totalDays = rows.reduce((s, r) => s + Number(r.daysCount || 0), 0);
+    const rawTotalDays = rows.reduce((s, r) => s + Number(r.daysCount || 0), 0);
+    const totalDays = Math.round(rawTotalDays * 10) / 10;
     const totalIndemnity = rows.reduce((s, r) => s + Number(r.indemnityAmount || 0), 0);
     return { count: rows.length, totalDays, totalIndemnity };
   }, [rows]);
@@ -85,7 +86,7 @@ export default function LeavePlanningPage() {
       map.set(name, (map.get(name) || 0) + Number(r.daysCount || 0));
     }
     return Array.from(map.entries())
-      .map(([name, days]) => ({ name, days }))
+      .map(([name, days]) => ({ name, days: Math.round(days * 10) / 10 }))
       .sort((a, b) => b.days - a.days);
   }, [rows]);
 
@@ -95,7 +96,7 @@ export default function LeavePlanningPage() {
   const handleDownloadPdf = async () => {
     setIsExportingPdf(true);
     try {
-      await downloadLeaveDocumentPDF(REPORT_ID, `planning-conge-${mode === 'departures' ? 'departs' : 'a-payer'}-${cursor.year}-${cursor.month}.pdf`);
+      await downloadLeaveDocumentPDF(REPORT_ID, `planning-conge-${mode === 'departures' ? 'departs' : 'a-payer'}-${cursor.year}-${cursor.month}.pdf`, 'landscape');
     } finally {
       setIsExportingPdf(false);
     }
@@ -135,12 +136,21 @@ export default function LeavePlanningPage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
             <Printer size={16} /> Imprimer
           </button>
           <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
             {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
           </button>
+          {company?.documentTemplate === 'ORCA' && (
+            <button
+              onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/planning/document.xlsx?month=${cursor.month}&year=${cursor.year}`, '_blank')}
+              className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 rounded-xl text-sm font-bold hover:bg-sky-100 dark:hover:bg-sky-900/40"
+              title="Télécharger le fichier Excel original rempli (2 onglets : départs + à payer)"
+            >
+              <Download size={15} /> Excel (.xlsx)
+            </button>
+          )}
         </div>
       </div>
 

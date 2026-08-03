@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { Loader2, Filter, Users2, ChevronRight, Ticket, CheckCircle2, Clock } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -79,7 +79,7 @@ export default function PermissionsSuiviPage() {
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
       <div>

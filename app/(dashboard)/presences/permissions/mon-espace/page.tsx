@@ -18,7 +18,7 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
@@ -143,7 +143,7 @@ export default function MonEspacePermissionsPage() {
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
       <div className="flex items-center justify-between">

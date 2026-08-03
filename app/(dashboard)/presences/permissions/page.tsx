@@ -17,7 +17,7 @@ import {
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import EmployeeTicketHistorySidebar, { EmployeeTicketHistoryData } from '@/components/EmployeeTicketHistorySidebar';
@@ -154,7 +154,7 @@ export default function PermissionsManagementPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
       <PermissionsSubNav userRole={userRole} />
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

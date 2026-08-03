@@ -76,6 +76,30 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     cellText: 'text-slate-600 dark:text-slate-300',
     solid: 'bg-gray-300 dark:bg-gray-700',
   },
+  teal: {
+    hex: '#14B8A6',
+    dot: 'bg-teal-500',
+    chip: 'bg-teal-50 text-teal-700 border-teal-100 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-800',
+    cellBg: 'bg-teal-100 dark:bg-teal-500/20',
+    cellText: 'text-teal-700 dark:text-teal-300',
+    solid: 'bg-teal-400',
+  },
+  pink: {
+    hex: '#EC4899',
+    dot: 'bg-pink-500',
+    chip: 'bg-pink-50 text-pink-700 border-pink-100 dark:bg-pink-900/20 dark:text-pink-300 dark:border-pink-800',
+    cellBg: 'bg-pink-100 dark:bg-pink-500/20',
+    cellText: 'text-pink-700 dark:text-pink-300',
+    solid: 'bg-pink-400',
+  },
+  rose: {
+    hex: '#E11D48',
+    dot: 'bg-rose-600',
+    chip: 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-800',
+    cellBg: 'bg-rose-100 dark:bg-rose-500/20',
+    cellText: 'text-rose-700 dark:text-rose-300',
+    solid: 'bg-rose-600',
+  },
 };
 
 export function colorFor(colorKey: string): ColorTokens {

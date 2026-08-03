@@ -228,7 +228,7 @@ function LoadingBlock() {
 // Ordre : KPI → Photographie du jour → Donuts (service d'abord) → Podium → Calendrier
 // ============================================================================
 function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any) {
-  const byTypeData = (dashboard.byType ?? []).map((t: any) => ({ name: t.code, fullLabel: t.label, value: t.days, colorKey: t.colorKey }));
+  const byTypeData = (dashboard.byType ?? []).map((t: any) => ({ name: t.label, code: t.code, value: t.days, colorKey: t.colorKey }));
   const byDeptData = (dashboard.byDepartment ?? []).map((d: any) => ({ name: d.name, value: d.days }));
   const totalDays = byTypeData.reduce((s: number, d: any) => s + d.value, 0);
   const topDept = [...byDeptData].sort((a, b) => b.value - a.value)[0];
@@ -291,7 +291,7 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
                 <Pie data={byTypeData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
                   {byTypeData.map((d: any, i: number) => <Cell key={i} fill={colorFor(d.colorKey).hex} />)}
                 </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, n: any, p: any) => [`${v} j.`, p.payload.fullLabel]} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, n: any, p: any) => [`${v} j.`, `${p.payload.code} — ${p.payload.name}`]} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -331,7 +331,7 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
           <div className="inline-block min-w-full align-middle">
             {/* En-tête jours */}
             <div className="border-b border-gray-200 dark:border-gray-700 flex">
-              <div className="sticky left-0 z-20 w-48 shrink-0 bg-gray-100 dark:bg-gray-800 p-3 font-bold text-xs uppercase border-r text-gray-500">
+              <div className="sticky left-0 z-20 w-60 shrink-0 bg-gray-100 dark:bg-gray-800 p-3 font-bold text-xs uppercase border-r text-gray-500">
                 Collaborateur
               </div>
               {Array.from({ length: grid.daysInMonth }, (_, i) => i + 1).map((d) => {
@@ -353,12 +353,12 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {grid.employees.map((emp: any) => (
                 <div key={emp.id} className="flex hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                  <div className="sticky left-0 z-10 w-48 shrink-0 bg-white dark:bg-gray-800 p-3 border-r flex items-center gap-3">
+                  <div className="sticky left-0 z-10 w-60 shrink-0 bg-white dark:bg-gray-800 p-3 border-r flex items-center gap-3 overflow-hidden">
                     <button onClick={() => onSelectEmployee(emp.id)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 shrink-0">
                       {emp.name?.[0] ?? '?'}
                     </button>
-                    <div className="min-w-0">
-                      <button onClick={() => onSelectEmployee(emp.id)} className="text-sm font-bold truncate text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 block">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <button onClick={() => onSelectEmployee(emp.id)} title={emp.name} className="w-full text-left text-sm font-bold truncate text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 block">
                         {emp.name}
                       </button>
                       <p className="text-[10px] text-gray-500 truncate">{emp.departmentName || '—'}</p>

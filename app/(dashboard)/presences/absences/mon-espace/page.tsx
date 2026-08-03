@@ -19,7 +19,8 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
 import { printAbsenceRequest } from '@/lib/absence-print';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import AbsenceSubNav from '@/components/AbsenceSubNav';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -116,7 +117,8 @@ export default function MonEspaceAbsencesPage() {
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
+      <AbsenceSubNav userRole={userRole} />
 
       <div className="flex items-center justify-between">
         <div>

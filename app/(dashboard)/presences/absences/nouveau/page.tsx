@@ -18,7 +18,8 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import AbsenceSubNav from '@/components/AbsenceSubNav';
 
 type AbsenceType = 'CONVENTIONNELLE' | 'EXCEPTIONNELLE';
 type AbsenceSubType = 'MALADIE' | 'MATERNITE' | 'PATERNITE' | 'MARIAGE' | 'DECES' | 'NAISSANCE' | 'AUTRE';
@@ -200,7 +201,8 @@ export default function NouvelleAbsencePage() {
 
   return (
     <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
+      <AbsenceSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
         <button onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">

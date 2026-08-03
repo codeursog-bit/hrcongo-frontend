@@ -9,7 +9,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { authService } from '@/lib/services/authService';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import AbsenceSubNav from '@/components/AbsenceSubNav';
 import AbsenceAnalyticsBoard from '@/components/absence-analytics/AbsenceAnalyticsBoard';
 
 export default function SuiviAbsencesPage() {
@@ -29,7 +30,8 @@ export default function SuiviAbsencesPage() {
         </p>
       </div>
 
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
+      <AbsenceSubNav userRole={userRole} />
 
       <AbsenceAnalyticsBoard scope="all" />
     </div>

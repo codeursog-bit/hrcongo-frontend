@@ -8,12 +8,15 @@ function findElement(elementId: string): HTMLElement | null {
   return document.getElementById(elementId);
 }
 
-export function printLeaveDocument(elementId: string) {
+export function printLeaveDocument(elementId: string, orientation: 'portrait' | 'landscape' = 'portrait') {
   const el = findElement(elementId);
   if (!el) { window.print(); return; }
 
+  const pageWidth = orientation === 'landscape' ? '297mm' : '210mm';
+  const pageHeight = orientation === 'landscape' ? '210mm' : '297mm';
+
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
+  iframe.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${pageWidth};height:${pageHeight};border:none;visibility:hidden;`;
   document.body.appendChild(iframe);
 
   const doc = iframe.contentDocument || iframe.contentWindow?.document;
@@ -27,11 +30,11 @@ export function printLeaveDocument(elementId: string) {
 ${styleLinks}
 ${styleInlines}
 <style>
-  @page { size: A4 portrait; margin: 0; }
+  @page { size: A4 ${orientation}; margin: 0; }
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, Helvetica, sans-serif; }
   * { color-scheme: light !important; }
   body > *:not(#leave-print-target) { display: none !important; }
-  #leave-print-target { width: 210mm !important; margin: 0 auto !important; background: #fff !important; }
+  #leave-print-target { width: ${pageWidth} !important; margin: 0 auto !important; background: #fff !important; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 </style>
 </head><body>
@@ -54,7 +57,7 @@ ${styleInlines}
   }
 }
 
-export async function downloadLeaveDocumentPDF(elementId: string, filename: string): Promise<void> {
+export async function downloadLeaveDocumentPDF(elementId: string, filename: string, orientation: 'portrait' | 'landscape' = 'portrait'): Promise<void> {
   const el = findElement(elementId);
   if (!el) { alert('Impossible de générer le PDF : document introuvable.'); return; }
 
@@ -63,11 +66,18 @@ export async function downloadLeaveDocumentPDF(elementId: string, filename: stri
     import('jspdf'),
   ]);
 
+  const isLandscape = orientation === 'landscape';
+  const pageWidthMm = isLandscape ? 297 : 210;
+  const pageHeightMm = isLandscape ? 210 : 297;
+  // Correspondance mm → px à 96dpi (utilisée par html2canvas/windowWidth)
+  const pagePxWidth = Math.round(pageWidthMm * 3.7795);
+  const pagePxHeight = Math.round(pageHeightMm * 3.7795);
+
   const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;overflow:visible;';
+  container.style.cssText = `position:fixed;left:-9999px;top:0;width:${pageWidthMm}mm;background:#fff;z-index:-1;overflow:visible;`;
 
   const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.cssText = 'width:210mm;min-height:297mm;padding:14mm 16mm;margin:0;box-shadow:none;border:none;background:#fff;box-sizing:border-box;color-scheme:light;';
+  clone.style.cssText = `width:${pageWidthMm}mm;min-height:${pageHeightMm}mm;padding:${isLandscape ? '10mm 12mm' : '14mm 16mm'};margin:0;box-shadow:none;border:none;background:#fff;box-sizing:border-box;color-scheme:light;`;
 
   container.appendChild(clone);
   document.body.appendChild(container);
@@ -75,12 +85,14 @@ export async function downloadLeaveDocumentPDF(elementId: string, filename: stri
   try {
     await new Promise(r => setTimeout(r, 200));
 
-    const W = clone.scrollWidth  || clone.offsetWidth  || 794;
-    const H = clone.scrollHeight || clone.offsetHeight || 1123;
+    const W = clone.scrollWidth  || clone.offsetWidth  || pagePxWidth;
+    const H = clone.scrollHeight || clone.offsetHeight || pagePxHeight;
 
-    const canvas = await html2canvas(clone, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false, width: W, height: H, windowWidth: 794, windowHeight: 1123 });
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    // scale 2.5 : plus net qu'avant (2), important sur un tableau large avec
+    // beaucoup de texte serré — évite le flou à l'impression/zoom.
+    const canvas = await html2canvas(clone, { scale: 2.5, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false, width: W, height: H, windowWidth: pagePxWidth, windowHeight: pagePxHeight });
+    const imgData = canvas.toDataURL('image/jpeg', 0.97);
+    const pdf     = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
     const pdfW    = pdf.internal.pageSize.getWidth();
     const pdfH    = pdf.internal.pageSize.getHeight();
 

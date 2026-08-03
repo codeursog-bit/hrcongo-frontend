@@ -2,9 +2,11 @@
 
 // ============================================================================
 // 📁 components/CongeSubNav.tsx
-// ✅ Même principe que PresenceSubNav — une barre de liens courte à poser en
-//    haut de chaque page du module Congés, pour naviguer d'une page à l'autre
-//    sans repasser par le menu principal.
+// ✅ Même principe que FinanceSubNav / PermissionsSubNav — barre courte à
+//    poser en haut de chaque page du module Congés.
+//    Vue employé (self-service) : Nouvelle demande, Mon espace, Programme
+//    des départs — le reste (Gestion, Suivi, Calendrier, Soldes, Provision,
+//    Analyse) est réservé aux managers/RH.
 //    À poser dans : /conges, /conges/nouveau, /conges/mon-espace,
 //    /conges/soldes, /conges/calendrier, /conges/provision, /conges/[id]
 // ============================================================================
@@ -13,7 +15,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutGrid, Plus, UserCircle, Wallet, CalendarDays, HandCoins, Plane, ClipboardList, CalendarRange, AreaChart,
+  LayoutGrid, ClipboardList, Plus, UserCircle, Wallet, CalendarDays, HandCoins, Plane, CalendarRange, AreaChart,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -32,16 +34,18 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
   const isHR = HR_ROLES.includes(userRole);
 
   const links = [
-    { href: '/conges',            label: 'Vue d\u2019ensemble', icon: LayoutGrid },
-    { href: '/conges/nouveau',    label: 'Nouvelle demande',   icon: Plus },
-    { href: '/conges/mon-espace', label: 'Mon espace',         icon: UserCircle },
-    { href: '/conges/soldes',     label: 'Soldes',              icon: Wallet },
-    { href: '/conges/calendrier', label: 'Calendrier',          icon: CalendarDays },
-    { href: '/conges/programme', label: 'Programme des départs', icon: CalendarRange },
+    // ── Gestion (managers/RH) ──────────────────────────────────────────
+    ...(canManage ? [{ href: '/conges',          label: 'Vue d\u2019ensemble', icon: LayoutGrid }] : []),
     ...(canManage ? [{ href: '/conges/gestion',  label: 'Gestion',        icon: ClipboardList }] : []),
     ...(canManage ? [{ href: '/conges/planning', label: 'Suivi de congé', icon: Plane }] : []),
+    ...(canManage ? [{ href: '/conges/calendrier', label: 'Calendrier',   icon: CalendarDays }] : []),
+    ...(canManage ? [{ href: '/conges/soldes',   label: 'Soldes',         icon: Wallet }] : []),
     ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins }] : []),
     ...(isHR ? [{ href: '/conges/analyse', label: 'Analyse', icon: AreaChart }] : []),
+    // ── Self-service (tout le monde) ───────────────────────────────────
+    { href: '/conges/nouveau',    label: 'Nouvelle demande',   icon: Plus },
+    { href: '/conges/mon-espace', label: 'Mon espace',         icon: UserCircle },
+    { href: '/conges/programme', label: 'Programme des départs', icon: CalendarRange },
   ];
 
   const isActive = (href: string) => {
