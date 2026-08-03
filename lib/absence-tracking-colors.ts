@@ -3,7 +3,9 @@
 // ✅ Mappe les colorKey sémantiques renvoyés par /absence-tracking (success,
 //    warning, danger, info, neutral, holiday, purple) sur la palette RÉELLE
 //    déjà utilisée dans le reste de l'app (cf. rapports/departements,
-//    STATUS_CONFIG de la page demandes d'absence). Rien n'est copié du
+//    STATUS_CONFIG de la page demandes d'absence, et le calendrier mensuel
+//    de presences/MonthlyView.tsx dont on reprend ici le même vocabulaire de
+//    couleurs pleines pour la grille + la légende). Rien n'est copié du
 //    fichier Excel de référence — uniquement nos propres couleurs.
 // ============================================================================
 
@@ -11,8 +13,10 @@ export interface ColorTokens {
   hex: string;       // pour recharts (Cell fill, Line stroke...)
   dot: string;        // pastille ronde
   chip: string;        // badge/legend chip (fond + texte, light & dark)
-  cellBg: string;      // fond de cellule dans la grille calendrier
+  cellBg: string;      // fond de cellule dans la grille calendrier (pastel)
   cellText: string;
+  solid: string;       // ✅ bloc plein — même vocabulaire que le calendrier
+                        //    de présences (bg-emerald-400, bg-red-400, etc.)
 }
 
 export const COLOR_TOKENS: Record<string, ColorTokens> = {
@@ -22,6 +26,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800',
     cellBg: 'bg-emerald-100 dark:bg-emerald-500/20',
     cellText: 'text-emerald-700 dark:text-emerald-300',
+    solid: 'bg-emerald-400',
   },
   warning: {
     hex: '#F59E0B',
@@ -29,6 +34,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800',
     cellBg: 'bg-amber-100 dark:bg-amber-500/20',
     cellText: 'text-amber-700 dark:text-amber-300',
+    solid: 'bg-orange-400',
   },
   danger: {
     hex: '#EF4444',
@@ -36,6 +42,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800',
     cellBg: 'bg-red-100 dark:bg-red-500/20',
     cellText: 'text-red-700 dark:text-red-300',
+    solid: 'bg-red-400',
   },
   info: {
     hex: '#0EA5E9',
@@ -43,6 +50,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800',
     cellBg: 'bg-sky-100 dark:bg-sky-500/20',
     cellText: 'text-sky-700 dark:text-sky-300',
+    solid: 'bg-sky-400',
   },
   purple: {
     hex: '#8B5CF6',
@@ -50,6 +58,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-900/20 dark:text-violet-300 dark:border-violet-800',
     cellBg: 'bg-violet-100 dark:bg-violet-500/20',
     cellText: 'text-violet-700 dark:text-violet-300',
+    solid: 'bg-purple-400',
   },
   holiday: {
     hex: '#6366F1',
@@ -57,6 +66,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
     cellBg: 'bg-indigo-100 dark:bg-indigo-500/20',
     cellText: 'text-indigo-700 dark:text-indigo-300',
+    solid: 'bg-blue-400',
   },
   neutral: {
     hex: '#64748B',
@@ -64,6 +74,7 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     chip: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     cellBg: 'bg-slate-100 dark:bg-slate-700/40',
     cellText: 'text-slate-600 dark:text-slate-300',
+    solid: 'bg-gray-300 dark:bg-gray-700',
   },
 };
 

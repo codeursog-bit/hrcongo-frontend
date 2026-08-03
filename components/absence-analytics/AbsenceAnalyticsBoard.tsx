@@ -18,7 +18,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Loader2, Users, CalendarDays, TrendingUp, TrendingDown, Flame,
-  ChevronLeft, ChevronRight, Building2, Filter, UserCircle2, X, Medal,
+  ChevronLeft, ChevronRight, Building2, Filter, X, Medal,
   Radar, LineChart as LineChartIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,7 +36,6 @@ const MONTHS = [
 ];
 
 const TOOLTIP_STYLE = { backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' };
-type Tab = 'ce-mois' | 'sur-annee' | 'comparer';
 
 function currentYear() { return new Date().getFullYear(); }
 
@@ -47,21 +46,24 @@ export interface AbsenceAnalyticsBoardProps {
 
 export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardProps) {
   const scopeQS = scope !== 'all' ? `&scope=${scope}` : '';
-  const [tab, setTab] = useState<Tab>('ce-mois');
 
   const [year, setYear] = useState(currentYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [departmentId, setDepartmentId] = useState('');
   const [departments, setDepartments] = useState<any[]>([]);
+  const [focusYear, setFocusYear] = useState(currentYear());
   const [focusDepartmentId, setFocusDepartmentId] = useState('');
   const [compareYears, setCompareYears] = useState<number[]>([currentYear() - 2, currentYear() - 1, currentYear()]);
 
   const [dashboard, setDashboard] = useState<any>(null);
+  const [prevMonthTotal, setPrevMonthTotal] = useState<number | null>(null);
   const [grid, setGrid] = useState<any>(null);
   const [yearly, setYearly] = useState<any>(null);
   const [deptFocus, setDeptFocus] = useState<any>(null);
   const [comparison, setComparison] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadingMonth, setLoadingMonth] = useState(true);
+  const [loadingYear, setLoadingYear] = useState(true);
+  const [loadingCompare, setLoadingCompare] = useState(true);
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [employeeDetail, setEmployeeDetail] = useState<any>(null);
@@ -73,50 +75,48 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
     }).catch(() => {});
   }, []);
 
+  // ── Section 1 : le mois sélectionné ────────────────────────────────────
   useEffect(() => {
-    if (tab === 'ce-mois') fetchMonthly();
-    else if (tab === 'sur-annee') fetchYearly();
-    else fetchComparison();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, year, month, departmentId]);
-
-  useEffect(() => {
-    if (tab !== 'sur-annee' || !focusDepartmentId) return;
-    api.get(`/absence-tracking/yearly-department-focus?year=${year}&departmentId=${focusDepartmentId}${scopeQS}`)
-      .then(setDeptFocus).catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, year, focusDepartmentId]);
-
-  async function fetchMonthly() {
-    setIsLoading(true);
-    try {
-      const [d, g] = await Promise.all([
-        api.get(`/absence-tracking/dashboard?year=${year}&month=${month}${scopeQS}`),
-        api.get(`/absence-tracking/grid?year=${year}&month=${month}${departmentId ? `&departmentId=${departmentId}` : ''}${scopeQS}`),
-      ]);
+    setLoadingMonth(true);
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    Promise.all([
+      api.get(`/absence-tracking/dashboard?year=${year}&month=${month}${scopeQS}`),
+      api.get(`/absence-tracking/grid?year=${year}&month=${month}${departmentId ? `&departmentId=${departmentId}` : ''}${scopeQS}`),
+      api.get(`/absence-tracking/dashboard?year=${prevYear}&month=${prevMonth}${scopeQS}`).catch(() => null),
+    ]).then(([d, g, prev]) => {
       setDashboard(d); setGrid(g);
-    } catch (e) { console.error(e); }
-    finally { setIsLoading(false); }
-  }
+      const prevTotal = prev ? ((prev as any).byType ?? []).reduce((s: number, t: any) => s + t.days, 0) : null;
+      setPrevMonthTotal(prevTotal);
+    })
+      .catch((e) => console.error(e))
+      .finally(() => setLoadingMonth(false));
+  }, [year, month, departmentId]);
 
-  async function fetchYearly() {
-    setIsLoading(true);
-    try {
-      const y = await api.get(`/absence-tracking/yearly-overview?year=${year}${scopeQS}`);
-      setYearly(y);
-    } catch (e) { console.error(e); }
-    finally { setIsLoading(false); }
-  }
+  // ── Section 2 : trajectoire annuelle ───────────────────────────────────
+  useEffect(() => {
+    setLoadingYear(true);
+    api.get(`/absence-tracking/yearly-overview?year=${focusYear}${scopeQS}`)
+      .then(setYearly)
+      .catch((e) => console.error(e))
+      .finally(() => setLoadingYear(false));
+  }, [focusYear]);
 
-  async function fetchComparison() {
+  useEffect(() => {
+    if (!focusDepartmentId) return;
+    api.get(`/absence-tracking/yearly-department-focus?year=${focusYear}&departmentId=${focusDepartmentId}${scopeQS}`)
+      .then(setDeptFocus).catch(() => {});
+  }, [focusYear, focusDepartmentId]);
+
+  // ── Section 3 : comparaison pluriannuelle ──────────────────────────────
+  useEffect(() => {
     if (compareYears.length < 2) return;
-    setIsLoading(true);
-    try {
-      const c = await api.get(`/absence-tracking/compare?years=${compareYears.join(',')}${scopeQS}`);
-      setComparison(c);
-    } catch (e) { console.error(e); }
-    finally { setIsLoading(false); }
-  }
+    setLoadingCompare(true);
+    api.get(`/absence-tracking/compare?years=${compareYears.join(',')}${scopeQS}`)
+      .then(setComparison)
+      .catch((e) => console.error(e))
+      .finally(() => setLoadingCompare(false));
+  }, [compareYears]);
 
   useEffect(() => {
     if (!selectedEmployeeId) { setEmployeeDetail(null); return; }
@@ -124,7 +124,6 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
       .then(setEmployeeDetail).catch(() => {});
   }, [selectedEmployeeId, year, month]);
 
-  const legend = dashboard?.byType?.length ? dashboard.byType : (grid?.legend ?? []);
   const monthOptions = MONTHS.map((m, i) => ({ value: String(i + 1), label: m }));
   const deptOptions = [{ value: '', label: 'Tous les services' }, ...departments.map((d: any) => ({ value: d.id, label: d.name }))];
 
@@ -137,79 +136,63 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
   }
 
   return (
-    <div className="space-y-5">
-      {/* Onglets */}
-      <div className="flex gap-1.5 bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl p-1.5 w-fit">
-        {([['ce-mois', 'Ce mois-ci', CalendarDays], ['sur-annee', 'Sur l\u2019année', Radar], ['comparer', 'Comparer les années', Medal]] as const).map(([key, label, Icon]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              tab === key ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5'
-            }`}
-          >
-            <Icon size={16} /> {label}
-          </button>
-        ))}
-      </div>
+    <div className="space-y-10">
+      {/* ================= SECTION 1 — LE MOIS EN COURS ================= */}
+      <section className="space-y-4">
+        <SectionHeader icon={CalendarDays} title="Portrait du mois" subtitle="Répartition, alertes et calendrier collaborateurs pour la période sélectionnée" />
 
-      {/* Filtres */}
-      <div className="flex flex-wrap items-center gap-3">
-        {tab !== 'comparer' && (
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-xl px-2 py-1.5">
             <button onClick={() => setYear((y) => y - 1)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500"><ChevronLeft size={16} /></button>
             <span className="font-bold text-sm text-slate-800 dark:text-white w-12 text-center">{year}</span>
             <button onClick={() => setYear((y) => y + 1)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500"><ChevronRight size={16} /></button>
           </div>
-        )}
-        {tab === 'ce-mois' && (
-          <>
-            <div className="w-44"><FancySelect value={String(month)} onChange={(v) => setMonth(Number(v))} options={monthOptions} icon={CalendarDays} /></div>
-            <div className="w-52"><FancySelect value={departmentId} onChange={setDepartmentId} options={deptOptions} icon={Building2} /></div>
-          </>
-        )}
-        {tab === 'comparer' && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter size={14} className="text-slate-400" />
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Années à comparer (max 5) :</span>
-            {Array.from({ length: 8 }, (_, i) => currentYear() - 6 + i).map((y) => (
-              <button key={y} onClick={() => toggleCompareYear(y)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${compareYears.includes(y) ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white dark:bg-[#0B1121] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-sky-300'}`}>
-                {y}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Codes utilisés */}
-      {tab === 'ce-mois' && legend.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {legend.map((l: any) => {
-            const t = colorFor(l.colorKey);
-            return (
-              <span key={l.code} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${t.chip}`}>
-                <span className={`w-2 h-2 rounded-full ${t.dot}`} /> {l.code} — {l.label}
-              </span>
-            );
-          })}
+          <div className="w-44"><FancySelect value={String(month)} onChange={(v) => setMonth(Number(v))} options={monthOptions} icon={CalendarDays} /></div>
+          <div className="w-52"><FancySelect value={departmentId} onChange={setDepartmentId} options={deptOptions} icon={Building2} /></div>
         </div>
-      )}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-24 text-slate-400"><Loader2 className="animate-spin mr-2" size={22} /> Chargement…</div>
-      ) : (
-        <>
-          {tab === 'ce-mois' && dashboard && grid && <CeMoisPanel dashboard={dashboard} grid={grid} onSelectEmployee={setSelectedEmployeeId} />}
-          {tab === 'sur-annee' && yearly && (
-            <SurAnneePanel
-              yearly={yearly} deptFocus={deptFocus}
-              departments={departments} focusDepartmentId={focusDepartmentId} onFocusDepartment={setFocusDepartmentId}
-              onSelectEmployee={setSelectedEmployeeId}
-            />
-          )}
-          {tab === 'comparer' && comparison && <ComparerPanel comparison={comparison} />}
-        </>
-      )}
+        {loadingMonth ? <LoadingBlock /> : (dashboard && grid && <CeMoisPanel dashboard={dashboard} grid={grid} prevMonthTotal={prevMonthTotal} onSelectEmployee={setSelectedEmployeeId} />)}
+      </section>
+
+      <SectionDivider />
+
+      {/* ================= SECTION 2 — TRAJECTOIRE ANNUELLE ================= */}
+      <section className="space-y-4">
+        <SectionHeader icon={Radar} title="Trajectoire annuelle" subtitle="Évolution mois par mois, zoom par service et classement de l'année" />
+
+        <div className="flex items-center gap-1 bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-xl px-2 py-1.5 w-fit">
+          <button onClick={() => setFocusYear((y) => y - 1)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500"><ChevronLeft size={16} /></button>
+          <span className="font-bold text-sm text-slate-800 dark:text-white w-12 text-center">{focusYear}</span>
+          <button onClick={() => setFocusYear((y) => y + 1)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500"><ChevronRight size={16} /></button>
+        </div>
+
+        {loadingYear ? <LoadingBlock /> : (yearly && (
+          <SurAnneePanel
+            yearly={yearly} deptFocus={deptFocus}
+            departments={departments} focusDepartmentId={focusDepartmentId} onFocusDepartment={setFocusDepartmentId}
+            onSelectEmployee={setSelectedEmployeeId}
+          />
+        ))}
+      </section>
+
+      <SectionDivider />
+
+      {/* ================= SECTION 3 — COMPARAISON PLURIANNUELLE ================= */}
+      <section className="space-y-4">
+        <SectionHeader icon={Medal} title="Comparaison pluriannuelle" subtitle="De 2 à 5 années côte à côte, pour comprendre une tendance de fond" />
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter size={14} className="text-slate-400" />
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Années à comparer (max 5) :</span>
+          {Array.from({ length: 8 }, (_, i) => currentYear() - 6 + i).map((y) => (
+            <button key={y} onClick={() => toggleCompareYear(y)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${compareYears.includes(y) ? 'bg-sky-500 border-sky-500 text-white' : 'bg-white dark:bg-[#0B1121] border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-sky-300'}`}>
+              {y}
+            </button>
+          ))}
+        </div>
+
+        {loadingCompare ? <LoadingBlock /> : (comparison && <ComparerPanel comparison={comparison} />)}
+      </section>
 
       <AnimatePresence>
         {selectedEmployeeId && employeeDetail && <EmployeeDrawer detail={employeeDetail} onClose={() => setSelectedEmployeeId(null)} />}
@@ -218,11 +201,33 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
   );
 }
 
+function SectionHeader({ icon: Icon, title, subtitle }: any) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-500 flex items-center justify-center text-white shrink-0 shadow-md">
+        <Icon size={18} />
+      </div>
+      <div>
+        <h2 className="text-lg font-extrabold text-slate-800 dark:text-white">{title}</h2>
+        <p className="text-xs text-slate-400">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionDivider() {
+  return <div className="border-t-2 border-dashed border-slate-100 dark:border-white/5" />;
+}
+
+function LoadingBlock() {
+  return <div className="flex items-center justify-center py-16 text-slate-400"><Loader2 className="animate-spin mr-2" size={20} /> Chargement…</div>;
+}
+
 // ============================================================================
 // ONGLET 1 — "CE MOIS-CI"
 // Ordre : KPI → Photographie du jour → Donuts (service d'abord) → Podium → Calendrier
 // ============================================================================
-function CeMoisPanel({ dashboard, grid, onSelectEmployee }: any) {
+function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any) {
   const byTypeData = (dashboard.byType ?? []).map((t: any) => ({ name: t.code, fullLabel: t.label, value: t.days, colorKey: t.colorKey }));
   const byDeptData = (dashboard.byDepartment ?? []).map((d: any) => ({ name: d.name, value: d.days }));
   const totalDays = byTypeData.reduce((s: number, d: any) => s + d.value, 0);
@@ -230,16 +235,24 @@ function CeMoisPanel({ dashboard, grid, onSelectEmployee }: any) {
   const absentTodayEntries = Object.entries(dashboard.absentToday ?? {}) as [string, number][];
   const absentTodayTotal = absentTodayEntries.reduce((s, [, n]) => s + n, 0);
 
+  const delta = typeof prevMonthTotal === 'number' ? totalDays - prevMonthTotal : null;
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatMini label="Effectif suivi" value={String(dashboard.employeeCount)} icon={Users} gradient="from-sky-400 to-blue-500" />
-        <StatMini label="Volume d'absence (jours)" value={String(totalDays)} icon={CalendarDays} gradient="from-violet-400 to-purple-500" />
+        <StatMini
+          label="Volume d'absence (jours)"
+          value={String(totalDays)}
+          sub={delta === null ? undefined : delta === 0 ? 'Stable vs mois précédent' : `${delta > 0 ? '+' : ''}${delta} j. vs mois précédent`}
+          icon={CalendarDays}
+          gradient="from-violet-400 to-purple-500"
+        />
         <StatMini label="Alertes du jour" value={String(absentTodayTotal)} icon={Flame} gradient="from-amber-400 to-orange-500" />
         <StatMini label="Service le plus exposé" value={topDept?.name ?? '—'} sub={topDept ? `${topDept.value} j.` : ''} icon={Building2} gradient="from-emerald-400 to-teal-500" />
       </div>
 
-      {/* Photographie du jour — grille de compteurs par code */}
+      {/* Photographie du jour — compteurs par code, même langage visuel que la légende */}
       {absentTodayEntries.length > 0 && (
         <ChartCard title="Photographie du jour">
           <div className="flex flex-wrap gap-3">
@@ -247,9 +260,9 @@ function CeMoisPanel({ dashboard, grid, onSelectEmployee }: any) {
               const def = (dashboard.byType ?? []).find((t: any) => t.code === code) ?? { colorKey: 'neutral', label: code };
               const t = colorFor(def.colorKey);
               return (
-                <div key={code} className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${t.chip}`}>
-                  <span className="text-lg font-extrabold">{count}</span>
-                  <span className="text-[11px] font-semibold">{def.label}</span>
+                <div key={code} className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <div className={`w-6 h-6 rounded ${t.solid} flex items-center justify-center text-white text-[11px] font-extrabold shrink-0`}>{count}</div>
+                  <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">{def.label}</span>
                 </div>
               );
             })}
@@ -288,45 +301,86 @@ function CeMoisPanel({ dashboard, grid, onSelectEmployee }: any) {
 
       <TopTable title="Podium du mois" rows={dashboard.top20Month} onSelect={onSelectEmployee} />
 
-      <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5">
-          <h3 className="font-bold text-slate-800 dark:text-white">Calendrier collaborateurs — {grid.employees.length} personne(s)</h3>
+      {/* Légende — même format que le calendrier de Présences : carré plein + libellé */}
+      {grid.legend?.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Légende</h4>
+          <div className="flex flex-wrap gap-4">
+            {grid.legend.map((l: any) => {
+              const t = colorFor(l.colorKey);
+              return (
+                <div key={l.code} className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded ${t.solid}`} />
+                  <span className="text-xs text-gray-600 dark:text-gray-400">{l.code} — {l.label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr className="sticky top-0 bg-slate-50 dark:bg-white/5 z-10">
-                <th className="sticky left-0 bg-slate-50 dark:bg-[#0B1121] px-3 py-2 text-left font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap border-r border-slate-100 dark:border-white/5">Collaborateur</th>
-                {Array.from({ length: grid.daysInMonth }, (_, i) => i + 1).map((d) => {
-                  const isHoliday = grid.holidays?.some((h: any) => Number(h.day) === d);
-                  return <th key={d} className={`px-1.5 py-2 text-center font-bold w-8 ${isHoliday ? 'text-indigo-500' : 'text-slate-400 dark:text-slate-500'}`}>{d}</th>;
-                })}
-              </tr>
-            </thead>
-            <tbody>
+      )}
+
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden min-h-[400px]">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900 dark:text-white">
+            Calendrier collaborateurs
+            <span className="text-sm font-normal text-gray-500 ml-2">{grid.employees.length} personne(s)</span>
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
+          <div className="inline-block min-w-full align-middle">
+            {/* En-tête jours */}
+            <div className="border-b border-gray-200 dark:border-gray-700 flex">
+              <div className="sticky left-0 z-20 w-48 shrink-0 bg-gray-100 dark:bg-gray-800 p-3 font-bold text-xs uppercase border-r text-gray-500">
+                Collaborateur
+              </div>
+              {Array.from({ length: grid.daysInMonth }, (_, i) => i + 1).map((d) => {
+                const dayDate = new Date(grid.year, grid.month - 1, d);
+                const dayName = dayDate.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3).toUpperCase();
+                const isToday = grid.year === new Date().getFullYear() && grid.month === new Date().getMonth() + 1 && d === new Date().getDate();
+                const isHoliday = grid.holidays?.some((h: any) => Number(h.day) === d);
+                return (
+                  <div key={d} className={`w-10 shrink-0 text-center p-2 border-r ${isToday ? 'bg-sky-100 dark:bg-sky-900/50' : isHoliday ? 'bg-indigo-50 dark:bg-indigo-900/30' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                    <div className={`text-[10px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : 'text-gray-400'}`}>{dayName}</div>
+                    <div className={`text-xs font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : isHoliday ? 'text-indigo-500' : 'text-gray-600 dark:text-gray-300'}`}>{d}</div>
+                    {isToday && <div className="w-1.5 h-1.5 bg-sky-500 rounded-full mx-auto mt-0.5" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Lignes collaborateurs */}
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {grid.employees.map((emp: any) => (
-                <tr key={emp.id} className="border-t border-slate-50 dark:border-white/5 hover:bg-slate-50/60 dark:hover:bg-white/[0.03]">
-                  <td className="sticky left-0 bg-white dark:bg-[#0B1121] px-3 py-1.5 whitespace-nowrap border-r border-slate-100 dark:border-white/5">
-                    <button onClick={() => onSelectEmployee(emp.id)} className="flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400">
-                      <UserCircle2 size={14} className="text-slate-300" /> {emp.name}
+                <div key={emp.id} className="flex hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                  <div className="sticky left-0 z-10 w-48 shrink-0 bg-white dark:bg-gray-800 p-3 border-r flex items-center gap-3">
+                    <button onClick={() => onSelectEmployee(emp.id)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 shrink-0">
+                      {emp.name?.[0] ?? '?'}
                     </button>
-                    {emp.departmentName && <div className="text-[10px] text-slate-400 pl-5">{emp.departmentName}</div>}
-                  </td>
+                    <div className="min-w-0">
+                      <button onClick={() => onSelectEmployee(emp.id)} className="text-sm font-bold truncate text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 block">
+                        {emp.name}
+                      </button>
+                      <p className="text-[10px] text-gray-500 truncate">{emp.departmentName || '—'}</p>
+                    </div>
+                  </div>
                   {Array.from({ length: grid.daysInMonth }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => {
                     const cell = emp.cells?.[d];
+                    const isToday = grid.year === new Date().getFullYear() && grid.month === new Date().getMonth() + 1 && Number(d) === new Date().getDate();
                     const t = cell ? colorFor(cell.colorKey) : null;
                     return (
-                      <td key={d} className="p-0.5 text-center">
-                        {cell ? (
-                          <div title={cell.label} className={`w-7 h-6 rounded-md flex items-center justify-center text-[10px] font-bold ${t!.cellBg} ${t!.cellText}`}>{cell.code}</div>
-                        ) : <div className="w-7 h-6 rounded-md bg-slate-50 dark:bg-white/[0.02]" />}
-                      </td>
+                      <div key={d} className="w-10 shrink-0">
+                        <div
+                          title={cell ? cell.label : ''}
+                          className={`w-full h-full min-h-[32px] border-b border-r border-gray-100 dark:border-gray-800 ${cell ? t!.solid : 'bg-gray-50 dark:bg-gray-900'} ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''}`}
+                        />
+                      </div>
                     );
                   })}
-                </tr>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
