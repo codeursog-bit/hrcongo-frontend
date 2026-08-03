@@ -9,6 +9,14 @@
 //
 //    Usage dans une page :
 //      <RapportsSubNav active="/rapports/departements" />
+//
+// 🔧 Fix : le menu "Plus" était auparavant DANS le même conteneur que la
+//    rangée de boutons en overflow-x-auto. En CSS, dès qu'un axe passe à
+//    autre chose que "visible", le navigateur force l'AUTRE axe à "auto"
+//    aussi — donc overflow-y devenait "auto" sur ce conteneur et coupait le
+//    menu déroulant (positionné en absolute juste dessous), qui s'ouvrait
+//    bien mais restait invisible/inaccessible. Le menu "Plus" est maintenant
+//    un frère du conteneur scrollable, plus jamais coupé par lui.
 // ============================================================================
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -59,22 +67,25 @@ export default function RapportsSubNav({ active }: { active: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-      {PRIMARY.map(({ href, label, Icon }) => (
-        <button
-          key={href}
-          onClick={() => go(href)}
-          className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
-            active === href
-              ? 'bg-sky-500 text-white shadow-sm'
-              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-          }`}
-        >
-          <Icon size={14} /> {label}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      {/* ✅ Seule la rangée de boutons principaux défile horizontalement */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        {PRIMARY.map(({ href, label, Icon }) => (
+          <button
+            key={href}
+            onClick={() => go(href)}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
+              active === href
+                ? 'bg-sky-500 text-white shadow-sm'
+                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Icon size={14} /> {label}
+          </button>
+        ))}
+      </div>
 
-      {/* Le reste des rapports — regroupés, pas listés en rangée */}
+      {/* ✅ Le menu "Plus" est maintenant HORS du conteneur à overflow-x-auto */}
       <div className="relative shrink-0" ref={wrapRef}>
         <button
           onClick={() => setOpen((o) => !o)}
