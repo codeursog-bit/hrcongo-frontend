@@ -117,7 +117,8 @@ export default function ProgrammeCongesPage() {
   );
 
   const stats = useMemo(() => {
-    const totalDays = filteredRows.reduce((s, r) => s + Number(r.daysCount || 0), 0);
+    const rawTotal = filteredRows.reduce((s, r) => s + Number(r.daysCount || 0), 0);
+    const totalDays = Math.round(rawTotal * 10) / 10; // évite les artefacts d'addition flottante (ex: 925.2000000000004)
     return { count: filteredRows.length, totalDays };
   }, [filteredRows]);
 
@@ -128,7 +129,7 @@ export default function ProgrammeCongesPage() {
       map.set(name, (map.get(name) || 0) + Number(r.daysCount || 0));
     }
     return Array.from(map.entries())
-      .map(([name, days]) => ({ name, days }))
+      .map(([name, days]) => ({ name, days: Math.round(days * 10) / 10 }))
       .sort((a, b) => b.days - a.days);
   }, [filteredRows]);
 
