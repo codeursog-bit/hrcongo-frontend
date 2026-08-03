@@ -328,7 +328,7 @@ export default function MonProfilPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-sky-500" size={40} />
       </div>
     );
@@ -356,7 +356,7 @@ export default function MonProfilPage() {
   const set = <K extends keyof EditableFields>(key: K, value: EditableFields[K]) => setForm(f => ({ ...f, [key]: value }));
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen pb-20">
       <PushToggleButton />
 
       <motion.div initial="hidden" animate="visible" variants={containerVariants} className="max-w-6xl mx-auto px-4 py-8 space-y-5">
