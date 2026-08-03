@@ -2,13 +2,13 @@
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/permissions/rapport/page.tsx
-// ✅ Page "Rapport" — même modèle que le rapport congés/absences (onglets
-//    mois, camemberts, courbe annuelle, top 20), pour les tickets de
-//    permission, avec le style et les couleurs de l'app.
+// ✅ Page "Rapport" — même modèle à 3 colonnes que le rapport congés/absences
+//    (gauche : légende + tableau ; centre : camemberts + courbes annuelles ;
+//    droite : mini-tableau "en attente aujourd'hui" + Top 20).
 // ============================================================================
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Loader2, Users2 } from 'lucide-react';
+import { Loader2, Users2, Clock } from 'lucide-react';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
@@ -42,6 +42,12 @@ export default function PermissionsReportPage() {
       finally { setIsLoading(false); }
     })();
   }, []);
+
+  // ── "En attente aujourd'hui" (par type) — mini-tableau de droite ────────
+  const pendingToday = useMemo(() => {
+    const pending = tickets.filter(t => t.status === 'PENDING');
+    return Object.keys(TYPE_LABEL).map(type => ({ type, label: TYPE_LABEL[type], count: pending.filter(t => t.type === type).length }));
+  }, [tickets]);
 
   const availableYears = useMemo(() => {
     const set = new Set<number>([now.getFullYear()]);
@@ -105,7 +111,7 @@ export default function PermissionsReportPage() {
   if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
       <PresenceSubNav userRole={userRole} />
       <PermissionsSubNav userRole={userRole} />
       <div>
@@ -125,8 +131,10 @@ export default function PermissionsReportPage() {
         </select>
       </div>
 
+      {/* ══════════════════ 3 COLONNES : GAUCHE / CENTRE / DROITE ══════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* ══════════════════ COLONNE GAUCHE ══════════════════ */}
+
+        {/* ── GAUCHE ── */}
         <div className="lg:col-span-3 space-y-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{MONTHS_FULL[month - 1]} {year}</p>
@@ -177,14 +185,14 @@ export default function PermissionsReportPage() {
           </div>
         </div>
 
-        {/* ══════════════════ COLONNE DROITE : camemberts + courbes ══════════════════ */}
-        <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* ── CENTRE ── */}
+        <div className="lg:col-span-6 space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition des tickets par type — {MONTHS_FULL[month - 1]}</p>
             {byTypeMonth.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={byTypeMonth} dataKey="nombre" nameKey="label" outerRadius={95} label={(d: any) => `${d.pct}%`}>
+                  <Pie data={byTypeMonth} dataKey="nombre" nameKey="label" outerRadius={90} label={(d: any) => `${d.pct}%`}>
                     {byTypeMonth.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type]} />)}
                   </Pie>
                   <Tooltip />
@@ -197,9 +205,9 @@ export default function PermissionsReportPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par département — {MONTHS_FULL[month - 1]}</p>
             {byDeptMonth.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
-                  <Pie data={byDeptMonth} dataKey="nombre" nameKey="name" innerRadius={55} outerRadius={95} label={(d: any) => `${d.pct}%`}>
+                  <Pie data={byDeptMonth} dataKey="nombre" nameKey="name" innerRadius={50} outerRadius={90} label={(d: any) => `${d.pct}%`}>
                     {byDeptMonth.map((d, i) => <Cell key={i} fill={d.color} />)}
                   </Pie>
                   <Tooltip />
@@ -209,9 +217,9 @@ export default function PermissionsReportPage() {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 md:col-span-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Vue annuelle des tickets — tous les employés ({year})</p>
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={annualSeries}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="mois" fontSize={12} />
@@ -225,15 +233,15 @@ export default function PermissionsReportPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 md:col-span-2">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Vue annuelle des tickets — par département ({year})</p>
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Vue annuelle — par département ({year})</p>
               <select value={deptFilterAnnual} onChange={e => setDeptFilterAnnual(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
                 <option value="">Tous les départements</option>
                 {departments.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={annualSeriesByDept}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="mois" fontSize={12} />
@@ -244,42 +252,56 @@ export default function PermissionsReportPage() {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
 
-      {/* ══════════════════ TOP 20 ══════════════════ */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2"><Users2 size={16} /> Top 20 — employés avec le plus de tickets</p>
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
-            <button onClick={() => setTop20Mode('mois')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'mois' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`}>{MONTHS_FULL[month - 1]}</button>
-            <button onClick={() => setTop20Mode('annee')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'annee' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`}>Annuel {year}</button>
+        {/* ── DROITE : en attente aujourd'hui + Top 20 ── */}
+        <div className="lg:col-span-3 space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-3 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
+              <Clock size={13} className="text-amber-500" />
+              <p className="text-xs font-bold text-gray-700 dark:text-gray-200">En attente aujourd'hui</p>
+            </div>
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {pendingToday.map(p => (
+                  <tr key={p.type}>
+                    <td className="px-3 py-2 flex items-center gap-2 text-gray-600 dark:text-gray-300"><span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: TYPE_COLOR[p.type] }} />{p.label}</td>
+                    <td className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white">{p.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-3 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
+              <p className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5"><Users2 size={13} /> Top 20</p>
+              <div className="flex gap-0.5 bg-gray-100 dark:bg-gray-900 p-0.5 rounded-md">
+                <button onClick={() => setTop20Mode('mois')} className={`px-2 py-0.5 rounded text-[10px] font-semibold ${top20Mode === 'mois' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`}>Mois</button>
+                <button onClick={() => setTop20Mode('annee')} className={`px-2 py-0.5 rounded text-[10px] font-semibold ${top20Mode === 'annee' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`}>Annuel</button>
+              </div>
+            </div>
+            <div className="max-h-[520px] overflow-y-auto">
+              <table className="w-full text-xs">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {top20.length === 0 ? (
+                    <tr><td className="text-center py-8 text-gray-400">Aucune donnée.</td></tr>
+                  ) : top20.map((e, i) => (
+                    <tr key={e.name + i}>
+                      <td className="px-3 py-1.5 text-gray-400 font-semibold w-6">{i + 1}</td>
+                      <td className="px-1 py-1.5 font-semibold text-gray-800 dark:text-gray-100 truncate max-w-[110px]">{e.name}</td>
+                      <td className="px-3 py-1.5 text-right font-bold text-gray-900 dark:text-white">{e.nombre}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase w-10">#</th>
-              <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase">Employé</th>
-              <th className="px-4 py-2 text-right text-[10px] font-bold text-gray-400 uppercase">Nombre de tickets</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {top20.length === 0 ? (
-              <tr><td colSpan={3} className="text-center py-10 text-gray-400">Aucune donnée pour cette période.</td></tr>
-            ) : top20.map((e, i) => (
-              <tr key={e.name + i} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
-                <td className="px-4 py-2 text-gray-400 font-semibold">{i + 1}</td>
-                <td className="px-4 py-2 font-semibold text-gray-800 dark:text-gray-100">{e.name}</td>
-                <td className="px-4 py-2 text-right font-bold text-gray-900 dark:text-white">{e.nombre}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );
 }
 
 function EmptyChart() {
-  return <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">Aucune donnée pour cette période.</div>;
+  return <div className="h-[240px] flex items-center justify-center text-sm text-gray-400">Aucune donnée pour cette période.</div>;
 }
