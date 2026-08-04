@@ -698,7 +698,7 @@ export default function NewLeaveRequestPage() {
                 Vous connaissez déjà les deux dates exactes (départ et retour) ? Ignorez ce bloc et remplissez-les directement ci-dessous.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="number" min="1" step="0.5"
                 placeholder="Ex : 26 jours"
@@ -710,7 +710,7 @@ export default function NewLeaveRequestPage() {
                 type="button"
                 onClick={handleCalculateReturn}
                 disabled={isCalculatingReturn || !formData.employeeId || !formData.startDate || !desiredDays}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
+                className="px-4 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
               >
                 {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} />}
                 Calculer la date de reprise

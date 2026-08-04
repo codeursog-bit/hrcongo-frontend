@@ -11,14 +11,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Stethoscope, Sparkles, Calendar, Send, Loader2,
-  Paperclip, CheckCircle2, ArrowLeft, Wallet, Info,
+  Paperclip, CheckCircle2, ArrowLeft, Wallet, Info, Search, Eye, EyeOff,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import PresenceSubNav from '@/components/PresenceSubNav';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import AbsenceSubNav from '@/components/AbsenceSubNav';
+
+const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 type AbsenceType = 'CONVENTIONNELLE' | 'EXCEPTIONNELLE';
 type AbsenceSubType = 'MALADIE' | 'MATERNITE' | 'PATERNITE' | 'MARIAGE' | 'DECES' | 'NAISSANCE' | 'AUTRE';
@@ -65,6 +68,12 @@ export default function NouvelleAbsencePage() {
   const [company, setCompany]   = useState<any>(null);
   const [userRole, setUserRole] = useState('');
 
+  const [employeesList, setEmployeesList] = useState<any[]>([]);
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [onBehalf, setOnBehalf] = useState(false);
+  const isApprover = APPROVER_ROLES.includes(userRole);
+
   const [type, setType]           = useState<AbsenceType>('CONVENTIONNELLE');
   const [subType, setSubType]     = useState<AbsenceSubType>('MALADIE');
   const [startDate, setStartDate] = useState('');
@@ -75,16 +84,35 @@ export default function NouvelleAbsencePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone]             = useState(false);
   const [error, setError]               = useState<string | null>(null);
+  const [showPreview, setShowPreview]   = useState(false);
   const [returnCalc, setReturnCalc] = useState<any>(null);
   const [desiredDays, setDesiredDays] = useState('');
   const [isCalculatingReturn, setIsCalculatingReturn] = useState(false);
 
+  useEffect(() => {
+    if (!onBehalf) return;
+    (async () => {
+      try {
+        const list: any = await api.get('/employees/simple');
+        setEmployeesList(list || []);
+      } catch (e) { console.error('Erreur chargement employés', e); }
+    })();
+  }, [onBehalf]);
+
+  const filteredEmployees = useMemo(() => {
+    if (!employeeSearch.trim()) return employeesList.slice(0, 30);
+    const q = employeeSearch.toLowerCase();
+    return employeesList.filter(e => `${e.firstName} ${e.lastName}`.toLowerCase().includes(q)).slice(0, 30);
+  }, [employeesList, employeeSearch]);
+
+  const selectedTargetEmployee = onBehalf ? employeesList.find(e => e.id === selectedEmployeeId) : employee;
+
   const handleCalculateReturn = async () => {
-    if (!employee?.id || !startDate || !desiredDays) return;
+    if (!selectedTargetEmployee?.id || !startDate || !desiredDays) return;
     setIsCalculatingReturn(true);
     try {
       const result: any = await api.get(
-        `/absence-requests/calculate-return-date?employeeId=${employee.id}&startDate=${startDate}&days=${desiredDays}`,
+        `/absence-requests/calculate-return-date?employeeId=${selectedTargetEmployee.id}&startDate=${startDate}&days=${desiredDays}`,
       );
       setEndDate(result.lastLeaveDay);
       setReturnCalc(result);
@@ -123,7 +151,8 @@ export default function NouvelleAbsencePage() {
 
   const workingDays = useMemo(() => workingDaysBetween(startDate, endDate), [startDate, endDate]);
 
-  const canSubmit = type && subType && startDate && endDate && reason.trim().length >= 3 && workingDays > 0 && !isSubmitting;
+  const canSubmit = type && subType && startDate && endDate && reason.trim().length >= 3 && workingDays > 0
+    && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -131,6 +160,7 @@ export default function NouvelleAbsencePage() {
     setError(null);
     try {
       await api.post('/absence-requests', {
+        employeeId: onBehalf ? selectedEmployeeId : undefined,
         type,
         subType,
         startDate,
@@ -158,10 +188,10 @@ export default function NouvelleAbsencePage() {
       phone:      company?.phone,
     },
     employee: {
-      firstName:       employee?.firstName || '',
-      lastName:        employee?.lastName || '',
-      position:        employee?.position,
-      departmentName:  employee?.department?.name,
+      firstName:       selectedTargetEmployee?.firstName || '',
+      lastName:        selectedTargetEmployee?.lastName || '',
+      position:        selectedTargetEmployee?.position,
+      departmentName:  selectedTargetEmployee?.department?.name,
       responsableName: undefined,
     },
     type,
@@ -184,11 +214,13 @@ export default function NouvelleAbsencePage() {
         </motion.div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Demande envoyée</h1>
         <p className="text-gray-400 text-sm mb-8">
-          Votre demande d&apos;autorisation d&apos;absence a été transmise. Vous serez notifié dès qu&apos;elle sera traitée.
+          {onBehalf
+            ? "La demande d'autorisation d'absence a été enregistrée pour l'employé sélectionné."
+            : "Votre demande d'autorisation d'absence a été transmise. Vous serez notifié dès qu'elle sera traitée."}
         </p>
         <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp('/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm">
-            Voir mes demandes
+          <button onClick={() => router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm">
+            {onBehalf ? 'Voir les demandes' : 'Voir mes demandes'}
           </button>
           <button onClick={() => { setIsDone(false); setStartDate(''); setEndDate(''); setReason(''); }} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-sm text-gray-600 dark:text-gray-300">
             Nouvelle demande
@@ -200,21 +232,69 @@ export default function NouvelleAbsencePage() {
 
   return (
     <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
-      <PresenceSubNav userRole={userRole} />
+      <PresenceModuleSwitcher />
+      <AbsenceSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
         <button onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
           <ArrowLeft size={18} />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nouvelle demande d&apos;absence</h1>
-          <p className="text-gray-400 text-sm">Remplissez le formulaire — l&apos;aperçu à droite se met à jour en direct</p>
+          <p className="text-gray-400 text-sm">Remplissez le formulaire{showPreview ? ' — l\u2019aperçu à droite se met à jour en direct' : ''}</p>
         </div>
+        <button
+          onClick={() => setShowPreview(s => !s)}
+          className={`px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 shrink-0 border transition-colors ${
+            showPreview
+              ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
+              : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+          }`}
+        >
+          {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
+          {showPreview ? "Masquer l'aperçu" : "Voir l'aperçu"}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <div className={`grid grid-cols-1 ${showPreview ? 'xl:grid-cols-5' : ''} gap-6`}>
         {/* ── FORMULAIRE ── */}
-        <div className="xl:col-span-2 space-y-5">
+        <div className={`${showPreview ? 'xl:col-span-2' : 'max-w-2xl mx-auto w-full'} space-y-5`}>
+
+          {isApprover && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pour qui ?</label>
+                <button
+                  onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }}
+                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-sky-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
+                </button>
+              </div>
+              {!onBehalf ? (
+                <p className="text-sm text-gray-500">Pour moi-même</p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  </div>
+                  <div className="max-h-40 overflow-y-auto space-y-1">
+                    {filteredEmployees.map(e => (
+                      <button
+                        key={e.id}
+                        onClick={() => setSelectedEmployeeId(e.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 font-semibold' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                      >
+                        {e.firstName} {e.lastName}
+                        {e.department?.name && <span className="text-xs text-gray-400">{e.department.name}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Type d&apos;absence</label>
@@ -385,11 +465,12 @@ export default function NouvelleAbsencePage() {
             className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 transition-all"
           >
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-            Envoyer la demande
+            {onBehalf ? 'Créer la demande' : 'Envoyer la demande'}
           </button>
         </div>
 
-        {/* ── APERÇU IMPRIMABLE ── */}
+        {/* ── APERÇU IMPRIMABLE (masqué par défaut) ── */}
+        {showPreview && (
         <div className="xl:col-span-3">
           <div className="sticky top-6">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Aperçu du document</p>
@@ -400,6 +481,7 @@ export default function NouvelleAbsencePage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
