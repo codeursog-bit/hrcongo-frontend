@@ -317,7 +317,7 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, workDays, onSelectEmploy
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
           <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Légende</h4>
           <div className="flex flex-wrap gap-4">
-            {grid.legend.map((l: any) => {
+            {grid.legend.filter((l: any) => l.code !== 'CSS').map((l: any) => {
               const t = colorFor(l.colorKey);
               return (
                 <div key={l.code} className="flex items-center gap-2">
@@ -326,6 +326,10 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, workDays, onSelectEmploy
                 </div>
               );
             })}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-cyan-100 dark:bg-cyan-900/50 border border-cyan-300 dark:border-cyan-700" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Jour ouvrable</span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded bg-gray-300 dark:bg-gray-700 border border-gray-400" />
               <span className="text-xs text-gray-600 dark:text-gray-400">Jour non ouvrable</span>
