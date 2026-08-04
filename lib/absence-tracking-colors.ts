@@ -100,6 +100,14 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     cellText: 'text-rose-700 dark:text-rose-300',
     solid: 'bg-rose-600',
   },
+  orange: {
+    hex: '#FB923C',
+    dot: 'bg-orange-500',
+    chip: 'bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800',
+    cellBg: 'bg-orange-100 dark:bg-orange-500/20',
+    cellText: 'text-orange-700 dark:text-orange-300',
+    solid: 'bg-orange-500',
+  },
 };
 
 export function colorFor(colorKey: string): ColorTokens {

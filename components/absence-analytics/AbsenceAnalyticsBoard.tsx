@@ -51,6 +51,7 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [departmentId, setDepartmentId] = useState('');
   const [departments, setDepartments] = useState<any[]>([]);
+  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5, 6]);
   const [focusYear, setFocusYear] = useState(currentYear());
   const [focusDepartmentId, setFocusDepartmentId] = useState('');
   const [compareYears, setCompareYears] = useState<number[]>([currentYear() - 2, currentYear() - 1, currentYear()]);
@@ -72,6 +73,9 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
     api.get('/departments').then((d: any) => {
       setDepartments(d || []);
       if (d?.length) setFocusDepartmentId(d[0].id);
+    }).catch(() => {});
+    api.get('/companies/mine').then((c: any) => {
+      if (c?.settings?.workDays?.length) setWorkDays(c.settings.workDays);
     }).catch(() => {});
   }, []);
 
@@ -151,7 +155,7 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
           <div className="w-52"><FancySelect value={departmentId} onChange={setDepartmentId} options={deptOptions} icon={Building2} /></div>
         </div>
 
-        {loadingMonth ? <LoadingBlock /> : (dashboard && grid && <CeMoisPanel dashboard={dashboard} grid={grid} prevMonthTotal={prevMonthTotal} onSelectEmployee={setSelectedEmployeeId} />)}
+        {loadingMonth ? <LoadingBlock /> : (dashboard && grid && <CeMoisPanel dashboard={dashboard} grid={grid} prevMonthTotal={prevMonthTotal} workDays={workDays} onSelectEmployee={setSelectedEmployeeId} />)}
       </section>
 
       <SectionDivider />
@@ -227,13 +231,20 @@ function LoadingBlock() {
 // ONGLET 1 — "CE MOIS-CI"
 // Ordre : KPI → Photographie du jour → Donuts (service d'abord) → Podium → Calendrier
 // ============================================================================
-function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any) {
+function CeMoisPanel({ dashboard, grid, prevMonthTotal, workDays, onSelectEmployee }: any) {
   const byTypeData = (dashboard.byType ?? []).map((t: any) => ({ name: t.label, code: t.code, value: t.days, colorKey: t.colorKey }));
   const byDeptData = (dashboard.byDepartment ?? []).map((d: any) => ({ name: d.name, value: d.days }));
   const totalDays = byTypeData.reduce((s: number, d: any) => s + d.value, 0);
   const topDept = [...byDeptData].sort((a, b) => b.value - a.value)[0];
   const absentTodayEntries = Object.entries(dashboard.absentToday ?? {}) as [string, number][];
   const absentTodayTotal = absentTodayEntries.reduce((s, [, n]) => s + n, 0);
+  const todayLabel = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+
+  const isWorkingDay = (year: number, month: number, day: number) => {
+    const dow = new Date(year, month - 1, day).getDay();
+    const normalized = dow === 0 ? 7 : dow;
+    return (workDays ?? [1, 2, 3, 4, 5, 6]).includes(normalized);
+  };
 
   const delta = typeof prevMonthTotal === 'number' ? totalDays - prevMonthTotal : null;
 
@@ -252,9 +263,9 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
         <StatMini label="Service le plus exposé" value={topDept?.name ?? '—'} sub={topDept ? `${topDept.value} j.` : ''} icon={Building2} gradient="from-emerald-400 to-teal-500" />
       </div>
 
-      {/* Photographie du jour — compteurs par code, même langage visuel que la légende */}
+      {/* Aujourd'hui — compteurs par code, même langage visuel que la légende */}
       {absentTodayEntries.length > 0 && (
-        <ChartCard title="Photographie du jour">
+        <ChartCard title={`Aujourd'hui — ${todayLabel}`} subtitle="Qui est absent précisément aujourd'hui (indépendant du mois affiché plus haut)">
           <div className="flex flex-wrap gap-3">
             {absentTodayEntries.map(([code, count]) => {
               const def = (dashboard.byType ?? []).find((t: any) => t.code === code) ?? { colorKey: 'neutral', label: code };
@@ -315,6 +326,10 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
                 </div>
               );
             })}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-gray-300 dark:bg-gray-700 border border-gray-400" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Jour non ouvrable</span>
+            </div>
           </div>
         </div>
       )}
@@ -339,8 +354,9 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
                 const dayName = dayDate.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3).toUpperCase();
                 const isToday = grid.year === new Date().getFullYear() && grid.month === new Date().getMonth() + 1 && d === new Date().getDate();
                 const isHoliday = grid.holidays?.some((h: any) => Number(h.day) === d);
+                const nonWorking = !isWorkingDay(grid.year, grid.month, d);
                 return (
-                  <div key={d} className={`w-10 shrink-0 text-center p-2 border-r ${isToday ? 'bg-sky-100 dark:bg-sky-900/50' : isHoliday ? 'bg-indigo-50 dark:bg-indigo-900/30' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                  <div key={d} className={`w-10 shrink-0 text-center p-2 border-r ${isToday ? 'bg-sky-100 dark:bg-sky-900/50' : isHoliday ? 'bg-indigo-50 dark:bg-indigo-900/30' : nonWorking ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-50 dark:bg-gray-800'}`}>
                     <div className={`text-[10px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : 'text-gray-400'}`}>{dayName}</div>
                     <div className={`text-xs font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : isHoliday ? 'text-indigo-500' : 'text-gray-600 dark:text-gray-300'}`}>{d}</div>
                     {isToday && <div className="w-1.5 h-1.5 bg-sky-500 rounded-full mx-auto mt-0.5" />}
@@ -367,12 +383,13 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, onSelectEmployee }: any)
                   {Array.from({ length: grid.daysInMonth }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => {
                     const cell = emp.cells?.[d];
                     const isToday = grid.year === new Date().getFullYear() && grid.month === new Date().getMonth() + 1 && Number(d) === new Date().getDate();
+                    const nonWorking = !isWorkingDay(grid.year, grid.month, Number(d));
                     const t = cell ? colorFor(cell.colorKey) : null;
                     return (
                       <div key={d} className="w-10 shrink-0">
                         <div
-                          title={cell ? cell.label : ''}
-                          className={`w-full h-full min-h-[32px] border-b border-r border-gray-100 dark:border-gray-800 ${cell ? t!.solid : 'bg-gray-50 dark:bg-gray-900'} ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''}`}
+                          title={cell ? cell.label : nonWorking ? 'Jour non ouvrable' : ''}
+                          className={`w-full h-full min-h-[32px] border-b border-r border-gray-100 dark:border-gray-800 ${cell ? t!.solid : nonWorking ? 'bg-gray-300 dark:bg-gray-700' : 'bg-gray-50 dark:bg-gray-900'} ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''}`}
                         />
                       </div>
                     );
@@ -594,13 +611,15 @@ function StatMini({ label, value, sub, icon: Icon, gradient }: any) {
   );
 }
 
-function ChartCard({ title, action, children }: any) {
+function ChartCard({ title, subtitle, action, children }: any) {
   return (
     <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl p-5 shadow-xl shadow-slate-200/50 dark:shadow-none">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1">
         <h3 className="font-bold text-slate-800 dark:text-white text-sm">{title}</h3>
         {action}
       </div>
+      {subtitle && <p className="text-[11px] text-slate-400 mb-3">{subtitle}</p>}
+      {!subtitle && <div className="mb-2" />}
       {children}
     </div>
   );
