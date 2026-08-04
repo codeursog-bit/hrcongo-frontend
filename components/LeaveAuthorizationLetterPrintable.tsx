@@ -62,6 +62,7 @@ export default function LeaveAuthorizationLetterPrintable({ id, data }: { id: st
         width: '210mm', minHeight: '297mm', background: '#fff', color: '#1a1a1a',
         fontFamily: "'Times New Roman', Georgia, serif", padding: '18mm 20mm',
         boxSizing: 'border-box', fontSize: 12.5, lineHeight: 1.55,
+        display: 'flex', flexDirection: 'column',
       }}
     >
       {/* En-tête expéditeur */}
@@ -128,7 +129,7 @@ export default function LeaveAuthorizationLetterPrintable({ id, data }: { id: st
       <p style={{ textAlign: 'right', fontWeight: 700, marginRight: 20 }}>{data.signatoryName || 'La Direction des Ressources Humaines'}</p>
 
       {/* Pied de page légal */}
-      <div style={{ marginTop: 60, textAlign: 'center', fontSize: 9.5, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #d1d5db', paddingTop: 10 }}>
+      <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: 9.5, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #d1d5db', paddingTop: 10 }}>
         <div style={{ fontWeight: 700 }}>{companyName}</div>
         {(data.company.rccmNumber || data.company.taxNumber) && (
           <div>

@@ -51,7 +51,7 @@ export default function LeaveRequestFormPrintable({ data }: { data: LeaveRequest
     <div
       id="leave-form-print-root"
       data-leave-form-print-root="true"
-      style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#1f2937', fontFamily: 'Arial, Helvetica, sans-serif', padding: '14mm 16mm', boxSizing: 'border-box' }}
+      style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#1f2937', fontFamily: 'Arial, Helvetica, sans-serif', padding: '14mm 16mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -124,7 +124,7 @@ export default function LeaveRequestFormPrintable({ data }: { data: LeaveRequest
         ))}
       </div>
 
-      <div style={{ marginTop: 26, textAlign: 'center', fontSize: 9.5, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #e5e7eb', paddingTop: 10 }}>
+      <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: 9.5, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #e5e7eb', paddingTop: 10 }}>
         <div style={{ fontWeight: 700 }}>{companyName}</div>
         {(data.company.rccmNumber || data.company.taxNumber) && (
           <div>

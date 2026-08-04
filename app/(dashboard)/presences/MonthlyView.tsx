@@ -29,8 +29,8 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
     const fetchCompanyInfo = async () => {
       try {
         const res: any = await api.get('/auth/me');
-        if (res.employee?.company?.createdAt) {
-          setCompanyCreatedAt(new Date(res.employee.company.createdAt));
+        if (res.company?.createdAt) {
+          setCompanyCreatedAt(new Date(res.company.createdAt));
         }
       } catch (e) {
         console.error('Erreur récupération infos entreprise:', e);
