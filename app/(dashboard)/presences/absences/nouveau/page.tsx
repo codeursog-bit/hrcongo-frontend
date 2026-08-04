@@ -365,7 +365,7 @@ export default function NouvelleAbsencePage() {
               <button
                 type="button"
                 onClick={handleCalculateReturn}
-                disabled={isCalculatingReturn || !employee?.id || !startDate || !desiredDays}
+                disabled={isCalculatingReturn || !selectedTargetEmployee?.id || !startDate || !desiredDays}
                 className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
               >
                 {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
