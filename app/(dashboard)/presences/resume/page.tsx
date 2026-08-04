@@ -139,6 +139,7 @@ export default function AttendanceResumePage() {
       if (stored) setUserRole(JSON.parse(stored).role || '');
     } catch {}
   }, []);
+  const canManage = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(userRole);
 
   // ✅ Par défaut : mois et année en cours
   const now = new Date();
@@ -382,9 +383,9 @@ export default function AttendanceResumePage() {
            <Link href={bp('/presences')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
               <ArrowRight className="rotate-180 text-gray-500" size={20} />
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Résumés de Présences</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{canManage ? 'Résumés de Présences' : 'Mon Résumé de Présence'}</h1>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 ml-11">Consolidez et exportez les heures pour la paie.</p>
+          <p className="text-gray-500 dark:text-gray-400 ml-11">{canManage ? 'Consolidez et exportez les heures pour la paie.' : 'Retrouvez vos heures, retards et absences du mois.'}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -474,8 +475,8 @@ export default function AttendanceResumePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase mb-1">Employés Traités</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{data.length}</h3>
+                <p className="text-xs font-bold text-gray-500 uppercase mb-1">{canManage ? 'Employés Traités' : 'Jours Présents'}</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{canManage ? data.length : (totals?.daysPresent || 0)}</h3>
               </div>
               <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl flex items-center justify-center">
                 <Users size={24} />
@@ -687,8 +688,9 @@ export default function AttendanceResumePage() {
           </div>
 
           {/* CHARTS */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Taux de présence / absence / congé par département */}
+          <div className={`grid grid-cols-1 ${canManage ? 'xl:grid-cols-2' : ''} gap-6`}>
+            {/* Taux de présence / absence / congé par département — réservé aux managers/RH */}
+            {canManage && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 size={18} className="text-emerald-500" />
@@ -707,12 +709,13 @@ export default function AttendanceResumePage() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            )}
 
             {/* Évolution quotidienne du taux de présence */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={18} className="text-emerald-500" />
-                <h3 className="font-bold text-gray-900 dark:text-white">Évolution Quotidienne du Taux de Présence</h3>
+                <h3 className="font-bold text-gray-900 dark:text-white">{canManage ? 'Évolution Quotidienne du Taux de Présence' : 'Mon Évolution Quotidienne'}</h3>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={dailyTrend}>
@@ -726,7 +729,7 @@ export default function AttendanceResumePage() {
             </div>
 
             {/* Répartition des motifs d'absence */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 xl:col-span-2">
+            <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 ${canManage ? 'xl:col-span-2' : ''}`}>
               <div className="flex items-center gap-2 mb-4">
                 <UserX size={18} className="text-red-500" />
                 <h3 className="font-bold text-gray-900 dark:text-white">Motifs d'Absence (Maladie · Conventionnelle · Exceptionnelle)</h3>
@@ -760,6 +763,7 @@ export default function AttendanceResumePage() {
               </button>
             </div>
 
+            {canManage && (
             <div className="flex items-center gap-4 w-full md:w-auto">
               {!isValidated ? (
                 <button onClick={() => setIsValidated(true)} className="flex-1 md:flex-none px-6 py-3 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
@@ -775,6 +779,7 @@ export default function AttendanceResumePage() {
                 Envoyer à la Paie <ArrowRight size={18} />
               </button>
             </div>
+            )}
           </div>
 
         </motion.div>
