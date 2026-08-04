@@ -18,8 +18,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
-import AbsenceSubNav from '@/components/AbsenceSubNav';
+import PresenceSubNav from '@/components/PresenceSubNav';
 
 type AbsenceType = 'CONVENTIONNELLE' | 'EXCEPTIONNELLE';
 type AbsenceSubType = 'MALADIE' | 'MATERNITE' | 'PATERNITE' | 'MARIAGE' | 'DECES' | 'NAISSANCE' | 'AUTRE';
@@ -201,8 +200,7 @@ export default function NouvelleAbsencePage() {
 
   return (
     <div className="max-w-[1400px] mx-auto pb-24 space-y-6">
-      <PresenceModuleSwitcher />
-      <AbsenceSubNav userRole={userRole} />
+      <PresenceSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
         <button onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
@@ -263,13 +261,23 @@ export default function NouvelleAbsencePage() {
           </div>
 
           <div className="bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800 rounded-2xl p-4 space-y-3">
-            <label className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider block">
-              Calculer la date de reprise automatiquement
-            </label>
+            <div>
+              <label className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider block">
+                Vous ne connaissez pas votre date de reprise ?
+              </label>
+              <p className="text-xs text-sky-600/80 dark:text-sky-400/80 mt-1">
+                Optionnel — utile si vous savez combien de jours vous voulez prendre, mais pas encore la date exacte de retour
+                (ça dépend des dimanches et jours fériés entre les deux). Indiquez le nombre de jours ci-dessous, on calcule
+                la date de reprise et on la remplit pour vous plus bas.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Vous connaissez déjà vos deux dates (ex: du 1er au 30) ? Ignorez ce bloc et remplissez directement les champs en bas.
+              </p>
+            </div>
             <div className="flex gap-2">
               <input
                 type="number" min="1" step="0.5"
-                placeholder="Nombre de jours"
+                placeholder="Ex : 12 jours"
                 value={desiredDays}
                 onChange={e => setDesiredDays(e.target.value)}
                 className="flex-1 px-3 py-2.5 rounded-xl border border-sky-200 dark:border-sky-700 dark:bg-gray-900 text-sm"
@@ -281,10 +289,10 @@ export default function NouvelleAbsencePage() {
                 className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
               >
                 {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
-                Calculer
+                Calculer la date de reprise
               </button>
             </div>
-            {!startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous.</p>}
+            {!startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
             {returnCalc && (
               <div className="pt-2 border-t border-sky-100 dark:border-sky-800 space-y-1.5">
                 <p className="text-sm text-sky-700 dark:text-sky-300">

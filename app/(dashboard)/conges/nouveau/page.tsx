@@ -684,13 +684,24 @@ export default function NewLeaveRequestPage() {
 
           {/* 🆕 Calcul automatique de la date de retour */}
           <div className="p-4 bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800 rounded-xl space-y-3">
-            <label className="block text-sm font-bold text-sky-700 dark:text-sky-300">
-              Calculer la date de retour automatiquement
-            </label>
+            <div>
+              <label className="block text-sm font-bold text-sky-700 dark:text-sky-300">
+                Vous ne connaissez pas la date de retour ?
+              </label>
+              <p className="text-xs text-sky-600/80 dark:text-sky-400/80 mt-1">
+                Optionnel. En congé, on connaît souvent le <strong>solde de jours</strong> (affiché plus haut : "Solde
+                disponible") avant de connaître la date exacte de retour — parce que ça dépend des dimanches et jours
+                fériés compris dans la période. Indiquez ici le nombre de jours à consommer (ex: le solde affiché, ou une
+                partie), on calcule la vraie date de reprise et on la remplit pour vous plus bas.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Vous connaissez déjà les deux dates exactes (départ et retour) ? Ignorez ce bloc et remplissez-les directement ci-dessous.
+              </p>
+            </div>
             <div className="flex gap-2">
               <input
                 type="number" min="1" step="0.5"
-                placeholder="Nombre de jours"
+                placeholder="Ex : 26 jours"
                 value={desiredDays}
                 onChange={e => setDesiredDays(e.target.value)}
                 className="flex-1 p-3 border border-sky-200 dark:border-sky-700 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white outline-none"
@@ -702,10 +713,10 @@ export default function NewLeaveRequestPage() {
                 className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
               >
                 {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} />}
-                Calculer
+                Calculer la date de reprise
               </button>
             </div>
-            {!formData.startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous.</p>}
+            {!formData.startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
 
             {returnCalc && (
               <div className="pt-3 border-t border-sky-100 dark:border-sky-800 space-y-2">
