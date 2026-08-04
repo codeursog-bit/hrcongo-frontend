@@ -110,67 +110,34 @@ export default function LeaveBalancesAdminPage() {
 
   const load = async () => {
     try {
-      // Récupérer tous les employés actifs avec leurs soldes
-      const employees = await api.get<any[]>('/employees/simple');
+      // ✅ Un seul appel serveur qui calcule tout — avant : 1 requête
+      // /employees/simple + N requêtes /leaves/balance/:id en parallèle,
+      // ce qui déclenchait le rate-limiter du serveur (429 Too Many Requests)
+      // dès qu'il y avait une centaine d'employés.
+      const results: any[] = await api.get('/leaves/balances');
 
-      // Charger les soldes en parallèle
-      const results = await Promise.allSettled(
-        employees.map(async (emp: any) => {
-          try {
-            const bal = await api.get<any>(`/leaves/balance/${emp.id}`);
-            return {
-              employeeId:          emp.id,
-              employeeName:        `${emp.firstName} ${emp.lastName}`,
-              position:            emp.position,
-              departmentName:      emp.department?.name,
-              hireDate:            emp.hireDate,
-              monthsWorked:        bal?.monthsWorked ?? 0,
-              canTakeAnnualLeave:  bal?.canTakeAnnualLeave ?? true,
-              monthsUntilEligible: bal?.monthsUntilEligible ?? 0,
-              annualEntitled:      Number(bal.annualEntitled  ?? 0),
-              annualTaken:         Number(bal.annualTaken     ?? 0),
-              annualRemaining:     Number(bal.annualRemaining ?? 0),
-              carriedForward:      Number(bal.carriedForward  ?? 0),
-              seniorityDays:       Number(bal.seniorityDays   ?? 0),
-              cycleEndDate:        bal?.cycleEndDate ?? null,
-              year:                bal?.year ?? new Date().getFullYear(), // année de démarrage du cycle en cours
-            } as EmployeeBalance;
-          } catch (e: any) {
-            // ✅ On ne fait plus disparaître l'employé silencieusement — on le
-            // garde avec un statut d'erreur explicite, et on logue la vraie
-            // cause pour pouvoir diagnostiquer (avant : `return null` faisait
-            // perdre la moitié des employés sans aucune trace).
-            const reason = e?.message || e?.response?.data?.message || String(e);
-            console.warn(`⚠️ Solde non chargé pour ${emp.firstName} ${emp.lastName} (${emp.id}) : ${reason}`);
-            return {
-              employeeId:          emp.id,
-              employeeName:        `${emp.firstName} ${emp.lastName}`,
-              position:            emp.position,
-              departmentName:      emp.department?.name,
-              hireDate:            emp.hireDate,
-              monthsWorked:        0,
-              canTakeAnnualLeave:  false,
-              monthsUntilEligible: 0,
-              annualEntitled:      0,
-              annualTaken:         0,
-              annualRemaining:     0,
-              carriedForward:      0,
-              seniorityDays:       0,
-              cycleEndDate:        null,
-              year:                new Date().getFullYear(),
-              loadError:           reason,
-            } as EmployeeBalance;
-          }
-        })
-      );
+      const valid: EmployeeBalance[] = results.map((r) => ({
+        employeeId: r.employeeId,
+        employeeName: r.employeeName,
+        position: r.position,
+        departmentName: r.departmentName,
+        hireDate: r.hireDate,
+        monthsWorked: r.monthsWorked ?? 0,
+        canTakeAnnualLeave: r.canTakeAnnualLeave ?? true,
+        monthsUntilEligible: r.monthsUntilEligible ?? 0,
+        annualEntitled: Number(r.annualEntitled ?? 0),
+        annualTaken: Number(r.annualTaken ?? 0),
+        annualRemaining: Number(r.annualRemaining ?? 0),
+        carriedForward: Number(r.carriedForward ?? 0),
+        seniorityDays: Number(r.seniorityDays ?? 0),
+        cycleEndDate: r.cycleEndDate ?? null,
+        year: r.year ?? new Date().getFullYear(),
+        loadError: r.loadError,
+      }));
 
-      const valid = results
-        .filter(r => r.status === 'fulfilled' && r.value !== null)
-        .map(r => (r as any).value as EmployeeBalance);
-
-      const failedCount = valid.filter((v: any) => v.loadError).length;
+      const failedCount = valid.filter((v) => v.loadError).length;
       if (failedCount > 0) {
-        console.warn(`⚠️ ${failedCount} employé(s) sur ${employees.length} ont un solde en erreur — voir les avertissements ci-dessus pour le détail.`);
+        console.warn(`⚠️ ${failedCount} employé(s) sur ${valid.length} ont un solde en erreur — voir les avertissements côté serveur (logs backend) pour le détail.`);
       }
 
       setBalances(valid);
@@ -279,7 +246,7 @@ export default function LeaveBalancesAdminPage() {
               {balances.filter(b => b.loadError).length} employé(s) sur {balances.length} ont un solde en erreur
             </p>
             <p className="text-red-600/80 dark:text-red-400/80 mt-0.5">
-              Ils restent affichés ci-dessous avec un badge "Erreur" — ouvre la console du navigateur (F12 → Console) pour voir le détail exact de chaque erreur.
+              Ils restent affichés ci-dessous avec un badge "Erreur" — voir les logs backend (Coolify) pour le détail exact de chaque erreur.
             </p>
           </div>
         </div>
