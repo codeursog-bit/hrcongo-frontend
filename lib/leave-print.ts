@@ -77,7 +77,21 @@ export async function downloadLeaveDocumentPDF(elementId: string, filename: stri
   container.style.cssText = `position:fixed;left:-9999px;top:0;width:${pageWidthMm}mm;background:#fff;z-index:-1;overflow:visible;`;
 
   const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.cssText = `width:${pageWidthMm}mm;min-height:${pageHeightMm}mm;padding:${isLandscape ? '10mm 12mm' : '14mm 16mm'};margin:0;box-shadow:none;border:none;background:#fff;box-sizing:border-box;color-scheme:light;`;
+  // ⚠️ On NE remplace PAS tout le style (cssText) : ça effacerait la couleur
+  // de texte d'origine et d'autres styles inline du composant source, qui
+  // retomberaient alors sur les styles hérités du thème (souvent clair sur
+  // fond clair / invisible). On ajoute seulement ce qui est nécessaire pour
+  // l'export, par-dessus le style existant du clone.
+  clone.style.setProperty('width', `${pageWidthMm}mm`);
+  clone.style.setProperty('min-height', `${pageHeightMm}mm`);
+  clone.style.setProperty('padding', isLandscape ? '10mm 12mm' : '14mm 16mm');
+  clone.style.setProperty('margin', '0');
+  clone.style.setProperty('box-shadow', 'none');
+  clone.style.setProperty('border', 'none');
+  clone.style.setProperty('background', '#fff');
+  clone.style.setProperty('box-sizing', 'border-box');
+  if (!clone.style.color) clone.style.setProperty('color', '#1f2937');
+  if (!clone.style.fontFamily) clone.style.setProperty('font-family', 'Arial, Helvetica, sans-serif');
 
   container.appendChild(clone);
   document.body.appendChild(container);

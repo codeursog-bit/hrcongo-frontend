@@ -51,7 +51,7 @@ export default function LeavePlanningPrintable({
     : `PLANNING CONGÉ À PAYER — ${monthLabel.toUpperCase()}`;
 
   return (
-    <div id={id} style={{ width: '297mm', minHeight: '210mm', background: '#fff', color: '#1f2937', fontFamily: 'Arial, Helvetica, sans-serif', padding: '10mm 12mm', boxSizing: 'border-box' }}>
+    <div id={id} style={{ width: '297mm', minHeight: '210mm', background: '#fff', color: '#1f2937', fontFamily: 'Arial, Helvetica, sans-serif', padding: '10mm 12mm', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
       {/* En-tête */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
         {company.logo && (
@@ -107,16 +107,22 @@ export default function LeavePlanningPrintable({
         </tbody>
       </table>
 
-      <p style={{ fontSize: 10, marginTop: 14 }}>
-        <strong>N.B :</strong> Conformément aux instructions de la direction, chaque travailleur a l&apos;obligation de
-        prendre son congé annuel et de profiter de ses jours de repos.
-      </p>
+      {/* ✅ Bloc bas de page — toujours collé en bas via marginTop:'auto' dans
+          le conteneur flex-column, peu importe le nombre de lignes du tableau
+          au-dessus (avant : flottait juste sous le tableau, laissant un grand
+          vide en dessous quand il y avait peu d'employés). */}
+      <div style={{ marginTop: 'auto', paddingTop: 24 }}>
+        <p style={{ fontSize: 10, margin: 0 }}>
+          <strong>N.B :</strong> Conformément aux instructions de la direction, chaque travailleur a l&apos;obligation de
+          prendre son congé annuel et de profiter de ses jours de repos.
+        </p>
 
-      <div style={{ marginTop: 40, textAlign: 'right', fontWeight: 800, fontSize: 12 }}>{signatoryLabel}</div>
+        <div style={{ marginTop: 40, textAlign: 'right', fontWeight: 800, fontSize: 12 }}>{signatoryLabel}</div>
 
-      <div style={{ marginTop: 30, textAlign: 'center', fontSize: 9, color: '#9ca3af', borderTop: '1px solid #e5e7eb', paddingTop: 8 }}>
-        {company.address && <span>{company.address}{company.phone ? ` — Tél : ${company.phone}` : ''} · </span>}
-        Document généré via Konza RH le {new Date().toLocaleDateString('fr-FR')}
+        <div style={{ marginTop: 30, textAlign: 'center', fontSize: 9, color: '#9ca3af', borderTop: '1px solid #e5e7eb', paddingTop: 8 }}>
+          {company.address && <span>{company.address}{company.phone ? ` — Tél : ${company.phone}` : ''} · </span>}
+          Document généré via Konza RH le {new Date().toLocaleDateString('fr-FR')}
+        </div>
       </div>
     </div>
   );
