@@ -30,6 +30,7 @@ interface EmployeeBalance {
   seniorityDays:       number;
   cycleEndDate?:       string | null;
   year:                number;
+  loadError?:          string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -134,8 +135,31 @@ export default function LeaveBalancesAdminPage() {
               cycleEndDate:        bal?.cycleEndDate ?? null,
               year:                bal?.year ?? new Date().getFullYear(), // année de démarrage du cycle en cours
             } as EmployeeBalance;
-          } catch {
-            return null;
+          } catch (e: any) {
+            // ✅ On ne fait plus disparaître l'employé silencieusement — on le
+            // garde avec un statut d'erreur explicite, et on logue la vraie
+            // cause pour pouvoir diagnostiquer (avant : `return null` faisait
+            // perdre la moitié des employés sans aucune trace).
+            const reason = e?.message || e?.response?.data?.message || String(e);
+            console.warn(`⚠️ Solde non chargé pour ${emp.firstName} ${emp.lastName} (${emp.id}) : ${reason}`);
+            return {
+              employeeId:          emp.id,
+              employeeName:        `${emp.firstName} ${emp.lastName}`,
+              position:            emp.position,
+              departmentName:      emp.department?.name,
+              hireDate:            emp.hireDate,
+              monthsWorked:        0,
+              canTakeAnnualLeave:  false,
+              monthsUntilEligible: 0,
+              annualEntitled:      0,
+              annualTaken:         0,
+              annualRemaining:     0,
+              carriedForward:      0,
+              seniorityDays:       0,
+              cycleEndDate:        null,
+              year:                new Date().getFullYear(),
+              loadError:           reason,
+            } as EmployeeBalance;
           }
         })
       );
@@ -143,6 +167,11 @@ export default function LeaveBalancesAdminPage() {
       const valid = results
         .filter(r => r.status === 'fulfilled' && r.value !== null)
         .map(r => (r as any).value as EmployeeBalance);
+
+      const failedCount = valid.filter((v: any) => v.loadError).length;
+      if (failedCount > 0) {
+        console.warn(`⚠️ ${failedCount} employé(s) sur ${employees.length} ont un solde en erreur — voir les avertissements ci-dessus pour le détail.`);
+      }
 
       setBalances(valid);
     } catch (e) {
@@ -240,6 +269,21 @@ export default function LeaveBalancesAdminPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* ── ALERTE : employés dont le solde n'a pas pu être calculé ── */}
+      {balances.some(b => b.loadError) && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-bold text-red-700 dark:text-red-300">
+              {balances.filter(b => b.loadError).length} employé(s) sur {balances.length} ont un solde en erreur
+            </p>
+            <p className="text-red-600/80 dark:text-red-400/80 mt-0.5">
+              Ils restent affichés ci-dessous avec un badge "Erreur" — ouvre la console du navigateur (F12 → Console) pour voir le détail exact de chaque erreur.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── FILTRES ── */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -361,10 +405,19 @@ export default function LeaveBalancesAdminPage() {
 
                   {/* Statut */}
                   <td className="px-5 py-4">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${cfg.badge}`}>
-                      <Icon size={12} />
-                      {cfg.label}
-                    </span>
+                    {bal.loadError ? (
+                      <span
+                        title={bal.loadError}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 cursor-help"
+                      >
+                        <AlertTriangle size={12} /> Erreur
+                      </span>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full ${cfg.badge}`}>
+                        <Icon size={12} />
+                        {cfg.label}
+                      </span>
+                    )}
                   </td>
 
                   {/* Action */}
