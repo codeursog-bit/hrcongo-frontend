@@ -182,7 +182,7 @@ export default function LeaveManagementPage() {
             href={bp("/conges/calendrier")}
             className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-600 dark:text-gray-300"
           >
-            <Calendar size={18} /> Planning
+            <Calendar size={18} /> Calendrier
           </Link>
 
           {/* RH / Admin uniquement */}
