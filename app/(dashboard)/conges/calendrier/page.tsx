@@ -202,6 +202,7 @@ const TYPE_CONFIG: Record<string, {
   icon: React.ElementType;
 }> = {
   ANNUAL:    { label: 'Congés Annuels', dot: 'bg-sky-400',    light: 'bg-sky-100 dark:bg-sky-900/40',    text: 'text-sky-700 dark:text-sky-300',    icon: Umbrella },
+  ANNUAL_ANTICIPATED: { label: 'Congé anticipé', dot: 'bg-cyan-400', light: 'bg-cyan-100 dark:bg-cyan-900/40', text: 'text-cyan-700 dark:text-cyan-300', icon: Umbrella },
   SICK:      { label: 'Maladie',        dot: 'bg-red-400',    light: 'bg-red-100 dark:bg-red-900/40',    text: 'text-red-700 dark:text-red-300',    icon: Stethoscope },
   MATERNITY: { label: 'Maternité',      dot: 'bg-pink-400',   light: 'bg-pink-100 dark:bg-pink-900/40', text: 'text-pink-700 dark:text-pink-300',  icon: Baby },
   PATERNITY: { label: 'Paternité',      dot: 'bg-blue-400',   light: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-700 dark:text-blue-300',  icon: User },
@@ -468,7 +469,7 @@ export default function CalendarPage() {
                       {/* Événements */}
                       <div className="space-y-0.5">
                         {dayLeaves.slice(0, 3).map((leave) => {
-                          const cfg = TYPE_CONFIG[leave.type];
+                          const cfg = TYPE_CONFIG[leave.type] || TYPE_CONFIG.ANNUAL;
                           return (
                             <div
                               key={leave.id}
@@ -549,7 +550,7 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-2">
                   {selectedDayLeaves.map((leave) => {
-                    const cfg = TYPE_CONFIG[leave.type];
+                    const cfg = TYPE_CONFIG[leave.type] || TYPE_CONFIG.ANNUAL;
                     return (
                       <div
                         key={leave.id}
