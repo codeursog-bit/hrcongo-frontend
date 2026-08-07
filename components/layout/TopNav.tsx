@@ -348,25 +348,23 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
     try {
       await api.patch('/notifications/read-all', {});
       setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({...n, read: true})));
+      // ✅ Supprimées côté back désormais — on vide la liste, pas juste le style
+      setNotifications([]);
     } catch (e) {}
   };
 
-  // ✅ Ajouté : cliquer sur une notification la marque comme lue et navigue
-  //    vers sa page liée — auparavant, cliquer une notification individuelle
-  //    ne faisait rien du tout (seul "Tout marquer lu" fonctionnait).
+  // ✅ Lire une notification la SUPPRIME (comportement demandé) — on la
+  //    retire de la liste locale au lieu de juste changer son style.
   const handleNotifClick = async (n: any) => {
-    if (!n.read) {
-      try {
-        await api.patch(`/notifications/${n.id}/read`, {});
-        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      } catch (e) {}
-    }
     if (n.link) {
       router.push(bp(n.link));
       setShowNotifs(false);
     }
+    try {
+      await api.patch(`/notifications/${n.id}/read`, {});
+      setNotifications(prev => prev.filter(x => x.id !== n.id));
+      if (!n.read) setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (e) {}
   };
 
   const handleLogout = async () => {

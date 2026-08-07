@@ -63,23 +63,22 @@ export default function NotificationsPage() {
     }
   };
 
+  // ✅ Lire une notification la SUPPRIME désormais (comportement demandé),
+  //    au lieu de juste la marquer lue et la garder affichée.
   const handleMarkAsRead = async (id: string) => {
     try {
       await api.patch(`/notifications/${id}/read`, {});
-      // ✅ Fix : utilise le vrai champ `read` renvoyé par l'API
-      setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
-      );
+      setNotifications(prev => prev.filter(n => n.id !== id));
     } catch (e) {
       console.error(e);
     }
   };
 
+  // ✅ "Tout marquer lu" supprime maintenant toutes les notifications non lues
   const handleMarkAllAsRead = async () => {
     try {
       await api.patch('/notifications/read-all', {});
-      // ✅ Fix : utilise `read`
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev => prev.filter(n => n.read));
     } catch (e) {
       console.error(e);
     }
