@@ -6,6 +6,7 @@ import {
   ArrowLeft, Users, UserPlus, TrendingDown, TrendingUp, Clock, 
   Calendar, Loader2, Building2, Award, Target, AlertCircle, ClipboardList, LayoutDashboard,UsersRound,
   UmbrellaOff,BookOpen, DollarSign, Hourglass, AlertTriangle, CheckCircle2, Activity, LogOut, UserCircle, BarChart3,
+  Globe, Briefcase, SlidersHorizontal, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -14,6 +15,10 @@ import {
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import SlideOver from '@/components/SlideOver'; // 🆕 panneau détail nationalité
+import EffectifMonthlyList from '@/components/reports/EffectifMonthlyList'; // 🆕 liste mensuelle séparée
+import { FancySelect } from '@/components/ui/FancySelect'; // 🆕 filtres du rapport
+import { NATIONALITIES } from '@/lib/nationalities'; // 🆕 filtre nationalité
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
 
@@ -60,6 +65,23 @@ interface RetirementWatch {
 interface ContractTypeData { type: string; label: string; count: number; }
 interface CategoryData { label: string; count: number; }
 
+// 🆕 Détail par nationalité (un pays réel, plus le bloc binaire Congolais/Étranger)
+interface NationalityData { label: string; male: number; female: number; count: number; }
+interface NationalitySummary {
+  distinctCount: number;
+  foreignCount: number;
+  foreignPercentage: number;
+  unspecifiedCount: number;
+}
+interface NationalityEmployee {
+  id: string;
+  name: string;
+  position: string;
+  department: string | null;
+  hireDate: string;
+  gender: string;
+}
+
 interface TurnoverMonthly { month: string; rate: number; }
 interface TurnoverMotif { motif: string; label: string; count: number; }
 interface TurnoverByDept { department: string; count: number; }
@@ -83,8 +105,14 @@ interface WorkforceData {
   pyramid?: PyramidData[];
   seniority?: PyramidData[];         // 🆕
   retirementWatch?: RetirementWatch; // 🆕
+  trendPreviousYear?: { month: string; total: number }[]; // 🆕
+  yearlyHeadcount?: { year: number; total: number }[];     // 🆕
+  availableYears?: number[];           // 🆕
+  selectedYear?: number;               // 🆕
+  insights?: { type: 'success' | 'warning' | 'info'; title: string; message: string }[]; // 🆕
   byContractType?: ContractTypeData[]; // 🆕
-  byNationality?: PyramidData[];       // 🆕
+  byNationality?: NationalityData[];   // 🆕
+  nationalitySummary?: NationalitySummary; // 🆕
   byCategory?: CategoryData[];         // 🆕
   csp?: CategoryData[];                // 🆕
   hasConvention?: boolean;             // 🆕
@@ -100,11 +128,48 @@ export default function EmployeeAnalyticsPage() {
   const [topEmployees, setTopEmployees] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🆕 Filtres du rapport (repliables pour ne pas surcharger l'en-tête)
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [reportFilters, setReportFilters] = useState({
+    department: 'Tous',
+    contractType: 'Tous',
+    nationality: 'Tous',
+    year: new Date().getFullYear(),
+  });
+
+  // 🆕 Panneau latéral "Détail nationalité" — évite de surcharger la page principale
+  const [selectedNationality, setSelectedNationality] = useState<string | null>(null);
+  const [nationalityEmployees, setNationalityEmployees] = useState<NationalityEmployee[]>([]);
+  const [nationalityLoading, setNationalityLoading] = useState(false);
+
+  const openNationalityDetail = async (label: string) => {
+    setSelectedNationality(label);
+    setNationalityLoading(true);
+    try {
+      const res = await api.get<NationalityEmployee[]>(
+        `/reports/workforce/nationality/${encodeURIComponent(label)}`
+      );
+      setNationalityEmployees(res || []);
+    } catch (e) {
+      console.error('Erreur chargement détail nationalité', e);
+      setNationalityEmployees([]);
+    } finally {
+      setNationalityLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
+        const params = new URLSearchParams();
+        if (reportFilters.department !== 'Tous') params.set('department', reportFilters.department);
+        if (reportFilters.contractType !== 'Tous') params.set('contractType', reportFilters.contractType);
+        if (reportFilters.nationality !== 'Tous') params.set('nationality', reportFilters.nationality);
+        params.set('year', String(reportFilters.year));
+
         const [workforceRes, deptRes, topRes] = await Promise.all([
-          api.get('/reports/workforce'),
+          api.get(`/reports/workforce?${params}`),
           api.get('/reports/departments'),
           api.get('/reports/top-employees')
         ]);
@@ -119,7 +184,7 @@ export default function EmployeeAnalyticsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [reportFilters]);
 
   if (isLoading) {
     return (
@@ -156,6 +221,87 @@ export default function EmployeeAnalyticsPage() {
 
       {/* ✅ NAVIGATION RAPPORTS */}
       <RapportsSubNav active="/rapports/effectifs" />
+
+      {/* 🆕 FILTRES DU RAPPORT — repliable pour ne pas surcharger la page */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+        <button
+          onClick={() => setFiltersOpen((o) => !o)}
+          className="w-full flex items-center justify-between px-5 py-4"
+        >
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
+            <SlidersHorizontal size={16} className="text-sky-500" />
+            Filtres du rapport
+            <span className="text-xs font-normal text-gray-400">
+              — Année {reportFilters.year}
+              {reportFilters.department !== 'Tous' ? ` · ${reportFilters.department}` : ''}
+              {reportFilters.contractType !== 'Tous' ? ` · ${reportFilters.contractType}` : ''}
+              {reportFilters.nationality !== 'Tous' ? ` · ${reportFilters.nationality}` : ''}
+            </span>
+          </div>
+          {filtersOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+        </button>
+        {filtersOpen && (
+          <div className="px-5 pb-5 flex flex-wrap items-end gap-3 border-t border-gray-100 dark:border-gray-700 pt-4">
+            <div className="w-40">
+              <FancySelect
+                label="Année"
+                value={String(reportFilters.year)}
+                onChange={(v) => setReportFilters((prev) => ({ ...prev, year: parseInt(v, 10) }))}
+                icon={Calendar}
+                options={(data?.availableYears?.length ? data.availableYears : [new Date().getFullYear()]).map((y) => ({ value: String(y), label: String(y) }))}
+              />
+            </div>
+            <div className="w-48">
+              <FancySelect
+                label="Département"
+                value={reportFilters.department}
+                onChange={(v) => setReportFilters((prev) => ({ ...prev, department: v }))}
+                icon={Building2}
+                placeholder="Tous"
+                options={[{ value: 'Tous', label: 'Tous' }, ...departments.map((d) => ({ value: d.name, label: d.name }))]}
+              />
+            </div>
+            <div className="w-48">
+              <FancySelect
+                label="Contrat"
+                value={reportFilters.contractType}
+                onChange={(v) => setReportFilters((prev) => ({ ...prev, contractType: v }))}
+                icon={Briefcase}
+                placeholder="Tous"
+                options={[
+                  { value: 'Tous', label: 'Tous' }, { value: 'CDI', label: 'CDI' },
+                  { value: 'CDD', label: 'CDD' }, { value: 'STAGE', label: 'Stage' },
+                  { value: 'INTERIM', label: 'Intérim' },
+                  { value: 'CONSULTANT', label: 'Consultant' },
+                  { value: 'PRESTATAIRE', label: 'Prestataire' },
+                ]}
+              />
+            </div>
+            <div className="w-48">
+              <FancySelect
+                label="Nationalité"
+                value={reportFilters.nationality}
+                onChange={(v) => setReportFilters((prev) => ({ ...prev, nationality: v }))}
+                icon={Globe}
+                placeholder="Toutes"
+                options={[
+                  { value: 'Tous', label: 'Toutes' },
+                  ...NATIONALITIES.map((n) => ({ value: n, label: n })),
+                  { value: 'Non renseigné', label: 'Non renseigné' },
+                ]}
+              />
+            </div>
+            {(reportFilters.department !== 'Tous' || reportFilters.contractType !== 'Tous' || reportFilters.nationality !== 'Tous') && (
+              <button
+                onClick={() => setReportFilters((prev) => ({ ...prev, department: 'Tous', contractType: 'Tous', nationality: 'Tous' }))}
+                className="text-xs font-bold text-red-500 hover:text-red-600 px-3 py-2.5"
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* METRIC CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -252,21 +398,80 @@ export default function EmployeeAnalyticsPage() {
         
         {/* Évolution */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-            Évolution de l'Effectif
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+            Évolution de l'Effectif — {reportFilters.year}
           </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Comparé à {reportFilters.year - 1} (pointillés)
+          </p>
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data?.trend || []}>
-                <defs>
-                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+              {(() => {
+                const trendCur = data?.trend || [];
+                const trendPrev = data?.trendPreviousYear || [];
+                const merged = trendCur.map((t, idx) => ({
+                  month: t.month,
+                  total: t.total,
+                  totalPrevYear: trendPrev[idx]?.total,
+                }));
+                return (
+                  <AreaChart data={merged}>
+                    <defs>
+                      <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1f2937', 
+                        color: '#fff', 
+                        borderRadius: '12px', 
+                        border: 'none' 
+                      }} 
+                    />
+                    <Legend />
+                    <Area 
+                      type="monotone" 
+                      dataKey="total" 
+                      name={String(reportFilters.year)}
+                      stroke="#0EA5E9" 
+                      strokeWidth={3}
+                      fill="url(#colorTotal)" 
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="totalPrevYear"
+                      name={String(reportFilters.year - 1)}
+                      stroke="#94A3B8"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      fill="none"
+                    />
+                  </AreaChart>
+                );
+              })()}
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 🆕 Historique pluriannuel — combien on avait chaque année */}
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+            Évolution sur 5 ans
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Effectif au 31 décembre de chaque année (aujourd'hui pour l'année en cours)
+          </p>
+          <div className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data?.yearlyHeadcount || []} margin={{ left: 0, right: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
+                <XAxis dataKey="year" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#1f2937', 
@@ -275,63 +480,72 @@ export default function EmployeeAnalyticsPage() {
                     border: 'none' 
                   }} 
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="total" 
-                  stroke="#0EA5E9" 
-                  strokeWidth={3}
-                  fill="url(#colorTotal)" 
-                />
-              </AreaChart>
+                <Bar dataKey="total" name="Effectif" radius={[8, 8, 0, 0]}>
+                  {(data?.yearlyHeadcount || []).map((yh, idx) => (
+                    <Cell key={idx} fill={yh.year === reportFilters.year ? '#0EA5E9' : '#93C5FD'} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Pyramide des Âges */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
             Pyramide des Âges
           </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Femmes à gauche, hommes à droite — par tranche d'âge
+          </p>
           <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                layout="vertical" 
-                data={data?.pyramid || []} 
-                stackOffset="sign"
-                margin={{ left: 20, right: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="label" 
-                  type="category" 
-                  width={60} 
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    color: '#fff', 
-                    borderRadius: '12px', 
-                    border: 'none' 
-                  }} 
-                />
-                <Legend />
-                <ReferenceLine x={0} stroke="#64748b" strokeWidth={2} />
-                <Bar 
-                  dataKey="male" 
-                  name="Hommes" 
-                  fill="#0EA5E9" 
-                  radius={[0, 8, 8, 0]}
-                />
-                <Bar 
-                  dataKey="female" 
-                  name="Femmes" 
-                  fill="#EC4899" 
-                  radius={[8, 0, 0, 8]}
-                />
-              </BarChart>
+              {(() => {
+                const pyramidSrc = data?.pyramid || [];
+                const pyramidData = pyramidSrc.map((b: PyramidData) => ({ ...b, femaleNeg: -b.female }));
+                const maxSide = Math.max(1, ...pyramidSrc.map((b: PyramidData) => Math.max(b.male, b.female)));
+                const axisMax = Math.ceil(maxSide * 1.15);
+                return (
+                  <BarChart 
+                    layout="vertical" 
+                    data={pyramidData} 
+                    margin={{ left: 20, right: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} />
+                    <YAxis 
+                      dataKey="label" 
+                      type="category" 
+                      width={60} 
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      formatter={(value: any, name: any) => [Math.abs(value), name]}
+                      contentStyle={{ 
+                        backgroundColor: '#1f2937', 
+                        color: '#fff', 
+                        borderRadius: '12px', 
+                        border: 'none' 
+                      }} 
+                    />
+                    <Legend />
+                    <ReferenceLine x={0} stroke="#64748b" strokeWidth={2} />
+                    <Bar 
+                      dataKey="femaleNeg" 
+                      name="Femmes" 
+                      fill="#EC4899" 
+                      radius={[8, 0, 0, 8]}
+                    />
+                    <Bar 
+                      dataKey="male" 
+                      name="Hommes" 
+                      fill="#0EA5E9" 
+                      radius={[0, 8, 8, 0]}
+                    />
+                  </BarChart>
+                );
+              })()}
             </ResponsiveContainer>
           </div>
         </div>
@@ -342,36 +556,46 @@ export default function EmployeeAnalyticsPage() {
             Pyramide de l'Ancienneté
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Depuis combien de temps l'effectif est-il en poste ?
+            Femmes à gauche, hommes à droite — depuis combien de temps l'effectif est-il en poste ?
           </p>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                layout="vertical" 
-                data={data?.seniority || []} 
-                margin={{ left: 20, right: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="label" 
-                  type="category" 
-                  width={80} 
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    color: '#fff', 
-                    borderRadius: '12px', 
-                    border: 'none' 
-                  }} 
-                />
-                <Legend />
-                <Bar dataKey="male"   name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
-                <Bar dataKey="female" name="Femmes" fill="#F59E0B" radius={[0, 8, 8, 0]} />
-              </BarChart>
+              {(() => {
+                const senioritySrc = data?.seniority || [];
+                const seniorityData = senioritySrc.map((b: PyramidData) => ({ ...b, femaleNeg: -b.female }));
+                const maxSide = Math.max(1, ...senioritySrc.map((b: PyramidData) => Math.max(b.male, b.female)));
+                const axisMax = Math.ceil(maxSide * 1.15);
+                return (
+                  <BarChart 
+                    layout="vertical" 
+                    data={seniorityData} 
+                    margin={{ left: 20, right: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} />
+                    <YAxis 
+                      dataKey="label" 
+                      type="category" 
+                      width={80} 
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip 
+                      formatter={(value: any, name: any) => [Math.abs(value), name]}
+                      contentStyle={{ 
+                        backgroundColor: '#1f2937', 
+                        color: '#fff', 
+                        borderRadius: '12px', 
+                        border: 'none' 
+                      }} 
+                    />
+                    <Legend />
+                    <ReferenceLine x={0} stroke="#64748b" strokeWidth={2} />
+                    <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
+                    <Bar dataKey="male"      name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
+                  </BarChart>
+                );
+              })()}
             </ResponsiveContainer>
           </div>
         </div>
@@ -470,19 +694,49 @@ export default function EmployeeAnalyticsPage() {
             </div>
           </div>
 
-          {/* Nationalité × Genre */}
+          {/* 🆕 Nationalité — détail réel par pays, cliquable pour voir la liste */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h4 className="text-base font-bold text-gray-900 dark:text-white mb-5">Répartition par Nationalité</h4>
-            <div className="h-[280px]">
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Globe size={17} className="text-teal-500" /> Répartition par Nationalité
+              </h4>
+            </div>
+            {data?.nationalitySummary && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <strong className="text-gray-900 dark:text-white">{data.nationalitySummary.distinctCount}</strong> nationalité{data.nationalitySummary.distinctCount > 1 ? 's' : ''} différente{data.nationalitySummary.distinctCount > 1 ? 's' : ''} dans l'effectif —{' '}
+                <strong className="text-gray-900 dark:text-white">{data.nationalitySummary.foreignPercentage}%</strong> de salariés étrangers
+                {data.nationalitySummary.unspecifiedCount > 0 && (
+                  <> · {data.nationalitySummary.unspecifiedCount} fiche{data.nationalitySummary.unspecifiedCount > 1 ? 's' : ''} sans nationalité renseignée</>
+                )}
+              </p>
+            )}
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">Cliquez sur une barre pour voir le détail des employés</p>
+            <div style={{ height: Math.max(220, (data?.byNationality?.length || 0) * 34) }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={data?.byNationality || []} margin={{ left: 10, right: 20 }}>
+                <BarChart
+                  layout="vertical"
+                  data={data?.byNationality || []}
+                  margin={{ left: 10, right: 30 }}
+                  onClick={(state: any) => {
+                    const label = state?.activePayload?.[0]?.payload?.label;
+                    if (label) openNationalityDetail(label);
+                  }}
+                >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="label" type="category" width={100} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                  <Legend />
-                  <Bar dataKey="male"   name="Hommes" fill="#0EA5E9" radius={[0, 8, 8, 0]} />
-                  <Bar dataKey="female" name="Femmes" fill="#EC4899" radius={[0, 8, 8, 0]} />
+                  <XAxis type="number" hide allowDecimals={false} />
+                  <YAxis dataKey="label" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }}
+                    formatter={(value: any, _name: any, item: any) => [
+                      `${value} (${item?.payload?.male ?? 0} H · ${item?.payload?.female ?? 0} F)`,
+                      'Employés',
+                    ]}
+                  />
+                  <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]} cursor="pointer">
+                    {(data?.byNationality || []).map((_: NationalityData, idx: number) => (
+                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -692,69 +946,79 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         <div className="lg:col-span-2 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
-          <h3 className="text-lg font-bold mb-4">Insights & Recommandations</h3>
-          
+          <h3 className="text-lg font-bold mb-1">Conseils RH — Assistant Effectifs</h3>
+          <p className="text-sm text-sky-100 mb-4">Généré automatiquement à partir des données de {data?.selectedYear || new Date().getFullYear()}</p>
+
           <div className="space-y-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <Target size={20} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold mb-1">Équilibre Démographique</p>
-                  <p className="text-sm text-sky-50 leading-relaxed">
-                    {(() => {
-                      const buckets = data?.pyramid || [];
-                      const dominant = buckets.reduce((max: PyramidData | null, b: PyramidData) =>
-                        (b.male + b.female) > ((max?.male || 0) + (max?.female || 0)) ? b : max, null as PyramidData | null);
-                      if (!dominant) return 'Pas encore assez de données pour analyser la pyramide des âges.';
-                      return `La pyramide des âges montre une concentration dans la tranche ${dominant.label}. ${
-                        dominant.label.includes('55') || dominant.label.includes('60')
-                          ? 'Anticipez la relève avec des profils plus juniors.'
-                          : 'Surveillez l\'équilibre entre les générations à moyen terme.'
-                      }`;
-                    })()}
-                  </p>
-                </div>
+            {(!data?.insights || data.insights.length === 0) && (
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <p className="text-sm text-sky-50 leading-relaxed">
+                  Pas encore assez de données pour générer des conseils. Revenez lorsque l'effectif aura un peu plus d'historique.
+                </p>
               </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold mb-1">Diversité de Genre</p>
-                  <p className="text-sm text-sky-50 leading-relaxed">
-                    {((data?.pyramid?.reduce((sum: number, age: PyramidData) => sum + age.female, 0) || 0) / totalEmployees * 100).toFixed(0)}% de l'effectif est féminin. 
-                    Continuez les efforts pour maintenir la diversité.
-                  </p>
+            )}
+            {data?.insights?.map((insight: { type: 'success' | 'warning' | 'info'; title: string; message: string }, idx: number) => {
+              const InsightIcon = insight.type === 'warning' ? AlertTriangle : insight.type === 'success' ? CheckCircle2 : Target;
+              return (
+                <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <InsightIcon size={20} className="flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold mb-1">{insight.title}</p>
+                      <p className="text-sm text-sky-50 leading-relaxed">{insight.message}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <TrendingUp size={20} className="flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold mb-1">Tendance Effectif</p>
-                  <p className="text-sm text-sky-50 leading-relaxed">
-                    {(() => {
-                      const trend = data?.trend || [];
-                      if (trend.length < 2) return "Pas encore assez d'historique pour dégager une tendance.";
-                      const first = trend[0].total;
-                      const last  = trend[trend.length - 1].total;
-                      const delta = last - first;
-                      if (delta === 0) return "L'effectif est resté stable sur les 12 derniers mois.";
-                      const pct = first > 0 ? Math.abs(Math.round((delta / first) * 100)) : 0;
-                      return delta > 0
-                        ? `L'effectif a progressé de ${delta} personne(s) (+${pct}%) sur 12 mois. Anticipez les besoins RH liés à cette croissance.`
-                        : `L'effectif a reculé de ${Math.abs(delta)} personne(s) (-${pct}%) sur 12 mois. Identifiez les causes de ces départs.`;
-                    })()}
-                  </p>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>
+
+      {/* 🆕 Composant séparé (Phase 4) — liste des employés par mois/année */}
+      <EffectifMonthlyList
+        availableYears={data?.availableYears}
+        department={reportFilters.department}
+        contractType={reportFilters.contractType}
+        nationality={reportFilters.nationality}
+      />
+
+      {/* 🆕 Panneau latéral — détail des employés d'une nationalité */}
+      <SlideOver
+        open={!!selectedNationality}
+        onClose={() => setSelectedNationality(null)}
+        title={selectedNationality || ''}
+        subtitle={`${nationalityEmployees.length} employé${nationalityEmployees.length > 1 ? 's' : ''}`}
+      >
+        {nationalityLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 size={24} className="animate-spin text-sky-500" />
+          </div>
+        ) : nationalityEmployees.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">Aucun employé trouvé pour cette nationalité.</p>
+        ) : (
+          <div className="space-y-2">
+            {nationalityEmployees.map((e) => (
+              <div key={e.id} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{e.name}</p>
+                  <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0">
+                    {e.gender === 'MALE' ? 'H' : e.gender === 'FEMALE' ? 'F' : '—'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {e.position}{e.department ? ` · ${e.department}` : ''}
+                </p>
+                {e.hireDate && (
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Embauché(e) le {new Date(e.hireDate).toLocaleDateString('fr-FR')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </SlideOver>
     </div>
   );
 }

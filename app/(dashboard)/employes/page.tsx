@@ -8,17 +8,18 @@ import {
   Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Briefcase,
   BadgeCheck, Building2, X, Lock,FileText,
-  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon, Clock,
+  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon, Clock, Globe,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie, Legend,
+  PieChart, Pie, Legend, ReferenceLine,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { useBasePath } from '@/hooks/useBasePath';
+import { NATIONALITIES } from '@/lib/nationalities'; // 🆕 filtre nationalité
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -196,7 +197,7 @@ export default function EmployeeListPage() {
   const [departments, setDepartments]       = useState<any[]>([]);
   const [searchQuery, setSearchQuery]       = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [filters, setFilters]               = useState({ department: 'Tous', contract: 'Tous' });
+  const [filters, setFilters]               = useState({ department: 'Tous', contract: 'Tous', nationality: 'Tous' });
   const [currentPage, setCurrentPage]       = useState(1);
   const [userRole, setUserRole]             = useState('EMPLOYEE');
   const itemsPerPage = 12;
@@ -209,7 +210,7 @@ export default function EmployeeListPage() {
 
   // 🆕 Revenir à la page 1 dès qu'une recherche ou un filtre change — sinon on peut se
   // retrouver sur une page qui n'existe plus pour les nouveaux résultats
-  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filters.department, filters.contract]);
+  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filters.department, filters.contract, filters.nationality]);
 
   // 🆕 États modal
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
@@ -238,6 +239,7 @@ export default function EmployeeListPage() {
       if (debouncedSearch)              params.set('search', debouncedSearch);
       if (filters.department !== 'Tous') params.set('department', filters.department);
       if (filters.contract !== 'Tous')   params.set('contractType', filters.contract);
+      if (filters.nationality !== 'Tous') params.set('nationality', filters.nationality);
       const empResponse = await api.get<PaginatedResponse<Employee>>(`/employees?${params}`);
       setEmployees(empResponse.data || []);
       setTotalEmployees(empResponse.total || 0);
@@ -249,7 +251,7 @@ export default function EmployeeListPage() {
       setIsLoading(false);
       setIsInitialLoading(false); // 🆕 seul le tout premier chargement affiche l'écran de chargement plein écran
     }
-  }, [currentPage, debouncedSearch, filters.department, filters.contract]);
+  }, [currentPage, debouncedSearch, filters.department, filters.contract, filters.nationality]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -270,6 +272,7 @@ export default function EmployeeListPage() {
         if (debouncedSearch)              params.set('search', debouncedSearch);
         if (filters.department !== 'Tous') params.set('department', filters.department);
         if (filters.contract !== 'Tous')   params.set('contractType', filters.contract);
+        if (filters.nationality !== 'Tous') params.set('nationality', filters.nationality);
         const data = await api.get<any>(`/employees/summary?${params}`);
         setSummary(data);
       } catch (error) {
@@ -280,7 +283,7 @@ export default function EmployeeListPage() {
       }
     };
     fetchSummary();
-  }, [debouncedSearch, filters.department, filters.contract]);
+  }, [debouncedSearch, filters.department, filters.contract, filters.nationality]);
 
   const SUMMARY_COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#F97316', '#14B8A6'];
 
@@ -288,8 +291,8 @@ export default function EmployeeListPage() {
   // contient déjà exactement les résultats de la recherche/des filtres actifs.
   const filteredEmployees = employees;
 
-  const hasActiveFilters = filters.department !== 'Tous' || filters.contract !== 'Tous' || searchQuery !== '';
-  const resetFilters = () => { setFilters({ department: 'Tous', contract: 'Tous' }); setSearchQuery(''); };
+  const hasActiveFilters = filters.department !== 'Tous' || filters.contract !== 'Tous' || filters.nationality !== 'Tous' || searchQuery !== '';
+  const resetFilters = () => { setFilters({ department: 'Tous', contract: 'Tous', nationality: 'Tous' }); setSearchQuery(''); };
 
   // 🆕 Ouvre la modal au lieu d'un confirm() natif
   const requestDelete = (e: React.MouseEvent, emp: Employee) => {
@@ -407,22 +410,32 @@ export default function EmployeeListPage() {
               <Loader2 size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sky-400 animate-spin" />
             )}
           </div>
-          <div className="flex items-center gap-3 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0">
+          <div className="flex items-end gap-3 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0">
             {!isManager && (
               <div className="w-48">
-                <FancySelect value={filters.department} onChange={v => setFilters(prev => ({ ...prev, department: v }))} icon={Building2} placeholder="Département"
+                <FancySelect label="Département" value={filters.department} onChange={v => setFilters(prev => ({ ...prev, department: v }))} icon={Building2} placeholder="Toutes"
                   options={[{ value: 'Tous', label: 'Tous' }, ...departments.map(d => ({ value: d.name, label: d.name }))]}
                 />
               </div>
             )}
             <div className="w-48">
-              <FancySelect value={filters.contract} onChange={v => setFilters(prev => ({ ...prev, contract: v }))} icon={Briefcase} placeholder="Contrat"
+              <FancySelect label="Contrat" value={filters.contract} onChange={v => setFilters(prev => ({ ...prev, contract: v }))} icon={Briefcase} placeholder="Tous"
                 options={[
                   { value: 'Tous', label: 'Tous' }, { value: 'CDI', label: 'CDI' },
                   { value: 'CDD', label: 'CDD' }, { value: 'STAGE', label: 'Stage' },
                   { value: 'INTERIM', label: 'Intérim' },
                   { value: 'CONSULTANT', label: 'Consultant' },
                   { value: 'PRESTATAIRE', label: 'Prestataire' },
+                ]}
+              />
+            </div>
+            {/* 🆕 Filtre nationalité — utile pour voir combien de congolais, gabonais, etc. */}
+            <div className="w-48">
+              <FancySelect label="Nationalité" value={filters.nationality} onChange={v => setFilters(prev => ({ ...prev, nationality: v }))} icon={Globe} placeholder="Toutes"
+                options={[
+                  { value: 'Tous', label: 'Toutes' },
+                  ...NATIONALITIES.map(n => ({ value: n, label: n })),
+                  { value: 'Non renseigné', label: 'Non renseigné' },
                 ]}
               />
             </div>
@@ -641,6 +654,32 @@ export default function EmployeeListPage() {
               </div>
             )}
 
+            {/* 🆕 Par nationalité — combien de congolais, gabonais, camerounais, etc. */}
+            {summary.byNationality?.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Globe size={15} className="text-teal-500" /> Effectif par nationalité</h3>
+                {summary.byNationality.length > 1 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byNationality[0].label}</strong> en tête ({summary.byNationality[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byNationality[summary.byNationality.length - 1].label}</strong> en retrait ({summary.byNationality[summary.byNationality.length - 1].count})
+                  </p>
+                )}
+                <div style={{ height: Math.max(180, summary.byNationality.length * 34), maxHeight: 340, overflowY: summary.byNationality.length > 10 ? 'auto' : 'visible' }}>
+                  <ResponsiveContainer width="100%" height={Math.max(180, summary.byNationality.length * 34)}>
+                    <BarChart layout="vertical" data={summary.byNationality} margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide allowDecimals={false} />
+                      <YAxis dataKey="label" type="category" width={130} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        {summary.byNationality.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
             {/* Par genre */}
             <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Users size={15} className="text-violet-500" /> Répartition par genre</h3>
@@ -687,47 +726,59 @@ export default function EmployeeListPage() {
               </div>
             )}
 
-            {/* 🆕 Pyramide des âges */}
-            {summary.agePyramid?.some((b: any) => b.male + b.female > 0) && (
-              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Users size={15} className="text-indigo-500" /> Pyramide des âges</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Répartition par tranche d'âge et par genre</p>
-                <div style={{ height: 220 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={summary.agePyramid} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                      <XAxis type="number" hide allowDecimals={false} />
-                      <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                      <Legend />
-                      <Bar dataKey="male" name="Hommes" fill="#0EA5E9" radius={[0, 8, 8, 0]} />
-                      <Bar dataKey="female" name="Femmes" fill="#EC4899" radius={[0, 8, 8, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+            {/* 🆕 Pyramide des âges — vraie forme pyramidale : femmes à gauche (barres négatives), hommes à droite */}
+            {summary.agePyramid?.some((b: any) => b.male + b.female > 0) && (() => {
+              const pyramidData = summary.agePyramid.map((b: any) => ({ ...b, femaleNeg: -b.female }));
+              const maxSide = Math.max(1, ...summary.agePyramid.map((b: any) => Math.max(b.male, b.female)));
+              const axisMax = Math.ceil(maxSide * 1.15);
+              return (
+                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Users size={15} className="text-indigo-500" /> Pyramide des âges</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Femmes à gauche, hommes à droite — par tranche d'âge</p>
+                  <div style={{ height: 240 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart layout="vertical" data={pyramidData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} tick={{ fontSize: 11 }} />
+                        <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                        <ReferenceLine x={0} stroke="#9CA3AF" />
+                        <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                        <Legend />
+                        <Bar dataKey="femaleNeg" name="Femmes" fill="#EC4899" radius={[8, 0, 0, 8]} />
+                        <Bar dataKey="male" name="Hommes" fill="#0EA5E9" radius={[0, 8, 8, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {/* 🆕 Pyramide de l'ancienneté */}
-            {summary.seniorityPyramid?.some((b: any) => b.male + b.female > 0) && (
-              <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Clock size={15} className="text-teal-500" /> Pyramide de l'ancienneté</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Depuis combien de temps l'effectif est en poste</p>
-                <div style={{ height: 220 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={summary.seniorityPyramid} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                      <XAxis type="number" hide allowDecimals={false} />
-                      <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <Tooltip contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
-                      <Legend />
-                      <Bar dataKey="male" name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
-                      <Bar dataKey="female" name="Femmes" fill="#F59E0B" radius={[0, 8, 8, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+            {/* 🆕 Pyramide de l'ancienneté — même logique divergente */}
+            {summary.seniorityPyramid?.some((b: any) => b.male + b.female > 0) && (() => {
+              const seniorityData = summary.seniorityPyramid.map((b: any) => ({ ...b, femaleNeg: -b.female }));
+              const maxSide = Math.max(1, ...summary.seniorityPyramid.map((b: any) => Math.max(b.male, b.female)));
+              const axisMax = Math.ceil(maxSide * 1.15);
+              return (
+                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2"><Clock size={15} className="text-teal-500" /> Pyramide de l'ancienneté</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Femmes à gauche, hommes à droite — depuis combien de temps l'effectif est en poste</p>
+                  <div style={{ height: 240 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart layout="vertical" data={seniorityData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} tick={{ fontSize: 11 }} />
+                        <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                        <ReferenceLine x={0} stroke="#9CA3AF" />
+                        <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
+                        <Legend />
+                        <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
+                        <Bar dataKey="male" name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}
