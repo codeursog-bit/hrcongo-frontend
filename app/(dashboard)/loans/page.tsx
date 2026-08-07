@@ -16,7 +16,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
-  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,PiggyBank,
+  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -46,7 +46,7 @@ const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }>
 const ADVANCE_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   PENDING:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock },
   APPROVED:  { label: 'Approuvée',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
-  PAID:      { label: 'Payée (espèces)', cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
+  PAID:      { label: 'Remboursée (espèces)', cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
   DEDUCTED:  { label: 'Déduite',    cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusée',    cls: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300', icon: XCircle },
   CANCELLED: { label: 'Annulée',    cls: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400', icon: Ban },
@@ -60,8 +60,10 @@ export default function LoansManagementPage() {
   const [loanStatusFilter, setLoanStatusFilter] = useState('');
   const [loanTypeFilter, setLoanTypeFilter] = useState('');
   const [loanDeptFilter, setLoanDeptFilter] = useState('');
+  const [loanNameSearch, setLoanNameSearch] = useState('');
   const [advanceStatusFilter, setAdvanceStatusFilter] = useState('');
   const [advanceDeptFilter, setAdvanceDeptFilter] = useState('');
+  const [advanceNameSearch, setAdvanceNameSearch] = useState('');
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const [loans, setLoans] = useState<any[]>([]);
@@ -129,7 +131,7 @@ export default function LoansManagementPage() {
         const path = tab === 'loans' ? `/loans/${id}/document-data` : `/loans/advances/${id}/document-data`;
         const data = await api.get(path);
         setDocData(data);
-        if ((data as any)?.company?.documentTemplate === 'ORCA') {
+        if (data?.company?.documentTemplate === 'ORCA') {
           const htmlPath = tab === 'loans' ? `/loans/${id}/document/orca-html` : `/loans/advances/${id}/document/orca-html`;
           const res: any = await api.get(htmlPath);
           setOrcaHtml(res?.html ?? null);
@@ -176,14 +178,18 @@ export default function LoansManagementPage() {
     try { await api.patch(`/loans/${id}/cancel`, {}); await load(); } catch (e: any) { alert(e?.message || 'Erreur'); }
   };
 
-  const [payModal, setPayModal] = useState<{ loanId: string; remaining: number } | null>(null);
+  const [payModal, setPayModal] = useState<{ kind: 'loan' | 'advance'; id: string; remaining: number } | null>(null);
   const handleCashRepayment = (loanId: string, remainingBalance: number) => {
-    setPayModal({ loanId, remaining: remainingBalance });
+    setPayModal({ kind: 'loan', id: loanId, remaining: remainingBalance });
+  };
+  const handleAdvanceCashRepayment = (advanceId: string, remainingBalance: number) => {
+    setPayModal({ kind: 'advance', id: advanceId, remaining: remainingBalance });
   };
   const confirmCashRepayment = async (amount: number) => {
     if (!payModal) return;
     try {
-      await api.post(`/loans/${payModal.loanId}/cash-repayment`, { amount });
+      const path = payModal.kind === 'loan' ? `/loans/${payModal.id}/cash-repayment` : `/loans/advances/${payModal.id}/cash-repayment`;
+      await api.post(path, { amount });
       setPayModal(null);
       await load();
     } catch (e: any) { alert(e?.message || 'Erreur'); }
@@ -253,6 +259,12 @@ export default function LoansManagementPage() {
   const printSource = tab === 'loans' ? selectedLoan : selectedAdvance;
   const printReference = printSource ? `${tab === 'loans' ? 'PR' : 'AV'}-${printSource.id.slice(0, 8).toUpperCase()}` : '';
 
+  // Dette précédente de l'employé (autres prêts/avances validés, hors celui affiché) — pour que la fiche montre bien ce qu'il doit au total.
+  const previousLoanAmount = printSource ? (
+    loans.filter(l => l.employeeId === printSource.employeeId && l.id !== (tab === 'loans' ? printSource.id : null) && ['ACTIVE', 'PAID'].includes(l.status)).reduce((s, l) => s + Number(l.amount), 0)
+    + advances.filter(a => a.employeeId === printSource.employeeId && a.id !== (tab === 'advances' ? printSource.id : null) && ['APPROVED', 'DEDUCTED', 'PAID'].includes(a.status)).reduce((s, a) => s + Number(a.amount), 0)
+  ) : 0;
+
   const printData = printSource ? {
     reference: printReference,
     company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
@@ -263,6 +275,7 @@ export default function LoansManagementPage() {
     requestedAt: printSource.createdAt,
     monthlyRepayment: selectedLoan?.monthlyRepayment,
     durationMonths: selectedLoan ? Math.ceil(Number(selectedLoan.amount) / Number(selectedLoan.monthlyRepayment)) : undefined,
+    previousLoanAmount,
     status: printSource.status,
     drhDecision: selectedLoan?.drhDecision, dgDecision: selectedLoan?.dgDecision,
     chefDecision: tab === 'advances' ? (selectedAdvance?.status === 'APPROVED' || selectedAdvance?.status === 'DEDUCTED' || selectedAdvance?.status === 'PAID' ? 'OUI' : selectedAdvance?.status === 'REJECTED' ? 'NON' : null) : undefined,
@@ -291,18 +304,26 @@ export default function LoansManagementPage() {
     finally { setIsPreparingPrint(false); }
   };
 
+  const matchesName = (emp: any, query: string) => {
+    if (!query.trim()) return true;
+    const full = `${emp?.firstName ?? ''} ${emp?.lastName ?? ''}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return full.includes(query.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
+  };
+
   const loanDepartments = useMemo(() => Array.from(new Set(loans.map(l => l.employee?.department?.name).filter(Boolean))).sort(), [loans]);
   const filteredLoans = useMemo(() => loans.filter(l =>
     (!loanStatusFilter || l.status === loanStatusFilter) &&
     (!loanTypeFilter || l.type === loanTypeFilter) &&
-    (!loanDeptFilter || l.employee?.department?.name === loanDeptFilter),
-  ), [loans, loanStatusFilter, loanTypeFilter, loanDeptFilter]);
+    (!loanDeptFilter || l.employee?.department?.name === loanDeptFilter) &&
+    matchesName(l.employee, loanNameSearch),
+  ), [loans, loanStatusFilter, loanTypeFilter, loanDeptFilter, loanNameSearch]);
 
   const advanceDepartments = useMemo(() => Array.from(new Set(advances.map(a => a.employee?.department?.name).filter(Boolean))).sort(), [advances]);
   const filteredAdvances = useMemo(() => advances.filter(a =>
     (!advanceStatusFilter || a.status === advanceStatusFilter) &&
-    (!advanceDeptFilter || a.employee?.department?.name === advanceDeptFilter),
-  ), [advances, advanceStatusFilter, advanceDeptFilter]);
+    (!advanceDeptFilter || a.employee?.department?.name === advanceDeptFilter) &&
+    matchesName(a.employee, advanceNameSearch),
+  ), [advances, advanceStatusFilter, advanceDeptFilter, advanceNameSearch]);
 
   // Client Orca : télécharge la fiche en écrivant directement dans LEUR fichier Excel (pas un rendu recréé).
   const [isExportingXlsx, setIsExportingXlsx] = useState(false);
@@ -374,7 +395,11 @@ export default function LoansManagementPage() {
       {tab === 'loans' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-3 max-h-[75vh] overflow-y-auto pr-1">
-            <div className="flex flex-wrap gap-2 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 pb-1">
+            <div className="relative sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 pb-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input value={loanNameSearch} onChange={e => setLoanNameSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-sm" />
+            </div>
+            <div className="flex flex-wrap gap-2 sticky top-11 bg-gray-50 dark:bg-gray-900 z-10 pb-1">
               <select value={loanStatusFilter} onChange={e => setLoanStatusFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
                 <option value="">Tous les statuts</option>
                 {['PENDING', 'ACTIVE', 'PAID', 'REJECTED', 'CANCELLED'].map(s => <option key={s} value={s}>{LOAN_STATUS_CFG[s]?.label ?? s}</option>)}
@@ -474,7 +499,7 @@ export default function LoansManagementPage() {
 
                     {selectedLoan.status === 'ACTIVE' && DRH_ROLES.includes(userRole) && (
                       <button onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
-                        <Wallet size={16} /> Enregistrer un paiement
+                        <Wallet size={16} /> Enregistrer un remboursement
                       </button>
                     )}
 
@@ -539,7 +564,11 @@ export default function LoansManagementPage() {
       {tab === 'advances' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-3 max-h-[75vh] overflow-y-auto pr-1">
-            <div className="flex flex-wrap gap-2 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 pb-1">
+            <div className="relative sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 pb-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input value={advanceNameSearch} onChange={e => setAdvanceNameSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-sm" />
+            </div>
+            <div className="flex flex-wrap gap-2 sticky top-11 bg-gray-50 dark:bg-gray-900 z-10 pb-1">
               <select value={advanceStatusFilter} onChange={e => setAdvanceStatusFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
                 <option value="">Tous les statuts</option>
                 {['PENDING', 'APPROVED', 'DEDUCTED', 'PAID', 'REJECTED', 'CANCELLED'].map(s => <option key={s} value={s}>{ADVANCE_STATUS_CFG[s]?.label ?? s}</option>)}
@@ -619,9 +648,14 @@ export default function LoansManagementPage() {
                     )}
 
                     {selectedAdvance.status === 'APPROVED' && DRH_ROLES.includes(userRole) && (
-                      <button onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Marquer comme payée en espèces (ne sera pas déduite)
-                      </button>
+                      <div className="space-y-2">
+                        <button onClick={() => handleAdvanceCashRepayment(selectedAdvance.id, Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
+                          <Wallet size={16} /> Enregistrer un remboursement
+                        </button>
+                        <button onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                          Solder tout en espèces d'un coup
+                        </button>
+                      </div>
                     )}
 
                     {['APPROVED', 'PAID', 'DEDUCTED'].includes(selectedAdvance.status) && DRH_ROLES.includes(userRole) && (

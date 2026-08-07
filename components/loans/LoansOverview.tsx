@@ -327,7 +327,7 @@ function StatusPill({ status }: { status: string }) {
     PENDING_DG: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300' },
     ACTIVE: { label: 'Actif', cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' },
     APPROVED: { label: 'Approuvée', cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' },
-    PAID: { label: 'Payé(e)', cls: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300' },
+    PAID: { label: 'Remboursé(e)', cls: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300' },
     DEDUCTED: { label: 'Déduite', cls: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300' },
     REJECTED: { label: 'Refusé(e)', cls: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' },
     CANCELLED: { label: 'Annulé(e)', cls: 'bg-gray-50 text-gray-500 dark:bg-gray-700 dark:text-gray-400' },

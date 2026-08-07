@@ -144,7 +144,7 @@ export default function SuiviDettesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard icon={Users2} label="Employés concernés" value={String(kpis.employees)} tone="slate" />
         <KpiCard icon={Banknote} label="Total validé (période)" value={fmt(kpis.totalValidated)} tone="sky" />
-        <KpiCard icon={PiggyBank} label="Déjà payé" value={fmt(kpis.totalPaid)} tone="emerald" />
+        <KpiCard icon={PiggyBank} label="Déjà remboursé" value={fmt(kpis.totalPaid)} tone="emerald" />
         <KpiCard icon={Wallet} label="Reste à recouvrer" value={fmt(kpis.totalRemaining)} tone="amber" />
       </div>
 
@@ -153,7 +153,7 @@ export default function SuiviDettesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>{['Employé', 'Département', 'Type(s)', 'Montant validé', 'Déjà payé', 'Reste à payer', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase whitespace-nowrap">{h}</th>)}</tr>
+              <tr>{['Employé', 'Département', 'Type(s)', 'Montant validé', 'Déjà remboursé', 'Reste à rembourser', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase whitespace-nowrap">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {byEmployee.length === 0 ? (

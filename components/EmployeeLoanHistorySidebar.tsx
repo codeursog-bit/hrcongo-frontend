@@ -82,8 +82,8 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
         {kpis && (
           <div className="grid grid-cols-2 gap-3 mb-6">
             <KpiTile label="Montant dû (total)" value={fmt(kpis.totalDue)} tone="slate" />
-            <KpiTile label="Déjà payé" value={fmt(kpis.totalPaid)} tone="emerald" />
-            <KpiTile label="Reste à payer" value={fmt(kpis.totalRemaining)} tone="amber" />
+            <KpiTile label="Déjà remboursé" value={fmt(kpis.totalPaid)} tone="emerald" />
+            <KpiTile label="Reste à rembourser" value={fmt(kpis.totalRemaining)} tone="amber" />
             <KpiTile label="Mensualité en cours" value={fmt(kpis.monthlyLoad)} tone="sky" />
           </div>
         )}
@@ -104,7 +104,7 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
                 </button>
                 {canManage && l.status === 'ACTIVE' && onCashRepayment && (
                   <button onClick={() => onCashRepayment(l.id, Number(l.remainingBalance))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                    💵 Enregistrer un paiement en espèces
+                    💵 Enregistrer un remboursement en espèces
                   </button>
                 )}
               </div>
@@ -141,7 +141,7 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
             <div className="space-y-2.5 text-sm">
               <DetailRow label="Montant" value={fmt(Number(detailItem.item.amount))} />
               {detailItem.kind === 'loan' && <DetailRow label="Mensualité" value={fmt(Number(detailItem.item.monthlyRepayment))} />}
-              {detailItem.kind === 'loan' && <DetailRow label="Reste à payer" value={fmt(Number(detailItem.item.remainingBalance))} />}
+              {detailItem.kind === 'loan' && <DetailRow label="Reste à rembourser" value={fmt(Number(detailItem.item.remainingBalance))} />}
               <DetailRow label="Statut" value={(STATUS_BADGE[detailItem.item.status] ?? STATUS_BADGE.PENDING).label} />
               <DetailRow label="Créée le" value={new Date(detailItem.item.createdAt).toLocaleDateString('fr-FR')} />
               {detailItem.kind === 'loan' && detailItem.item.decidedByRole && <DetailRow label="Décidé par" value={detailItem.item.decidedByRole === 'DG' ? 'Direction Générale' : 'DRH'} />}

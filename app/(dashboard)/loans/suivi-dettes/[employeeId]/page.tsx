@@ -141,8 +141,8 @@ export default function EmployeeDebtDetailPage() {
       {/* ══════════════════ KPI ══════════════════ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard icon={Banknote} label="Montant dû (total)" value={fmt(kpis.totalDue)} tone="slate" />
-        <KpiCard icon={PiggyBank} label="Déjà payé" value={fmt(kpis.totalPaid)} tone="emerald" />
-        <KpiCard icon={Wallet} label="Reste à payer" value={fmt(kpis.totalRemaining)} tone="amber" />
+        <KpiCard icon={PiggyBank} label="Déjà remboursé" value={fmt(kpis.totalPaid)} tone="emerald" />
+        <KpiCard icon={Wallet} label="Reste à rembourser" value={fmt(kpis.totalRemaining)} tone="amber" />
         <KpiCard icon={TrendingUp} label="Mensualité en cours" value={fmt(kpis.monthlyLoad)} tone="sky" />
       </div>
 
@@ -189,7 +189,7 @@ export default function EmployeeDebtDetailPage() {
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                   {r.kind === 'loan' && r.status === 'ACTIVE' && (
                     <button onClick={() => setPayModal({ loanId: r.id, remaining: Number(r.remainingBalance) })} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
-                      <WalletIcon size={13} /> Payer
+                      <WalletIcon size={13} /> Rembourser
                     </button>
                   )}
                 </div>

@@ -66,20 +66,17 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
   return (
     <div id={id} style={{ width: '210mm', minHeight: '297mm', background: '#fff', color: '#1f2937', fontFamily: 'Arial, Helvetica, sans-serif', padding: '14mm 16mm', boxSizing: 'border-box' }}>
       {/* En-tête */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {data.company.logo && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.company.logo} alt={companyName} style={{ height: 46, objectFit: 'contain' }} />
-          )}
-          <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>{companyName}</span>
-        </div>
-        <div style={{ fontSize: 11, fontWeight: 700 }}>Référence : {data.reference || '.....................'}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        {data.company.logo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={data.company.logo} alt={companyName} style={{ height: 46, objectFit: 'contain' }} />
+        )}
+        <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: 1 }}>{companyName}</span>
       </div>
 
-      <div style={{ border: '2px solid #1f2937', padding: '10px 16px', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 16, fontWeight: 800, letterSpacing: 0.5, margin: 0, textAlign: 'center' }}>{TITLE[data.docType]}</h1>
-      </div>
+      <h1 style={{ fontSize: 16, fontWeight: 800, letterSpacing: 0.5, margin: '10px 0', textAlign: 'center' }}>{TITLE[data.docType]}</h1>
+
+      <div style={{ fontSize: 12, marginBottom: 14 }}>Référence : {data.reference || '.....................'}</div>
 
       <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse', marginBottom: 18 }}>
         <tbody>
@@ -95,7 +92,7 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
         </tbody>
       </table>
 
-      {data.reason && (
+      {data.reason && data.docType !== 'MARCHANDISE' && (
         <div style={{ marginBottom: 16, fontSize: 13 }}>
           <strong>Motif :</strong>
           <div style={{ borderBottom: '1px solid #9ca3af', paddingBottom: 4, marginTop: 4 }}>{data.reason}</div>
@@ -105,7 +102,7 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
       <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse', marginBottom: 18 }}>
         <tbody>
           <tr>
-            <td style={{ padding: '6px 0', width: 240 }}><strong>{data.docType === 'AVANCE' ? "Montant de l'avance demandée :" : 'Montant du prêt demandé :'}</strong></td>
+            <td style={{ padding: '6px 0', width: 240 }}><strong>{data.docType === 'AVANCE' ? "Montant de l'avance demandée :" : data.docType === 'MARCHANDISE' ? 'Montant total de la marchandise :' : 'Montant du prêt demandé :'}</strong></td>
             <td style={{ borderBottom: '1px solid #9ca3af' }}>{fmtMoney(data.amount)} FCFA</td>
           </tr>
           <tr><td style={{ padding: '6px 0' }}><strong>Date :</strong></td><td style={{ borderBottom: '1px solid #9ca3af' }}>{fmt(data.requestedAt)}</td></tr>
@@ -117,6 +114,9 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
           )}
           {data.previousLoanAmount != null && (
             <tr><td style={{ padding: '6px 0' }}><strong>Montant du prêt précédent :</strong></td><td style={{ borderBottom: '1px solid #9ca3af' }}>{fmtMoney(data.previousLoanAmount)} FCFA</td></tr>
+          )}
+          {data.previousLoanAmount != null && (
+            <tr><td style={{ padding: '6px 0' }}><strong>Total (dette précédente + demande) :</strong></td><td style={{ borderBottom: '1px solid #9ca3af', fontWeight: 700 }}>{fmtMoney(Number(data.previousLoanAmount) + Number(data.amount || 0))} FCFA</td></tr>
           )}
         </tbody>
       </table>

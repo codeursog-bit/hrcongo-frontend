@@ -33,7 +33,7 @@ const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }>
 const ADVANCE_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   PENDING:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock },
   APPROVED:  { label: 'Approuvée',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
-  PAID:      { label: 'Payée (espèces)', cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
+  PAID:      { label: 'Remboursée (espèces)', cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
   DEDUCTED:  { label: 'Déduite',    cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusée',    cls: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300', icon: XCircle },
   CANCELLED: { label: 'Annulée',    cls: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400', icon: Ban },
@@ -381,8 +381,8 @@ export default function MonEspacePretsAvancesPage() {
         <div className="space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <MyKpiCard label="Montant dû (total)" value={myKpis.totalDue} tone="slate" />
-            <MyKpiCard label="Déjà payé" value={myKpis.totalPaid} tone="emerald" />
-            <MyKpiCard label="Reste à payer" value={myKpis.totalRemaining} tone="amber" />
+            <MyKpiCard label="Déjà remboursé" value={myKpis.totalPaid} tone="emerald" />
+            <MyKpiCard label="Reste à rembourser" value={myKpis.totalRemaining} tone="amber" />
             <MyKpiCard label="Mensualité en cours" value={myKpis.monthlyLoad} tone="sky" />
           </div>
 
