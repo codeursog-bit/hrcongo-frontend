@@ -13,6 +13,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
@@ -23,7 +24,6 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import EmployeeLoanHistorySidebar, { EmployeeLoanHistoryData } from '@/components/EmployeeLoanHistorySidebar';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import LoansOverview from '@/components/loans/LoansOverview';
@@ -54,6 +54,7 @@ const ADVANCE_STATUS_CFG: Record<string, { label: string; cls: string; icon: any
 
 export default function LoansManagementPage() {
   const { bp } = useBasePath();
+  const router = useRouter();
   const [userRole, setUserRole] = useState('');
   const [company, setCompany] = useState<any>(null);
   const [tab, setTab] = useState<'overview' | 'loans' | 'advances' | 'deductions'>('overview');
@@ -78,7 +79,6 @@ export default function LoansManagementPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [recoverViaPayroll, setRecoverViaPayroll] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [historyEmployee, setHistoryEmployee] = useState<EmployeeLoanHistoryData | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [printAuthModal, setPrintAuthModal] = useState<'loan' | 'advance' | null>(null);
   const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
@@ -145,12 +145,11 @@ export default function LoansManagementPage() {
     })();
   }, [tab, selectedLoanId, selectedAdvanceId]);
 
-  const openEmployeeHistory = (emp: any) => {
-    setHistoryEmployee({
-      employee: { firstName: emp.firstName, lastName: emp.lastName, employeeNumber: emp.employeeNumber, department: emp.department?.name, photoUrl: emp.photoUrl },
-      loans: loans.filter(l => l.employee?.employeeNumber === emp.employeeNumber && l.employee?.firstName === emp.firstName && l.employee?.lastName === emp.lastName),
-      advances: advances.filter(a => a.employee?.employeeNumber === emp.employeeNumber && a.employee?.firstName === emp.firstName && a.employee?.lastName === emp.lastName),
-    });
+  // Ouvre la fiche complète de l'employé (prêts + avances + remboursements,
+  // modification/suppression) — remplace l'ancien sidebar en lecture seule.
+  const openEmployeeHistory = (emp: any, employeeId?: string) => {
+    const id = employeeId || emp?.id;
+    if (id) router.push(bp(`/loans/suivi-dettes/${id}`));
   };
 
   // ── Actions prêts ──────────────────────────────────────────────────────────
@@ -426,7 +425,7 @@ export default function LoansManagementPage() {
               const active = l.id === selectedLoanId;
               return (
                 <div key={l.id} onClick={() => { setSelectedLoanId(l.id); setRejectMode(false); setRejectionReason(''); }} className={`p-4 rounded-2xl border cursor-pointer flex gap-3 items-start transition-all ${active ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'}`}>
-                  <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(l.employee); }} className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0 hover:ring-2 hover:ring-sky-400">
+                  <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(l.employee, l.employeeId); }} className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0 hover:ring-2 hover:ring-sky-400">
                     {l.employee?.photoUrl ? <img src={l.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
                   </button>
                   <div className="flex-1 min-w-0">
@@ -499,7 +498,7 @@ export default function LoansManagementPage() {
 
                     {selectedLoan.status === 'ACTIVE' && DRH_ROLES.includes(userRole) && (
                       <button onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
-                        <Wallet size={16} /> Enregistrer un remboursement
+                        <Wallet size={16} /> Confirmer un remboursement
                       </button>
                     )}
 
@@ -589,7 +588,7 @@ export default function LoansManagementPage() {
               const active = a.id === selectedAdvanceId;
               return (
                 <div key={a.id} onClick={() => { setSelectedAdvanceId(a.id); setRejectMode(false); setRejectionReason(''); }} className={`p-4 rounded-2xl border cursor-pointer flex gap-3 items-start transition-all ${active ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'}`}>
-                  <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(a.employee); }} className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0 hover:ring-2 hover:ring-sky-400">
+                  <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(a.employee, a.employeeId); }} className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0 hover:ring-2 hover:ring-sky-400">
                     {a.employee?.photoUrl ? <img src={a.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
                   </button>
                   <div className="flex-1 min-w-0">
@@ -650,7 +649,7 @@ export default function LoansManagementPage() {
                     {selectedAdvance.status === 'APPROVED' && DRH_ROLES.includes(userRole) && (
                       <div className="space-y-2">
                         <button onClick={() => handleAdvanceCashRepayment(selectedAdvance.id, Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
-                          <Wallet size={16} /> Enregistrer un remboursement
+                          <Wallet size={16} /> Confirmer un remboursement
                         </button>
                         <button onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                           Solder tout en espèces d'un coup
@@ -777,16 +776,6 @@ export default function LoansManagementPage() {
         onClose={() => setPayModal(null)}
         remaining={payModal?.remaining ?? 0}
         onConfirm={confirmCashRepayment}
-      />
-
-      <EmployeeLoanHistorySidebar
-        open={!!historyEmployee}
-        onClose={() => setHistoryEmployee(null)}
-        data={historyEmployee}
-        canManage={DRH_ROLES.includes(userRole)}
-        onCashRepayment={handleCashRepayment}
-        onAdvanceCashRepayment={handleAdvanceCashRepayment}
-        onDataChanged={load}
       />
 
       <PrintAuthorizationModal
