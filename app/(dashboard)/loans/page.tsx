@@ -16,7 +16,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
-  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,PiggyBank
+  ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -131,7 +131,7 @@ export default function LoansManagementPage() {
         const path = tab === 'loans' ? `/loans/${id}/document-data` : `/loans/advances/${id}/document-data`;
         const data = await api.get(path);
         setDocData(data);
-        if ((data as Record<string, any>)?.company?.documentTemplate === 'ORCA') {
+        if (data?.company?.documentTemplate === 'ORCA') {
           const htmlPath = tab === 'loans' ? `/loans/${id}/document/orca-html` : `/loans/advances/${id}/document/orca-html`;
           const res: any = await api.get(htmlPath);
           setOrcaHtml(res?.html ?? null);
@@ -785,6 +785,8 @@ export default function LoansManagementPage() {
         data={historyEmployee}
         canManage={DRH_ROLES.includes(userRole)}
         onCashRepayment={handleCashRepayment}
+        onAdvanceCashRepayment={handleAdvanceCashRepayment}
+        onDataChanged={load}
       />
 
       <PrintAuthorizationModal
