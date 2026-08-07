@@ -15,7 +15,7 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useBasePath } from '@/hooks/useBasePath';
 import {
-  TrendingUp, Wallet, Banknote, PiggyBank, Filter, ChevronRight, Users2,
+  TrendingUp, Wallet, Banknote, PiggyBank, Filter, ChevronRight, Users2, Search,
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -41,6 +41,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
   const [year, setYear] = useState(now.getFullYear());
   const [typeFilter, setTypeFilter] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
   const [showAll, setShowAll] = useState(false);
 
   // ── Unifier prêts + avances en une seule liste de "demandes" ──────────────
@@ -64,10 +65,14 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
     return Array.from(set).sort();
   }, [allRequests]);
 
-  const filtered = useMemo(() => allRequests.filter(r =>
-    (!typeFilter || r.requestType === typeFilter) &&
-    (!deptFilter || r.employee?.department?.name === deptFilter),
-  ), [allRequests, typeFilter, deptFilter]);
+  const filtered = useMemo(() => {
+    const nameQuery = nameFilter.trim().toLowerCase();
+    return allRequests.filter(r =>
+      (!typeFilter || r.requestType === typeFilter) &&
+      (!deptFilter || r.employee?.department?.name === deptFilter) &&
+      (!nameQuery || `${r.employee?.firstName ?? ''} ${r.employee?.lastName ?? ''}`.toLowerCase().includes(nameQuery)),
+    );
+  }, [allRequests, typeFilter, deptFilter, nameFilter]);
 
   // ── KPI ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
@@ -157,6 +162,14 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
         <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-700">
           <p className="text-sm font-bold text-gray-700 dark:text-gray-200">{showAll ? 'Toutes les demandes' : 'Dernières demandes'}</p>
           <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                type="text" value={nameFilter} onChange={e => setNameFilter(e.target.value)}
+                placeholder="Rechercher un nom..."
+                className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-xs"
+              />
+            </div>
             <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
             {departments.length > 0 && (
               <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />

@@ -10,7 +10,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Filter, Users2, Download, ChevronRight, Wallet, Banknote, PiggyBank, TrendingDown } from 'lucide-react';
+import { Loader2, Filter, Users2, Download, ChevronRight, Wallet, Banknote, PiggyBank, TrendingDown, Search } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
@@ -32,6 +32,7 @@ export default function SuiviDettesPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [deptFilter, setDeptFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
 
   useEffect(() => {
     try { const stored = localStorage.getItem('user'); if (stored) setUserRole(JSON.parse(stored).role || ''); } catch {}
@@ -61,12 +62,15 @@ export default function SuiviDettesPage() {
       return true;
     };
 
-    const l = loans.filter(x => ['ACTIVE', 'PAID'].includes(x.status) && inPeriod(x.createdAt) && (!typeFilter || typeFilter === x.type) && (!deptFilter || x.employee?.department?.name === deptFilter))
+    const nameQuery = nameFilter.trim().toLowerCase();
+    const matchesName = (x: any) => !nameQuery || `${x.employee?.firstName ?? ''} ${x.employee?.lastName ?? ''}`.toLowerCase().includes(nameQuery);
+
+    const l = loans.filter(x => ['ACTIVE', 'PAID'].includes(x.status) && inPeriod(x.createdAt) && (!typeFilter || typeFilter === x.type) && (!deptFilter || x.employee?.department?.name === deptFilter) && matchesName(x))
       .map(x => ({ ...x, kind: 'loan' as const, requestType: x.type ?? 'ARGENT' }));
-    const a = advances.filter(x => ['APPROVED', 'DEDUCTED', 'PAID'].includes(x.status) && inPeriod(x.createdAt) && (!typeFilter || typeFilter === 'AVANCE') && (!deptFilter || x.employee?.department?.name === deptFilter))
+    const a = advances.filter(x => ['APPROVED', 'DEDUCTED', 'PAID'].includes(x.status) && inPeriod(x.createdAt) && (!typeFilter || typeFilter === 'AVANCE') && (!deptFilter || x.employee?.department?.name === deptFilter) && matchesName(x))
       .map(x => ({ ...x, kind: 'advance' as const, requestType: 'AVANCE' }));
     return [...l, ...a];
-  }, [loans, advances, month, year, typeFilter, deptFilter]);
+  }, [loans, advances, month, year, typeFilter, deptFilter, nameFilter]);
 
   // ── Regroupement par employé ──────────────────────────────────────────
   const byEmployee = useMemo(() => {
@@ -129,6 +133,14 @@ export default function SuiviDettesPage() {
 
       {/* ══════════════════ FILTRES ══════════════════ */}
       <div className="flex flex-wrap gap-2">
+        <div className="relative">
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text" value={nameFilter} onChange={e => setNameFilter(e.target.value)}
+            placeholder="Rechercher un nom..."
+            className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs w-48"
+          />
+        </div>
         <select value={month} onChange={e => setMonth(e.target.value === '' ? '' : Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
           <option value="">Toute l'année</option>
           {MONTHS_FR.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
