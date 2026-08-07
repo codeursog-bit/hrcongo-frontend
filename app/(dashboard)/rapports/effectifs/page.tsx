@@ -512,7 +512,7 @@ export default function EmployeeAnalyticsPage() {
                     margin={{ left: 20, right: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} />
+                    <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} />
                     <YAxis 
                       dataKey="label" 
                       type="category" 
@@ -572,7 +572,7 @@ export default function EmployeeAnalyticsPage() {
                     margin={{ left: 20, right: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} />
+                    <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} />
                     <YAxis 
                       dataKey="label" 
                       type="category" 

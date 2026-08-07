@@ -739,7 +739,7 @@ export default function EmployeeListPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={pyramidData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} tick={{ fontSize: 11 }} />
+                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11 }} />
                         <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                         <ReferenceLine x={0} stroke="#9CA3AF" />
                         <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
@@ -766,7 +766,7 @@ export default function EmployeeListPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={seniorityData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => Math.abs(v)} allowDecimals={false} tick={{ fontSize: 11 }} />
+                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11 }} />
                         <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                         <ReferenceLine x={0} stroke="#9CA3AF" />
                         <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '12px', border: 'none' }} />
