@@ -5,7 +5,7 @@
 // ✅ Restrictions par rôle :
 //    - EMPLOYEE   → ses notifs perso uniquement (congés, paie)
 //    - RH/ADMIN   → tout (+ contrats expirants)
-// ✅ Fix bug isRead : utilise n.isRead partout (cohérent avec TopNav)
+// ✅ Fix bug champ : le backend renvoie `read` (champ Prisma réel), pas `isRead` — utilisé partout maintenant, cohérent avec TopNav
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -66,9 +66,9 @@ export default function NotificationsPage() {
   const handleMarkAsRead = async (id: string) => {
     try {
       await api.patch(`/notifications/${id}/read`, {});
-      // ✅ Fix : utilise isRead (cohérent avec TopNav)
+      // ✅ Fix : utilise le vrai champ `read` renvoyé par l'API
       setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
       );
     } catch (e) {
       console.error(e);
@@ -78,8 +78,8 @@ export default function NotificationsPage() {
   const handleMarkAllAsRead = async () => {
     try {
       await api.patch('/notifications/read-all', {});
-      // ✅ Fix : utilise isRead
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      // ✅ Fix : utilise `read`
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch (e) {
       console.error(e);
     }
@@ -116,8 +116,8 @@ export default function NotificationsPage() {
     return n.type.includes(filter);
   });
 
-  // ✅ Fix : compte non lus avec isRead
-  const unreadCount = visibleNotifications.filter(n => !n.isRead).length;
+  // ✅ Fix : compte les non-lus avec le vrai champ `read`
+  const unreadCount = visibleNotifications.filter(n => !n.read).length;
 
   const getIcon = (n: any) => {
     // Icône spéciale pour les alertes contrat
@@ -147,7 +147,7 @@ export default function NotificationsPage() {
 
   // Couleur de bordure gauche selon urgence
   const getBorderColor = (n: any) => {
-    if (n.isRead) return 'border-gray-100 dark:border-gray-700';
+    if (n.read) return 'border-gray-100 dark:border-gray-700';
     if (n.metadata?.notificationType === 'CONTRACT_EXPIRY') {
       const days = n.metadata?.daysLeft ?? 99;
       if (days <= 7)  return 'border-l-4 border-l-red-500 border-gray-200 dark:border-gray-700';
@@ -222,7 +222,7 @@ export default function NotificationsPage() {
             {/* Badge sur l'onglet Contrats */}
             {f.key === 'CONTRACT' && (() => {
               const contractUnread = visibleNotifications.filter(
-                n => !n.isRead &&
+                n => !n.read &&
                      n.metadata?.notificationType === 'CONTRACT_EXPIRY'
               ).length;
               return contractUnread > 0 ? (
@@ -253,7 +253,7 @@ export default function NotificationsPage() {
           {filtered.map(n => (
             <div
               key={n.id}
-              onClick={() => !n.isRead && handleMarkAsRead(n.id)}
+              onClick={() => !n.read && handleMarkAsRead(n.id)}
               className={`bg-white dark:bg-gray-800 p-5 rounded-2xl border flex gap-4 transition-all cursor-pointer hover:shadow-md ${getBorderColor(n)}`}
             >
               <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-xl h-fit shrink-0">
@@ -266,7 +266,7 @@ export default function NotificationsPage() {
                     <h3 className="font-bold text-gray-900 dark:text-white">
                       {n.title}
                     </h3>
-                    {!n.isRead && (
+                    {!n.read && (
                       <span className="w-2 h-2 bg-sky-500 rounded-full shrink-0" />
                     )}
                     {/* Badge urgence pour contrats */}

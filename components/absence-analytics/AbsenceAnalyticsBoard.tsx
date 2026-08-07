@@ -59,6 +59,7 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
   const [dashboard, setDashboard] = useState<any>(null);
   const [prevMonthTotal, setPrevMonthTotal] = useState<number | null>(null);
   const [grid, setGrid] = useState<any>(null);
+  const [journal, setJournal] = useState<any>(null);
   const [yearly, setYearly] = useState<any>(null);
   const [deptFocus, setDeptFocus] = useState<any>(null);
   const [comparison, setComparison] = useState<any>(null);
@@ -88,8 +89,9 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
       api.get(`/absence-tracking/dashboard?year=${year}&month=${month}${scopeQS}`),
       api.get(`/absence-tracking/grid?year=${year}&month=${month}${departmentId ? `&departmentId=${departmentId}` : ''}${scopeQS}`),
       api.get(`/absence-tracking/dashboard?year=${prevYear}&month=${prevMonth}${scopeQS}`).catch(() => null),
-    ]).then(([d, g, prev]) => {
-      setDashboard(d); setGrid(g);
+      api.get(`/absence-tracking/month-journal?year=${year}&month=${month}${scopeQS}`).catch(() => null),
+    ]).then(([d, g, prev, j]) => {
+      setDashboard(d); setGrid(g); setJournal(j);
       const prevTotal = prev ? ((prev as any).byType ?? []).reduce((s: number, t: any) => s + t.days, 0) : null;
       setPrevMonthTotal(prevTotal);
     })
@@ -155,7 +157,7 @@ export default function AbsenceAnalyticsBoard({ scope }: AbsenceAnalyticsBoardPr
           <div className="w-52"><FancySelect value={departmentId} onChange={setDepartmentId} options={deptOptions} icon={Building2} /></div>
         </div>
 
-        {loadingMonth ? <LoadingBlock /> : (dashboard && grid && <CeMoisPanel dashboard={dashboard} grid={grid} prevMonthTotal={prevMonthTotal} workDays={workDays} onSelectEmployee={setSelectedEmployeeId} />)}
+        {loadingMonth ? <LoadingBlock /> : (dashboard && grid && <CeMoisPanel dashboard={dashboard} grid={grid} journal={journal} prevMonthTotal={prevMonthTotal} workDays={workDays} onSelectEmployee={setSelectedEmployeeId} />)}
       </section>
 
       <SectionDivider />
@@ -231,7 +233,51 @@ function LoadingBlock() {
 // ONGLET 1 — "CE MOIS-CI"
 // Ordre : KPI → Photographie du jour → Donuts (service d'abord) → Podium → Calendrier
 // ============================================================================
-function CeMoisPanel({ dashboard, grid, prevMonthTotal, workDays, onSelectEmployee }: any) {
+function MonthJournal({ journal, onSelectEmployee }: any) {
+  const rows = journal.journal ?? [];
+  return (
+    <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden">
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5">
+        <h3 className="font-bold text-slate-800 dark:text-white">Journal du mois</h3>
+        <p className="text-xs text-slate-400 mt-0.5">{journal.summary}</p>
+      </div>
+      {rows.length === 0 ? (
+        <div className="p-6 text-sm text-slate-400 text-center">Aucune absence enregistrée ce mois-ci.</div>
+      ) : (
+        <div className="divide-y divide-slate-50 dark:divide-white/5">
+          {rows.map((r: any, i: number) => {
+            const start = new Date(r.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+            const end = new Date(r.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+            return (
+              <div key={i} className="px-5 py-3 flex flex-wrap items-start gap-3">
+                <div className="flex-1 min-w-[220px]">
+                  <button onClick={() => onSelectEmployee(r.employeeId)} className="text-sm font-bold text-slate-800 dark:text-white hover:text-sky-600 dark:hover:text-sky-400">
+                    {r.employeeName}
+                  </button>
+                  <span className="text-xs text-slate-400 ml-2">{r.departmentName}</span>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">
+                    <span className="font-semibold">{r.label}</span>
+                    {r.subLabel && <span> — {r.subLabel}</span>}
+                    {' '}du {start} au {end} ({r.days} j.)
+                  </p>
+                  {r.reason && <p className="text-xs text-slate-400 mt-1 italic">« {r.reason} »</p>}
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${r.paid ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>
+                    {r.paid ? 'Rémunéré pendant l\u2019absence' : 'Non rémunéré'}
+                  </span>
+                  <span className="text-[10px] text-slate-400">Statut réel : absent</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSelectEmployee }: any) {
   const byTypeData = (dashboard.byType ?? []).map((t: any) => ({ name: t.label, code: t.code, value: t.days, colorKey: t.colorKey }));
   const byDeptData = (dashboard.byDepartment ?? []).map((d: any) => ({ name: d.name, value: d.days }));
   const totalDays = byTypeData.reduce((s: number, d: any) => s + d.value, 0);
@@ -309,6 +355,8 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, workDays, onSelectEmploy
           )}
         </ChartCard>
       </div>
+
+      {journal && <MonthJournal journal={journal} onSelectEmployee={onSelectEmployee} />}
 
       <TopTable title="Podium du mois" rows={dashboard.top20Month} onSelect={onSelectEmployee} />
 
@@ -414,7 +462,7 @@ function CeMoisPanel({ dashboard, grid, prevMonthTotal, workDays, onSelectEmploy
 // services dans le temps → Podium annuel
 // ============================================================================
 function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFocusDepartment, onSelectEmployee }: any) {
-  const lineData = yearly.months.map((m: any) => ({ month: MONTHS[m.month - 1].slice(0, 3), total: m.totalDays }));
+  const lineData = yearly.months.map((m: any) => ({ month: MONTHS[m.month - 1].slice(0, 3), total: m.totalDays, explanation: m.explanation }));
 
   const focusCodes = deptFocus ? Array.from(new Set(deptFocus.months.flatMap((m: any) => Object.keys(m.byType)))) as string[] : [];
   const focusData = deptFocus ? deptFocus.months.map((m: any) => {
@@ -433,6 +481,13 @@ function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFo
 
   return (
     <div className="space-y-5">
+      {yearly.peakSummary && (
+        <div className="flex items-start gap-3 bg-sky-50 dark:bg-sky-500/10 border border-sky-100 dark:border-sky-800 rounded-2xl p-4">
+          <Radar size={18} className="text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-sky-800 dark:text-sky-200 font-medium">{yearly.peakSummary}</p>
+        </div>
+      )}
+
       <ChartCard
         title="Zoom sur un service"
         action={<div className="w-48"><FancySelect value={focusDepartmentId} onChange={onFocusDepartment} options={departments.map((d: any) => ({ value: d.id, label: d.name }))} icon={Building2} /></div>}
@@ -460,7 +515,10 @@ function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFo
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="month" fontSize={12} />
             <YAxis fontSize={12} allowDecimals={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Tooltip
+              contentStyle={{ ...TOOLTIP_STYLE, maxWidth: 240 }}
+              formatter={(v: any, n: any, p: any) => [`${v} j. — ${p.payload.explanation}`, "Jours d'absence"]}
+            />
             <Line type="monotone" dataKey="total" stroke="#0EA5E9" strokeWidth={3} dot={{ r: 4 }} name="Jours d'absence" />
           </LineChart>
         </ResponsiveContainer>
@@ -633,6 +691,12 @@ function EmptyChart() {
   return <div className="h-[220px] flex items-center justify-center text-sm text-slate-400">Aucune donnée sur cette période</div>;
 }
 
+const RANK_BADGE = [
+  { bg: 'bg-gradient-to-br from-yellow-300 to-amber-500', text: 'text-white', ring: 'ring-2 ring-amber-300/60', emoji: '🥇' },
+  { bg: 'bg-gradient-to-br from-slate-300 to-slate-400', text: 'text-white', ring: 'ring-2 ring-slate-300/60', emoji: '🥈' },
+  { bg: 'bg-gradient-to-br from-orange-300 to-orange-500', text: 'text-white', ring: 'ring-2 ring-orange-300/60', emoji: '🥉' },
+];
+
 function TopTable({ title, rows, onSelect }: { title: string; rows: any[]; onSelect: (id: string) => void }) {
   return (
     <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden">
@@ -642,13 +706,20 @@ function TopTable({ title, rows, onSelect }: { title: string; rows: any[]; onSel
       </div>
       {(!rows || rows.length === 0) ? <div className="p-6 text-sm text-slate-400 text-center">Aucune donnée</div> : (
         <div className="divide-y divide-slate-50 dark:divide-white/5">
-          {rows.map((r: any, i: number) => (
-            <button key={r.employeeId} onClick={() => onSelect(r.employeeId)} className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] text-left">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${i < 3 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>{i + 1}</span>
-              <span className="flex-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{r.name}</span>
-              <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{r.days} j.</span>
-            </button>
-          ))}
+          {rows.map((r: any, i: number) => {
+            const badge = RANK_BADGE[i];
+            return (
+              <button key={r.employeeId} onClick={() => onSelect(r.employeeId)} className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-white/[0.03] text-left">
+                {badge ? (
+                  <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${badge.bg} ${badge.ring} shrink-0`}>{badge.emoji}</span>
+                ) : (
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 shrink-0">{i + 1}</span>
+                )}
+                <span className="flex-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{r.name}</span>
+                <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{r.days} j.</span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

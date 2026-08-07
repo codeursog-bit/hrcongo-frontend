@@ -61,7 +61,7 @@
 //     try {
 //       const data = await api.get<any[]>('/notifications?limit=5');
 //       setNotifications(data);
-//       setUnreadCount(data.filter(n => !n.isRead).length);
+//       setUnreadCount(data.filter(n => !n.read).length);
 //     } catch (e) { console.error("Error fetching notifications", e); }
 //   };
 
@@ -69,7 +69,7 @@
 //     try {
 //       await api.patch('/notifications/read-all', {});
 //       setUnreadCount(0);
-//       setNotifications(prev => prev.map(n => ({...n, isRead: true})));
+//       setNotifications(prev => prev.map(n => ({...n, read: true})));
 //     } catch (e) {}
 //   };
 
@@ -177,7 +177,7 @@
 //                       </div>
 //                     ) : (
 //                       notifications.map((n) => (
-//                         <div key={n.id} className={`p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${!n.isRead ? 'bg-sky-50/30 dark:bg-sky-900/10' : ''}`}>
+//                         <div key={n.id} className={`p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${!n.read ? 'bg-sky-50/30 dark:bg-sky-900/10' : ''}`}>
 //                           <div className="flex gap-3">
 //                             <div className="mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
 //                               {getNotifIcon(n.type)}
@@ -283,6 +283,7 @@ import { Search, Bell, Menu, ChevronRight, ChevronDown, Moon, Sun, CheckCircle2,
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { useBasePath } from '@/hooks/useBasePath';
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -292,6 +293,7 @@ interface TopNavProps {
 export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { bp } = useBasePath();
   const { theme, toggleTheme } = useTheme();
   
   const [user, setUser] = useState<any>(null);
@@ -338,7 +340,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
     try {
       const data = await api.get<any[]>('/notifications?limit=5');
       setNotifications(data);
-      setUnreadCount(data.filter(n => !n.isRead).length);
+      setUnreadCount(data.filter(n => !n.read).length);
     } catch (e) { console.error("Error fetching notifications", e); }
   };
 
@@ -346,8 +348,25 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
     try {
       await api.patch('/notifications/read-all', {});
       setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({...n, isRead: true})));
+      setNotifications(prev => prev.map(n => ({...n, read: true})));
     } catch (e) {}
+  };
+
+  // ✅ Ajouté : cliquer sur une notification la marque comme lue et navigue
+  //    vers sa page liée — auparavant, cliquer une notification individuelle
+  //    ne faisait rien du tout (seul "Tout marquer lu" fonctionnait).
+  const handleNotifClick = async (n: any) => {
+    if (!n.read) {
+      try {
+        await api.patch(`/notifications/${n.id}/read`, {});
+        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (e) {}
+    }
+    if (n.link) {
+      router.push(bp(n.link));
+      setShowNotifs(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -460,7 +479,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                       </div>
                     ) : (
                       notifications.map((n) => (
-                        <div key={n.id} className={`p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${!n.isRead ? 'bg-sky-50/30 dark:bg-sky-900/10' : ''}`}>
+                        <div key={n.id} onClick={() => handleNotifClick(n)} className={`p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${!n.read ? 'bg-sky-50/30 dark:bg-sky-900/10' : ''}`}>
                           <div className="flex gap-3">
                             <div className="mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
                               {getNotifIcon(n.type)}

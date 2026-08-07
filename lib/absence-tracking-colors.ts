@@ -108,6 +108,32 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     cellText: 'text-orange-700 dark:text-orange-300',
     solid: 'bg-orange-500',
   },
+  // ✅ Statuts de présence (pas des absences) — mêmes tons cyan que le repère
+  //    "Jour ouvrable" de la légende, mais version pleine pour un jour confirmé
+  presence: {
+    hex: '#22D3EE',
+    dot: 'bg-cyan-500',
+    chip: 'bg-cyan-50 text-cyan-700 border-cyan-100 dark:bg-cyan-900/20 dark:text-cyan-300 dark:border-cyan-800',
+    cellBg: 'bg-cyan-100 dark:bg-cyan-500/20',
+    cellText: 'text-cyan-700 dark:text-cyan-300',
+    solid: 'bg-cyan-400',
+  },
+  remote: {
+    hex: '#60A5FA',
+    dot: 'bg-blue-500',
+    chip: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800',
+    cellBg: 'bg-blue-100 dark:bg-blue-500/20',
+    cellText: 'text-blue-700 dark:text-blue-300',
+    solid: 'bg-blue-400',
+  },
+  late: {
+    hex: '#FACC15',
+    dot: 'bg-yellow-500',
+    chip: 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800',
+    cellBg: 'bg-yellow-100 dark:bg-yellow-500/20',
+    cellText: 'text-yellow-700 dark:text-yellow-300',
+    solid: 'bg-yellow-400',
+  },
 };
 
 export function colorFor(colorKey: string): ColorTokens {
