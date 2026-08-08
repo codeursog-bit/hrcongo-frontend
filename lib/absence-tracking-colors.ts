@@ -195,7 +195,7 @@ export function colorFor(colorKey: string): ColorTokens {
 // afficher des labels lisibles sans dépendre d'un appel API supplémentaire
 // quand on manipule des données agrégées brutes (ex: comparaison d'années).
 export const CODE_LABELS: Record<string, string> = {
-  CP: 'Congé annuel', CA: 'Congé anticipé', CSS: 'Congé sans solde',
+  CP: 'Congé annuel', CA: 'Congé anticipé', CPT: 'Congé payé (travaillé)', CSS: 'Congé sans solde',
   MAL: 'Maladie', MAT: 'Maternité', PAT: 'Paternité', CONV_AUTRE: 'Conventionnelle — autre',
   MAR: 'Mariage', DEC: 'Décès', NAI: 'Naissance', EXC_AUTRE: 'Exceptionnelle — autre',
   ABS: 'Absence non justifiée', JF: 'Jour férié',

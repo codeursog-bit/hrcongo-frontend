@@ -9,10 +9,14 @@
 //    - /rapports/observatoire-conges      (scope="leave", dans le module Rapports)
 //
 //    Toute la donnée vient de /absence-tracking (module backend dédié).
-//    Mise en page et intitulés volontairement réorganisés par rapport au
-//    fichier Excel de référence (rien n'est au même endroit ni sous le même
-//    nom) — uniquement la palette et les composants déjà utilisés dans
-//    Konza RH.
+//    ⚠️ Revirement assumé (voir échange client) : la donnée et sa structure
+//    (dashboard mensuel + grille employé × jour + Top 20) doivent maintenant
+//    reprendre FIDÈLEMENT ce que montre le fichier Excel de référence du
+//    client — seule la présentation change (chips/cartes pastel façon Konza
+//    RH au lieu des aplats et de la mise en page Excel). La grille dense
+//    (MonthlyAbsenceGrid, plus bas) est l'ajout central de ce revirement :
+//    avant, seule une vue "chronologie" (barres) existait, la grille
+//    case-par-case façon tableur n'était pas rendue du tout.
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
@@ -442,6 +446,11 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
         </div>
       )}
 
+      {/* Grille mensuelle — chaque employé, chaque jour, case vide = présent.
+          C'est la vue dense (façon tableur) ; la Chronologie ci-dessous en
+          donne la lecture "d'un coup d'œil" pour qui préfère les barres. */}
+      <MonthlyAbsenceGrid grid={grid} workDays={workDays} onSelectEmployee={onSelectEmployee} />
+
       {journal && (
         <ChronologyPanel
           journal={journal}
@@ -453,6 +462,151 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
           legend={grid.legend}
           onSelectEmployee={onSelectEmployee}
         />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// GRILLE MENSUELLE DENSE — employé × jour, la représentation fidèle à
+// l'Excel de référence (une ligne par employé, une colonne par jour, un code
+// dans chaque case). Seule la présentation change : chips pastel (palette
+// Konza) au lieu d'aplats saturés, pour rester lisible sur 30+ lignes sans
+// fatiguer l'œil, + colonnes Total/% comme dans le fichier d'origine.
+// ============================================================================
+function MonthlyAbsenceGrid({ grid, workDays, onSelectEmployee }: any) {
+  const daysArray = Array.from({ length: grid.daysInMonth }, (_, i) => i + 1);
+  const holidayMap = new Map((grid.holidays ?? []).map((h: any) => [h.day, h.name]));
+  const countsAsAbsence = new Map<string, boolean>((grid.legend ?? []).map((l: any) => [l.code, l.countsAsAbsenceDay]));
+  countsAsAbsence.set('PRESENT', false);
+  countsAsAbsence.set('REMOTE', false);
+  countsAsAbsence.set('LATE', false);
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === grid.year && today.getMonth() + 1 === grid.month;
+  const todayDay = isCurrentMonth ? today.getDate() : null;
+
+  const isWorkingDay = (day: number) => {
+    const dow = new Date(grid.year, grid.month - 1, day).getDay();
+    const normalized = dow === 0 ? 7 : dow;
+    return (workDays ?? [1, 2, 3, 4, 5, 6]).includes(normalized);
+  };
+
+  const dayName = (day: number) =>
+    new Date(grid.year, grid.month - 1, day).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 2).toUpperCase();
+
+  const workingDaysCount = daysArray.filter(isWorkingDay).length;
+
+  return (
+    <div className="bg-white dark:bg-[#0B1121] rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 dark:border-white/5">
+        <h3 className="font-bold text-slate-800 dark:text-white">
+          Grille du mois, jour par jour
+          <span className="text-sm font-normal text-slate-400 ml-2">
+            {grid.employees?.length ?? 0} employé(s) · {workingDaysCount} j. ouvrables / {grid.daysInMonth} j.
+          </span>
+        </h3>
+        <p className="text-xs text-slate-400 mt-0.5">Case vide = présence normale ce jour-là. Survolez un code pour le détail.</p>
+      </div>
+
+      {(!grid.employees || grid.employees.length === 0) ? (
+        <div className="p-8 text-sm text-slate-400 text-center">Aucun employé à afficher.</div>
+      ) : (
+        <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
+          <div className="inline-block min-w-full align-middle">
+            {/* En-tête jours */}
+            <div className="flex border-b border-slate-100 dark:border-white/5">
+              <div className="sticky left-0 z-20 w-44 shrink-0 bg-slate-50 dark:bg-white/[0.03] p-2.5 font-bold text-[11px] uppercase border-r border-slate-100 dark:border-white/5 text-slate-400">
+                Employé
+              </div>
+              {daysArray.map((d) => {
+                const isToday = d === todayDay;
+                const working = isWorkingDay(d);
+                const holiday = holidayMap.get(String(d).padStart(2, '0'));
+                return (
+                  <div
+                    key={d}
+                    title={holiday ? String(holiday) : undefined}
+                    className={`w-7 shrink-0 text-center py-1.5 border-r border-slate-100 dark:border-white/5 ${
+                      isToday ? 'bg-sky-100 dark:bg-sky-900/40'
+                        : holiday ? 'bg-indigo-50 dark:bg-indigo-900/20'
+                        : !working ? 'bg-slate-100 dark:bg-white/[0.04]'
+                        : 'bg-slate-50/60 dark:bg-white/[0.02]'
+                    }`}
+                  >
+                    <div className={`text-[8px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400'}`}>{dayName(d)}</div>
+                    <div className={`text-[10px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : !working ? 'text-slate-400' : 'text-slate-500 dark:text-slate-400'}`}>{d}</div>
+                  </div>
+                );
+              })}
+              <div className="w-14 shrink-0 text-center py-1.5 border-l border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.03]">
+                <div className="text-[9px] font-bold text-slate-400 uppercase">Total</div>
+              </div>
+              <div className="w-14 shrink-0 text-center py-1.5 bg-slate-50 dark:bg-white/[0.03]">
+                <div className="text-[9px] font-bold text-slate-400 uppercase">% Abs.</div>
+              </div>
+            </div>
+
+            {/* Lignes employés */}
+            <div className="divide-y divide-slate-50 dark:divide-white/[0.04]">
+              {grid.employees.map((emp: any) => {
+                let total = 0;
+                daysArray.forEach((d) => {
+                  const cell = emp.cells?.[String(d).padStart(2, '0')];
+                  if (cell && countsAsAbsence.get(cell.code)) total += 1;
+                });
+                const pct = workingDaysCount > 0 ? Math.round((total / workingDaysCount) * 100) : 0;
+                return (
+                  <div key={emp.id} className="flex hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors">
+                    <button
+                      onClick={() => onSelectEmployee?.(emp)}
+                      className="sticky left-0 z-10 w-44 shrink-0 bg-white dark:bg-[#0B1121] p-2.5 border-r border-slate-100 dark:border-white/5 flex items-center gap-2 text-left"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-300 shrink-0">
+                        {emp.name?.[0] ?? '?'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold truncate text-slate-800 dark:text-white">{emp.name}</p>
+                        <p className="text-[9px] text-slate-400 truncate">{emp.departmentName ?? '—'}</p>
+                      </div>
+                    </button>
+                    {daysArray.map((d) => {
+                      const cell = emp.cells?.[String(d).padStart(2, '0')];
+                      const isToday = d === todayDay;
+                      const working = isWorkingDay(d);
+                      if (!cell) {
+                        return (
+                          <div
+                            key={d}
+                            className={`w-7 h-8 shrink-0 border-r border-b border-slate-50 dark:border-white/[0.04] ${
+                              !working ? 'bg-slate-100 dark:bg-white/[0.04]' : ''
+                            } ${isToday ? 'ring-1 ring-inset ring-sky-400' : ''}`}
+                          />
+                        );
+                      }
+                      const t = colorFor(cell.colorKey);
+                      return (
+                        <div
+                          key={d}
+                          title={`${cell.label} — ${emp.name}, ${d}`}
+                          className={`w-7 h-8 shrink-0 border-r border-b border-slate-50 dark:border-white/[0.04] flex items-center justify-center ${t.cellBg} ${isToday ? 'ring-1 ring-inset ring-sky-400' : ''}`}
+                        >
+                          <span className={`text-[8px] font-extrabold leading-none ${t.cellText}`}>{cell.code}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="w-14 shrink-0 flex items-center justify-center border-l border-slate-50 dark:border-white/[0.04]">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">{total}</span>
+                    </div>
+                    <div className="w-14 shrink-0 flex items-center justify-center">
+                      <span className={`text-[11px] font-bold ${pct >= 8 ? 'text-red-500' : pct > 0 ? 'text-amber-500' : 'text-slate-400'}`}>{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
