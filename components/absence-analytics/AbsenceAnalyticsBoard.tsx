@@ -19,7 +19,8 @@ import React, { useEffect, useState } from 'react';
 import {
   Loader2, Users, CalendarDays, TrendingUp, TrendingDown, Flame,
   ChevronLeft, ChevronRight, Building2, Filter, X, Medal,
-  Radar, LineChart as LineChartIcon,
+  Radar, LineChart as LineChartIcon, ShieldAlert, AlertTriangle,
+  Stethoscope, HeartPulse, PartyPopper, UserX, ChevronDown, Gauge,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,7 +29,16 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
-import { colorFor, CHART_PALETTE } from '@/lib/absence-tracking-colors';
+import { colorFor, CHART_PALETTE, absenteeismRateTone, FRONT_ALERT_THRESHOLDS, CODE_LABELS, FAMILY_META } from '@/lib/absence-tracking-colors';
+
+// Icône représentative par classement ciblé — utilisé pour l'entête des
+// mini-podiums "Classements ciblés" et le bandeau d'alertes.
+const LEADERBOARD_META: Record<string, { label: string; icon: any; gradient: string }> = {
+  maladie: { label: 'Maladie', icon: Stethoscope, gradient: 'from-violet-400 to-purple-500' },
+  conventionnelle: { label: 'Conventionnelle (tout motif)', icon: HeartPulse, gradient: 'from-fuchsia-400 to-pink-500' },
+  exceptionnelle: { label: 'Exceptionnelle', icon: PartyPopper, gradient: 'from-amber-400 to-orange-500' },
+  injustifiee: { label: 'Non justifiée', icon: UserX, gradient: 'from-rose-400 to-red-500' },
+};
 
 const MONTHS = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -248,6 +258,12 @@ function MonthJournal({ journal, onSelectEmployee }: any) {
           {rows.map((r: any, i: number) => {
             const start = new Date(r.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
             const end = new Date(r.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+            // ✅ Le statut payé/non-payé n'est une info utile QUE quand c'est
+            // une vraie décision RH (maladie, exceptionnelle, sans solde,
+            // non justifiée). Le congé annuel/anticipé est TOUJOURS payé —
+            // ce n'est pas une décision, donc pas la peine de le présenter
+            // comme tel ("absent mais payé" laisse croire à une exception).
+            const isStatutoryLeave = r.family === 'CONGE_STATUTAIRE' && ['CP', 'CA'].includes(r.code);
             return (
               <div key={i} className="px-5 py-3 flex flex-wrap items-start gap-3">
                 <div className="flex-1 min-w-[220px]">
@@ -257,16 +273,20 @@ function MonthJournal({ journal, onSelectEmployee }: any) {
                   <span className="text-xs text-slate-400 ml-2">{r.departmentName}</span>
                   <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">
                     <span className="font-semibold">{r.label}</span>
-                    {r.subLabel && <span> — {r.subLabel}</span>}
                     {' '}du {start} au {end} ({r.days} j.)
                   </p>
                   {r.reason && <p className="text-xs text-slate-400 mt-1 italic">« {r.reason} »</p>}
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${r.paid ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>
-                    {r.paid ? 'Rémunéré pendant l\u2019absence' : 'Non rémunéré'}
-                  </span>
-                  <span className="text-[10px] text-slate-400">Statut réel : absent</span>
+                  {isStatutoryLeave ? (
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300">
+                      Droit acquis
+                    </span>
+                  ) : (
+                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${r.paid ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>
+                      Absent — {r.paid ? 'rémunéré' : 'non rémunéré'}
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -293,9 +313,19 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
   };
 
   const delta = typeof prevMonthTotal === 'number' ? totalDays - prevMonthTotal : null;
+  const rate = dashboard.absenteeismRatePercent ?? 0;
+  const rateTone = absenteeismRateTone(rate);
+  const employeeAlerts = dashboard.alerts?.employeeAlerts ?? [];
+  const departmentAlerts = dashboard.alerts?.departmentAlerts ?? [];
+  const alertEmployeeIds = new Set<string>(employeeAlerts.map((a: any) => a.employeeId as string));
+  const alertDepartmentIds = new Set<string>(departmentAlerts.map((a: any) => a.departmentId as string));
 
   return (
     <div className="space-y-5">
+      {(employeeAlerts.length > 0 || departmentAlerts.length > 0) && (
+        <AlertsBanner employeeAlerts={employeeAlerts} departmentAlerts={departmentAlerts} onSelectEmployee={onSelectEmployee} />
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatMini label="Effectif suivi" value={String(dashboard.employeeCount)} icon={Users} gradient="from-sky-400 to-blue-500" />
         <StatMini
@@ -305,9 +335,32 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
           icon={CalendarDays}
           gradient="from-violet-400 to-purple-500"
         />
-        <StatMini label="Alertes du jour" value={String(absentTodayTotal)} icon={Flame} gradient="from-amber-400 to-orange-500" />
+        <StatMini
+          label="Taux d'absentéisme"
+          value={`${rate}%`}
+          sub={`${rateTone.label} — hors congé statutaire`}
+          icon={Gauge}
+          gradient={rateTone.bg}
+        />
         <StatMini label="Service le plus exposé" value={topDept?.name ?? '—'} sub={topDept ? `${topDept.value} j.` : ''} icon={Building2} gradient="from-emerald-400 to-teal-500" />
       </div>
+
+      {/* Classements ciblés — répondent directement à "qui/quel service a le plus de X" */}
+      <ChartCard title="Classements ciblés par motif" subtitle="Qui, et quel service, est le plus concerné par chaque type d'absence">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(['maladie', 'conventionnelle', 'exceptionnelle', 'injustifiee'] as const).map((key) => (
+            <TargetedLeaderboard
+              key={key}
+              leaderboardKey={key}
+              employees={dashboard.leaderboards?.[key] ?? []}
+              departments={dashboard.departmentLeaderboards?.[key] ?? []}
+              alertEmployeeIds={alertEmployeeIds}
+              alertDepartmentIds={alertDepartmentIds}
+              onSelectEmployee={onSelectEmployee}
+            />
+          ))}
+        </div>
+      </ChartCard>
 
       {/* Aujourd'hui — compteurs par code, même langage visuel que la légende */}
       {absentTodayEntries.length > 0 && (
@@ -356,9 +409,9 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
         </ChartCard>
       </div>
 
-      {journal && <MonthJournal journal={journal} onSelectEmployee={onSelectEmployee} />}
+      {journal && <CollapsibleJournal journal={journal} onSelectEmployee={onSelectEmployee} />}
 
-      <TopTable title="Podium du mois" rows={dashboard.top20Month} onSelect={onSelectEmployee} />
+      <TopTable title="Podium du mois" rows={dashboard.top20Month} onSelect={onSelectEmployee} alertIds={alertEmployeeIds} />
 
       {/* Légende — même format que le calendrier de Présences : carré plein + libellé */}
       {grid.legend?.length > 0 && (
@@ -389,72 +442,18 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden min-h-[400px]">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="font-bold text-gray-900 dark:text-white">
-            Calendrier collaborateurs
-            <span className="text-sm font-normal text-gray-500 ml-2">{grid.employees.length} personne(s)</span>
-          </h3>
-        </div>
-
-        <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
-          <div className="inline-block min-w-full align-middle">
-            {/* En-tête jours */}
-            <div className="border-b border-gray-200 dark:border-gray-700 flex">
-              <div className="sticky left-0 z-20 w-60 shrink-0 bg-gray-100 dark:bg-gray-800 p-3 font-bold text-xs uppercase border-r text-gray-500">
-                Collaborateur
-              </div>
-              {Array.from({ length: grid.daysInMonth }, (_, i) => i + 1).map((d) => {
-                const dayDate = new Date(grid.year, grid.month - 1, d);
-                const dayName = dayDate.toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3).toUpperCase();
-                const isToday = grid.year === new Date().getFullYear() && grid.month === new Date().getMonth() + 1 && d === new Date().getDate();
-                const isHoliday = grid.holidays?.some((h: any) => Number(h.day) === d);
-                const nonWorking = !isWorkingDay(grid.year, grid.month, d);
-                return (
-                  <div key={d} className={`w-10 shrink-0 text-center p-2 border-r ${isToday ? 'bg-sky-100 dark:bg-sky-900/50' : isHoliday ? 'bg-indigo-50 dark:bg-indigo-900/30' : nonWorking ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-50 dark:bg-gray-800'}`}>
-                    <div className={`text-[10px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : 'text-gray-400'}`}>{dayName}</div>
-                    <div className={`text-xs font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : isHoliday ? 'text-indigo-500' : 'text-gray-600 dark:text-gray-300'}`}>{d}</div>
-                    {isToday && <div className="w-1.5 h-1.5 bg-sky-500 rounded-full mx-auto mt-0.5" />}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Lignes collaborateurs */}
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {grid.employees.map((emp: any) => (
-                <div key={emp.id} className="flex hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                  <div className="sticky left-0 z-10 w-60 shrink-0 bg-white dark:bg-gray-800 p-3 border-r flex items-center gap-3 overflow-hidden">
-                    <button onClick={() => onSelectEmployee(emp.id)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300 shrink-0">
-                      {emp.name?.[0] ?? '?'}
-                    </button>
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <button onClick={() => onSelectEmployee(emp.id)} title={emp.name} className="w-full text-left text-sm font-bold truncate text-gray-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 block">
-                        {emp.name}
-                      </button>
-                      <p className="text-[10px] text-gray-500 truncate">{emp.departmentName || '—'}</p>
-                    </div>
-                  </div>
-                  {Array.from({ length: grid.daysInMonth }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => {
-                    const cell = emp.cells?.[d];
-                    const isToday = grid.year === new Date().getFullYear() && grid.month === new Date().getMonth() + 1 && Number(d) === new Date().getDate();
-                    const nonWorking = !isWorkingDay(grid.year, grid.month, Number(d));
-                    const t = cell ? colorFor(cell.colorKey) : null;
-                    return (
-                      <div key={d} className="w-10 shrink-0">
-                        <div
-                          title={cell ? cell.label : nonWorking ? 'Jour non ouvrable' : ''}
-                          className={`w-full h-full min-h-[32px] border-b border-r border-gray-100 dark:border-gray-800 ${cell ? t!.solid : nonWorking ? 'bg-gray-300 dark:bg-gray-700' : 'bg-gray-50 dark:bg-gray-900'} ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''}`}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      {journal && (
+        <ChronologyPanel
+          journal={journal}
+          year={grid.year}
+          month={grid.month}
+          daysInMonth={grid.daysInMonth}
+          holidays={grid.holidays}
+          isWorkingDay={isWorkingDay}
+          legend={grid.legend}
+          onSelectEmployee={onSelectEmployee}
+        />
+      )}
     </div>
   );
 }
@@ -465,7 +464,14 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
 // services dans le temps → Podium annuel
 // ============================================================================
 function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFocusDepartment, onSelectEmployee }: any) {
-  const lineData = yearly.months.map((m: any) => ({ month: MONTHS[m.month - 1].slice(0, 3), total: m.totalDays, explanation: m.explanation }));
+  const families = Object.keys(FAMILY_META);
+  // ✅ Empilé par famille plutôt qu'une seule ligne "total" — on voit
+  // directement quel motif pousse la tendance vers le haut, mois par mois.
+  const trendData = yearly.months.map((m: any) => {
+    const row: any = { month: MONTHS[m.month - 1].slice(0, 3), explanation: m.explanation };
+    for (const fam of families) row[fam] = m.byFamily?.[fam] ?? 0;
+    return row;
+  });
 
   const focusCodes = deptFocus ? Array.from(new Set(deptFocus.months.flatMap((m: any) => Object.keys(m.byType)))) as string[] : [];
   const focusData = deptFocus ? deptFocus.months.map((m: any) => {
@@ -501,8 +507,8 @@ function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFo
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="month" fontSize={12} />
               <YAxis fontSize={12} allowDecimals={false} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
-              <Legend />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, n: any) => [`${v} j.`, CODE_LABELS[n as string] ?? n]} />
+              <Legend formatter={(v: any) => CODE_LABELS[v] ?? v} />
               {focusCodes.map((c, i) => (
                 <Area key={c} type="monotone" dataKey={c} stackId="1" stroke={CHART_PALETTE[i % CHART_PALETTE.length]} fill={CHART_PALETTE[i % CHART_PALETTE.length]} fillOpacity={0.5} />
               ))}
@@ -512,18 +518,18 @@ function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFo
         {deptFocus?.departmentName && <p className="text-xs text-slate-400 mt-2">{deptFocus.employeeCount} personne(s) — {deptFocus.departmentName}</p>}
       </ChartCard>
 
-      <ChartCard title={`Tendance annuelle — ${yearly.year}`}>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={lineData}>
+      <ChartCard title={`Tendance annuelle — ${yearly.year}`} subtitle="Empilée par famille de motif, pour voir ce qui explique chaque mois">
+        <ResponsiveContainer width="100%" height={280}>
+          <AreaChart data={trendData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="month" fontSize={12} />
             <YAxis fontSize={12} allowDecimals={false} />
-            <Tooltip
-              contentStyle={{ ...TOOLTIP_STYLE, maxWidth: 240 }}
-              formatter={(v: any, n: any, p: any) => [`${v} j. — ${p.payload.explanation}`, "Jours d'absence"]}
-            />
-            <Line type="monotone" dataKey="total" stroke="#0EA5E9" strokeWidth={3} dot={{ r: 4 }} name="Jours d'absence" />
-          </LineChart>
+            <Tooltip contentStyle={{ ...TOOLTIP_STYLE, maxWidth: 240 }} formatter={(v: any, n: any) => [`${v} j.`, FAMILY_META[n as string]?.label ?? n]} />
+            <Legend formatter={(v: any) => FAMILY_META[v]?.label ?? v} />
+            {families.map((fam) => (
+              <Area key={fam} type="monotone" dataKey={fam} stackId="1" stroke={colorFor(FAMILY_META[fam].colorKey).hex} fill={colorFor(FAMILY_META[fam].colorKey).hex} fillOpacity={0.55} />
+            ))}
+          </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
 
@@ -540,6 +546,22 @@ function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFo
         </ResponsiveContainer>
       </ChartCard>
 
+      {yearly.leaderboardsYear && (
+        <ChartCard title="Classements ciblés — année complète" subtitle="Qui, et quel service, cumule le plus par motif sur l'année">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(['maladie', 'conventionnelle', 'exceptionnelle', 'injustifiee'] as const).map((key) => (
+              <TargetedLeaderboard
+                key={key}
+                leaderboardKey={key}
+                employees={yearly.leaderboardsYear?.[key] ?? []}
+                departments={[]}
+                onSelectEmployee={onSelectEmployee}
+              />
+            ))}
+          </div>
+        </ChartCard>
+      )}
+
       <TopTable title={`Podium annuel — ${yearly.year}`} rows={yearly.top20Year} onSelect={onSelectEmployee} />
     </div>
   );
@@ -549,20 +571,29 @@ function SurAnneePanel({ yearly, deptFocus, departments, focusDepartmentId, onFo
 // ONGLET 3 — "COMPARER LES ANNÉES"
 // ============================================================================
 function ComparerPanel({ comparison }: any) {
-  const barData = comparison.years.map((y: any) => ({ year: String(y.year), total: y.totalDays }));
+  const families = Object.keys(FAMILY_META);
+  // ✅ Barres empilées par famille — on voit directement, année par année,
+  // POURQUOI le volume a bougé (plus de maladie ? plus d'exceptionnel ?),
+  // pas juste que le total a changé.
+  const barData = comparison.years.map((y: any) => {
+    const row: any = { year: String(y.year) };
+    for (const fam of families) row[fam] = y.byFamily?.[fam] ?? 0;
+    return row;
+  });
 
   return (
     <div className="space-y-5">
-      <ChartCard title="Volume comparé par année">
-        <ResponsiveContainer width="100%" height={260}>
+      <ChartCard title="Volume comparé par année" subtitle="Empilé par famille de motif — pour voir immédiatement ce qui pèse le plus, année par année">
+        <ResponsiveContainer width="100%" height={280}>
           <BarChart data={barData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="year" fontSize={12} />
             <YAxis fontSize={12} allowDecimals={false} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Bar dataKey="total" name="Jours d'absence" radius={[8, 8, 0, 0]}>
-              {barData.map((_: any, i: number) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
-            </Bar>
+            <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any, n: any) => [`${v} j.`, FAMILY_META[n as string]?.label ?? n]} />
+            <Legend formatter={(v: any) => FAMILY_META[v]?.label ?? v} />
+            {families.map((fam) => (
+              <Bar key={fam} dataKey={fam} name={fam} stackId="a" fill={colorFor(FAMILY_META[fam].colorKey).hex} radius={fam === families[families.length - 1] ? [8, 8, 0, 0] : [0, 0, 0, 0]} />
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -583,21 +614,48 @@ function ComparerPanel({ comparison }: any) {
       </div>
 
       <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5"><h3 className="font-bold text-slate-800 dark:text-white">Détail par année</h3></div>
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5">
+          <h3 className="font-bold text-slate-800 dark:text-white">Détail par année</h3>
+          <p className="text-xs text-slate-400 mt-0.5">Répartition par famille et motifs principaux — pour expliquer chaque total</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase">
-              <tr><th className="px-4 py-2 text-left">Année</th><th className="px-4 py-2 text-right">Effectif</th><th className="px-4 py-2 text-right">Jours</th><th className="px-4 py-2 text-right">Moyenne / employé</th></tr>
+              <tr>
+                <th className="px-4 py-2 text-left">Année</th>
+                <th className="px-4 py-2 text-right">Effectif</th>
+                <th className="px-4 py-2 text-right">Jours totaux</th>
+                <th className="px-4 py-2 text-right">Moy. / employé</th>
+                {families.map((fam) => <th key={fam} className="px-4 py-2 text-right whitespace-nowrap">{FAMILY_META[fam].label}</th>)}
+                <th className="px-4 py-2 text-left">Motifs principaux</th>
+              </tr>
             </thead>
             <tbody>
-              {comparison.years.map((y: any) => (
-                <tr key={y.year} className="border-t border-slate-50 dark:border-white/5">
-                  <td className="px-4 py-2.5 font-bold text-slate-700 dark:text-slate-200">{y.year}</td>
-                  <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400">{y.employeeCount}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-slate-700 dark:text-slate-200">{y.totalDays} j.</td>
-                  <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400">{y.avgDaysPerEmployee} j.</td>
-                </tr>
-              ))}
+              {comparison.years.map((y: any) => {
+                const topCodes = Object.entries(y.byType ?? {})
+                  .sort((a: any, b: any) => b[1] - a[1])
+                  .slice(0, 3) as [string, number][];
+                return (
+                  <tr key={y.year} className="border-t border-slate-50 dark:border-white/5 align-top">
+                    <td className="px-4 py-2.5 font-bold text-slate-700 dark:text-slate-200">{y.year}</td>
+                    <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400">{y.employeeCount}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold text-slate-700 dark:text-slate-200">{y.totalDays} j.</td>
+                    <td className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400">{y.avgDaysPerEmployee} j.</td>
+                    {families.map((fam) => (
+                      <td key={fam} className="px-4 py-2.5 text-right text-slate-500 dark:text-slate-400">{y.byFamily?.[fam] ?? 0}</td>
+                    ))}
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-wrap gap-1">
+                        {topCodes.length === 0 ? <span className="text-xs text-slate-300">—</span> : topCodes.map(([code, days]) => (
+                          <span key={code} className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 dark:bg-white/5 dark:text-slate-300 whitespace-nowrap">
+                            {CODE_LABELS[code] ?? code} · {days} j.
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -623,6 +681,7 @@ function EmployeeDrawer({ detail, onClose }: any) {
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-400"><X size={18} /></button>
         </div>
         <div className="p-5 space-y-6">
+          {detail.recurrence && <RecurrenceBlock recurrence={detail.recurrence} />}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Fiche du mois</h4>
             {pieData.length === 0 ? <EmptyChart /> : (
@@ -654,6 +713,74 @@ function EmployeeDrawer({ detail, onClose }: any) {
         </div>
       </motion.div>
     </>
+  );
+}
+
+// ============================================================================
+// BLOC RÉCURRENCE — fiche employé
+// ✅ Distingue le CUMUL (jours de maladie sur 12 mois) de la RÉCURRENCE
+// (épisodes distincts sur 90 jours glissants) : un employé avec 8 arrêts
+// d'1 jour et un employé avec 1 arrêt de 8 jours ont le même cumul, mais un
+// signal RH très différent — le premier est un pattern à investiguer.
+// ============================================================================
+function RecurrenceBlock({ recurrence }: any) {
+  const items = [
+    {
+      label: 'Maladie — cumul 12 mois',
+      value: `${recurrence.sickDaysYear} j.`,
+      threshold: `seuil ${FRONT_ALERT_THRESHOLDS.employeeSickDaysPerYear} j.`,
+      alert: recurrence.alertSickDays,
+      icon: Stethoscope,
+      explain: 'Total des jours de maladie posés sur les 12 derniers mois.',
+    },
+    {
+      label: 'Maladie — récurrence',
+      value: `${recurrence.sickEpisodesRolling90d} épisode${recurrence.sickEpisodesRolling90d > 1 ? 's' : ''}`,
+      threshold: `seuil ${FRONT_ALERT_THRESHOLDS.employeeSickEpisodesRolling90d} sur 90j`,
+      alert: recurrence.alertSickRecurrence,
+      icon: Radar,
+      explain: 'Nombre d\u2019arrêts maladie distincts sur 90 jours glissants — un pattern répétitif, même court, mérite un échange RH.',
+    },
+    {
+      label: 'Absentéisme global — 12 mois',
+      value: `${recurrence.trackableDaysYear} j.`,
+      threshold: `seuil ${FRONT_ALERT_THRESHOLDS.employeeTrackableDaysPerYear} j.`,
+      alert: recurrence.alertTrackableDays,
+      icon: Gauge,
+      explain: 'Tout motif hors congé annuel/anticipé (maladie, exceptionnelle, sans solde, non justifiée) cumulé sur 12 mois.',
+    },
+  ];
+
+  const hasAnyAlert = items.some((i) => i.alert);
+
+  return (
+    <div className={`rounded-2xl p-4 border ${hasAnyAlert ? 'bg-amber-50/60 border-amber-200 dark:bg-amber-500/5 dark:border-amber-800/40' : 'bg-slate-50 border-slate-100 dark:bg-white/[0.02] dark:border-white/5'}`}>
+      <div className="flex items-center gap-2 mb-3">
+        {hasAnyAlert ? <ShieldAlert size={15} className="text-amber-500" /> : <ShieldAlert size={15} className="text-slate-300" />}
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Récurrence & signaux RH</h4>
+      </div>
+      <div className="space-y-2.5">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <div key={it.label} className={`flex items-start gap-3 p-2.5 rounded-xl ${it.alert ? 'bg-white dark:bg-[#0B1121] border border-amber-200 dark:border-amber-800/30' : ''}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${it.alert ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 text-slate-400 dark:bg-white/5'}`}>
+                <Icon size={14} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{it.label}</span>
+                  <span className={`text-xs font-extrabold ${it.alert ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}>{it.value}</span>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">{it.explain}</p>
+                <p className="text-[10px] text-slate-300 mt-0.5">{it.threshold}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {!hasAnyAlert && <p className="text-[11px] text-slate-400 mt-3">Aucun signal particulier — situation normale.</p>}
+    </div>
   );
 }
 
@@ -694,13 +821,253 @@ function EmptyChart() {
   return <div className="h-[220px] flex items-center justify-center text-sm text-slate-400">Aucune donnée sur cette période</div>;
 }
 
+// ============================================================================
+// CHRONOLOGIE DU MOIS — remplace temporairement la grille calendrier
+// (jugée peu lisible). Une ligne par employé concerné, une barre par
+// épisode d'absence positionnée sur l'axe du mois, motif écrit dessus.
+// On y reviendra pour une version grille plus aboutie une fois le reste
+// du module stabilisé.
+// ============================================================================
+function ChronologyPanel({ journal, year, month, daysInMonth, holidays, isWorkingDay, legend, onSelectEmployee }: any) {
+  const rows = journal.journal ?? [];
+  const codeDefMap = new Map<string, any>((legend ?? []).map((l: any) => [l.code, l]));
+  const defFor = (code: string) => codeDefMap.get(code) ?? { colorKey: 'neutral', countsAsAbsenceDay: true };
+
+  const byEmployee = new Map<string, { name: string; departmentName: string | null; episodes: any[] }>();
+  for (const r of rows) {
+    if (!defFor(r.code).countsAsAbsenceDay) continue;
+    if (!byEmployee.has(r.employeeId)) byEmployee.set(r.employeeId, { name: r.employeeName, departmentName: r.departmentName, episodes: [] });
+    byEmployee.get(r.employeeId)!.episodes.push(r);
+  }
+  const employees = Array.from(byEmployee.entries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month - 1, daysInMonth);
+  const dayWidth = 100 / daysInMonth;
+
+  const clampDay = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const clamped = d < monthStart ? monthStart : d > monthEnd ? monthEnd : d;
+    return clamped.getDate();
+  };
+
+  const todayInMonth = new Date().getFullYear() === year && new Date().getMonth() + 1 === month ? new Date().getDate() : null;
+
+  return (
+    <div className="bg-white dark:bg-[#0B1121] rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 overflow-hidden">
+      <div className="p-4 border-b border-slate-100 dark:border-white/5">
+        <h3 className="font-bold text-slate-800 dark:text-white">
+          Chronologie du mois
+          <span className="text-sm font-normal text-slate-400 ml-2">{employees.length} personne(s) concernée(s)</span>
+        </h3>
+        <p className="text-xs text-slate-400 mt-0.5">Chaque barre = une absence, motif indiqué directement dessus</p>
+      </div>
+
+      {employees.length === 0 ? (
+        <div className="p-8 text-sm text-slate-400 text-center">Aucune absence à positionner ce mois-ci.</div>
+      ) : (
+        <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
+          <div className="min-w-[720px]">
+            {/* Axe des jours */}
+            <div className="flex border-b border-slate-100 dark:border-white/5">
+              <div className="sticky left-0 z-10 w-48 shrink-0 bg-slate-50 dark:bg-white/[0.03] p-2 text-[10px] font-bold uppercase text-slate-400 border-r border-slate-100 dark:border-white/5">
+                Collaborateur
+              </div>
+              <div className="flex-1 relative h-8">
+                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
+                  const isHoliday = holidays?.some((h: any) => Number(h.day) === d);
+                  const nonWorking = !isWorkingDay(year, month, d);
+                  if (d % 5 !== 0 && d !== 1 && d !== daysInMonth) return null;
+                  return (
+                    <div key={d} className="absolute top-0 h-full flex flex-col items-center justify-center" style={{ left: `${(d - 1) * dayWidth}%`, width: `${dayWidth}%` }}>
+                      <span className={`text-[10px] font-bold ${d === todayInMonth ? 'text-sky-600' : isHoliday ? 'text-indigo-500' : nonWorking ? 'text-slate-300' : 'text-slate-400'}`}>{d}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Lignes employés */}
+            <div className="divide-y divide-slate-50 dark:divide-white/5">
+              {employees.map(([employeeId, emp]) => (
+                <div key={employeeId} className="flex hover:bg-slate-50 dark:hover:bg-white/[0.02]">
+                  <div className="sticky left-0 z-10 w-48 shrink-0 bg-white dark:bg-[#0B1121] p-2.5 border-r border-slate-100 dark:border-white/5 overflow-hidden">
+                    <button onClick={() => onSelectEmployee(employeeId)} title={emp.name} className="text-xs font-bold truncate text-slate-800 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 block w-full text-left">
+                      {emp.name}
+                    </button>
+                    <p className="text-[10px] text-slate-400 truncate">{emp.departmentName || '—'}</p>
+                  </div>
+                  <div className="flex-1 relative py-2" style={{ minHeight: 40 }}>
+                    {emp.episodes.map((ep: any, i: number) => {
+                      const startDay = clampDay(ep.startDate);
+                      const endDay = clampDay(ep.endDate);
+                      const left = (startDay - 1) * dayWidth;
+                      const width = Math.max((endDay - startDay + 1) * dayWidth, dayWidth);
+                      const t = colorFor(defFor(ep.code).colorKey);
+                      const start = new Date(ep.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                      const end = new Date(ep.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                      return (
+                        <div
+                          key={i}
+                          title={`${ep.label} — du ${start} au ${end} (${ep.days} j.)${ep.reason ? ` — « ${ep.reason} »` : ''}`}
+                          className={`absolute h-6 rounded-md ${t.solid} flex items-center px-1.5 overflow-hidden shadow-sm`}
+                          style={{ left: `${left}%`, width: `${width}%`, top: 4 }}
+                        >
+                          <span className="text-[10px] font-bold text-white truncate">{ep.code}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// JOURNAL DU MOIS — replié par défaut (peut être une longue liste), avec
+// un résumé toujours visible et un bouton pour dérouler le détail.
+// ============================================================================
+function CollapsibleJournal({ journal, onSelectEmployee }: any) {
+  const [open, setOpen] = useState(false);
+  const count = journal.journal?.length ?? 0;
+
+  return (
+    <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden">
+      <button onClick={() => setOpen((o) => !o)} className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-white/[0.02]">
+        <div>
+          <h3 className="font-bold text-slate-800 dark:text-white">Journal du mois <span className="text-sm font-normal text-slate-400">({count})</span></h3>
+          <p className="text-xs text-slate-400 mt-0.5">{journal.summary}</p>
+        </div>
+        <ChevronDown size={18} className={`text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="border-t border-slate-100 dark:border-white/5"><MonthJournal journal={journal} onSelectEmployee={onSelectEmployee} /></div>}
+    </div>
+  );
+}
+
+// ============================================================================
+// BANDEAU D'ALERTES RH
+// ✅ Calculé côté backend sur 12 mois glissants (hors congé statutaire).
+//    Replié par défaut au-delà de 3 alertes de chaque catégorie pour ne pas
+//    noyer le dashboard — combiné avec des badges directement sur les
+//    classements/podiums concernés (cf. TargetedLeaderboard / TopTable).
+// ============================================================================
+function AlertsBanner({ employeeAlerts, departmentAlerts, onSelectEmployee }: any) {
+  const [expanded, setExpanded] = useState(false);
+  const totalCount = employeeAlerts.length + departmentAlerts.length;
+  const visibleEmployeeAlerts = expanded ? employeeAlerts : employeeAlerts.slice(0, 3);
+  const visibleDeptAlerts = expanded ? departmentAlerts : departmentAlerts.slice(0, 3);
+
+  const ALERT_LABELS: Record<string, string> = {
+    EMPLOYEE_SICK_DAYS: 'Cumul maladie élevé',
+    EMPLOYEE_SICK_RECURRENCE: 'Maladie récurrente',
+    EMPLOYEE_TRACKABLE_DAYS: 'Absentéisme global élevé',
+    DEPARTMENT_ABSENTEEISM_RATE: 'Taux d\u2019absentéisme élevé',
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-800/40 rounded-2xl overflow-hidden">
+      <div className="px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shrink-0"><ShieldAlert size={18} /></div>
+          <div>
+            <h3 className="font-bold text-amber-900 dark:text-amber-200 text-sm">{totalCount} signal{totalCount > 1 ? 'aux' : ''} RH à surveiller</h3>
+            <p className="text-[11px] text-amber-700/80 dark:text-amber-300/70">Basé sur 12 mois glissants — hors congé annuel/anticipé</p>
+          </div>
+        </div>
+        {totalCount > 3 && (
+          <button onClick={() => setExpanded((e) => !e)} className="flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-300 hover:underline">
+            {expanded ? 'Réduire' : 'Tout voir'} <ChevronDown size={14} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          </button>
+        )}
+      </div>
+      <div className="px-5 pb-4 flex flex-wrap gap-2">
+        {visibleEmployeeAlerts.map((a: any, i: number) => (
+          <button
+            key={`e-${i}`}
+            onClick={() => onSelectEmployee(a.employeeId)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-[#0B1121] border border-amber-200 dark:border-amber-800/40 text-left hover:border-amber-400"
+          >
+            <AlertTriangle size={13} className="text-amber-500 shrink-0" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{a.employeeName}</span>
+            <span className="text-[10px] text-slate-400">{ALERT_LABELS[a.type] ?? a.type}</span>
+          </button>
+        ))}
+        {visibleDeptAlerts.map((a: any, i: number) => (
+          <div
+            key={`d-${i}`}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white dark:bg-[#0B1121] border border-red-200 dark:border-red-800/40"
+          >
+            <Building2 size={13} className="text-red-500 shrink-0" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{a.departmentName}</span>
+            <span className="text-[10px] text-red-500 font-semibold">{a.value}% d'absentéisme</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// CLASSEMENT CIBLÉ PAR MOTIF (mini-podium employé + mini-classement service)
+// ✅ Un bloc par famille "à tracer" (maladie, conventionnelle, exceptionnelle,
+//    non justifiée) — répond directement à "qui/quel service en a le plus".
+// ============================================================================
+function TargetedLeaderboard({ leaderboardKey, employees, departments, alertEmployeeIds, alertDepartmentIds, onSelectEmployee }: any) {
+  const meta = LEADERBOARD_META[leaderboardKey];
+  const Icon = meta.icon;
+  const topEmployees = employees.slice(0, 5);
+  const topDepartments = departments.slice(0, 3);
+  const isEmpty = topEmployees.length === 0;
+
+  return (
+    <div className="border border-slate-100 dark:border-white/5 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 flex items-center gap-2.5 bg-slate-50 dark:bg-white/[0.03]">
+        <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${meta.gradient} flex items-center justify-center text-white shrink-0`}><Icon size={14} /></div>
+        <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">{meta.label}</h4>
+      </div>
+      {isEmpty ? (
+        <div className="p-4 text-xs text-slate-400 text-center">Aucun cas ce mois-ci</div>
+      ) : (
+        <div className="p-3 space-y-3">
+          <div className="space-y-1">
+            {topEmployees.map((e: any, i: number) => (
+              <button key={e.employeeId} onClick={() => onSelectEmployee(e.employeeId)} className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-white/[0.03] text-left">
+                <span className="w-5 text-[10px] font-bold text-slate-400">{i + 1}.</span>
+                <span className="flex-1 text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">{e.name}</span>
+                {alertEmployeeIds?.has(e.employeeId) && <AlertTriangle size={12} className="text-amber-500 shrink-0" />}
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">{e.days} j.</span>
+              </button>
+            ))}
+          </div>
+          {topDepartments.length > 0 && (
+            <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex flex-wrap gap-1.5">
+              {topDepartments.map((d: any) => (
+                <span key={d.departmentId} className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg ${alertDepartmentIds?.has(d.departmentId) ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'}`}>
+                  {alertDepartmentIds?.has(d.departmentId) && <AlertTriangle size={10} />}
+                  {d.name} · {d.days} j.
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const RANK_BADGE = [
   { bg: 'bg-gradient-to-br from-yellow-300 to-amber-500', text: 'text-white', ring: 'ring-2 ring-amber-300/60', emoji: '🥇' },
   { bg: 'bg-gradient-to-br from-slate-300 to-slate-400', text: 'text-white', ring: 'ring-2 ring-slate-300/60', emoji: '🥈' },
   { bg: 'bg-gradient-to-br from-orange-300 to-orange-500', text: 'text-white', ring: 'ring-2 ring-orange-300/60', emoji: '🥉' },
 ];
 
-function TopTable({ title, rows, onSelect }: { title: string; rows: any[]; onSelect: (id: string) => void }) {
+function TopTable({ title, rows, onSelect, alertIds }: { title: string; rows: any[]; onSelect: (id: string) => void; alertIds?: Set<string> }) {
   return (
     <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl overflow-hidden">
       <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
@@ -719,6 +1086,7 @@ function TopTable({ title, rows, onSelect }: { title: string; rows: any[]; onSel
                   <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400 shrink-0">{i + 1}</span>
                 )}
                 <span className="flex-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{r.name}</span>
+                {alertIds?.has(r.employeeId) && <AlertTriangle size={13} className="text-amber-500 shrink-0" />}
                 <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{r.days} j.</span>
               </button>
             );

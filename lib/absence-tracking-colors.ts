@@ -108,6 +108,57 @@ export const COLOR_TOKENS: Record<string, ColorTokens> = {
     cellText: 'text-orange-700 dark:text-orange-300',
     solid: 'bg-orange-500',
   },
+  // ✅ Ajoutés pour les codes fins par sous-motif (refonte traçabilité) —
+  // congé anticipé (variante plus claire du congé annuel), paternité,
+  // conventionnelle "autre", mariage, décès, naissance.
+  'success-light': {
+    hex: '#34D399',
+    dot: 'bg-emerald-400',
+    chip: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/10 dark:text-emerald-300 dark:border-emerald-800',
+    cellBg: 'bg-emerald-50 dark:bg-emerald-500/10',
+    cellText: 'text-emerald-600 dark:text-emerald-300',
+    solid: 'bg-emerald-300',
+  },
+  indigo: {
+    hex: '#6366F1',
+    dot: 'bg-indigo-500',
+    chip: 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800',
+    cellBg: 'bg-indigo-100 dark:bg-indigo-500/20',
+    cellText: 'text-indigo-700 dark:text-indigo-300',
+    solid: 'bg-indigo-400',
+  },
+  violet: {
+    hex: '#A78BFA',
+    dot: 'bg-violet-400',
+    chip: 'bg-violet-50 text-violet-600 border-violet-100 dark:bg-violet-900/10 dark:text-violet-300 dark:border-violet-800',
+    cellBg: 'bg-violet-50 dark:bg-violet-500/10',
+    cellText: 'text-violet-600 dark:text-violet-300',
+    solid: 'bg-violet-300',
+  },
+  amber: {
+    hex: '#FBBF24',
+    dot: 'bg-amber-400',
+    chip: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800',
+    cellBg: 'bg-amber-100 dark:bg-amber-500/20',
+    cellText: 'text-amber-700 dark:text-amber-300',
+    solid: 'bg-amber-400',
+  },
+  sky: {
+    hex: '#38BDF8',
+    dot: 'bg-sky-400',
+    chip: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800',
+    cellBg: 'bg-sky-100 dark:bg-sky-500/20',
+    cellText: 'text-sky-700 dark:text-sky-300',
+    solid: 'bg-sky-400',
+  },
+  'slate-dark': {
+    hex: '#334155',
+    dot: 'bg-slate-600',
+    chip: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    cellBg: 'bg-slate-200 dark:bg-slate-600/40',
+    cellText: 'text-slate-700 dark:text-slate-300',
+    solid: 'bg-slate-500',
+  },
   // ✅ Statuts de présence (pas des absences) — mêmes tons cyan que le repère
   //    "Jour ouvrable" de la légende, mais version pleine pour un jour confirmé
   presence: {
@@ -140,6 +191,42 @@ export function colorFor(colorKey: string): ColorTokens {
   return COLOR_TOKENS[colorKey] ?? COLOR_TOKENS.neutral;
 }
 
+// ✅ Miroir des libellés backend (absence-tracking.constants.ts) — pour
+// afficher des labels lisibles sans dépendre d'un appel API supplémentaire
+// quand on manipule des données agrégées brutes (ex: comparaison d'années).
+export const CODE_LABELS: Record<string, string> = {
+  CP: 'Congé annuel', CA: 'Congé anticipé', CSS: 'Congé sans solde',
+  MAL: 'Maladie', MAT: 'Maternité', PAT: 'Paternité', CONV_AUTRE: 'Conventionnelle — autre',
+  MAR: 'Mariage', DEC: 'Décès', NAI: 'Naissance', EXC_AUTRE: 'Exceptionnelle — autre',
+  ABS: 'Absence non justifiée', JF: 'Jour férié',
+};
+
+export const FAMILY_META: Record<string, { label: string; colorKey: string }> = {
+  CONGE_STATUTAIRE: { label: 'Congé statutaire', colorKey: 'success' },
+  CONVENTIONNELLE: { label: 'Conventionnelle', colorKey: 'purple' },
+  EXCEPTIONNELLE: { label: 'Exceptionnelle', colorKey: 'amber' },
+  INJUSTIFIEE: { label: 'Non justifiée', colorKey: 'rose' },
+};
+
+// ✅ Miroir de ALERT_THRESHOLDS côté backend (absence-tracking.constants.ts)
+// — uniquement pour affichage ("seuil : X"), la logique d'alerte reste
+// calculée côté serveur.
+export const FRONT_ALERT_THRESHOLDS = {
+  employeeSickDaysPerYear: 15,
+  employeeSickEpisodesRolling90d: 3,
+  employeeTrackableDaysPerYear: 25,
+  departmentAbsenteeismRatePercent: 8,
+};
+
 // Palette de secours pour les graphiques quand on a besoin d'une série ordonnée
 // (identique à la palette déjà utilisée dans rapports/departements)
 export const CHART_PALETTE = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1', '#EF4444', '#64748B'];
+
+// ✅ Code couleur du taux d'absentéisme — mêmes seuils que le backend
+// (ALERT_THRESHOLDS.departmentAbsenteeismRatePercent = 8%). En dessous de la
+// moitié du seuil = sain, entre les deux = à surveiller, au-dessus = alerte.
+export function absenteeismRateTone(ratePercent: number): { text: string; bg: string; label: string } {
+  if (ratePercent >= 8) return { text: 'text-red-600 dark:text-red-400', bg: 'from-red-400 to-rose-500', label: 'Élevé' };
+  if (ratePercent >= 4) return { text: 'text-amber-600 dark:text-amber-400', bg: 'from-amber-400 to-orange-500', label: 'À surveiller' };
+  return { text: 'text-emerald-600 dark:text-emerald-400', bg: 'from-emerald-400 to-teal-500', label: 'Sain' };
+}
