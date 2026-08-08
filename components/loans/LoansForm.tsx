@@ -308,11 +308,21 @@ const GlassCard = ({ children, className = '' }: { children: React.ReactNode; cl
 // ============================================================
 export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void }) => {
     const [formType, setFormType] = useState<FormType>('LOAN');
-    const [formData, setFormData] = useState<any>({});
+    const [formData, setFormData] = useState<any>({ recoverViaPayroll: true });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loadingEmployees, setLoadingEmployees] = useState(true);
+    const [userRole, setUserRole] = useState('');
+
+    useEffect(() => {
+        try { const stored = localStorage.getItem('user'); if (stored) setUserRole(JSON.parse(stored).role || ''); } catch {}
+    }, []);
+
+    // Le choix "paie / espèces" n'a d'effet que quand un ADMIN/SUPER_ADMIN/HR_MANAGER
+    // crée directement pour un employé (auto-approuvé, pas de circuit de validation
+    // où ce choix serait redemandé plus tard).
+    const isAdminCreatingForSomeoneElse = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole) && !!formData.employeeId;
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -403,9 +413,10 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                 ...formData,
                 amount: Number(formData.amount),
                 ...(formType === 'LOAN' && { monthlyRepayment: Number(formData.monthlyRepayment) }),
+                ...(isAdminCreatingForSomeoneElse && { recoverViaPayroll: !!formData.recoverViaPayroll }),
             });
             setMessage({ type: 'success', text: `${label} créé et approuvé avec succès !` });
-            setFormData({});
+            setFormData({ recoverViaPayroll: true });
             setTimeout(() => onCreationSuccess(), 1500);
         } catch (error: any) {
             console.error(error);
@@ -495,6 +506,17 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
 
                 <div className="mb-6">
                     <Input icon={List} label="Raison du Financement / Avance" name="reason" type="textarea" value={formData.reason || ''} onChange={handleChange} placeholder="Détaillez la raison (achat immobilier, dépense imprévue, etc.)" required />
+
+                    {isAdminCreatingForSomeoneElse && (
+                        <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mt-1 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.recoverViaPayroll ?? true}
+                                onChange={e => setFormData((prev: any) => ({ ...prev, recoverViaPayroll: e.target.checked }))}
+                            />
+                            Récupérer automatiquement sur la paie {formData.recoverViaPayroll === false && <span className="text-amber-500">(sinon : remboursement en espèces uniquement, à saisir manuellement)</span>}
+                        </label>
+                    )}
                 </div>
 
                 <AnimatePresence>
