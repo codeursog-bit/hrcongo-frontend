@@ -37,11 +37,10 @@ export default function ReleveEmployeeDetailPage() {
     try { const stored = localStorage.getItem('user'); if (stored) setUserRole(JSON.parse(stored).role || ''); } catch {}
     (async () => {
       try {
-        const [l, a, d]: any = await Promise.all([api.get('/loans'), api.get('/loans/advances'), api.get('/company-deductions')]);
+        const [l, a]: any = await Promise.all([api.get('/loans'), api.get('/loans/advances')]);
         const myLoans = (l || []).filter((x: any) => x.employeeId === employeeId);
         const myAdvances = (a || []).filter((x: any) => x.employeeId === employeeId);
-        const myDeductions = (d || []).filter((x: any) => x.employeeId === employeeId && x.status !== 'CANCELLED');
-        setEmployee(myLoans[0]?.employee || myAdvances[0]?.employee || myDeductions[0]?.employee || null);
+        setEmployee(myLoans[0]?.employee || myAdvances[0]?.employee || null);
 
         const relevantLoans = myLoans.filter((x: any) => ['ACTIVE', 'PAID'].includes(x.status));
         const relevantAdvances = myAdvances.filter((x: any) => ['APPROVED', 'DEDUCTED', 'PAID'].includes(x.status));
@@ -53,7 +52,8 @@ export default function ReleveEmployeeDetailPage() {
         const rows: Mouvement[] = [];
 
         myLoans.forEach((x: any) => {
-          rows.push({ date: x.createdAt, motif: TYPE_LABEL[x.type ?? 'ARGENT'], ref: x.reference || '', montant: Number(x.amount), remboursement: 0 });
+          const label = TYPE_LABEL[x.type ?? 'ARGENT'];
+          rows.push({ date: x.createdAt, motif: x.type === 'AUTRE' && x.reason ? x.reason : label, ref: x.reference || '', montant: Number(x.amount), remboursement: 0 });
         });
         relevantLoans.forEach((x: any, i: number) => {
           (loanHistories[i] || []).forEach((log: any) => {
@@ -68,13 +68,6 @@ export default function ReleveEmployeeDetailPage() {
           (advanceHistories[i] || []).forEach((log: any) => {
             rows.push({ date: log.createdAt || `${log.year}-${String(log.month).padStart(2, '0')}-01`, motif: 'Remboursement avance', ref: '', montant: 0, remboursement: Number(log.amount) });
           });
-        });
-
-        myDeductions.forEach((x: any) => {
-          // Retenue diverse (Pharmacie, Hôpital, Cantine...) — dès qu'elle est
-          // DEDUCTED, elle a été retenue directement sur la paie : c'est donc
-          // un débit ET un remboursement immédiat sur la même ligne.
-          rows.push({ date: x.createdAt, motif: x.label, ref: '', montant: Number(x.amount), remboursement: x.status === 'DEDUCTED' ? Number(x.amount) : 0 });
         });
 
         rows.sort((r1, r2) => new Date(r1.date).getTime() - new Date(r2.date).getTime());
@@ -95,7 +88,7 @@ export default function ReleveEmployeeDetailPage() {
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 
   return (
-    <div className="max-w-[900px] mx-auto pb-24 space-y-5 print:max-w-full">
+    <div className="max-w-[1200px] mx-auto pb-24 space-y-5 print:max-w-full">
       <div className="print:hidden">
         <FinanceSubNav userRole={userRole} />
       </div>
