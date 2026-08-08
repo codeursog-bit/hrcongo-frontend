@@ -485,7 +485,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                             <div>
                               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{n.title}</p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{n.message}</p>
-                              <p className="text-[10px] text-slate-400 mt-2">{new Date(n.time).toLocaleString()}</p>
+                              <p className="text-[10px] text-slate-400 mt-2">{new Date(n.createdAt).toLocaleString('fr-FR')}</p>
                             </div>
                           </div>
                         </div>
