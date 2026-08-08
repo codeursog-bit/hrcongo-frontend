@@ -301,11 +301,10 @@ function MonthJournal({ journal, onSelectEmployee }: any) {
   );
 }
 
-function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSelectEmployee }: any) {
+function CeMoisPanel({ dashboard, grid, journal, yearly, prevMonthTotal, workDays, onSelectEmployee }: any) {
   const byTypeData = (dashboard.byType ?? []).map((t: any) => ({ name: t.label, code: t.code, value: t.days, colorKey: t.colorKey }));
   const byDeptData = (dashboard.byDepartment ?? []).map((d: any) => ({ name: d.name, value: d.days }));
   const totalDays = byTypeData.reduce((s: number, d: any) => s + d.value, 0);
-  const topDept = [...byDeptData].sort((a, b) => b.value - a.value)[0];
   const absentTodayEntries = Object.entries(dashboard.absentToday ?? {}) as [string, number][];
   const absentTodayTotal = absentTodayEntries.reduce((s, [, n]) => s + n, 0);
   const todayLabel = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
@@ -326,12 +325,44 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
 
   return (
     <div className="space-y-5">
-      {(employeeAlerts.length > 0 || departmentAlerts.length > 0) && (
-        <AlertsBanner employeeAlerts={employeeAlerts} departmentAlerts={departmentAlerts} onSelectEmployee={onSelectEmployee} />
+      {/* ============ BANDEAU CHIFFRES-CLÉS — "Nombre d'employés" +
+          "Absents aujourd'hui", exactement comme l'en-tête du tableau de
+          bord Excel. Le reste (volume, taux, service exposé) est SOUS ce
+          bandeau, en plus petit — ce ne sont pas des chiffres de l'Excel. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0"><Users size={22} /></div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Nombre d'employés</p>
+            <p className="text-3xl font-extrabold text-slate-800 dark:text-white">{dashboard.employeeCount}</p>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-[#0B1121] border border-slate-100 dark:border-white/5 rounded-2xl p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0"><CalendarDays size={22} /></div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Absents aujourd'hui — {todayLabel}</p>
+            <p className="text-3xl font-extrabold text-slate-800 dark:text-white">{absentTodayTotal}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Aujourd'hui — détail par code, complète le chiffre ci-dessus */}
+      {absentTodayEntries.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {absentTodayEntries.filter(([, n]) => n > 0).map(([code, count]) => {
+            const def = (dashboard.byType ?? []).find((t: any) => t.code === code) ?? { colorKey: 'neutral', label: code };
+            const t = colorFor(def.colorKey);
+            return (
+              <div key={code} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${t.chip} border text-[11px] font-bold`}>
+                <span>{def.label}</span><span className="opacity-70">· {count}</span>
+              </div>
+            );
+          })}
+        </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatMini label="Effectif suivi" value={String(dashboard.employeeCount)} icon={Users} gradient="from-sky-400 to-blue-500" />
+      {/* Repères secondaires — volume/taux/service, pas des chiffres Excel */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatMini
           label="Volume d'absence (jours)"
           value={String(totalDays)}
@@ -342,63 +373,17 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
         <StatMini
           label="Taux d'absentéisme"
           value={`${rate}%`}
-          sub={`${rateTone.label} — hors congé statutaire`}
+          sub={`${rateTone.label} — hors congé annuel`}
           icon={Gauge}
           gradient={rateTone.bg}
         />
-        <StatMini label="Service le plus exposé" value={topDept?.name ?? '—'} sub={topDept ? `${topDept.value} j.` : ''} icon={Building2} gradient="from-emerald-400 to-teal-500" />
+        <StatMini label="Service le plus exposé" value={[...byDeptData].sort((a, b) => b.value - a.value)[0]?.name ?? '—'} sub={byDeptData[0] ? `${[...byDeptData].sort((a, b) => b.value - a.value)[0]?.value} j.` : ''} icon={Building2} gradient="from-emerald-400 to-teal-500" />
       </div>
 
-      {/* Classements ciblés — répondent directement à "qui/quel service a le plus de X" */}
-      <ChartCard title="Classements ciblés par motif" subtitle="Qui, et quel service, est le plus concerné par chaque type d'absence">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(['maladie', 'conventionnelle', 'exceptionnelle', 'injustifiee'] as const).map((key) => (
-            <TargetedLeaderboard
-              key={key}
-              leaderboardKey={key}
-              employees={dashboard.leaderboards?.[key] ?? []}
-              departments={dashboard.departmentLeaderboards?.[key] ?? []}
-              alertEmployeeIds={alertEmployeeIds}
-              alertDepartmentIds={alertDepartmentIds}
-              onSelectEmployee={onSelectEmployee}
-            />
-          ))}
-        </div>
-      </ChartCard>
-
-      {/* Aujourd'hui — compteurs par code, même langage visuel que la légende */}
-      {absentTodayEntries.length > 0 && (
-        <ChartCard title={`Aujourd'hui — ${todayLabel}`} subtitle="Qui est absent précisément aujourd'hui (indépendant du mois affiché plus haut)">
-          <div className="flex flex-wrap gap-3">
-            {absentTodayEntries.map(([code, count]) => {
-              const def = (dashboard.byType ?? []).find((t: any) => t.code === code) ?? { colorKey: 'neutral', label: code };
-              const t = colorFor(def.colorKey);
-              return (
-                <div key={code} className="flex items-center gap-2.5 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                  <div className={`w-6 h-6 rounded ${t.solid} flex items-center justify-center text-white text-[11px] font-extrabold shrink-0`}>{count}</div>
-                  <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">{def.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </ChartCard>
-      )}
-
+      {/* ============ RÉPARTITION DES ABSENCES — les 2 camemberts, dans
+          le même ordre que l'Excel : tous les employés, puis par service. */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChartCard title="Poids de chaque service">
-          {byDeptData.length === 0 ? <EmptyChart /> : (
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie data={byDeptData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
-                  {byDeptData.map((_: any, i: number) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
-                </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v} j.`, '']} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </ChartCard>
-        <ChartCard title="Nature des absences">
+        <ChartCard title="Répartition des absences — tous les employés">
           {byTypeData.length === 0 ? <EmptyChart /> : (
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
@@ -411,58 +396,98 @@ function CeMoisPanel({ dashboard, grid, journal, prevMonthTotal, workDays, onSel
             </ResponsiveContainer>
           )}
         </ChartCard>
+        <ChartCard title="Répartition des absences — par service">
+          {byDeptData.length === 0 ? <EmptyChart /> : (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={byDeptData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+                  {byDeptData.map((_: any, i: number) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: any) => [`${v} j.`, '']} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
       </div>
 
-      {journal && <CollapsibleJournal journal={journal} onSelectEmployee={onSelectEmployee} />}
-
-      <TopTable title="Podium du mois" rows={dashboard.top20Month} onSelect={onSelectEmployee} alertIds={alertEmployeeIds} />
-
-      {/* Légende — même format que le calendrier de Présences : carré plein + libellé */}
+      {/* ============ PRÉSENCE — légende des codes, format clé/valeur
+          compact façon Excel (code + libellé), juste après les camemberts
+          et avant les classements, comme dans le fichier de référence. */}
       {grid.legend?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
-          <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Légende</h4>
-          <div className="flex flex-wrap gap-4">
-            {grid.legend.filter((l: any) => !['CSS', 'LATE'].includes(l.code)).map((l: any) => {
+        <div className="bg-white dark:bg-[#0B1121] rounded-2xl p-5 border border-slate-100 dark:border-white/5">
+          <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Présence</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-2">
+            {grid.legend.filter((l: any) => l.code !== 'LATE').map((l: any) => {
               const t = colorFor(l.colorKey);
               return (
-                <div key={l.code} className="flex items-start gap-2 max-w-[220px]">
-                  <div className={`w-6 h-6 rounded ${t.solid} shrink-0 mt-0.5`} />
-                  <div>
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 block">{l.label}</span>
-                    {l.description && <span className="text-[10px] text-gray-400 leading-snug">{l.description}</span>}
-                  </div>
+                <div key={l.code} className="flex items-center gap-2">
+                  <span className={`w-9 shrink-0 text-center text-[10px] font-extrabold rounded px-1 py-0.5 ${t.cellBg} ${t.cellText}`}>{l.code}</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{l.label}</span>
                 </div>
               );
             })}
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-cyan-100 dark:bg-cyan-900/50 border border-cyan-300 dark:border-cyan-700" />
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Jour ouvrable</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-gray-300 dark:bg-gray-700 border border-gray-400" />
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Jour non ouvrable</span>
-            </div>
           </div>
         </div>
       )}
 
-      {/* Grille mensuelle — chaque employé, chaque jour, case vide = présent.
-          C'est la vue dense (façon tableur) ; la Chronologie ci-dessous en
-          donne la lecture "d'un coup d'œil" pour qui préfère les barres. */}
+      {/* ============ TOP 20 — Scores d'absences, mois puis année, comme
+          les deux tableaux "Top 20" de l'Excel. */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TopTable title={`Top 20 — Scores d'absences (${MONTHS[dashboard.month - 1]})`} rows={dashboard.top20Month} onSelect={onSelectEmployee} alertIds={alertEmployeeIds} />
+        <TopTable title={`Top 20 — Scores d'absences (Annuel ${yearly?.year ?? ''})`} rows={yearly?.top20Year ?? []} onSelect={onSelectEmployee} />
+      </div>
+
+      {/* ============ GRILLE DU MOIS — la vue dense, employé × jour,
+          équivalent direct des onglets Janvier→Décembre de l'Excel. */}
       <MonthlyAbsenceGrid grid={grid} workDays={workDays} onSelectEmployee={onSelectEmployee} />
 
-      {journal && (
-        <ChronologyPanel
-          journal={journal}
-          year={grid.year}
-          month={grid.month}
-          daysInMonth={grid.daysInMonth}
-          holidays={grid.holidays}
-          isWorkingDay={isWorkingDay}
-          legend={grid.legend}
-          onSelectEmployee={onSelectEmployee}
-        />
-      )}
+      {/* ============ Ce qui suit n'existe pas dans l'Excel — analyses RH
+          complémentaires propres à Konza, clairement à part. ============ */}
+      <div className="pt-2">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-px flex-1 bg-slate-100 dark:bg-white/5" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Analyses RH complémentaires</span>
+          <div className="h-px flex-1 bg-slate-100 dark:bg-white/5" />
+        </div>
+
+        <div className="space-y-5">
+          {(employeeAlerts.length > 0 || departmentAlerts.length > 0) && (
+            <AlertsBanner employeeAlerts={employeeAlerts} departmentAlerts={departmentAlerts} onSelectEmployee={onSelectEmployee} />
+          )}
+
+          <ChartCard title="Classements ciblés par motif" subtitle="Qui, et quel service, est le plus concerné par chaque type d'absence">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(['maladie', 'conventionnelle', 'exceptionnelle', 'injustifiee'] as const).map((key) => (
+                <TargetedLeaderboard
+                  key={key}
+                  leaderboardKey={key}
+                  employees={dashboard.leaderboards?.[key] ?? []}
+                  departments={dashboard.departmentLeaderboards?.[key] ?? []}
+                  alertEmployeeIds={alertEmployeeIds}
+                  alertDepartmentIds={alertDepartmentIds}
+                  onSelectEmployee={onSelectEmployee}
+                />
+              ))}
+            </div>
+          </ChartCard>
+
+          {journal && <CollapsibleJournal journal={journal} onSelectEmployee={onSelectEmployee} />}
+
+          {journal && (
+            <ChronologyPanel
+              journal={journal}
+              year={grid.year}
+              month={grid.month}
+              daysInMonth={grid.daysInMonth}
+              holidays={grid.holidays}
+              isWorkingDay={isWorkingDay}
+              legend={grid.legend}
+              onSelectEmployee={onSelectEmployee}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
