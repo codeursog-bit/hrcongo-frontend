@@ -2,38 +2,38 @@
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/absences/suivi/page.tsx
-// ✅ "Suivi des absences" — vue complète (congés + permissions + absences
-//    injustifiées), dans le module Présences. Le contenu vient du composant
-//    partagé AbsenceAnalyticsBoard (scope="all").
+// ✅ "Suivi des absences" — utilise le moteur partagé AbsenceAnalyticsBoard,
+//    scope="absence_request" (demandes d'absence : maladie, conventionnelle,
+//    exceptionnelle, non justifiée — distinct des congés statutaires qui
+//    ont leur propre page /conges/analyse avec scope="leave").
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
-import { authService } from '@/lib/services/authService';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
 import AbsenceAnalyticsBoard from '@/components/absence-analytics/AbsenceAnalyticsBoard';
 
-export default function SuiviAbsencesPage() {
+export default function AbsencesSuiviPage() {
   const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
-    const user = authService.getCurrentUser();
-    if (user?.role) setUserRole(user.role);
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setUserRole(JSON.parse(stored).role || '');
+    } catch {}
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      <div className="mb-1">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Suivi des absences</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Vue d&apos;ensemble des congés, permissions et absences — calendrier, tableau de bord et tendances pluriannuelles
-        </p>
-      </div>
-
+    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <PresenceModuleSwitcher />
       <AbsenceSubNav userRole={userRole} />
 
-      <AbsenceAnalyticsBoard scope="all" />
+      <div>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Suivi des absences</h1>
+        <p className="text-sm text-gray-500">Qui s&apos;absente, pour quel motif, sur quelle période, payé ou non.</p>
+      </div>
+
+      <AbsenceAnalyticsBoard scope="absence_request" />
     </div>
   );
 }
