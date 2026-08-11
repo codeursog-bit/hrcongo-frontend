@@ -146,6 +146,18 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
     name: t.label, value: t.days, color: colorFor(t.colorKey).hex,
     pct: Math.round((t.days / trackableTotal) * 1000) / 10,
   }));
+  const topMotif = trackableDonut[0];
+  // Département le plus concerné — même filtre "hors congé statutaire/férié/présence"
+  // que le donut, via la ventilation par famille déjà fournie par département.
+  const EXCLUDED_FAMILIES = ['CONGE_STATUTAIRE', 'FERIE', 'PRESENCE'];
+  const deptTrackable = data.byDepartment
+    .map((d: any) => ({
+      name: d.name,
+      days: (d.byFamily ?? []).filter((f: any) => !EXCLUDED_FAMILIES.includes(f.family)).reduce((s: number, f: any) => s + f.days, 0),
+    }))
+    .filter((d: any) => d.days > 0)
+    .sort((a: any, b: any) => b.days - a.days);
+  const topDept = deptTrackable[0];
 
   return (
     <div className="space-y-6">
@@ -165,36 +177,62 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
           (maladie, maternité, paternité, mariage, décès, naissance, non justifiée,
           congé sans solde) — le congé annuel/anticipé (droit acquis) en est
           volontairement exclu, ce n'est pas un sujet de suivi RH */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Absences à surveiller par catégorie — {MONTHS_FULL[month - 1]}</p>
-        <p className="text-[11px] text-gray-400 mb-4">Hors congé annuel/anticipé (droit acquis, pas un sujet RH)</p>
-        {trackableDonut.length === 0 ? <EmptyLine /> : (
-          <div className="flex items-center gap-5">
-            <div className="w-[130px] h-[130px] relative shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={trackableDonut} dataKey="value" nameKey="name" innerRadius={38} outerRadius={62} paddingAngle={2} stroke="none">
-                    {trackableDonut.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v: any, n: any) => [`${v} j`, n]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-base font-bold text-gray-900 dark:text-white">{trackableTotal}</span>
-                <span className="text-[8.5px] text-gray-400 text-center max-w-[55px]">jours à surveiller</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Absences à surveiller par catégorie — {MONTHS_FULL[month - 1]}</p>
+          <p className="text-[11px] text-gray-400 mb-4">Hors congé annuel/anticipé (droit acquis, pas un sujet RH)</p>
+          {trackableDonut.length === 0 ? <EmptyLine /> : (
+            <div className="flex items-center gap-5">
+              <div className="w-[130px] h-[130px] relative shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={trackableDonut} dataKey="value" nameKey="name" innerRadius={38} outerRadius={62} paddingAngle={2} stroke="none">
+                      {trackableDonut.map((d, i) => <Cell key={i} fill={d.color} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: any, n: any) => [`${v} j`, n]} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-base font-bold text-gray-900 dark:text-white">{trackableTotal}</span>
+                  <span className="text-[8.5px] text-gray-400 text-center max-w-[55px]">jours à surveiller</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
+                {trackableDonut.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: d.color }} />
+                    <span className="text-gray-500 dark:text-gray-400 flex-1 truncate">{d.name}</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-100">{d.pct}%</span>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
-              {trackableDonut.map((d, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs">
-                  <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: d.color }} />
-                  <span className="text-gray-500 dark:text-gray-400 flex-1 truncate">{d.name}</span>
-                  <span className="font-bold text-gray-800 dark:text-gray-100">{d.pct}%</span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex-1">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Motif dominant</p>
+            {topMotif ? (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: topMotif.color }} />
+                  <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{topMotif.name}</span>
                 </div>
-              ))}
-            </div>
+                <p className="text-xs text-gray-400">{topMotif.value} j · {topMotif.pct}% des absences suivies</p>
+              </>
+            ) : <EmptyLine />}
           </div>
-        )}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex-1">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Département le plus concerné</p>
+            {topDept ? (
+              <>
+                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{topDept.name}</p>
+                <p className="text-xs text-gray-400">{topDept.days} j à surveiller ce mois</p>
+              </>
+            ) : <EmptyLine />}
+          </div>
+        </div>
       </div>
 
       {/* deux donuts, comme la maquette */}

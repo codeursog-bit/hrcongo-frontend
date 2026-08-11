@@ -146,6 +146,9 @@ export default function CnssDeclarationPage() {
   const [error,      setError]      = useState('');
   const [tab,        setTab]        = useState<'dnms'|'dgc'|'historique'|'taux'>('dnms');
   const [showDetail, setShowDetail] = useState(true);
+  const [dnmsLoad,   setDnmsLoad]   = useState(false);
+  const [tusLoad,    setTusLoad]    = useState(false);
+  const [dgcLoad,    setDgcLoad]    = useState(false);
   const [xlsxLoad,   setXlsxLoad]  = useState(false);
   const [csvLoad,    setCsvLoad]    = useState(false);
   const [search,     setSearch]     = useState('');
@@ -169,17 +172,25 @@ export default function CnssDeclarationPage() {
   useEffect(() => { loadRecap(); }, [loadRecap]);
   useEffect(() => { if(tab==='historique') loadHistory(); }, [tab, loadHistory]);
 
-  const doExport = async (type:'excel'|'csv', setLoad:(v:boolean)=>void) => {
+  const EXPORT_META: Record<'dnms'|'tus'|'dgc'|'excel'|'csv', {ext:string; prefix:string}> = {
+    dnms:  { ext:'xlsx', prefix:'CNSS_DNMS' },
+    tus:   { ext:'xlsx', prefix:'CNSS_TUS'  },
+    dgc:   { ext:'docx', prefix:'CNSS_DGC'  },
+    excel: { ext:'xlsx', prefix:'CNSS_RECAP_INTERNE' },
+    csv:   { ext:'csv',  prefix:'CNSS_DNMS' },
+  };
+
+  const doExport = async (type:'dnms'|'tus'|'dgc'|'excel'|'csv', setLoad:(v:boolean)=>void) => {
     if(!recap) return;
     setLoad(true);
     try {
       const mm   = String(month).padStart(2,'0');
       const slug = (recap.company?.legalName||'ENTREPRISE').replace(/\s+/g,'_').toUpperCase();
-      const ext  = type==='excel'?'xlsx':'csv';
-      const blob = await api.getBlob(`/cnss-declaration/export/${type==='excel'?'excel':'csv'}?month=${month}&year=${year}`);
+      const { ext, prefix } = EXPORT_META[type];
+      const blob = await api.getBlob(`/cnss-declaration/export/${type}?month=${month}&year=${year}`);
       const a    = document.createElement('a');
       a.href     = URL.createObjectURL(blob);
-      a.download = `CNSS_DNMS_${mm}_${year}_${slug}.${ext}`;
+      a.download = `${prefix}_${mm}_${year}_${slug}.${ext}`;
       a.click();
       URL.revokeObjectURL(a.href);
     } catch(e:any) { alert('❌ '+e.message); }
@@ -412,12 +423,22 @@ export default function CnssDeclarationPage() {
               </div>
             </div>
 
-            {/* Boutons export */}
+            {/* Boutons export — chaque déclaration officielle dans son propre fichier */}
             <div className="flex flex-wrap gap-3">
-              <button onClick={()=>doExport('excel',setXlsxLoad)} disabled={xlsxLoad||recap.employees.length===0}
+              <button onClick={()=>doExport('dnms',setDnmsLoad)} disabled={dnmsLoad||recap.employees.length===0}
                 className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all">
-                {xlsxLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
-                Exporter Excel (DNMS + TUS + DGC)
+                {dnmsLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
+                Exporter DNMS (modèle officiel)
+              </button>
+              <button onClick={()=>doExport('tus',setTusLoad)} disabled={tusLoad||recap.employees.length===0}
+                className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-violet-500/30 transition-all">
+                {tusLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
+                Exporter TUS (modèle officiel)
+              </button>
+              <button onClick={()=>doExport('dgc',setDgcLoad)} disabled={dgcLoad||recap.employees.length===0}
+                className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-amber-500/30 transition-all">
+                {dgcLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileText className="w-4 h-4"/>}
+                Exporter Déclaration Globale (DGC, .docx officiel)
               </button>
               <button onClick={()=>doExport('csv',setCsvLoad)} disabled={csvLoad||recap.employees.length===0}
                 className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl shadow-sm transition-all">
@@ -429,6 +450,11 @@ export default function CnssDeclarationPage() {
                 <ChevronRight className="w-4 h-4"/>Portail e-Déclaration CNSS
               </a>
             </div>
+            <button onClick={()=>doExport('excel',setXlsxLoad)} disabled={xlsxLoad||recap.employees.length===0}
+              className="flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-xs font-medium rounded-lg transition-all">
+              {xlsxLoad?<Loader2 className="w-3.5 h-3.5 animate-spin"/>:<FileSpreadsheet className="w-3.5 h-3.5"/>}
+              Récap interne (3 feuilles, non officiel — usage archive uniquement)
+            </button>
 
             {/* Tableau nominatif — tous les champs séparés */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
@@ -682,6 +708,13 @@ export default function CnssDeclarationPage() {
                   <span className="font-bold text-base uppercase tracking-wide">TOTAL À PAYER (1 + 2)</span>
                   <span className="text-2xl font-bold text-emerald-400 tabular-nums">{fmt(recap.totals.dgcTotalAPayer)}</span>
                 </div>
+
+                <button onClick={()=>doExport('dgc',setDgcLoad)} disabled={dgcLoad||recap.employees.length===0}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-amber-500/30 transition-all">
+                  {dgcLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileText className="w-4 h-4"/>}
+                  Télécharger la Déclaration Globale (.docx officiel)
+                </button>
+
                 <p className="text-xs text-slate-400 italic text-center">
                   NB : Joindre la liste nominative ou télédéclarer sur edeclaration.cnss.cg
                 </p>
