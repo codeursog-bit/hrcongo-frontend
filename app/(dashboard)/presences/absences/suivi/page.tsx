@@ -32,7 +32,7 @@ const WEEKDAY_ABBR = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
 const YEAR_PALETTE = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
 const DEPT_PALETTE = ['#ec4899', '#f59e0b', '#3b82f6', '#10b981', '#22d3ee', '#8b5cf6', '#f97316', '#f43f5e', '#14b8a6', '#a78bfa'];
 
-type Tab = 'dashboard' | 'grille' | 'journal' | 'comparatif';
+type Tab = 'dashboard' | 'grille' | 'journal' | 'comparatif' | 'alertes';
 type LeaderboardKey = 'maladie' | 'conventionnelle' | 'exceptionnelle' | 'injustifiee';
 
 export default function AbsencesEmployePage() {
@@ -75,6 +75,7 @@ export default function AbsencesEmployePage() {
               ['grille', 'Grille mensuelle'],
               ['journal', 'Journal'],
               ['comparatif', 'Comparatif'],
+              ['alertes', 'Alertes RH'],
             ] as [Tab, string][]).map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tab === key ? 'bg-sky-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
                 {label}
@@ -89,10 +90,11 @@ export default function AbsencesEmployePage() {
         </div>
       </div>
 
-      {tab === 'dashboard' && <DashboardTab year={year} month={month} shiftMonth={shiftMonth} />}
+      {tab === 'dashboard' && <DashboardTab year={year} month={month} shiftMonth={shiftMonth} onOpenAlerts={() => setTab('alertes')} />}
       {tab === 'grille' && <GrilleTab year={year} month={month} shiftMonth={shiftMonth} />}
       {tab === 'journal' && <JournalTab year={year} month={month} />}
       {tab === 'comparatif' && <ComparatifTab anchorYear={year} />}
+      {tab === 'alertes' && <AlertesTab year={year} month={month} />}
     </div>
   );
 }
@@ -105,7 +107,7 @@ function qs(params: Record<string, string | number | undefined>) {
 // ============================================================================
 // ONGLET 1 — TABLEAU DE BORD (donuts + KPI + vue annuelle + top scores)
 // ============================================================================
-function DashboardTab({ year, month }: { year: number; month: number; shiftMonth: (d: number) => void }) {
+function DashboardTab({ year, month, onOpenAlerts }: { year: number; month: number; shiftMonth: (d: number) => void; onOpenAlerts: () => void }) {
   const [data, setData] = useState<any>(null);
   const [yearOverview, setYearOverview] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -141,6 +143,11 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
   }));
   const annualSeries = (yearOverview?.months ?? []).map((m: any) => ({ mois: MONTHS_FR[m.month - 1], total: m.totalDays, isCurrent: m.month === month }));
 
+  const totalAlerts = (data.alerts?.employeeAlerts?.length ?? 0) + (data.alerts?.departmentAlerts?.length ?? 0);
+  const paidDays = data.byType.filter((t: any) => t.isPaidByDefault).reduce((s: number, t: any) => s + t.days, 0);
+  const unpaidDays = data.byType.filter((t: any) => !t.isPaidByDefault).reduce((s: number, t: any) => s + t.days, 0);
+  const paidPct = totalAbsenceDays ? Math.round((paidDays / totalAbsenceDays) * 1000) / 10 : 0;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -155,26 +162,34 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
         <KpiCard icon={CalendarClock} label="Jours ouvrés" value={String(data.workingDaysInMonth)} sub="dans le mois" tone="sky" small />
       </div>
 
-      {(data.alerts?.employeeAlerts?.length > 0 || data.alerts?.departmentAlerts?.length > 0) && (
-        <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl p-4">
-          <p className="text-sm font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2 mb-3"><AlertTriangle size={16} /> Alertes RH — 12 derniers mois</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {data.alerts.employeeAlerts.map((a: any, i: number) => (
-              <button key={i} onClick={() => setDetailEmployeeId(a.employeeId)} className="text-left text-xs bg-white dark:bg-gray-800 rounded-xl px-3 py-2.5 border border-rose-100 dark:border-rose-900/40 hover:border-rose-300">
-                <span className="font-semibold text-gray-800 dark:text-gray-100">{a.employeeName}</span>
-                {a.departmentName && <span className="text-gray-400"> · {a.departmentName}</span>}
-                <p className="text-rose-600 dark:text-rose-300 mt-0.5">{a.message}</p>
-              </button>
-            ))}
-            {data.alerts.departmentAlerts.map((a: any, i: number) => (
-              <div key={i} className="text-xs bg-white dark:bg-gray-800 rounded-xl px-3 py-2.5 border border-rose-100 dark:border-rose-900/40">
-                <span className="font-semibold text-gray-800 dark:text-gray-100">{a.departmentName}</span>
-                <p className="text-rose-600 dark:text-rose-300 mt-0.5">{a.message}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* indicateur compact — la liste complète vit dans son propre onglet pour ne pas s'allonger avec l'effectif */}
+      {totalAlerts > 0 && (
+        <button onClick={onOpenAlerts} className="w-full flex items-center gap-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl px-4 py-3 text-left hover:border-rose-300 transition-colors">
+          <AlertTriangle size={16} className="text-rose-500 shrink-0" />
+          <span className="text-sm text-rose-700 dark:text-rose-300 flex-1">
+            <strong>{totalAlerts} alerte{totalAlerts > 1 ? 's' : ''} RH</strong> à examiner (récurrence maladie, absentéisme élevé…)
+          </span>
+          <span className="text-xs font-bold text-rose-500">Voir l&apos;onglet Alertes RH →</span>
+        </button>
       )}
+
+      {/* répartition payé / non payé — remplace l'espace des alertes ici */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition payé / non payé — {MONTHS_FULL[month - 1]}</p>
+        {totalAbsenceDays === 0 ? <EmptyLine /> : (
+          <div className="space-y-3">
+            <div className="h-3 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden flex">
+              <div className="h-full bg-emerald-500" style={{ width: `${paidPct}%` }} />
+              <div className="h-full bg-rose-400" style={{ width: `${100 - paidPct}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Payé — {paidDays} j ({paidPct}%)</span>
+              <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300"><span className="w-2.5 h-2.5 rounded-sm bg-rose-400" /> Non payé — {unpaidDays} j ({Math.round((100 - paidPct) * 10) / 10}%)</span>
+            </div>
+            <p className="text-[10px] text-gray-400">Estimation par type de motif — le statut de paie exact de chaque dossier est dans le Journal.</p>
+          </div>
+        )}
+      </div>
 
       {/* deux donuts, comme la maquette */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -459,6 +474,86 @@ function JournalTab({ year, month }: { year: number; month: number }) {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// ONGLET 5 — ALERTES RH (liste complète, dans son propre onglet pour ne pas
+// exploser en longueur sur le dashboard quand l'effectif grandit)
+// ============================================================================
+function AlertesTab({ year, month }: { year: number; month: number }) {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [detailEmployeeId, setDetailEmployeeId] = useState<string | null>(null);
+  const [deptFilter, setDeptFilter] = useState('');
+
+  useEffect(() => {
+    setIsLoading(true);
+    api.get(`/absence-tracking/dashboard${qs({ year, month })}`)
+      .then(setData)
+      .catch(e => { console.error('Erreur chargement alertes absences', e); setData(null); })
+      .finally(() => setIsLoading(false));
+  }, [year, month]);
+
+  if (isLoading) return <LoadingBlock />;
+  if (!data) return <ErrorBlock />;
+
+  const employeeAlerts = data.alerts?.employeeAlerts ?? [];
+  const departmentAlerts = data.alerts?.departmentAlerts ?? [];
+  const departments = Array.from(new Set(employeeAlerts.map((a: any) => a.departmentName).filter(Boolean))).sort() as string[];
+  const filteredEmployeeAlerts = deptFilter ? employeeAlerts.filter((a: any) => a.departmentName === deptFilter) : employeeAlerts;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-900/40 rounded-2xl p-4 text-sm text-sky-800 dark:text-sky-200">
+        Récurrence de maladie, jours à surveiller élevés, taux d&apos;absentéisme au-dessus du seuil — calculé sur les 12 derniers mois glissants.
+      </div>
+
+      {employeeAlerts.length === 0 && departmentAlerts.length === 0 ? (
+        <div className="text-center py-20 text-gray-400 text-sm">Aucune alerte RH pour le moment — tout est dans les clous.</div>
+      ) : (
+        <>
+          {departmentAlerts.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Départements — {departmentAlerts.length} alerte{departmentAlerts.length > 1 ? 's' : ''}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {departmentAlerts.map((a: any, i: number) => (
+                  <div key={i} className="text-xs bg-rose-50 dark:bg-rose-900/20 rounded-xl px-3 py-2.5 border border-rose-100 dark:border-rose-900/40">
+                    <span className="font-semibold text-gray-800 dark:text-gray-100">{a.departmentName}</span>
+                    <p className="text-rose-600 dark:text-rose-300 mt-0.5">{a.message}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {employeeAlerts.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Employés — {filteredEmployeeAlerts.length} alerte{filteredEmployeeAlerts.length > 1 ? 's' : ''}</p>
+                {departments.length > 1 && (
+                  <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+                    <option value="">Tous les départements</option>
+                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[560px] overflow-y-auto pr-1">
+                {filteredEmployeeAlerts.map((a: any, i: number) => (
+                  <button key={i} onClick={() => setDetailEmployeeId(a.employeeId)} className="text-left text-xs bg-rose-50 dark:bg-rose-900/20 rounded-xl px-3 py-2.5 border border-rose-100 dark:border-rose-900/40 hover:border-rose-300">
+                    <span className="font-semibold text-gray-800 dark:text-gray-100">{a.employeeName}</span>
+                    {a.departmentName && <span className="text-gray-400"> · {a.departmentName}</span>}
+                    <p className="text-rose-600 dark:text-rose-300 mt-0.5">{a.message}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      <EmployeeDetailSlideOver employeeId={detailEmployeeId} year={year} month={month} onClose={() => setDetailEmployeeId(null)} />
     </div>
   );
 }
