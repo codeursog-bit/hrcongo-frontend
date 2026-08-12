@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Loader2, Filter, Umbrella, Zap, Download, FileDown, Printer,
-  Users, Plane, CalendarClock,
+  Users, Plane, CalendarClock, Plus, X, Check,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import CongeSubNav from '@/components/CongeSubNav';
@@ -38,6 +38,7 @@ interface DepartureRow {
   daysCount: number;
   status: string; // 'APPROVED' (réel) | 'PREVU' (calcul théorique)
   isTheoretical: boolean;
+  isManual?: boolean;
 }
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -65,6 +66,58 @@ export default function ProgrammeCongesPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [typeFilter, setTypeFilter] = useState('');
+
+  // ✅ Planification manuelle RH — le manuel prime sur le théorique dès
+  // qu'un vrai congé APPROVED existe pour la période (voir buildDepartureRows
+  // côté back), donc pas de logique supplémentaire côté front : on crée le
+  // congé, on recharge le mois, et le calcul auto s'efface tout seul pour
+  // cet employé.
+  const canPlan = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [isSavingManual, setIsSavingManual] = useState(false);
+  const [manualError, setManualError] = useState('');
+  const [manualForm, setManualForm] = useState({
+    employeeId: '', type: 'ANNUAL' as 'ANNUAL' | 'ANNUAL_ANTICIPATED',
+    startDate: '', endDate: '', reason: '',
+  });
+
+  useEffect(() => {
+    if (!canPlan) return;
+    (async () => {
+      try {
+        const data = await api.get<any[]>('/employees/simple');
+        setEmployees(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error('Erreur chargement employés', e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canPlan]);
+
+  const openManualModal = () => {
+    setManualError('');
+    setManualForm({ employeeId: employees[0]?.id || '', type: 'ANNUAL', startDate: '', endDate: '', reason: '' });
+    setShowManualModal(true);
+  };
+
+  const saveManualLeave = async () => {
+    if (!manualForm.employeeId || !manualForm.startDate || !manualForm.endDate) {
+      setManualError('Employé, date de départ et date de retour sont requis.');
+      return;
+    }
+    setIsSavingManual(true);
+    setManualError('');
+    try {
+      await api.post('/leaves/manual', manualForm);
+      setShowManualModal(false);
+      await load();
+    } catch (e: any) {
+      setManualError(e?.message || 'Erreur lors de la planification du congé');
+    } finally {
+      setIsSavingManual(false);
+    }
+  };
 
   const REPORT_ID = 'programme-departs-print';
   const monthLabel = `${MONTHS[month - 1]} ${year}`;
@@ -183,6 +236,14 @@ export default function ProgrammeCongesPage() {
           <p className="text-sm text-gray-400 mt-1">Qui part en congé, et quand — {monthLabel}</p>
         </div>
         <div className="flex gap-2">
+          {canPlan && (
+            <button
+              onClick={openManualModal}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold"
+            >
+              <Plus size={15} /> Planifier un congé
+            </button>
+          )}
           <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
             <Printer size={16} /> Imprimer
           </button>
@@ -217,7 +278,7 @@ export default function ProgrammeCongesPage() {
           ))}
         </select>
         <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5">
-          {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map(y => <option key={y} value={y}>{y}</option>)}
+          {Array.from({ length: 7 }, (_, i) => now.getFullYear() - 1 + i).map(y => <option key={y} value={y}>{y}</option>)}
         </select>
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5">
           <option value="">Tous les types</option>
@@ -333,6 +394,10 @@ export default function ProgrammeCongesPage() {
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
                               <CalendarClock size={12} /> Prévu
                             </span>
+                          ) : r.isManual ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-500" title="Planifié directement par le RH/Admin">
+                              <Plus size={12} /> Planifié RH
+                            </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-500">
                               <Plane size={12} /> Confirmé
@@ -354,6 +419,97 @@ export default function ProgrammeCongesPage() {
             </div>
           </div>
         </>
+      )}
+
+      {showManualModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Planifier un congé</h2>
+              <button onClick={() => setShowManualModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">
+              Crée directement un congé validé pour l'employé — remplace tout calcul automatique pour cette période.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Employé</label>
+                <select
+                  value={manualForm.employeeId}
+                  onChange={e => setManualForm(f => ({ ...f, employeeId: e.target.value }))}
+                  className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                >
+                  <option value="">— Sélectionner —</option>
+                  {employees.map((e: any) => (
+                    <option key={e.id} value={e.id}>{e.lastName} {e.firstName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Type</label>
+                <select
+                  value={manualForm.type}
+                  onChange={e => setManualForm(f => ({ ...f, type: e.target.value as any }))}
+                  className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                >
+                  <option value="ANNUAL">Annuel</option>
+                  <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <input
+                    type="date"
+                    value={manualForm.startDate}
+                    onChange={e => setManualForm(f => ({ ...f, startDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <input
+                    type="date"
+                    value={manualForm.endDate}
+                    onChange={e => setManualForm(f => ({ ...f, endDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Note (optionnel)</label>
+                <input
+                  type="text"
+                  value={manualForm.reason}
+                  onChange={e => setManualForm(f => ({ ...f, reason: e.target.value }))}
+                  placeholder="Ex : accord oral avec le chef de service"
+                  className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                />
+              </div>
+            </div>
+
+            {manualError && <div className="text-xs text-red-500">{manualError}</div>}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowManualModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Annuler
+              </button>
+              <button
+                onClick={saveManualLeave}
+                disabled={isSavingManual}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
+              >
+                {isSavingManual ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Planifier
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

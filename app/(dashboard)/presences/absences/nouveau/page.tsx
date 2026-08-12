@@ -186,6 +186,7 @@ export default function NouvelleAbsencePage() {
       taxNumber:  company?.taxNumber,
       address:    company?.address,
       phone:      company?.phone,
+      cachetUrl:  company?.cachetUrl,
     },
     employee: {
       firstName:       selectedTargetEmployee?.firstName || '',

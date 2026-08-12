@@ -169,6 +169,7 @@ export default function AbsenceManagementPage() {
     company: {
       legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo,
       rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone,
+      cachetUrl: company?.cachetUrl,
     },
     employee: {
       firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '',
