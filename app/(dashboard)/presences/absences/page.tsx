@@ -174,7 +174,7 @@ export default function AbsenceManagementPage() {
       firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '',
       position: selected.employee?.position, departmentName: selected.employee?.department?.name,
     },
-    type: selected.type, reason: selected.reason, isPaid: selected.isPaid,
+    type: selected.type, subType: selected.subType, reason: selected.reason, isPaid: selected.isPaid,
     startDate: selected.startDate, endDate: selected.endDate, workingDays: selected.workingDays,
     hasAttachment: !!selected.attachmentUrl, status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,

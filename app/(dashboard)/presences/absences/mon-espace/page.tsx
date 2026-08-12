@@ -102,7 +102,7 @@ export default function MonEspaceAbsencesPage() {
       firstName: employee?.firstName || '', lastName: employee?.lastName || '',
       position: employee?.position, departmentName: employee?.department?.name,
     },
-    type: selected.type, reason: selected.reason, isPaid: selected.isPaid,
+    type: selected.type, subType: selected.subType, reason: selected.reason, isPaid: selected.isPaid,
     startDate: selected.startDate, endDate: selected.endDate, workingDays: selected.workingDays,
     hasAttachment: !!selected.attachmentUrl, status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,

@@ -30,6 +30,7 @@ export interface AbsenceRequestPrintableData {
     responsableName?: string;
   };
   type: 'MALADIE' | 'CONVENTIONNELLE' | 'EXCEPTIONNELLE' | string;
+  subType?: 'MALADIE' | 'MATERNITE' | 'PATERNITE' | 'MARIAGE' | 'DECES' | 'NAISSANCE' | 'AUTRE' | string;
   reason: string;
   isPaid: boolean;
   startDate: string | Date;
@@ -116,8 +117,12 @@ export default function AbsenceRequestPrintable({ data }: { data: AbsenceRequest
 
         <div style={{ marginTop: 8 }}>
           <strong>Type d&apos;absence : </strong>
-          <Checkbox checked={data.type === 'MALADIE'} /> Maladie &nbsp;&nbsp;
-          <Checkbox checked={data.type === 'CONVENTIONNELLE'} /> Conventionnelle &nbsp;&nbsp;
+          {/* ✅ "Maladie" est un sous-motif de Conventionnelle depuis la restructuration
+              du schéma (type=CONVENTIONNELLE, subType=MALADIE) — la case doit donc se
+              cocher sur le sous-motif, pas sur data.type qui ne vaudra plus jamais
+              littéralement "MALADIE" pour une nouvelle demande. */}
+          <Checkbox checked={data.subType === 'MALADIE'} /> Maladie &nbsp;&nbsp;
+          <Checkbox checked={data.type === 'CONVENTIONNELLE' && data.subType !== 'MALADIE'} /> Conventionnelle &nbsp;&nbsp;
           <Checkbox checked={data.type === 'EXCEPTIONNELLE'} /> Exceptionnelle
         </div>
 
