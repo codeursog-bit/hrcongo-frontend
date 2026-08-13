@@ -21,6 +21,14 @@ import CongeSubNav from '@/components/CongeSubNav';
 import LeavePlanningPrintable from '@/components/LeavePlanningPrintable';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 
+/** Affichage propre d'un nombre de jours (évite les artefacts de virgule
+ * flottante type "28.799999999999997j" — arrondit à 1 décimale, sans
+ * afficher ".0" pour les comptes ronds). */
+function formatDays(n: number | string): string {
+  const v = Math.round(Number(n || 0) * 10) / 10;
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
 interface DepartureRow {
   id: string;
   employeeId: string;
@@ -388,7 +396,7 @@ export default function ProgrammeCongesPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-500">{fmtDate(r.startDate)}</td>
                         <td className="px-4 py-3 text-gray-500">{fmtDate(r.endDate)}</td>
-                        <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">{r.daysCount}j</td>
+                        <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">{formatDays(r.daysCount)}j</td>
                         <td className="px-4 py-3">
                           {r.isTheoretical ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
