@@ -329,6 +329,7 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
 // ONGLET 2 — GRILLE MENSUELLE (badges colorés, comme la maquette)
 // ============================================================================
 function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (d: number) => void }) {
+  const today = useMemo(() => new Date(), []);
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deptFilter, setDeptFilter] = useState('');
@@ -350,84 +351,135 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
 
   const days = Array.from({ length: data.daysInMonth }, (_, i) => i + 1);
   const holidayByDay = new Map(data.holidays.map((h: any) => [h.day, h.name]));
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
+  const currentDay = isCurrentMonth ? today.getDate() : null;
+  const workingDaysCount = days.filter(d => {
+    const wd = new Date(year, month - 1, d).getDay();
+    return wd !== 0 && wd !== 6 && !holidayByDay.has(String(d).padStart(2, '0'));
+  }).length;
+  const getDayName = (d: number) => new Date(year, month - 1, d).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3).toUpperCase();
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-        <div className="flex flex-wrap gap-2">
+    <div className="space-y-4">
+      {/* bandeau "aujourd'hui", identique au module Présences */}
+      {currentDay && (
+        <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+          <div className="flex-1">
+            <p className="text-sm text-sky-700 dark:text-sky-300">
+              📅 <strong>Aujourd&apos;hui :</strong> {currentDay} {MONTHS_FULL[month - 1]} {year}
+            </p>
+            <p className="text-xs text-sky-600 dark:text-sky-400 mt-1">
+              Jours ouvrables : {workingDaysCount} ce mois-ci
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* légende — blocs de couleur pleine, comme le module Présences */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+        <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Légende</h4>
+        <div className="flex flex-wrap gap-4">
           {data.legend.map((l: any) => {
             const c = colorFor(l.colorKey);
             return (
-              <span key={l.code} className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg border" style={{ background: `${c.hex}1a`, borderColor: c.hex, color: c.hex }}>
-                <span className="w-4 h-4 rounded flex items-center justify-center text-[9px] font-bold" style={{ background: `${c.hex}33`, border: `1px solid ${c.hex}` }}>{l.code[0]}</span>
-                {l.label}
-              </span>
+              <div key={l.code} className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded" style={{ background: c.hex }} />
+                <span className="text-xs text-gray-600 dark:text-gray-400">{l.label}</span>
+              </div>
             );
           })}
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 flex-wrap gap-2">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Grille de présence — {MONTHS_FULL[month - 1]} {year}</p>
+      {/* grille */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden min-h-[600px]">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-bold text-gray-900 dark:text-white">
+            Grille mensuelle
+            <span className="text-sm font-normal text-gray-500 ml-2">
+              ({workingDaysCount} jours ouvrables / {data.daysInMonth} jours au total)
+            </span>
+          </h3>
           {departments.length > 0 && (
             <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
-              <option value="">Tous</option>
+              <option value="">Tous les départements</option>
               {departments.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           )}
         </div>
-        <div className="overflow-x-auto">
-          <div style={{ minWidth: 900 }}>
-            <div className="flex sticky top-0 z-10 bg-white dark:bg-gray-800">
-              <div className="w-52 shrink-0 px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase">Employé</div>
-              <div className="w-28 shrink-0 px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase">Service</div>
-              {days.map(d => {
-                const dayStr = String(d).padStart(2, '0');
-                const wd = new Date(year, month - 1, d).getDay();
-                const weekend = wd === 0 || wd === 6;
-                const holidayName = holidayByDay.get(dayStr) as string | undefined;
-                return (
-                  <div key={d} title={holidayName ?? ''} className={`w-7 shrink-0 text-center py-1 rounded ${weekend ? 'bg-gray-50 dark:bg-gray-900/60' : ''} ${holidayName ? 'bg-sky-50 dark:bg-sky-900/20' : ''}`}>
-                    <div className="text-[10px] font-semibold text-gray-500 dark:text-gray-300">{d}</div>
-                  </div>
-                );
-              })}
-            </div>
-            {filteredEmployees.length === 0 ? (
-              <div className="py-10 text-center text-gray-400 text-sm">Aucun employé pour ce filtre.</div>
-            ) : filteredEmployees.map((emp: any) => (
-              <div key={emp.id} className="flex items-center border-t border-gray-50 dark:border-gray-700/50">
-                <button onClick={() => setDetailEmployeeId(emp.id)} className="w-52 shrink-0 text-left px-2 py-1.5 hover:text-sky-600 truncate">
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">{emp.name}</p>
-                </button>
-                <div className="w-28 shrink-0 px-2">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 truncate inline-block max-w-full">{emp.departmentName ?? '—'}</span>
+
+        {filteredEmployees.length === 0 ? (
+          <div className="flex items-center justify-center py-32 text-gray-400 dark:text-gray-600">
+            <p className="text-sm">Aucun employé à afficher.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
+            <div className="inline-block min-w-full align-middle">
+              {/* en-tête jours */}
+              <div className="border-b border-gray-200 dark:border-gray-700 flex">
+                <div className="sticky left-0 z-20 w-48 shrink-0 bg-gray-100 dark:bg-gray-800 p-3 font-bold text-xs uppercase border-r text-gray-500">
+                  Employé
                 </div>
                 {days.map(d => {
-                  const dayStr = String(d).padStart(2, '0');
-                  const cell = emp.cells[dayStr];
-                  const c = cell ? colorFor(cell.colorKey) : null;
+                  const isToday = d === currentDay;
+                  const wd = new Date(year, month - 1, d).getDay();
+                  const isWorking = wd !== 0 && wd !== 6;
+                  const holidayName = holidayByDay.get(String(d).padStart(2, '0')) as string | undefined;
                   return (
-                    <div key={d} className="w-7 h-8 shrink-0 flex items-center justify-center">
-                      {cell ? (
-                        <span
-                          title={cell.label}
-                          className="w-6 h-5 rounded-md flex items-center justify-center text-[9px] font-bold"
-                          style={{ background: `${c!.hex}26`, border: `1px solid ${c!.hex}`, color: c!.hex }}
-                        >
-                          {cell.code[0]}
-                        </span>
-                      ) : (
-                        <span className="w-6 h-5 rounded-md border border-dashed border-gray-200 dark:border-gray-700" />
-                      )}
+                    <div key={d} title={holidayName ?? ''} className={`w-10 shrink-0 text-center p-2 border-r ${
+                      isToday ? 'bg-sky-100 dark:bg-sky-900/50'
+                      : !isWorking || holidayName ? 'bg-gray-300 dark:bg-gray-700'
+                      : 'bg-gray-50 dark:bg-gray-800'
+                    }`}>
+                      <div className={`text-[10px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : !isWorking || holidayName ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400'}`}>
+                        {getDayName(d)}
+                      </div>
+                      <div className={`text-xs font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : !isWorking || holidayName ? 'text-gray-500 dark:text-gray-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                        {d}
+                      </div>
+                      {isToday && <div className="w-1.5 h-1.5 bg-sky-500 rounded-full mx-auto mt-0.5" />}
                     </div>
                   );
                 })}
               </div>
-            ))}
+
+              {/* lignes employés */}
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                {filteredEmployees.map((emp: any) => (
+                  <div key={emp.id} className="flex hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                    <button onClick={() => setDetailEmployeeId(emp.id)} className="sticky left-0 z-10 w-48 shrink-0 bg-white dark:bg-gray-800 p-3 border-r flex items-center gap-3 text-left hover:text-sky-600">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
+                        {emp.name?.[0] ?? '?'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold truncate text-gray-900 dark:text-white">{emp.name}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{emp.departmentName || '—'}</p>
+                      </div>
+                    </button>
+                    {days.map(d => {
+                      const dayStr = String(d).padStart(2, '0');
+                      const cell = emp.cells[dayStr];
+                      const c = cell ? colorFor(cell.colorKey) : null;
+                      const isToday = d === currentDay;
+                      const wd = new Date(year, month - 1, d).getDay();
+                      const isWorking = wd !== 0 && wd !== 6;
+                      const holidayName = holidayByDay.get(dayStr) as string | undefined;
+                      return (
+                        <div
+                          key={d}
+                          title={cell?.label ?? (holidayName || (!isWorking ? 'Jour non ouvrable' : ''))}
+                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-gray-100 dark:border-gray-800 ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-gray-300 dark:bg-gray-700' : ''}`}
+                          style={cell ? { background: c!.hex } : undefined}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <EmployeeDetailSlideOver employeeId={detailEmployeeId} year={year} month={month} onClose={() => setDetailEmployeeId(null)} />
