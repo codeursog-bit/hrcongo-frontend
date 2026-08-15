@@ -139,7 +139,7 @@ export default function MonEspacePretsAvancesPage() {
 
   const printData = selected ? {
     reference,
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
     employee: { firstName: employee?.firstName || '', lastName: employee?.lastName || '', position: employee?.position, phone: employee?.phone, departmentName: employee?.department?.name },
     docType: selected.kind === 'loan' ? selected.data.type : 'AVANCE',
     reason: selected.data.reason,

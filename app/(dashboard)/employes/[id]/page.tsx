@@ -1551,6 +1551,25 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     </button>
                   </div>
                 </div>
+
+                {/* ✅ Cumul brut avant Konza RH — affiché seulement s'il a été
+                    renseigné. Rappel explicite de son usage : sert au calcul
+                    de l'indemnité de congé payé tant que l'historique de paie
+                    réel dans l'app est encore court (voir leaves-indemnity.service.ts,
+                    méthode AVERAGE_12M). */}
+                {(employee as any).openingCumulativeGross != null && (
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <p className="text-xs text-gray-400 uppercase font-bold mb-1">Cumul brut avant Konza RH</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white font-mono">
+                      {showSalary
+                        ? `${Number((employee as any).openingCumulativeGross).toLocaleString('fr-FR')} FCFA sur ${(employee as any).openingCumulativeMonths ?? '?'} mois`
+                        : '• • • • • • •'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Cumul des bruts du cycle de congé en cours avant l&apos;arrivée sur Konza RH. Utilisé pour l&apos;indemnité de congé tant que l&apos;historique réel est court — se remet à zéro tout seul au prochain cycle.
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
 

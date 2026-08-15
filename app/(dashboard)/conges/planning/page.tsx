@@ -44,7 +44,7 @@ export default function LeavePlanningPage() {
       setIsLoading(true);
       try {
         const [planning, me]: any = await Promise.all([
-          api.get(`/leaves/planning?month=${cursor.month}&year=${cursor.year}`),
+          api.get(`/leaves/planning?month=${cursor.month}&year=${cursor.year}&mode=${mode}`),
           api.get('/auth/me').catch(() => null),
         ]);
         setRows(planning || []);
@@ -56,7 +56,7 @@ export default function LeavePlanningPage() {
         setIsLoading(false);
       }
     })();
-  }, [cursor]);
+  }, [cursor, mode]);
 
   useEffect(() => {
     (async () => {

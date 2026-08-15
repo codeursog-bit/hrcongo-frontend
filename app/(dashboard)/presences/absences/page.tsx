@@ -15,13 +15,13 @@ import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, UserCircle, Plus, Stethoscope,
   FileText, Sparkles, Wallet, Paperclip, Info, Lock, Unlock, FileDown,
-  LayoutDashboard, ListChecks,
+  LayoutDashboard, ListChecks, Download,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import { printAbsenceRequest } from '@/lib/absence-print';
+import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
 import AbsencesOverview from '@/components/absences/AbsencesOverview';
@@ -55,6 +55,7 @@ export default function AbsenceManagementPage() {
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
@@ -169,7 +170,7 @@ export default function AbsenceManagementPage() {
     company: {
       legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo,
       rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone,
-      cachetUrl: company?.cachetUrl,
+      cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText,
     },
     employee: {
       firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '',
@@ -412,12 +413,25 @@ export default function AbsenceManagementPage() {
                     </div>
                   )}
 
-                  <button
-                    onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
-                    className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    <Printer size={16} /> Imprimer le formulaire
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
+                      className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <Printer size={16} /> Imprimer
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setIsExportingPdf(true);
+                        try { await downloadAbsenceRequestPDF(`absence-${selected.id.slice(0, 8)}.pdf`); }
+                        finally { setIsExportingPdf(false); }
+                      }}
+                      disabled={isExportingPdf}
+                      className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                    >
+                      {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
+                    </button>
+                  </div>
 
                   {docData?.company?.documentTemplate === 'ORCA' && (
                     <button

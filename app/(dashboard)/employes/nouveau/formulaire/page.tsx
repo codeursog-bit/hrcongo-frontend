@@ -431,6 +431,8 @@ function CreateEmployeeFormInner() {
     position:            prefill.position,
     departmentId:        '',
     baseSalary:          '',
+    openingCumulativeGross:  '',
+    openingCumulativeMonths: '',
     professionalCategory: '',
     echelon:             '',
     trialPeriodDays:     '0',
@@ -573,6 +575,14 @@ function CreateEmployeeFormInner() {
         position:            formData.position,
         departmentId:        formData.departmentId,
         baseSalary:          parseFloat(formData.baseSalary),
+        openingCumulativeGross:
+          (formData.openingCumulativeGross as string).trim()
+            ? parseFloat(formData.openingCumulativeGross as string)
+            : null,
+        openingCumulativeMonths:
+          (formData.openingCumulativeMonths as string).trim()
+            ? parseInt(formData.openingCumulativeMonths as string)
+            : null,
         professionalCategory: (formData.professionalCategory as string) || null,
         echelon:             (formData.echelon as string).trim() || null,
         trialPeriodDays:     parseInt(formData.trialPeriodDays as string) || 0,

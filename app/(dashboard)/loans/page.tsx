@@ -266,7 +266,7 @@ export default function LoansManagementPage() {
 
   const printData = printSource ? {
     reference: printReference,
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
     employee: { firstName: printSource.employee?.firstName || '', lastName: printSource.employee?.lastName || '', position: printSource.employee?.position, departmentName: printSource.employee?.department?.name },
     docType: tab === 'loans' ? (selectedLoan?.type || 'ARGENT') : 'AVANCE',
     reason: printSource.reason,

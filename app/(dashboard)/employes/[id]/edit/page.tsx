@@ -624,6 +624,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     contractEndDate: '',  // 🆕
     position: '', departmentId: '',
     baseSalary: '', professionalCategory: '', echelon: '',
+    openingCumulativeGross: '', openingCumulativeMonths: '',
     isResident: 'true', // ✅ AJOUT : nécessaire pour le calcul BNC (CONSULTANT / PRESTATAIRE)
     employeeNumber: '',
     photoUrl: '', // 🆕 Photo existante (avant remplacement éventuel)
@@ -685,6 +686,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           position:            employee.position || '',
           departmentId:        employee.departmentId || '',
           baseSalary:          employee.baseSalary?.toString() || '',
+          openingCumulativeGross:  employee.openingCumulativeGross?.toString() || '',
+          openingCumulativeMonths: employee.openingCumulativeMonths?.toString() || '',
           professionalCategory:employee.professionalCategory || '',
           echelon:             employee.echelon || '',
           isResident:          employee.isResident === false ? 'false' : 'true', // ✅ AJOUT
@@ -798,6 +801,14 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         contractEndDate: formData.contractEndDate || null, // 🆕
         position: formData.position, departmentId: formData.departmentId,
         baseSalary: parseFloat(formData.baseSalary),
+        openingCumulativeGross:
+          (formData.openingCumulativeGross as string).trim()
+            ? parseFloat(formData.openingCumulativeGross as string)
+            : null,
+        openingCumulativeMonths:
+          (formData.openingCumulativeMonths as string).trim()
+            ? parseInt(formData.openingCumulativeMonths as string)
+            : null,
         professionalCategory: formData.professionalCategory || null,
         echelon: formData.echelon || null,
         isResident: formData.isResident !== 'false', // ✅ AJOUT
@@ -1078,6 +1089,28 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">FCFA</span>
                       </div>
                     </div>
+
+                    {/* ✅ Cumul brut avant Konza RH — optionnel, pour un
+                        calcul plus fidèle de l'indemnité de congé tant que
+                        l'historique de paie dans l'app est encore court. */}
+                    {!isBncContract && (
+                      <div className="md:col-span-2">
+                        <label className={labelClass}>Cumul brut avant Konza RH (optionnel)</label>
+                        <p className="text-xs text-gray-400 mb-2">Somme des salaires bruts déjà perçus par l&apos;employé depuis le début de son cycle de congé en cours, avant Konza RH (ex: cycle démarré en janvier, vous arrivez sur Konza en juillet → cumul des 6 bulletins jan-juin). Utilisé pour l&apos;indemnité de congé tant que l&apos;historique réel est court. Se remet à zéro tout seul au prochain cycle.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="relative">
+                            <input type="number" name="openingCumulativeGross" value={formData.openingCumulativeGross} onChange={handleChange}
+                              placeholder="Cumul brut" className="w-full px-4 py-3 pr-16 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-sky-500 outline-none font-semibold" />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">FCFA</span>
+                          </div>
+                          <div className="relative">
+                            <input type="number" name="openingCumulativeMonths" value={formData.openingCumulativeMonths} onChange={handleChange}
+                              placeholder="Nb de mois" className="w-full px-4 py-3 pr-14 border border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:border-sky-500 outline-none font-semibold" />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">mois</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* ✅ AJOUT : bloc BNC (Consultant / Prestataire) — même logique que la création */}
                     {isBncContract && (

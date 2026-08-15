@@ -12,13 +12,13 @@ import Link from 'next/link';
 import {
   Plus, Loader2, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, X, Paperclip, Info, Wallet,
-  Stethoscope, FileText, Sparkles, Lock,
+  Stethoscope, FileText, Sparkles, Lock, Download,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import { printAbsenceRequest } from '@/lib/absence-print';
+import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
 
@@ -47,6 +47,7 @@ export default function MonEspaceAbsencesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [page, setPage] = useState(1);
   const [userRole, setUserRole] = useState('');
 
@@ -97,6 +98,7 @@ export default function MonEspaceAbsencesPage() {
     company: {
       legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo,
       rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone,
+      cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText,
     },
     employee: {
       firstName: employee?.firstName || '', lastName: employee?.lastName || '',
@@ -249,12 +251,25 @@ export default function MonEspaceAbsencesPage() {
                           <Lock size={14} /> Impression non autorisée par le RH
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
-                          className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <Printer size={16} /> Imprimer
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
+                            className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            <Printer size={16} /> Imprimer
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setIsExportingPdf(true);
+                              try { await downloadAbsenceRequestPDF(`absence-${selected.id.slice(0, 8)}.pdf`); }
+                              finally { setIsExportingPdf(false); }
+                            }}
+                            disabled={isExportingPdf}
+                            className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                          >
+                            {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
+                          </button>
+                        </>
                       )}
                       {selected.status === 'PENDING' && (
                         <button

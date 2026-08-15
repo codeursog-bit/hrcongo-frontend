@@ -14,6 +14,7 @@ import React from 'react';
 interface CompanyInfo {
   legalName?: string; tradeName?: string; logo?: string | null;
   rccmNumber?: string; taxNumber?: string; address?: string; city?: string; phone?: string;
+  documentFooterText?: string | null;
 }
 
 export interface LeaveLetterData {
@@ -63,8 +64,29 @@ export default function LeaveAuthorizationLetterPrintable({ id, data }: { id: st
         fontFamily: "'Times New Roman', Georgia, serif", padding: '18mm 20mm',
         boxSizing: 'border-box', fontSize: 12.5, lineHeight: 1.55,
         display: 'flex', flexDirection: 'column',
+        position: 'relative', overflow: 'hidden',
       }}
     >
+      {/* ✅ Filigrane — logo de l'entreprise en fond, très faible opacité pour
+          rester lisible (contrairement au modèle papier fourni où le tampon
+          plein recouvre le texte). Reste toujours DERRIÈRE le contenu. */}
+      {data.company.logo && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={data.company.logo}
+          alt=""
+          style={{
+            position: 'absolute', top: '50%', left: '50%',
+            width: 340, height: 340, objectFit: 'contain',
+            transform: 'translate(-50%, -50%) rotate(-25deg)',
+            opacity: 0.06, zIndex: 0, pointerEvents: 'none',
+          }}
+        />
+      )}
+
+      {/* Le contenu passe au-dessus du filigrane */}
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
+
       {/* En-tête expéditeur */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
@@ -128,16 +150,26 @@ export default function LeaveAuthorizationLetterPrintable({ id, data }: { id: st
 
       <p style={{ textAlign: 'right', fontWeight: 700, marginRight: 20 }}>{data.signatoryName || 'La Direction des Ressources Humaines'}</p>
 
-      {/* Pied de page légal */}
-      <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: 9.5, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #d1d5db', paddingTop: 10 }}>
-        <div style={{ fontWeight: 700 }}>{companyName}</div>
-        {(data.company.rccmNumber || data.company.taxNumber) && (
-          <div>
-            {data.company.rccmNumber && <>RCCM : {data.company.rccmNumber}&nbsp;&nbsp;</>}
-            {data.company.taxNumber && <>NIU : {data.company.taxNumber}</>}
-          </div>
+      {/* ── PIED DE PAGE ──
+          Texte libre défini par l'entreprise (paramètres → Pied de page des documents)
+          s'il existe ; sinon composition automatique à partir de RCCM/NIU/adresse. */}
+      <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: 9.5, color: '#4b5563', lineHeight: 1.6, borderTop: '1px solid #d1d5db', paddingTop: 10, whiteSpace: 'pre-line' }}>
+        {data.company.documentFooterText ? (
+          data.company.documentFooterText
+        ) : (
+          <>
+            <div style={{ fontWeight: 700 }}>{companyName}</div>
+            {(data.company.rccmNumber || data.company.taxNumber) && (
+              <div>
+                {data.company.rccmNumber && <>RCCM : {data.company.rccmNumber}&nbsp;&nbsp;</>}
+                {data.company.taxNumber && <>NIU : {data.company.taxNumber}</>}
+              </div>
+            )}
+            {data.company.address && <div>{data.company.address}</div>}
+          </>
         )}
-        {data.company.address && <div>{data.company.address}</div>}
+      </div>
+
       </div>
     </div>
   );

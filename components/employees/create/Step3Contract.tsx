@@ -594,6 +594,53 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             </div>
           </Field>
 
+          {/* ✅ Cumul brut avant Konza RH — optionnel, pour un calcul plus
+              fidèle de l'indemnité de congé tant que l'historique de paie
+              dans l'app est encore court (voir leaves-indemnity.service.ts). */}
+          {!isBncContract && (
+            <Field
+              label="Cumul brut avant Konza RH (optionnel)"
+              hint="Somme des salaires bruts déjà perçus par l'employé DEPUIS LE DÉBUT DE SON CYCLE DE CONGÉ EN COURS, avant l'arrivée sur Konza RH (ex: il travaille depuis janvier, vous démarrez Konza en juillet → cumul des 6 bulletins jan-juin). Sert au calcul de l'indemnité de congé en attendant d'avoir 12 bulletins réels dans l'app. Se remet à zéro automatiquement au prochain cycle."
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    name="openingCumulativeGross"
+                    value={formData.openingCumulativeGross}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                      onSelectChange('openingCumulativeGross', val);
+                    }}
+                    placeholder="Cumul brut, ex. 1000000"
+                    className="w-full pl-3.5 pr-16 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 dark:text-gray-500">
+                    FCFA
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    name="openingCumulativeMonths"
+                    value={formData.openingCumulativeMonths}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      onSelectChange('openingCumulativeMonths', val);
+                    }}
+                    placeholder="Nb de mois, ex. 5"
+                    className="w-full pl-3.5 pr-14 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 dark:text-gray-500">
+                    mois
+                  </span>
+                </div>
+              </div>
+            </Field>
+          )}
+
           {/* BNC section (Consultant / Prestataire) */}
           <AnimatePresence mode="wait">
             {isBncContract && (

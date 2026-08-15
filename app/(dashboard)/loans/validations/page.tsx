@@ -166,7 +166,7 @@ export default function ValidationsPage() {
   const reference = selected ? `${selected.kind === 'loan' ? 'PR' : 'AV'}-${selected.item.id.slice(0, 8).toUpperCase()}` : '';
   const printData = selected ? {
     reference,
-    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
+    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
     employee: { firstName: selected.item.employee?.firstName || '', lastName: selected.item.employee?.lastName || '', position: selected.item.employee?.position, departmentName: selected.item.employee?.department?.name },
     docType: selected.kind === 'loan' ? (selected.item.type || 'ARGENT') : 'AVANCE',
     amount: selected.item.amount, monthlyRepayment: selected.item.monthlyRepayment, status: selected.item.status,
