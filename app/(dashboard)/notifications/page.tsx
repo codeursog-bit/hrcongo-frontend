@@ -187,14 +187,18 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {unreadCount > 0 && (
-          <button
-            onClick={handleMarkAllAsRead}
-            className="px-4 py-2 text-sm font-bold text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 rounded-xl transition-colors"
-          >
-            Tout marquer comme lu
-          </button>
-        )}
+        {/* ✅ Toujours visible, désactivé s'il n'y a rien à marquer lu */}
+        <button
+          onClick={handleMarkAllAsRead}
+          disabled={unreadCount === 0}
+          className={`px-4 py-2 text-sm font-bold rounded-xl transition-colors ${
+            unreadCount === 0
+              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              : 'text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20'
+          }`}
+        >
+          Tout marquer comme lu
+        </button>
       </div>
 
       {/* BANDEAU INFO ROLE */}
@@ -293,15 +297,28 @@ export default function NotificationsPage() {
                   {n.message}
                 </p>
 
-                {/* Lien direct vers l'employé pour les alertes contrat */}
-                {n.metadata?.notificationType === 'CONTRACT_EXPIRY' && n.link && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); router.push(n.link); }}
-                    className="mt-2 text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline"
-                  >
-                    Voir l'employé →
-                  </button>
-                )}
+                <div className="flex items-center gap-4 mt-2">
+                  {/* Lien direct vers l'employé pour les alertes contrat */}
+                  {n.metadata?.notificationType === 'CONTRACT_EXPIRY' && n.link && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); router.push(n.link); }}
+                      className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline"
+                    >
+                      Voir l'employé →
+                    </button>
+                  )}
+
+                  {/* ✅ Bouton dédié par notification — marque UNE SEULE
+                      notification, indépendamment de "Tout marquer comme lu" */}
+                  {!n.read && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleMarkAsRead(n.id); }}
+                      className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"
+                    >
+                      <CheckCircle2 size={14} /> Marquer comme lue
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

@@ -10,6 +10,7 @@
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
+import { getBaseTemplate } from '@/lib/bulletin-templates';
 
 export interface BulletinRendererDefaultProps {
   payroll:      BulletinPayroll;
@@ -163,7 +164,25 @@ const Row = ({ rub, label, base = '', taux = '', gain = '', ret = '',
 );
 
 // ── Composant principal ───────────────────────────────────────────────────────
-export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProps) {
+// ✅ CORRECTIF : `template` était accepté en prop mais jamais utilisé — le
+//    sélecteur de modèle (page paramètres/bulletin) ne changeait donc RIEN,
+//    ni dans la preview ni à l'impression. On lit maintenant template.style
+//    pour : couleur d'accent (identité, cumuls, net à payer, en-têtes de
+//    colonnes quand headerStyle='dark'), logo, adresse/mentions fiscales
+//    (showLogo/showAddress/showFiscalNumbers), et message employeur
+//    (footerMessage). Le calcul des montants n'est pas concerné.
+export function BulletinRendererDefault({ payroll, template }: BulletinRendererDefaultProps) {
+  const tpl        = template ?? getBaseTemplate('default');
+  const ACCENT     = tpl.style.primaryColor || K;
+  const isDark     = tpl.style.headerStyle === 'dark';
+  const headerBg   = isDark ? `${ACCENT}22` : TH_BG;   // teinte légère — texte des en-têtes de colonnes reste noir, lisible
+  const brandBg    = isDark ? ACCENT : TH_BG;          // couleur pleine — blocs identité/cumuls/net à payer
+  const brandTint  = isDark ? `${ACCENT}22` : '#e0e0e0';
+  const brandText  = isDark ? '#fff' : K;
+  const showLogo    = tpl.style.showLogo    !== false;
+  const showAddress = tpl.style.showAddress !== false;
+  const showFiscal  = tpl.style.showFiscalNumbers !== false;
+
   const e   = (payroll.employee ?? {}) as any;
   const co  = (payroll.company  ?? {}) as any;
   const items: PayrollItem[] = payroll.items ?? [];
@@ -372,6 +391,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             {/* Ligne 1 */}
             <tr>
               <td style={{ width:'34%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:13, textTransform:'uppercase', color:K }}>
+                {showLogo && co.logo && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height:20, verticalAlign:'middle', marginRight:6, objectFit:'contain' }} />
+                )}
                 {co.tradeName || co.legalName || '—'}
               </td>
               <td style={{ width:'28%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:11, color:K }}>
@@ -383,17 +406,21 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, fontSize:9, color:K }}>
                 Poste : <strong>{e.position || '—'}</strong>
               </td>
-              <td rowSpan={3} style={{ width:'12%', padding:'5px 4px', textAlign:'center', verticalAlign:'middle', background:TH_BG, color:K }}>
-                <div style={{ fontSize:8, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', color:K }}>Bulletin de Paie</div>
-                <div style={{ fontSize:23, fontWeight:900, fontFamily:FONT, marginTop:2, color:K }}>{monthLabel.slice(0,4).toUpperCase()}</div>
-                <div style={{ fontSize:15, fontWeight:900, fontFamily:FONT, color:K }}>{payroll.year}</div>
+              <td rowSpan={3} style={{ width:'12%', padding:'5px 4px', textAlign:'center', verticalAlign:'middle', background:brandBg, color:brandText }}>
+                <div style={{ fontSize:8, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase', color:brandText }}>Bulletin de Paie</div>
+                <div style={{ fontSize:23, fontWeight:900, fontFamily:FONT, marginTop:2, color:brandText }}>{monthLabel.slice(0,4).toUpperCase()}</div>
+                <div style={{ fontSize:15, fontWeight:900, fontFamily:FONT, color:brandText }}>{payroll.year}</div>
               </td>
             </tr>
             {/* Ligne 2 — données SOCIÉTÉ uniquement */}
             <tr style={{ borderTop:BDB }}>
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
-                {[co.address, co.city].filter(Boolean).join(', ')}
-                {co.phone && <span> · Tél : {co.phone}</span>}
+                {showAddress && (
+                  <>
+                    {[co.address, co.city].filter(Boolean).join(', ')}
+                    {co.phone && <span> · Tél : {co.phone}</span>}
+                  </>
+                )}
               </td>
               {/* Données EMPLOYÉ sur cette ligne */}
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
@@ -409,11 +436,11 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             {/* Ligne 3 — RCCM société | Convention société */}
             <tr style={{ borderTop:BDB }}>
               <td style={{ padding:'2px 6px', borderRight:BDB, fontSize:8, color:K }}>
-                RCCM : <strong>{co.rccmNumber || '—'}</strong>
+                {showFiscal && <>RCCM : <strong>{co.rccmNumber || '—'}</strong></>}
               </td>
               <td colSpan={3} style={{ padding:'2px 6px', fontSize:8, color:K }}>
                 Conv. : <strong>{co.collectiveAgreement || '—'}</strong>
-                {co.nif && <span> · NIU : <strong>{co.nif}</strong></span>}
+                {showFiscal && co.nif && <span> · NIU : <strong>{co.nif}</strong></span>}
               </td>
             </tr>
           </tbody>
@@ -425,7 +452,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           <thead>
             <tr>
               {['Date embauche','N° CNSS','Sit. familiale','Nbr Enfant','Ancienneté','Nbr part ITS','Type de contrat'].map(h => (
-                <th key={h} style={TH(TH_BG, { fontSize:8, padding:'3px 4px' })}>{h}</th>
+                <th key={h} style={TH(headerBg, { fontSize:8, padding:'3px 4px' })}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -468,9 +495,9 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
             <thead>
               <tr>
                 <th rowSpan={2} style={TH()}>Rub.</th>
-                <th rowSpan={2} style={TH(TH_BG, { textAlign:'left', paddingLeft:5 })}>Libellé</th>
+                <th rowSpan={2} style={TH(headerBg, { textAlign:'left', paddingLeft:5 })}>Libellé</th>
                 <th rowSpan={2} style={TH()}>Nbre / Base</th>
-                <th rowSpan={2} style={TH(TH_BG, { fontSize: 7.5, overflow: 'hidden' })}>Taux</th>
+                <th rowSpan={2} style={TH(headerBg, { fontSize: 7.5, overflow: 'hidden' })}>Taux</th>
                 <th colSpan={2} style={TH('#bbb', { fontSize:9 })}>Part Salariale</th>
                 <th colSpan={2} style={TH('#a8a8a8', { fontSize:9 })}>Part Patronale</th>
               </tr>
@@ -625,7 +652,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         <table className="nobreak" style={{ width:'100%', borderCollapse:'collapse', marginTop:4, border:BDB, flexShrink:0 }}>
           <tbody>
             <tr>
-              <td style={{ width:'14%', padding:'4px 6px', borderRight:BDB, background:TH_BG, fontWeight:700, textAlign:'center', fontSize:10, color:K }}>
+              <td style={{ width:'14%', padding:'4px 6px', borderRight:BDB, background:brandBg, fontWeight:700, textAlign:'center', fontSize:10, color:brandText }}>
                 Mode règlement
               </td>
               <td style={{ width:'22%', padding:'4px 6px', borderRight:BDB, fontSize:10, color:K }}>
@@ -635,10 +662,10 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
               <td style={{ width:'10%', padding:'4px 6px', borderRight:BDB, fontSize:10, color:K }}>
                 {e.paymentMethod === 'BANK_TRANSFER' ? 'Virement' : 'Espèces'}
               </td>
-              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:TH_BG, fontWeight:900, textAlign:'center', fontSize:11, color:K, letterSpacing:0.3 }}>
+              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:brandBg, fontWeight:900, textAlign:'center', fontSize:11, color:brandText, letterSpacing:0.3 }}>
                 Net à payer
               </td>
-              <td style={{ width:'16%', padding:'4px 10px', borderRight:BDB, fontWeight:900, fontSize:FS_NET, textAlign:'right', fontFamily:FONT, background:'#e0e0e0', color:K, letterSpacing:0.5 }}>
+              <td style={{ width:'16%', padding:'4px 10px', borderRight:BDB, fontWeight:900, fontSize:FS_NET, textAlign:'right', fontFamily:FONT, background:brandTint, color:K, letterSpacing:0.5 }}>
                 {fmtZ(netSalary)}
               </td>
               <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, textAlign:'center', fontSize:9, color:K }}>
@@ -662,11 +689,11 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </colgroup>
           <thead>
             <tr>
-              <th style={TH(TH_BG, { fontSize:9 })}> </th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Brut</th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Net imposable</th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Charges Sal</th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Charges Pat</th>
+              <th style={TH(headerBg, { fontSize:9 })}> </th>
+              <th style={TH(headerBg, { fontSize:9 })}>Brut</th>
+              <th style={TH(headerBg, { fontSize:9 })}>Net imposable</th>
+              <th style={TH(headerBg, { fontSize:9 })}>Charges Sal</th>
+              <th style={TH(headerBg, { fontSize:9 })}>Charges Pat</th>
             </tr>
           </thead>
           <tbody>
@@ -683,7 +710,7 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         {/* ══ SÉPARATEUR CUMULS ═══════════════════════════════════════ */}
         <div style={{
           width:'100%', textAlign:'center', fontSize:9.5, fontWeight:700,
-          color:K, background:TH_BG, border:BDB, borderTop:'none',
+          color:brandText, background:brandBg, border:BDB, borderTop:'none',
           padding:'3px 0', textTransform:'uppercase', letterSpacing:2,
           flexShrink:0,
         }}>
@@ -707,22 +734,22 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
           </colgroup>
           <thead>
             <tr>
-              <th style={TH(TH_BG, { fontSize:9 })}> </th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Brut</th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Net imposable</th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Charges Sal</th>
-              <th style={TH(TH_BG, { fontSize:9 })}>Charges Pat</th>
-              <th colSpan={3} style={TH(TH_BG, { fontSize:9 })}>Congés annuels</th>
+              <th style={TH(headerBg, { fontSize:9 })}> </th>
+              <th style={TH(headerBg, { fontSize:9 })}>Brut</th>
+              <th style={TH(headerBg, { fontSize:9 })}>Net imposable</th>
+              <th style={TH(headerBg, { fontSize:9 })}>Charges Sal</th>
+              <th style={TH(headerBg, { fontSize:9 })}>Charges Pat</th>
+              <th colSpan={3} style={TH(headerBg, { fontSize:9 })}>Congés annuels</th>
             </tr>
             <tr>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}> </th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Droits</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Pris</th>
-              <th style={TH(TH_BG, { fontSize:8 })}>Solde</th>
+              <th style={TH(headerBg, { fontSize:8 })}> </th>
+              <th style={TH(headerBg, { fontSize:8 })}> </th>
+              <th style={TH(headerBg, { fontSize:8 })}> </th>
+              <th style={TH(headerBg, { fontSize:8 })}> </th>
+              <th style={TH(headerBg, { fontSize:8 })}> </th>
+              <th style={TH(headerBg, { fontSize:8 })}>Droits</th>
+              <th style={TH(headerBg, { fontSize:8 })}>Pris</th>
+              <th style={TH(headerBg, { fontSize:8 })}>Solde</th>
             </tr>
           </thead>
           <tbody>
@@ -764,6 +791,11 @@ export function BulletinRendererDefault({ payroll }: BulletinRendererDefaultProp
         </table>
 
         {/* ══ PIED DE PAGE ═══════════════════════════════════════════ */}
+        {tpl.style.footerMessage && (
+          <div style={{ textAlign:'center', fontSize:8, fontStyle:'italic', color:K, marginTop:3, flexShrink:0 }}>
+            {tpl.style.footerMessage}
+          </div>
+        )}
         <div style={{
           borderTop:'0.5px solid #999', marginTop:4, paddingTop:3,
           display:'flex', justifyContent:'space-between',

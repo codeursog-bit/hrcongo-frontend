@@ -37,6 +37,7 @@ interface CompanySettings {
   longitude:             number;
   allowedRadius:         number;
   appliesCnssEmployer:   boolean;
+  appliesSeniorityLeaveBonus: boolean;
   defaultAppliesIrpp:    boolean;
   defaultAppliesCnss:    boolean;
   collectiveAgreement?:  string;
@@ -102,6 +103,7 @@ const DEFAULT_COMPANY: CompanySettings = {
   primaryColor: '#0EA5E9', secondaryColor: '#10B981',
   latitude: 0, longitude: 0, allowedRadius: 100,
   appliesCnssEmployer: true,
+  appliesSeniorityLeaveBonus: true,
   defaultAppliesIrpp:  true,
   defaultAppliesCnss:  true,
   collectiveAgreement: '',
@@ -187,6 +189,7 @@ export default function CompanySettingsPage() {
             longitude:            company.longitude           || 0,
             allowedRadius:        company.allowedRadius       || 100,
             appliesCnssEmployer:  company.appliesCnssEmployer ?? true,
+            appliesSeniorityLeaveBonus: company.appliesSeniorityLeaveBonus ?? true,
             defaultAppliesIrpp:   company.defaultAppliesIrpp  ?? true,
             defaultAppliesCnss:   company.defaultAppliesCnss  ?? true,
             collectiveAgreement:  company.collectiveAgreement || '',
@@ -1031,6 +1034,32 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       </p>
                     </div>
                   )}
+                </div>
+
+                {/* 🆕 JOURS DE CONGÉ SUPPLÉMENTAIRES D'ANCIENNETÉ */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8">
+                  <div className="mb-5">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
+                      <Award size={20} className="text-purple-500" /> Congé supplémentaire d'ancienneté
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Certaines conventions accordent des jours de congé additionnels selon l'ancienneté de l'employé, en plus des 26 jours de base. Certaines entreprises choisissent de ne pas les appliquer.
+                    </p>
+                  </div>
+
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 transition-all group">
+                    <input type="checkbox" checked={companyData.appliesSeniorityLeaveBonus}
+                      onChange={e => handleCompanyChange('appliesSeniorityLeaveBonus', e.target.checked)}
+                      className="w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 mt-0.5" />
+                    <div className="flex-1">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white block mb-1">
+                        Accorder les jours de congé supplémentaires d'ancienneté
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Coché : les employés éligibles reçoivent 26j + leurs jours d'ancienneté (selon la convention sélectionnée), et le bulletin de paie affiche une ligne "Congé supplémentaire" séparée. Décoché : tous les employés n'acquièrent que les 26 jours de base, quelle que soit leur ancienneté.
+                      </p>
+                    </div>
+                  </label>
                 </div>
               </motion.div>
             )}

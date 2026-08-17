@@ -367,6 +367,18 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
     } catch (e) {}
   };
 
+  // ✅ Marquer UNE SEULE notification lue, sans naviguer (bouton dédié par
+  //    notification — demandé séparément du clic sur toute la carte, et du
+  //    "Tout marquer lu" qui traite tout d'un coup).
+  const markOneRead = async (n: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await api.patch(`/notifications/${n.id}/read`, {});
+      setNotifications(prev => prev.filter(x => x.id !== n.id));
+      if (!n.read) setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (e) {}
+  };
+
   const handleLogout = async () => {
     // Révoquer le cookie côté serveur
     try {
@@ -462,11 +474,13 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                 >
                   <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="text-xs font-bold text-sky-500 hover:text-sky-600">
-                        Tout marquer lu
-                      </button>
-                    )}
+                    <button
+                      onClick={markAllRead}
+                      disabled={unreadCount === 0}
+                      className={`text-xs font-bold ${unreadCount === 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-sky-500 hover:text-sky-600'}`}
+                    >
+                      Tout marquer lu
+                    </button>
                   </div>
                   
                   <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -477,16 +491,23 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                       </div>
                     ) : (
                       notifications.map((n) => (
-                        <div key={n.id} onClick={() => handleNotifClick(n)} className={`p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${!n.read ? 'bg-sky-50/30 dark:bg-sky-900/10' : ''}`}>
+                        <div key={n.id} onClick={() => handleNotifClick(n)} className={`group p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${!n.read ? 'bg-sky-50/30 dark:bg-sky-900/10' : ''}`}>
                           <div className="flex gap-3">
                             <div className="mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
                               {getNotifIcon(n.type)}
                             </div>
-                            <div>
+                            <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{n.title}</p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{n.message}</p>
                               <p className="text-[10px] text-slate-400 mt-2">{new Date(n.createdAt).toLocaleString('fr-FR')}</p>
                             </div>
+                            <button
+                              onClick={(e) => markOneRead(n, e)}
+                              title="Marquer cette notification comme lue"
+                              className="shrink-0 self-start p-1.5 rounded-lg text-slate-300 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <CheckCircle2 size={16} />
+                            </button>
                           </div>
                         </div>
                       ))

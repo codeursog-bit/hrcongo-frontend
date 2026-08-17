@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  FileSpreadsheet, Download, AlertTriangle, Clock,
+  FileSpreadsheet, AlertTriangle, Clock,
   ChevronDown, RefreshCw, Shield, Users, Banknote,
   AlertCircle, Calendar, FileText, Building2,
   XCircle, Loader2, Eye, EyeOff, Receipt,
-  ChevronRight, Info,
+  ChevronRight, Info, CheckCircle2,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -89,6 +89,11 @@ interface CnssRecap {
   deadline: string;
   isLate: boolean;
   missingCnssCount: number;
+  // 🆕 Statut réel de déclaration (indépendant du statut de la paie)
+  declaration: {
+    status: 'A_DECLARER'|'DECLAREE'|'PAYEE'|'EN_RETARD'|'REGULARISEE';
+    declaredAt: string | null;
+  } | null;
 }
 
 interface HistoryItem {
@@ -150,7 +155,7 @@ export default function CnssDeclarationPage() {
   const [tusLoad,    setTusLoad]    = useState(false);
   const [dgcLoad,    setDgcLoad]    = useState(false);
   const [xlsxLoad,   setXlsxLoad]  = useState(false);
-  const [csvLoad,    setCsvLoad]    = useState(false);
+  const [declareLoad,setDeclareLoad] = useState(false);
   const [search,     setSearch]     = useState('');
   const [missingOnly,setMissingOnly]= useState(false);
 
@@ -172,15 +177,14 @@ export default function CnssDeclarationPage() {
   useEffect(() => { loadRecap(); }, [loadRecap]);
   useEffect(() => { if(tab==='historique') loadHistory(); }, [tab, loadHistory]);
 
-  const EXPORT_META: Record<'dnms'|'tus'|'dgc'|'excel'|'csv', {ext:string; prefix:string}> = {
+  const EXPORT_META: Record<'dnms'|'tus'|'dgc'|'excel', {ext:string; prefix:string}> = {
     dnms:  { ext:'xlsx', prefix:'CNSS_DNMS' },
     tus:   { ext:'xlsx', prefix:'CNSS_TUS'  },
     dgc:   { ext:'docx', prefix:'CNSS_DGC'  },
     excel: { ext:'xlsx', prefix:'CNSS_RECAP_INTERNE' },
-    csv:   { ext:'csv',  prefix:'CNSS_DNMS' },
   };
 
-  const doExport = async (type:'dnms'|'tus'|'dgc'|'excel'|'csv', setLoad:(v:boolean)=>void) => {
+  const doExport = async (type:'dnms'|'tus'|'dgc'|'excel', setLoad:(v:boolean)=>void) => {
     if(!recap) return;
     setLoad(true);
     try {
@@ -195,6 +199,30 @@ export default function CnssDeclarationPage() {
       URL.revokeObjectURL(a.href);
     } catch(e:any) { alert('❌ '+e.message); }
     finally { setLoad(false); }
+  };
+
+  // 🆕 Bouton "Je déclare la CNSS" — action manuelle, indépendante du
+  // statut de la paie. C'est CE bouton (et non plus le fait que la paie
+  // soit payée) qui détermine si le mois est considéré comme déclaré.
+  const handleDeclare = async () => {
+    if (!recap || recap.employees.length === 0) return;
+    if (!confirm(`Confirmer que la déclaration CNSS de ${MONTHS[month-1]} ${year} a bien été déposée à la CNSS ?`)) return;
+    setDeclareLoad(true);
+    try {
+      await api.post('/cnss-declaration/declare', { month, year });
+      await loadRecap();
+    } catch(e:any) { alert('❌ '+e.message); }
+    finally { setDeclareLoad(false); }
+  };
+
+  const handleCancelDeclare = async () => {
+    if (!confirm('Annuler la déclaration de ce mois ? Le statut repassera à "À déclarer".')) return;
+    setDeclareLoad(true);
+    try {
+      await api.post('/cnss-declaration/cancel-declare', { month, year });
+      await loadRecap();
+    } catch(e:any) { alert('❌ '+e.message); }
+    finally { setDeclareLoad(false); }
   };
 
   const filtered = (recap?.employees??[]).filter(emp => {
@@ -440,13 +468,21 @@ export default function CnssDeclarationPage() {
                 {dgcLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileText className="w-4 h-4"/>}
                 Exporter Déclaration Globale (DGC, .docx officiel)
               </button>
-              <button onClick={()=>doExport('csv',setCsvLoad)} disabled={csvLoad||recap.employees.length===0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl shadow-sm transition-all">
-                {csvLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<Download className="w-4 h-4"/>}
-                Exporter CSV (e-déclaration)
-              </button>
+              {recap.declaration?.status && ['DECLAREE','PAYEE','REGULARISEE'].includes(recap.declaration.status) ? (
+                <button onClick={handleCancelDeclare} disabled={declareLoad}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 disabled:opacity-50 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 text-sm font-semibold rounded-xl transition-all">
+                  {declareLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<CheckCircle2 className="w-4 h-4"/>}
+                  Déclarée le {recap.declaration.declaredAt ? new Date(recap.declaration.declaredAt).toLocaleDateString('fr-FR') : ''} — Annuler
+                </button>
+              ) : (
+                <button onClick={handleDeclare} disabled={declareLoad||recap.employees.length===0}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-emerald-500/30 transition-all">
+                  {declareLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<CheckCircle2 className="w-4 h-4"/>}
+                  Je déclare la CNSS
+                </button>
+              )}
               <a href="https://edeclaration.cnss.cg" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-emerald-500/30 transition-all">
+                className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl shadow-sm transition-all">
                 <ChevronRight className="w-4 h-4"/>Portail e-Déclaration CNSS
               </a>
             </div>
