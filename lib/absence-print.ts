@@ -50,6 +50,12 @@ ${styleInlines}
     width: 210mm !important;
     margin: 0 auto !important;
     background: #fff !important;
+    /* ✅ CORRECTIF : garantit UNE seule page à l'impression navigateur —
+       le téléchargement PDF avait déjà ce garde-fou (mise à l'échelle),
+       l'impression native window.print() n'en avait aucun : le moindre
+       dépassement de 297mm produisait une 2e page quasi vide. */
+    height: 297mm !important;
+    overflow: hidden !important;
   }
   * {
     -webkit-print-color-adjust: exact !important;
@@ -146,19 +152,19 @@ export async function downloadAbsenceRequestPDF(filename: string): Promise<void>
     const pdfH    = pdf.internal.pageSize.getHeight();
 
     const imgRatio = canvas.width / canvas.height;
-    const finalW   = pdfW;
-    const finalH   = pdfW / imgRatio;
 
+    // ✅ CORRECTIF : ce formulaire tient sur UNE page — l'ancienne logique
+    // paginait dès que le contenu dépassait 297mm de la moindre fraction de
+    // mm, produisant une 2e page quasi vide. On ajuste maintenant l'échelle
+    // pour TOUJOURS tenir sur une seule page.
+    let finalW = pdfW;
+    let finalH = pdfW / imgRatio;
     if (finalH > pdfH) {
-      let posY = 0;
-      while (posY < finalH) {
-        if (posY > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, -posY, finalW, finalH, '', 'FAST');
-        posY += pdfH;
-      }
-    } else {
-      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, finalH, '', 'FAST');
+      finalH = pdfH;
+      finalW = pdfH * imgRatio;
     }
+    const offsetX = (pdfW - finalW) / 2;
+    pdf.addImage(imgData, 'JPEG', offsetX, 0, finalW, finalH, '', 'FAST');
 
     pdf.save(filename);
   } catch (err) {

@@ -1470,8 +1470,10 @@ export default function ManuelPayrollPage() {
           )}
 
           {/* ════ POINT DE DÉPART HISTORIQUE ════ */}
-          {/* Visible uniquement en janvier OU après retour congé (cycle = 0) */}
-          {selectedEmp && isCarryOverMonth && (
+          {/* ✅ Modifiable n'importe quel mois désormais (avant : janvier ou
+              retour de congé uniquement) — utile pour corriger un cumul mal
+              saisi, même en cours d'année. */}
+          {selectedEmp && (
             <Card className="p-5 border-2 border-dashed border-amber-200 dark:border-amber-800">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
@@ -1482,7 +1484,11 @@ export default function ManuelPayrollPage() {
                     Point de départ — Brut &amp; Charges historiques
                   </p>
                   <p className="text-[10px] text-amber-600 dark:text-amber-400">
-                    {month === 'Janvier' ? `Janvier ${year} — début de cycle` : 'Retour de congé — nouveau cycle'}
+                    {month === 'Janvier'
+                      ? `Janvier ${year} — début de cycle`
+                      : isCarryOverMonth
+                        ? 'Retour de congé — nouveau cycle'
+                        : `Correction du cumul au 01/01/${year}`}
                   </p>
                 </div>
               </div>

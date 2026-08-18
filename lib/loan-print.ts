@@ -30,7 +30,14 @@ ${styleInlines}
   html, body { margin: 0; padding: 0; background: #fff; font-family: Arial, Helvetica, sans-serif; }
   * { color-scheme: light !important; }
   body > *:not(#loan-print-target) { display: none !important; }
-  #loan-print-target { width: 210mm !important; margin: 0 auto !important; background: #fff !important; }
+  #loan-print-target {
+    width: 210mm !important; margin: 0 auto !important; background: #fff !important;
+    /* ✅ CORRECTIF : garantit UNE seule page à l'impression navigateur —
+       le téléchargement PDF avait déjà ce garde-fou (mise à l'échelle),
+       l'impression native window.print() n'en avait aucun : le moindre
+       dépassement de 297mm produisait une 2e page quasi vide. */
+    height: 297mm !important; overflow: hidden !important;
+  }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 </style>
 </head><body>
@@ -82,19 +89,21 @@ export async function downloadLoanDocumentPDF(elementId: string, filename: strin
     const pdfW    = pdf.internal.pageSize.getWidth();
     const pdfH    = pdf.internal.pageSize.getHeight();
     const imgRatio = canvas.width / canvas.height;
-    const finalW   = pdfW;
-    const finalH   = pdfW / imgRatio;
 
+    // ✅ CORRECTIF : ces formulaires tiennent sur UNE page — l'ancienne
+    // logique paginait dès que le contenu dépassait 297mm de la moindre
+    // fraction de mm (marges d'arrondi, cachet/logo agrandis, etc.), ce qui
+    // produisait une 2e page quasi vide. On ajuste maintenant l'échelle pour
+    // TOUJOURS tenir sur une seule page — au pire une réduction visuelle
+    // à peine perceptible, jamais une 2e page.
+    let finalW = pdfW;
+    let finalH = pdfW / imgRatio;
     if (finalH > pdfH) {
-      let posY = 0;
-      while (posY < finalH) {
-        if (posY > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, -posY, finalW, finalH, '', 'FAST');
-        posY += pdfH;
-      }
-    } else {
-      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, finalH, '', 'FAST');
+      finalH = pdfH;
+      finalW = pdfH * imgRatio;
     }
+    const offsetX = (pdfW - finalW) / 2;
+    pdf.addImage(imgData, 'JPEG', offsetX, 0, finalW, finalH, '', 'FAST');
 
     pdf.save(filename);
   } catch (err) {

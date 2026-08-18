@@ -13,7 +13,7 @@ import React from 'react';
 
 interface CompanyInfo {
   legalName?: string; tradeName?: string; logo?: string | null;
-  rccmNumber?: string; taxNumber?: string; address?: string; phone?: string;
+  rccmNumber?: string; taxNumber?: string; address?: string; city?: string; phone?: string;
   documentFooterText?: string | null; cachetUrl?: string | null;
 }
 
@@ -79,26 +79,25 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
         <h1 style={{ fontSize: 19, fontWeight: 800, letterSpacing: 0.5, margin: 0, textAlign: 'center' }}>{TITLE[data.docType]}</h1>
       </div>
 
-      <div style={{ fontSize: 14, marginBottom: 18, fontWeight: 700 }}>Référence : {data.reference || '.....................'}</div>
+      <div style={{ fontSize: 14, marginBottom: 18, fontWeight: 700, textAlign: 'center' }}>Référence : {data.reference || '.....................'}</div>
 
       <table style={{ width: '100%', fontSize: 15, borderCollapse: 'collapse', marginBottom: 22, lineHeight: 1.6 }}>
         <tbody>
-          <tr><td style={{ padding: '7px 0', width: 130 }}><strong>NOM :</strong></td><td style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.lastName}</td></tr>
-          <tr><td style={{ padding: '7px 0' }}><strong>PRÉNOMS :</strong></td><td style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.firstName}</td></tr>
+          <tr><td style={{ padding: '7px 0', width: 130 }}><strong>NOM :</strong></td><td colSpan={3} style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.lastName}</td></tr>
+          <tr><td style={{ padding: '7px 0' }}><strong>PRÉNOMS :</strong></td><td colSpan={3} style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.firstName}</td></tr>
           <tr>
-            <td style={{ padding: '7px 0' }}><strong>POSTE :</strong></td>
-            <td style={{ borderBottom: '1px solid #9ca3af' }}>
-              {data.employee.position || ''} <span style={{ float: 'right' }}><strong>TÉL :</strong> {data.employee.phone || ''}</span>
-            </td>
+            <td style={{ padding: '7px 0', width: 130 }}><strong>POSTE :</strong></td>
+            <td style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.position || ''}</td>
+            <td style={{ padding: '7px 16px', width: 90, textAlign: 'center' }}><strong>TÉL :</strong></td>
+            <td style={{ borderBottom: '1px solid #9ca3af', width: 160, textAlign: 'center' }}>{data.employee.phone || ''}</td>
           </tr>
-          <tr><td style={{ padding: '7px 0' }}><strong>SERVICE :</strong></td><td style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.departmentName || ''}</td></tr>
+          <tr><td style={{ padding: '7px 0' }}><strong>SERVICE :</strong></td><td colSpan={3} style={{ borderBottom: '1px solid #9ca3af' }}>{data.employee.departmentName || ''}</td></tr>
         </tbody>
       </table>
 
       {data.reason && data.docType !== 'MARCHANDISE' && (
-        <div style={{ marginBottom: 20, fontSize: 15 }}>
-          <strong>Motif :</strong>
-          <div style={{ borderBottom: '1px solid #9ca3af', paddingBottom: 6, marginTop: 6 }}>{data.reason}</div>
+        <div style={{ marginBottom: 20, fontSize: 15, borderBottom: '1px solid #9ca3af', paddingBottom: 6 }}>
+          <strong>Motif :</strong> {data.reason}
         </div>
       )}
 
@@ -116,10 +115,15 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
             </>
           )}
           {data.previousLoanAmount != null && (
-            <tr><td style={{ padding: '8px 0' }}><strong>Montant du prêt précédent :</strong></td><td style={{ borderBottom: '1px solid #9ca3af' }}>{fmtMoney(data.previousLoanAmount)} FCFA</td></tr>
-          )}
-          {data.previousLoanAmount != null && (
-            <tr><td style={{ padding: '8px 0' }}><strong>Total (dette précédente + demande) :</strong></td><td style={{ borderBottom: '1px solid #9ca3af', fontWeight: 700 }}>{fmtMoney(Number(data.previousLoanAmount) + Number(data.amount || 0))} FCFA</td></tr>
+            <tr>
+              <td style={{ padding: '8px 0' }}><strong>Montant du prêt précédent :</strong></td>
+              <td style={{ borderBottom: '1px solid #9ca3af' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span>{fmtMoney(data.previousLoanAmount)} FCFA</span>
+                  <span><strong>Total :</strong> {fmtMoney(Number(data.previousLoanAmount) + Number(data.amount || 0))} FCFA</span>
+                </div>
+              </td>
+            </tr>
           )}
         </tbody>
       </table>
@@ -128,7 +132,7 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
           plutôt que collé au tableau du dessus — reproduit la position basse du modèle papier. */}
       <div style={{ marginTop: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 34, fontSize: 14 }}>
-          <div>Fait à ..............................., le {fmt(data.requestedAt)}</div>
+          <div>Fait à {data.company.city || '...............................'}, le {fmt(data.requestedAt)}</div>
         </div>
         <div style={{ textAlign: 'center', fontSize: 14, fontWeight: 700, marginBottom: 34 }}>Signature de l&apos;Agent</div>
 
