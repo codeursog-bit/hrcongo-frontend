@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -14,6 +13,8 @@ import { PayrollMonthSelector } from './components/PayrollMonthSelector';
 import { PayrollTableRow } from './components/PayrollTableRow';
 import { PayrollBatchActionsFooter } from './components/PayrollBatchActionsFooter';
 import { PayrollPagination } from './components/PayrollPagination';
+import BulletinBatchPrintHidden from '@/components/BulletinBatchPrintHidden';
+import { printBulletinBatch } from '@/lib/bulletin-print';
 import { usePayrollData } from '@/hooks/usePayrollData';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -38,6 +39,12 @@ export default function PayrollPage() {
   const [showMonthSelector,  setShowMonthSelector]   = useState(false);
   const [isBatchActionLoading, setIsBatchActionLoading] = useState(false);
   const [currentPage,        setCurrentPage]         = useState(1);
+
+  // ── ÉTAT IMPRESSION GROUPÉE ───────────────────────────────────────────────
+  // ✅ printBatchIds déclenche le montage hors-écran de BulletinBatchPrintHidden
+  // (un par bulletin sélectionné, même rendu que l'impression à l'unité).
+  // Une fois chargé+rendu, son onReady() lance l'impression puis on démonte.
+  const [printBatchIds, setPrintBatchIds] = useState<string[] | null>(null);
 
   // ── ÉTAT MODAL SUPPRESSION ───────────────────────────────────────────────
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string; name: string }>({
@@ -121,6 +128,18 @@ export default function PayrollPage() {
     setSelectedIds([]);
     refetch();
     setIsBatchActionLoading(false);
+  };
+
+  // ── IMPRESSION GROUPÉE ────────────────────────────────────────────────────
+  // ✅ Réutilise le même DOM que l'impression à l'unité (BulletinDisplay) —
+  // même gabarit choisi en paramètres, mêmes calculs, même logo. Pas de
+  // génération séparée côté backend.
+  const handleBatchPrint = () => {
+    if (selectedIds.length === 0) {
+      alert('⚠️ Veuillez sélectionner au moins un bulletin');
+      return;
+    }
+    setPrintBatchIds(selectedIds);
   };
 
   // ── FILTRAGE + PAGINATION ─────────────────────────────────────────────────
@@ -300,7 +319,24 @@ export default function PayrollPage() {
         onPay={() => handleBatchAction('PAID')}
         onCancel={() => handleBatchAction('CANCELLED')}
         onClear={() => setSelectedIds([])}
+        onPrintAll={handleBatchPrint}
+        isPrinting={printBatchIds !== null}
       />
+
+      {/* ── IMPRESSION GROUPÉE — rendu hors-écran, invisible, démonté après usage ── */}
+      {printBatchIds && (
+        <BulletinBatchPrintHidden
+          payrollIds={printBatchIds}
+          onReady={() => {
+            printBulletinBatch('bul-batch-root');
+            setPrintBatchIds(null);
+          }}
+          onError={(msg) => {
+            alert(`❌ ${msg}`);
+            setPrintBatchIds(null);
+          }}
+        />
+      )}
 
       {/* ── MODAL SUPPRESSION DÉFINITIVE ── */}
       <AnimatePresence>

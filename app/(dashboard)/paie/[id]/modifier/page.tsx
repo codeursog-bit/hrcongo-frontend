@@ -860,6 +860,13 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
   const [congesSolde, setCongesSolde]       = useState<number | ''>('');
   const [joursCongesPris, setJoursCongesPris] = useState<number | ''>('');
 
+  // ✅ Cumul annuel brut — modifiable, pré-rempli avec le cumul ACTUEL du
+  // bulletin (payroll.ytd.grossSalary). Net imposable / charges sal / charges
+  // pat sont recalculés automatiquement à partir du brut par le back — pas
+  // besoin de les saisir séparément.
+  const [cumulBrut, setCumulBrut]           = useState<number | ''>('');
+  const [cumulBrutOriginal, setCumulBrutOriginal] = useState<number>(0);
+
   // ── Sim ─────────────────────────────────────────────────────────────────────
   const [sim, setSim]               = useState<SimResult | null>(null);
   const [simLoading, setSimLoading] = useState(false);
@@ -930,10 +937,18 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
           }));
         if (extractedRet.length > 0) setRetenues(extractedRet);
 
-        // Congés — depuis les items snapshot ou champs directs
-        if (payroll.congesDroits != null) setCongesDroits(Number(payroll.congesDroits));
-        if (payroll.congesPris   != null) setCongesPris(Number(payroll.congesPris));
-        if (payroll.congesSolde  != null) setCongesSolde(Number(payroll.congesSolde));
+        // Congés — depuis le cumul YTD calculé par le back (ytd.droitsConge /
+        // priseConge / soldeConge). ⚠️ Ne PAS lire payroll.congesDroits — ce
+        // champ n'existe pas sur le modèle Payroll, il était toujours undefined
+        // ici avant ce fix, donc les congés ne se pré-remplissaient jamais.
+        if (payroll.ytd?.droitsConge != null) setCongesDroits(Number(payroll.ytd.droitsConge));
+        if (payroll.ytd?.priseConge  != null) setCongesPris(Number(payroll.ytd.priseConge));
+        if (payroll.ytd?.soldeConge  != null) setCongesSolde(Number(payroll.ytd.soldeConge));
+
+        // ✅ Cumul brut actuel — pré-rempli pour permettre une correction manuelle
+        const currentCumulBrut = Number(payroll.ytd?.grossSalary ?? 0);
+        setCumulBrut(currentCumulBrut);
+        setCumulBrutOriginal(currentCumulBrut);
 
       } catch {
         setNotFound(true);
@@ -1024,6 +1039,11 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
         congesPris:       n(congesPris)   || undefined,
         congesSolde:      n(congesSolde)  || undefined,
         joursCongesPris:  n(joursCongesPris) || undefined,
+        // ✅ Correction manuelle du cumul brut — envoyée seulement si modifiée.
+        // Le back recalcule net imposable / charges sal / charges pat à partir
+        // de ce brut (proportionnellement, via les taux du bulletin recalculé).
+        cumulBrutOverride:
+          n(cumulBrut) !== cumulBrutOriginal ? n(cumulBrut) : undefined,
         // ✅ Recalculés par le back depuis les manualBonuses
         month:            monthNum,
         year,
@@ -1229,6 +1249,25 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter une retenue
               </button>
+            </div>
+          </Card>
+
+          {/* ── Cumul annuel ── */}
+          <Card className="p-5">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Cumul annuel</p>
+            <p className="text-[11px] text-gray-400 mb-4">
+              Seul le brut se corrige ici — net imposable et charges sont recalculés automatiquement à partir de lui.
+            </p>
+            <div>
+              <SLabel>Cumul brut (F)</SLabel>
+              <input type="number" min={0} value={cumulBrut}
+                onChange={e => setCumulBrut(e.target.value === '' ? '' : Number(e.target.value))}
+                className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
+              {n(cumulBrut) !== cumulBrutOriginal && (
+                <p className="text-[10px] text-amber-500 font-semibold mt-1.5">
+                  Modifié — était {fmt(cumulBrutOriginal)} F
+                </p>
+              )}
             </div>
           </Card>
 

@@ -245,6 +245,86 @@ export async function downloadBulletinPDF(
 }
 
 // ============================================================================
+// IMPRESSION GROUPÉE (plusieurs bulletins en un seul job d'impression)
+// ============================================================================
+// ✅ Réutilise EXACTEMENT le même DOM que l'impression individuelle — pas de
+//    génération séparée côté backend, donc garantie que le bulletin imprimé
+//    en masse est rigoureusement identique à celui imprimé un par un (même
+//    gabarit choisi en paramètres, mêmes calculs, même logo).
+
+/**
+ * Impression groupée — `rootId` pointe vers un conteneur contenant déjà N
+ * bulletins (chacun avec `page-break-after: always` sauf le dernier), rendus
+ * hors-écran par BulletinBatchPrintHidden. Même mécanique que printBulletin
+ * (iframe isolé) mais sans détection : le conteneur est donné directement.
+ */
+export function printBulletinBatch(rootId: string): void {
+  const el = document.getElementById(rootId);
+  if (!el) { window.print(); return; }
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!doc) { document.body.removeChild(iframe); window.print(); return; }
+
+  const styleLinks   = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.outerHTML).join('\n');
+  const styleInlines = Array.from(document.querySelectorAll('style')).map(s => `<style>${s.innerHTML}</style>`).join('\n');
+  const baseHref = window.location.origin + '/';
+
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<base href="${baseHref}">
+${styleLinks}
+${styleInlines}
+<style>
+  @page { size: A4 portrait; margin: 8mm 6mm; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  * { color-scheme: light !important; }
+  body > *:not(#bul-batch-print-target) { display: none !important; }
+  #bul-batch-print-target {
+    width: 210mm !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+  }
+  .bul-legal, .bulletin-legal, .adm-legal, .bulletin-legal-corp { display: none !important; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+</style>
+</head><body>
+<div id="bul-batch-print-target">${el.innerHTML}</div>
+</body></html>`);
+  doc.close();
+
+  const win = iframe.contentWindow;
+  if (!win) { document.body.removeChild(iframe); window.print(); return; }
+
+  const doPrint = () => {
+    try { win.focus(); win.print(); } catch { window.print(); }
+    // ✅ Fenêtre de nettoyage plus large qu'à l'unité — un lot de N
+    // bulletins met plus de temps à s'ouvrir dans la boîte de dialogue
+    // d'impression que un seul.
+    setTimeout(() => {
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 2500);
+  };
+
+  if (doc.readyState === 'complete') setTimeout(doPrint, 500);
+  else {
+    win.addEventListener('load', () => setTimeout(doPrint, 500), { once: true });
+    setTimeout(doPrint, 2500);
+  }
+}
+
+// ============================================================================
 // HELPER
 // ============================================================================
 

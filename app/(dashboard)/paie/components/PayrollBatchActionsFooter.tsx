@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, DollarSign, Ban, X } from 'lucide-react';
+import { CheckCircle2, DollarSign, Ban, X, Printer, Loader2 } from 'lucide-react';
 
 interface PayrollBatchActionsFooterProps {
   selectedCount: number;
@@ -9,6 +9,8 @@ interface PayrollBatchActionsFooterProps {
   onPay: () => void;
   onCancel: () => void;
   onClear: () => void;
+  onPrintAll?: () => void;
+  isPrinting?: boolean;
 }
 
 export function PayrollBatchActionsFooter({
@@ -17,7 +19,9 @@ export function PayrollBatchActionsFooter({
   onValidate,
   onPay,
   onCancel,
-  onClear
+  onClear,
+  onPrintAll,
+  isPrinting = false,
 }: PayrollBatchActionsFooterProps) {
   if (selectedCount === 0) return null;
 
@@ -54,6 +58,18 @@ export function PayrollBatchActionsFooter({
               </div>
             ) : (
               <>
+                {/* ✅ Bouton Imprimer tout (gris/neutre — action de lecture, pas de changement de statut) */}
+                {onPrintAll && (
+                  <button
+                    onClick={onPrintAll}
+                    disabled={isPrinting}
+                    className="flex-1 md:flex-none px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isPrinting ? <Loader2 size={18} className="animate-spin" /> : <Printer size={18} />}
+                    <span className="hidden sm:inline">{isPrinting ? 'Préparation…' : 'Imprimer'}</span>
+                  </button>
+                )}
+
                 {/* ✅ Bouton Valider (vert) */}
                 <button 
                   onClick={onValidate}
