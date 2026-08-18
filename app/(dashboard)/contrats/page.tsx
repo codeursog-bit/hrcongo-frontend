@@ -7,7 +7,7 @@ import {
   Loader2, Search, RefreshCw, RotateCcw, TrendingUp, AlertCircle,
   XCircle, UserX, Shield, Calculator, ArrowLeft, Gavel,
   Infinity, CalendarDays, GraduationCap, Briefcase, Handshake,
-  RefreshCcw, Check, Info,
+  RefreshCcw, Check, Info, FileSignature,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { differenceInDays } from 'date-fns';
@@ -330,6 +330,14 @@ export default function ContratsPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 🆕 Générer un contrat */}
+          <button
+            onClick={() => router.push(bp('/contrats/generer'))}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white text-sm font-semibold rounded-xl shadow-md shadow-indigo-500/30 transition-all"
+          >
+            <FileSignature className="w-4 h-4" />
+            Générer un contrat
+          </button>
           {/* ✅ Bouton vers page rupture */}
           <button
             onClick={() => router.push(bp('/contrats/rupture'))}
@@ -582,7 +590,7 @@ export default function ContratsPage() {
                           {emp.contractType === 'CDD' ? 'Renouveler / CDI' : 'Renouveler'}
                         </button>
                       )}
-                      <a href={`/employes/${emp.id}`}
+                      <a href={bp(`/contrats/employe/${emp.id}`)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                         <ChevronRight className="w-4 h-4" />
                       </a>

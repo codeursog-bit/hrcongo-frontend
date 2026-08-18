@@ -334,7 +334,8 @@ ${styleInlines}
  * donc n'importe quel id fonctionne — on garde pour compatibilité.
  */
 export function getBulletinRootId(templateId?: string): string {
-  if (templateId === 'corporate') return 'bulletin-corp-root';
-  if (templateId === 'admin')     return 'bul-admin-root';
-  return 'bul-wrap'; // BulletinRendererDefault
+  // Les 3 gabarits (Default / Clarifié / Classique) partagent le même
+  // wrapper #bul-wrap (data-bulletin-root="true") — n'importe quel id
+  // fonctionne donc, on garde une valeur unique pour compatibilité.
+  return 'bul-wrap';
 }

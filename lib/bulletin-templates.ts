@@ -58,21 +58,21 @@ export const TEMPLATE_DEFAULT: BulletinTemplateConfig = {
   ]),
 };
 
-// ─── 2. CORPORATE — Bandeau bleu marine, sections colorées ───────────────────
+// ─── 2. CLARIFIÉ — Colonne "Montant" unique, sections encadrées ──────────────
 
-export const TEMPLATE_CORPORATE: BulletinTemplateConfig = {
-  templateId: 'corporate',
-  name: 'Corporate professionnel',
+export const TEMPLATE_CLARIFIE: BulletinTemplateConfig = {
+  templateId: 'clarifie',
+  name: 'Bulletin de salaire clarifié',
   style: {
-    primaryColor:      '#1e3a5f',
-    secondaryColor:    '#3b82f6',
-    textColor:         '#1e293b',
+    primaryColor:      '#000000',
+    secondaryColor:    '#555555',
+    textColor:         '#000000',
     fontFamily:        'sans',
     fontSize:          'md',
-    density:           'normal',
+    density:           'compact',
     layout:            '1col',
     borderRadius:      0,
-    headerStyle:       'dark',
+    headerStyle:       'line',
     showLogo:          true,
     logoPosition:      'left',
     showAddress:       true,
@@ -88,21 +88,21 @@ export const TEMPLATE_CORPORATE: BulletinTemplateConfig = {
   ]),
 };
 
-// ─── 3. ADMIN — Sections numérotées, marine/doré ─────────────────────────────
+// ─── 3. CLASSIQUE — Rubriques numérotées + calendrier journalier ─────────────
 
-export const TEMPLATE_ADMIN: BulletinTemplateConfig = {
-  templateId: 'admin',
-  name: 'Administration numérotée',
+export const TEMPLATE_CLASSIQUE: BulletinTemplateConfig = {
+  templateId: 'classique',
+  name: 'Bulletin de paie classique numéroté',
   style: {
-    primaryColor:      '#0f2544',
-    secondaryColor:    '#b8860b',
+    primaryColor:      '#000000',
+    secondaryColor:    '#555555',
     textColor:         '#000000',
     fontFamily:        'sans',
     fontSize:          'sm',
     density:           'compact',
     layout:            '1col',
     borderRadius:      0,
-    headerStyle:       'dark',
+    headerStyle:       'line',
     showLogo:          true,
     logoPosition:      'left',
     showAddress:       true,
@@ -122,14 +122,14 @@ export const TEMPLATE_ADMIN: BulletinTemplateConfig = {
 
 export const TEMPLATES: Record<string, BulletinTemplateConfig> = {
   default:   TEMPLATE_DEFAULT,
-  corporate: TEMPLATE_CORPORATE,
-  admin:     TEMPLATE_ADMIN,
+  clarifie:  TEMPLATE_CLARIFIE,
+  classique: TEMPLATE_CLASSIQUE,
 };
 
 export const TEMPLATE_LIST = [
   TEMPLATE_DEFAULT,
-  TEMPLATE_CORPORATE,
-  TEMPLATE_ADMIN,
+  TEMPLATE_CLARIFIE,
+  TEMPLATE_CLASSIQUE,
 ];
 
 export function getBaseTemplate(templateId: string): BulletinTemplateConfig {

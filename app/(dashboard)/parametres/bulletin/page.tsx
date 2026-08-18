@@ -23,8 +23,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { api } from '@/services/api';
 import { invalidateBulletinTemplateCache } from '@/hooks/useBulletinConfig';
 import BulletinRenderer from '@/components/BulletinRenderer';
-import BulletinRendererAdmin from '@/components/BulletinRendererAdmin';
-import BulletinRendererCorporate from '@/components/BulletinRendererCorporate';
+import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
+import BulletinRendererClassique from '@/components/BulletinRendererClassique';
 import CanvasEditor from '@/components/CanvasEditor';
 import CanvasRenderer from '@/components/CanvasRenderer';
 import type {
@@ -660,10 +660,10 @@ export default function BulletinDesignerPage() {
           </div>
           <div style={{ flex:1, overflowY:'auto', padding:'20px', background:'#f1f5f9', display:'flex', justifyContent:'center' }}>
             <div style={{ width:794, background:'#fff', borderRadius:10, boxShadow:'0 4px 20px rgba(0,0,0,.1)', overflow:'hidden' }}>
-              {cfg.templateId === 'admin' ? (
-                <BulletinRendererAdmin payroll={payroll} template={cfg} previewMode />
-              ) : cfg.templateId === 'corporate' ? (
-                <BulletinRendererCorporate payroll={payroll} template={cfg} previewMode />
+              {cfg.templateId === 'clarifie' ? (
+                <BulletinRendererClarifie payroll={payroll} template={cfg} previewMode />
+              ) : cfg.templateId === 'classique' ? (
+                <BulletinRendererClassique payroll={payroll} template={cfg} previewMode />
               ) : (
                 <BulletinRenderer payroll={payroll} template={cfg} previewMode />
               )}

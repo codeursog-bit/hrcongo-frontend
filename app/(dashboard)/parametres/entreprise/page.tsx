@@ -47,6 +47,11 @@ interface CompanySettings {
   // 🆕 Pied de page légal des documents imprimables (congé, absence, prêt...)
   documentFooterText?:   string;
   documentTemplate?:     string; // 'DEFAULT' | 'ORCA' — affiché "Modèle par défaut" / "Modèle 1" côté écran
+  // 🆕 Générateur de contrats — représentant légal & ville de signature par défaut
+  contractRepresentativeName?: string;
+  contractRepresentativeRole?: string;
+  contractSignatureCity?:      string;
+  legalForm?: string;
 }
 
 // 🆕 Multi-sites
@@ -111,6 +116,10 @@ const DEFAULT_COMPANY: CompanySettings = {
   payrollCloseDay:     25,  // valeur par défaut schema Prisma
   documentFooterText:  '',
   documentTemplate:    'DEFAULT',
+  contractRepresentativeName: '',
+  contractRepresentativeRole: '',
+  contractSignatureCity:      '',
+  legalForm: '',
 };
 
 const DEFAULT_PAYROLL: PayrollSettings = {
@@ -199,6 +208,11 @@ export default function CompanySettingsPage() {
             // 🆕 Pied de page légal libre affiché sur les documents imprimables (congé, absence, prêt...)
             documentFooterText:   company.documentFooterText  || '',
             documentTemplate:     company.documentTemplate    || 'DEFAULT',
+            // 🆕 Représentant légal & ville de signature — générateur de contrats
+            contractRepresentativeName: company.contractRepresentativeName || '',
+            contractRepresentativeRole: company.contractRepresentativeRole || '',
+            contractSignatureCity:      company.contractSignatureCity      || '',
+            legalForm:                  company.legalForm                  || '',
           });
         }
 
@@ -773,6 +787,54 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
     placeholder={"Ex. : ORCA DECO CONGO S.A\nSociété Anonyme à Responsabilité Limitée (SARL) au capital de 100 000 000 CFA\nRCCM CG/PNR/14 B 197 · NIU : M2014 110000707066 · Tél : +242 22 294 16 42\nSiège social : Avenue Marien Ngouabi, Pointe-Noire"}
     className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white resize-y"
   />
+</div>
+
+              {/* 🆕 ── Générateur de contrats : représentant légal & lieu de signature ── */}
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-indigo-500" /> Générateur de contrats
+  </h3>
+  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+    Ces informations sont pré-remplies automatiquement à chaque génération de contrat (CDI/CDD, prestation de services, stage).
+  </p>
+  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Forme juridique</label>
+      <input
+        value={companyData.legalForm || ''}
+        onChange={(e) => setCompanyData({ ...companyData, legalForm: e.target.value })}
+        placeholder="Ex. : Société Anonyme à Responsabilité Limitée (SARL)"
+        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+      />
+    </div>
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Nom du représentant</label>
+      <input
+        value={companyData.contractRepresentativeName || ''}
+        onChange={(e) => setCompanyData({ ...companyData, contractRepresentativeName: e.target.value })}
+        placeholder="Ex. : Monsieur HUSSEIN Ayman"
+        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+      />
+    </div>
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Fonction du représentant</label>
+      <input
+        value={companyData.contractRepresentativeRole || ''}
+        onChange={(e) => setCompanyData({ ...companyData, contractRepresentativeRole: e.target.value })}
+        placeholder="Ex. : Directeur Gérant"
+        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+      />
+    </div>
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Ville de signature</label>
+      <input
+        value={companyData.contractSignatureCity || ''}
+        onChange={(e) => setCompanyData({ ...companyData, contractSignatureCity: e.target.value })}
+        placeholder="Ex. : Pointe-Noire"
+        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+      />
+    </div>
+  </div>
 </div>
               </motion.div>
             )}
