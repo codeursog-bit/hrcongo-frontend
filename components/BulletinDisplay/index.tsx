@@ -18,6 +18,8 @@
 
 import React from 'react';
 import BulletinRenderer from '@/components/BulletinRenderer';
+import BulletinRendererAdmin from '@/components/BulletinRendererAdmin';
+import BulletinRendererCorporate from '@/components/BulletinRendererCorporate';
 import CanvasRenderer   from '@/components/CanvasRenderer';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
 import type { BulletinPayroll } from '@/types/bulletin-template';
@@ -44,6 +46,32 @@ export default function BulletinDisplay({ payroll, previewMode = false }: Props)
       <CanvasRenderer
         layout={config.canvasLayout}
         payroll={payroll}
+        previewMode={previewMode}
+      />
+    );
+  }
+
+  // ✅ CORRECTIF : Default/Admin/Corporate sont 3 GABARITS différents (mise
+  // en page distincte, pas juste une palette de couleurs) — ce switch fait
+  // défaut jusqu'ici : quel que soit le modèle choisi en paramètres, ce
+  // composant rendait TOUJOURS BulletinRenderer (Default). Admin et
+  // Corporate existaient en tant que fichiers mais n'étaient jamais montés
+  // nulle part dans l'app.
+  const templateId = config.templateConfig?.templateId;
+  if (templateId === 'admin') {
+    return (
+      <BulletinRendererAdmin
+        payroll={payroll}
+        template={config.templateConfig}
+        previewMode={previewMode}
+      />
+    );
+  }
+  if (templateId === 'corporate') {
+    return (
+      <BulletinRendererCorporate
+        payroll={payroll}
+        template={config.templateConfig}
         previewMode={previewMode}
       />
     );

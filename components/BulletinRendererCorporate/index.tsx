@@ -181,7 +181,7 @@ export default function BulletinRendererCorporate({ payroll, template }: Bulleti
           <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
             {co.logo && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={co.logo} alt="Logo" crossOrigin="anonymous" style={{ width:42, height:42, objectFit:'contain' }} />
+              <img src={co.logo} alt="Logo" crossOrigin="anonymous" style={{ width:62, height:62, objectFit:'contain' }} />
             )}
             <div>
               <div style={{ fontSize:13, fontWeight:800 }}>{co.tradeName || co.legalName || 'Entreprise'}</div>

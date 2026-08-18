@@ -393,7 +393,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
               <td style={{ width:'34%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:13, textTransform:'uppercase', color:K }}>
                 {showLogo && co.logo && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height:20, verticalAlign:'middle', marginRight:6, objectFit:'contain' }} />
+                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height:28, verticalAlign:'middle', marginRight:6, objectFit:'contain' }} />
                 )}
                 {co.tradeName || co.legalName || '—'}
               </td>
