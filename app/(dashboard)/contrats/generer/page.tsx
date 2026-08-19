@@ -122,45 +122,72 @@ const KIND_META: Record<ContractKind, { label: string; icon: React.ElementType; 
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
 
-// ─── Calcul local — miroir du calcul serveur, pour l'aperçu en direct ───────
-const CNSS_CEILING = 1_200_000;
-const CNSS_RATE = 0.04;
-function estimateITS(baseImposableAnnuel: number): number {
-  const brackets: [number, number, number][] = [
-    [0, 615000, 0],
-    [615000, 1500000, 0.10],
-    [1500000, 3500000, 0.15],
-    [3500000, 5000000, 0.20],
-    [5000000, Infinity, 0.30],
-  ];
-  let tax = 0;
-  for (const [lo, hi, rate] of brackets) {
-    if (baseImposableAnnuel > lo) tax += (Math.min(baseImposableAnnuel, hi) - lo) * rate;
-  }
-  return Math.ceil(tax / 12);
-}
-
-function useLiveBreakdown(form: ContractForm) {
+// ─── Calcul local — UNIQUEMENT pour Stage/Prestation (arithmétique directe,
+// sans barème fiscal, donc fiable à 100% côté client). Pour le Contrat de
+// travail, l'ITS suit un barème progressif : on ne le devine JAMAIS côté
+// front — l'aperçu Brut/CNSS/ITS/TOL/Net est calculé par le serveur avec le
+// même moteur que la paie (voir useServerBreakdown ci-dessous), pour éviter
+// tout écart entre l'aperçu et le document réellement généré.
+function useLocalBreakdown(form: ContractForm) {
   return useMemo(() => {
     if (form.kind === 'STAGE') {
-      return { totalGross: 0, cnss: 0, its: 0, tol: 0, net: form.montantForfaitaire || 0, primesTotal: 0, indemnitesTotal: 0, bnc: 0 };
+      return { net: form.montantForfaitaire || 0, bnc: 0 };
     }
-    if (form.kind === 'PRESTATION_SERVICES' || form.kind === 'CONSULTANT') {
-      const bnc = Math.round(((form.emoluments || 0) * (form.tauxBnc || 0)) / 100);
-      return { totalGross: 0, cnss: 0, its: 0, tol: 0, net: form.emoluments || 0, primesTotal: 0, indemnitesTotal: 0, bnc };
-    }
-    const primesTotal = form.primes.reduce((s, p) => s + (Number(p.amount) || 0), 0);
-    const indemnitesTotal = form.indemnites.reduce((s, i) => s + (Number(i.amount) || 0), 0);
-    const totalGross =
-      Number(form.salaireBase || 0) + Number(form.sursalaire || 0) +
-      Number(form.heuresSupplementaires || 0) + primesTotal + Number(form.transport || 0);
-    const cnss = Math.round(Math.min(totalGross, CNSS_CEILING) * CNSS_RATE);
-    const baseImposable = (totalGross - cnss) * 0.8 * 12;
-    const its = estimateITS(baseImposable);
-    const tol = 5000;
-    const net = totalGross - cnss - its - tol + Number(form.indemniteTransport || 0) + indemnitesTotal;
-    return { totalGross, cnss, its, tol, net, primesTotal, indemnitesTotal, bnc: 0 };
+    const bnc = Math.round(((form.emoluments || 0) * (form.tauxBnc || 0)) / 100);
+    return { net: form.emoluments || 0, bnc };
   }, [form]);
+}
+
+interface ServerBreakdown {
+  totalGross: number; cnss: number; its: number; tol: number; net: number;
+  primesTotal: number; indemnitesTotal: number;
+}
+
+/** Aperçu Brut/CNSS/ITS/TOL/Net calculé par le serveur (vrai barème ITS),
+ * avec un léger debounce pour ne pas spammer l'API à chaque frappe. */
+function useServerBreakdown(form: ContractForm, isTravail: boolean) {
+  const [breakdown, setBreakdown] = useState<ServerBreakdown | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isTravail || !form.employeeId || !form.salaireBase) {
+      setBreakdown(null);
+      return;
+    }
+    setLoading(true);
+    const handle = setTimeout(async () => {
+      try {
+        const res: any = await api.post('/contracts/generation/preview-breakdown', {
+          employeeId: form.employeeId,
+          salaireBase: form.salaireBase,
+          sursalaire: form.sursalaire,
+          heuresSupplementaires: form.heuresSupplementaires,
+          primes: form.primes.filter(p => p.label && p.amount),
+          transport: form.transport,
+          indemniteTransport: form.indemniteTransport,
+          indemnites: form.indemnites.filter(i => i.label && i.amount),
+          situationMatrimoniale: form.situationMatrimoniale,
+          nombreEnfants: form.nombreEnfants,
+        });
+        setBreakdown({
+          totalGross: res.totalGross, cnss: res.cnssDeduction, its: res.itsDeduction,
+          tol: res.tolDeduction, net: res.netPay, primesTotal: res.primesTotal,
+          indemnitesTotal: res.indemnitesTotal,
+        });
+      } catch {
+        // silencieux : on garde le dernier aperçu valide plutôt que d'afficher une erreur intrusive
+      } finally {
+        setLoading(false);
+      }
+    }, 450);
+    return () => clearTimeout(handle);
+  }, [
+    isTravail, form.employeeId, form.salaireBase, form.sursalaire, form.heuresSupplementaires,
+    form.primes, form.transport, form.indemniteTransport, form.indemnites,
+    form.situationMatrimoniale, form.nombreEnfants,
+  ]);
+
+  return { breakdown, loading };
 }
 
 // ─── Nombre animé ───────────────────────────────────────────────────────────
@@ -272,10 +299,11 @@ function GenerateContractInner() {
   const [result, setResult] = useState<{ id: string; fileUrl: string } | null>(null);
   const [contractTypes, setContractTypes] = useState<{ key: string; label: string; kind: ContractKind }[]>([]);
 
-  const breakdown = useLiveBreakdown(form);
   const isTravail = form.kind === 'CONTRAT_TRAVAIL';
   const isStage = form.kind === 'STAGE';
   const isPrestationLike = form.kind === 'PRESTATION_SERVICES' || form.kind === 'CONSULTANT';
+  const localBreakdown = useLocalBreakdown(form);
+  const { breakdown: serverBreakdown, loading: breakdownLoading } = useServerBreakdown(form, isTravail);
 
   useEffect(() => {
     api.get('/contracts/generation/types').then((r: any) => setContractTypes(r)).catch(() => {});
@@ -837,20 +865,32 @@ function GenerateContractInner() {
               <div className="space-y-2 text-sm">
                 <Row label="Salaire de base" value={form.salaireBase} />
                 {form.sursalaire > 0 && <Row label="Sursalaire" value={form.sursalaire} />}
-                {breakdown.primesTotal > 0 && <Row label="Primes" value={breakdown.primesTotal} highlight="indigo" />}
+                {(serverBreakdown?.primesTotal ?? 0) > 0 && <Row label="Primes" value={serverBreakdown!.primesTotal} highlight="indigo" />}
                 {form.transport > 0 && <Row label="Transport" value={form.transport} />}
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
-                <Row label="TOTAL BRUT" value={breakdown.totalGross} bold />
-                <Row label="Retenues CNSS" value={-breakdown.cnss} muted />
-                <Row label="Retenues ITS" value={-breakdown.its} muted />
-                <Row label="TOL" value={-breakdown.tol} muted />
-                {form.indemniteTransport > 0 && <Row label="Indemnité transport" value={form.indemniteTransport} highlight="teal" />}
-                {breakdown.indemnitesTotal > 0 && <Row label="Indemnités" value={breakdown.indemnitesTotal} highlight="teal" />}
-                <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Net à payer</span>
-                  <AnimatedNumber value={breakdown.net} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
-                </div>
+                {serverBreakdown ? (
+                  <>
+                    <Row label="TOTAL BRUT" value={serverBreakdown.totalGross} bold />
+                    <Row label="Retenues CNSS" value={-serverBreakdown.cnss} muted />
+                    <Row label="Retenues ITS" value={-serverBreakdown.its} muted />
+                    <Row label="TOL" value={-serverBreakdown.tol} muted />
+                    {form.indemniteTransport > 0 && <Row label="Indemnité transport" value={form.indemniteTransport} highlight="teal" />}
+                    {serverBreakdown.indemnitesTotal > 0 && <Row label="Indemnités" value={serverBreakdown.indemnitesTotal} highlight="teal" />}
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Net à payer</span>
+                      <AnimatedNumber value={serverBreakdown.net} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1.5 py-2">
+                    {breakdownLoading ? (
+                      <><Loader2 className="w-3 h-3 animate-spin" /> Calcul du brut/CNSS/ITS/net en cours…</>
+                    ) : (
+                      <><Info className="w-3 h-3" /> Renseignez le salaire de base pour voir le calcul.</>
+                    )}
+                  </p>
+                )}
               </div>
             )}
 
@@ -858,7 +898,7 @@ function GenerateContractInner() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between pt-1">
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Montant mensuel</span>
-                  <AnimatedNumber value={form.montantForfaitaire} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
+                  <AnimatedNumber value={localBreakdown.net} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <p className="text-[11px] text-slate-400 flex items-center gap-1.5 pt-1">
                   <Info className="w-3 h-3" /> Aucune retenue CNSS/ITS — montant forfaitaire net.
@@ -869,8 +909,8 @@ function GenerateContractInner() {
             {isPrestationLike && (
               <div className="space-y-2 text-sm">
                 <Row label="Émoluments (facturés)" value={form.emoluments} bold />
-                {breakdown.bnc > 0 && (
-                  <Row label={`Cotisation BNC (${form.tauxBnc}%, à charge prestataire)`} value={breakdown.bnc} muted />
+                {localBreakdown.bnc > 0 && (
+                  <Row label={`Cotisation BNC (${form.tauxBnc}%, à charge prestataire)`} value={localBreakdown.bnc} muted />
                 )}
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
                 <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
