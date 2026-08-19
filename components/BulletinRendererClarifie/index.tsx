@@ -93,6 +93,37 @@ function itemTaux(item: any): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 
+// ── En-tête entreprise : nom (+logo à droite si présent) ────────────────────
+// - Sans logo : le nom garde toute la largeur de la case (comportement
+//   inchangé).
+// - Avec logo : la case se partage en 2 (nom à gauche / logo agrandi à
+//   droite, centré verticalement). Si le nom contient un espace, le 1er mot
+//   reste sur la ligne du haut et le reste du nom passe en dessous, centré.
+function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 34 }: {
+  name: string; logo?: string; nameStyle?: React.CSSProperties; logoHeight?: number;
+}) {
+  const parts = (name || '').trim().split(/\s+/);
+  const hasSpace = parts.length > 1;
+  const nameNode = hasSpace ? (
+    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{parts[0]}</div>
+      <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', textAlign: 'center' }}>{parts.slice(1).join(' ')}</div>
+    </div>
+  ) : (
+    <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{name || '—'}</div>
+  );
+
+  if (!logo) return <div style={nameStyle}>{nameNode}</div>;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <div style={{ flex: 1, minWidth: 0, ...nameStyle }}>{nameNode}</div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={logo} alt="" crossOrigin="anonymous" style={{ height: logoHeight, maxWidth: '44%', objectFit: 'contain', flexShrink: 0 }} />
+    </div>
+  );
+}
+
 // ── Tokens visuels — canevas A4 fixe, même logique que le Default ──────────
 const SANS  = 'Arial,Helvetica,sans-serif';
 const FONT  = '"Courier New",Courier,monospace';
@@ -251,14 +282,13 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
           <tbody>
             <tr>
               <td style={{ width: '44%', border: BDB, padding: '6px 8px', verticalAlign: 'top' }}>
-                {tpl.style.showLogo !== false && co.logo && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 22, objectFit: 'contain', marginBottom: 3 }} />
-                )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 11, overflow: 'hidden' }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.tradeName || co.legalName || '—'}</span>
-                  <span style={{ flexShrink: 0, marginLeft: 6 }}>{co.legalForm || ''}</span>
-                </div>
+                <CompanyNameLogo
+                  name={co.tradeName || co.legalName || '—'}
+                  logo={tpl.style.showLogo !== false ? co.logo : undefined}
+                  logoHeight={34}
+                  nameStyle={{ fontWeight: 800, fontSize: 11 }}
+                />
+                {co.legalForm && <div style={{ fontSize: 7.5, color: '#555', marginTop: 1 }}>{co.legalForm}</div>}
                 {tpl.style.showAddress !== false && (
                   <div style={{ fontSize: 8, marginTop: 3, overflow: 'hidden' }}>
                     {co.address || '—'}<br/>
@@ -412,6 +442,17 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
                   <DataRow key={item.id || item.code} indent={false} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmt(item.amount)} />
                 ))}
               </>}
+
+              {/* ── Spacer — absorbe l'espace restant du canevas A4 fixe (au
+                   lieu de le répartir sur chaque ligne de contenu) ────────── */}
+              <tr id="grid-spacer-clarifie" style={{ background: '#fff' }}>
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, borderRight: BD, background: '#fff' }} />
+              </tr>
 
               {/* ── Salaire net ──────────────────────────────────────────── */}
               <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>

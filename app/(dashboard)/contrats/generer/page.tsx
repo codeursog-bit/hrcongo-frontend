@@ -296,7 +296,9 @@ function GenerateContractInner() {
   const [loadingPrefill, setLoadingPrefill] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genPhase, setGenPhase] = useState(0);
-  const [result, setResult] = useState<{ id: string; fileUrl: string } | null>(null);
+  const [result, setResult] = useState<{ id: string } | null>(null);
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
+  const [openingPdf, setOpeningPdf] = useState(false);
   const [contractTypes, setContractTypes] = useState<{ key: string; label: string; kind: ContractKind }[]>([]);
 
   const isTravail = form.kind === 'CONTRAT_TRAVAIL';
@@ -410,10 +412,42 @@ function GenerateContractInner() {
         });
       }
       const created: any = await api.post('/contracts/generation', payload);
-      setResult({ id: created.id, fileUrl: created.fileUrl });
+      setResult({ id: created.id });
     } catch (e: any) {
       showError('Erreur de génération', e.message || 'Erreur lors de la génération du contrat');
       setGenerating(false);
+    }
+  };
+
+  const downloadDocx = async (id: string) => {
+    setDownloadingDocx(true);
+    try {
+      const blob: any = await api.get(`/contracts/generation/${id}/download`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${form.prenom}-${form.nom}-contrat.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      showError('Téléchargement impossible', e.message || 'Erreur lors du téléchargement du document');
+    } finally {
+      setDownloadingDocx(false);
+    }
+  };
+
+  const openPdf = async (id: string) => {
+    setOpeningPdf(true);
+    try {
+      const blob: any = await api.get(`/contracts/generation/${id}/preview`);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // L'URL blob reste valide le temps que l'onglet l'utilise ; on la libère après un délai raisonnable.
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e: any) {
+      showError('Prévisualisation impossible', e.message || 'Erreur lors de la génération du PDF');
+    } finally {
+      setOpeningPdf(false);
     }
   };
 
@@ -438,14 +472,14 @@ function GenerateContractInner() {
             Le document de {form.prenom} {form.nom} est prêt.
           </p>
           <div className="flex flex-col gap-2.5">
-            <a href={result.fileUrl} target="_blank" rel="noreferrer"
-              className="w-full py-3 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all">
-              <Eye className="w-4 h-4" /> Voir le document
-            </a>
-            <a href={result.fileUrl} download
-              className="w-full py-3 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-              <Download className="w-4 h-4" /> Télécharger
-            </a>
+            <button onClick={() => openPdf(result.id)} disabled={openingPdf}
+              className="w-full py-3 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:opacity-60 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all">
+              {openingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />} Prévisualiser (PDF)
+            </button>
+            <button onClick={() => downloadDocx(result.id)} disabled={downloadingDocx}
+              className="w-full py-3 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60 transition-colors">
+              {downloadingDocx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Télécharger (Word)
+            </button>
             <button onClick={() => router.push(bp(`/contrats/employe/${form.employeeId}`))}
               className="w-full py-2.5 text-sm text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
               Voir la fiche contrat de l'employé

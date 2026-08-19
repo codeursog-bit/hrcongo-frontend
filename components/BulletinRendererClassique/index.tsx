@@ -88,6 +88,37 @@ function itemTaux(item: any): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 
+// ── En-tête entreprise : nom (+logo à droite si présent) ────────────────────
+// - Sans logo : le nom garde toute la largeur de la case (comportement
+//   inchangé).
+// - Avec logo : la case se partage en 2 (nom à gauche / logo agrandi à
+//   droite, centré verticalement). Si le nom contient un espace, le 1er mot
+//   reste sur la ligne du haut et le reste du nom passe en dessous, centré.
+function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 32 }: {
+  name: string; logo?: string; nameStyle?: React.CSSProperties; logoHeight?: number;
+}) {
+  const parts = (name || '').trim().split(/\s+/);
+  const hasSpace = parts.length > 1;
+  const nameNode = hasSpace ? (
+    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{parts[0]}</div>
+      <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', textAlign: 'center' }}>{parts.slice(1).join(' ')}</div>
+    </div>
+  ) : (
+    <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{name || '—'}</div>
+  );
+
+  if (!logo) return <div style={nameStyle}>{nameNode}</div>;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <div style={{ flex: 1, minWidth: 0, ...nameStyle }}>{nameNode}</div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={logo} alt="" crossOrigin="anonymous" style={{ height: logoHeight, maxWidth: '44%', objectFit: 'contain', flexShrink: 0 }} />
+    </div>
+  );
+}
+
 // ── Tokens visuels — canevas A4 fixe, même logique que le Default ──────────
 const SANS  = 'Arial,Helvetica,sans-serif';
 const FONT  = '"Courier New",Courier,monospace';
@@ -249,11 +280,12 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
           <tbody>
             <tr>
               <td style={{ width: '48%', border: BDB, padding: '6px 8px', verticalAlign: 'top' }}>
-                {tpl.style.showLogo !== false && co.logo && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 20, objectFit: 'contain', marginBottom: 3 }} />
-                )}
-                <div style={{ fontWeight: 800, fontSize: 10, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{co.tradeName || co.legalName || '—'}</div>
+                <CompanyNameLogo
+                  name={co.tradeName || co.legalName || '—'}
+                  logo={tpl.style.showLogo !== false ? co.logo : undefined}
+                  logoHeight={32}
+                  nameStyle={{ fontWeight: 800, fontSize: 10 }}
+                />
                 {tpl.style.showAddress !== false && (
                   <div style={{ fontSize: 8, marginTop: 3, overflow: 'hidden' }}>
                     {co.address || '—'}<br/>{[co.postalCode, co.city].filter(Boolean).join(' ')}
@@ -380,6 +412,20 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               {indemItems.map((item: any) => { rub += 10; return (
                 <Row key={item.id || item.code} n={rub} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} gain={fmt(item.amount)} />
               ); })}
+
+              {/* ── Spacer — absorbe l'espace restant du canevas A4 fixe (au
+                   lieu de le répartir sur chaque ligne de contenu) ────────── */}
+              <tr id="grid-spacer-classique" style={{ background: '#fff' }}>
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, background: '#fff' }} />
+                <td style={{ borderLeft: BD, borderRight: BD, background: '#fff' }} />
+              </tr>
 
               <TotalRow label="Total Cotisations" ret={fmtZ(totalCotisSal)} retP={fmtZ(totalPat)} />
             </tbody>

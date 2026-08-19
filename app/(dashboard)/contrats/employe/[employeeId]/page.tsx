@@ -3,9 +3,13 @@
 // ============================================================================
 // 📁 app/(dashboard)/contrats/employe/[employeeId]/page.tsx
 //
-// Fiche contrat d'un employé : identité, poste, et historique des documents
-// de contrat déjà générés (avec aperçu/téléchargement), + CTA pour en
-// générer un nouveau.
+// Fiche contrat d'un employé :
+//  1. Fiche d'informations contractuelles actuelles (type, salaire, date
+//     d'embauche, ancienneté, poste, catégorie...) — lues depuis la fiche
+//     employé elle-même, pas depuis l'historique des documents générés.
+//  2. Historique des documents de contrat déjà générés — chaque ligne peut
+//     être téléchargée en Word ou prévisualisée en PDF, régénérés à la
+//     volée à chaque clic (AUCUN fichier n'est stocké sur le cloud).
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
@@ -13,6 +17,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, FileSignature, Loader2, Eye, Download, Plus,
   Briefcase, MapPin, Calendar, Wallet, FileX2, Clock, Sparkles,
+  Contact, CalendarClock, Layers,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -20,14 +25,13 @@ import { useBasePath } from '@/hooks/useBasePath';
 
 interface GeneratedContract {
   id: string;
-  kind: 'CONTRAT_TRAVAIL' | 'PRESTATION_SERVICES' | 'STAGE';
+  kind: 'CONTRAT_TRAVAIL' | 'PRESTATION_SERVICES' | 'CONSULTANT' | 'STAGE';
   contractDuration: string;
   status: string;
   startDate: string | null;
   endDate: string | null;
   totalGross: number;
   netPay: number;
-  fileUrl: string | null;
   fileName: string | null;
   generatedAt: string;
   snapshot: Record<string, any>;
@@ -39,20 +43,39 @@ interface EmployeeSummary {
   lastName: string;
   employeeNumber: string;
   position: string;
+  professionalCategory?: string | null;
   department?: { name: string };
   baseSalary: number;
+  hireDate: string;
+  contractType: string; // CDI | CDD | STAGE | CONSULTANT | PRESTATAIRE | INTERIM...
+  contractEndDate?: string | null;
   photoUrl?: string | null;
 }
 
 const KIND_LABEL: Record<string, string> = {
   CONTRAT_TRAVAIL: 'Contrat de travail',
   PRESTATION_SERVICES: 'Prestation de services',
+  CONSULTANT: 'Consultance',
   STAGE: 'Convention de stage',
 };
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
-const fmtDate = (d: string | null) =>
+const fmtDate = (d: string | null | undefined) =>
   d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+function anciennete(hireDate: string): string {
+  const start = new Date(hireDate);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  if (now.getDate() < start.getDate()) months -= 1;
+  if (months < 0) { years -= 1; months += 12; }
+  if (years <= 0 && months <= 0) return "Moins d'un mois";
+  const parts = [];
+  if (years > 0) parts.push(`${years} an${years > 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} mois`);
+  return parts.join(' et ');
+}
 
 export default function EmployeeContractPage() {
   const params = useParams();
@@ -121,6 +144,26 @@ export default function EmployeeContractPage() {
         </button>
       </div>
 
+      {/* 🆕 Fiche contrat — infos contractuelles actuelles de l'employé */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-6">
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-1.5">
+          <Contact className="w-3.5 h-3.5" /> Fiche contrat
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <InfoTile icon={Layers} label="Type de contrat" value={employee.contractType} />
+          <InfoTile icon={Wallet} label="Salaire de base" value={`${fmt(employee.baseSalary)} FCFA`} />
+          <InfoTile icon={Calendar} label="Date d'embauche" value={fmtDate(employee.hireDate)} />
+          <InfoTile icon={CalendarClock} label="Ancienneté" value={anciennete(employee.hireDate)} />
+          <InfoTile icon={Briefcase} label="Poste" value={employee.position} />
+          {employee.professionalCategory && (
+            <InfoTile icon={Contact} label="Catégorie" value={employee.professionalCategory} />
+          )}
+          {employee.contractEndDate && (
+            <InfoTile icon={Clock} label="Fin de contrat" value={fmtDate(employee.contractEndDate)} />
+          )}
+        </div>
+      </div>
+
       {/* Contrat en cours — mis en avant */}
       {latest && (
         <div>
@@ -155,7 +198,50 @@ export default function EmployeeContractPage() {
   );
 }
 
+function InfoTile({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  return (
+    <div>
+      <p className="flex items-center gap-1 text-[11px] text-slate-400 mb-1"><Icon className="w-3 h-3" /> {label}</p>
+      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{value}</p>
+    </div>
+  );
+}
+
 function ContractCard({ contract, featured }: { contract: GeneratedContract; featured?: boolean }) {
+  const [downloading, setDownloading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+
+  const downloadDocx = async () => {
+    setDownloading(true);
+    try {
+      const blob: any = await api.get(`/contracts/generation/${contract.id}/download`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${contract.fileName || 'contrat'}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silencieux — le bouton reprend son état normal, l'utilisateur peut réessayer
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const openPdf = async () => {
+    setPreviewing(true);
+    try {
+      const blob: any = await api.get(`/contracts/generation/${contract.id}/preview`);
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      // silencieux
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       className={`rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm ${
@@ -183,18 +269,14 @@ function ContractCard({ contract, featured }: { contract: GeneratedContract; fea
         </div>
       </div>
       <div className="flex gap-2 shrink-0">
-        {contract.fileUrl && (
-          <>
-            <a href={contract.fileUrl} target="_blank" rel="noreferrer"
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-colors ${featured ? 'bg-white/15 hover:bg-white/25 text-white' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
-              <Eye className="w-3.5 h-3.5" /> Voir
-            </a>
-            <a href={contract.fileUrl} download
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-colors ${featured ? 'bg-white text-indigo-600 hover:bg-white/90' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
-              <Download className="w-3.5 h-3.5" /> Télécharger
-            </a>
-          </>
-        )}
+        <button onClick={openPdf} disabled={previewing}
+          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-colors disabled:opacity-60 ${featured ? 'bg-white/15 hover:bg-white/25 text-white' : 'bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
+          {previewing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />} PDF
+        </button>
+        <button onClick={downloadDocx} disabled={downloading}
+          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg transition-colors disabled:opacity-60 ${featured ? 'bg-white text-indigo-600 hover:bg-white/90' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
+          {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Word
+        </button>
       </div>
     </motion.div>
   );
