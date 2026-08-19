@@ -1,26 +1,18 @@
 'use client';
 
 // ============================================================================
-// components/BulletinRendererClarifie/index.tsx
+// components/BulletinRendererClarifie/index.tsx  (v2)
 //
 // Gabarit "Bulletin de salaire clarifié" — reproduit la mise en page du
-// modèle papier fourni par le client (bulletin AIRCAM / EBP) :
-//   • en-tête entreprise encadré + bloc infos période/contrat à droite
-//   • bloc salarié grisé (nom + adresse)
-//   • ligne Convention / Emploi / Qualification / Service / Catégorie
-//   • tableau à COLONNE UNIQUE "Montant" par partie (salariale / patronale) —
-//     les gains sont positifs, toutes les cotisations sont négatives (signe
-//     "-"), regroupées par bandeaux de section en gras
-//   • pied de page : mode de règlement + Net à payer, cumuls Mois / Année,
-//     congés (Acquis/Pris/Solde), signatures, mentions légales
+// modèle papier fourni par le client (bulletin AIRCAM / EBP).
 //
-// ✅ Calculs : mêmes sources de données que BulletinRenderer (Default) — le
-//    front ne recalcule rien, tout vient de payroll / payroll.items / ytd.
-// ✅ Les catégories "Santé/Retraite/Famille/Chômage" du modèle papier sont
-//    spécifiques au régime URSSAF français et n'existent pas dans le régime
-//    CNSS/ITS du Congo utilisé par l'app — les sections ci-dessous reprennent
-//    donc les catégories réelles du système (CNSS, ITS/TUS, Autres
-//    cotisations) plutôt que d'inventer des rubriques françaises fictives.
+// ✅ v2 — même architecture "canevas A4 fixe" que BulletinRendererDefault :
+//    la page est une boîte de taille FIXE (210mm × 297mm, overflow: hidden,
+//    flex column) — ce sont les lignes et colonnes qui sont pré-dimensionnées
+//    pour occuper le bon espace, et le CONTENU vient se placer dedans, jamais
+//    l'inverse. Le tableau principal vit dans un conteneur flex:1 avec
+//    height:100%, exactement comme #main-grid dans le Default. Plus de
+//    colonnes qui débordent / se coupent quel que soit le contenu.
 // ============================================================================
 
 import React, { useMemo } from 'react';
@@ -74,6 +66,20 @@ function formatCategorie(code: string | null | undefined): string {
   return code;
 }
 
+// ✅ Raccourcit les libellés longs pour qu'ils tiennent sur UNE ligne dans la
+// largeur de colonne fixe (même logique que cleanLabel() du Default).
+function cleanLabel(label: string): string {
+  if (!label) return label;
+  if (/taxe.{0,10}occupation.{0,10}locaux/i.test(label)) return 'T.O.L.';
+  return label
+    .replace(/\s*\(\d+h\)\s*—[^%]*/i, '')
+    .replace(/\s*—\s*(5\s*premières?|heures?\s+suivantes?|nuit[^)]*|dimanche[^)]*)[^)]*$/i, '')
+    .replace(/\s*\(\d+h\)/i, '')
+    .replace(/\s*—\s*$/, '')
+    .replace(' (part patronale)', '')
+    .trim();
+}
+
 function itemBase(item: any): string {
   if (item.base == null || nv(item.base) === 0) return '';
   return Math.round(nv(item.base)).toLocaleString('fr-FR');
@@ -87,31 +93,39 @@ function itemTaux(item: any): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 
-// ── Tokens visuels — noir & blanc, colonne "Montant" unique signée ─────────
+// ── Tokens visuels — canevas A4 fixe, même logique que le Default ──────────
 const SANS  = 'Arial,Helvetica,sans-serif';
 const FONT  = '"Courier New",Courier,monospace';
 const BD    = '0.5px solid #000';
 const BDB   = '1px solid #000';
-const TH_BG = '#dcdcdc';
+const TH_BG = '#d8d8d8';
 const K     = '#000';
-const ROW_H = 18;
+
+const ROW_H  = 15.5;   // hauteur de ligne fixe du tableau principal
+const HEAD_H = 17;
+const FS     = 8.6;
 
 const th = (bg = TH_BG, o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '2px 4px', fontSize: 8.5, fontWeight: 700,
+  border: BD, padding: '1px 4px', fontSize: 8, fontWeight: 700,
   textAlign: 'center', background: bg, textTransform: 'uppercase',
-  fontFamily: SANS, verticalAlign: 'middle', color: K, ...o,
+  fontFamily: SANS, verticalAlign: 'middle', color: K,
+  height: HEAD_H, lineHeight: `${HEAD_H}px`, overflow: 'hidden', ...o,
 });
 const td = (o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, borderTop: 'none', borderBottom: 'none', padding: '0 5px',
-  height: ROW_H, lineHeight: `${ROW_H}px`, fontSize: 9.5, verticalAlign: 'middle',
-  color: K, fontFamily: SANS, background: '#fff', ...o,
+  borderLeft: BD, borderRight: 'none', borderTop: 'none', borderBottom: 'none',
+  padding: '0 5px', height: ROW_H, lineHeight: `${ROW_H}px`, fontSize: FS,
+  verticalAlign: 'middle', color: K, fontFamily: SANS, background: '#fff',
+  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...o,
 });
-const tdR = (o?: React.CSSProperties) => td({ textAlign: 'right', fontFamily: FONT, whiteSpace: 'nowrap', ...o });
+const tdR = (o?: React.CSSProperties) => td({ textAlign: 'right', fontFamily: FONT, ...o });
 const tdC = (o?: React.CSSProperties) => td({ textAlign: 'center', ...o });
 
 const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-  <tr>
-    <td colSpan={6} style={{ ...td({ fontWeight: 800, fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: .4, paddingTop: 6 }), border: 'none' }}>
+  <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+    <td colSpan={6} style={{ ...td({
+      fontWeight: 800, fontSize: 9, textTransform: 'uppercase' as const,
+      letterSpacing: .3, background: '#f0f0f0', whiteSpace: 'nowrap',
+    }), borderRight: BD }}>
       {children}
     </td>
   </tr>
@@ -119,20 +133,20 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
 
 const DataRow = ({ label, base = '', tauxS = '', mtS = '', tauxP = '', mtP = '', indent = true, bold = false }:
   { label: string; base?: string; tauxS?: string; mtS?: string; tauxP?: string; mtP?: string; indent?: boolean; bold?: boolean }) => (
-  <tr>
-    <td style={{ ...td({ paddingLeft: indent ? 14 : 5, fontWeight: bold ? 700 : 400 }), borderLeft: BD }}>{label}</td>
-    <td style={{ ...tdR(), borderLeft: BD }}>{base}</td>
-    <td style={{ ...tdC({ fontSize: 8.5, padding: '0 2px' }), borderLeft: BD }}>{tauxS}</td>
-    <td style={{ ...tdR({ fontWeight: mtS ? 600 : 400 }), borderLeft: BD }}>{mtS}</td>
-    <td style={{ ...tdC({ fontSize: 8.5, padding: '0 2px' }), borderLeft: BD }}>{tauxP}</td>
-    <td style={{ ...tdR({ fontWeight: mtP ? 600 : 400 }), borderLeft: BD, borderRight: BD }}>{mtP}</td>
+  <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+    <td style={td({ paddingLeft: indent ? 13 : 5, fontWeight: bold ? 700 : 400, whiteSpace: 'nowrap' })}>{cleanLabel(label)}</td>
+    <td style={tdR()}>{base}</td>
+    <td style={tdC({ fontSize: 7.5, padding: '0 2px' })}>{tauxS}</td>
+    <td style={tdR({ fontWeight: mtS ? 600 : 400 })}>{mtS}</td>
+    <td style={tdC({ fontSize: 7.5, padding: '0 2px' })}>{tauxP}</td>
+    <td style={tdR({ fontWeight: mtP ? 600 : 400, borderRight: BD })}>{mtP}</td>
   </tr>
 );
 
 const InfoLine = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div style={{ display: 'flex', gap: 5, fontSize: 8.5, marginBottom: 1.5 }}>
-    <span style={{ color: '#555', minWidth: 90 }}>{label}</span>
-    <strong style={{ color: K }}>{value}</strong>
+  <div style={{ display: 'flex', gap: 5, fontSize: 8, marginBottom: 1 }}>
+    <span style={{ color: '#555', minWidth: 84, flexShrink: 0 }}>{label}</span>
+    <strong style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
   </div>
 );
 
@@ -188,7 +202,6 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
   const ytdCnssEmp = nv(ytd.cnssEmployer);
   const ytdNetImp = nv(ytd.netImposable) || (ytdGross - ytdCnss);
 
-  const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
   const periodStart = `01/${String(payroll.month ?? 1).padStart(2,'0')}/${payroll.year}`;
   const periodEnd   = `${new Date(payroll.year, payroll.month, 0).getDate()}/${String(payroll.month ?? 1).padStart(2,'0')}/${payroll.year}`;
   const fullName = [e.civility === 'FEMALE' ? 'Mme' : e.civility === 'MALE' ? 'M.' : '', e.firstName, e.lastName?.toUpperCase()]
@@ -205,57 +218,67 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
           body { visibility: hidden !important; background: #fff !important; margin: 0 !important; padding: 0 !important; }
           #bul-wrap, #bul-wrap * { visibility: visible !important; }
           #bul-wrap { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; }
-          #bul-clarifie { width: 195mm !important; min-height: unset !important; padding: 6mm 7mm !important; margin: 0 auto !important; box-shadow: none !important; border: none !important; }
+          #bul-clarifie {
+            width: 195mm !important; height: 277mm !important; min-height: unset !important;
+            padding: 6mm 7mm !important; margin: 0 auto !important;
+            box-shadow: none !important; border: none !important; overflow: hidden !important;
+          }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .nobreak, tr { page-break-inside: avoid !important; break-inside: avoid !important; }
         }
+        #main-grid-clarifie {
+          width: 100%; table-layout: fixed; border-collapse: collapse;
+          border: ${BD}; height: 100%;
+        }
+        #main-grid-clarifie td, #main-grid-clarifie th { color: #000 !important; }
       `}</style>
 
       <div id="bul-wrap" data-bulletin-root="true" style={{ background: '#fff' }}>
       <div id="bul-clarifie" style={{
-        fontFamily: SANS, fontSize: 10, lineHeight: 1.35, background: '#fff', color: K,
-        width: '210mm', boxSizing: 'border-box', padding: '8mm 9mm', margin: '0 auto',
-        boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+        fontFamily: SANS, fontSize: 9, lineHeight: 1.3, background: '#fff', color: K,
+        width: '210mm', height: '297mm', boxSizing: 'border-box', padding: '6mm 7mm',
+        margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
 
         {/* ══ TITRE ══════════════════════════════════════════════════ */}
-        <div style={{ textAlign: 'center', fontSize: 17, fontWeight: 800, letterSpacing: .8, textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 800, letterSpacing: .6, textTransform: 'uppercase', marginBottom: 4, flexShrink: 0 }}>
           Bulletin de salaire clarifié
         </div>
 
         {/* ══ EN-TÊTE : entreprise (encadré) + méta période/contrat ═══ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 6 }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ width: '46%', border: BDB, padding: '8px 10px', verticalAlign: 'top' }}>
+              <td style={{ width: '44%', border: BDB, padding: '6px 8px', verticalAlign: 'top' }}>
                 {tpl.style.showLogo !== false && co.logo && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 26, objectFit: 'contain', marginBottom: 4 }} />
+                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 22, objectFit: 'contain', marginBottom: 3 }} />
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 12 }}>
-                  <span>{co.tradeName || co.legalName || '—'}</span>
-                  <span>{co.legalForm || ''}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 11, overflow: 'hidden' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{co.tradeName || co.legalName || '—'}</span>
+                  <span style={{ flexShrink: 0, marginLeft: 6 }}>{co.legalForm || ''}</span>
                 </div>
                 {tpl.style.showAddress !== false && (
-                  <div style={{ fontSize: 9, marginTop: 4 }}>
+                  <div style={{ fontSize: 8, marginTop: 3, overflow: 'hidden' }}>
                     {co.address || '—'}<br/>
                     {[co.postalCode, co.city].filter(Boolean).join(' ')}
                   </div>
                 )}
                 {deptName !== '—' && (
-                  <div style={{ fontSize: 8.5, marginTop: 6 }}>
+                  <div style={{ fontSize: 7.5, marginTop: 5, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                     Ets de rattachement&nbsp;&nbsp;<strong>{deptName}</strong>
                   </div>
                 )}
                 {tpl.style.showFiscalNumbers !== false && (
-                  <div style={{ fontSize: 8.5, marginTop: 3 }}>
-                    Siret&nbsp;&nbsp;<strong>{co.rccmNumber || '—'}</strong>
-                    &nbsp;&nbsp;&nbsp;APE/NAF&nbsp;&nbsp;<strong>{co.nif || '—'}</strong>
+                  <div style={{ fontSize: 7.5, marginTop: 3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                    Siret&nbsp;<strong>{co.rccmNumber || '—'}</strong>
+                    &nbsp;&nbsp;APE/NAF&nbsp;<strong>{co.nif || '—'}</strong>
                   </div>
                 )}
               </td>
-              <td style={{ width: '54%', padding: '8px 0 8px 16px', verticalAlign: 'top' }}>
-                <div style={{ display: 'flex', gap: 6, fontSize: 9.5, marginBottom: 4 }}>
+              <td style={{ width: '56%', padding: '6px 0 6px 14px', verticalAlign: 'top' }}>
+                <div style={{ display: 'flex', gap: 5, fontSize: 8.5, marginBottom: 3 }}>
                   <span>Période du</span><strong>{periodStart}</strong><span>au</span><strong>{periodEnd}</strong>
                 </div>
                 <InfoLine label="Matricule"    value={e.employeeNumber || '—'} />
@@ -265,12 +288,11 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
                 <InfoLine label="N° Sécu"      value={e.cnssNumber || '—'} />
                 <InfoLine label="Horaires"     value="151,67" />
 
-                {/* ── Bloc salarié grisé ── */}
-                <div style={{ background: '#eee', border: '0.5px solid #ccc', padding: '8px 10px', marginTop: 8 }}>
-                  <div style={{ fontWeight: 800, fontSize: 11 }}>{fullName || '—'}</div>
-                  {e.address && <div style={{ fontSize: 9, marginTop: 3 }}>{e.address}</div>}
+                <div style={{ background: '#eee', border: '0.5px solid #ccc', padding: '6px 8px', marginTop: 6, overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 800, fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName || '—'}</div>
+                  {e.address && <div style={{ fontSize: 8, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.address}</div>}
                   {(e.postalCode || e.city) && (
-                    <div style={{ fontSize: 9 }}>{[e.postalCode, e.city].filter(Boolean).join(' ')}</div>
+                    <div style={{ fontSize: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[e.postalCode, e.city].filter(Boolean).join(' ')}</div>
                   )}
                 </div>
               </td>
@@ -279,28 +301,28 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
         </table>
 
         {/* ══ CONV. / EMPLOI / QUALIFICATION / SERVICE / CATÉGORIE ═══ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 6 }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, tableLayout: 'fixed', flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ width: '20%', fontSize: 8.5, color: '#555', padding: '1px 0' }}>Conv. collective</td>
-              <td style={{ width: '30%', fontSize: 9, fontWeight: 700, padding: '1px 0' }}>{co.collectiveAgreement || '—'}</td>
-              <td style={{ width: '20%', fontSize: 8.5, color: '#555', padding: '1px 0' }}>Qualification</td>
-              <td style={{ width: '30%', fontSize: 9, fontWeight: 700, padding: '1px 0' }}>{cat}</td>
+              <td style={{ width: '18%', fontSize: 7.5, color: '#555', padding: '1px 0' }}>Conv. collective</td>
+              <td style={{ width: '32%', fontSize: 8.5, fontWeight: 700, padding: '1px 4px 1px 0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{co.collectiveAgreement || '—'}</td>
+              <td style={{ width: '18%', fontSize: 7.5, color: '#555', padding: '1px 0' }}>Qualification</td>
+              <td style={{ width: '32%', fontSize: 8.5, fontWeight: 700, padding: '1px 0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{cat}</td>
             </tr>
             <tr>
-              <td style={{ fontSize: 8.5, color: '#555', padding: '1px 0' }}>Emploi</td>
-              <td style={{ fontSize: 9, fontWeight: 700, padding: '1px 0' }}>{e.position || '—'}</td>
-              <td style={{ fontSize: 8.5, color: '#555', padding: '1px 0' }}>Service</td>
-              <td style={{ fontSize: 9, fontWeight: 700, padding: '1px 0', textTransform: 'uppercase' as const }}>{deptName}</td>
+              <td style={{ fontSize: 7.5, color: '#555', padding: '1px 0' }}>Emploi</td>
+              <td style={{ fontSize: 8.5, fontWeight: 700, padding: '1px 4px 1px 0', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{e.position || '—'}</td>
+              <td style={{ fontSize: 7.5, color: '#555', padding: '1px 0' }}>Service</td>
+              <td style={{ fontSize: 8.5, fontWeight: 700, padding: '1px 0', textTransform: 'uppercase' as const, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{deptName}</td>
             </tr>
             <tr>
-              <td style={{ fontSize: 8.5, color: '#555', padding: '1px 0' }}>Type de contrat</td>
-              <td style={{ fontSize: 9, fontWeight: 700, padding: '1px 0' }}>{CONTRACT[e.contractType ?? ''] || e.contractType || '—'}</td>
-              <td style={{ fontSize: 8.5, color: '#555', padding: '1px 0' }}>Sit. familiale</td>
-              <td style={{ fontSize: 9, fontWeight: 700, padding: '1px 0' }}>{MARITAL[e.maritalStatus ?? ''] || '—'}</td>
+              <td style={{ fontSize: 7.5, color: '#555', padding: '1px 0' }}>Type de contrat</td>
+              <td style={{ fontSize: 8.5, fontWeight: 700, padding: '1px 4px 1px 0' }}>{CONTRACT[e.contractType ?? ''] || e.contractType || '—'}</td>
+              <td style={{ fontSize: 7.5, color: '#555', padding: '1px 0' }}>Sit. familiale</td>
+              <td style={{ fontSize: 8.5, fontWeight: 700, padding: '1px 0' }}>{MARITAL[e.maritalStatus ?? ''] || '—'}</td>
             </tr>
             <tr>
-              <td colSpan={4} style={{ fontSize: 8.5, color: '#555', padding: '6px 0 1px' }}>
+              <td colSpan={4} style={{ fontSize: 7.5, color: '#555', padding: '4px 0 1px' }}>
                 Paiement le <strong style={{ color: K }}>{fmtDate((payroll as any).paymentDate)}</strong>
                 &nbsp;&nbsp;par&nbsp;&nbsp;<strong style={{ color: K }}>{PAYMENT[e.paymentMethod ?? ''] || 'Virement'}</strong>
               </td>
@@ -308,137 +330,143 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
           </tbody>
         </table>
 
-        {/* ══ TABLEAU PRINCIPAL — colonne Montant unique, signée ══════ */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', border: BDB }}>
-          <colgroup>
-            <col style={{ width: '32%' }} /><col style={{ width: '13%' }} />
-            <col style={{ width: '10%' }} /><col style={{ width: '15%' }} />
-            <col style={{ width: '10%' }} /><col style={{ width: '20%' }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th rowSpan={2} style={th(TH_BG, { textAlign: 'left', paddingLeft: 5 })}>Désignation</th>
-              <th rowSpan={2} style={th()}>Base ou nombre</th>
-              <th colSpan={2} style={th('#c9c9c9')}>Gains et cotisations salariales</th>
-              <th colSpan={2} style={th('#b6b6b6')}>Cotisations patronales</th>
-            </tr>
-            <tr>
-              <th style={th('#c9c9c9', { fontSize: 7.5 })}>Taux</th>
-              <th style={th('#c9c9c9', { fontSize: 7.5 })}>Montant</th>
-              <th style={th('#b6b6b6', { fontSize: 7.5 })}>Taux</th>
-              <th style={th('#b6b6b6', { fontSize: 7.5 })}>Montant</th>
-            </tr>
-          </thead>
-          <tbody>
+        {/* ══ TABLEAU PRINCIPAL — canevas fixe, remplit l'espace restant ═ */}
+        <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+          <table id="main-grid-clarifie">
+            <colgroup>
+              <col style={{ width: '30%' }} /><col style={{ width: '11%' }} />
+              <col style={{ width: '8%'  }} /><col style={{ width: '16%' }} />
+              <col style={{ width: '8%'  }} /><col style={{ width: '27%' }} />
+            </colgroup>
+            <thead>
+              <tr>
+                <th rowSpan={2} style={th(TH_BG, { textAlign: 'left', paddingLeft: 5 })}>Désignation</th>
+                <th rowSpan={2} style={th(TH_BG, { fontSize: 7 })}>Base ou nombre</th>
+                <th colSpan={2} style={th('#c9c9c9')}>Gains et cotis. salariales</th>
+                <th colSpan={2} style={th('#b6b6b6')}>Cotisations patronales</th>
+              </tr>
+              <tr>
+                <th style={th('#c9c9c9', { fontSize: 7 })}>Taux</th>
+                <th style={th('#c9c9c9', { fontSize: 7 })}>Montant</th>
+                <th style={th('#b6b6b6', { fontSize: 7 })}>Taux</th>
+                <th style={th('#b6b6b6', { fontSize: 7 })}>Montant</th>
+              </tr>
+            </thead>
+            <tbody>
 
-            {/* ── Gains ─────────────────────────────────────────────── */}
-            {gains.map((item: any, idx: number) => (
-              <DataRow key={item.id || item.code || idx} indent={false} bold={item.code === 'SAL_BASE'}
-                label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmt(item.amount)} />
-            ))}
-            {absDeductItem && (
-              <DataRow indent={false} label={absDeductItem.label}
-                base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
-                mtS={fmtNeg(absDeductItem.amount)} />
-            )}
-            <tr>
-              <td colSpan={3} style={{ ...td({ fontWeight: 800, textTransform: 'uppercase' as const, borderTop: BDB, borderBottom: BDB }), borderLeft: BD }}>Total brut</td>
-              <td style={{ ...tdR({ fontWeight: 800, borderTop: BDB, borderBottom: BDB }), borderLeft: BD }}>{fmtZ(totalBrut)}</td>
-              <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), borderLeft: BD }} />
-              <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), borderLeft: BD, borderRight: BD }} />
-            </tr>
-
-            {/* ── Sécurité sociale (CNSS) ─────────────────────────────── */}
-            <SectionHeader>Sécurité sociale (CNSS)</SectionHeader>
-            <DataRow label="CNSS salariale (plafond 1 200 000)" base={fmtZ(Math.min(totalBrut,1_200_000))} tauxS="4,00%" mtS={fmtNeg(cnssSal)} />
-            {cnssEmpPension  > 0 && <DataRow label="CNSS Pension"  base={fmtZ(Math.min(totalBrut,1_200_000))} tauxP="8,00%"  mtP={fmtNeg(cnssEmpPension)} />}
-            {cnssEmpFamily   > 0 && <DataRow label="CNSS Famille"  base={fmtZ(Math.min(totalBrut,600_000))}   tauxP="10,03%" mtP={fmtNeg(cnssEmpFamily)} />}
-            {cnssEmpAccident > 0 && <DataRow label="CNSS Accident du travail" base={fmtZ(Math.min(totalBrut,600_000))} tauxP="2,25%" mtP={fmtNeg(cnssEmpAccident)} />}
-
-            {/* ── Impôts sur salaires (ITS / TUS) ─────────────────────── */}
-            {(itsAmount > 0 || tusDgi > 0 || tusCnss > 0) && <>
-              <SectionHeader>Impôts sur salaires (ITS / TUS)</SectionHeader>
-              {itsAmount > 0 && <DataRow label="ITS mois" base={fmt(totalBrut - cnssSal)} mtS={fmtNeg(itsAmount)} />}
-              {tusCnss   > 0 && <DataRow label="Taxe unique sur salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475%" mtP={fmtNeg(tusCnss)} />}
-              {tusDgi    > 0 && <DataRow label="Taxe unique sur salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025%" mtP={fmtNeg(tusDgi)} />}
-            </>}
-
-            {/* ── Autres cotisations et taxes ─────────────────────────── */}
-            {(ctaxEmp.length > 0 || ctaxPat.length > 0 || loanItems.length > 0 || manualDeductions.length > 0) && <>
-              <SectionHeader>Autres cotisations et retenues</SectionHeader>
-              {ctaxEmp.map((item: any) => (
-                <DataRow key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmtNeg(item.amount)} />
+              {/* ── Gains ─────────────────────────────────────────────── */}
+              {gains.map((item: any, idx: number) => (
+                <DataRow key={item.id || item.code || idx} indent={false} bold={item.code === 'SAL_BASE'}
+                  label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmt(item.amount)} />
               ))}
-              {ctaxPat.map((item: any) => (
-                <DataRow key={item.id || item.code} label={item.label.replace(' (part patronale)','')} base={itemBase(item)} tauxP={itemTaux(item)} mtP={fmtNeg(item.amount)} />
-              ))}
-              {loanItems.map((item: any) => (
-                <DataRow key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmtNeg(item.amount)} />
-              ))}
-              {manualDeductions.map((item: any, idx: number) => (
-                <DataRow key={item.id || item.code || idx} label={item.label} mtS={fmtNeg(item.amount)} />
-              ))}
-            </>}
+              {absDeductItem && (
+                <DataRow indent={false} label={absDeductItem.label}
+                  base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
+                  mtS={fmtNeg(absDeductItem.amount)} />
+              )}
+              <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <td style={{ ...td({ fontWeight: 800, textTransform: 'uppercase' as const, borderTop: BDB, borderBottom: BDB }) }}>Total brut</td>
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
+                <td style={{ ...tdR({ fontWeight: 800, borderTop: BDB, borderBottom: BDB }) }}>{fmtZ(totalBrut)}</td>
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB, borderRight: BD }) }} />
+              </tr>
 
-            {/* ── Indemnités hors cotisation ───────────────────────────── */}
-            {indemItems.length > 0 && <>
-              <SectionHeader>Indemnités et avantages</SectionHeader>
-              {indemItems.map((item: any) => (
-                <DataRow key={item.id || item.code} indent={false} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmt(item.amount)} />
-              ))}
-            </>}
+              {/* ── Sécurité sociale (CNSS) ─────────────────────────────── */}
+              <SectionHeader>Sécurité sociale (CNSS)</SectionHeader>
+              <DataRow label="CNSS salariale (plafond 1 200 000)" base={fmtZ(Math.min(totalBrut,1_200_000))} tauxS="4,00%" mtS={fmtNeg(cnssSal)} />
+              {cnssEmpPension  > 0 && <DataRow label="CNSS Pension"  base={fmtZ(Math.min(totalBrut,1_200_000))} tauxP="8,00%"  mtP={fmtNeg(cnssEmpPension)} />}
+              {cnssEmpFamily   > 0 && <DataRow label="CNSS Famille"  base={fmtZ(Math.min(totalBrut,600_000))}   tauxP="10,03%" mtP={fmtNeg(cnssEmpFamily)} />}
+              {cnssEmpAccident > 0 && <DataRow label="CNSS Accident du travail" base={fmtZ(Math.min(totalBrut,600_000))} tauxP="2,25%" mtP={fmtNeg(cnssEmpAccident)} />}
 
-            {/* ── Salaire net ──────────────────────────────────────────── */}
-            <tr>
-              <td colSpan={3} style={{ ...td({ fontWeight: 900, fontSize: 12, textTransform: 'uppercase' as const, borderTop: BDB, borderBottom: BDB }), borderLeft: BD, background: '#eee' }}>Salaire net</td>
-              <td style={{ ...tdR({ fontWeight: 900, fontSize: 13, borderTop: BDB, borderBottom: BDB }), borderLeft: BD, background: '#eee' }}>{fmtZ(netSalary)}</td>
-              <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), borderLeft: BD, background: '#eee' }} />
-              <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), borderLeft: BD, borderRight: BD, background: '#eee' }} />
-            </tr>
-          </tbody>
-        </table>
+              {/* ── Impôts sur salaires (ITS / TUS) ─────────────────────── */}
+              {(itsAmount > 0 || tusDgi > 0 || tusCnss > 0) && <>
+                <SectionHeader>Impôts sur salaires (ITS / TUS)</SectionHeader>
+                {itsAmount > 0 && <DataRow label="ITS mois" base={fmt(totalBrut - cnssSal)} mtS={fmtNeg(itsAmount)} />}
+                {tusCnss   > 0 && <DataRow label="Taxe unique/salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475%" mtP={fmtNeg(tusCnss)} />}
+                {tusDgi    > 0 && <DataRow label="Taxe unique/salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025%" mtP={fmtNeg(tusDgi)} />}
+              </>}
+
+              {/* ── Autres cotisations et taxes ─────────────────────────── */}
+              {(ctaxEmp.length > 0 || ctaxPat.length > 0 || loanItems.length > 0 || manualDeductions.length > 0) && <>
+                <SectionHeader>Autres cotisations et retenues</SectionHeader>
+                {ctaxEmp.map((item: any) => (
+                  <DataRow key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmtNeg(item.amount)} />
+                ))}
+                {ctaxPat.map((item: any) => (
+                  <DataRow key={item.id || item.code} label={item.label} tauxP={itemTaux(item)} mtP={fmtNeg(item.amount)} />
+                ))}
+                {loanItems.map((item: any) => (
+                  <DataRow key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmtNeg(item.amount)} />
+                ))}
+                {manualDeductions.map((item: any, idx: number) => (
+                  <DataRow key={item.id || item.code || idx} label={item.label} mtS={fmtNeg(item.amount)} />
+                ))}
+              </>}
+
+              {/* ── Indemnités hors cotisation ───────────────────────────── */}
+              {indemItems.length > 0 && <>
+                <SectionHeader>Indemnités et avantages</SectionHeader>
+                {indemItems.map((item: any) => (
+                  <DataRow key={item.id || item.code} indent={false} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmt(item.amount)} />
+                ))}
+              </>}
+
+              {/* ── Salaire net ──────────────────────────────────────────── */}
+              <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <td style={{ ...td({ fontWeight: 900, fontSize: 11, textTransform: 'uppercase' as const, borderTop: BDB, borderBottom: BDB }), background: '#eee' }}>Salaire net</td>
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), background: '#eee' }} />
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), background: '#eee' }} />
+                <td style={{ ...tdR({ fontWeight: 900, fontSize: 11.5, borderTop: BDB, borderBottom: BDB }), background: '#eee' }}>{fmtZ(netSalary)}</td>
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }), background: '#eee' }} />
+                <td style={{ ...td({ borderTop: BDB, borderBottom: BDB, borderRight: BD }), background: '#eee' }} />
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         {/* ══ CUMULS MOIS / ANNÉE + NET À PAYER ═══════════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8, border: BDB }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, border: BDB, tableLayout: 'fixed', flexShrink: 0 }}>
           <thead>
             <tr>
-              <th style={th(TH_BG, { width: 60 })}></th>
+              <th style={th(TH_BG, { width: '9%' })}></th>
               <th style={th(TH_BG)}>Salaire brut</th>
               <th style={th(TH_BG)}>Chg. salariales</th>
               <th style={th(TH_BG)}>Chg. patronales</th>
               <th style={th(TH_BG)}>Net imposable</th>
               <th style={th(TH_BG)}>Heures</th>
-              <th rowSpan={3} style={{ ...th('#eee', { width: 130 }), textTransform: 'none' as const }}>
-                <div style={{ fontSize: 8, letterSpacing: 1 }}>NET À PAYER</div>
-                <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 900, marginTop: 3 }}>{fmtZ(netSalary)}</div>
+              <th rowSpan={3} style={{ ...th('#eee', { width: '18%', height: 'auto' }), textTransform: 'none' as const }}>
+                <div style={{ fontSize: 7.5, letterSpacing: 1, whiteSpace: 'nowrap' }}>NET À PAYER</div>
+                <div style={{ fontFamily: FONT, fontSize: 15, fontWeight: 900, marginTop: 2 }}>{fmtZ(netSalary)}</div>
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={{ ...tdC({ fontWeight: 800, borderLeft: BD }) }}>Mois</td>
-              <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtZ(totalBrut)}</td>
-              <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtD(cnssSal + itsAmount)}</td>
-              <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtD(totalPat)}</td>
-              <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtZ(totalBrut - cnssSal)}</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderRight: BD }) }}>{fmt((payroll.workedDays ?? 0) * 8) || '—'}</td>
+              <td style={tdC({ fontWeight: 800 })}>Mois</td>
+              <td style={tdR()}>{fmtZ(totalBrut)}</td>
+              <td style={tdR()}>{fmtD(cnssSal + itsAmount)}</td>
+              <td style={tdR()}>{fmtD(totalPat)}</td>
+              <td style={tdR()}>{fmtZ(totalBrut - cnssSal)}</td>
+              <td style={{ ...tdR({ borderRight: BD }) }}>{fmt((payroll.workedDays ?? 0) * 8) || '—'}</td>
             </tr>
             <tr>
-              <td style={{ ...tdC({ fontWeight: 800, borderLeft: BD, borderTop: BD }) }}>Année</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdGross)}</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdCnss)}</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdCnssEmp)}</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdNetImp)}</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderRight: BD, borderTop: BD }) }}>—</td>
+              <td style={{ ...tdC({ fontWeight: 800, borderTop: BD }) }}>Année</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdGross)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdCnss)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdCnssEmp)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdNetImp)}</td>
+              <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}>—</td>
             </tr>
           </tbody>
         </table>
 
         {/* ══ CONGÉS ANNUELS — Acquis / Pris / Solde ═══════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, border: BDB, borderTop: 'none' }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', border: BDB, borderTop: 'none', tableLayout: 'fixed', flexShrink: 0 }}>
           <thead>
             <tr>
-              <th style={th('#eee', { width: 60 })}>Congés</th>
+              <th style={th('#eee', { width: '9%' })}>Congés</th>
               <th style={th('#eee')}>Acquis</th>
               <th style={th('#eee')}>Pris</th>
               <th style={th('#eee')}>Solde</th>
@@ -446,35 +474,35 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
           </thead>
           <tbody>
             <tr>
-              <td style={{ ...tdC({ fontWeight: 800, borderLeft: BD }) }}>Jours</td>
-              <td style={{ ...tdR({ borderLeft: BD }) }}>{congesDroits > 0 ? fmtD(congesDroits) : '—'}</td>
-              <td style={{ ...tdR({ borderLeft: BD }) }}>{congesPris > 0 ? fmtD(congesPris) : '—'}</td>
-              <td style={{ ...tdR({ borderLeft: BD, borderRight: BD }) }}>{congesSolde > 0 ? fmtD(congesSolde) : '—'}</td>
+              <td style={tdC({ fontWeight: 800 })}>Jours</td>
+              <td style={tdR()}>{congesDroits > 0 ? fmtD(congesDroits) : '—'}</td>
+              <td style={tdR()}>{congesPris > 0 ? fmtD(congesPris) : '—'}</td>
+              <td style={{ ...tdR({ borderRight: BD }) }}>{congesSolde > 0 ? fmtD(congesSolde) : '—'}</td>
             </tr>
           </tbody>
         </table>
 
         {/* ══ SIGNATURES ══════════════════════════════════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', border: BDB, borderTop: 'none', marginTop: 0 }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', border: BDB, borderTop: 'none', tableLayout: 'fixed', flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ padding: '6px 10px', borderRight: BD, verticalAlign: 'top', height: 44 }}>
-                <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const }}>Signature de l&apos;Employé(e)</div>
+              <td style={{ padding: '5px 8px', borderRight: BD, verticalAlign: 'top', height: 34 }}>
+                <div style={{ fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase' as const }}>Signature de l&apos;Employé(e)</div>
               </td>
-              <td style={{ padding: '6px 10px', verticalAlign: 'top', textAlign: 'center', height: 44 }}>
-                <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const }}>Direction Générale</div>
+              <td style={{ padding: '5px 8px', verticalAlign: 'top', textAlign: 'center', height: 34 }}>
+                <div style={{ fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase' as const }}>Direction Générale</div>
               </td>
             </tr>
           </tbody>
         </table>
 
         {tpl.style.footerMessage && (
-          <div style={{ textAlign: 'center', fontSize: 8, fontStyle: 'italic', marginTop: 4 }}>{tpl.style.footerMessage}</div>
+          <div style={{ textAlign: 'center', fontSize: 7.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
         )}
 
         {/* ══ MENTIONS LÉGALES ══════════════════════════════════════════ */}
-        <div style={{ fontSize: 7.5, color: '#333', marginTop: 6, borderTop: '0.5px solid #999', paddingTop: 4 }}>
-          Pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.<br/>
+        <div style={{ fontSize: 7, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, flexShrink: 0 }}>
+          Pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.
           <span style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
             <span>CNSS sal. 4% · ITS barème 2026 · SMIG 70 400 FCFA</span>
             <strong style={{ color: K }}>KONZARH</strong>

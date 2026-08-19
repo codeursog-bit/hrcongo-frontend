@@ -662,7 +662,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
               <td style={{ width:'10%', padding:'4px 6px', borderRight:BDB, fontSize:10, color:K }}>
                 {e.paymentMethod === 'BANK_TRANSFER' ? 'Virement' : 'Espèces'}
               </td>
-              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:brandBg, fontWeight:900, textAlign:'center', fontSize:11, color:brandText, letterSpacing:0.3 }}>
+              <td style={{ width:'12%', padding:'4px 6px', borderRight:BDB, background:brandBg, fontWeight:900, textAlign:'center', fontSize:11, color:brandText, letterSpacing:0.3, whiteSpace:'nowrap' }}>
                 Net à payer
               </td>
               <td style={{ width:'16%', padding:'4px 10px', borderRight:BDB, fontWeight:900, fontSize:FS_NET, textAlign:'right', fontFamily:FONT, background:brandTint, color:K, letterSpacing:0.5 }}>

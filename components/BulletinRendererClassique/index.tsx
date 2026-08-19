@@ -1,29 +1,21 @@
 'use client';
 
 // ============================================================================
-// components/BulletinRendererClassique/index.tsx
+// components/BulletinRendererClassique/index.tsx  (v2)
 //
 // Gabarit "Bulletin de paie classique numéroté" — reproduit la mise en page
-// du modèle papier fourni par le client (bulletin "Informatique & Industrie") :
-//   • en-tête entreprise (encadré) + bloc titre/période/paiement à droite
-//   • bloc salarié en encadré
-//   • ligne d'infos : N° Sécu / Matricule / Ancienneté / Emploi / Qualif. /
-//     Département / Catégorie / Horaire
-//   • tableau principal à rubriques NUMÉROTÉES : Désignation | Nombre | Base |
-//     Part salariale (Taux/Gain/Retenue) | Part patronale (Taux/Retenue), avec
-//     à droite un calendrier des jours de la période (Date / Hres trav. /
-//     Congés payés / Autres absences)
-//   • lignes "Total Brut" / "Total Cotisations"
-//   • cumuls Période / Année + case "NET A PAYER"
-//   • compteurs congés (Pris / Restant / Acquis) + Repos compensateur
+// du modèle papier fourni par le client (bulletin "Informatique & Industrie").
 //
-// ✅ Calculs : mêmes sources de données que BulletinRenderer (Default) — le
-//    front ne recalcule rien, tout vient de payroll / payroll.items / ytd.
-// ✅ Le calendrier journalier (colonne de droite) n'a pas de source de
-//    données par-jour dans le modèle actuel (seuls des totaux mensuels
-//    existent) : les cellules d'heures/absences restent donc vides, comme
-//    dans le modèle papier fourni (aucune valeur n'y est renseignée non
-//    plus) — seule la structure (dates du mois) est générée dynamiquement.
+// ✅ v2 :
+//    - Calendrier journalier (Date / Hres trav. / Congés payés / Autres
+//      absences) SUPPRIMÉ à la demande du client — pas de source de données
+//      par-jour dans le modèle actuel, et il grignotait la largeur du
+//      tableau principal.
+//    - Même architecture "canevas A4 fixe" que BulletinRendererDefault :
+//      page de taille FIXE (210mm × 297mm, overflow: hidden, flex column),
+//      tableau principal dans un conteneur flex:1 / height:100%. Les lignes
+//      et colonnes sont pré-dimensionnées, le contenu vient s'y placer —
+//      plus de colonnes qui débordent ou se coupent.
 // ============================================================================
 
 import React, { useMemo } from 'react';
@@ -37,8 +29,6 @@ export interface BulletinRendererClassiqueProps {
   previewMode?: boolean;
 }
 
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet',
-                'Août','Septembre','Octobre','Novembre','Décembre'];
 const MARITAL: Record<string,string> = {
   SINGLE:'Célibataire', MARRIED:'Marié(e)', DIVORCED:'Divorcé(e)',
   WIDOWED:'Veuf/Veuve', COHABITING:'Union libre',
@@ -73,6 +63,18 @@ function formatCategorie(code: string | null | undefined): string {
   if (m2) return `Cat.${m2[1]} Éch.${m2[2]}`;
   return code;
 }
+// ✅ Raccourcit les libellés longs (même logique que le Default)
+function cleanLabel(label: string): string {
+  if (!label) return label;
+  if (/taxe.{0,10}occupation.{0,10}locaux/i.test(label)) return 'T.O.L.';
+  return label
+    .replace(/\s*\(\d+h\)\s*—[^%]*/i, '')
+    .replace(/\s*—\s*(5\s*premières?|heures?\s+suivantes?|nuit[^)]*|dimanche[^)]*)[^)]*$/i, '')
+    .replace(/\s*\(\d+h\)/i, '')
+    .replace(/\s*—\s*$/, '')
+    .replace(' (part patronale)', '')
+    .trim();
+}
 function itemBase(item: any): string {
   if (item.base == null || nv(item.base) === 0) return '';
   return Math.round(nv(item.base)).toLocaleString('fr-FR');
@@ -85,64 +87,64 @@ function itemTaux(item: any): string {
   if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
-/** Jours du mois de la période, au format JJ/MM/AA — pour le calendrier de droite */
-function daysOfPeriod(month: number, year: number): string[] {
-  const n = new Date(year, month, 0).getDate();
-  const yy = String(year).slice(-2);
-  return Array.from({ length: n }, (_, i) => `${String(i + 1).padStart(2,'0')}/${String(month).padStart(2,'0')}/${yy}`);
-}
 
-// ── Tokens visuels ───────────────────────────────────────────────────────
+// ── Tokens visuels — canevas A4 fixe, même logique que le Default ──────────
 const SANS  = 'Arial,Helvetica,sans-serif';
 const FONT  = '"Courier New",Courier,monospace';
 const BD    = '0.5px solid #000';
 const BDB   = '1px solid #000';
 const TH_BG = '#d8d8d8';
 const K     = '#000';
-const ROW_H = 15.5;
+
+const ROW_H  = 16;
+const HEAD_H = 17;
+const FS     = 8.8;
 
 const th = (bg = TH_BG, o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '2px 3px', fontSize: 7.5, fontWeight: 700,
+  border: BD, padding: '1px 3px', fontSize: 7.5, fontWeight: 700,
   textAlign: 'center', background: bg, fontFamily: SANS,
-  verticalAlign: 'middle', color: K, ...o,
+  verticalAlign: 'middle', color: K, height: HEAD_H, lineHeight: `${HEAD_H}px`,
+  overflow: 'hidden', ...o,
 });
 const td = (o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '0 4px', height: ROW_H, lineHeight: `${ROW_H}px`,
-  fontSize: 8.5, verticalAlign: 'middle', color: K, fontFamily: SANS, background: '#fff', ...o,
+  borderLeft: BD, borderRight: 'none', borderTop: 'none', borderBottom: 'none',
+  padding: '0 4px', height: ROW_H, lineHeight: `${ROW_H}px`, fontSize: FS,
+  verticalAlign: 'middle', color: K, fontFamily: SANS, background: '#fff',
+  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...o,
 });
-const tdR = (o?: React.CSSProperties) => td({ textAlign: 'right', fontFamily: FONT, whiteSpace: 'nowrap', ...o });
+const tdR = (o?: React.CSSProperties) => td({ textAlign: 'right', fontFamily: FONT, ...o });
 const tdC = (o?: React.CSSProperties) => td({ textAlign: 'center', ...o });
 
 const Row = ({ n, label, nombre = '', base = '', tauxS = '', gain = '', ret = '', tauxP = '', retP = '', bold = false }:
   { n: number | string; label: string; nombre?: string; base?: string; tauxS?: string; gain?: string; ret?: string; tauxP?: string; retP?: string; bold?: boolean }) => (
-  <tr>
+  <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
     <td style={tdC({ fontFamily: FONT, fontSize: 7.5 })}>{n}</td>
-    <td style={td({ paddingLeft: 5, fontWeight: bold ? 700 : 400 })}>{label}</td>
+    <td style={td({ paddingLeft: 5, fontWeight: bold ? 700 : 400 })}>{cleanLabel(label)}</td>
     <td style={tdR()}>{nombre}</td>
     <td style={tdR()}>{base}</td>
-    <td style={tdC({ fontSize: 7.5 })}>{tauxS}</td>
+    <td style={tdC({ fontSize: 7 })}>{tauxS}</td>
     <td style={tdR({ fontWeight: gain ? 600 : 400 })}>{gain}</td>
     <td style={tdR({ fontWeight: ret ? 600 : 400 })}>{ret}</td>
-    <td style={tdC({ fontSize: 7.5 })}>{tauxP}</td>
+    <td style={tdC({ fontSize: 7 })}>{tauxP}</td>
     <td style={tdR({ fontWeight: retP ? 600 : 400, borderRight: BD })}>{retP}</td>
   </tr>
 );
 
 const TotalRow = ({ label, gain = '', ret = '', retP = '' }: { label: string; gain?: string; ret?: string; retP?: string }) => (
-  <tr>
-    <td colSpan={4} style={{ ...td({ fontWeight: 800, fontSize: 9.5, textAlign: 'right', borderTop: BDB, borderBottom: BDB }) }}>{label}</td>
+  <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+    <td colSpan={4} style={{ ...td({ fontWeight: 800, fontSize: 9, textAlign: 'right', borderTop: BDB, borderBottom: BDB }) }}>{label}</td>
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10, borderTop: BDB, borderBottom: BDB }) }}>{gain}</td>
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10, borderTop: BDB, borderBottom: BDB }) }}>{ret}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 9.5, borderTop: BDB, borderBottom: BDB }) }}>{gain}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 9.5, borderTop: BDB, borderBottom: BDB }) }}>{ret}</td>
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10, borderTop: BDB, borderBottom: BDB, borderRight: BD }) }}>{retP}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 9.5, borderTop: BDB, borderBottom: BDB, borderRight: BD }) }}>{retP}</td>
   </tr>
 );
 
 const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div style={{ display: 'flex', gap: 4, fontSize: 8, marginBottom: 1.5 }}>
-    <span style={{ color: '#555', minWidth: 74 }}>{label}</span>
-    <strong style={{ color: K }}>{value}</strong>
+  <div style={{ display: 'flex', gap: 4, fontSize: 7.5, marginBottom: 1 }}>
+    <span style={{ color: '#555', minWidth: 70, flexShrink: 0 }}>{label}</span>
+    <strong style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
   </div>
 );
 
@@ -202,7 +204,6 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
   const ytdCnssEmp = nv(ytd.cnssEmployer);
   const ytdNetImp  = nv(ytd.netImposable) || (ytdGross - ytdCnss);
 
-  const monthLabel  = MONTHS[(payroll.month ?? 1) - 1];
   const periodStart = `01/${String(payroll.month ?? 1).padStart(2,'0')}/${payroll.year}`;
   const periodEnd   = `${new Date(payroll.year, payroll.month, 0).getDate()}/${String(payroll.month ?? 1).padStart(2,'0')}/${payroll.year}`;
   const fullName    = [e.civility === 'FEMALE' ? 'Mme' : 'M', e.firstName, e.lastName?.toUpperCase()].filter(Boolean).join(' ');
@@ -210,70 +211,78 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
   const rawDept  = e.department?.name ?? '';
   const deptName = /no.dep/i.test(rawDept) || rawDept.trim() === '' ? '—' : rawDept;
 
-  const days = useMemo(() => daysOfPeriod(payroll.month ?? 1, payroll.year), [payroll.month, payroll.year]);
-
   let rub = 10;
 
   return (
     <>
       <style>{`
         @media print {
-          @page { size: A4 portrait; margin: 7mm 6mm; }
+          @page { size: A4 portrait; margin: 8mm 6mm; }
           body { visibility: hidden !important; background: #fff !important; margin: 0 !important; padding: 0 !important; }
           #bul-wrap, #bul-wrap * { visibility: visible !important; }
           #bul-wrap { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; }
-          #bul-classique { width: 196mm !important; min-height: unset !important; padding: 5mm 6mm !important; margin: 0 auto !important; box-shadow: none !important; border: none !important; }
+          #bul-classique {
+            width: 195mm !important; height: 277mm !important; min-height: unset !important;
+            padding: 6mm 7mm !important; margin: 0 auto !important;
+            box-shadow: none !important; border: none !important; overflow: hidden !important;
+          }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .nobreak, tr { page-break-inside: avoid !important; break-inside: avoid !important; }
         }
+        #main-grid-classique {
+          width: 100%; table-layout: fixed; border-collapse: collapse;
+          border: ${BD}; height: 100%;
+        }
+        #main-grid-classique td, #main-grid-classique th { color: #000 !important; }
       `}</style>
 
       <div id="bul-wrap" data-bulletin-root="true" style={{ background: '#fff' }}>
       <div id="bul-classique" style={{
-        fontFamily: SANS, fontSize: 9, lineHeight: 1.3, background: '#fff', color: K,
-        width: '210mm', boxSizing: 'border-box', padding: '7mm 8mm', margin: '0 auto',
-        boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+        fontFamily: SANS, fontSize: 8.8, lineHeight: 1.25, background: '#fff', color: K,
+        width: '210mm', height: '297mm', boxSizing: 'border-box', padding: '6mm 7mm',
+        margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
 
         {/* ══ EN-TÊTE : entreprise + titre/période ═════════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 6 }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ width: '48%', border: BDB, padding: '8px 10px', verticalAlign: 'top' }}>
+              <td style={{ width: '48%', border: BDB, padding: '6px 8px', verticalAlign: 'top' }}>
                 {tpl.style.showLogo !== false && co.logo && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 24, objectFit: 'contain', marginBottom: 4 }} />
+                  <img src={co.logo} alt="" crossOrigin="anonymous" style={{ height: 20, objectFit: 'contain', marginBottom: 3 }} />
                 )}
-                <div style={{ fontWeight: 800, fontSize: 11 }}>{co.tradeName || co.legalName || '—'}</div>
+                <div style={{ fontWeight: 800, fontSize: 10, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{co.tradeName || co.legalName || '—'}</div>
                 {tpl.style.showAddress !== false && (
-                  <div style={{ fontSize: 8.5, marginTop: 3 }}>
+                  <div style={{ fontSize: 8, marginTop: 3, overflow: 'hidden' }}>
                     {co.address || '—'}<br/>{[co.postalCode, co.city].filter(Boolean).join(' ')}
                   </div>
                 )}
                 {tpl.style.showFiscalNumbers !== false && (
-                  <div style={{ fontSize: 8, marginTop: 5 }}>
-                    SIRET&nbsp;&nbsp;<strong>{co.rccmNumber || '—'}</strong>&nbsp;&nbsp;&nbsp;APE/NAF&nbsp;&nbsp;<strong>{co.nif || '—'}</strong>
+                  <div style={{ fontSize: 7.5, marginTop: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                    SIRET&nbsp;<strong>{co.rccmNumber || '—'}</strong>&nbsp;&nbsp;APE/NAF&nbsp;<strong>{co.nif || '—'}</strong>
                   </div>
                 )}
-                <div style={{ fontSize: 8, marginTop: 2 }}>
-                  Conv. coll.&nbsp;&nbsp;<strong>{co.collectiveAgreement || '—'}</strong>
+                <div style={{ fontSize: 7.5, marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                  Conv. coll.&nbsp;<strong>{co.collectiveAgreement || '—'}</strong>
                 </div>
               </td>
-              <td style={{ width: '52%', padding: '4px 0 4px 16px', verticalAlign: 'top' }}>
-                <div style={{ textAlign: 'right', fontSize: 20, fontWeight: 800, letterSpacing: .5, textTransform: 'uppercase' as const }}>
+              <td style={{ width: '52%', padding: '3px 0 3px 14px', verticalAlign: 'top' }}>
+                <div style={{ textAlign: 'right', fontSize: 17, fontWeight: 800, letterSpacing: .4, textTransform: 'uppercase' as const }}>
                   Bulletin de paie
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 9, marginTop: 6 }}>
+                <div style={{ textAlign: 'right', fontSize: 8.5, marginTop: 5 }}>
                   Période du <strong>{periodStart}</strong> au <strong>{periodEnd}</strong>
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 9, marginTop: 2 }}>
+                <div style={{ textAlign: 'right', fontSize: 8.5, marginTop: 2 }}>
                   Paiement le <strong>{fmtDate((payroll as any).paymentDate)}</strong> par <strong>{PAYMENT[e.paymentMethod ?? ''] || 'Virement'}</strong>
                 </div>
 
-                <div style={{ border: BDB, padding: '8px 10px', marginTop: 10 }}>
-                  <div style={{ fontWeight: 800, fontSize: 11 }}>{fullName || '—'}</div>
-                  {e.address && <div style={{ fontSize: 8.5, marginTop: 3 }}>{e.address}</div>}
-                  {(e.postalCode || e.city) && <div style={{ fontSize: 8.5 }}>{[e.postalCode, e.city].filter(Boolean).join(' ')}</div>}
+                <div style={{ border: BDB, padding: '6px 8px', marginTop: 8, overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 800, fontSize: 10, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{fullName || '—'}</div>
+                  {e.address && <div style={{ fontSize: 8, marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{e.address}</div>}
+                  {(e.postalCode || e.city) && <div style={{ fontSize: 8, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{[e.postalCode, e.city].filter(Boolean).join(' ')}</div>}
                 </div>
               </td>
             </tr>
@@ -281,32 +290,31 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
         </table>
 
         {/* ══ INFOS SALARIÉ ═════════════════════════════════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 6 }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 4, tableLayout: 'fixed', flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ width: '25%', padding: '1px 0' }}><InfoRow label="N° Séc.Soc." value={e.cnssNumber || '—'} /></td>
-              <td style={{ width: '25%', padding: '1px 0' }}><InfoRow label="Matricule"   value={e.employeeNumber || '—'} /></td>
-              <td style={{ width: '25%', padding: '1px 0' }}><InfoRow label="Ancienneté"  value={seniority(e.hireDate, new Date(payroll.year, payroll.month, 0))} /></td>
+              <td style={{ width: '25%', padding: '1px 4px 1px 0' }}><InfoRow label="N° Séc.Soc." value={e.cnssNumber || '—'} /></td>
+              <td style={{ width: '25%', padding: '1px 4px 1px 0' }}><InfoRow label="Matricule"   value={e.employeeNumber || '—'} /></td>
+              <td style={{ width: '25%', padding: '1px 4px 1px 0' }}><InfoRow label="Ancienneté"  value={seniority(e.hireDate, new Date(payroll.year, payroll.month, 0))} /></td>
               <td style={{ width: '25%', padding: '1px 0' }}><InfoRow label="Contrat"     value={CONTRACT[e.contractType ?? ''] || e.contractType || '—'} /></td>
             </tr>
             <tr>
-              <td style={{ padding: '1px 0' }}><InfoRow label="Emploi"       value={e.position || '—'} /></td>
-              <td style={{ padding: '1px 0' }}><InfoRow label="Qualification" value={cat} /></td>
-              <td style={{ padding: '1px 0' }}><InfoRow label="Département"  value={deptName} /></td>
+              <td style={{ padding: '1px 4px 1px 0' }}><InfoRow label="Emploi"       value={e.position || '—'} /></td>
+              <td style={{ padding: '1px 4px 1px 0' }}><InfoRow label="Qualification" value={cat} /></td>
+              <td style={{ padding: '1px 4px 1px 0' }}><InfoRow label="Département"  value={deptName} /></td>
               <td style={{ padding: '1px 0' }}><InfoRow label="Horaire"      value="151,67 h" /></td>
             </tr>
           </tbody>
         </table>
 
-        {/* ══ TABLEAU PRINCIPAL + CALENDRIER JOURS ═════════════════════ */}
-        <div style={{ display: 'flex', gap: 0 }}>
-          {/* Table rubriques */}
-          <table style={{ flex: 1, borderCollapse: 'collapse', tableLayout: 'fixed', border: BDB }}>
+        {/* ══ TABLEAU PRINCIPAL — canevas fixe, remplit l'espace restant ═ */}
+        <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+          <table id="main-grid-classique">
             <colgroup>
-              <col style={{ width: '4%' }} /><col style={{ width: '24%' }} />
-              <col style={{ width: '9%' }} /><col style={{ width: '9%' }} />
-              <col style={{ width: '6%' }} /><col style={{ width: '12%' }} />
-              <col style={{ width: '12%' }} /><col style={{ width: '6%' }} />
+              <col style={{ width: '4%'  }} /><col style={{ width: '27%' }} />
+              <col style={{ width: '9%'  }} /><col style={{ width: '9%'  }} />
+              <col style={{ width: '6%'  }} /><col style={{ width: '13%' }} />
+              <col style={{ width: '13%' }} /><col style={{ width: '6%'  }} />
               <col style={{ width: '13%' }} />
             </colgroup>
             <thead>
@@ -319,11 +327,11 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                 <th colSpan={2} style={th('#b0b0b0')}>Part patronale</th>
               </tr>
               <tr>
-                <th style={th('#c4c4c4', { fontSize: 7 })}>Taux</th>
-                <th style={th('#c4c4c4', { fontSize: 7 })}>Gain</th>
-                <th style={th('#c4c4c4', { fontSize: 7 })}>Retenue</th>
-                <th style={th('#b0b0b0', { fontSize: 7 })}>Taux</th>
-                <th style={th('#b0b0b0', { fontSize: 7 })}>Retenue</th>
+                <th style={th('#c4c4c4', { fontSize: 6.5 })}>Taux</th>
+                <th style={th('#c4c4c4', { fontSize: 6.5 })}>Gain</th>
+                <th style={th('#c4c4c4', { fontSize: 6.5 })}>Retenue</th>
+                <th style={th('#b0b0b0', { fontSize: 6.5 })}>Taux</th>
+                <th style={th('#b0b0b0', { fontSize: 6.5 })}>Retenue</th>
               </tr>
             </thead>
             <tbody>
@@ -339,13 +347,12 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
 
               <TotalRow label="Total Brut" gain={fmtZ(totalBrut)} />
 
-              {(()=>{ rub = 2100; return null; })()}
               <Row n={2100} label="CNSS salariale (plafond 1 200 000)" base={fmtZ(Math.min(totalBrut,1_200_000))} tauxS="4,00" ret={fmt(cnssSal)} />
               {cnssEmpPension  > 0 && <Row n={2101} label="CNSS Pension"  base={fmtZ(Math.min(totalBrut,1_200_000))} tauxP="8,00"  retP={fmt(cnssEmpPension)} />}
               {cnssEmpFamily   > 0 && <Row n={2102} label="CNSS Famille"  base={fmtZ(Math.min(totalBrut,600_000))}   tauxP="10,03" retP={fmt(cnssEmpFamily)} />}
               {cnssEmpAccident > 0 && <Row n={2103} label="CNSS Accident du travail" base={fmtZ(Math.min(totalBrut,600_000))} tauxP="2,25" retP={fmt(cnssEmpAccident)} />}
-              {tusCnss > 0 && <Row n={2104} label="Taxe unique sur salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475" retP={fmt(tusCnss)} />}
-              {tusDgi  > 0 && <Row n={2105} label="Taxe unique sur salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025" retP={fmt(tusDgi)} />}
+              {tusCnss > 0 && <Row n={2104} label="Taxe unique/salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475" retP={fmt(tusCnss)} />}
+              {tusDgi  > 0 && <Row n={2105} label="Taxe unique/salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025" retP={fmt(tusDgi)} />}
 
               {itsAmount > 0 && <Row n={4520} label="ITS mois" base={fmt(totalBrut - cnssSal)} ret={fmt(itsAmount)} />}
 
@@ -358,7 +365,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               {(()=>{
                 let r = 5800;
                 return ctaxPat.map((item: any) => { r++; return (
-                  <Row key={item.id || item.code} n={r} label={item.label.replace(' (part patronale)','')} base={itemBase(item)} tauxP={itemTaux(item)} retP={fmt(item.amount)} />
+                  <Row key={item.id || item.code} n={r} label={item.label} tauxP={itemTaux(item)} retP={fmt(item.amount)} />
                 ); });
               })()}
               {(()=>{
@@ -377,39 +384,17 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               <TotalRow label="Total Cotisations" ret={fmtZ(totalCotisSal)} retP={fmtZ(totalPat)} />
             </tbody>
           </table>
-
-          {/* Calendrier jours de la période */}
-          <table style={{ width: 92, borderCollapse: 'collapse', borderTop: BDB, borderRight: BDB, borderBottom: BDB, flexShrink: 0 }}>
-            <thead>
-              <tr>
-                <th style={th(TH_BG, { fontSize: 6.5, padding: '1px 2px' })}>Date</th>
-                <th style={th(TH_BG, { fontSize: 6.5, padding: '1px 2px' })}>Hres trav.</th>
-                <th style={th(TH_BG, { fontSize: 6.5, padding: '1px 2px' })}>Cgés pay.</th>
-                <th style={th(TH_BG, { fontSize: 6.5, padding: '1px 2px' })}>Autres absences</th>
-              </tr>
-            </thead>
-            <tbody>
-              {days.map(d => (
-                <tr key={d}>
-                  <td style={{ ...tdC({ fontSize: 6.5, height: 10.6, lineHeight: '10.6px', padding: '0 2px' }) }}>{d}</td>
-                  <td style={{ ...tdC({ fontSize: 6.5, height: 10.6, lineHeight: '10.6px' }) }} />
-                  <td style={{ ...tdC({ fontSize: 6.5, height: 10.6, lineHeight: '10.6px' }) }} />
-                  <td style={{ ...tdC({ fontSize: 6.5, height: 10.6, lineHeight: '10.6px' }) }} />
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
 
         {/* ══ CUMULS PÉRIODE / ANNÉE + NET À PAYER ═════════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 6 }}>
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, flexShrink: 0 }}>
           <tbody>
             <tr>
-              <td style={{ width: '76%', verticalAlign: 'top' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: BDB }}>
+              <td style={{ width: '78%', verticalAlign: 'top' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: BDB, tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
-                      <th style={th(TH_BG, { width: '10%' })}></th>
+                      <th style={th(TH_BG, { width: '9%' })}></th>
                       <th style={th(TH_BG)}>Salaire brut</th>
                       <th style={th(TH_BG)}>Charges sal.</th>
                       <th style={th(TH_BG)}>Charges pat.</th>
@@ -420,28 +405,27 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ ...tdC({ fontWeight: 800, borderLeft: BD }) }}>Période</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtZ(totalBrut)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtD(cnssSal + itsAmount)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtD(totalPat)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{fmtZ(totalBrut - cnssSal)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{fmt((payroll.workedDays ?? 0) * 8) || '—'}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderRight: BD }) }}>{fmt(nv(payroll.overtimeHours10) + nv(payroll.overtimeHours25)) || '—'}</td>
+                      <td style={tdC({ fontWeight: 800 })}>Période</td>
+                      <td style={tdR()}>{fmtZ(totalBrut)}</td>
+                      <td style={tdR()}>{fmtD(cnssSal + itsAmount)}</td>
+                      <td style={tdR()}>{fmtD(totalPat)}</td>
+                      <td style={tdR()}>{fmtZ(totalBrut - cnssSal)}</td>
+                      <td style={tdR()}>{fmt((payroll.workedDays ?? 0) * 8) || '—'}</td>
+                      <td style={{ ...tdR({ borderRight: BD }) }}>{fmt(nv(payroll.overtimeHours10) + nv(payroll.overtimeHours25)) || '—'}</td>
                     </tr>
                     <tr>
-                      <td style={{ ...tdC({ fontWeight: 800, borderLeft: BD, borderTop: BD }) }}>Année</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdGross)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdCnss)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdCnssEmp)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(ytdNetImp)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>{fmtD(nv(ytd.workedDays) * 8)}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderRight: BD, borderTop: BD }) }}>—</td>
+                      <td style={{ ...tdC({ fontWeight: 800, borderTop: BD }) }}>Année</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdGross)}</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdCnss)}</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdCnssEmp)}</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdNetImp)}</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(nv(ytd.workedDays) * 8)}</td>
+                      <td style={{ ...tdR({ borderRight: BD, borderTop: BD }) }}>—</td>
                     </tr>
                   </tbody>
                 </table>
 
-                {/* Compteurs congés */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: BDB, borderTop: 'none', marginTop: 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: BDB, borderTop: 'none', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
                       <th style={th('#eee', { width: '20%', textAlign: 'left', paddingLeft: 5 })}>Compteurs</th>
@@ -452,24 +436,24 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ ...td({ borderLeft: BD, paddingLeft: 5 }) }}>Congés</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{congesPris > 0 ? fmtD(congesPris) : '0,0000'}</td>
-                      <td style={{ ...tdR({ borderLeft: BD }) }}>{congesSolde > 0 ? fmtD(congesSolde) : '0,0000'}</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderRight: BD }) }}>{congesDroits > 0 ? fmtD(congesDroits) : '0,0000'}</td>
+                      <td style={td({ paddingLeft: 5 })}>Congés</td>
+                      <td style={tdR()}>{congesPris > 0 ? fmtD(congesPris) : '0,0000'}</td>
+                      <td style={tdR()}>{congesSolde > 0 ? fmtD(congesSolde) : '0,0000'}</td>
+                      <td style={{ ...tdR({ borderRight: BD }) }}>{congesDroits > 0 ? fmtD(congesDroits) : '0,0000'}</td>
                     </tr>
                     <tr>
-                      <td style={{ ...td({ borderLeft: BD, borderTop: BD, paddingLeft: 5 }) }}>Repos compensateur</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>0,0000</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderTop: BD }) }}>0,0000</td>
-                      <td style={{ ...tdR({ borderLeft: BD, borderRight: BD, borderTop: BD }) }}>0,0000</td>
+                      <td style={{ ...td({ borderTop: BD, paddingLeft: 5 }) }}>Repos compensateur</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>0,0000</td>
+                      <td style={{ ...tdR({ borderTop: BD }) }}>0,0000</td>
+                      <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}>0,0000</td>
                     </tr>
                   </tbody>
                 </table>
               </td>
-              <td style={{ width: '24%', verticalAlign: 'top', paddingLeft: 6 }}>
-                <div style={{ border: BDB, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 6px' }}>
-                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: 1 }}>Net à payer</div>
-                  <div style={{ fontFamily: FONT, fontSize: 19, fontWeight: 900, marginTop: 6 }}>{fmtZ(netSalary)}</div>
+              <td style={{ width: '22%', verticalAlign: 'top', paddingLeft: 6 }}>
+                <div style={{ border: BDB, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 5px' }}>
+                  <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: 1, whiteSpace: 'nowrap' }}>Net à payer</div>
+                  <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 900, marginTop: 5 }}>{fmtZ(netSalary)}</div>
                 </div>
               </td>
             </tr>
@@ -477,10 +461,10 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
         </table>
 
         {tpl.style.footerMessage && (
-          <div style={{ textAlign: 'center', fontSize: 8, fontStyle: 'italic', marginTop: 4 }}>{tpl.style.footerMessage}</div>
+          <div style={{ textAlign: 'center', fontSize: 7.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
         )}
 
-        <div style={{ fontSize: 7, color: '#333', marginTop: 6, borderTop: '0.5px solid #999', paddingTop: 3, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 6.8, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
           <span>Pour vous aider à faire valoir vos droits, conservez ce bulletin sans limitation de durée · CNSS 4% sal. · ITS barème 2026 · SMIG 70 400 FCFA</span>
           <strong style={{ color: K }}>KONZARH</strong>
         </div>

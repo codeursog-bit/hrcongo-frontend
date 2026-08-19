@@ -93,6 +93,18 @@ ${styleInlines}
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+  /* ✅ Neutralise le "position:absolute;top:0;left:0" que chaque gabarit
+     applique à #bul-wrap (id dupliqué — un par bulletin dans le DOM live).
+     Sans ce reset, TOUS les bulletins se retrouveraient épinglés exactement
+     au même point (0,0) et s'empileraient les uns sur les autres — un seul
+     resterait visible. Spécificité (1,0,2) > (1,0,0) de la règle d'origine,
+     donc ce reset gagne même avec !important des deux côtés. */
+  body #bul-wrap {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+  }
 </style>
 </head><body>
 <div id="bul-print-target">${el.outerHTML}</div>
@@ -297,6 +309,26 @@ ${styleInlines}
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+  /* ✅ CORRECTIF BUG PRINCIPAL — impression groupée n'affichait qu'1 bulletin
+     Chaque gabarit (Default/Clarifié/Classique) place son id="bul-wrap"
+     racine avec "position:absolute;top:0;left:0" en CSS d'impression. C'est
+     sans danger à l'unité (un seul élément), mais en lot il y a N éléments
+     PORTANT LE MÊME id dans le DOM — les navigateurs appliquent une règle
+     #id à TOUS les éléments qui portent cet id, même dupliqué. Résultat :
+     les N bulletins étaient tous épinglés au même point (0,0) et se
+     superposaient exactement — un seul restait visible/imprimé, et le
+     rendu semblait aléatoire selon lequel finissait au-dessus. On neutralise
+     donc cette règle ici avec une sélectivité supérieure (1,0,2 > 1,0,0),
+     pour que chaque bulletin reste dans le flux normal du document et que
+     les sauts de page (page-break-after sur le wrapper de chaque bulletin,
+     posé par BulletinBatchPrintHidden) fonctionnent comme prévu. */
+  body #bul-wrap,
+  body [data-bulletin-root] {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
   }
 </style>
 </head><body>
