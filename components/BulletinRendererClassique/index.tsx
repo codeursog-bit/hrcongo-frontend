@@ -94,7 +94,7 @@ function itemTaux(item: any): string {
 // - Avec logo : la case se partage en 2 (nom à gauche / logo agrandi à
 //   droite, centré verticalement). Si le nom contient un espace, le 1er mot
 //   reste sur la ligne du haut et le reste du nom passe en dessous, centré.
-function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 32 }: {
+function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 60 }: {
   name: string; logo?: string; nameStyle?: React.CSSProperties; logoHeight?: number;
 }) {
   const parts = (name || '').trim().split(/\s+/);
@@ -127,12 +127,12 @@ const BDB   = '1px solid #000';
 const TH_BG = '#d8d8d8';
 const K     = '#000';
 
-const ROW_H  = 16;
-const HEAD_H = 17;
-const FS     = 8.8;
+const ROW_H  = 18;
+const HEAD_H = 19;
+const FS     = 9.8;
 
 const th = (bg = TH_BG, o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '1px 3px', fontSize: 7.5, fontWeight: 700,
+  border: BD, padding: '1px 3px', fontSize: 8.5, fontWeight: 700,
   textAlign: 'center', background: bg, fontFamily: SANS,
   verticalAlign: 'middle', color: K, height: HEAD_H, lineHeight: `${HEAD_H}px`,
   overflow: 'hidden', ...o,
@@ -149,31 +149,31 @@ const tdC = (o?: React.CSSProperties) => td({ textAlign: 'center', ...o });
 const Row = ({ n, label, nombre = '', base = '', tauxS = '', gain = '', ret = '', tauxP = '', retP = '', bold = false }:
   { n: number | string; label: string; nombre?: string; base?: string; tauxS?: string; gain?: string; ret?: string; tauxP?: string; retP?: string; bold?: boolean }) => (
   <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-    <td style={tdC({ fontFamily: FONT, fontSize: 7.5 })}>{n}</td>
+    <td style={tdC({ fontFamily: FONT, fontSize: 8.5 })}>{n}</td>
     <td style={td({ paddingLeft: 5, fontWeight: bold ? 700 : 400 })}>{cleanLabel(label)}</td>
     <td style={tdR()}>{nombre}</td>
     <td style={tdR()}>{base}</td>
-    <td style={tdC({ fontSize: 7 })}>{tauxS}</td>
+    <td style={tdC({ fontSize: 8 })}>{tauxS}</td>
     <td style={tdR({ fontWeight: gain ? 600 : 400 })}>{gain}</td>
     <td style={tdR({ fontWeight: ret ? 600 : 400 })}>{ret}</td>
-    <td style={tdC({ fontSize: 7 })}>{tauxP}</td>
+    <td style={tdC({ fontSize: 8 })}>{tauxP}</td>
     <td style={tdR({ fontWeight: retP ? 600 : 400, borderRight: BD })}>{retP}</td>
   </tr>
 );
 
 const TotalRow = ({ label, gain = '', ret = '', retP = '' }: { label: string; gain?: string; ret?: string; retP?: string }) => (
   <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-    <td colSpan={4} style={{ ...td({ fontWeight: 800, fontSize: 9, textAlign: 'right', borderTop: BDB, borderBottom: BDB }) }}>{label}</td>
+    <td colSpan={4} style={{ ...td({ fontWeight: 800, fontSize: 10, textAlign: 'right', borderTop: BDB, borderBottom: BDB }) }}>{label}</td>
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 9.5, borderTop: BDB, borderBottom: BDB }) }}>{gain}</td>
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 9.5, borderTop: BDB, borderBottom: BDB }) }}>{ret}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10.5, borderTop: BDB, borderBottom: BDB }) }}>{gain}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10.5, borderTop: BDB, borderBottom: BDB }) }}>{ret}</td>
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 9.5, borderTop: BDB, borderBottom: BDB, borderRight: BD }) }}>{retP}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10.5, borderTop: BDB, borderBottom: BDB, borderRight: BD }) }}>{retP}</td>
   </tr>
 );
 
 const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-  <div style={{ display: 'flex', gap: 4, fontSize: 7.5, marginBottom: 1 }}>
+  <div style={{ display: 'flex', gap: 4, fontSize: 8.5, marginBottom: 1 }}>
     <span style={{ color: '#555', minWidth: 70, flexShrink: 0 }}>{label}</span>
     <strong style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
   </div>
@@ -269,7 +269,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
 
       <div id="bul-wrap" data-bulletin-root="true" style={{ background: '#fff' }}>
       <div id="bul-classique" style={{
-        fontFamily: SANS, fontSize: 8.8, lineHeight: 1.25, background: '#fff', color: K,
+        fontFamily: SANS, fontSize: 9.8, lineHeight: 1.25, background: '#fff', color: K,
         width: '210mm', height: '297mm', boxSizing: 'border-box', padding: '6mm 7mm',
         margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -283,38 +283,38 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                 <CompanyNameLogo
                   name={co.tradeName || co.legalName || '—'}
                   logo={tpl.style.showLogo !== false ? co.logo : undefined}
-                  logoHeight={32}
-                  nameStyle={{ fontWeight: 800, fontSize: 10 }}
+                  logoHeight={60}
+                  nameStyle={{ fontWeight: 800, fontSize: 11 }}
                 />
                 {tpl.style.showAddress !== false && (
-                  <div style={{ fontSize: 8, marginTop: 3, overflow: 'hidden' }}>
+                  <div style={{ fontSize: 9, marginTop: 3, overflow: 'hidden' }}>
                     {co.address || '—'}<br/>{[co.postalCode, co.city].filter(Boolean).join(' ')}
                   </div>
                 )}
                 {tpl.style.showFiscalNumbers !== false && (
-                  <div style={{ fontSize: 7.5, marginTop: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: 8.5, marginTop: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                     SIRET&nbsp;<strong>{co.rccmNumber || '—'}</strong>&nbsp;&nbsp;APE/NAF&nbsp;<strong>{co.nif || '—'}</strong>
                   </div>
                 )}
-                <div style={{ fontSize: 7.5, marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: 8.5, marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                   Conv. coll.&nbsp;<strong>{co.collectiveAgreement || '—'}</strong>
                 </div>
               </td>
               <td style={{ width: '52%', padding: '3px 0 3px 14px', verticalAlign: 'top' }}>
-                <div style={{ textAlign: 'right', fontSize: 17, fontWeight: 800, letterSpacing: .4, textTransform: 'uppercase' as const }}>
+                <div style={{ textAlign: 'right', fontSize: 18, fontWeight: 800, letterSpacing: .4, textTransform: 'uppercase' as const }}>
                   Bulletin de paie
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 8.5, marginTop: 5 }}>
+                <div style={{ textAlign: 'right', fontSize: 9.5, marginTop: 5 }}>
                   Période du <strong>{periodStart}</strong> au <strong>{periodEnd}</strong>
                 </div>
-                <div style={{ textAlign: 'right', fontSize: 8.5, marginTop: 2 }}>
+                <div style={{ textAlign: 'right', fontSize: 9.5, marginTop: 2 }}>
                   Paiement le <strong>{fmtDate((payroll as any).paymentDate)}</strong> par <strong>{PAYMENT[e.paymentMethod ?? ''] || 'Virement'}</strong>
                 </div>
 
                 <div style={{ border: BDB, padding: '6px 8px', marginTop: 8, overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 800, fontSize: 10, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{fullName || '—'}</div>
-                  {e.address && <div style={{ fontSize: 8, marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{e.address}</div>}
-                  {(e.postalCode || e.city) && <div style={{ fontSize: 8, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{[e.postalCode, e.city].filter(Boolean).join(' ')}</div>}
+                  <div style={{ fontWeight: 800, fontSize: 11, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{fullName || '—'}</div>
+                  {e.address && <div style={{ fontSize: 9, marginTop: 2, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{e.address}</div>}
+                  {(e.postalCode || e.city) && <div style={{ fontSize: 9, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{[e.postalCode, e.city].filter(Boolean).join(' ')}</div>}
                 </div>
               </td>
             </tr>
@@ -359,11 +359,11 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                 <th colSpan={2} style={th('#b0b0b0')}>Part patronale</th>
               </tr>
               <tr>
-                <th style={th('#c4c4c4', { fontSize: 6.5 })}>Taux</th>
-                <th style={th('#c4c4c4', { fontSize: 6.5 })}>Gain</th>
-                <th style={th('#c4c4c4', { fontSize: 6.5 })}>Retenue</th>
-                <th style={th('#b0b0b0', { fontSize: 6.5 })}>Taux</th>
-                <th style={th('#b0b0b0', { fontSize: 6.5 })}>Retenue</th>
+                <th style={th('#c4c4c4', { fontSize: 7.5 })}>Taux</th>
+                <th style={th('#c4c4c4', { fontSize: 7.5 })}>Gain</th>
+                <th style={th('#c4c4c4', { fontSize: 7.5 })}>Retenue</th>
+                <th style={th('#b0b0b0', { fontSize: 7.5 })}>Taux</th>
+                <th style={th('#b0b0b0', { fontSize: 7.5 })}>Retenue</th>
               </tr>
             </thead>
             <tbody>
@@ -498,8 +498,8 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               </td>
               <td style={{ width: '22%', verticalAlign: 'top', paddingLeft: 6 }}>
                 <div style={{ border: BDB, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 5px' }}>
-                  <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: 1, whiteSpace: 'nowrap' }}>Net à payer</div>
-                  <div style={{ fontFamily: FONT, fontSize: 16, fontWeight: 900, marginTop: 5 }}>{fmtZ(netSalary)}</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: 1, whiteSpace: 'nowrap' }}>Net à payer</div>
+                  <div style={{ fontFamily: FONT, fontSize: 17, fontWeight: 900, marginTop: 5 }}>{fmtZ(netSalary)}</div>
                 </div>
               </td>
             </tr>
@@ -507,10 +507,10 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
         </table>
 
         {tpl.style.footerMessage && (
-          <div style={{ textAlign: 'center', fontSize: 7.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
+          <div style={{ textAlign: 'center', fontSize: 8.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
         )}
 
-        <div style={{ fontSize: 6.8, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div style={{ fontSize: 7.8, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
           <span>Pour vous aider à faire valoir vos droits, conservez ce bulletin sans limitation de durée · CNSS 4% sal. · ITS barème 2026 · SMIG 70 400 FCFA</span>
           <strong style={{ color: K }}>KONZARH</strong>
         </div>

@@ -93,37 +93,6 @@ function itemTaux(item: any): string {
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 
-// ── En-tête entreprise : nom (+logo à droite si présent) ────────────────────
-// - Sans logo : le nom garde toute la largeur de la case (comportement
-//   inchangé).
-// - Avec logo : la case se partage en 2 (nom à gauche / logo agrandi à
-//   droite, centré verticalement). Si le nom contient un espace, le 1er mot
-//   reste sur la ligne du haut et le reste du nom passe en dessous, centré.
-function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 40 }: {
-  name: string; logo?: string; nameStyle?: React.CSSProperties; logoHeight?: number;
-}) {
-  const parts = (name || '').trim().split(/\s+/);
-  const hasSpace = parts.length > 1;
-  const nameNode = hasSpace ? (
-    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-      <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{parts[0]}</div>
-      <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', textAlign: 'center' }}>{parts.slice(1).join(' ')}</div>
-    </div>
-  ) : (
-    <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{name || '—'}</div>
-  );
-
-  if (!logo) return <div style={nameStyle}>{nameNode}</div>;
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-      <div style={{ flex: 1, minWidth: 0, ...nameStyle }}>{nameNode}</div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={logo} alt="" crossOrigin="anonymous" style={{ height: logoHeight, maxWidth: '44%', objectFit: 'contain', flexShrink: 0 }} />
-    </div>
-  );
-}
-
 // ── Tokens visuels ────────────────────────────────────────────────────────────
 const FONT  = '"Courier New",Courier,monospace';
 const SANS  = 'Arial,Helvetica,sans-serif';
@@ -210,7 +179,6 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
   const brandBg    = isDark ? ACCENT : TH_BG;          // couleur pleine — blocs identité/cumuls/net à payer
   const brandTint  = isDark ? `${ACCENT}22` : '#e0e0e0';
   const brandText  = isDark ? '#fff' : K;
-  const showLogo    = tpl.style.showLogo    !== false;
   const showAddress = tpl.style.showAddress !== false;
   const showFiscal  = tpl.style.showFiscalNumbers !== false;
 
@@ -421,13 +389,8 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
           <tbody>
             {/* Ligne 1 */}
             <tr>
-              <td style={{ width:'34%', padding:'4px 6px', borderRight:BDB, color:K }}>
-                <CompanyNameLogo
-                  name={co.tradeName || co.legalName || '—'}
-                  logo={showLogo ? co.logo : undefined}
-                  logoHeight={40}
-                  nameStyle={{ fontWeight:900, fontSize:13, textTransform:'uppercase' }}
-                />
+              <td style={{ width:'34%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:13, textTransform:'uppercase', color:K, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>
+                {co.tradeName || co.legalName || '—'}
               </td>
               <td style={{ width:'28%', padding:'4px 6px', borderRight:BDB, fontWeight:900, fontSize:11, color:K }}>
                 {fullName || '—'}
