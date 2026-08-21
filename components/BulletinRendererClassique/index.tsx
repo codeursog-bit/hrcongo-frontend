@@ -212,6 +212,12 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
 
   const cnssSal    = nv(payroll.cnssSalarial);
   const itsAmount  = nv(payroll.its);
+  // ✅ payroll.its est réutilisé côté backend pour stocker AUSSI la retenue
+  // BNC des consultants/prestataires (libellé différent : "BNC X% retenu à
+  // la source (...)" au lieu de "ITS mois"). On récupère le vrai libellé
+  // de l'item plutôt que d'afficher "ITS mois" en dur pour tout le monde.
+  const itsItem    = items.find((i: any) => i.code === 'ITS' || i.code === 'BNC_SOURCE');
+  const itsLabel   = itsItem?.label || 'ITS mois';
   const totalBrut  = nv(payroll.grossSalary);
   const netSalary  = nv(payroll.netSalary);
   const cnssEmpPension  = nv(payroll.cnssEmployerPension);
@@ -406,7 +412,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               {tusCnss > 0 && <Row n={2104} label="Taxe unique/salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475" retP={fmt(tusCnss)} />}
               {tusDgi  > 0 && <Row n={2105} label="Taxe unique/salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025" retP={fmt(tusDgi)} />}
 
-              {itsAmount > 0 && <Row n={4520} label="ITS mois" base={fmt(totalBrut - cnssSal)} ret={fmt(itsAmount)} />}
+              {itsAmount > 0 && <Row n={4520} label={itsLabel} base={fmt(totalBrut - cnssSal)} ret={fmt(itsAmount)} />}
 
               {(()=>{
                 let r = 5700;

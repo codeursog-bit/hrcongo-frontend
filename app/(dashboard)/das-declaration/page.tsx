@@ -127,6 +127,12 @@ export default function DasDeclarationPage() {
     ? years
     : Array.from({ length: 7 }, (_, i) => currentYear - i);
 
+  // Plage d'années : toujours une liste large et indépendante des années
+  // qui ont déjà des paies validées — le backend saute lui-même les
+  // années sans donnée, donc restreindre ce sélecteur à `years` empêchait
+  // de choisir une borne (ex: 2021) tant qu'aucune paie n'y était validée.
+  const rangeYearOptions = Array.from({ length: 10 }, (_, i) => currentYear - i);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 print:bg-white print:p-0">
       {/* ── En-tête ─────────────────────────────────────────────────────── */}
@@ -195,7 +201,7 @@ export default function DasDeclarationPage() {
                   onChange={(e) => setStartYear(Number(e.target.value))}
                   className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
-                  {yearOptions.map((y) => (
+                  {rangeYearOptions.map((y) => (
                     <option key={y} value={y}>
                       {y}
                     </option>
@@ -210,7 +216,7 @@ export default function DasDeclarationPage() {
                   onChange={(e) => setEndYear(Number(e.target.value))}
                   className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 >
-                  {yearOptions.map((y) => (
+                  {rangeYearOptions.map((y) => (
                     <option key={y} value={y}>
                       {y}
                     </option>

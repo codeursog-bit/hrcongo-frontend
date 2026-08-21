@@ -206,6 +206,13 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
   const cnssSal         = nv(payroll.cnssSalarial);
   const itsAmount       = nv(payroll.its);
   const itsBase         = nv(payroll.grossSalary) - cnssSal;
+  // ✅ payroll.its est réutilisé côté backend pour stocker AUSSI la retenue
+  // BNC des consultants/prestataires (le libellé diffère : "BNC X% retenu à
+  // la source (...)" au lieu de "ITS Mois"). On va chercher le vrai libellé
+  // de l'item correspondant plutôt que d'afficher "ITS Mois" en dur, sinon
+  // un prestataire voit à tort une ligne "ITS Mois" sur son bulletin.
+  const itsItem         = items.find((i: any) => i.code === 'ITS' || i.code === 'BNC_SOURCE');
+  const itsLabel        = itsItem?.label || 'ITS Mois';
   const totalBrut       = nv(payroll.grossSalary);
   const netSalary       = nv(payroll.netSalary);
   const fiscalParts     = nv((payroll as any).irppFiscalParts) || 1;
@@ -579,9 +586,9 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
 
               <TotalRow label="Total cotisations" ret={fmtZ(cnssSal)} patMt={fmtZ(totalPat)} />
 
-              {/* ── ITS ─────────────────────────────────────────────── */}
+              {/* ── ITS / BNC ───────────────────────────────────────── */}
               {itsAmount > 0 && (
-                <Row rub={4520} label="ITS Mois"
+                <Row rub={4520} label={itsLabel}
                   base={fmt(itsBase)} ret={fmt(itsAmount)} />
               )}
 

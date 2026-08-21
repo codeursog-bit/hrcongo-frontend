@@ -217,6 +217,12 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
 
   const cnssSal    = nv(payroll.cnssSalarial);
   const itsAmount  = nv(payroll.its);
+  // ✅ payroll.its est réutilisé côté backend pour stocker AUSSI la retenue
+  // BNC des consultants/prestataires (libellé différent : "BNC X% retenu à
+  // la source (...)" au lieu de "ITS mois"). On récupère le vrai libellé
+  // de l'item plutôt que d'afficher "ITS mois" en dur pour tout le monde.
+  const itsItem    = items.find((i: any) => i.code === 'ITS' || i.code === 'BNC_SOURCE');
+  const itsLabel   = itsItem?.label || 'ITS mois';
   const totalBrut  = nv(payroll.grossSalary);
   const netSalary  = nv(payroll.netSalary);
   const cnssEmpPension  = nv(payroll.cnssEmployerPension);
@@ -436,7 +442,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
               {/* ── Impôts sur salaires (ITS / TUS) ─────────────────────── */}
               {(itsAmount > 0 || tusDgi > 0 || tusCnss > 0) && <>
                 <SectionHeader>Impôts sur salaires (ITS / TUS)</SectionHeader>
-                {itsAmount > 0 && <DataRow label="ITS mois" base={fmt(totalBrut - cnssSal)} mtS={fmtNeg(itsAmount)} />}
+                {itsAmount > 0 && <DataRow label={itsLabel} base={fmt(totalBrut - cnssSal)} mtS={fmtNeg(itsAmount)} />}
                 {tusCnss   > 0 && <DataRow label="Taxe unique/salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475%" mtP={fmtNeg(tusCnss)} />}
                 {tusDgi    > 0 && <DataRow label="Taxe unique/salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025%" mtP={fmtNeg(tusDgi)} />}
               </>}
