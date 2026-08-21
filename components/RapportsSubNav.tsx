@@ -38,8 +38,9 @@ const PRIMARY = [
 
 const MORE = [
   { href: '/rapports/recap-personnel',     label: 'Récap. Personnel',    Icon: ReceiptText },
-  { href: '/rapports/das1',                label: 'DAS 1',                Icon: FileSpreadsheet },
-  { href: '#',            label: 'Employés',            Icon: UserCircle },
+   { href: '/rapports/das-declaration',     label: 'Bulletin Annuel',     Icon: FileSpreadsheet },
+  { href: '/rapports/recap-bulletins-annuel',     label: 'Récap Bulletin Annuel',     Icon: BookOpen },
+  { href: '/rapports/employes',            label: 'Employés',            Icon: UserCircle },
   { href: '/rapports/indicateurs',         label: 'Indicateurs RH',      Icon: BarChart3 },
   { href: '/rapports/analyse-conges',      label: 'Congés',               Icon: UmbrellaOff },
   { href: '/rapports/observatoire-conges', label: 'Observatoire congés',  Icon: UmbrellaOff },
