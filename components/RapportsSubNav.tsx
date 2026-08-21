@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard, ClipboardList, DollarSign, UsersRound, Building2,
   UserCircle, BarChart3, UmbrellaOff, BookOpen, CalendarDays,
-  MoreHorizontal, ChevronDown, Check, ReceiptText,
+  MoreHorizontal, ChevronDown, Check, ReceiptText, FileSpreadsheet,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -38,7 +38,8 @@ const PRIMARY = [
 
 const MORE = [
   { href: '/rapports/recap-personnel',     label: 'Récap. Personnel',    Icon: ReceiptText },
-  { href: '/rapports/employes',            label: 'Employés',            Icon: UserCircle },
+  { href: '/rapports/das1',                label: 'DAS 1',                Icon: FileSpreadsheet },
+  { href: '#',            label: 'Employés',            Icon: UserCircle },
   { href: '/rapports/indicateurs',         label: 'Indicateurs RH',      Icon: BarChart3 },
   { href: '/rapports/analyse-conges',      label: 'Congés',               Icon: UmbrellaOff },
   { href: '/rapports/observatoire-conges', label: 'Observatoire congés',  Icon: UmbrellaOff },
