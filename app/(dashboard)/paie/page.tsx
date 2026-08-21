@@ -28,8 +28,33 @@ export default function PayrollPage() {
   const now    = new Date();
   const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
-  const [selectedMonth,      setSelectedMonth]      = useState(MONTHS[now.getMonth()]);
-  const [selectedYear,       setSelectedYear]        = useState(now.getFullYear());
+  // ✅ Mois/année sélectionnés persistés en sessionStorage — sans ça, revenir
+  // sur cette page (bouton retour depuis un bulletin, navigation interne...)
+  // remonte le composant avec un state React tout neuf, qui retombe toujours
+  // sur le mois en cours. On ne perd la sélection qu'à la fin de la session
+  // (fermeture de l'onglet/navigateur ou déconnexion), ce qui est le
+  // comportement voulu.
+  const PAIE_MONTH_KEY = 'paie:selectedMonth';
+  const PAIE_YEAR_KEY  = 'paie:selectedYear';
+
+  const [selectedMonth, setSelectedMonthState] = useState(() => {
+    if (typeof window === 'undefined') return MONTHS[now.getMonth()];
+    return sessionStorage.getItem(PAIE_MONTH_KEY) || MONTHS[now.getMonth()];
+  });
+  const [selectedYear, setSelectedYearState] = useState(() => {
+    if (typeof window === 'undefined') return now.getFullYear();
+    const stored = sessionStorage.getItem(PAIE_YEAR_KEY);
+    return stored ? Number(stored) : now.getFullYear();
+  });
+
+  const setSelectedMonth = (month: string) => {
+    setSelectedMonthState(month);
+    if (typeof window !== 'undefined') sessionStorage.setItem(PAIE_MONTH_KEY, month);
+  };
+  const setSelectedYear = (year: number) => {
+    setSelectedYearState(year);
+    if (typeof window !== 'undefined') sessionStorage.setItem(PAIE_YEAR_KEY, String(year));
+  };
   const [activeTab,          setActiveTab]           = useState<'All' | PayrollStatus>('All');
   const [searchQuery,        setSearchQuery]         = useState('');
   const [selectedIds,        setSelectedIds]         = useState<string[]>([]);

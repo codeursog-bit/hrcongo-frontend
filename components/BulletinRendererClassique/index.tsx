@@ -49,10 +49,20 @@ const fmtDate = (d?: string)    => d ? new Date(d).toLocaleDateString('fr-FR') :
 
 function seniority(hireDate?: string, asOf?: Date): string {
   if (!hireDate) return '—';
-  const hire = new Date(hireDate), now = asOf ?? new Date();
-  let y = now.getFullYear() - hire.getFullYear();
-  let m = now.getMonth()    - hire.getMonth();
-  if (m < 0) { y--; m += 12; }
+  const hire = new Date(hireDate);
+  const now  = asOf ?? new Date();
+  if (isNaN(hire.getTime())) return '—';
+
+  let months = (now.getFullYear() - hire.getFullYear()) * 12 + (now.getMonth() - hire.getMonth());
+  if (now.getDate() < hire.getDate()) months--;
+  // ✅ Ne jamais afficher de nombre négatif.
+  if (months < 0 || !isFinite(months)) months = 0;
+
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+
+  // ✅ Moins d'un an : seulement les mois ("5 mois", "11 mois"), pas "0 an".
+  if (y === 0) return `${m} mois`;
   return `${y} an${y !== 1 ? 's' : ''} et ${String(m).padStart(2,'0')} mois`;
 }
 function formatCategorie(code: string | null | undefined): string {
@@ -89,14 +99,24 @@ function itemTaux(item: any): string {
 }
 
 // ── En-tête entreprise : nom (+logo à droite si présent) ────────────────────
-// - Sans logo : le nom garde toute la largeur de la case (comportement
-//   inchangé).
-// - Avec logo : la case se partage en 2 (nom à gauche / logo agrandi à
-//   droite, centré verticalement). Si le nom contient un espace, le 1er mot
-//   reste sur la ligne du haut et le reste du nom passe en dessous, centré.
+// - Sans logo : le nom garde toute la largeur de la case, sur une seule
+//   ligne (comportement inchangé — pas de découpage même si le nom contient
+//   un espace, ex. "PHARMACIE BANQUE DE VIE" reste sur une ligne).
+// - Avec logo : la case se partage exactement 50% nom / 50% logo (agrandi,
+//   centré verticalement). Le nom, lui, ne se découpe en 2 lignes QUE dans
+//   ce cas — puisqu'il partage désormais sa moitié de case avec le logo —
+//   1er mot en haut, reste du nom centré en dessous.
 function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 60 }: {
   name: string; logo?: string; nameStyle?: React.CSSProperties; logoHeight?: number;
 }) {
+  if (!logo) {
+    return (
+      <div style={{ ...nameStyle, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
+        {name || '—'}
+      </div>
+    );
+  }
+
   const parts = (name || '').trim().split(/\s+/);
   const hasSpace = parts.length > 1;
   const nameNode = hasSpace ? (
@@ -108,13 +128,13 @@ function CompanyNameLogo({ name, logo, nameStyle, logoHeight = 60 }: {
     <div style={{ overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{name || '—'}</div>
   );
 
-  if (!logo) return <div style={nameStyle}>{nameNode}</div>;
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-      <div style={{ flex: 1, minWidth: 0, ...nameStyle }}>{nameNode}</div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={logo} alt="" crossOrigin="anonymous" style={{ height: logoHeight, maxWidth: '44%', objectFit: 'contain', flexShrink: 0 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ width: '50%', minWidth: 0, ...nameStyle }}>{nameNode}</div>
+      <div style={{ width: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logo} alt="" crossOrigin="anonymous" style={{ height: logoHeight, maxWidth: '100%', objectFit: 'contain' }} />
+      </div>
     </div>
   );
 }

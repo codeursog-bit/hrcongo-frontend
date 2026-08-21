@@ -39,10 +39,22 @@ function seniority(h?: string, asOf?: Date): string {
   if (!h) return '—';
   // ✅ Ancrée sur la période du bulletin (fin de mois payé), pas sur la date d'affichage.
   // Sinon un bulletin de janvier consulté en juin affiche l'ancienneté "au jour de juin".
-  const hire = new Date(h), now = asOf ?? new Date();
-  let y = now.getFullYear() - hire.getFullYear();
-  let m = now.getMonth()    - hire.getMonth();
-  if (m < 0) { y--; m += 12; }
+  const hire = new Date(h);
+  const now  = asOf ?? new Date();
+  if (isNaN(hire.getTime())) return '—';
+
+  let months = (now.getFullYear() - hire.getFullYear()) * 12 + (now.getMonth() - hire.getMonth());
+  if (now.getDate() < hire.getDate()) months--;
+  // ✅ Ne jamais afficher de nombre négatif (embauche saisie après la période
+  // consultée, décalage de données, etc.) — on plafonne à 0.
+  if (months < 0 || !isFinite(months)) months = 0;
+
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+
+  // ✅ Moins d'un an : on affiche seulement les mois ("5 mois", "11 mois"),
+  // pas "0 an et 5 mois" ni de négatif.
+  if (y === 0) return `${m} mois`;
   return `${y} an${y !== 1 ? 's' : ''} et ${String(m).padStart(2,'0')} mois`;
 }
 
