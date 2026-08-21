@@ -24,6 +24,8 @@ import {
 import { api } from '@/services/api';
 import SlideOver from '@/components/SlideOver';
 import { colorFor, LEADERBOARD_LABELS } from '@/components/absences/absenceColors';
+import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
+import AbsenceSubNav from '@/components/AbsenceSubNav'; 
 
 const MONTHS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
 const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -35,11 +37,21 @@ const DEPT_PALETTE = ['#ec4899', '#f59e0b', '#3b82f6', '#10b981', '#22d3ee', '#8
 type Tab = 'dashboard' | 'grille' | 'journal' | 'comparatif';
 type LeaderboardKey = 'maladie' | 'conventionnelle' | 'exceptionnelle' | 'injustifiee';
 
+
+
 export default function AbsencesEmployePage() {
   const now = new Date();
   const [tab, setTab] = useState<Tab>('dashboard');
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setUserRole(JSON.parse(stored).role || '');
+    } catch {}
+  }, []);
 
   function shiftMonth(delta: number) {
     let m = month + delta, y = year;
@@ -48,8 +60,11 @@ export default function AbsencesEmployePage() {
     setMonth(m); setYear(y);
   }
 
+  
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+      <PresenceModuleSwitcher />
+       <AbsenceSubNav userRole={userRole} />
       <div>
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">Absences employés</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">Congés, maladie, maternité, paternité, mariage, décès, naissance, non justifiée — tout au même endroit.</p>
