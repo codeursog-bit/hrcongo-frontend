@@ -122,18 +122,15 @@ const KIND_META: Record<ContractKind, { label: string; icon: React.ElementType; 
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
 
-// ─── Calcul local — UNIQUEMENT pour Stage/Prestation (arithmétique directe,
-// sans barème fiscal, donc fiable à 100% côté client). Pour le Contrat de
-// travail, l'ITS suit un barème progressif : on ne le devine JAMAIS côté
-// front — l'aperçu Brut/CNSS/ITS/TOL/Net est calculé par le serveur avec le
-// même moteur que la paie (voir useServerBreakdown ci-dessous), pour éviter
-// tout écart entre l'aperçu et le document réellement généré.
+// ─── Calcul local — arithmétique directe (aucun barème fiscal), donc fiable
+// à 100% côté client pour Stage/Prestation.
 function useLocalBreakdown(form: ContractForm) {
   return useMemo(() => {
     if (form.kind === 'STAGE') {
       return { net: form.montantForfaitaire || 0, bnc: 0 };
     }
-    const bnc = Math.round(((form.emoluments || 0) * (form.tauxBnc || 0)) / 100);
+    const tauxBnc = form.tauxBnc || 10;
+    const bnc = Math.round(((form.emoluments || 0) * tauxBnc) / 100);
     return { net: form.emoluments || 0, bnc };
   }, [form]);
 }
@@ -422,7 +419,7 @@ function GenerateContractInner() {
   const downloadDocx = async (id: string) => {
     setDownloadingDocx(true);
     try {
-      const blob: any = await api.get(`/contracts/generation/${id}/download`);
+      const blob: any = await api.post(`/contracts/generation/${id}/download`, {});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -439,7 +436,7 @@ function GenerateContractInner() {
   const openPdf = async (id: string) => {
     setOpeningPdf(true);
     try {
-      const blob: any = await api.get(`/contracts/generation/${id}/preview`);
+      const blob: any = await api.post(`/contracts/generation/${id}/preview`, {});
       const url = URL.createObjectURL(blob);
       window.open(url, '_blank');
       // L'URL blob reste valide le temps que l'onglet l'utilise ; on la libère après un délai raisonnable.
@@ -935,7 +932,7 @@ function GenerateContractInner() {
                   <AnimatedNumber value={localBreakdown.net} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <p className="text-[11px] text-slate-400 flex items-center gap-1.5 pt-1">
-                  <Info className="w-3 h-3" /> Aucune retenue CNSS/ITS — montant forfaitaire net.
+                  <Info className="w-3 h-3" /> Aucune retenue — montant forfaitaire net.
                 </p>
               </div>
             )}
@@ -944,7 +941,7 @@ function GenerateContractInner() {
               <div className="space-y-2 text-sm">
                 <Row label="Émoluments (facturés)" value={form.emoluments} bold />
                 {localBreakdown.bnc > 0 && (
-                  <Row label={`Cotisation BNC (${form.tauxBnc}%, à charge prestataire)`} value={localBreakdown.bnc} muted />
+                  <Row label={`Cotisation BNC (${form.tauxBnc || 10}%, à charge prestataire)`} value={localBreakdown.bnc} muted />
                 )}
                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
                 <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
