@@ -17,7 +17,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, FileSignature, Loader2, Eye, Download, Plus,
   Briefcase, MapPin, Calendar, Wallet, FileX2, Clock, Sparkles,
-  IdCard, CalendarClock, Layers,
+  CreditCard, CalendarClock, Layers,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -147,7 +147,7 @@ export default function EmployeeContractPage() {
       {/* 🆕 Fiche contrat — infos contractuelles actuelles de l'employé */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-6">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-1.5">
-          <IdCard className="w-3.5 h-3.5" /> Fiche contrat
+          <CreditCard className="w-3.5 h-3.5" /> Fiche contrat
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <InfoTile icon={Layers} label="Type de contrat" value={employee.contractType} />
@@ -156,7 +156,7 @@ export default function EmployeeContractPage() {
           <InfoTile icon={CalendarClock} label="Ancienneté" value={anciennete(employee.hireDate)} />
           <InfoTile icon={Briefcase} label="Poste" value={employee.position} />
           {employee.professionalCategory && (
-            <InfoTile icon={IdCard} label="Catégorie" value={employee.professionalCategory} />
+            <InfoTile icon={CreditCard} label="Catégorie" value={employee.professionalCategory} />
           )}
           {employee.contractEndDate && (
             <InfoTile icon={Clock} label="Fin de contrat" value={fmtDate(employee.contractEndDate)} />
