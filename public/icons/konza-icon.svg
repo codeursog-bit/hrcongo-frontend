@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Konza RH</title>
+  <rect width="512" height="512" rx="96" fill="#047857"/>
+  <!-- K simplifié, épais, centré, lisible en petit -->
+  <rect x="150" y="140" width="52" height="232" rx="8" fill="#FFFFFF"/>
+  <polygon points="222,140 340,140 222,246" fill="#6EE7B7"/>
+  <polygon points="222,266 340,372 222,372" fill="#F59E0B"/>
+</svg>

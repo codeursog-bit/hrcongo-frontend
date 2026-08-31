@@ -1,0 +1,601 @@
+'use client';
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { 
+  ArrowLeft, UserPlus, Search, Filter, MoreVertical, 
+  Shield, Key, Eye, Ban, Trash2, CheckCircle2, 
+  Mail, Smartphone, Laptop, AlertTriangle, Lock,
+  FileText, Check, X, RefreshCw, LogOut, Globe,
+  ShieldAlert, Settings, ChevronDown, ChevronUp,
+  Activity, Clock, Loader2, Save, Edit, Network, User
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/services/api';
+import { useAlert } from '@/components/providers/AlertProvider';
+
+import { FancySelect } from '@/components/ui/FancySelect';
+
+// --- Types ---
+
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  avatar?: string;
+  lastLoginAt: string;
+  canRecordAttendanceForAll?: boolean; // 🆕 permission "secrétaire" : pointage manuel pour tout le monde
+}
+
+interface Department {
+  id: string;
+  name: string;
+}
+
+const ROLE_CONFIG: Record<string, { label: string, color: string, bg: string }> = {
+  SUPER_ADMIN: { label: 'Super Admin', color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
+  ADMIN: { label: 'Admin', color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+  HR_MANAGER: { label: 'Manager RH', color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+  MANAGER: { label: 'Manager', color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+  EMPLOYEE: { label: 'Employé', color: 'text-gray-600', bg: 'bg-gray-100 dark:bg-gray-700' },
+};
+
+export default function UserManagementPage() {
+  const router = useRouter();
+  const alert = useAlert()
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) setCurrentUserId(JSON.parse(stored)?.id || null);
+    } catch {}
+  }, []);
+  
+  // -- State --
+  const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All');
+  
+  // Invite Modal State
+  const [inviteModal, setInviteModal] = useState(false);
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    firstName: '',
+    lastName: '',
+    role: 'EMPLOYEE',
+    password: '', // Mot de passe provisoire
+    departmentId: '' // Optionnel, pour les managers
+  });
+
+  // Edit Modal State
+  const [editModal, setEditModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState({
+    role: '',
+    isActive: true,
+    canRecordAttendanceForAll: false // 🆕 permission "secrétaire" pointage manuel pour tout le monde
+  });
+
+  // -- Fetch --
+  const fetchUsers = async () => {
+    try {
+        const [usersData, deptsData] = await Promise.all([
+            api.get<User[]>('/users'),
+            api.get<Department[]>('/departments')
+        ]);
+        setUsers(usersData);
+        setDepartments(deptsData);
+    } catch (e) {
+        console.error("Failed to fetch data", e);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // -- Invite Actions --
+  // 🆕 Après une invitation réussie, on garde la modale ouverte pour proposer le partage
+  const [inviteSuccessInfo, setInviteSuccessInfo] = useState<{ firstName: string; lastName: string; email: string; password: string; phone?: string | null } | null>(null);
+  const [copiedInviteMsg, setCopiedInviteMsg] = useState(false);
+
+  const buildInviteMessage = (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
+    const loginUrl = typeof window !== 'undefined' ? `${window.location.origin}/auth/login` : '';
+    return `Bonjour ${info.firstName} ${info.lastName},\n` +
+      `Voici tes identifiants pour accéder à konza-rh :\n` +
+      `Lien de connexion : ${loginUrl}\n` +
+      `Email : ${info.email}\n` +
+      (info.phone ? `Téléphone : ${info.phone} (tu peux aussi te connecter avec ce numéro)\n` : '') +
+      `Mot de passe temporaire : ${info.password}\n` +
+      `⚠️ Important : Lors de ta première connexion, l'application te demandera de modifier ton mot de passe. Ton nouveau mot de passe devra contenir au moins 8 caractères, incluant une majuscule, une minuscule et un chiffre.\n` +
+      `N'hésite pas si tu as des questions.\n` +
+      `Bonne prise en main !`;
+  };
+
+  const handleShareWhatsApp = (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
+    const text = encodeURIComponent(buildInviteMessage(info));
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+  const handleShareSms = (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
+    const text = encodeURIComponent(buildInviteMessage(info));
+    window.open(`sms:?body=${text}`, '_blank');
+  };
+  const handleCopyInviteMessage = async (info: { firstName: string; lastName: string; email: string; password: string; phone?: string | null }) => {
+    try {
+      await navigator.clipboard.writeText(buildInviteMessage(info));
+      setCopiedInviteMsg(true);
+      setTimeout(() => setCopiedInviteMsg(false), 2500);
+    } catch {
+      alert.error('Erreur', "Impossible de copier le message.");
+    }
+  };
+  const closeInviteModal = () => {
+    setInviteModal(false);
+    setInviteSuccessInfo(null);
+    setCopiedInviteMsg(false);
+  };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsInviting(true);
+    try {
+        // Nettoyage : si pas Manager, pas de departmentId
+        const payload = { ...inviteForm };
+        if (payload.role !== 'MANAGER') delete (payload as any).departmentId;
+
+        // ✅ On récupère la réponse (newUser) pour savoir si un téléphone a été lié automatiquement
+        const created = await api.post<{ phone?: string | null }>('/users/invite', payload);
+        // 🆕 On garde la modale ouverte pour proposer le partage des identifiants
+        setInviteSuccessInfo({ firstName: inviteForm.firstName, lastName: inviteForm.lastName, email: inviteForm.email, password: inviteForm.password, phone: created?.phone ?? null });
+        setInviteForm({ email: '', firstName: '', lastName: '', role: 'EMPLOYEE', password: '', departmentId: '' });
+        alert.success('Utilisateur invité ', 'Utilisateur invité avec succès !');
+        fetchUsers(); // Refresh list
+   } catch (err: any) {
+  alert.error(
+    'Erreur d\'invitation',
+    err.message || "Impossible d'envoyer l'invitation."
+  );
+}finally {
+        setIsInviting(false);
+    }
+  };
+
+  // -- Edit Actions --
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    setEditForm({
+        role: user.role,
+        isActive: user.isActive,
+        canRecordAttendanceForAll: user.canRecordAttendanceForAll || false
+    });
+    setEditModal(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingUser) return;
+    setIsSaving(true);
+    try {
+        await api.patch(`/users/${editingUser.id}`, editForm);
+        setEditModal(false);
+        setEditingUser(null);
+        alert.success('utilisateur', 'Utilisateur mis à jour !');
+        fetchUsers();
+    } catch (err: any) {
+  alert.error(
+    'Erreur de mise à jour',
+    err.message || 'Impossible de mettre à jour l\'utilisateur.'
+  );
+}finally {
+        setIsSaving(false);
+    }
+  };
+
+  // 🆕 Suppression d'un utilisateur
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const handleDelete = async (user: User) => {
+    if (!window.confirm(`Supprimer définitivement ${user.firstName} ${user.lastName} ?\n\nCette action est irréversible. Si vous voulez juste bloquer son accès temporairement, préférez "Désactiver" via Modifier.`)) {
+      return;
+    }
+    setDeletingId(user.id);
+    try {
+      await api.delete(`/users/${user.id}`);
+      alert.success('Utilisateur supprimé', `${user.firstName} ${user.lastName} a été supprimé.`);
+      fetchUsers();
+    } catch (err: any) {
+      alert.error('Erreur de suppression', err.message || "Impossible de supprimer cet utilisateur.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // -- Derived Data --
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => {
+      const matchesSearch = u.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            u.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            u.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesRole = roleFilter === 'All' || u.role === roleFilter;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, searchQuery, roleFilter]);
+
+  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-sky-500" size={48} /></div>;
+
+  return (
+    <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
+      
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+           <button onClick={() => router.back()} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
+             <ArrowLeft size={20} className="text-gray-500" />
+           </button>
+           <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Gestion des Utilisateurs</h1>
+              <p className="text-gray-500 dark:text-gray-400">Contrôle d'accès, rôles et sécurité.</p>
+           </div>
+        </div>
+
+        <button 
+           onClick={() => setInviteModal(true)}
+           className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
+        >
+           <UserPlus size={20} /> Inviter Utilisateur
+        </button>
+      </div>
+
+      {/* STATS CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <p className="text-xs text-gray-500 uppercase font-bold">Total Utilisateurs</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{users.length}</p>
+         </div>
+         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <p className="text-xs text-gray-500 uppercase font-bold">Administrateurs</p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{users.filter(u => u.role === 'ADMIN').length}</p>
+         </div>
+         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <p className="text-xs text-gray-500 uppercase font-bold">Actifs</p>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-2">
+               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+               {users.filter(u => u.isActive).length}
+            </p>
+         </div>
+      </div>
+
+      {/* FILTERS & LIST */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+         
+         {/* Toolbar */}
+         <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50 dark:bg-gray-900/50">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+               <div className="relative flex-1 md:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input 
+                     type="text" 
+                     placeholder="Rechercher..." 
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                     className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 outline-none"
+                  />
+               </div>
+               <select 
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium"
+               >
+                  <option value="All">Tous les rôles</option>
+                  {Object.keys(ROLE_CONFIG).filter(r => r !== 'SUPER_ADMIN').map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
+               </select>
+            </div>
+         </div>
+
+         {/* User Grid */}
+         <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredUsers.map(user => {
+               const config = ROLE_CONFIG[user.role] || ROLE_CONFIG.EMPLOYEE;
+               return (
+               <div key={user.id} className="group bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:border-sky-200 dark:hover:border-sky-800 transition-all relative overflow-hidden">
+                  <div className="flex justify-between items-start mb-4 relative z-10">
+                     <div className="flex items-center gap-4">
+                        <div className="relative">
+                           <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`} className={`w-14 h-14 rounded-full object-cover border-2 ${!user.isActive ? 'border-red-200 grayscale' : 'border-white dark:border-gray-600'}`} />
+                           <span className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-white dark:border-gray-800 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-gray-300'}`}></span>
+                        </div>
+                        <div>
+                           <h3 className={`font-bold text-lg ${!user.isActive ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white'}`}>{user.firstName} {user.lastName}</h3>
+                           <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{user.email}</p>
+                        </div>
+                     </div>
+                     
+                     <div className="flex items-center gap-1">
+                       <button 
+                          onClick={() => openEditModal(user)}
+                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-sky-500 transition-colors"
+                          title="Modifier le rôle/statut"
+                       >
+                          <Edit size={18} />
+                       </button>
+                       {user.id !== currentUserId && (
+                         <button
+                            onClick={() => handleDelete(user)}
+                            disabled={deletingId === user.id}
+                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                            title="Supprimer définitivement"
+                         >
+                            {deletingId === user.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                         </button>
+                       )}
+                     </div>
+                  </div>
+
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${config.bg} ${config.color}`}>
+                            {config.label}
+                        </span>
+                        {user.canRecordAttendanceForAll && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-sky-600 bg-sky-100 dark:bg-sky-900/30" title="Peut pointer pour tout le monde">
+                                <Shield size={12} /> Secrétaire
+                            </span>
+                        )}
+                        {!user.isActive && <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Ban size={12}/> Désactivé</span>}
+                     </div>
+                     
+                     <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 dark:bg-gray-750/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
+                        <Clock size={14} /> Dernier accès: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Jamais'}
+                     </div>
+                  </div>
+               </div>
+            )})}
+         </div>
+      </div>
+
+      {/* EDIT USER MODAL */}
+      <AnimatePresence>
+        {editModal && editingUser && (
+            <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            >
+                <motion.div 
+                    initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                    className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-700"
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Modifier Utilisateur</h2>
+                        <button onClick={() => setEditModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
+                    </div>
+
+                    <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                            {editingUser.firstName[0]}{editingUser.lastName[0]}
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white">{editingUser.firstName} {editingUser.lastName}</h3>
+                            <p className="text-xs text-gray-500">{editingUser.email}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div>
+                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Rôle système</label>
+                            <div className="grid grid-cols-1 gap-2">
+                                {Object.entries(ROLE_CONFIG).filter(([key]) => key !== 'SUPER_ADMIN').map(([key, config]) => (
+                                    <label 
+                                        key={key} 
+                                        className={`
+                                            flex items-center p-3 rounded-xl border cursor-pointer transition-all
+                                            ${editForm.role === key 
+                                                ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-1 ring-sky-500' 
+                                                : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'}
+                                        `}
+                                    >
+                                        <input 
+                                            type="radio" 
+                                            name="role" 
+                                            value={key} 
+                                            checked={editForm.role === key} 
+                                            onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                                            className="hidden"
+                                        />
+                                        <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${editForm.role === key ? 'border-sky-500' : 'border-gray-400'}`}>
+                                            {editForm.role === key && <div className="w-2 h-2 rounded-full bg-sky-500"></div>}
+                                        </div>
+                                        <span className={`text-sm font-bold ${editForm.role === key ? 'text-sky-700 dark:text-sky-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                            {config.label}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Permission supplémentaire</label>
+                            <button
+                                type="button"
+                                onClick={() => setEditForm({...editForm, canRecordAttendanceForAll: !editForm.canRecordAttendanceForAll})}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${editForm.canRecordAttendanceForAll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-1 ring-sky-500' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'}`}
+                            >
+                                <div className="pr-4">
+                                    <p className={`text-sm font-bold ${editForm.canRecordAttendanceForAll ? 'text-sky-700 dark:text-sky-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                        Pointage pour tout le monde (Secrétaire)
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        Peut faire le pointage manuel de n'importe quel employé de l'entreprise, quel que soit son rôle (indépendant du département pour un Manager).
+                                    </p>
+                                </div>
+                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${editForm.canRecordAttendanceForAll ? 'bg-sky-500 justify-end' : 'bg-gray-300 dark:bg-gray-600 justify-start'}`}>
+                                    <div className="w-5 h-5 rounded-full bg-white shadow" />
+                                </div>
+                            </button>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Statut du compte</label>
+                            <div className="flex items-center gap-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => setEditForm({...editForm, isActive: true})}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${editForm.isActive ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700'}`}
+                                >
+                                    Actif
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => setEditForm({...editForm, isActive: false})}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${!editForm.isActive ? 'bg-red-500 text-white border-red-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700'}`}
+                                >
+                                    Désactivé
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 flex gap-3">
+                            <button onClick={() => setEditModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
+                            <button onClick={handleUpdate} disabled={isSaving} className="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
+                                {isSaving ? <Loader2 className="animate-spin" size={20}/> : <><Save size={18}/> Enregistrer</>}
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* INVITE MODAL */}
+      <AnimatePresence>
+        {inviteModal && (
+            <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            >
+                <motion.div 
+                    initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                    className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700"
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{inviteSuccessInfo ? 'Partager les identifiants' : 'Inviter un collaborateur'}</h2>
+                        <button onClick={closeInviteModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
+                    </div>
+
+                    {inviteSuccessInfo ? (
+                        <div className="space-y-5">
+                            <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                                <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    <strong>{inviteSuccessInfo.firstName} {inviteSuccessInfo.lastName}</strong> a été invité(e) avec succès. Partage-lui maintenant ses identifiants.
+                                </p>
+                            </div>
+
+                            <div className="p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl">
+                                <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Aperçu du message</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed">{buildInviteMessage(inviteSuccessInfo)}</p>
+                            </div>
+
+                            <div className="space-y-2.5">
+                                {/* Partage prioritaire : WhatsApp choisit le contact lui-même */}
+                                <button
+                                    onClick={() => handleShareWhatsApp(inviteSuccessInfo)}
+                                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-xl shadow-lg transition-colors"
+                                >
+                                    <Smartphone size={18} /> Partager sur WhatsApp
+                                </button>
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    <button
+                                        onClick={() => handleShareSms(inviteSuccessInfo)}
+                                        className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        <Mail size={16} /> SMS
+                                    </button>
+                                    <button
+                                        onClick={() => handleCopyInviteMessage(inviteSuccessInfo)}
+                                        className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                    >
+                                        {copiedInviteMsg ? <><Check size={16} className="text-emerald-500" /> Copié !</> : <>Copier le message</>}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button onClick={closeInviteModal} className="w-full py-3 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                Fermer sans partager
+                            </button>
+                        </div>
+                    ) : (
+                    <form onSubmit={handleInvite} className="space-y-5">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold mb-1">Prénom</label>
+                                <input required value={inviteForm.firstName} onChange={e => setInviteForm({...inviteForm, firstName: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold mb-1">Nom</label>
+                                <input required value={inviteForm.lastName} onChange={e => setInviteForm({...inviteForm, lastName: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Email professionnel</label>
+                            <input type="email" required value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                        </div>
+
+                        <div>
+                            <FancySelect
+                                label="Rôle"
+                                value={inviteForm.role}
+                                onChange={(v) => setInviteForm({...inviteForm, role: v})}
+                                icon={User}
+                                options={[
+                                    { value: 'EMPLOYEE', label: 'Employé (Standard)' },
+                                    { value: 'MANAGER', label: 'Manager (Accès équipe)' },
+                                    { value: 'HR_MANAGER', label: 'RH (Gestion paie/congés)' },
+                                    { value: 'ADMIN', label: 'Administrateur' }
+                                ]}
+                            />
+                        </div>
+
+                        {/* CHAMPS DÉPARTEMENT POUR MANAGER UNIQUEMENT */}
+                        {inviteForm.role === 'MANAGER' && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                <FancySelect 
+                                    label="Assigner un Département"
+                                    value={inviteForm.departmentId} 
+                                    onChange={(v) => setInviteForm({...inviteForm, departmentId: v})} 
+                                    icon={Network}
+                                    options={departments.map(d => ({ value: d.id, label: d.name }))}
+                                    placeholder="Choisir département..."
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Le manager n'aura accès qu'aux employés de ce département.</p>
+                            </motion.div>
+                        )}
+
+                        <div>
+                            <label className="block text-sm font-bold mb-1">Mot de passe provisoire</label>
+                            <input type="text" required minLength={6} value={inviteForm.password} onChange={e => setInviteForm({...inviteForm, password: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono" placeholder="Ex: Welcome2025!" />
+                            <p className="text-xs text-gray-500 mt-1">Communiquez ce mot de passe à l'utilisateur.</p>
+                        </div>
+
+                        <div className="pt-4 flex gap-3">
+                            <button type="button" onClick={closeInviteModal} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
+                            <button type="submit" disabled={isInviting} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
+                                {isInviting ? <Loader2 className="animate-spin" size={20}/> : <><Mail size={18}/> Envoyer l'invitation</>}
+                            </button>
+                        </div>
+                    </form>
+                    )}
+                </motion.div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

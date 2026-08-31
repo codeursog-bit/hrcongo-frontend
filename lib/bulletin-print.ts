@@ -1,0 +1,373 @@
+// ============================================================================
+// lib/bulletin-print.ts
+// ✅ printBulletin      — iframe isolé → preview navigateur correcte
+// ✅ downloadBulletinPDF — html2canvas + jsPDF fiable
+// ✅ Détection robuste : id explicite → data-bulletin-root → fallback ids
+// ============================================================================
+
+// Tous les ids possibles de bulletins dans le DOM
+const BULLETIN_IDS = [
+  'bulletin-root',
+  'bulletin-corp-root',
+  'bul-admin-root',
+  'bul-wrap',        // BulletinRendererDefault
+  'bul-default',
+];
+
+/**
+ * Trouve le div bulletin dans le DOM.
+ * Ordre : id explicite → data-bulletin-root → liste des ids connus
+ */
+function findBulletinElement(bulletinElementId?: string): HTMLElement | null {
+  // 1. Id explicite passé en paramètre
+  if (bulletinElementId) {
+    const el = document.getElementById(bulletinElementId);
+    if (el) return el;
+  }
+
+  // 2. Attribut data-bulletin-root (BulletinRendererDefault v8+)
+  const byAttr = document.querySelector<HTMLElement>('[data-bulletin-root="true"]');
+  if (byAttr) return byAttr;
+
+  // 3. Fallback : chercher parmi tous les ids connus
+  for (const id of BULLETIN_IDS) {
+    const el = document.getElementById(id);
+    if (el) return el;
+  }
+
+  return null;
+}
+
+// ============================================================================
+// IMPRESSION
+// ============================================================================
+
+/**
+ * Impression native via iframe isolé.
+ * Seul le bulletin s'affiche dans la preview — sidebar et UI masquées.
+ */
+export function printBulletin(bulletinElementId?: string) {
+  const el = findBulletinElement(bulletinElementId);
+  if (!el) { window.print(); return; }
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!doc) { document.body.removeChild(iframe); window.print(); return; }
+
+  const styleLinks   = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.outerHTML).join('\n');
+  const styleInlines = Array.from(document.querySelectorAll('style')).map(s => `<style>${s.innerHTML}</style>`).join('\n');
+
+  // ✅ Base absolue par robustesse générale (le logo entreprise est sur
+  //    Cloudinary donc déjà en URL absolue — ceci couvre d'éventuels autres
+  //    assets en chemin relatif dans les feuilles de style copiées)
+  const baseHref = window.location.origin + '/';
+
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<base href="${baseHref}">
+${styleLinks}
+${styleInlines}
+<style>
+  @page { size: A4 portrait; margin: 8mm 6mm; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  /* Forcer light mode — dark mode app ne doit pas passer */
+  * { color-scheme: light !important; }
+  /* Masquer tout sauf le bulletin */
+  body > *:not(#bul-print-target) { display: none !important; }
+  #bul-print-target {
+    width: 210mm !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+  }
+  /* Masquer mentions légales */
+  .bul-legal, .bulletin-legal, .adm-legal, .bulletin-legal-corp { display: none !important; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  /* ✅ Neutralise le "position:absolute;top:0;left:0" que chaque gabarit
+     applique à #bul-wrap (id dupliqué — un par bulletin dans le DOM live).
+     Sans ce reset, TOUS les bulletins se retrouveraient épinglés exactement
+     au même point (0,0) et s'empileraient les uns sur les autres — un seul
+     resterait visible. Spécificité (1,0,2) > (1,0,0) de la règle d'origine,
+     donc ce reset gagne même avec !important des deux côtés. */
+  body #bul-wrap {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+  }
+</style>
+</head><body>
+<div id="bul-print-target">${el.outerHTML}</div>
+</body></html>`);
+  doc.close();
+
+  const win = iframe.contentWindow;
+  if (!win) { document.body.removeChild(iframe); window.print(); return; }
+
+  const doPrint = () => {
+    try { win.focus(); win.print(); } catch { window.print(); }
+    setTimeout(() => {
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 1500);
+  };
+
+  if (doc.readyState === 'complete') setTimeout(doPrint, 300);
+  else {
+    win.addEventListener('load', () => setTimeout(doPrint, 300), { once: true });
+    setTimeout(doPrint, 1500);
+  }
+}
+
+// ============================================================================
+// TÉLÉCHARGEMENT PDF
+// ============================================================================
+
+/**
+ * Téléchargement PDF — html2canvas + jsPDF.
+ * Clone dans un div temporaire visible hors écran (fix scrollHeight=0).
+ */
+export async function downloadBulletinPDF(
+  bulletinElementId: string,
+  filename: string,
+): Promise<void> {
+  const el = findBulletinElement(bulletinElementId);
+  if (!el) {
+    console.error('[bulletin-print] Aucun div bulletin trouvé. Ids cherchés:', BULLETIN_IDS);
+    alert('Impossible de générer le PDF : bulletin non trouvé.');
+    return;
+  }
+
+  const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
+
+  // Conteneur temporaire visible hors écran — évite scrollHeight=0
+  const container = document.createElement('div');
+  container.style.cssText = [
+    'position:fixed',
+    'left:-9999px',
+    'top:0',
+    'width:210mm',
+    'background:#fff',
+    'z-index:-1',
+    'overflow:visible',
+  ].join(';');
+
+  const clone = el.cloneNode(true) as HTMLElement;
+
+  // Forcer dimensions A4 sur le clone
+  clone.style.cssText = [
+    'width:210mm',
+    'min-height:297mm',
+    'padding:0',
+    'margin:0',
+    'box-shadow:none',
+    'border:none',
+    'background:#fff',
+    'box-sizing:border-box',
+    'color-scheme:light',
+  ].join(';');
+
+  // Masquer mentions légales dans le clone
+  clone.querySelectorAll<HTMLElement>(
+    '.bul-legal,.bulletin-legal,.adm-legal,.bulletin-legal-corp'
+  ).forEach(n => { n.style.display = 'none'; });
+
+  container.appendChild(clone);
+  document.body.appendChild(container);
+
+  try {
+    // ✅ Le logo entreprise vient de Cloudinary (URL absolue, cross-origin).
+    //    html2canvas ne peut lire les pixels d'une image cross-origin que si
+    //    elle est chargée en mode crossOrigin="anonymous" — sinon elle
+    //    ressort vide/blanche dans le PDF, silencieusement. On force donc un
+    //    rechargement CORS + cache-bust et on attend avant de capturer.
+    const logoImgs = Array.from(clone.querySelectorAll<HTMLImageElement>('img'));
+    await Promise.all(logoImgs.map((img) => new Promise<void>((resolve) => {
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve();
+      img.onerror = () => resolve(); // ne bloque jamais la génération du PDF
+      const src = img.getAttribute('src') || '';
+      img.src = src + (src.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+      setTimeout(resolve, 2500); // filet de sécurité
+    })));
+
+    // Laisser le DOM se rendre
+    await new Promise(r => setTimeout(r, 200));
+
+    // Dimensions réelles — px à 96dpi : 210mm ≈ 794px, 297mm ≈ 1123px
+    const W = clone.scrollWidth  || clone.offsetWidth  || 794;
+    const H = clone.scrollHeight || clone.offsetHeight || 1123;
+
+    const canvas = await html2canvas(clone, {
+      scale:           2,        // haute résolution
+      useCORS:         true,
+      allowTaint:      true,
+      backgroundColor: '#ffffff',
+      logging:         false,
+      width:           W,
+      height:          H,
+      windowWidth:     794,
+      windowHeight:    1123,
+    });
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const pdf     = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfW    = pdf.internal.pageSize.getWidth();   // 210mm
+    const pdfH    = pdf.internal.pageSize.getHeight();  // 297mm
+
+    // Ratio image → dimensions PDF
+    const imgRatio = canvas.width / canvas.height;
+    const finalW   = pdfW;
+    const finalH   = pdfW / imgRatio;
+
+    if (finalH > pdfH) {
+      // Bulletin multi-page (rare mais géré)
+      let posY = 0;
+      while (posY < finalH) {
+        if (posY > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, -posY, finalW, finalH, '', 'FAST');
+        posY += pdfH;
+      }
+    } else {
+      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, finalH, '', 'FAST');
+    }
+
+    pdf.save(filename);
+  } catch (err) {
+    console.error('[bulletin-print] Erreur génération PDF:', err);
+    alert('Erreur lors de la génération du PDF. Essayez l\'impression navigateur.');
+  } finally {
+    // Toujours nettoyer le DOM
+    if (document.body.contains(container)) {
+      document.body.removeChild(container);
+    }
+  }
+}
+
+// ============================================================================
+// IMPRESSION GROUPÉE (plusieurs bulletins en un seul job d'impression)
+// ============================================================================
+// ✅ Réutilise EXACTEMENT le même DOM que l'impression individuelle — pas de
+//    génération séparée côté backend, donc garantie que le bulletin imprimé
+//    en masse est rigoureusement identique à celui imprimé un par un (même
+//    gabarit choisi en paramètres, mêmes calculs, même logo).
+
+/**
+ * Impression groupée — `rootId` pointe vers un conteneur contenant déjà N
+ * bulletins (chacun avec `page-break-after: always` sauf le dernier), rendus
+ * hors-écran par BulletinBatchPrintHidden. Même mécanique que printBulletin
+ * (iframe isolé) mais sans détection : le conteneur est donné directement.
+ */
+export function printBulletinBatch(rootId: string): void {
+  const el = document.getElementById(rootId);
+  if (!el) { window.print(); return; }
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!doc) { document.body.removeChild(iframe); window.print(); return; }
+
+  const styleLinks   = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.outerHTML).join('\n');
+  const styleInlines = Array.from(document.querySelectorAll('style')).map(s => `<style>${s.innerHTML}</style>`).join('\n');
+  const baseHref = window.location.origin + '/';
+
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<base href="${baseHref}">
+${styleLinks}
+${styleInlines}
+<style>
+  @page { size: A4 portrait; margin: 8mm 6mm; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  * { color-scheme: light !important; }
+  body > *:not(#bul-batch-print-target) { display: none !important; }
+  #bul-batch-print-target {
+    width: 210mm !important;
+    margin: 0 auto !important;
+    background: #fff !important;
+  }
+  .bul-legal, .bulletin-legal, .adm-legal, .bulletin-legal-corp { display: none !important; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  /* ✅ CORRECTIF BUG PRINCIPAL — impression groupée n'affichait qu'1 bulletin
+     Chaque gabarit (Default/Clarifié/Classique) place son id="bul-wrap"
+     racine avec "position:absolute;top:0;left:0" en CSS d'impression. C'est
+     sans danger à l'unité (un seul élément), mais en lot il y a N éléments
+     PORTANT LE MÊME id dans le DOM — les navigateurs appliquent une règle
+     #id à TOUS les éléments qui portent cet id, même dupliqué. Résultat :
+     les N bulletins étaient tous épinglés au même point (0,0) et se
+     superposaient exactement — un seul restait visible/imprimé, et le
+     rendu semblait aléatoire selon lequel finissait au-dessus. On neutralise
+     donc cette règle ici avec une sélectivité supérieure (1,0,2 > 1,0,0),
+     pour que chaque bulletin reste dans le flux normal du document et que
+     les sauts de page (page-break-after sur le wrapper de chaque bulletin,
+     posé par BulletinBatchPrintHidden) fonctionnent comme prévu. */
+  body #bul-wrap,
+  body [data-bulletin-root] {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+  }
+</style>
+</head><body>
+<div id="bul-batch-print-target">${el.innerHTML}</div>
+</body></html>`);
+  doc.close();
+
+  const win = iframe.contentWindow;
+  if (!win) { document.body.removeChild(iframe); window.print(); return; }
+
+  const doPrint = () => {
+    try { win.focus(); win.print(); } catch { window.print(); }
+    // ✅ Fenêtre de nettoyage plus large qu'à l'unité — un lot de N
+    // bulletins met plus de temps à s'ouvrir dans la boîte de dialogue
+    // d'impression que un seul.
+    setTimeout(() => {
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 2500);
+  };
+
+  if (doc.readyState === 'complete') setTimeout(doPrint, 500);
+  else {
+    win.addEventListener('load', () => setTimeout(doPrint, 500), { once: true });
+    setTimeout(doPrint, 2500);
+  }
+}
+
+// ============================================================================
+// HELPER
+// ============================================================================
+
+/**
+ * Retourne l'id du div racine selon le templateId.
+ * Avec le nouveau renderer default, on passe par data-bulletin-root
+ * donc n'importe quel id fonctionne — on garde pour compatibilité.
+ */
+export function getBulletinRootId(templateId?: string): string {
+  // Les 3 gabarits (Default / Clarifié / Classique) partagent le même
+  // wrapper #bul-wrap (data-bulletin-root="true") — n'importe quel id
+  // fonctionne donc, on garde une valeur unique pour compatibilité.
+  return 'bul-wrap';
+}

@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- BASE --- */
+html {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+body {
+  min-height: 100vh;
+  /* Mode sombre par défaut (futuriste), écrasé par les classes Tailwind pour le light */
+  @apply bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-500;
+  overflow-x: hidden;
+}
+
+/* ✨ SCROLLBAR INVISIBLE MAIS FONCTIONNELLE */
+::-webkit-scrollbar {
+  width: 0px; /* Largeur 0 pour masquer */
+  height: 0px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Firefox - Scrollbar invisible */
+* {
+  scrollbar-width: none; /* Masque la scrollbar sur Firefox */
+  scrollbar-color: transparent transparent;
+}
+
+/* Alternative pour tous les navigateurs */
+html {
+  -ms-overflow-style: none; /* IE et Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari et Opera */
+}
+
+/* Sélection de texte futuriste */
+::selection {
+  background-color: rgba(6, 182, 212, 0.3); /* Cyan */
+  color: inherit;
+}
+
+/* --- UTILITIES --- */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-white/10 rounded-full hover:bg-slate-400 dark:hover:bg-white/20;
+  }
+
+  /* ✨ SCROLLBAR VISIBLE ET STYLÉE (pour pages spécifiques) */
+  .visible-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .visible-scrollbar::-webkit-scrollbar-track {
+    background: rgba(2, 6, 23, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .visible-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #06b6d4 0%, #3b82f6 100%);
+    border-radius: 10px;
+    border: 2px solid rgba(2, 6, 23, 0.5);
+    transition: all 0.3s ease;
+  }
+  
+  .visible-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #22d3ee 0%, #60a5fa 100%);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+  }
+  
+  /* Firefox */
+  .visible-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #06b6d4 rgba(2, 6, 23, 0.5);
+  }
+
+  /* Effets de Verre Premium (Light & Dark) */
+  .glass-panel {
+    @apply bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none;
+  }
+  
+  .glass-card {
+    @apply bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/40 dark:border-white/5 hover:border-sky-200/50 dark:hover:border-white/10 transition-all duration-300;
+  }
+
+  .glow-text {
+    @apply text-sky-600 dark:text-cyan-400;
+    text-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+  }
+}
+
+/* --- ANIMATIONS AURORA (Fond animé) --- */
+@keyframes aurora-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  50% { transform: translate(20px, -20px) scale(1.1); opacity: 0.5; }
+}
+@keyframes aurora-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+  50% { transform: translate(-20px, 10px) scale(1.2); opacity: 0.4; }
+}
+
+.animate-aurora-1 { animation: aurora-1 10s infinite alternate ease-in-out; }
+.animate-aurora-2 { animation: aurora-2 15s infinite alternate ease-in-out; }
+
+/* Override Autocomplete */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: inherit !important;
+}
+.dark input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+    -webkit-text-fill-color: white !important;
+}

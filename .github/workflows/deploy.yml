@@ -1,0 +1,23 @@
+name: Deploy KonzaRH Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 188.245.96.208
+          username: deploy
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/deploy/hrcongo-frontend
+            git pull
+            npm install
+            npm run build
+            pm2 restart konzarh-frontend
+            pm2 save
