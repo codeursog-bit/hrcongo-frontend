@@ -36,6 +36,14 @@ export interface LeaveLetterData {
   // motif ni notion de report (ce type ne déclenche jamais de paiement
   // d'indemnité à sa propre date, voir plannedPayrollMonth côté backend).
   availableBalanceAfter?: number | string | null;
+  // ✅ CORRECTIF (demande explicite) : quand daysCount inclut des jours
+  // d'ancienneté DÉJÀ PRIS EN UNE FOIS (ex: 30j = 26 base + 4 ancienneté,
+  // congé complet, rien à reporter), la phrase principale doit le dire
+  // explicitement — "26 jours ouvrables ... plus 4 jours ... liés à
+  // l'ancienneté" — au lieu d'annoncer juste "30 jours" sans distinction.
+  // Différent de extraDaysGranted, qui concerne des jours d'ancienneté
+  // PAS pris maintenant (reportés à plus tard).
+  seniorityDaysIncluded?: number | string | null;
 }
 
 const MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
@@ -127,7 +135,14 @@ export default function LeaveAuthorizationLetterPrintable({ id, data }: { id: st
         {data.employee.hireDate ? ` depuis ${fmtMonthYear(data.employee.hireDate)}` : ''}, en qualité
         de {data.employee.position || '—'}, de bénéficier de son congé annuel de l&apos;année {data.leaveYear}, du{' '}
         <strong>{fmtLongDate(data.startDate)}</strong> au <strong>{fmtLongDate(data.endDate)}</strong>, ce qui correspond
-        à <strong>{data.daysCount} jours ouvrables</strong> de congé annuel.
+        à {data.seniorityDaysIncluded ? (
+          <>
+            <strong>{Number(data.daysCount) - Number(data.seniorityDaysIncluded)} jours ouvrables</strong> de congé annuel
+            plus <strong>{data.seniorityDaysIncluded} jours</strong> de congés supplémentaires liés à l&apos;ancienneté
+          </>
+        ) : (
+          <><strong>{data.daysCount} jours ouvrables</strong> de congé annuel</>
+        )}.
       </p>
 
       {(data.remainingDays || data.extraDaysGranted) && (

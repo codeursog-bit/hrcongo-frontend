@@ -355,12 +355,12 @@ export default function LeaveBalancesAdminPage() {
                         />
                       </div>
                       <span className="text-sm font-mono text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                        {bal.annualRemaining.toFixed(1)}j restant
+                        {Math.round(bal.annualRemaining)}j restant
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      Acquis {bal.annualEntitled.toFixed(1)}j · Pris {bal.annualTaken.toFixed(1)}j
-                      {bal.seniorityDays > 0 && <span> (dont {bal.seniorityDays.toFixed(1)}j ancienneté)</span>}
+                      Acquis {Math.round(bal.annualEntitled)}j · Pris {Math.round(bal.annualTaken)}j
+                      {bal.seniorityDays > 0 && <span> (dont {Math.round(bal.seniorityDays)}j ancienneté)</span>}
                     </p>
                     {bal.cycleEndDate && (
                       <p className="text-xs text-gray-400">
@@ -373,7 +373,7 @@ export default function LeaveBalancesAdminPage() {
                   <td className="px-5 py-4">
                     {bal.carriedForward > 0 ? (
                       <span className="text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full">
-                        +{bal.carriedForward.toFixed(1)}j reportés
+                        +{Math.round(bal.carriedForward)}j reportés
                       </span>
                     ) : (
                       <span className="text-xs text-gray-300">—</span>

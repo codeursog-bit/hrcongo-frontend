@@ -646,7 +646,7 @@ export default function NewLeaveRequestPage() {
             <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl">
               <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
               <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                Solde disponible : <strong>{Number(selectedBalance.annualRemaining).toFixed(1)} jours</strong>
+                Solde disponible : <strong>{Math.round(Number(selectedBalance.annualRemaining))} jours</strong>
               </p>
             </div>
           )}
@@ -764,7 +764,7 @@ export default function NewLeaveRequestPage() {
             <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
               <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
               <p className="text-sm text-red-600 dark:text-red-400">
-                Solde insuffisant : vous demandez <strong>{calculationDetails.ouvrables} jours</strong> mais il vous en reste <strong>{Number(selectedBalance?.annualRemaining ?? 0).toFixed(1)}</strong>.
+                Solde insuffisant : vous demandez <strong>{calculationDetails.ouvrables} jours</strong> mais il vous en reste <strong>{Math.round(Number(selectedBalance?.annualRemaining ?? 0))}</strong>.
               </p>
             </div>
           )}
@@ -828,7 +828,7 @@ export default function NewLeaveRequestPage() {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-300">Solde après</span>
                         <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-sky-300'}`}>
-                          {(Number(selectedBalance.annualRemaining) - calculationDetails.ouvrables).toFixed(1)}j
+                          {Math.round(Number(selectedBalance.annualRemaining) - calculationDetails.ouvrables)}j
                         </span>
                       </div>
                     </>

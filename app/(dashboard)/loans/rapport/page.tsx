@@ -9,7 +9,7 @@
 // ============================================================================
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Loader2, Users2 } from 'lucide-react';
+import { Loader2, Users2, Banknote, PiggyBank, TrendingUp } from 'lucide-react';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
@@ -90,7 +90,19 @@ export default function LoansReportPage() {
   const byDeptMonth = useMemo(() => {
     const map: Record<string, number> = {};
     monthDebts.forEach(r => { const n = r.employee?.department?.name || 'Sans département'; map[n] = (map[n] ?? 0) + Number(r.amount); });
-    return Object.entries(map).map(([name, montant], i) => ({ name, montant, pct: monthTotal ? Math.round((montant / monthTotal) * 1000) / 10 : 0, color: DEPT_COLORS[i % DEPT_COLORS.length] }));
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+    // ✅ Au-delà de 6 départements, le donut devient illisible (tranches
+    // minuscules, étiquettes qui se chevauchent) — on regroupe le reste
+    // dans "Autres", comme n'importe quel tableau de bord professionnel.
+    const TOP_N = 6;
+    const top = sorted.slice(0, TOP_N);
+    const rest = sorted.slice(TOP_N);
+    const result = top.map(([name, montant], i) => ({ name, montant, pct: monthTotal ? Math.round((montant / monthTotal) * 1000) / 10 : 0, color: DEPT_COLORS[i % DEPT_COLORS.length] }));
+    if (rest.length > 0) {
+      const autresMontant = rest.reduce((s, [, m]) => s + m, 0);
+      result.push({ name: `Autres (${rest.length})`, montant: autresMontant, pct: monthTotal ? Math.round((autresMontant / monthTotal) * 1000) / 10 : 0, color: '#94a3b8' });
+    }
+    return result;
   }, [monthDebts, monthTotal]);
 
   // ── Vue annuelle : montants par mois et par type ─────────────────────────
@@ -111,6 +123,33 @@ export default function LoansReportPage() {
     }).reduce((s, r) => s + Number(r.amount), 0);
     return { mois: label, Montant: Math.round(montant) };
   }), [allDebts, year, deptFilterAnnual]);
+
+  // ── KPI annuels — vue d'ensemble de l'année entière, pas juste le mois sélectionné ──
+  const yearDebts = useMemo(() => allDebts.filter(r => refDate(r).getFullYear() === year), [allDebts, year]);
+  const annualKpis = useMemo(() => {
+    const total = yearDebts.reduce((s, r) => s + Number(r.amount), 0);
+    const count = yearDebts.length;
+    const employeesCount = new Set(yearDebts.map(r => r.employeeId)).size;
+    // Mois le plus chargé de l'année (utile pour anticiper la trésorerie)
+    const byMonth: Record<number, number> = {};
+    yearDebts.forEach(r => { const m = refDate(r).getMonth() + 1; byMonth[m] = (byMonth[m] ?? 0) + Number(r.amount); });
+    const peakMonthEntry = Object.entries(byMonth).sort((a, b) => b[1] - a[1])[0];
+    return {
+      total,
+      count,
+      employeesCount,
+      avgAmount: count ? Math.round(total / count) : 0,
+      peakMonth: peakMonthEntry ? MONTHS_FR[Number(peakMonthEntry[0]) - 1] : '—',
+      peakMonthAmount: peakMonthEntry ? peakMonthEntry[1] : 0,
+    };
+  }, [yearDebts]);
+
+  const annualByType = useMemo(() => {
+    const map: Record<string, number> = {};
+    yearDebts.forEach(r => { map[r.requestType] = (map[r.requestType] ?? 0) + Number(r.amount); });
+    const total = yearDebts.reduce((s, r) => s + Number(r.amount), 0);
+    return Object.entries(map).map(([type, montant]) => ({ type, label: TYPE_LABEL[type] ?? type, montant, pct: total ? Math.round((montant / total) * 1000) / 10 : 0 }));
+  }, [yearDebts]);
 
   // ── Top 20 — employés avec le plus de dettes ─────────────────────────────
   const top20 = useMemo(() => {
@@ -205,37 +244,57 @@ export default function LoansReportPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition des dettes par type — {MONTHS_FULL[month - 1]}</p>
             {byTypeMonth.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie data={byTypeMonth} dataKey="montant" nameKey="label" innerRadius={0} outerRadius={95} label={(d: any) => `${d.pct}%`}>
-                    {byTypeMonth.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type]} />)}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => fmt(v)} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <ResponsiveContainer width="100%" height={220} className="sm:!w-1/2">
+                  <PieChart>
+                    <Pie data={byTypeMonth} dataKey="montant" nameKey="label" innerRadius={50} outerRadius={95} paddingAngle={2}>
+                      {byTypeMonth.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type]} stroke="none" />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => fmt(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <ChartLegendList items={byTypeMonth.map(t => ({ label: t.label, pct: t.pct, montant: t.montant, color: TYPE_COLOR[t.type] }))} />
+              </div>
             )}
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
             <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par département — {MONTHS_FULL[month - 1]}</p>
             {byDeptMonth.length === 0 ? <EmptyChart /> : (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie data={byDeptMonth} dataKey="montant" nameKey="name" innerRadius={55} outerRadius={95} label={(d: any) => `${d.pct}%`}>
-                    {byDeptMonth.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => fmt(v)} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <ResponsiveContainer width="100%" height={220} className="sm:!w-1/2">
+                  <PieChart>
+                    <Pie data={byDeptMonth} dataKey="montant" nameKey="name" innerRadius={55} outerRadius={95} paddingAngle={2}>
+                      {byDeptMonth.map((d, i) => <Cell key={i} fill={d.color} stroke="none" />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => fmt(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <ChartLegendList items={byDeptMonth.map(d => ({ label: d.name, pct: d.pct, montant: d.montant, color: d.color }))} />
+              </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* ══════════════════ VUE ANNUELLE — TOUS LES EMPLOYÉS ══════════════════ */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 md:col-span-2">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Vue annuelle des montants — tous les employés ({year})</p>
-            <ResponsiveContainer width="100%" height={280}>
+      {/* ══════════════════ VUE ANNUELLE — section pleine largeur, indépendante de la vue mensuelle ══════════════════ */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">Vue annuelle — {year}</h2>
+          <p className="text-xs text-gray-500">Vision globale sur l'année, indépendamment du mois sélectionné ci-dessus.</p>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <AnnualKpiCard icon={Banknote} label={`Total accordé (${year})`} value={fmt(annualKpis.total)} tone="sky" />
+          <AnnualKpiCard icon={Users2} label="Dossiers sur l'année" value={String(annualKpis.count)} sub={`${annualKpis.employeesCount} employé(s) concerné(s)`} tone="slate" />
+          <AnnualKpiCard icon={PiggyBank} label="Montant moyen / dossier" value={fmt(annualKpis.avgAmount)} tone="emerald" />
+          <AnnualKpiCard icon={TrendingUp} label="Mois le plus chargé" value={annualKpis.peakMonth} sub={annualKpis.peakMonthAmount ? fmt(annualKpis.peakMonthAmount) : undefined} tone="amber" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Montants par mois et par type — {year}</p>
+            <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={annualSeries}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                 <XAxis dataKey="mois" fontSize={12} />
@@ -249,25 +308,45 @@ export default function LoansReportPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* ══════════════════ VUE ANNUELLE — PAR DÉPARTEMENT ══════════════════ */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 md:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Vue annuelle des montants — par département ({year})</p>
-              <select value={deptFilterAnnual} onChange={e => setDeptFilterAnnual(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
-                <option value="">Tous les départements</option>
-                {departments.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={annualSeriesByDept}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="mois" fontSize={12} />
-                <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
-                <Tooltip formatter={(v: number) => fmt(v)} />
-                <Area type="monotone" dataKey="Montant" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.35} />
-              </AreaChart>
-            </ResponsiveContainer>
+          {/* Répartition par type — année entière, en complément du graphe empilé */}
+          <div className="lg:col-span-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par type — {year}</p>
+            {annualByType.length === 0 ? <EmptyChart /> : (
+              <>
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie data={annualByType} dataKey="montant" nameKey="label" innerRadius={45} outerRadius={75} paddingAngle={2}>
+                      {annualByType.map((t, i) => <Cell key={i} fill={TYPE_COLOR[t.type]} stroke="none" />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => fmt(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-2">
+                  <ChartLegendList items={annualByType.map(t => ({ label: t.label, pct: t.pct, montant: t.montant, color: TYPE_COLOR[t.type] }))} />
+                </div>
+              </>
+            )}
           </div>
+        </div>
+
+        {/* ══════════════════ VUE ANNUELLE — PAR DÉPARTEMENT ══════════════════ */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Montants par mois — par département ({year})</p>
+            <select value={deptFilterAnnual} onChange={e => setDeptFilterAnnual(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+              <option value="">Tous les départements</option>
+              {departments.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <AreaChart data={annualSeriesByDept}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="mois" fontSize={12} />
+              <YAxis fontSize={12} tickFormatter={(v) => `${Math.round(v / 1000)}k`} />
+              <Tooltip formatter={(v: number) => fmt(v)} />
+              <Area type="monotone" dataKey="Montant" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.35} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -307,4 +386,40 @@ export default function LoansReportPage() {
 
 function EmptyChart() {
   return <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">Aucune donnée pour cette période.</div>;
+}
+
+function AnnualKpiCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: string; value: string; sub?: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
+  const cls: Record<string, string> = {
+    slate: 'bg-gray-50 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
+    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
+    amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
+    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300',
+  };
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
+      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{value}</p>
+      {sub && <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>}
+    </div>
+  );
+}
+
+/** Légende en liste (couleur + nom + % + montant) — remplace les labels
+ * flottants de recharts sur le camembert, qui se chevauchent dès qu'il y a
+ * plus de 3-4 tranches proches en taille. Toujours lisible, quel que soit
+ * le nombre d'entrées. */
+function ChartLegendList({ items }: { items: { label: string; pct: number; montant: number; color: string }[] }) {
+  const sorted = [...items].sort((a, b) => b.montant - a.montant);
+  return (
+    <div className="w-full sm:w-1/2 space-y-2">
+      {sorted.map((it, i) => (
+        <div key={i} className="flex items-center gap-2 text-xs">
+          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: it.color }} />
+          <span className="text-gray-600 dark:text-gray-300 truncate flex-1">{it.label}</span>
+          <span className="font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{it.pct}%</span>
+        </div>
+      ))}
+    </div>
+  );
 }

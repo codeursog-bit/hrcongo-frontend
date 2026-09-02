@@ -22,11 +22,10 @@ import LeavePlanningPrintable from '@/components/LeavePlanningPrintable';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 
 /** Affichage propre d'un nombre de jours (évite les artefacts de virgule
- * flottante type "28.799999999999997j" — arrondit à 1 décimale, sans
- * afficher ".0" pour les comptes ronds). */
+ * flottante type "28.799999999999997j") — arrondi entier, jamais de décimale
+ * affichée. */
 function formatDays(n: number | string): string {
-  const v = Math.round(Number(n || 0) * 10) / 10;
-  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+  return String(Math.round(Number(n || 0)));
 }
 
 interface DepartureRow {
@@ -88,7 +87,13 @@ export default function ProgrammeCongesPage() {
   const [manualForm, setManualForm] = useState({
     employeeId: '', type: 'ANNUAL' as 'ANNUAL' | 'ANNUAL_ANTICIPATED',
     startDate: '', endDate: '', reason: '',
+    extraDaysGranted: '', resumptionNote: '',
   });
+  // ✅ CORRECTIF (demande explicite) : cette modale ("Planifier") crée le
+  // congé déjà APPROVED — c'était le seul chemin où le motif de report et
+  // les jours d'ancienneté n'étaient jamais proposés au RH (contrairement
+  // à l'écran d'approbation d'une demande employé, /conges/[id]).
+  const [manualBalance, setManualBalance] = useState<{ annualEntitled: number; seniorityDays: number } | null>(null);
 
   useEffect(() => {
     if (!canPlan) return;
@@ -105,19 +110,56 @@ export default function ProgrammeCongesPage() {
 
   const openManualModal = () => {
     setManualError('');
-    setManualForm({ employeeId: employees[0]?.id || '', type: 'ANNUAL', startDate: '', endDate: '', reason: '' });
+    setManualForm({ employeeId: employees[0]?.id || '', type: 'ANNUAL', startDate: '', endDate: '', reason: '', extraDaysGranted: '', resumptionNote: '' });
+    setManualBalance(null);
     setShowManualModal(true);
   };
+
+  // ✅ Charge le solde de l'employé sélectionné pour afficher le rappel
+  // "26j + Xj ancienneté" et pouvoir estimer un éventuel reste.
+  useEffect(() => {
+    if (!manualForm.employeeId || !showManualModal) return;
+    (async () => {
+      try {
+        const bal = await api.get<any>(`/leaves/balance/${manualForm.employeeId}`);
+        setManualBalance({
+          annualEntitled: Number(bal?.annualEntitled ?? 26),
+          seniorityDays: Number(bal?.seniorityDays ?? 0),
+        });
+      } catch {
+        setManualBalance(null);
+      }
+    })();
+  }, [manualForm.employeeId, showManualModal]);
+
+  // Jours calendaires approximatifs entre les 2 dates (estimation front —
+  // le vrai décompte en jours ouvrés se fait côté serveur à la sauvegarde).
+  const manualEstimatedDays = manualForm.startDate && manualForm.endDate
+    ? Math.max(0, Math.round((new Date(manualForm.endDate).getTime() - new Date(manualForm.startDate).getTime()) / 86400000) + 1)
+    : 0;
+  const manualBaseRemaining = manualBalance ? Math.max(0, 26 - manualEstimatedDays) : 0;
+  const manualSeniorityRemaining = manualBalance
+    ? Math.max(0, manualBalance.seniorityDays - Math.max(0, manualEstimatedDays - 26))
+    : 0;
+  const manualNeedsMotif = manualForm.type === 'ANNUAL' && (manualBaseRemaining > 0 || Number(manualForm.extraDaysGranted) > 0);
 
   const saveManualLeave = async () => {
     if (!manualForm.employeeId || !manualForm.startDate || !manualForm.endDate) {
       setManualError('Employé, date de départ et date de retour sont requis.');
       return;
     }
+    if (manualNeedsMotif && !manualForm.resumptionNote.trim()) {
+      setManualError('Merci de préciser le motif de report (il apparaîtra sur la lettre officielle).');
+      return;
+    }
     setIsSavingManual(true);
     setManualError('');
     try {
-      await api.post('/leaves/manual', manualForm);
+      await api.post('/leaves/manual', {
+        ...manualForm,
+        extraDaysGranted: manualForm.extraDaysGranted ? Number(manualForm.extraDaysGranted) : undefined,
+        resumptionNote: manualForm.resumptionNote || undefined,
+      });
       setShowManualModal(false);
       await load();
     } catch (e: any) {
@@ -500,6 +542,45 @@ export default function ProgrammeCongesPage() {
                   className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
                 />
               </div>
+
+              {manualForm.type === 'ANNUAL' && (
+                <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-gray-700">
+                  {manualBalance && (
+                    <p className="text-xs text-gray-400 pt-2">
+                      Droit du cycle : {manualBalance.annualEntitled}j
+                      {manualBalance.seniorityDays > 0 && ` (dont ${manualBalance.seniorityDays}j ancienneté)`}
+                    </p>
+                  )}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Jours d&apos;ancienneté reportés (optionnel)</label>
+                    <input
+                      type="number" min="0" step="0.5"
+                      value={manualForm.extraDaysGranted}
+                      onChange={e => setManualForm(f => ({ ...f, extraDaysGranted: e.target.value }))}
+                      placeholder="Ex : 4 — laisser vide si non applicable"
+                      className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    />
+                    {(manualBaseRemaining > 0 || manualSeniorityRemaining > 0) && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        Congé partiel probable : ~{manualEstimatedDays}j estimés — il resterait ~{manualBaseRemaining}j de congé de base
+                        {manualSeniorityRemaining > 0 ? ` et ${manualSeniorityRemaining}j d'ancienneté` : ''} à reporter.
+                      </p>
+                    )}
+                  </div>
+                  {manualNeedsMotif && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Motif de report (pour la lettre) *</label>
+                      <input
+                        type="text"
+                        value={manualForm.resumptionNote}
+                        onChange={e => setManualForm(f => ({ ...f, resumptionNote: e.target.value }))}
+                        placeholder="Ex : seront récupérés après la période de forte activité du service..."
+                        className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {manualError && <div className="text-xs text-red-500">{manualError}</div>}

@@ -510,7 +510,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                     <tr>
                       <td style={td({ paddingLeft: 5 })}>Congés</td>
                       <td style={tdR()}>{congesPris > 0 ? fmtD(congesPris) : '0,0000'}</td>
-                      <td style={tdR()}>{congesSolde > 0 ? fmtD(congesSolde) : '0,0000'}</td>
+                      <td style={tdR()}>{congesSolde > 0 ? fmtD(congesSolde) : '0'}</td>
                       <td style={{ ...tdR({ borderRight: BD }) }}>{congesDroits > 0 ? fmtD(congesDroits) : '0,0000'}</td>
                     </tr>
                     <tr>

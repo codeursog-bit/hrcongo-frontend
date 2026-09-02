@@ -274,7 +274,7 @@ export default function LeaveProvisionPage() {
               <TrendingUp size={18} className="text-sky-500" />
             </div>
             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-              {stats.avgDays.toFixed(1)}j
+              {Math.round(stats.avgDays)}j
             </p>
             <p className="text-sm text-gray-400 mt-1">solde moyen par employé</p>
           </motion.div>
@@ -388,7 +388,7 @@ export default function LeaveProvisionPage() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-400 mt-1">
-                        {emp.remainingDays.toFixed(1)}j de congé non pris cumulés
+                        {Math.round(emp.remainingDays)}j de congé non pris cumulés
                       </p>
                     </div>
 

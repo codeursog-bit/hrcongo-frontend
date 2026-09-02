@@ -219,6 +219,13 @@ export default function LeaveDetailPage() {
     remainingDays: leave.type === 'ANNUAL' && baseRemaining > 0 ? baseRemaining : undefined,
     extraDaysGranted: leave.type === 'ANNUAL' ? leave.extraDaysGranted : undefined,
     resumptionNote: leave.type === 'ANNUAL' ? leave.resumptionNote : undefined,
+    // ✅ CORRECTIF (demande explicite) : jours d'ancienneté déjà INCLUS
+    // dans ce congé (pris maintenant, pas reportés) — distinct
+    // d'extraDaysGranted qui lui concerne des jours reportés à plus tard.
+    seniorityDaysIncluded:
+      leave.type === 'ANNUAL' && plannedDays > 26
+        ? Math.min(entitledSeniorityDays, plannedDays - 26)
+        : undefined,
     // ✅ Congé anticipé : info neutre, jamais de motif — le solde déjà
     // déduit (leave.balance.annualRemaining) reste simplement disponible
     // pour un prochain congé dans le même cycle.
@@ -297,7 +304,7 @@ export default function LeaveDetailPage() {
             {leave.balance && (
               <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700">
                 <Wallet size={14} className="text-gray-400" />
-                Solde {new Date(leave.startDate).getFullYear()} : {Number(leave.balance.annualRemaining).toFixed(1)}j restants sur {Number(leave.balance.annualEntitled).toFixed(1)}j
+                Solde {new Date(leave.startDate).getFullYear()} : {Math.round(Number(leave.balance.annualRemaining))}j restants sur {Math.round(Number(leave.balance.annualEntitled))}j
                 {Number(leave.balance.seniorityDays) > 0 && <span className="text-gray-400"> (dont {Number(leave.balance.seniorityDays)}j ancienneté)</span>}
               </div>
             )}
