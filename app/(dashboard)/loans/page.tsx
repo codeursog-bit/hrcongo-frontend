@@ -305,7 +305,7 @@ export default function LoansManagementPage() {
     docType: tab === 'loans' ? (selectedLoan?.type || 'ARGENT') : 'AVANCE',
     reason: printSource.reason,
     amount: printSource.amount,
-    requestedAt: printSource.createdAt,
+    requestedAt: tab === 'loans' ? (printSource.startDate ?? printSource.createdAt) : printSource.createdAt,
     monthlyRepayment: selectedLoan?.monthlyRepayment,
     durationMonths: selectedLoan ? Math.ceil(Number(selectedLoan.amount) / Number(selectedLoan.monthlyRepayment)) : undefined,
     previousLoanAmount,

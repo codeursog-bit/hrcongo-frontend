@@ -98,10 +98,19 @@ export default function LeaveDetailPage() {
   const baseRemaining = Math.max(0, 26 - plannedDays);
   const seniorityRemaining = Math.max(0, entitledSeniorityDays - Math.max(0, plannedDays - 26));
 
+  // ✅ CORRECTIF (demande explicite) : le motif de réduction est déjà saisi
+  // à la CRÉATION de la demande (voir /conges/nouveau — popup obligatoire
+  // si daysCount < solde dû) et stocké dans leave.reason. On ne doit
+  // JAMAIS le redemander une 2e fois à l'approbation — on préremplit
+  // resumptionNote avec ce texte (l'approbateur peut toujours l'affiner
+  // avant validation, mais part du motif déjà donné par le RH/employé).
   useEffect(() => {
     if (!leave || leave.status !== 'PENDING' || leave.type !== 'ANNUAL') return;
     if (seniorityRemaining > 0) {
       setExtraDaysGranted(String(Math.round(seniorityRemaining * 2) / 2));
+    }
+    if ((baseRemaining > 0 || seniorityRemaining > 0) && leave.reason?.trim()) {
+      setResumptionNote(leave.reason.trim());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leave?.id]);
@@ -341,6 +350,9 @@ export default function LeaveDetailPage() {
                         {(baseRemaining > 0 || Number(extraDaysGranted) > 0) && (
                           <div>
                             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Motif de report (pour la lettre) *</label>
+                            {leave.reason?.trim() && resumptionNote === leave.reason.trim() && (
+                              <p className="text-xs text-sky-600 dark:text-sky-400 mb-1">Repris du motif indiqué à la demande — modifiable si besoin.</p>
+                            )}
                             <textarea value={resumptionNote} onChange={e => setResumptionNote(e.target.value)} rows={2} placeholder="Ex : seront récupérés après la période de forte activité du service..." className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm resize-none" />
                           </div>
                         )}

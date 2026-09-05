@@ -59,6 +59,16 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
     return [...l, ...a].sort((x, y) => new Date(y.createdAt).getTime() - new Date(x.createdAt).getTime());
   }, [loans, advances]);
 
+  // ✅ Date de référence pour CLASSER une demande dans un mois/une année —
+  // jamais createdAt seul (date de création de l'enregistrement, souvent
+  // "aujourd'hui" même si le prêt a été programmé pour un mois différent).
+  // Un prêt se classe sur sa date de départ voulue (startDate) ; une avance
+  // n'a pas de date de départ distincte, createdAt reste la meilleure
+  // approximation de son décaissement réel. Utilisé PARTOUT dans ce fichier
+  // (KPI du mois, tableau des demandes, graphe mensuel, années disponibles)
+  // pour que toutes les vues restent cohérentes entre elles.
+  const refDate = (r: any) => new Date(r.kind === 'loan' ? (r.startDate ?? r.createdAt) : r.createdAt);
+
   const departments = useMemo(() => {
     const set = new Set<string>();
     allRequests.forEach(r => { if (r.employee?.department?.name) set.add(r.employee.department.name); });
@@ -77,7 +87,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
   // ── KPI ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
     const thisMonth = allRequests.filter(r => {
-      const d = new Date(r.createdAt);
+      const d = refDate(r);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
     const countThisMonth = thisMonth.length;
@@ -105,8 +115,8 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
       // meilleure approximation de son décaissement réel.
       const emprunte = allRequests
         .filter(r => {
-          const refDate = r.kind === 'loan' ? new Date(r.startDate ?? r.createdAt) : new Date(r.createdAt);
-          return refDate.getFullYear() === year && refDate.getMonth() === idx;
+          const d = refDate(r);
+          return d.getFullYear() === year && d.getMonth() === idx;
         })
         .reduce((s, r) => s + Number(r.amount ?? 0), 0);
 
@@ -125,7 +135,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
 
   const availableYears = useMemo(() => {
     const set = new Set<number>([now.getFullYear()]);
-    allRequests.forEach(r => set.add(new Date(r.kind === 'loan' ? (r.startDate ?? r.createdAt) : r.createdAt).getFullYear()));
+    allRequests.forEach(r => set.add(refDate(r).getFullYear()));
     return Array.from(set).sort((a, b) => b - a);
   }, [allRequests, now]);
 
@@ -213,7 +223,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{TYPE_LABEL[r.requestType] ?? r.requestType}</td>
                   <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{fmt(Number(r.amount ?? 0))}</td>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{r.monthlyAmount ? fmt(r.monthlyAmount) : '—'}</td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{new Date(r.createdAt).toLocaleDateString('fr-FR')}</td>
+                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{refDate(r).toLocaleDateString('fr-FR')}</td>
                   <td className="px-4 py-3"><StatusPill status={r.status} /></td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => onGoToRequest(r.kind, r.id)} className="text-sky-600 hover:underline text-xs font-semibold flex items-center gap-0.5 ml-auto">

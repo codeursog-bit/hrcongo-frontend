@@ -25,6 +25,8 @@ import { invalidateBulletinTemplateCache } from '@/hooks/useBulletinConfig';
 import BulletinRenderer from '@/components/BulletinRenderer';
 import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
 import BulletinRendererClassique from '@/components/BulletinRendererClassique';
+import FactureRendererForfait from '@/components/FactureRendererForfait';
+import FactureRendererDetaillee from '@/components/FactureRendererDetaillee';
 import CanvasEditor from '@/components/CanvasEditor';
 import CanvasRenderer from '@/components/CanvasRenderer';
 import type {
@@ -70,6 +72,31 @@ const DEMO: BulletinPayroll = {
     address:'34, Avenue Amilcar Cabral',city:'Brazzaville',phone:'+242 06 000 0000',
     rccmNumber:'CG/BZV/24/B/0042',cnssNumber:'CNSS-0042-BZV',
   },
+};
+
+// ─── Données démo — preview FACTURE (prestataire/consultant/intérim/stagiaire) ──
+// Mêmes codes items que le moteur de paie réel (SAL_BASE, BNC_SOURCE,
+// ADVANCE, INDEM_CONGE) — seul le contractType change le routage vers
+// FactureRenderer* au lieu de BulletinRenderer*.
+
+const DEMO_FACTURE: BulletinPayroll = {
+  id:'preview-facture', month: new Date().getMonth()+1, year: new Date().getFullYear(),
+  status:'VALIDATED', workDays:26, workedDays:26, absenceDays:0,
+  baseSalary:250000, grossSalary:265000, netSalary:212500, totalDeductions:52500,
+  totalBonuses:0, totalEmployerCost:0, its:25000,
+  items:[
+    {id:'f1',code:'SAL_BASE',label:'Forfait mensuel',type:'GAIN',amount:250000,base:250000,isTaxable:true,isCnss:false,order:1},
+    {id:'f2',code:'INDEM_CONGE',label:'Indemnité de congé',type:'GAIN',amount:15000,isTaxable:true,isCnss:false,order:2},
+    {id:'f3',code:'BNC_SOURCE',label:'BNC 10% retenu à la source',type:'DEDUCTION',amount:25000,base:265000,rate:0.10,isTaxable:false,isCnss:false,order:1},
+    {id:'f4',code:'ADVANCE',label:'Avance sur salaire',type:'DEDUCTION',amount:27500,isTaxable:false,isCnss:false,order:2},
+  ],
+  bonuses:[],
+  employee:{
+    id:'emp-presta',firstName:'Jean',lastName:'Okouyi',
+    position:'Prestataire',paymentMethod:'CASH',
+    contractType:'PRESTATAIRE',hireDate:'2025-01-10',
+  },
+  company: DEMO.company,
 };
 
 // ─── Métadonnées blocs (pour l'onglet Blocs du mode Template) ────────────────
@@ -209,6 +236,7 @@ export default function BulletinDesignerPage() {
   const [saving, setSaving]     = useState(false);
   const [toast, setToast]       = useState<{msg:string;ok:boolean}|null>(null);
   const [showPreview, setShowPreview] = useState(true);
+  const [previewKind, setPreviewKind] = useState<'bulletin' | 'facture'>('bulletin');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint:{ distance:6 } }));
 
@@ -565,6 +593,46 @@ export default function BulletinDesignerPage() {
     );
   };
 
+  const FACTURE_MODELS: { id: 'forfait' | 'detaillee'; name: string; desc: string }[] = [
+    { id:'forfait',   name:'Forfait simple',      desc:'Reçu compact — forfait, retenues, net à payer. 2 signatures.' },
+    { id:'detaillee', name:'Facture détaillée',   desc:'Facture numérotée — congé, total brut, retenue BNC, net à payer.' },
+  ];
+
+  const FactureTab = () => (
+    <div>
+      <Sub>
+        S'applique automatiquement aux contrats Prestataire, Consultant, Intérimaire et Stagiaire
+        — ce document remplace entièrement le bulletin de paie pour ces profils.
+      </Sub>
+
+      <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.06em', color:'#94a3b8', margin:'0 0 8px' }}>
+        Choisir le modèle de facture
+      </div>
+
+      {FACTURE_MODELS.map(m => {
+        const active = (cfg.factureTemplateId ?? 'forfait') === m.id;
+        return (
+          <div key={m.id} onClick={() => setCfg(prev => ({ ...prev, factureTemplateId: m.id }))}
+            style={{ padding:'12px 14px', borderRadius:10, cursor:'pointer', marginBottom:8,
+              border: active ? `2px solid ${p}` : '1.5px solid #e2e8f0',
+              background: active ? `${p}0d` : '#fff', transition:'all .15s' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+              <div>
+                <div style={{ fontSize:13, fontWeight:700, color:'#0f172a', marginBottom:3 }}>{m.name}</div>
+                <div style={{ fontSize:10.5, color:'#64748b' }}>{m.desc}</div>
+              </div>
+              {active && (
+                <div style={{ width:20, height:20, borderRadius:'50%', background:p, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   const OptionsTab = () => (
     <div>
       <Label>En-tête entreprise</Label>
@@ -610,25 +678,35 @@ export default function BulletinDesignerPage() {
       {/* ══ PANNEAU GAUCHE ══ */}
       <div style={{ background:'#fff', borderRight:'1.5px solid #e2e8f0', display:'flex', flexDirection:'column', overflow:'hidden' }}>
         <div style={{ padding:'16px 16px 0', borderBottom:'1px solid #f1f5f9', flexShrink:0 }}>
-          <h1 style={{ fontSize:16, fontWeight:800, color:'#0f172a', margin:'0 0 2px' }}>Mon bulletin de paie</h1>
+          <h1 style={{ fontSize:16, fontWeight:800, color:'#0f172a', margin:'0 0 2px' }}>
+            {previewKind==='facture' ? '🧾 Facture prestataire' : 'Mon bulletin de paie'}
+          </h1>
           <p style={{ fontSize:11, color:'#64748b', margin:'0 0 12px' }}>La preview se met à jour en temps réel</p>
-          <div style={{ display:'flex', gap:5, flexWrap:'wrap' as const, marginBottom:12 }}>
-            {TABS.map(t=>(
-              <button key={t.id} onClick={()=>setTab(t.id as TemplateTab)}
-                style={{ padding:'7px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', transition:'all .15s',
-                  background: tab===t.id ? p : 'transparent', color: tab===t.id ? '#fff' : '#64748b',
-                  border: tab===t.id ? 'none' : '1.5px solid #e2e8f0' }}>
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {previewKind==='bulletin' && (
+            <div style={{ display:'flex', gap:5, flexWrap:'wrap' as const, marginBottom:12 }}>
+              {TABS.map(t=>(
+                <button key={t.id} onClick={()=>setTab(t.id as TemplateTab)}
+                  style={{ padding:'7px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', transition:'all .15s',
+                    background: tab===t.id ? p : 'transparent', color: tab===t.id ? '#fff' : '#64748b',
+                    border: tab===t.id ? 'none' : '1.5px solid #e2e8f0' }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{ flex:1, overflowY:'auto', padding:'16px' }}>
-          {tab==='gabarit' && <GabaritTab />}
-          {tab==='style'   && <StyleTab   />}
-          {tab==='blocs'   && <BlocsTab   />}
-          {tab==='options' && <OptionsTab />}
+          {previewKind==='facture' ? (
+            <FactureTab />
+          ) : (
+            <>
+              {tab==='gabarit' && <GabaritTab />}
+              {tab==='style'   && <StyleTab   />}
+              {tab==='blocs'   && <BlocsTab   />}
+              {tab==='options' && <OptionsTab />}
+            </>
+          )}
         </div>
 
         <div style={{ padding:'14px 16px', borderTop:'1.5px solid #e2e8f0', display:'flex', gap:8, flexShrink:0 }}>
@@ -653,14 +731,36 @@ export default function BulletinDesignerPage() {
               <span style={{ fontSize:12, fontWeight:600, color:'#0f172a' }}>Preview live</span>
               <span style={{ fontSize:11, color:'#94a3b8' }}>— exactement ce que verront vos employés</span>
             </div>
-            <button onClick={()=>window.print()}
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1.5px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151' }}>
-              🖨️ Imprimer / PDF
-            </button>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ display:'flex', gap:3, background:'#f1f5f9', borderRadius:8, padding:3 }}>
+                <button onClick={()=>setPreviewKind('bulletin')}
+                  style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
+                    background: previewKind==='bulletin' ? '#fff' : 'transparent', color: previewKind==='bulletin' ? '#0f172a' : '#64748b',
+                    boxShadow: previewKind==='bulletin' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
+                  👤 Salarié
+                </button>
+                <button onClick={()=>setPreviewKind('facture')}
+                  style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
+                    background: previewKind==='facture' ? '#fff' : 'transparent', color: previewKind==='facture' ? '#0f172a' : '#64748b',
+                    boxShadow: previewKind==='facture' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
+                  🧾 Prestataire
+                </button>
+              </div>
+              <button onClick={()=>window.print()}
+                style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1.5px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151' }}>
+                🖨️ Imprimer / PDF
+              </button>
+            </div>
           </div>
           <div style={{ flex:1, overflowY:'auto', padding:'20px', background:'#f1f5f9', display:'flex', justifyContent:'center' }}>
             <div style={{ width:794, background:'#fff', borderRadius:10, boxShadow:'0 4px 20px rgba(0,0,0,.1)', overflow:'hidden' }}>
-              {cfg.templateId === 'clarifie' ? (
+              {previewKind === 'facture' ? (
+                cfg.factureTemplateId === 'detaillee' ? (
+                  <FactureRendererDetaillee payroll={DEMO_FACTURE} template={cfg} previewMode />
+                ) : (
+                  <FactureRendererForfait payroll={DEMO_FACTURE} template={cfg} previewMode />
+                )
+              ) : cfg.templateId === 'clarifie' ? (
                 <BulletinRendererClarifie payroll={payroll} template={cfg} previewMode />
               ) : cfg.templateId === 'classique' ? (
                 <BulletinRendererClassique payroll={payroll} template={cfg} previewMode />

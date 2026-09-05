@@ -11,6 +11,12 @@
 //   • app/(dashboard)/cabinet/.../bulletins/page.tsx
 //   • app/pme/[companyId]/bulletins/page.tsx
 //
+// ✅ MODIF (sept. 2026) : si l'employé a un contractType PRESTATAIRE /
+// CONSULTANT / INTERIM / STAGE (cf. lib/facture-contract-types.ts), on
+// route automatiquement vers FactureDisplay (facture) au lieu d'un bulletin
+// de paie classique — décision prise en amont, pas de bouton/toggle par
+// utilisateur RH à chaque consultation.
+//
 // Props :
 //   payroll      — données payroll telles que retournées par l'API
 //   previewMode  — true = taille réduite pour preview (pas impression)
@@ -21,7 +27,9 @@ import BulletinRenderer from '@/components/BulletinRenderer';
 import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
 import BulletinRendererClassique from '@/components/BulletinRendererClassique';
 import CanvasRenderer   from '@/components/CanvasRenderer';
+import FactureDisplay   from '@/components/FactureDisplay';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
+import { isFactureContract } from '@/lib/facture-contract-types';
 import type { BulletinPayroll } from '@/types/bulletin-template';
 
 interface Props {
@@ -31,6 +39,12 @@ interface Props {
 
 export default function BulletinDisplay({ payroll, previewMode = false }: Props) {
   const { config, isLoading } = useBulletinConfig();
+
+  // ── Routage facture — avant tout le reste, indépendant du mode
+  //    template/canvas puisque ça concerne le TYPE de document, pas son style.
+  if (isFactureContract(payroll.employee?.contractType)) {
+    return <FactureDisplay payroll={payroll} previewMode={previewMode} />;
+  }
 
   if (isLoading) {
     return (

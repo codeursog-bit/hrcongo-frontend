@@ -188,6 +188,11 @@ export interface BulletinTemplateConfig {
   blocks: BlockConfig[];
   // Timestamp de dernière modification
   updatedAt?: string;
+  // 🆕 Modèle de FACTURE (prestataire/consultant/intérim/stagiaire) choisi
+  // par l'entreprise — stocké dans le même JSON que le bulletin, pas de
+  // nouvelle table. 'forfait' = reçu compact, 'detaillee' = facture
+  // numérotée. Absent = 'forfait' par défaut (cf. FactureDisplay).
+  factureTemplateId?: 'forfait' | 'detaillee';
 }
 
 // ─── Réponse API ─────────────────────────────────────────────────────────────

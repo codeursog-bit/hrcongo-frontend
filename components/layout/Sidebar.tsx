@@ -283,7 +283,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Planning des Shifts', path: '/presences/shifts', icon: Clock },
     { label: 'Déclaration CNSS', path: '/cnss-declaration', icon: FileCheck },
     { label: 'Contrats', path: '/contrats', icon: History },
-    { label: 'Rupture Contrats', path: '/contrats/rupture', icon: UserMinus },
+    { label: 'Documents admnistratifs', path: '/documents', icon: FileCheck },
     { label: 'Salaires Impayés', path: '/paie/impayes', icon: AlertCircle }, 
     { label: 'Demandes', path: '/demandes', icon: Inbox },
   ];

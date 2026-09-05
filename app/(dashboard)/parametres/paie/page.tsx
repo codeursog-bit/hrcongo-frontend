@@ -27,7 +27,7 @@ import {
   ArrowLeft, Save, AlertTriangle, Calculator, Percent, Clock,
   Calendar, Shield, Info, Loader2, CheckCircle2, Moon, Sun,
   ToggleLeft, ToggleRight, Zap, ChevronRight, FileText,
-  Users, Gift, Banknote, ClipboardList, Landmark, X, Palmtree
+  Users, Gift, Banknote, ClipboardList, Landmark, X, Palmtree, CalendarClock
 } from 'lucide-react';
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
@@ -167,6 +167,9 @@ export default function PayrollSettingsPage() {
 
   // 🆕 Config congés — stockée sur Company (pas PayrollSettings)
   const [leaveMethod, setLeaveMethod] = useState<'AVERAGE_12M' | 'CURRENT_SALARY'>('AVERAGE_12M');
+  // 🆕 Mode de cycle de départ en congé (ROLLING = glissant/retour réel,
+  // ANNIVERSARY = toujours calé sur le mois d'embauche)
+  const [leaveCycleMode, setLeaveCycleMode] = useState<'ROLLING' | 'ANNIVERSARY'>('ROLLING');
 
   // Simulateur ITS
   const [simIncome, setSimIncome]   = useState(450000);
@@ -214,6 +217,7 @@ export default function PayrollSettingsPage() {
     // 🆕 Charger la config congés depuis Company
     api.get<any>('/companies/mine').then(ci => {
       if (ci?.leaveIndemnityMethod) setLeaveMethod(ci.leaveIndemnityMethod);
+      if (ci?.leaveCycleMode) setLeaveCycleMode(ci.leaveCycleMode);
     }).catch(() => {});
   }, []);
 
@@ -261,6 +265,7 @@ const handleSave = async () => {
       // 2. 🆕 Config congés → Company
       await api.patch('/companies', {
         leaveIndemnityMethod: leaveMethod,
+        leaveCycleMode,
       });
 
       setShowConfirm(false);
@@ -874,9 +879,47 @@ const handleSave = async () => {
                 </div>
               </div>
 
-              {/* Note : la période de référence est désormais automatique
-                  (glissante depuis le dernier retour de congé) — plus de
-                  choix JANUARY/HIRE_DATE/JUNE à faire ici, voir backend. */}
+              {/* 🆕 Mode de cycle de congé (JANUARY/JUNE existent aussi
+                  légalement, mais dans les faits c'est ROLLING ou l'ancre
+                  d'embauche qui sont utilisées — voir conversation produit) */}
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                  <CalendarClock size={18} className="text-emerald-500" /> Mode de cycle de départ en congé
+                </h3>
+                <p className="text-xs text-gray-500 mb-4">
+                  Le règlement intérieur doit préciser ce mode. Change uniquement QUAND le prochain départ est dû — le solde (26j + ancienneté) reste identique dans les deux cas.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    {
+                      v: 'ROLLING',
+                      label: 'Glissant (défaut)',
+                      desc: "Le cycle redémarre à la date réelle de RETOUR de congé — toujours 12 mois de présence avant le prochain départ, mais la date de départ dérive dans le temps d'une année sur l'autre.",
+                    },
+                    {
+                      v: 'ANNIVERSARY',
+                      label: "Date anniversaire d'embauche",
+                      desc: "Le départ tombe toujours le même mois chaque année (ex : embauché en février → toujours en février). Prévisible pour la planification RH, mais le cycle suivant le premier ne compte que 11 mois réels de présence.",
+                    },
+                  ].map(({ v, label, desc }) => (
+                    <button key={v} onClick={() => setLeaveCycleMode(v as any)}
+                      className={`text-left p-4 rounded-xl border-2 transition-all ${
+                        leaveCycleMode === v
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                      }`}>
+                      <p className={`font-bold text-sm mb-1 ${leaveCycleMode === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-white'}`}>{label}</p>
+                      <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+                    </button>
+                  ))}
+                </div>
+                {leaveCycleMode === 'ANNIVERSARY' && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-3 flex items-start gap-1.5">
+                    <Info size={13} className="mt-0.5 shrink-0" />
+                    Ce changement s'applique aux prochains cycles calculés — les cycles déjà ouverts (en cours) ne sont pas recalculés rétroactivement.
+                  </p>
+                )}
+              </div>
 
               {/* Rappel règles légales */}
               <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-5">

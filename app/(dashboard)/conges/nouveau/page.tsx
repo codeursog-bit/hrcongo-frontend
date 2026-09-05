@@ -399,6 +399,12 @@ export default function NewLeaveRequestPage() {
   const [returnCalc, setReturnCalc] = useState<any>(null);
   const [desiredDays, setDesiredDays] = useState('');
   const [isCalculatingReturn, setIsCalculatingReturn] = useState(false);
+  // 🆕 Popup motif obligatoire (congé ANNUAL réduit par rapport au solde dû)
+  const [showMotifPrompt, setShowMotifPrompt] = useState(false);
+  const [motifDraft, setMotifDraft] = useState('');
+  // 🆕 Empêche l'auto-suggestion du solde d'écraser une saisie déjà faite
+  // par le RH (on ne préremplit que la toute première fois par employé).
+  const [daysAutoFilled, setDaysAutoFilled] = useState(false);
 
   const handleCalculateReturn = async () => {
     if (!formData.employeeId || !formData.startDate || !desiredDays) return;
@@ -415,6 +421,18 @@ export default function NewLeaveRequestPage() {
       setIsCalculatingReturn(false);
     }
   };
+
+  // 🆕 Auto-déclenche le calcul de la date de retour dès qu'on a une date de
+  // départ ET un nombre de jours suggéré automatiquement (voir effet
+  // ci-dessus) — le RH n'a plus à cliquer manuellement "Calculer la date de
+  // reprise" dans le cas courant (droit connu à l'avance). S'il change la
+  // date de départ ensuite, ce même effet recalcule tout seul.
+  useEffect(() => {
+    if (daysAutoFilled && formData.employeeId && formData.startDate && desiredDays && !formData.endDate) {
+      handleCalculateReturn();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daysAutoFilled, formData.startDate, formData.employeeId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -465,6 +483,7 @@ export default function NewLeaveRequestPage() {
   // 🆕 Charger le solde de l'employé sélectionné
   useEffect(() => {
     if (!formData.employeeId) return;
+    setDaysAutoFilled(false); // nouvel employé → on autorise un nouveau préremplissage
     const fetchBalance = async () => {
       try {
         const bal = await api.get<LeaveBalance>(
@@ -477,6 +496,24 @@ export default function NewLeaveRequestPage() {
     };
     fetchBalance();
   }, [formData.employeeId]);
+
+  // 🆕 Auto-suggestion du droit réel (26j + ancienneté) dès que le solde est
+  // connu — le RH n'a plus besoin de connaître ce chiffre de tête (demande
+  // explicite). Uniquement pour ANNUAL (l'anticipé est volontairement
+  // partiel par nature, pas de suggestion pertinente). Ne s'exécute qu'une
+  // fois par employé sélectionné : si le RH modifie ensuite la valeur à la
+  // main, on ne l'écrase plus.
+  useEffect(() => {
+    if (
+      formData.type === 'ANNUAL' &&
+      selectedBalance &&
+      !daysAutoFilled &&
+      !desiredDays
+    ) {
+      setDesiredDays(String(Math.round(Number(selectedBalance.annualRemaining))));
+      setDaysAutoFilled(true);
+    }
+  }, [formData.type, selectedBalance, daysAutoFilled, desiredDays]);
 
   const calculationDetails = useMemo(() => {
     if (!formData.startDate || !formData.endDate) return null;
@@ -514,7 +551,17 @@ export default function NewLeaveRequestPage() {
     return { businessDays, ouvrables, dimanchesDays, totalDays, insufficientBalance, cyclesUsed, fullCycles, remainingDays, isMultiCycle };
   }, [formData.startDate, formData.endDate, formData.type, selectedBalance]);
 
-  const handleSubmit = async () => {
+  // 🆕 Congé ANNUAL demandé pour MOINS que le solde réellement dû — motif
+  // obligatoire (voir popup plus bas), pour qu'il apparaisse sur la lettre
+  // de départ. Jamais pour ANNUAL_ANTICIPATED (partiel par nature).
+  const isReducedAnnual = !!(
+    formData.type === 'ANNUAL' &&
+    selectedBalance &&
+    calculationDetails &&
+    calculationDetails.ouvrables < Math.round(Number(selectedBalance.annualRemaining))
+  );
+
+  const submitLeave = async (reasonOverride?: string) => {
     setSubmitError(null);
     setIsSubmitting(true);
     try {
@@ -523,7 +570,7 @@ export default function NewLeaveRequestPage() {
         type:       formData.type,
         startDate:  formData.startDate,
         endDate:    formData.endDate,
-        reason:     formData.reason
+        reason:     reasonOverride ?? formData.reason
       });
       setShowConfirmation(true);
       setTimeout(() => router.push(bp('/conges/mon-espace')), 2500);
@@ -531,6 +578,22 @@ export default function NewLeaveRequestPage() {
       setSubmitError(e?.message || "Erreur lors de la demande");
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = () => {
+    if (isReducedAnnual && !formData.reason?.trim()) {
+      setMotifDraft('');
+      setShowMotifPrompt(true);
+      return;
+    }
+    submitLeave();
+  };
+
+  const handleConfirmMotif = () => {
+    if (!motifDraft.trim()) return;
+    setFormData(f => ({ ...f, reason: motifDraft.trim() }));
+    setShowMotifPrompt(false);
+    submitLeave(motifDraft.trim());
   };
 
   const showEmployeeSelect = currentUser &&
@@ -568,6 +631,59 @@ export default function NewLeaveRequestPage() {
               </p>
               <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
                 <motion.div className="h-full bg-sky-500" initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2.5 }} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMotifPrompt && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-700">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-10 h-10 shrink-0 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-600">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Motif requis</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Ce congé ({calculationDetails?.ouvrables}j) est inférieur au solde dû
+                    ({selectedBalance ? Math.round(Number(selectedBalance.annualRemaining)) : '—'}j).
+                    Précisez le motif de cette réduction — il apparaîtra sur la lettre de départ.
+                  </p>
+                </div>
+              </div>
+              <textarea
+                autoFocus
+                rows={3}
+                value={motifDraft}
+                onChange={e => setMotifDraft(e.target.value)}
+                placeholder="Ex : récupérés après le rangement de la promotion d'Août 2026"
+                className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-400"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Ce texte complète directement « ...seront <strong>{motifDraft || '…'}</strong>. » sur la lettre — pas de phrase complète, juste la suite.</p>
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowMotifPrompt(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-semibold text-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmMotif}
+                  disabled={!motifDraft.trim()}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm disabled:opacity-40"
+                >
+                  Confirmer et envoyer
+                </button>
               </div>
             </div>
           </motion.div>
@@ -771,10 +887,19 @@ export default function NewLeaveRequestPage() {
 
           {/* Motif */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Motif & Commentaires</label>
+            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+              Motif & Commentaires
+              {isReducedAnnual && <span className="text-amber-600 ml-1">(obligatoire — congé réduit)</span>}
+            </label>
+            {isReducedAnnual && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+                Ce congé ({calculationDetails?.ouvrables}j) est inférieur au solde dû
+                ({selectedBalance ? Math.round(Number(selectedBalance.annualRemaining)) : '—'}j) — le motif sera repris tel quel sur la lettre de départ (« ...seront <strong>{'{motif}'}</strong>. »), pas besoin de phrase complète.
+              </p>
+            )}
             <textarea value={formData.reason}
               onChange={e => setFormData({ ...formData, reason: e.target.value })}
-              className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium resize-none"
+              className={`w-full p-4 border rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium resize-none ${isReducedAnnual && !formData.reason?.trim() ? 'border-amber-400 dark:border-amber-600' : 'border-gray-200 dark:border-gray-600'}`}
               rows={3} placeholder="Ex: Voyage prévu, RDV médical..." />
           </div>
 
