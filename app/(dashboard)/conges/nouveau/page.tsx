@@ -602,14 +602,21 @@ export default function NewLeaveRequestPage() {
   const displayName = myEmployee
     ? `${myEmployee.firstName} ${myEmployee.lastName}` : '—';
 
+  const isRHOrAdmin = !!currentUser &&
+    ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(currentUser.role);
+
   // Vérification éligibilité congé annuel — l'anticipé existe précisément
   // pour déroger à cette règle des 12 mois, donc il n'est jamais bloqué ici.
+  // ✅ CORRECTIF (demande explicite) : ce blocage ne s'applique qu'à un
+  // employé en auto-service. Un RH/Admin qui planifie pour quelqu'un
+  // d'autre voit le même avertissement mais n'est jamais empêché de valider
+  // (le backend applique la même règle — voir leaves.service.ts/create()).
   const notEligible = formData.type === 'ANNUAL' && selectedBalance &&
     !selectedBalance.canTakeAnnualLeave;
 
   const canSubmit = !isSubmitting && !showConfirmation &&
     !!calculationDetails && !!formData.employeeId &&
-    !calculationDetails.insufficientBalance && !notEligible;
+    !calculationDetails.insufficientBalance && !(notEligible && !isRHOrAdmin);
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -747,12 +754,15 @@ export default function NewLeaveRequestPage() {
             </div>
           )}
 
-          {/* 🆕 Alerte éligibilité */}
+          {/* 🆕 Alerte éligibilité — bloquante pour l'employé, informative pour RH/Admin */}
           {notEligible && selectedBalance && (
             <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
               <Lock size={18} className="text-amber-500 mt-0.5 shrink-0" />
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                Les congés annuels sont accessibles après <strong>12 mois</strong> d'ancienneté (Code du travail congolais). Ancienneté actuelle : <strong>{selectedBalance.monthsWorked} mois</strong>. Encore <strong>{selectedBalance.monthsUntilEligible} mois</strong> requis.
+                Les congés annuels sont normalement accessibles après <strong>12 mois</strong> d'ancienneté (Code du travail congolais). Ancienneté actuelle : <strong>{Math.round(selectedBalance.monthsWorked)} mois</strong>. Encore <strong>{Math.round(selectedBalance.monthsUntilEligible)} mois</strong> requis.
+                {isRHOrAdmin
+                  ? ' En tant que RH/Admin, vous pouvez tout de même valider ce départ à titre exceptionnel — ce sera enregistré comme tel.'
+                  : ' Pour un départ avant ce délai, le congé annuel anticipé est disponible.'}
               </p>
             </div>
           )}
@@ -973,7 +983,7 @@ export default function NewLeaveRequestPage() {
                     <p className="text-xs text-amber-300 font-bold mb-1">Congés sur plusieurs années</p>
                     <p className="text-xs text-amber-200/80 leading-relaxed">
                       {calculationDetails.fullCycles} année{calculationDetails.fullCycles > 1 ? 's' : ''} complète{calculationDetails.fullCycles > 1 ? 's' : ''} (26j × {calculationDetails.fullCycles})
-                      {calculationDetails.remainingDays > 0 && ` + ${calculationDetails.remainingDays}j`}.
+                      {calculationDetails.remainingDays > 0 && ` + ${Math.round(calculationDetails.remainingDays)}j`}.
                       L'indemnité sera calculée cycle par cycle selon la base de référence de chaque année.
                     </p>
                   </div>

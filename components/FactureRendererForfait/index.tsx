@@ -37,12 +37,13 @@ const CONTRACT: Record<string, string> = {
   PRESTATAIRE: 'Prestataire', INTERIM: 'Intérimaire', FREELANCE: 'Freelance',
 };
 
+const MOIS = [
+  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+];
+
 const nv  = (v: any): number => { const x = Number(v); return isFinite(x) ? x : 0; };
 const fmt = (v: any): string  => Math.round(nv(v)).toLocaleString('fr-FR');
-const fmtDate = (d?: string | Date) => {
-  const x = d ? new Date(d) : new Date();
-  return isNaN(x.getTime()) ? '—' : x.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-};
 
 const SANS = 'Arial,Helvetica,sans-serif';
 const K    = '#000';
@@ -54,7 +55,7 @@ const Row = ({ label, value, bold = false, divider = false }: { label: string; v
     <td style={{
       padding: bold ? '5px 18px 5px 0' : '2.5px 18px 2.5px 0', fontSize: bold ? 12.5 : 11,
       fontWeight: bold ? 800 : 600, borderTop: divider ? BD : 'none',
-      textTransform: 'uppercase' as const, whiteSpace: 'nowrap',
+      textTransform: 'uppercase' as const, maxWidth: '78mm',
     }}>{label} :</td>
     <td style={{
       padding: bold ? '5px 0' : '2.5px 0', fontSize: bold ? 13 : 11,
@@ -70,7 +71,7 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
   const co  = (payroll.company  ?? {}) as any;
   const items: PayrollItem[] = payroll.items ?? [];
 
-  const { gainItems, cotisItems, retenueItems } = useMemo(() => classifyItems(items), [items]);
+  const { gainItems, cotisItems, retenueItems, indemItems } = useMemo(() => classifyItems(items), [items]);
 
   // ── Forfait / salaire de base (toujours affiché — c'est la ligne pivot) ─
   const forfaitItem = gainItems.find((i: any) => i.code === 'SAL_BASE');
@@ -90,25 +91,33 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
     i !== forfaitItem && i !== congeItem && i !== absItem && nv(i.amount) > 0
   );
 
+  // ── Indemnités hors brut (transport, panier, salissure…) — non soumises
+  //    ITS/CNSS, classées à part par classifyItems, mais bien payées donc
+  //    incluses dans payroll.netSalary. On les affiche comme BulletinRenderer.
+  const indems = indemItems.filter((i: any) => nv(i.amount) > 0);
+
   // ── Retenue BNC (remplace CNSS + ITS pour ce profil) — affichée seulement
-  //    si l'employé y est effectivement soumis et qu'un montant existe ────
+  //    si l'employé y est effectivement soumis et qu'un montant existe.
+  //    ✅ Le taux (10%/20%, résidence, article CGI) est déjà dans item.label
+  //    tel que produit par payroll-calculator.service.ts (calc.bncLabel) —
+  //    ne PAS reconstruire un libellé à partir de item.rate (toujours null).
   const bncItem = cotisItems.find((i: any) => i.code === 'BNC_SOURCE' || i.code === 'ITS');
   const bncMontant = nv(bncItem?.amount ?? payroll.its);
-  const bncTaux = bncItem?.rate != null
-    ? `${(nv(bncItem.rate) < 1 ? nv(bncItem.rate) * 100 : nv(bncItem.rate)).toFixed(0)}%`
-    : '';
 
   // ── Retenues diverses (avance sur salaire, prêt, retenue libre…) ────────
   const retenues = retenueItems.filter((i: any) => nv(i.amount) > 0);
 
-  const netAPayer = nv(payroll.netSalary) || (forfaitMontant + congeMontant
-    + autresGains.reduce((s: number, i: any) => s + nv(i.amount), 0)
-    - bncMontant - absMontant
-    - retenues.reduce((s: number, i: any) => s + nv(i.amount), 0));
+  // ✅ Net à payer = strictement payroll.netSalary tel que le back l'a calculé.
+  // Aucun recalcul front à partir des items — si le back ne l'a pas rempli,
+  // ça affiche 0/- tel quel plutôt que de masquer un écart avec un chiffre
+  // recalculé qui pourrait diverger du back.
+  const netAPayer = nv(payroll.netSalary);
 
   const fullName = [e.firstName, e.lastName?.toUpperCase()].filter(Boolean).join(' ') || '—';
   const qualite  = e.position || CONTRACT[e.contractType ?? ''] || '—';
-  const dateStr  = fmtDate((payroll as any).paymentDate ?? new Date(payroll.year, (payroll.month ?? 1) - 1, new Date().getDate()));
+  const moisIdx  = Math.max(0, Math.min(11, (payroll.month ?? 1) - 1));
+  const moisNom  = MOIS[moisIdx];
+  const anneeComplete = payroll.year ?? new Date().getFullYear();
   const ville    = co.city || '—';
 
   return (
@@ -145,7 +154,7 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
 
           {/* ── Ville / date — alignées à droite ─────────────────────────── */}
           <div style={{ fontSize: 10.5, marginTop: 8, width: '100%', textAlign: 'right' }}>
-            {ville} — le {dateStr}
+            {ville} — paie de {moisNom} {anneeComplete}
           </div>
 
           {/* ── Bandeau prestataire (nom + qualité) — centré sur la page ── */}
@@ -168,8 +177,11 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
                 {autresGains.map((item: any) => (
                   <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
                 ))}
+                {indems.map((item: any) => (
+                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+                ))}
                 {absMontant > 0 && <Row label={absItem?.label || 'Retenue absence'} value={fmt(absMontant)} />}
-                {bncMontant > 0 && <Row label={`Retenue impôt${bncTaux ? ` ${bncTaux}` : ''}`} value={fmt(bncMontant)} />}
+                {bncMontant > 0 && <Row label={bncItem?.label || 'Retenue impôt'} value={fmt(bncMontant)} />}
                 {retenues.map((item: any) => (
                   <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
                 ))}

@@ -5,10 +5,12 @@
 // ============================================================================
 // Fichier: app/(dashboard)/pricing/page.tsx
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSubscription, usePlans } from '@/hooks/useSubscription';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
+import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
+import { api } from '@/services/api';
 import {
   Check, Zap, Gift, Sparkles, AlertTriangle,
   Rocket, Building2, Star, X, Phone, ChevronDown, Loader2, Crown,
@@ -18,203 +20,9 @@ import { toast } from 'sonner';
 // ============================================================================
 // 📝 TYPES
 // ============================================================================
-interface PaymentIntent {
-  intentId: string;
-  clientSecret: string;
-  paymentId: string;
-  plan: string;
-  billingPeriod: string;
-  amount: number;
-}
-
-const OPERATORS = [
-  { value: 'MTN',    label: 'MTN Mobile Money' },
-  { value: 'AIRTEL', label: 'Airtel Money' },
-  { value: 'ORANGE', label: 'Orange Money' },
-] as const;
-
 const PLAN_LABELS: Record<string, string> = {
   FREE: 'Gratuit', BASIC: 'Basic', PRO: 'Pro', ENTERPRISE: 'Enterprise',
 };
-
-// ============================================================================
-// 💳 MODAL PAIEMENT MOBILE MONEY
-// ============================================================================
-function PaymentModal({
-  intent,
-  planLabel,
-  onClose,
-}: {
-  intent: PaymentIntent;
-  planLabel: string;
-  onClose: () => void;
-}) {
-  const router = useRouter();
-  const [phone,    setPhone]    = useState('');
-  const [operator, setOperator] = useState<'MTN' | 'AIRTEL' | 'ORANGE'>('MTN');
-  const [loading,  setLoading]  = useState(false);
-  const [step,     setStep]     = useState<'form' | 'waiting'>('form');
-
-  const handleConfirm = async () => {
-    if (!phone || phone.length < 9) {
-      toast.error('Numéro invalide — 9 chiffres requis');
-      return;
-    }
-    setLoading(true);
-    try {
-      const result = await api.post<{ status: string; message: string }>(
-        '/subscriptions/confirm-payment',
-        { intentId: intent.intentId, clientSecret: intent.clientSecret, phone, operator },
-      );
-
-      if (result.status === 'succeeded') {
-        // Paiement immédiat (rare en sandbox)
-        router.push(`/success?plan=${intent.plan}&immediate=true`);
-      } else {
-        // Cas normal : attente confirmation téléphone
-        setStep('waiting');
-      }
-    } catch {
-      toast.error('Erreur lors de l\'envoi. Vérifiez votre numéro.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleWaitingDone = () => {
-    router.push(`/success?plan=${intent.plan}&waiting=true`);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <p className="text-sm font-bold text-slate-900 dark:text-white">Paiement Mobile Money</p>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Plan {planLabel} · {intent.amount.toLocaleString('fr-FR')} FCFA/mois
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            <X size={15} className="text-slate-500" />
-          </button>
-        </div>
-
-        {step === 'form' ? (
-          <div className="p-5 space-y-4">
-            {/* Opérateur */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">
-                Opérateur
-              </label>
-              <div className="relative">
-                <select
-                  value={operator}
-                  onChange={e => setOperator(e.target.value as 'MTN' | 'AIRTEL' | 'ORANGE')}
-                  className="w-full appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer"
-                >
-                  {OPERATORS.map(op => (
-                    <option key={op.value} value={op.value}>{op.label}</option>
-                  ))}
-                </select>
-                <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Téléphone */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">
-                Numéro de téléphone
-              </label>
-              <div className="relative">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                  <Phone size={14} className="text-slate-400" />
-                  <span className="text-xs text-slate-400 font-mono">+242</span>
-                </div>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder="06 XXX XX XX"
-                  maxLength={9}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-20 pr-4 py-3 text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-400 placeholder:text-slate-300 dark:placeholder:text-slate-600"
-                />
-              </div>
-              <p className="mt-1.5 text-[11px] text-slate-400">
-                Numéro associé à votre {OPERATORS.find(o => o.value === operator)?.label}
-              </p>
-            </div>
-
-            {/* Récap */}
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Montant à payer</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white font-mono">
-                {intent.amount.toLocaleString('fr-FR')} FCFA
-              </span>
-            </div>
-
-            <button
-              onClick={handleConfirm}
-              disabled={loading || phone.length < 9}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
-            >
-              {loading ? <Loader2 size={15} className="animate-spin" /> : null}
-              {loading ? 'Envoi en cours…' : 'Confirmer le paiement'}
-            </button>
-
-            <p className="text-[11px] text-center text-slate-400">
-              Une notification sera envoyée sur votre téléphone. Confirmez avec votre PIN.
-            </p>
-          </div>
-        ) : (
-          /* Attente confirmation téléphone */
-          <div className="p-6 flex flex-col items-center text-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <Phone size={24} className="text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-                Confirmez sur votre téléphone
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Demande de{' '}
-                <span className="font-bold text-slate-700 dark:text-slate-300">
-                  {intent.amount.toLocaleString('fr-FR')} FCFA
-                </span>{' '}
-                envoyée au{' '}
-                <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                  +242 {phone}
-                </span>{' '}
-                via {OPERATORS.find(o => o.value === operator)?.label}.
-              </p>
-            </div>
-            <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 text-left space-y-1.5">
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Instructions</p>
-              <p className="text-xs text-slate-600 dark:text-slate-300">1. Ouvrez la notification sur votre téléphone</p>
-              <p className="text-xs text-slate-600 dark:text-slate-300">2. Entrez votre code PIN Mobile Money</p>
-              <p className="text-xs text-slate-600 dark:text-slate-300">3. Cliquez sur "J'ai confirmé" ci-dessous</p>
-            </div>
-            <button
-              onClick={handleWaitingDone}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold transition-all hover:opacity-90 shadow-lg"
-            >
-              J'ai confirmé le paiement ✓
-            </button>
-            <button onClick={onClose} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
-              Annuler
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ============================================================================
 // 🎯 COMPOSANT PRICING
@@ -227,23 +35,44 @@ function PricingContent() {
 
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
-  const [paymentIntent, setPaymentIntent] = useState<PaymentIntent | null>(null);
-  const [selectedPlan,  setSelectedPlan]  = useState<string>('');
+  const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
 
+  // 🔀 Bascule automatique de prestataire — voir GET /subscriptions/payment-provider.
+  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | null>(null);
+  const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
+
+  useEffect(() => {
+    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' }>('/subscriptions/payment-provider')
+      .then((r) => setActiveProvider(r.provider))
+      .catch(() => setActiveProvider('YABETOOPAY')); // repli prudent si l'appel échoue
+  }, []);
+
+  // Moteki initie ET déclenche le paiement en un seul appel (fait par
+  // MotekiCheckoutModal lui-même). YabetooPay a besoin d'un PaymentIntent
+  // créé d'abord via /subscriptions/upgrade (flux original en 2 étapes,
+  // inchangé) avant d'ouvrir son propre modal.
   const handleUpgrade = async (plan: 'BASIC' | 'PRO' | 'ENTERPRISE') => {
-    setUpgradingPlan(plan);
-    try {
-      const data = await api.post<PaymentIntent>('/subscriptions/upgrade', {
-        plan,
-        billingPeriod,
-      });
-      setPaymentIntent(data);
-      setSelectedPlan(plan);
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de l\'initialisation du paiement');
-    } finally {
-      setUpgradingPlan(null);
+    const planData = plans?.[plan];
+    const amount = billingPeriod === 'yearly' ? planData?.priceYearly : planData?.priceMonthly;
+    if (!amount) {
+      toast.error("Impossible de déterminer le tarif de ce plan, réessayez.");
+      return;
     }
+
+    if (activeProvider === 'YABETOOPAY') {
+      setUpgradingPlan(plan);
+      try {
+        const data = await api.post<PaymentIntent>('/subscriptions/upgrade', { plan, billingPeriod });
+        setPaymentIntent(data);
+      } catch (error: any) {
+        toast.error(error.message || "Erreur lors de l'initialisation du paiement");
+      } finally {
+        setUpgradingPlan(null);
+      }
+      return;
+    }
+
+    setCheckoutTarget({ plan, billingPeriod, amount });
   };
 
   if (isLoading) {
@@ -492,19 +321,35 @@ function PricingContent() {
                 <Zap className="w-5 h-5 text-blue-400" /> Moyens de paiement ?
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Mobile Money direct depuis l'app : MTN, Airtel, Orange via YabetooPay.
+                Mobile Money direct depuis l'app : MTN, Airtel, Orange via Moteki.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal paiement */}
+      {/* Modal paiement — Moteki */}
+      {checkoutTarget && (
+        <MotekiCheckoutModal
+          plan={checkoutTarget.plan}
+          billingPeriod={checkoutTarget.billingPeriod}
+          amount={checkoutTarget.amount}
+          planLabel={PLAN_LABELS[checkoutTarget.plan] ?? checkoutTarget.plan}
+          onClose={() => setCheckoutTarget(null)}
+          onError={(msg) => toast.error(msg)}
+        />
+      )}
+
+      {/* Modal paiement — YabetooPay (filet de secours, code original intact) */}
       {paymentIntent && (
-        <PaymentModal
+        <YabetooCheckoutModal
           intent={paymentIntent}
-          planLabel={PLAN_LABELS[selectedPlan] ?? selectedPlan}
+          planLabel={PLAN_LABELS[paymentIntent.plan] ?? paymentIntent.plan}
           onClose={() => setPaymentIntent(null)}
+          onSuccess={() => {
+            toast.success('Paiement envoyé ! Votre abonnement sera activé après confirmation.');
+          }}
+          onError={(msg) => toast.error(msg)}
         />
       )}
     </div>

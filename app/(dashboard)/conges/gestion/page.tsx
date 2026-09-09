@@ -245,7 +245,7 @@ export default function GestionCongesPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-500">{fmtDate(ev.startDate)} → {fmtDate(ev.endDate)}</td>
-                    <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">{ev.daysCount}j</td>
+                    <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">{Math.round(Number(ev.daysCount))}j</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${STATUS_COLORS[ev.status] || ''}`}>
                         {STATUS_LABELS[ev.status] || ev.status}
@@ -304,7 +304,7 @@ export default function GestionCongesPage() {
                               {STATUS_LABELS[h.status] || h.status}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-400">{fmtDate(h.startDate)} → {fmtDate(h.endDate)} · {h.daysCount}j</p>
+                          <p className="text-xs text-gray-400">{fmtDate(h.startDate)} → {fmtDate(h.endDate)} · {Math.round(Number(h.daysCount))}j</p>
                           {h.reason && <p className="text-xs text-gray-400 mt-1 italic">"{h.reason}"</p>}
                         </div>
                       );

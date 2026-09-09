@@ -62,6 +62,20 @@ ${styleInlines}
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+  /* ✅ CORRECTIF : le site est en dark mode par défaut (voir globals.css).
+     Si un élément du document utilise une classe Tailwind "dark:text-*"
+     (texte clair pensé pour un fond sombre) plutôt qu'une couleur figée,
+     il devient quasi invisible une fois forcé sur fond blanc ici — d'où le
+     texte "délavé" à l'impression/export (même bug identifié sur les prêts,
+     cf. loan-print.ts). On impose une couleur de texte sûre à tout le
+     contenu imprimé, quelle que soit la classe/le thème d'origine.
+  */
+  #absence-print-target, #absence-print-target * {
+    color: #111 !important;
+    background-color: transparent !important;
+  }
+  #absence-print-target { background-color: #fff !important; }
+  #absence-print-target img { background-color: initial !important; }
 </style>
 </head><body>
 <div id="absence-print-target">${el.outerHTML}</div>
@@ -124,7 +138,20 @@ export async function downloadAbsenceRequestPDF(filename: string): Promise<void>
     'box-sizing:border-box',
     'color-scheme:light',
   ].join(';');
+  clone.id = 'pdf-export-target';
 
+  // ✅ CORRECTIF : même filet de sécurité que loan-print.ts / leave-print.ts
+  // — le site étant en dark mode par défaut, un élément stylé en
+  // "dark:text-*" (texte clair sur fond sombre) copié tel quel par
+  // cloneNode() ressort quasi invisible une fois html2canvas forcé sur fond
+  // blanc. On impose ici une couleur de texte sûre à tout le clone.
+  const styleOverride = document.createElement('style');
+  styleOverride.textContent = `
+    #pdf-export-target, #pdf-export-target * { color: #111 !important; background-color: transparent !important; }
+    #pdf-export-target { background-color: #fff !important; }
+    #pdf-export-target img { background-color: initial !important; }
+  `;
+  container.appendChild(styleOverride);
   container.appendChild(clone);
   document.body.appendChild(container);
 

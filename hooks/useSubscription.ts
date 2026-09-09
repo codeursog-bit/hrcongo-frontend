@@ -205,7 +205,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api } from '@/services/api';
 
 // ============================================================================
 // 📝 TYPES
@@ -261,6 +261,10 @@ export interface Subscription {
   currency: string;
   planDetails: Plan;
   daysLeftInTrial?: number;
+  /** Jours restants avant la fin de la période EN COURS (essai OU payant) */
+  daysLeftInPeriod?: number | null;
+  /** false si l'entreprise est volontairement sur le plan Gratuit (rien à renouveler) */
+  willRevertToFree?: boolean;
 }
 
 export interface UsageStats {
@@ -329,10 +333,28 @@ export function useSubscription() {
   const isActive = subscription?.status === 'ACTIVE' || subscription?.status === 'TRIALING';
 
   // ✅ Calculer les jours restants
-  const daysLeft = subscription?.daysLeftInTrial || 0;
+  // 🐛 CORRIGÉ : avant, `daysLeft` ne comptait que l'essai (daysLeftInTrial).
+  // Un abonnement PAYANT (BASIC/PRO/ENTERPRISE) qui approchait de sa fin
+  // n'affichait donc jamais de compte à rebours. On utilise maintenant
+  // daysLeftInPeriod, qui couvre les deux cas côté backend.
+  const daysLeft = subscription?.daysLeftInPeriod ?? subscription?.daysLeftInTrial ?? 0;
 
-  // ✅ Vérifier si bientôt expiré (moins de 7 jours)
-  const isExpiringSoon = isOnTrial && daysLeft <= 7;
+  // ✅ Bientôt expiré : essai OU abonnement payant à 7 jours ou moins de la
+  // fin, seulement si un retour au Gratuit est effectivement en jeu (pas
+  // pertinent si l'entreprise est déjà volontairement sur FREE).
+  const isExpiringSoon =
+    (subscription?.willRevertToFree ?? isOnTrial) && daysLeft <= 7 && daysLeft >= 0;
+
+  // ✅ Palier de rappel actuel — utile pour choisir le ton du toast/modal
+  // (voir SubscriptionReminderProvider) : 'urgent' à J-1, 'warning' à J-3,
+  // 'info' à J-7, sinon rien à afficher.
+  const renewalUrgency: 'urgent' | 'warning' | 'info' | null = !isExpiringSoon
+    ? null
+    : daysLeft <= 1
+      ? 'urgent'
+      : daysLeft <= 3
+        ? 'warning'
+        : 'info';
 
   return {
     subscription,
@@ -349,6 +371,7 @@ export function useSubscription() {
     isActive,
     daysLeft,
     isExpiringSoon,
+    renewalUrgency,
     
     // Raccourcis
     plan: subscription?.plan || 'FREE',

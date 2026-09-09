@@ -16,6 +16,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSubscription } from '@/hooks/useSubscription';
+import { api } from '@/services/api';
 import {
   CheckCircle, Crown, ArrowRight, Loader2, XCircle,
   Sparkles, Zap, Phone, RefreshCw, Rocket,
@@ -39,9 +40,25 @@ function SuccessContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
 
-  const plan      = searchParams.get('plan') ?? '';
-  const immediate = searchParams.get('immediate') === 'true';
-  const failed    = searchParams.get('failed') === 'true';
+  // 🛒 Retour Moteki : l'URL de redirection est fixe (configurée sur le
+  // dashboard Moteki) et ne porte que ?status=success|cancel — pas nos
+  // propres ?plan=/&waiting= comme avec l'ancien flux Yabetoo. On relit
+  // donc le plan mémorisé juste avant le redirect (voir MotekiCheckoutModal)
+  // si l'URL ne le porte pas.
+  const motekiStatus = searchParams.get('status'); // 'success' | 'cancel' | null
+  let pendingCheckout: { plan?: string; billingPeriod?: string; paymentId?: string } = {};
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = sessionStorage.getItem('pendingSubscriptionCheckout');
+      if (raw) pendingCheckout = JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+  }
+
+  const plan      = searchParams.get('plan') ?? pendingCheckout.plan ?? '';
+  const immediate = searchParams.get('immediate') === 'true' || motekiStatus === 'success';
+  const failed    = searchParams.get('failed') === 'true' || motekiStatus === 'cancel';
 
   const { subscription, isLoading, refetch } = useSubscription();
 
@@ -56,6 +73,24 @@ function SuccessContent() {
   const [countdown, setCountdown] = useState(10);
   const [attempts,  setAttempts]  = useState(0);
   const [isChecking, setIsChecking] = useState(false);
+
+  // 🛒 Moteki : on ne dépend pas du webhook pour savoir si c'est payé — on
+  // interroge nous-mêmes la commande dès l'arrivée sur cette page (au lieu
+  // d'attendre le prochain passage du cron de polling, toutes les 5 min).
+  // Best-effort : si ça échoue (paiement encore en cours côté opérateur),
+  // le countdown "waiting" classique + le cron prennent le relais.
+  useEffect(() => {
+    if (motekiStatus !== 'success' || !pendingCheckout.paymentId) return;
+    (async () => {
+      try {
+        await api.post(`/subscriptions/moteki/check-order/${pendingCheckout.paymentId}`, {});
+      } catch {
+        // pas grave — le cron de polling réessaiera dans les minutes qui suivent
+      } finally {
+        refetch();
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Vérification initiale si paiement immédiat ────────────────────────────
   useEffect(() => {
@@ -74,6 +109,7 @@ function SuccessContent() {
     if (subscription?.status === 'ACTIVE') {
       setStatus('success');
       if (attempts > 0) toast.success('🎉 Abonnement activé !');
+      try { sessionStorage.removeItem('pendingSubscriptionCheckout'); } catch {}
     } else {
       // Pas encore activé → retour en attente
       setStatus('waiting');

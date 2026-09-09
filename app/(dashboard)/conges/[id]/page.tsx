@@ -46,6 +46,7 @@ export default function LeaveDetailPage() {
   const [docData, setDocData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState('');
+  const [currentUserName, setCurrentUserName] = useState('');
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [extraDaysGranted, setExtraDaysGranted] = useState('');
@@ -77,7 +78,18 @@ export default function LeaveDetailPage() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem('user');
-      if (stored) setUserRole(JSON.parse(stored).role || '');
+      if (stored) {
+        const u = JSON.parse(stored);
+        setUserRole(u.role || '');
+        // 🆕 CORRECTIF (demande explicite) : pour un congé sans approbateur
+        // enregistré (migré, ou tout cas où approvedByUser est absent), la
+        // lettre doit quand même porter un vrai nom — celui de l'admin/RH
+        // actuellement connecté, qui est de fait celui qui gère/imprime ce
+        // dossier aujourd'hui. Jamais un texte générique impersonnel.
+        if (u.firstName || u.lastName) {
+          setCurrentUserName(`${u.firstName ?? ''} ${u.lastName ?? ''}`.trim());
+        }
+      }
     } catch {}
     if (id) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -204,7 +216,11 @@ export default function LeaveDetailPage() {
     startDate: leave.startDate, endDate: leave.endDate, daysCount: leave.daysCount,
     hasAttachment: !!leave.attachmentUrl, status: leave.status,
     requestedAt: leave.requestedAt || leave.createdAt,
-    reviewedByName: leave.approvedByUser ? `${leave.approvedByUser.firstName} ${leave.approvedByUser.lastName}` : (leave.rejectedByUser ? `${leave.rejectedByUser.firstName} ${leave.rejectedByUser.lastName}` : undefined),
+    reviewedByName: leave.approvedByUser
+      ? `${leave.approvedByUser.firstName} ${leave.approvedByUser.lastName}`
+      : (leave.rejectedByUser
+          ? `${leave.rejectedByUser.firstName} ${leave.rejectedByUser.lastName}`
+          : (currentUserName || undefined)),
     reviewedAt: leave.approvedAt || leave.rejectedAt,
     rejectionReason: leave.rejectionReason,
   };
@@ -242,7 +258,9 @@ export default function LeaveDetailPage() {
       leave.type === 'ANNUAL_ANTICIPATED' && leave.balance
         ? Number(leave.balance.annualRemaining)
         : undefined,
-    signatoryName: leave.approvedByUser ? `${leave.approvedByUser.firstName} ${leave.approvedByUser.lastName}` : undefined,
+    signatoryName: leave.approvedByUser
+      ? `${leave.approvedByUser.firstName} ${leave.approvedByUser.lastName}`
+      : (currentUserName || undefined),
     approvedAt: leave.approvedAt,
   };
 
@@ -307,14 +325,14 @@ export default function LeaveDetailPage() {
               <span className="font-mono text-xs">{new Date(leave.startDate).toLocaleDateString('fr-FR')}</span>
               <ArrowRight size={12} className="text-gray-300" />
               <span className="font-mono text-xs">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
-              <span className="ml-auto font-bold text-xs text-gray-500">{Number(leave.daysCount)}j</span>
+              <span className="ml-auto font-bold text-xs text-gray-500">{Math.round(Number(leave.daysCount))}j</span>
             </div>
 
             {leave.balance && (
               <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700">
                 <Wallet size={14} className="text-gray-400" />
                 Solde {new Date(leave.startDate).getFullYear()} : {Math.round(Number(leave.balance.annualRemaining))}j restants sur {Math.round(Number(leave.balance.annualEntitled))}j
-                {Number(leave.balance.seniorityDays) > 0 && <span className="text-gray-400"> (dont {Number(leave.balance.seniorityDays)}j ancienneté)</span>}
+                {Number(leave.balance.seniorityDays) > 0 && <span className="text-gray-400"> (dont {Math.round(Number(leave.balance.seniorityDays))}j ancienneté)</span>}
               </div>
             )}
 

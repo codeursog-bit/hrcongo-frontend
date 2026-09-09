@@ -39,6 +39,23 @@ ${styleInlines}
     height: 297mm !important; overflow: hidden !important;
   }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  /* ✅ CORRECTIF : le site est en dark mode par défaut (voir globals.css).
+     Si un élément du document utilise une classe Tailwind "dark:text-*"
+     (texte clair pensé pour un fond sombre) plutôt qu'une couleur figée,
+     il devient quasi invisible une fois forcé sur fond blanc ici — d'où le
+     texte "délavé" à l'impression/export. On neutralise ça en imposant une
+     couleur de texte sûre à tout le contenu imprimé, quelle que soit la
+     classe/le thème d'origine. Les éléments qui définissent explicitement
+     leur propre couleur inline (labels, valeurs, cachet…) restent lisibles
+     de toute façon ; ce filet de sécurité ne fait que rattraper ceux qui
+     hériteraient sinon d'un blanc/gris clair invisible.
+  */
+  #loan-print-target, #loan-print-target * {
+    color: #111 !important;
+    background-color: transparent !important;
+  }
+  #loan-print-target { background-color: #fff !important; }
+  #loan-print-target img { background-color: initial !important; }
 </style>
 </head><body>
 <div id="loan-print-target">${el.outerHTML}</div>
@@ -74,7 +91,20 @@ export async function downloadLoanDocumentPDF(elementId: string, filename: strin
 
   const clone = el.cloneNode(true) as HTMLElement;
   clone.style.cssText = 'width:210mm;min-height:297mm;padding:14mm 16mm;margin:0;box-shadow:none;border:none;background:#fff;box-sizing:border-box;color-scheme:light;';
+  clone.id = 'pdf-export-target';
 
+  // ✅ CORRECTIF : même filet de sécurité que printLoanDocument — le site
+  // étant en dark mode par défaut, un élément stylé en "dark:text-*"
+  // (texte clair sur fond sombre) copié tel quel par cloneNode() ressort
+  // quasi invisible une fois html2canvas forcé sur fond blanc. On impose
+  // ici une couleur de texte sûre à tout le clone avant capture.
+  const styleOverride = document.createElement('style');
+  styleOverride.textContent = `
+    #pdf-export-target, #pdf-export-target * { color: #111 !important; background-color: transparent !important; }
+    #pdf-export-target { background-color: #fff !important; }
+    #pdf-export-target img { background-color: initial !important; }
+  `;
+  container.appendChild(styleOverride);
   container.appendChild(clone);
   document.body.appendChild(container);
 

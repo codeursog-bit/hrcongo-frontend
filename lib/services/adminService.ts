@@ -39,14 +39,40 @@ export const adminService = {
   getAnalytics:       () => adminFetch<any>('/admin/analytics'),
   getBilling:         () => adminFetch<any>('/admin/billing'),
   // ── Entreprises ──────────────────────────────────────────────────────────
-  getCompanies: (filters?: { status?: string; plan?: string; search?: string }) => {
+  getCompanies: (filters?: { status?: string; plan?: string; search?: string; includeArchived?: boolean }) => {
     const p = new URLSearchParams();
-    if (filters?.status) p.set('status', filters.status);
-    if (filters?.plan)   p.set('plan',   filters.plan);
-    if (filters?.search) p.set('search', filters.search);
+    if (filters?.status)   p.set('status',   filters.status);
+    if (filters?.plan)     p.set('plan',     filters.plan);
+    if (filters?.search)   p.set('search',   filters.search);
+    if (filters?.includeArchived) p.set('includeArchived', 'true');
     return adminFetch<any>(`/admin/companies?${p}`);
   },
   getCompanyDetails: (id: string)      => adminFetch<any>(`/admin/companies/${id}`),
+
+  updateCompany: (id: string, data: { legalName?: string; tradeName?: string; email?: string; phone?: string; address?: string; city?: string; website?: string }) =>
+    adminFetch<any>(`/admin/companies/${id}`, 'PATCH', data),
+
+  updateCompanyStatus: (id: string, isActive: boolean, reason?: string) =>
+    adminFetch<any>(`/admin/companies/${id}/status`, 'PATCH', { isActive, reason }),
+
+  archiveCompany: (id: string, reason?: string) =>
+    adminFetch<any>(`/admin/companies/${id}/archive`, 'POST', { reason }),
+
+  unarchiveCompany: (id: string) =>
+    adminFetch<any>(`/admin/companies/${id}/unarchive`, 'POST'),
+
+  // ── Abonnements ──────────────────────────────────────────────────────────
+  activateSubscription: (companyId: string) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/activate`, 'PATCH'),
+
+  suspendSubscription: (companyId: string, status?: 'PAUSED' | 'CANCELED', reason?: string) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/suspend`, 'PATCH', { status, reason }),
+
+  changeSubscriptionPlan: (companyId: string, plan: string, pricePerMonth?: number, reason?: string) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/plan`, 'PATCH', { plan, pricePerMonth, reason }),
+
+  extendSubscription: (companyId: string, days: number, reason?: string) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/extend`, 'PATCH', { days, reason }),
 
   // ── Monitoring — données complètes ───────────────────────────────────────
   getMonitoringData: () => adminFetch<any>('/admin/monitoring'),

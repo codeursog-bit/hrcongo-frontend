@@ -547,8 +547,8 @@ export default function ProgrammeCongesPage() {
                 <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-gray-700">
                   {manualBalance && (
                     <p className="text-xs text-gray-400 pt-2">
-                      Droit du cycle : {manualBalance.annualEntitled}j
-                      {manualBalance.seniorityDays > 0 && ` (dont ${manualBalance.seniorityDays}j ancienneté)`}
+                      Droit du cycle : {Math.round(manualBalance.annualEntitled)}j
+                      {manualBalance.seniorityDays > 0 && ` (dont ${Math.round(manualBalance.seniorityDays)}j ancienneté)`}
                     </p>
                   )}
                   <div>

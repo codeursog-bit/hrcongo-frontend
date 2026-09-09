@@ -9,6 +9,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import { AlertProvider } from '@/components/providers/AlertProvider';
 import { CompanyReminderProvider } from '@/components/providers/CompanyReminderProvider';
+import { SubscriptionReminderProvider } from '@/components/providers/SubscriptionReminderProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import './globals.css';
 
@@ -166,6 +167,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <QueryProvider>
             <AlertProvider>
               <CompanyReminderProvider>
+                <SubscriptionReminderProvider>
                 <NotificationProvider>
                   {/* Fond décoratif */}
                   <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
@@ -180,6 +182,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </div>
                   {children}
                 </NotificationProvider>
+                </SubscriptionReminderProvider>
               </CompanyReminderProvider>
             </AlertProvider>
           </QueryProvider>

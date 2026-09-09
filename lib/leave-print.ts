@@ -47,6 +47,20 @@ ${styleInlines}
     ` : ''}
   }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  /* ✅ CORRECTIF : le site est en dark mode par défaut (voir globals.css).
+     Si un élément du document utilise une classe Tailwind "dark:text-*"
+     (texte clair pensé pour un fond sombre) plutôt qu'une couleur figée,
+     il devient quasi invisible une fois forcé sur fond blanc ici — d'où le
+     texte "délavé" à l'impression/export (même bug identifié sur les prêts,
+     cf. loan-print.ts). On impose une couleur de texte sûre à tout le
+     contenu imprimé, quelle que soit la classe/le thème d'origine.
+  */
+  #leave-print-target, #leave-print-target * {
+    color: #111 !important;
+    background-color: transparent !important;
+  }
+  #leave-print-target { background-color: #fff !important; }
+  #leave-print-target img { background-color: initial !important; }
 </style>
 </head><body>
 <div id="leave-print-target">${el.outerHTML}</div>
@@ -101,7 +115,22 @@ export async function downloadLeaveDocumentPDF(elementId: string, filename: stri
   clone.style.setProperty('border', 'none');
   clone.style.setProperty('background', '#fff');
   clone.style.setProperty('box-sizing', 'border-box');
-  if (!clone.style.color) clone.style.setProperty('color', '#1f2937');
+  clone.id = 'pdf-export-target';
+
+  // ✅ CORRECTIF : le `if (!clone.style.color) …` ne suffisait pas — il ne
+  // couvre que la racine du clone, pas les enfants qui porteraient leur
+  // propre classe Tailwind "dark:text-*" (texte clair pensé pour un fond
+  // sombre, le site étant en dark mode par défaut). Ces enfants gardaient
+  // leur couleur claire, invisible une fois forcés sur fond blanc — d'où le
+  // texte "délavé" (même bug identifié sur les prêts, cf. loan-print.ts).
+  // On impose donc une couleur sûre à TOUT le clone, pas seulement sa racine.
+  const styleOverride = document.createElement('style');
+  styleOverride.textContent = `
+    #pdf-export-target, #pdf-export-target * { color: #1f2937 !important; background-color: transparent !important; }
+    #pdf-export-target { background-color: #fff !important; }
+    #pdf-export-target img { background-color: initial !important; }
+  `;
+  container.appendChild(styleOverride);
   if (!clone.style.fontFamily) clone.style.setProperty('font-family', 'Arial, Helvetica, sans-serif');
 
   container.appendChild(clone);

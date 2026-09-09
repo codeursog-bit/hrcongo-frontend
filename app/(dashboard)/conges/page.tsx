@@ -343,7 +343,7 @@ export default function LeaveManagementPage() {
                             <span className="font-mono text-xs">{new Date(leave.startDate).toLocaleDateString('fr-FR')}</span>
                             <ArrowRight size={12} className="text-gray-300" />
                             <span className="font-mono text-xs">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
-                            <span className="ml-auto font-bold text-xs text-gray-500">{leave.daysCount}j ouvrés</span>
+                            <span className="ml-auto font-bold text-xs text-gray-500">{Math.round(Number(leave.daysCount))}j ouvrés</span>
                           </div>
                           {leave.type === 'UNPAID' && (
                             <p className="text-xs text-gray-400 bg-gray-50 dark:bg-gray-700/30 px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5">
@@ -427,7 +427,7 @@ export default function LeaveManagementPage() {
                             {new Date(leave.startDate).toLocaleDateString('fr-FR')} → {new Date(leave.endDate).toLocaleDateString('fr-FR')}
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className="text-sm font-bold text-gray-500">{leave.daysCount}j</span>
+                            <span className="text-sm font-bold text-gray-500">{Math.round(Number(leave.daysCount))}j</span>
                           </td>
                           <td className="px-6 py-4 text-center">
                             {leave.status === 'APPROVED' && (

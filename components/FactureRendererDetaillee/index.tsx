@@ -55,11 +55,6 @@ const fmt = (v: any): string  => {
   const n = nv(v);
   return n === 0 ? '-' : Math.round(n).toLocaleString('fr-FR');
 };
-const fmtDate = (d?: string | Date) => {
-  const x = d ? new Date(d) : new Date();
-  return isNaN(x.getTime()) ? '—' : x.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-};
-
 // Abrège une qualité/fonction sur le modèle "Menuisier" → "Men"
 const abbrevQualite = (q: string): string => {
   const word = (q || '').trim().split(/\s+/)[0] || '';
@@ -77,7 +72,7 @@ const Row = ({ label, value, bold = false }: { label: string; value: string; bol
     <td style={{
       padding: bold ? '5px 18px 5px 0' : '2.5px 18px 2.5px 0', fontSize: bold ? 12.5 : 11,
       fontWeight: bold ? 800 : 600, textDecoration: 'none',
-      textTransform: 'uppercase' as const, whiteSpace: 'nowrap',
+      textTransform: 'uppercase' as const, maxWidth: '78mm',
     }}>{label}</td>
     <td style={{
       padding: bold ? '5px 0' : '2.5px 0', fontSize: bold ? 13 : 11,
@@ -93,26 +88,34 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
   const co  = (payroll.company  ?? {}) as any; // même société que pour un bulletin — c'est elle qui "doit" le paiement
   const items: PayrollItem[] = payroll.items ?? [];
 
-  const { gainItems, cotisItems, retenueItems } = useMemo(() => classifyItems(items), [items]);
+  const { gainItems, cotisItems, retenueItems, indemItems } = useMemo(() => classifyItems(items), [items]);
 
   const gains = gainItems.filter((i: any) => nv(i.amount) > 0);
-  const totalBrut = gains.reduce((s: number, i: any) => s + nv(i.amount), 0) || nv(payroll.grossSalary);
+  // ✅ Total brut = strictement payroll.grossSalary (back). On n'additionne
+  // plus les gains en front — le libellé de chaque item reste affiché
+  // individuellement ci-dessous, mais le total vient du back tel quel.
+  const totalBrut = nv(payroll.grossSalary);
+
+  // ✅ Indemnités hors brut (transport, panier, salissure…) — non soumises
+  // ITS/CNSS, donc PAS comptées dans grossSalary/totalBrut, mais bien payées
+  // et donc incluses dans netSalary. Affichées à part, comme dans BulletinRenderer.
+  const indems = indemItems.filter((i: any) => nv(i.amount) > 0);
 
   // Toutes les retenues (BNC/ITS + diverses), dans leur ordre naturel, avec leur propre label
   const deductions = [...cotisItems, ...retenueItems].filter((i: any) => nv(i.amount) > 0);
-  const totalRetenues = deductions.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
-  const netAPayer = nv(payroll.netSalary) || (totalBrut - totalRetenues);
+  // ✅ Net à payer = strictement payroll.netSalary (back), aucun recalcul front.
+  const netAPayer = nv(payroll.netSalary);
 
   const fullName = [e.firstName, e.lastName?.toUpperCase()].filter(Boolean).join(' ') || '—';
   const qualite  = e.position || CONTRACT[e.contractType ?? ''] || '—';
   const emetteurVille = e.city || co.city || '—';
-  const dateEmission = fmtDate((payroll as any).paymentDate ?? new Date(payroll.year, (payroll.month ?? 1) - 1, new Date().getDate()));
   const lieuEmission = (payroll as any).issueCity || co.headquartersCity || co.city || emetteurVille;
 
   const moisIdx  = Math.max(0, Math.min(11, (payroll.month ?? 1) - 1));
   const moisNom  = MOIS[moisIdx];
   const anneeCourte = String(payroll.year ?? new Date().getFullYear()).slice(-2);
+  const anneeComplete = payroll.year ?? new Date().getFullYear();
   const numeroFacture = `${invoiceSequence}/${payroll.month}/${payroll.year}/${abbrevQualite(qualite)}`;
 
   // ── Motif de la facture — s'adapte au type de paiement dominant ─────────
@@ -153,7 +156,7 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
 
           {/* ── Date d'émission — alignée à droite ──────────────────────── */}
           <div style={{ textAlign: 'right', marginTop: 22, fontSize: 11.5 }}>
-            {lieuEmission}, le {dateEmission}
+            {lieuEmission}, paie de {moisNom} {anneeComplete}
           </div>
 
           {/* ── Encadré "Doit :" — société débitrice (payroll.company) ──── */}
@@ -188,6 +191,10 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
                 ))}
 
                 <Row label="Total brut" value={fmt(totalBrut)} bold />
+
+                {indems.map((item: any) => (
+                  <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />
+                ))}
 
                 {deductions.map((item: any) => (
                   <Row key={item.id || item.code} label={item.label} value={fmt(item.amount)} />

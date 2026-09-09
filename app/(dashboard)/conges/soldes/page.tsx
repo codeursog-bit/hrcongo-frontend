@@ -338,10 +338,10 @@ export default function LeaveBalancesAdminPage() {
                   {/* Ancienneté */}
                   <td className="px-5 py-4">
                     <p className="text-sm font-mono text-gray-600 dark:text-gray-300">
-                      {bal.monthsWorked}m
+                      {Math.round(bal.monthsWorked)}m
                     </p>
                     {!bal.canTakeAnnualLeave && (
-                      <p className="text-xs text-amber-500">{bal.monthsUntilEligible}m restants</p>
+                      <p className="text-xs text-amber-500">{Math.round(bal.monthsUntilEligible)}m restants</p>
                     )}
                   </td>
 
