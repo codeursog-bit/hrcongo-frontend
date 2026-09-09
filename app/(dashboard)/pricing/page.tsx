@@ -38,24 +38,30 @@ function PricingContent() {
   const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
 
   // 🔀 Bascule automatique de prestataire — voir GET /subscriptions/payment-provider.
-  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | null>(null);
+  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
 
   useEffect(() => {
-    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' }>('/subscriptions/payment-provider')
+    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
       .then((r) => setActiveProvider(r.provider))
-      .catch(() => setActiveProvider('YABETOOPAY')); // repli prudent si l'appel échoue
+      .catch(() => setActiveProvider('NONE')); // repli prudent si l'appel échoue — jamais planter
   }, []);
 
   // Moteki initie ET déclenche le paiement en un seul appel (fait par
   // MotekiCheckoutModal lui-même). YabetooPay a besoin d'un PaymentIntent
   // créé d'abord via /subscriptions/upgrade (flux original en 2 étapes,
-  // inchangé) avant d'ouvrir son propre modal.
+  // inchangé) avant d'ouvrir son propre modal. NONE = aucun prestataire
+  // configuré côté serveur, on ne tente rien et on prévient.
   const handleUpgrade = async (plan: 'BASIC' | 'PRO' | 'ENTERPRISE') => {
     const planData = plans?.[plan];
     const amount = billingPeriod === 'yearly' ? planData?.priceYearly : planData?.priceMonthly;
     if (!amount) {
       toast.error("Impossible de déterminer le tarif de ce plan, réessayez.");
+      return;
+    }
+
+    if (activeProvider === 'NONE') {
+      toast.error('Le paiement en ligne est momentanément indisponible. Contactez le support.');
       return;
     }
 

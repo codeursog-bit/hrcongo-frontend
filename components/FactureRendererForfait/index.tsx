@@ -118,6 +118,7 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
   const moisIdx  = Math.max(0, Math.min(11, (payroll.month ?? 1) - 1));
   const moisNom  = MOIS[moisIdx];
   const anneeComplete = payroll.year ?? new Date().getFullYear();
+  const moisPrefix = /^[aeiouéèêô]/i.test(moisNom) ? "d'" : 'de ';
   const ville    = co.city || '—';
 
   return (
@@ -154,7 +155,7 @@ export default function FactureRendererForfait({ payroll, template, previewMode 
 
           {/* ── Ville / date — alignées à droite ─────────────────────────── */}
           <div style={{ fontSize: 10.5, marginTop: 8, width: '100%', textAlign: 'right' }}>
-            {ville} — paie de {moisNom} {anneeComplete}
+            {ville} — Paie du mois {moisPrefix}{moisNom} {anneeComplete}
           </div>
 
           {/* ── Bandeau prestataire (nom + qualité) — centré sur la page ── */}

@@ -116,6 +116,7 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
   const moisNom  = MOIS[moisIdx];
   const anneeCourte = String(payroll.year ?? new Date().getFullYear()).slice(-2);
   const anneeComplete = payroll.year ?? new Date().getFullYear();
+  const moisPrefix = /^[aeiouéèêô]/i.test(moisNom) ? "d'" : 'de ';
   const numeroFacture = `${invoiceSequence}/${payroll.month}/${payroll.year}/${abbrevQualite(qualite)}`;
 
   // ── Motif de la facture — s'adapte au type de paiement dominant ─────────
@@ -156,7 +157,7 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
 
           {/* ── Date d'émission — alignée à droite ──────────────────────── */}
           <div style={{ textAlign: 'right', marginTop: 22, fontSize: 11.5 }}>
-            {lieuEmission}, paie de {moisNom} {anneeComplete}
+            {lieuEmission}, Paie du mois {moisPrefix}{moisNom} {anneeComplete}
           </div>
 
           {/* ── Encadré "Doit :" — société débitrice (payroll.company) ──── */}
@@ -205,24 +206,32 @@ export default function FactureRendererDetaillee({ payroll, template, previewMod
             </table>
           </div>
 
-          {/* ── Pied de page : signataire, mention, signature ───────────── */}
+          {/* ── Pied de page : mention + signatures des 2 parties ───────── */}
           <div style={{ marginTop: 30 }}>
-            <div style={{ fontWeight: 800, fontSize: 12.5, textDecoration: 'none' }}>{fullName}</div>
-
             <div style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 10.5, margin: '18px 0' }}>
               Valeur en votre règlement à réception de la présente facture
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', minHeight: 70 }}>
-              <div style={{ flex: 1 }} />
-              {e.signatureImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={e.signatureImage} alt="" crossOrigin="anonymous" style={{ height: 60, objectFit: 'contain' }} />
-              ) : (
-                <div style={{ width: 140, borderTop: BD, fontSize: 10, textAlign: 'center', paddingTop: 3 }}>
-                  Signature
+            {/* ── Signatures — prestataire à gauche, société collée au bord
+                  droit du contenu (même bord que la date d'émission) ────── */}
+            <div style={{ position: 'relative', marginTop: 40, height: 70 }}>
+              <div style={{ position: 'absolute', left: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                {e.signatureImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={e.signatureImage} alt="" crossOrigin="anonymous" style={{ height: 44, objectFit: 'contain' }} />
+                ) : (
+                  <div style={{ height: 44 }} />
+                )}
+                <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
+                  {fullName}
                 </div>
-              )}
+              </div>
+              <div style={{ position: 'absolute', right: 0, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                <div style={{ height: 44 }} />
+                <div style={{ borderTop: BD, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, paddingTop: 3 }}>
+                  {(co as any).signatoryTitle || 'Directeur'}
+                </div>
+              </div>
             </div>
           </div>
 

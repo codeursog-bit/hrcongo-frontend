@@ -73,17 +73,17 @@ const PLANS_CONFIG = [
   },
   {
     name: 'BASIC' as const,
-    price: 25000,
+    price: 10000,
     features: ['20 employés max', '3 utilisateurs', '2 départements', '5 offres d\'emploi', 'Support email'],
   },
   {
     name: 'PRO' as const,
-    price: 75000,
+    price: 25000,
     features: ['100 employés max', '10 utilisateurs', '10 départements', '20 offres d\'emploi', 'Support prioritaire'],
   },
   {
     name: 'ENTERPRISE' as const,
-    price: 200000,
+    price: 45000,
     features: ['Employés illimités', 'Utilisateurs illimités', 'Départements illimités', 'Offres illimitées', 'Support dédié 24/7'],
   },
 ];
@@ -136,8 +136,9 @@ export default function SubscriptionPage() {
   // 🔀 Bascule automatique de prestataire : on demande au backend lequel est
   // configuré (MOTEKI si MOTEKI_SECRET_KEY est présent dans .env côté
   // serveur, sinon YABETOOPAY reprend le relais automatiquement — voir
-  // GET /subscriptions/payment-provider). null tant qu'on ne sait pas encore.
-  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | null>(null);
+  // GET /subscriptions/payment-provider). null tant qu'on ne sait pas encore,
+  // 'NONE' si aucun des deux n'est configuré côté serveur.
+  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error') => setToast({ message, type });
@@ -157,19 +158,25 @@ export default function SubscriptionPage() {
   useEffect(() => { fetchSubscription(); }, [fetchSubscription]);
 
   useEffect(() => {
-    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' }>('/subscriptions/payment-provider')
+    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
       .then((r) => setActiveProvider(r.provider))
-      .catch(() => setActiveProvider('YABETOOPAY')); // repli prudent si l'appel échoue
+      .catch(() => setActiveProvider('NONE')); // repli prudent si l'appel échoue — jamais planter
   }, []);
 
   // Selon le prestataire actif : Moteki ouvre directement le modal (il
   // initiera le paiement lui-même) ; YabetooPay doit d'abord créer un
   // PaymentIntent via /subscriptions/upgrade avant d'ouvrir son modal
-  // (flux en 2 étapes, inchangé — code original intact).
+  // (flux en 2 étapes, inchangé — code original intact) ; NONE = aucun
+  // prestataire configuré côté serveur, on ne tente rien et on prévient.
   const handleUpgrade = async (targetPlan: string) => {
     if (targetPlan === 'FREE') return;
     const planConfig = PLANS_CONFIG.find((p) => p.name === targetPlan);
     if (!planConfig) return;
+
+    if (activeProvider === 'NONE') {
+      showToast('Le paiement en ligne est momentanément indisponible. Contactez le support.', 'error');
+      return;
+    }
 
     if (activeProvider === 'YABETOOPAY') {
       setUpgradeLoading(targetPlan);
@@ -187,7 +194,8 @@ export default function SubscriptionPage() {
       return;
     }
 
-    // Moteki (ou prestataire inconnu — on tente Moteki par défaut)
+    // MOTEKI (ou encore null le temps du chargement initial — on tente
+    // Moteki par défaut plutôt que de bloquer l'utilisateur)
     setCheckoutTarget({
       plan: targetPlan as 'BASIC' | 'PRO' | 'ENTERPRISE',
       billingPeriod: 'monthly',
