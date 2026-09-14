@@ -50,6 +50,7 @@ const EXCLUDED_PATHS = [
   '/auth/login',
   '/auth/register',
   '/auth/forgot-password',
+  '/admin', // Super admin — pas de "compagnie" à créer, ça n'a aucun sens ici
 ];
 
 // ============================================================================
@@ -262,6 +263,10 @@ export const CompanyReminderProvider: React.FC<{ children: React.ReactNode }> = 
   // ============================================================================
 
   useEffect(() => {
+    if (EXCLUDED_PATHS.some(p => pathname.startsWith(p))) {
+      console.log('🚀 [CompanyReminder] Provider mounted sur page exclue, skip vérification');
+      return;
+    }
     console.log('🚀 [CompanyReminder] Provider mounted');
     checkCompany();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

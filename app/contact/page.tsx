@@ -103,12 +103,6 @@ export default function ContactPage() {
       {/* Fond (identique à la landing) */}
       <div className="fixed -right-40 -top-40 w-[600px] h-[600px] bg-white/[0.04] rounded-full blur-[130px] pointer-events-none z-0" />
       <div className="fixed -left-40 bottom-0 w-[500px] h-[500px] bg-[#D4A548]/[0.06] rounded-full blur-[130px] pointer-events-none z-0" />
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.05]"
-        style={{
-          backgroundImage: `linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)`,
-          backgroundSize: '48px 48px',
-        }}
-      />
 
       <Navbar/>
 
@@ -120,7 +114,7 @@ export default function ContactPage() {
           </div>
           <h1 className="text-[clamp(32px,5vw,58px)] font-black tracking-tight leading-[1.1] mb-5">
             On vous répond<br/>
-            <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">
+            <span className="text-white">
               sous 24 heures.
             </span>
           </h1>
@@ -264,7 +258,7 @@ export default function ContactPage() {
 
                 {/* Submit */}
                 <button type="submit" disabled={status === 'loading'}
-                  className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-[15px] rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">
+                  className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-[#FAFAFA] hover:bg-white text-black font-medium text-[15px] rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   {status === 'loading'
                     ? <><Loader2 size={16} className="animate-spin"/> Envoi en cours...</>
                     : <><Send size={15}/> Envoyer le message</>

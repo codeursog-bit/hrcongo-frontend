@@ -33,20 +33,20 @@ type Post = {
 // ── Constantes ────────────────────────────────────────────────────────────────
 const C = {
   bg:'#050607', card:'#0B0C0F',
-  border:'rgba(255,255,255,0.08)',
-  cyan:'#10B981', blue:'#10B981', purple:'#10B981',
-  green:'#10B981', pink:'#10B981',
-  text:'#FAFAFA', muted:'#8B8F98', sub:'#8B8F98',
+  border:'rgba(255,255,255,0.07)',
+  cyan:'#10B981', blue:'#059669', purple:'#64748B',
+  green:'#10B981', pink:'#EC4899',
+  text:'#F8FAFC', muted:'#64748B', sub:'#94A3B8',
 };
 
 const CAT_COLOR: Record<string, { bg: string; c: string }> = {
-  ANNONCE:      { bg:'rgba(139,143,152,0.12)',  c:'#8B8F98' },
-  PAIE:         { bg:'rgba(16,185,129,0.12)',   c:'#10B981' },
-  DROIT_TRAVAIL:{ bg:'rgba(16,185,129,0.12)',  c:'#10B981' },
+  ANNONCE:      { bg:'rgba(245,158,11,0.12)',  c:'#F59E0B' },
+  PAIE:         { bg:'rgba(45,212,191,0.12)',   c:'#2DD4BF' },
+  DROIT_TRAVAIL:{ bg:'rgba(100,116,139,0.12)',  c:'#64748B' },
   RECRUTEMENT:  { bg:'rgba(16,185,129,0.12)',  c:'#10B981' },
-  FORMATION:    { bg:'rgba(16,185,129,0.12)',  c:'#10B981' },
-  TEMOIGNAGE:   { bg:'rgba(16,185,129,0.12)', c:'#10B981' },
-  GENERAL:      { bg:'rgba(100,116,139,0.12)', c:'#8B8F98' },
+  FORMATION:    { bg:'rgba(5,150,105,0.12)',  c:'#059669' },
+  TEMOIGNAGE:   { bg:'rgba(236,72,153,0.12)', c:'#EC4899' },
+  GENERAL:      { bg:'rgba(100,116,139,0.12)', c:'#94A3B8' },
 };
 
 const CAT_LABEL: Record<string, string> = {
@@ -169,8 +169,8 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
       <Navbar />
       <div style={{ maxWidth: 640, margin: '160px auto 0', padding: '0 32px', textAlign: 'center', zIndex: 1, position: 'relative' }}>
         <div style={{ fontSize: 56, marginBottom: 20 }}>📭</div>
-        <h1 style={{ fontSize: 28, fontWeight: 600, color: C.text, marginBottom: 12 }}>{error || 'Article introuvable'}</h1>
-        <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#10B981,#10B981)', color: '#FAFAFA', textDecoration: 'none', fontWeight: 700, fontSize: 14, padding: '11px 22px', borderRadius: 10 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 800, color: C.text, marginBottom: 12 }}>{error || 'Article introuvable'}</h1>
+        <Link href="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#FAFAFA', color: '#000', textDecoration: 'none', fontWeight: 500, fontSize: 14, padding: '11px 22px', borderRadius: 10 }}>
           ← Retour au blog
         </Link>
       </div>
@@ -188,7 +188,11 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
   // Rendu simplifié — tu peux coller ici l'intégralité de ton BlogPostPage existant
   // en remplaçant juste l'en-tête (useParams → props)
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: "system-ui,-apple-system,'Segoe UI',sans-serif", color: C.text }}>
+    <div style={{ background: C.bg, minHeight: '100vh', fontFamily: "system-ui,-apple-system,'Segoe UI',sans-serif", color: C.text, position: 'relative', overflowX: 'hidden' }}>
+      <div style={{ position:'fixed', top:-160, right:-160, width:600, height:600, borderRadius:'50%',
+        background:'rgba(255,255,255,0.04)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
+      <div style={{ position:'fixed', left:-160, bottom:0, width:500, height:500, borderRadius:'50%',
+        background:'rgba(212,165,72,0.06)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
       <Navbar />
 
       <section style={{ padding: '130px 32px 0', position: 'relative', zIndex: 1 }}>
@@ -205,14 +209,14 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
 
           {/* Catégorie */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: cc.c, background: cc.bg, border: `1px solid ${cc.c}30`, padding: '4px 12px', borderRadius: 99 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: cc.c, background: cc.bg, border: `1px solid ${cc.c}30`, padding: '4px 12px', borderRadius: 99 }}>
               {CAT_LABEL[post.category] || post.category}
             </span>
-            {isSA && <span style={{ fontSize: 12, fontWeight: 600, color: '#FAFAFA', background: 'linear-gradient(135deg,#10B981,#10B981)', padding: '4px 12px', borderRadius: 99 }}>Officiel Konza RH</span>}
+            {isSA && <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#10B981,#059669)', padding: '4px 12px', borderRadius: 99 }}>Officiel Konza RH</span>}
           </div>
 
           {/* H1 — balise la plus importante SEO */}
-          <h1 style={{ fontSize: 'clamp(28px,5vw,48px)', fontWeight: 600, letterSpacing: '-0.04em', lineHeight: 1.1, color: C.text, marginBottom: 20 }}>
+          <h1 style={{ fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.1, color: C.text, marginBottom: 20 }}>
             {post.title}
           </h1>
 
@@ -226,7 +230,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
           {/* Meta auteur + actions */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, paddingBottom: 28, borderBottom: `1px solid ${C.border}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: `linear-gradient(135deg,${isSA ? C.cyan : C.blue},${isSA ? C.blue : C.purple})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: '#FAFAFA' }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: `linear-gradient(135deg,${isSA ? C.cyan : C.blue},${isSA ? C.blue : C.purple})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff' }}>
                 {isSA ? 'K' : author[0]}
               </div>
               <div>
@@ -235,7 +239,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={handleLike} style={{ display: 'flex', alignItems: 'center', gap: 6, background: liked ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${liked ? C.pink + '40' : C.border}`, borderRadius: 9, padding: '8px 14px', cursor: 'pointer', color: liked ? C.pink : C.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>
+              <button onClick={handleLike} style={{ display: 'flex', alignItems: 'center', gap: 6, background: liked ? 'rgba(236,72,153,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${liked ? C.pink + '40' : C.border}`, borderRadius: 9, padding: '8px 14px', cursor: 'pointer', color: liked ? C.pink : C.muted, fontSize: 13, fontWeight: 600, fontFamily: 'inherit' }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill={liked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
                 {likes}
               </button>
@@ -264,15 +268,15 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
             <div style={{ fontSize: 15.5, color: C.sub, lineHeight: 1.8 }}
               dangerouslySetInnerHTML={{
                 __html: post.content
-                  .replace(/^# (.+)$/gm, '<h2 style="font-size:clamp(20px,2.5vw,28px);font-weight:900;color:#FAFAFA;margin:32px 0 16px;letter-spacing:-0.03em">$1</h2>')
-                  .replace(/^## (.+)$/gm, '<h3 style="font-size:20px;font-weight:800;color:#FAFAFA;margin:28px 0 12px">$1</h3>')
-                  .replace(/^### (.+)$/gm, '<h4 style="font-size:17px;font-weight:700;color:#FAFAFA;margin:22px 0 10px">$1</h4>')
-                  .replace(/^> (.+)$/gm, '<blockquote style="margin:24px 0;padding:16px 20px;border-left:3px solid #10B981;background:rgba(16,185,129,0.05);border-radius:0 8px 8px 0"><p style="font-style:italic;color:#8B8F98;margin:0">$1</p></blockquote>')
-                  .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#FAFAFA;font-weight:700">$1</strong>')
+                  .replace(/^# (.+)$/gm, '<h2 style="font-size:clamp(20px,2.5vw,28px);font-weight:900;color:#F8FAFC;margin:32px 0 16px;letter-spacing:-0.03em">$1</h2>')
+                  .replace(/^## (.+)$/gm, '<h3 style="font-size:20px;font-weight:800;color:#F8FAFC;margin:28px 0 12px">$1</h3>')
+                  .replace(/^### (.+)$/gm, '<h4 style="font-size:17px;font-weight:700;color:#F8FAFC;margin:22px 0 10px">$1</h4>')
+                  .replace(/^> (.+)$/gm, '<blockquote style="margin:24px 0;padding:16px 20px;border-left:3px solid #10B981;background:rgba(16,185,129,0.05);border-radius:0 8px 8px 0"><p style="font-style:italic;color:#94A3B8;margin:0">$1</p></blockquote>')
+                  .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#F8FAFC;font-weight:700">$1</strong>')
                   .replace(/\*(.+?)\*/g, '<em>$1</em>')
                   .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:13px;color:#10B981">$1</code>')
-                  .replace(/\n\n/g, '</p><p style="margin:12px 0;font-size:15.5px;color:#8B8F98;line-height:1.8">')
-                  .replace(/^(?!<)(.)/m, '<p style="margin:12px 0;font-size:15.5px;color:#8B8F98;line-height:1.8">$1')
+                  .replace(/\n\n/g, '</p><p style="margin:12px 0;font-size:15.5px;color:#94A3B8;line-height:1.8">')
+                  .replace(/^(?!<)(.)/m, '<p style="margin:12px 0;font-size:15.5px;color:#94A3B8;line-height:1.8">$1')
                   + '</p>'
               }}
             />
@@ -283,7 +287,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Auteur</p>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <div style={{ width: 38, height: 38, borderRadius: '50%', background: `linear-gradient(135deg,${isSA ? C.cyan : C.blue},${isSA ? C.blue : C.purple})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#FAFAFA' }}>
+                <div style={{ width: 38, height: 38, borderRadius: '50%', background: `linear-gradient(135deg,${isSA ? C.cyan : C.blue},${isSA ? C.blue : C.purple})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: '#fff' }}>
                   {isSA ? 'K' : author[0]}
                 </div>
                 <div>
@@ -310,11 +314,11 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
             )}
 
             {/* CTA konza dans la sidebar */}
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 6 }}>Gérez la paie de votre entreprise</p>
+            <div style={{ background: 'linear-gradient(135deg,rgba(71,85,105,0.15),rgba(100,116,139,0.1))', border: '1px solid rgba(71,85,105,0.2)', borderRadius: 14, padding: 18 }}>
+              <p style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 6 }}>Gérez la paie de votre entreprise</p>
               <p style={{ fontSize: 11, color: C.sub, lineHeight: 1.5, marginBottom: 12 }}>Bulletins PDF, CNSS, CAMU, congés — conforme droit congolais.</p>
               <Link href="https://app.konza.cg" target="_blank"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#FAFAFA', color: '#000', textDecoration: 'none', fontWeight: 500, fontSize: 12, padding: '8px 14px', borderRadius: 9 }}>
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg,#475569,#64748B)', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 12, padding: '8px 14px', borderRadius: 9 }}>
                 Essayer Konza →
               </Link>
             </div>

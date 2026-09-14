@@ -135,9 +135,11 @@ export default function BillingPage() {
             </h2>
             <div className="flex items-baseline gap-4">
               <span className="text-5xl font-extrabold text-white tracking-tight">
-                {(totalRev / 1_000_000).toFixed(2)}M
+                {totalRev >= 1_000_000 ? (totalRev / 1_000_000).toFixed(2) : totalRev.toLocaleString('fr-FR')}
               </span>
-              <span className="text-xl font-medium text-gray-500">FCFA</span>
+              <span className="text-xl font-medium text-gray-500">
+                {totalRev >= 1_000_000 ? 'M FCFA' : 'FCFA'}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               {mrrGrowth !== null ? (

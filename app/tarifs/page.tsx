@@ -2,8 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Navbar } from '@/components/landing/Navbar';
-import { Footer } from '@/components/landing/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -43,7 +41,7 @@ const plans: Plan[] = [
     users: '1 utilisateur (admin)',
     color: 'rgba(255,255,255,0.04)',
     accent: 'rgba(148,163,184,0.3)',
-    textAccent: '#8B8F98',
+    textAccent: '#94A3B8',
     cta: 'Démarrer gratuitement',
     ctaHref: '/auth/register',
     features: [
@@ -72,7 +70,7 @@ const plans: Plan[] = [
     priceNote: "par mois · jusqu'à 30 employés",
     employees: "Jusqu'à 30 employés",
     users: "Admin + tous vos employés",
-    color: 'rgba(56,189,248,0.05)',
+    color: 'rgba(52,211,153,0.05)',
     accent: 'rgba(16,185,129,0.4)',
     textAccent: '#10B981',
     cta: 'Essai 14 jours gratuit',
@@ -135,9 +133,9 @@ const plans: Plan[] = [
     priceNote: 'Tarif négocié selon vos besoins',
     employees: '100+ employés · illimité',
     users: 'Utilisateurs illimités',
-    color: 'rgba(16,185,129,0.05)',
-    accent: 'rgba(16,185,129,0.4)',
-    textAccent: '#10B981',
+    color: 'rgba(100,116,139,0.05)',
+    accent: 'rgba(100,116,139,0.4)',
+    textAccent: '#94A3B8',
     cta: 'Nous contacter',
     ctaHref: '/contact',
     features: [
@@ -174,8 +172,8 @@ function IconCheck({ color }: { color: string }) {
 function IconPartial() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-      <circle cx="12" cy="12" r="11" fill="#8B8F98" fillOpacity="0.15" />
-      <path d="M8 12h8" stroke="#8B8F98" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="11" fill="#F59E0B" fillOpacity="0.15" />
+      <path d="M8 12h8" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -227,8 +225,8 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
           top: -14,
           left: '50%',
           transform: 'translateX(-50%)',
-          background: 'linear-gradient(135deg, #10B981, #10B981)',
-          color: '#FAFAFA',
+          background: 'linear-gradient(135deg, #10B981, #059669)',
+          color: '#fff',
           fontSize: 11,
           fontWeight: 700,
           padding: '4px 16px',
@@ -237,7 +235,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
           whiteSpace: 'nowrap',
           boxShadow: '0 4px 16px rgba(16,185,129,0.4)',
         }}>
-          RECOMMANDÉ
+          ⭐ RECOMMANDÉ
         </div>
       )}
 
@@ -257,7 +255,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
         }}>
           {plan.name}
         </div>
-        <p style={{ color: '#8B8F98', fontSize: 13, margin: '4px 0 16px', lineHeight: 1.4 }}>
+        <p style={{ color: '#64748B', fontSize: 13, margin: '4px 0 16px', lineHeight: 1.4 }}>
           {plan.tagline}
         </p>
 
@@ -266,22 +264,22 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{
               fontSize: 42,
-              fontWeight: 600,
-              color: '#FAFAFA',
+              fontWeight: 800,
+              color: '#fff',
               letterSpacing: '-0.04em',
-              
+              fontFamily: "'DM Sans', system-ui, sans-serif",
               lineHeight: 1,
             }}>
               {displayPrice.toLocaleString('fr-FR')}
             </span>
-            <span style={{ color: '#8B8F98', fontSize: 14 }}>XAF/mois</span>
+            <span style={{ color: '#64748B', fontSize: 14 }}>XAF/mois</span>
           </div>
         ) : (
           <div style={{
             fontSize: 28,
-            fontWeight: 600,
+            fontWeight: 800,
             color: plan.textAccent,
-            
+            fontFamily: "'DM Sans', system-ui, sans-serif",
             lineHeight: 1,
           }}>
             Sur devis
@@ -302,7 +300,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
           </div>
         )}
 
-        <p style={{ color: '#5A5E66', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
+        <p style={{ color: '#475569', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
           {plan.priceNote}
         </p>
       </div>
@@ -310,7 +308,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
       {/* Employés / Users */}
       <div style={{
         background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: '1px solid rgba(255,255,255,0.06)',
         borderRadius: 10,
         padding: '10px 14px',
         marginBottom: 20,
@@ -319,14 +317,14 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke={plan.textAccent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span style={{ color: '#FAFAFA', fontSize: 12, fontWeight: 500 }}>{plan.employees}</span>
+          <span style={{ color: '#CBD5E1', fontSize: 12, fontWeight: 500 }}>{plan.employees}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="8" r="4" stroke={plan.textAccent} strokeWidth="1.5" />
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={plan.textAccent} strokeWidth="1.5" strokeLinecap="round" />
           </svg>
-          <span style={{ color: '#8B8F98', fontSize: 12 }}>{plan.users}</span>
+          <span style={{ color: '#64748B', fontSize: 12 }}>{plan.users}</span>
         </div>
       </div>
 
@@ -347,7 +345,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
             }
             <span style={{
               fontSize: 13,
-              color: f.included === false ? '#5A5E66' : '#FAFAFA',
+              color: f.included === false ? '#475569' : '#CBD5E1',
               flex: 1,
             }}>
               {f.label}
@@ -355,7 +353,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
                 <span style={{
                   marginLeft: 6,
                   fontSize: 11,
-                  color: f.included === true ? plan.textAccent : '#8B8F98',
+                  color: f.included === true ? plan.textAccent : '#64748B',
                   background: f.included === true ? `${plan.textAccent}15` : 'rgba(255,255,255,0.04)',
                   padding: '1px 6px',
                   borderRadius: 4,
@@ -382,20 +380,19 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
           transition: 'all 0.2s ease',
           ...(plan.popular
             ? {
-                background: 'linear-gradient(135deg, #10B981, #10B981)',
-                color: '#FAFAFA',
-                boxShadow: '0 0 30px rgba(16,185,129,0.35)',
+                background: '#FAFAFA',
+                color: '#000',
               }
             : plan.id === 'enterprise'
             ? {
-                background: 'rgba(16,185,129,0.15)',
-                color: '#10B981',
-                border: '1px solid rgba(16,185,129,0.3)',
+                background: 'rgba(100,116,139,0.15)',
+                color: '#94A3B8',
+                border: '1px solid rgba(100,116,139,0.3)',
               }
             : plan.id === 'starter'
             ? {
-                background: 'rgba(255,255,255,0.08)',
-                color: '#8B8F98',
+                background: 'rgba(255,255,255,0.07)',
+                color: '#94A3B8',
                 border: '1px solid rgba(255,255,255,0.1)',
               }
             : {
@@ -466,7 +463,7 @@ function FAQ() {
         <div
           key={i}
           style={{
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
             overflow: 'hidden',
           }}
         >
@@ -485,7 +482,7 @@ function FAQ() {
               gap: 16,
             }}
           >
-            <span style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 500, lineHeight: 1.4 }}>
+            <span style={{ color: '#E2E8F0', fontSize: 15, fontWeight: 500, lineHeight: 1.4 }}>
               {f.q}
             </span>
             <svg
@@ -510,7 +507,7 @@ function FAQ() {
             transition: 'max-height 0.3s ease',
           }}>
             <p style={{
-              color: '#8B8F98',
+              color: '#64748B',
               fontSize: 14,
               lineHeight: 1.7,
               paddingBottom: 20,
@@ -534,11 +531,18 @@ export default function PricingPage() {
     <main style={{
       minHeight: '100vh',
       background: '#050607',
+      fontFamily: "'DM Sans', system-ui, sans-serif",
+      paddingTop: 80,
+      position: 'relative',
+      overflowX: 'hidden',
     }}>
-      <Navbar />
+      <div style={{ position:'fixed', top:-160, right:-160, width:600, height:600, borderRadius:'50%',
+        background:'rgba(255,255,255,0.04)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
+      <div style={{ position:'fixed', left:-160, bottom:0, width:500, height:500, borderRadius:'50%',
+        background:'rgba(212,165,72,0.06)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
 
       {/* ── Hero ── */}
-      <section style={{ textAlign: 'center', padding: '64px 24px 48px', position: 'relative' }}>
+      <section style={{ textAlign: 'center', padding: '64px 24px 48px', position: 'relative', zIndex: 1 }}>
         {/* Glow décoratif */}
         <div style={{
           position: 'absolute',
@@ -552,33 +556,39 @@ export default function PricingPage() {
         }} />
 
         <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          fontSize: 13,
-          color: '#8B8F98',
+          display: 'inline-block',
+          fontSize: 12,
+          fontWeight: 700,
+          color: '#10B981',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
           marginBottom: 20,
-          padding: '6px 14px',
-          background: 'rgba(255,255,255,0.03)',
-          borderRadius: 999,
-          border: '1px solid rgba(255,255,255,0.1)',
+          padding: '6px 16px',
+          background: 'rgba(16,185,129,0.1)',
+          borderRadius: 20,
+          border: '1px solid rgba(16,185,129,0.2)',
         }}>
-          // Tarifs
+          Tarifs simples & transparents
         </div>
 
         <h1 style={{
           fontSize: 'clamp(32px, 6vw, 58px)',
-          fontWeight: 600,
-          color: '#FAFAFA',
-          letterSpacing: '-0.03em',
+          fontWeight: 800,
+          color: '#fff',
+          letterSpacing: '-0.04em',
           lineHeight: 1.1,
           marginBottom: 16,
         }}>
           Choisissez votre plan<br />
-          <span style={{ color: '#10B981' }}>Konza RH</span>
+          <span style={{
+            color: '#fff',
+          }}>
+            HRCongo
+          </span>
         </h1>
 
         <p style={{
-          color: '#8B8F98',
+          color: '#64748B',
           fontSize: 18,
           maxWidth: 520,
           margin: '0 auto 36px',
@@ -598,7 +608,7 @@ export default function PricingPage() {
           borderRadius: 50,
           padding: '6px 6px 6px 18px',
         }}>
-          <span style={{ color: annual ? '#5A5E66' : '#FAFAFA', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>
+          <span style={{ color: annual ? '#475569' : '#E2E8F0', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>
             Mensuel
           </span>
           <button
@@ -606,7 +616,7 @@ export default function PricingPage() {
             style={{
               width: 48,
               height: 26,
-              background: annual ? 'linear-gradient(135deg, #10B981, #10B981)' : 'rgba(255,255,255,0.1)',
+              background: annual ? 'linear-gradient(135deg, #10B981, #059669)' : 'rgba(255,255,255,0.1)',
               borderRadius: 13,
               border: 'none',
               cursor: 'pointer',
@@ -634,7 +644,7 @@ export default function PricingPage() {
             gap: 8,
             paddingRight: 12,
           }}>
-            <span style={{ color: annual ? '#FAFAFA' : '#5A5E66', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>
+            <span style={{ color: annual ? '#E2E8F0' : '#475569', fontSize: 14, fontWeight: 500, transition: 'color 0.2s' }}>
               Annuel
             </span>
             <span style={{
@@ -669,7 +679,7 @@ export default function PricingPage() {
         {/* Note 14 jours */}
         <p style={{
           textAlign: 'center',
-          color: '#5A5E66',
+          color: '#334155',
           fontSize: 14,
           marginTop: 28,
         }}>
@@ -688,14 +698,14 @@ export default function PricingPage() {
           <h2 style={{
             textAlign: 'center',
             fontSize: 28,
-            fontWeight: 600,
-            color: '#FAFAFA',
+            fontWeight: 800,
+            color: '#fff',
             letterSpacing: '-0.03em',
             marginBottom: 8,
           }}>
             Comparaison des modules avancés
           </h2>
-          <p style={{ textAlign: 'center', color: '#8B8F98', fontSize: 14, marginBottom: 40 }}>
+          <p style={{ textAlign: 'center', color: '#64748B', fontSize: 14, marginBottom: 40 }}>
             Les fonctionnalités qui font la différence au quotidien
           </p>
 
@@ -703,17 +713,17 @@ export default function PricingPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '12px 16px', color: '#5A5E66', fontWeight: 500, fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.08)', minWidth: 200 }}>
+                  <th style={{ textAlign: 'left', padding: '12px 16px', color: '#475569', fontWeight: 500, fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.06)', minWidth: 200 }}>
                     Fonctionnalité
                   </th>
                   {['Starter', 'Business', 'Pro', 'Enterprise'].map((n, i) => (
                     <th key={n} style={{
                       textAlign: 'center',
                       padding: '12px 16px',
-                      color: i === 2 ? '#10B981' : '#8B8F98',
+                      color: i === 2 ? '#10B981' : '#64748B',
                       fontWeight: i === 2 ? 700 : 500,
                       fontSize: 12,
-                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                      borderBottom: '1px solid rgba(255,255,255,0.06)',
                     }}>
                       {n}
                     </th>
@@ -740,13 +750,13 @@ export default function PricingPage() {
                   ['API & intégrations', false, false, false, true],
                 ].map(([label, ...cols], ri) => (
                   <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
-                    <td style={{ padding: '11px 16px', color: '#8B8F98', fontSize: 13 }}>{label}</td>
+                    <td style={{ padding: '11px 16px', color: '#94A3B8', fontSize: 13 }}>{label}</td>
                     {cols.map((c, ci) => (
                       <td key={ci} style={{ textAlign: 'center', padding: '11px 16px' }}>
                         {c === true
                           ? <span style={{ color: ci === 2 ? '#10B981' : '#10B981', fontSize: 16 }}>✓</span>
                           : c === 'partial'
-                          ? <span style={{ color: '#8B8F98', fontSize: 11 }}>Manuel</span>
+                          ? <span style={{ color: '#F59E0B', fontSize: 11 }}>Manuel</span>
                           : <span style={{ color: 'rgba(100,116,139,0.3)', fontSize: 14 }}>–</span>
                         }
                       </td>
@@ -764,8 +774,8 @@ export default function PricingPage() {
         <div style={{
           maxWidth: 860,
           margin: '0 auto',
-          background: '#0B0C0F',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'linear-gradient(135deg, rgba(100,116,139,0.08), rgba(16,185,129,0.08))',
+          border: '1px solid rgba(100,116,139,0.2)',
           borderRadius: 24,
           padding: 'clamp(32px, 5vw, 56px)',
           display: 'grid',
@@ -779,7 +789,7 @@ export default function PricingPage() {
             <div style={{
               fontSize: 11,
               fontWeight: 700,
-              color: '#10B981',
+              color: '#94A3B8',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: 12,
@@ -788,14 +798,14 @@ export default function PricingPage() {
             </div>
             <h3 style={{
               fontSize: 26,
-              fontWeight: 600,
-              color: '#FAFAFA',
+              fontWeight: 800,
+              color: '#fff',
               letterSpacing: '-0.03em',
               marginBottom: 12,
             }}>
               Plus de 100 employés ?<br />Parlons-en directement.
             </h3>
-            <p style={{ color: '#8B8F98', fontSize: 14, lineHeight: 1.7, marginBottom: 0 }}>
+            <p style={{ color: '#64748B', fontSize: 14, lineHeight: 1.7, marginBottom: 0 }}>
               Groupes, hôtels, banques, ONG, sociétés minières — nous adaptons la plateforme à votre structure,
               vos conventions collectives, vos sites GPS et votre volume de bulletins.
               Tarif négocié, contrat annuel, gestionnaire dédié.
@@ -821,7 +831,7 @@ export default function PricingPage() {
               textAlign: 'center',
               padding: '12px 28px',
               background: 'rgba(255,255,255,0.05)',
-              color: '#8B8F98',
+              color: '#94A3B8',
               textDecoration: 'none',
               borderRadius: 12,
               fontSize: 13,
@@ -829,7 +839,7 @@ export default function PricingPage() {
               border: '1px solid rgba(255,255,255,0.08)',
               whiteSpace: 'nowrap',
             }}>
-              +242 06 413 36 93
+              📞 +242 06 413 36 93
             </a>
           </div>
         </div>
@@ -840,8 +850,8 @@ export default function PricingPage() {
         <h2 style={{
           textAlign: 'center',
           fontSize: 28,
-          fontWeight: 600,
-          color: '#FAFAFA',
+          fontWeight: 800,
+          color: '#fff',
           letterSpacing: '-0.03em',
           marginBottom: 48,
         }}>
@@ -858,14 +868,14 @@ export default function PricingPage() {
       }}>
         <h2 style={{
           fontSize: 'clamp(24px, 4vw, 38px)',
-          fontWeight: 600,
-          color: '#FAFAFA',
+          fontWeight: 800,
+          color: '#fff',
           letterSpacing: '-0.03em',
           marginBottom: 12,
         }}>
           Prêt à moderniser vos RH ?
         </h2>
-        <p style={{ color: '#8B8F98', fontSize: 16, marginBottom: 32 }}>
+        <p style={{ color: '#64748B', fontSize: 16, marginBottom: 32 }}>
           Commencez gratuitement. Aucune carte bancaire requise.
         </p>
         <Link href="/auth/register" style={{
@@ -876,7 +886,7 @@ export default function PricingPage() {
           background: '#FAFAFA',
           color: '#000',
           textDecoration: 'none',
-          borderRadius: 12,
+          borderRadius: 14,
           fontSize: 16,
           fontWeight: 500,
         }}>
@@ -893,8 +903,8 @@ export default function PricingPage() {
             grid-template-columns: 1fr !important;
           }
         }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
       `}</style>
-      <Footer />
     </main>
   );
 }

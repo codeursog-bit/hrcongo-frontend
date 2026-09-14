@@ -89,7 +89,9 @@ export const Header: React.FC<HeaderProps> = ({ stats }) => {
           <div className="flex flex-col">
             <span className="text-[10px] uppercase text-gray-500 font-semibold">MRR</span>
             <span className="text-sm font-bold text-brand-gold">
-              {(totalMRR / 1000000).toFixed(2)}M FCFA
+              {totalMRR >= 1_000_000
+                ? `${(totalMRR / 1_000_000).toFixed(2)}M FCFA`
+                : `${totalMRR.toLocaleString('fr-FR')} FCFA`}
             </span>
           </div>
            <div className="w-px h-8 bg-gray-700"></div>

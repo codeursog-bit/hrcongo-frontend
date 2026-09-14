@@ -14,7 +14,7 @@ export const NAVIGATION_ITEMS = [
   { path: '/admin/analytics',    label: 'Analytics',     icon: BarChart2       },
   { path: '/admin/billing',      label: 'Revenus',       icon: CreditCard      },
   { path: '/admin/monitoring',   label: 'Monitoring',    icon: Terminal        },
-  { path: '/admin/logs',         label: 'Logs Système',  icon: ScrollText      },
+  { path: '/admin/mes-logs',         label: 'Mes Logs Système',  icon: ScrollText      },
   { path: '/admin/users',        label: 'Admins',        icon: Users           },
   { path: '/admin/affiliates',   label: 'Affiliés',      icon: Link2           },
   { path: '/admin/errors',       label: 'Error Tracker', icon: Bug             },

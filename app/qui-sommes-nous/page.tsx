@@ -16,7 +16,6 @@ const C = {
   text:'#F8FAFC',muted:'#64748B',sub:'#94A3B8',
 };
 
-function GridBg(){return(<div style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none',opacity:0.05,backgroundImage:`linear-gradient(to right, #fff 1px,transparent 1px),linear-gradient(to bottom, #fff 1px,transparent 1px)`,backgroundSize:'48px 48px'}}/>);}
 function Blob({color,style}:{color:string;style:React.CSSProperties}){return<div style={{position:'absolute',borderRadius:'50%',filter:'blur(120px)',opacity:0.1,pointerEvents:'none',background:color,...style}}/>;}
 
 function useReveal(){
@@ -58,7 +57,6 @@ const TIMELINE=[
 export default function AboutPage(){
   return(
     <div style={{background:C.bg,minHeight:'100vh',fontFamily:"system-ui,-apple-system,'Segoe UI',sans-serif",color:C.text,overflowX:'hidden'}}>
-      <GridBg/>
       <Navbar/>
 
       {/* HERO */}
@@ -68,7 +66,7 @@ export default function AboutPage(){
           <Chip>// Qui sommes-nous</Chip>
           <h1 style={{fontSize:'clamp(36px,6vw,68px)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1.05,margin:'20px 0 22px'}}>
             Fabriqué à Pointe-Noire.<br/>
-            <span style={{background:'linear-gradient(135deg,#10B981,#059669,#64748B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Pour le Congo entier.</span>
+            <span style={{color:'#fff'}}>Pour le Congo entier.</span>
           </h1>
           <p style={{fontSize:19,color:C.sub,lineHeight:1.75,maxWidth:600,margin:'0 auto'}}>
             Konza RH est né d'un constat simple :{' '}
@@ -177,7 +175,7 @@ function Chip({children}:{children:React.ReactNode}){
   return<div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:99,fontSize:12,fontWeight:700,color:C.cyan,letterSpacing:'0.08em',textTransform:'uppercase' as const}}>{children}</div>;
 }
 function GradBtn({href,children}:{href:string;children:React.ReactNode}){
-  return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',textDecoration:'none',fontWeight:800,fontSize:15,padding:'14px 30px',borderRadius:12,boxShadow:'0 0 40px rgba(16,185,129,0.3)'}}>{children}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></Link>;
+  return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'#FAFAFA',color:'#000',textDecoration:'none',fontWeight:600,fontSize:15,padding:'14px 30px',borderRadius:12}}>{children}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></Link>;
 }
 function GhostBtn({href,children}:{href:string;children:React.ReactNode}){
   return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'transparent',color:C.text,textDecoration:'none',fontWeight:700,fontSize:15,padding:'14px 24px',borderRadius:12,border:`1px solid ${C.border}`}}>{children}</Link>;
