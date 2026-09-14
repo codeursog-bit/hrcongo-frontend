@@ -373,6 +373,7 @@ export default function DailyView({
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Département</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Statut</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Entrée</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Site</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Sortie</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Durée</th>
               </tr>
@@ -380,7 +381,7 @@ export default function DailyView({
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filteredAttendances.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
                       {!isWorkingDay ? (
                         <>
@@ -431,6 +432,17 @@ export default function DailyView({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">{formatTime(att.checkIn)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      {(att as any).checkInSiteName
+                        ? <span className="inline-flex items-center gap-1">
+                            <MapPin size={12} className="text-emerald-500" />
+                            {(att as any).checkInSiteName}
+                            {(att as any).checkInDistance != null && (
+                              <span className="text-gray-400">({(att as any).checkInDistance}m)</span>
+                            )}
+                          </span>
+                        : '-'}
+                    </td>
                     <td className="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">{formatTime(att.checkOut)}</td>
                     <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
                   </tr>

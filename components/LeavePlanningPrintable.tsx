@@ -79,7 +79,7 @@ export default function LeavePlanningPrintable({
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5 }}>
         <thead>
           <tr style={{ background: '#f3f4f6' }}>
-            {['Items', 'Noms & Prénoms', 'Poste occupé', 'Département', 'Date d\u2019embauche', 'Nature contrat', 'Date de départ congé', 'Date de retour congé', ...(mode === 'payable' ? ['Montant à payer'] : []), 'Statut'].map(h => (
+            {['Items', 'Noms & Prénoms', 'Poste occupé', 'Département', 'Date d\u2019embauche', 'Nature contrat', 'Date de départ congé', 'Date de retour congé', ...(mode === 'payable' ? ['Montant à payer'] : [])].map(h => (
               <th key={h} style={{ padding: '6px 8px', border: '1px solid #1f2937', fontSize: 9.5, textAlign: 'left', textTransform: 'uppercase', color: '#374151' }}>{h}</th>
             ))}
           </tr>
@@ -105,20 +105,11 @@ export default function LeavePlanningPrintable({
                   )}
                 </td>
               )}
-              <td style={{ padding: '6px 8px', border: '1px solid #d1d5db', fontSize: 9.5, fontWeight: 700 }}>
-                {r.isTheoretical ? (
-                  <span style={{ color: '#d97706' }}>Prévu</span>
-                ) : r.isManual ? (
-                  <span style={{ color: '#0284c7' }}>Planifié RH</span>
-                ) : (
-                  <span style={{ color: '#059669' }}>Confirmé</span>
-                )}
-              </td>
             </tr>
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={mode === 'payable' ? 10 : 9} style={{ padding: '20px', border: '1px solid #d1d5db', textAlign: 'center', color: '#9ca3af' }}>
+              <td colSpan={mode === 'payable' ? 9 : 8} style={{ padding: '20px', border: '1px solid #d1d5db', textAlign: 'center', color: '#9ca3af' }}>
                 Aucun départ en congé ce mois-ci.
               </td>
             </tr>

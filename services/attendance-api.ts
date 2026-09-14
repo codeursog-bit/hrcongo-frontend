@@ -299,6 +299,13 @@ export interface AttendanceRecord {
   checkInLon?: number;
   checkOutLat?: number;
   checkOutLon?: number;
+  // ✅ Site GPS matché au moment du pointage (voir attendance-check.service.ts)
+  checkInSiteId?: string | null;
+  checkInSiteName?: string | null;
+  checkInDistance?: number | null;
+  checkOutSiteId?: string | null;
+  checkOutSiteName?: string | null;
+  checkOutDistance?: number | null;
   status: string;
   totalHours?: number;
   normalHours?: number;

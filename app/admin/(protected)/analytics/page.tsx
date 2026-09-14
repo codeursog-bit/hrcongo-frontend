@@ -1,20 +1,32 @@
 // ============================================================================
 // Fichier: app/admin/(protected)/analytics/page.tsx
-// Page Analytics améliorée — utilise les vrais composants + données API
+// Page Analytics — uniquement des données réelles (voir notes ci-dessous)
 // ============================================================================
+//
+// Ce qui a été retiré volontairement (aucune donnée réelle disponible) :
+//  - Session moyenne / taux de rebond / pages par session → pas de tracking
+//    de sessions front-end dans le code
+//  - Latence API / taux d'erreur par route → pas d'APM
+//  - Répartition par secteur d'activité → pas de champ "industry" en base
+//  - CAC et ratio LTV/CAC → aucune donnée de dépense marketing
+//
+// Ce qui a été rendu réel (voir analytics.service.ts) :
+//  - ARPU, répartition Direct/Parrainage, rétention à 12 mois
+//  - Adoption des modules (Paie, Documents, Congés, Recrutement, Formation)
+//  - Ratio DAU/MAU
+//  - "Signaux à surveiller" (remplace l'ex "Prédiction Churn IA" fictive)
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import {
-  Calendar, Download, ArrowUpRight, ArrowDownRight, Users,
+  Calendar, Download, ArrowUpRight, Users,
   CreditCard, Activity, AlertTriangle, AlertCircle, Loader2,
   MapPin, TrendingUp, TrendingDown, RefreshCw, BarChart2,
 } from 'lucide-react';
 import { AnalyticsCard } from '@/components/admin/analytics/AnalyticsCard';
 import {
-  AcquisitionChart, ChurnPieChart, DauChart,
-  FeatureBarChart, LatencyChart, IndustryPieChart,
+  AcquisitionChart, ChurnPieChart, DauChart, FeatureBarChart,
 } from '@/components/admin/analytics/AnalyticsCharts';
 import { CohortAnalysis } from '@/components/admin/analytics/CohortAnalysis';
 import { adminService } from '@/lib/services/adminService';
@@ -22,8 +34,6 @@ import { adminService } from '@/lib/services/adminService';
 const fmt     = (n: number) => n?.toLocaleString('fr-FR') ?? '0';
 const fmtFcfa = (n: number) => `${fmt(Math.round(n ?? 0))} F`;
 const pct     = (a: number, b: number) => b > 0 ? Math.round(((a - b) / b) * 100) : 0;
-
-const MOIS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -72,6 +82,18 @@ export default function AnalyticsPage() {
   const prev        = growth[growth.length - 2] ?? {};
   const lastAcquisition = analytics.acquisitionData?.[analytics.acquisitionData?.length - 1]?.value ?? 0;
 
+  const dau = analytics.dau?.[analytics.dau.length - 1]?.value ?? 0;
+  const mau = analytics.mau ?? 0;
+  const dauMauRatio = mau > 0 ? Math.round((dau / mau) * 100) : 0;
+
+  const economics = analytics.unitEconomics ?? {};
+  const featureAdoption: Array<{ name: string; value: number }> = analytics.featureAdoption ?? [];
+  const weakestFeature = featureAdoption.length > 0
+    ? [...featureAdoption].sort((a, b) => a.value - b.value)[0]
+    : null;
+
+  const risk = analytics.riskSignals ?? { count: 0, companies: [] };
+
   return (
     <div className="space-y-8">
 
@@ -83,7 +105,7 @@ export default function AnalyticsPage() {
             Analytique Plateforme
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            Analyse approfondie des performances et du comportement des utilisateurs
+            Analyse des performances et du comportement des entreprises
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -226,11 +248,11 @@ export default function AnalyticsPage() {
           <div className="mt-4 pt-4 border-t border-gray-800 grid grid-cols-2 gap-2 text-xs">
             <div>
               <span className="text-gray-500 block">Direct</span>
-              <span className="text-white font-bold">45%</span>
+              <span className="text-white font-bold">{economics.acquisitionChannels?.direct ?? 0}%</span>
             </div>
             <div>
               <span className="text-gray-500 block">Parrainage</span>
-              <span className="text-white font-bold">30%</span>
+              <span className="text-white font-bold">{economics.acquisitionChannels?.referral ?? 0}%</span>
             </div>
           </div>
         </AnalyticsCard>
@@ -246,84 +268,60 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-bold text-white">78%</div>
-              <div className="text-xs text-gray-500">Rétention Annuelle</div>
+              <div className="text-sm font-bold text-white">
+                {economics.annualRetention === null ? 'N/A' : `${economics.annualRetention}%`}
+              </div>
+              <div className="text-xs text-gray-500">Rétention 12 mois</div>
             </div>
           </div>
           <ChurnPieChart data={analytics.churnData?.reasons ?? []} />
-          <div className="mt-2 text-center text-xs text-gray-500">
-            Raison Principale: <span className="text-white font-medium">Prix (40%)</span>
+        </AnalyticsCard>
+
+        <AnalyticsCard title="Économie Unitaire" subtitle="Revenu moyen par entreprise">
+          <div className="flex flex-col items-center justify-center h-full py-4">
+            <span className="text-xs text-gray-500 uppercase mb-2">ARPU (revenu moyen / entreprise active)</span>
+            <span className="text-3xl font-bold text-amber-400">{fmtFcfa(economics.arpu ?? 0)}</span>
+            <span className="text-xs text-gray-600 mt-2 text-center">
+              Par mois. LTV/CAC non affichés : pas de donnée de coût d'acquisition en base.
+            </span>
           </div>
         </AnalyticsCard>
 
-        <AnalyticsCard title="Économie Unitaire" subtitle="Efficacité des revenus">
-          <div className="space-y-4 mt-2">
-            {[
-              { l: 'ARPU',     v: '15 000 F',  c: 'text-white'   },
-              { l: 'LTV',      v: '180 000 F', c: 'text-amber-400' },
-              { l: 'CAC',      v: '45 000 F',  c: 'text-red-400' },
-            ].map((r, i) => (
-              <div key={i} className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">{r.l}</span>
-                <span className={`text-sm font-bold ${r.c}`}>{r.v}</span>
-              </div>
-            ))}
-            <div className="pt-2 border-t border-gray-800">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-gray-500">Ratio LTV/CAC</span>
-                <span className="text-xs font-bold text-emerald-400">4.0x (Sain)</span>
-              </div>
-              <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full rounded-full" style={{ width: '80%' }} />
-              </div>
-            </div>
-          </div>
-        </AnalyticsCard>
-
-        <AnalyticsCard title="Prédiction Churn IA" subtitle="Analyse de risque (30j)">
-          <div className="flex items-center gap-3 mb-6 bg-red-900/10 border border-red-900/30 p-3 rounded-lg">
-            <AlertCircle className="w-8 h-8 text-red-500" />
+        <AnalyticsCard title="Signaux à surveiller" subtitle="Basé sur connexions & paiements — pas d'IA">
+          <div className="flex items-center gap-3 mb-4 bg-amber-900/10 border border-amber-900/30 p-3 rounded-lg">
+            <AlertCircle className="w-8 h-8 text-amber-500" />
             <div>
-              <div className="text-2xl font-bold text-white">7</div>
-              <div className="text-xs text-red-400 font-bold">Entreprises à Haut Risque</div>
+              <div className="text-2xl font-bold text-white">{risk.count}</div>
+              <div className="text-xs text-amber-400 font-bold">Entreprises à surveiller</div>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="text-xs text-gray-500 uppercase font-bold">Facteurs Détectés</div>
-            {[
-              'Faible usage (> 14 jours sans connexion)',
-              'Paiement échoué 2+ fois',
-              'Ticket support ouvert > 7 jours',
-            ].map((f, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-gray-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                {f}
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {risk.companies.length === 0 ? (
+              <p className="text-xs text-gray-600 text-center py-4">Aucun signal détecté</p>
+            ) : risk.companies.map((c: any, i: number) => (
+              <div key={i} className="text-xs">
+                <div className="text-gray-200 font-medium truncate">{c.name}</div>
+                <div className="text-gray-500">{c.reasons.join(' · ')}</div>
               </div>
             ))}
           </div>
-          <button className="w-full mt-6 py-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold rounded-lg border border-gray-700 transition-colors">
-            Contacter les Comptes à Risque
-          </button>
         </AnalyticsCard>
       </div>
 
-      {/* ROW 2 — DAU & Features */}
+      {/* ROW 2 — DAU/MAU & Adoption */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <AnalyticsCard title="Utilisateurs Actifs Quotidiens (DAU)" subtitle="Tendance 7 derniers jours" className="h-full">
             <div className="flex items-end gap-2 mb-4">
-              <span className="text-3xl font-bold text-white">
-                {analytics.dau?.[analytics.dau.length - 1]?.value ?? 0}
-              </span>
+              <span className="text-3xl font-bold text-white">{dau}</span>
               <span className="text-sm text-emerald-400 mb-1">Aujourd'hui</span>
             </div>
             <DauChart data={analytics.dau ?? []} />
-            <div className="grid grid-cols-4 gap-4 mt-6">
+            <div className="grid grid-cols-3 gap-4 mt-6">
               {[
-                { l: 'DAU/MAU', v: '33%' },
-                { l: 'Session Moy.', v: '24m' },
-                { l: 'Taux Rebond', v: '12%' },
-                { l: 'Pages/Session', v: '7.4' },
+                { l: 'DAU (aujourd\'hui)', v: fmt(dau) },
+                { l: 'MAU (30j)', v: fmt(mau) },
+                { l: 'Ratio DAU/MAU', v: `${dauMauRatio}%` },
               ].map((s, i) => (
                 <div key={i} className="p-3 bg-gray-800/50 rounded-lg text-center">
                   <span className="text-xs text-gray-500 block uppercase">{s.l}</span>
@@ -334,59 +332,32 @@ export default function AnalyticsPage() {
           </AnalyticsCard>
         </div>
         <div className="lg:col-span-1">
-          <AnalyticsCard title="Utilisation Fonctionnalités" subtitle="Modules les plus adoptés" className="h-full">
-            <FeatureBarChart />
-            <div className="mt-4 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-amber-200">Alerte Faible Adoption</div>
-                <div className="text-[10px] text-amber-400/80">
-                  Seulement 29% utilisent les Documents.
+          <AnalyticsCard title="Adoption des Modules" subtitle="% d'entreprises actives utilisant chaque module" className="h-full">
+            <FeatureBarChart data={featureAdoption} />
+            {weakestFeature && (
+              <div className="mt-4 p-3 bg-amber-900/10 border border-amber-900/30 rounded-lg flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <div className="text-xs font-bold text-amber-200">Adoption la plus faible</div>
+                  <div className="text-[10px] text-amber-400/80">
+                    Seulement {weakestFeature.value}% utilisent {weakestFeature.name}.
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </AnalyticsCard>
         </div>
       </div>
 
-      {/* ROW 3 — Cohorte & Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AnalyticsCard title="Analyse de Cohorte" subtitle="Rétention par mois d'inscription">
+      {/* ROW 3 — Cohorte */}
+      <div className="grid grid-cols-1 gap-6">
+        <AnalyticsCard title="Analyse de Cohorte" subtitle="Rétention par mois d'inscription (— = échéance pas encore atteinte)">
           <CohortAnalysis data={analytics.cohortData ?? []} />
-        </AnalyticsCard>
-        <AnalyticsCard title="Performance Système" subtitle="Temps Réponse API (24h)">
-          <div className="flex justify-between items-end mb-4">
-            <div>
-              <div className="text-2xl font-bold text-white">124ms</div>
-              <div className="text-xs text-gray-400">Latence Moy.</div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-bold text-red-400">0.05%</div>
-              <div className="text-xs text-gray-500">Taux d'Erreur</div>
-            </div>
-          </div>
-          <LatencyChart />
-          <div className="space-y-3 mt-4">
-            {[
-              { route: 'POST /payroll/calculate', ms: 450, pct: 80, c: 'text-red-400 bg-red-500' },
-              { route: 'GET /reports/analytics',  ms: 380, pct: 65, c: 'text-amber-400 bg-amber-500' },
-            ].map((r, i) => (
-              <div key={i}>
-                <div className="flex justify-between items-center text-xs mb-1">
-                  <span className="text-gray-400 font-mono">{r.route}</span>
-                  <span className={r.c.split(' ')[0] + ' font-bold'}>{r.ms}ms</span>
-                </div>
-                <div className="w-full bg-gray-800 h-1 rounded-full overflow-hidden">
-                  <div className={`${r.c.split(' ')[1]} h-full rounded-full`} style={{ width: `${r.pct}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
         </AnalyticsCard>
       </div>
 
-      {/* ROW 4 — BI Géo & Secteur */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* ROW 4 — Géo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <AnalyticsCard title="Distribution Géographique" subtitle="Entreprises par Ville">
           <div className="space-y-4 mt-2">
             {(analytics.geoDistribution ?? []).slice(0, 5).map((geo: any, i: number) => (
@@ -411,11 +382,6 @@ export default function AnalyticsPage() {
           </div>
         </AnalyticsCard>
 
-        <AnalyticsCard title="Répartition par Secteur" subtitle="Segmentation industrielle">
-          <IndustryPieChart />
-        </AnalyticsCard>
-
-        {/* Stats monitoring */}
         {stats && (
           <AnalyticsCard title="Santé Plateforme" subtitle="7 derniers jours">
             <div className="grid grid-cols-2 gap-3 mt-2">

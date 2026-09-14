@@ -42,9 +42,9 @@ const SUBJECTS = [
 ];
 
 const CONTACT_INFO = [
-  { icon: Mail,    label: 'Email',         value: 'contact@konzarh.com',       href: 'mailto:contact@konzarh.com', color: 'text-cyan-400',   bg: 'bg-cyan-500/10'   },
+  { icon: Mail,    label: 'Email',         value: 'contact@konzarh.com',       href: 'mailto:contact@konzarh.com', color: 'text-emerald-400',   bg: 'bg-emerald-500/10'   },
   { icon: Phone,   label: 'Téléphone',     value: '+242 053 079 107',           href: 'tel:+242053079107',          color: 'text-emerald-400',bg: 'bg-emerald-500/10'},
-  { icon: MapPin,  label: 'Adresse',       value: 'Pointe-Noire, Congo-Brazza.', href: null,                        color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  { icon: MapPin,  label: 'Adresse',       value: 'Pointe-Noire, Congo-Brazza.', href: null,                        color: 'text-slate-400', bg: 'bg-slate-400/10' },
   { icon: Clock,   label: 'Disponibilité', value: 'Lun–Ven, 8h–18h (heure CG)', href: null,                        color: 'text-orange-400', bg: 'bg-orange-500/10' },
 ];
 
@@ -99,12 +99,14 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white font-sans overflow-x-hidden">
-      {/* Grid background */}
-      <div className="fixed inset-0 pointer-events-none z-0"
+    <div className="min-h-screen bg-[#050607] text-white font-sans overflow-x-hidden">
+      {/* Fond (identique à la landing) */}
+      <div className="fixed -right-40 -top-40 w-[600px] h-[600px] bg-white/[0.04] rounded-full blur-[130px] pointer-events-none z-0" />
+      <div className="fixed -left-40 bottom-0 w-[500px] h-[500px] bg-[#D4A548]/[0.06] rounded-full blur-[130px] pointer-events-none z-0" />
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.05]"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)`,
-          backgroundSize: '44px 44px',
+          backgroundImage: `linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)`,
+          backgroundSize: '48px 48px',
         }}
       />
 
@@ -112,14 +114,13 @@ export default function ContactPage() {
 
       {/* ── HERO ────────────────────────────────────────────────────────────── */}
       <section className="relative pt-40 pb-20 px-8 text-center overflow-hidden z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-cyan-500 rounded-full opacity-[0.07] blur-[120px] pointer-events-none"/>
         <div className="max-w-2xl mx-auto relative">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[11px] font-bold text-cyan-400 uppercase tracking-widest mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[11px] font-bold text-emerald-400 uppercase tracking-widest mb-6">
             // Contact
           </div>
           <h1 className="text-[clamp(32px,5vw,58px)] font-black tracking-tight leading-[1.1] mb-5">
             On vous répond<br/>
-            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 bg-clip-text text-transparent">
               sous 24 heures.
             </span>
           </h1>
@@ -165,14 +166,14 @@ export default function ContactPage() {
             </div>
 
             {/* Disponibilité */}
-            <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-xl">
+            <div className="p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-xl">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"/>
                 <span className="text-xs font-bold text-emerald-400">Équipe disponible</span>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Temps de réponse moyen : <strong className="text-white">moins de 4h</strong> en journée.<br/>
-                Urgences : <a href="tel:+242053079107" className="text-cyan-400 no-underline hover:underline font-bold">+242 053 079 107</a>
+                Urgences : <a href="tel:+242053079107" className="text-emerald-400 no-underline hover:underline font-bold">+242 053 079 107</a>
               </p>
             </div>
 
@@ -182,7 +183,7 @@ export default function ContactPage() {
               <div className="space-y-2">
                 {QUICK_LINKS.map(lk => (
                   <Link key={lk.label} href={lk.href}
-                    className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 no-underline transition-colors">
+                    className="flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 no-underline transition-colors">
                     <ArrowRight size={13}/> {lk.label}
                   </Link>
                 ))}
@@ -191,7 +192,7 @@ export default function ContactPage() {
           </div>
 
           {/* ── Formulaire ──────────────────────────────────────────────────── */}
-          <div className="bg-[#0A1628] border border-white/7 rounded-2xl p-10">
+          <div className="bg-[#0B0C0F] border border-white/7 rounded-2xl p-10">
 
             {/* Succès */}
             {status === 'success' ? (
@@ -202,7 +203,7 @@ export default function ContactPage() {
                 <h3 className="text-xl font-black text-white mb-3">Message envoyé !</h3>
                 <p className="text-sm text-slate-400 leading-relaxed mb-2">
                   Merci <strong className="text-white">{form.name}</strong>. Notre équipe vous répondra sous 24h à{' '}
-                  <span className="text-cyan-400">{form.email}</span>.
+                  <span className="text-emerald-400">{form.email}</span>.
                 </p>
                 <p className="text-xs text-slate-500 mb-8">
                   Vous recevrez également un email de confirmation.
@@ -263,7 +264,7 @@ export default function ContactPage() {
 
                 {/* Submit */}
                 <button type="submit" disabled={status === 'loading'}
-                  className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-[15px] rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/20">
+                  className="w-full flex items-center justify-center gap-2.5 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-[15px] rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">
                   {status === 'loading'
                     ? <><Loader2 size={16} className="animate-spin"/> Envoi en cours...</>
                     : <><Send size={15}/> Envoyer le message</>
@@ -272,7 +273,7 @@ export default function ContactPage() {
 
                 <p className="text-center text-xs text-slate-600">
                   En soumettant, vous acceptez notre{' '}
-                  <Link href="/privacy" className="text-cyan-400 no-underline hover:underline">politique de confidentialité</Link>.
+                  <Link href="/privacy" className="text-emerald-400 no-underline hover:underline">politique de confidentialité</Link>.
                 </p>
               </form>
             )}
@@ -285,7 +286,7 @@ export default function ContactPage() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        ::-webkit-scrollbar { width: 6px; background: #020817; }
+        ::-webkit-scrollbar { width: 6px; background: #050607; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
       `}</style>
     </div>
@@ -299,9 +300,9 @@ function Field({ label, children }: { label: string; children: React.ReactElemen
       <label className="block text-[13px] text-slate-400 font-medium">{label}</label>
       {React.cloneElement(children, {
         className: [
-          'w-full px-4 py-3 bg-[#020817] border border-white/10 rounded-xl',
+          'w-full px-4 py-3 bg-[#050607] border border-white/10 rounded-xl',
           'text-white text-[15px] placeholder:text-slate-600',
-          'outline-none focus:border-cyan-500/50 transition-colors',
+          'outline-none focus:border-emerald-500/50 transition-colors',
           'font-[inherit]',
           children.type === 'textarea' ? 'resize-y min-h-[110px]' : '',
           children.type === 'select'   ? 'appearance-none cursor-pointer' : '',

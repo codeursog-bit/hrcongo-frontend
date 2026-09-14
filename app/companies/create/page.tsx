@@ -29,20 +29,18 @@ import { ConventionPicker, getConventionCatalogEntry } from '@/components/conven
 // STEPS
 // ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Identité',   icon: Building2,  color: 'sky',     encouragement: "Commençons par les bases", emoji: "🏢" },
-  { id: 2, label: 'Contact',    icon: MapPin,      color: 'emerald', encouragement: "Presque à mi-chemin !",    emoji: "📍" },
-  { id: 3, label: 'Convention', icon: BookOpen,    color: 'purple',  encouragement: "Excellent progrès !",      emoji: "📋" },
-  { id: 4, label: 'Fiscalité',  icon: ShieldCheck, color: 'amber',   encouragement: "Dernière étape, on y est !", emoji: "🎯" },
+  { id: 1, label: 'Identité',   icon: Building2,  color: 'brand', encouragement: "Commençons par les bases", emoji: "🏢" },
+  { id: 2, label: 'Contact',    icon: MapPin,      color: 'brand', encouragement: "Presque à mi-chemin !",    emoji: "📍" },
+  { id: 3, label: 'Convention', icon: BookOpen,    color: 'brand', encouragement: "Excellent progrès !",      emoji: "📋" },
+  { id: 4, label: 'Fiscalité',  icon: ShieldCheck, color: 'brand', encouragement: "Dernière étape, on y est !", emoji: "🎯" },
 ];
 
+// Une seule couleur d'accent sur tout le parcours — cohérent avec le reste de l'app.
 const COLOR_MAP: Record<string, {
   ring: string; bg: string; bgLight: string; text: string; border: string;
   grad: string; glow: string; gradLight: string;
 }> = {
-  sky:     { ring: 'focus:ring-sky-500/30',     bg: 'bg-sky-500',     bgLight: 'bg-sky-500/10',     text: 'text-sky-400',     border: 'border-sky-500/50',     grad: 'from-sky-500 to-cyan-400',         glow: 'shadow-sky-500/30',     gradLight: 'from-sky-500/20 to-cyan-400/10' },
-  emerald: { ring: 'focus:ring-emerald-500/30', bg: 'bg-emerald-500', bgLight: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/50', grad: 'from-emerald-500 to-teal-400',     glow: 'shadow-emerald-500/30', gradLight: 'from-emerald-500/20 to-teal-400/10' },
-  purple:  { ring: 'focus:ring-purple-500/30',  bg: 'bg-purple-500',  bgLight: 'bg-purple-500/10',  text: 'text-purple-400',  border: 'border-purple-500/50',  grad: 'from-purple-500 to-violet-400',    glow: 'shadow-purple-500/30',  gradLight: 'from-purple-500/20 to-violet-400/10' },
-  amber:   { ring: 'focus:ring-amber-500/30',   bg: 'bg-amber-500',   bgLight: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/50',   grad: 'from-amber-500 to-orange-400',    glow: 'shadow-amber-500/30',   gradLight: 'from-amber-500/20 to-orange-400/10' },
+  brand: { ring: 'focus:ring-emerald-500/30', bg: 'bg-emerald-500', bgLight: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/50', grad: 'from-emerald-500 to-emerald-400', glow: 'shadow-emerald-500/30', gradLight: 'from-emerald-500/20 to-emerald-400/10' },
 };
 
 // ─────────────────────────────────────────────────────────
@@ -50,7 +48,7 @@ const COLOR_MAP: Record<string, {
 // ─────────────────────────────────────────────────────────
 function Field({
   label, name, value, onChange, placeholder, required, mono,
-  type = 'text', hint, colorKey = 'sky', icon: Icon,
+  type = 'text', hint, colorKey = 'brand', icon: Icon,
 }: {
   label: string; name: string; value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -201,13 +199,15 @@ export default function CreateCompanyPage() {
             height={windowSize.height}
             recycle={false}
             numberOfPieces={400}
-            colors={['#0EA5E9', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#06B6D4']}
+            colors={['#10B981', '#34D399', '#F59E0B', '#FBBF24']}
           />
         )}
-        <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 relative overflow-hidden">
-          {/* Fond */}
-          <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="min-h-screen bg-[#050607] flex items-center justify-center p-4 relative overflow-hidden">
+          {/* Fond : identique au Hero de la page d'accueil */}
+          <div className="pointer-events-none fixed inset-0 -z-10">
+            <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
+            <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
+          </div>
 
           <motion.div
             initial={{ scale: 0.85, opacity: 0 }}
@@ -226,10 +226,17 @@ export default function CreateCompanyPage() {
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.2, type: 'spring', bounce: 0.6 }}
-              className="w-28 h-28 mx-auto mb-6 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/30"
+              transition={{ delay: 0.2, type: 'spring', bounce: 0.45 }}
+              className="relative w-28 h-28 mx-auto mb-6"
             >
-              <PartyPopper size={52} className="text-white" />
+              <motion.div
+                className="absolute inset-0 rounded-3xl bg-emerald-500/40 blur-xl"
+                animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.15, 0.5] }}
+                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <div className="relative w-28 h-28 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/30">
+                <PartyPopper size={52} className="text-white" />
+              </div>
             </motion.div>
 
             <motion.h1
@@ -252,7 +259,7 @@ export default function CreateCompanyPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.48 }}
-              className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-8"
+              className="text-2xl font-bold text-white mb-8"
             >
               {createdCompanyName}
             </motion.p>
@@ -296,7 +303,7 @@ export default function CreateCompanyPage() {
               onClick={() => router.push('/dashboard')}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-2xl shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 transition-all text-base"
+              className="w-full py-4 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-2xl flex items-center justify-center gap-2 transition-all text-base"
             >
               <Rocket size={20} /> Accéder au tableau de bord
             </motion.button>
@@ -308,37 +315,29 @@ export default function CreateCompanyPage() {
 
   // ── VARIANTS STEPS ──────────────────────────────────────
   const variants = {
-    enter:  (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
-    center: { x: 0, opacity: 1 },
-    exit:   (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0 }),
+    enter:  (dir: number) => ({ x: dir > 0 ? 28 : -28, opacity: 0, scale: 0.985 }),
+    center: { x: 0, opacity: 1, scale: 1 },
+    exit:   (dir: number) => ({ x: dir > 0 ? -28 : 28, opacity: 0, scale: 0.985 }),
+  };
+  const EASE_PREMIUM = [0.22, 1, 0.36, 1] as const; // expo-out — sensation "premium", jamais de rebond excessif
+
+  const fieldStagger = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.05, delayChildren: 0.05 } },
+  };
+  const fieldItem = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE_PREMIUM } },
   };
 
   // ── RENDU PRINCIPAL ─────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#020617] text-white py-8 px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#050607] text-white py-8 px-4 relative overflow-hidden">
 
-      {/* ── Fond halos ── */}
-      <div className={`fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none transition-all duration-700 ${
-        step === 1 ? 'bg-sky-500/8' : step === 2 ? 'bg-emerald-500/8' : step === 3 ? 'bg-purple-500/8' : 'bg-amber-500/8'
-      }`} />
-      <div className={`fixed bottom-0 left-0 w-[500px] h-[500px] rounded-full blur-[130px] pointer-events-none transition-all duration-700 ${
-        step === 1 ? 'bg-cyan-500/6' : step === 2 ? 'bg-teal-500/6' : step === 3 ? 'bg-violet-500/6' : 'bg-orange-500/6'
-      }`} />
-
-      {/* Grille */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.02]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
-        }}
-      />
-
-      {/* Logo watermark */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
-        <div className="relative w-[420px] h-[180px] opacity-[0.03]">
-          <Image src="/logos/konza_logo_h_color.png" alt="" fill className="object-contain" />
-        </div>
+      {/* ── Fond : identique au Hero de la page d'accueil ── */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
+        <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
       </div>
 
       <div className="max-w-2xl mx-auto relative z-10">
@@ -397,6 +396,8 @@ export default function CreateCompanyPage() {
                 >
                   <motion.div
                     animate={{ scale: isCurrent ? 1.12 : 1 }}
+                    whileHover={isDone ? { scale: 1.08 } : undefined}
+                    whileTap={isDone ? { scale: 0.95 } : undefined}
                     transition={{ type: 'spring', stiffness: 320, damping: 20 }}
                     className={`relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                       isDone
@@ -457,39 +458,52 @@ export default function CreateCompanyPage() {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 0.38, ease: EASE_PREMIUM }}
           >
 
             {/* ═══ STEP 1 : IDENTITÉ ═══ */}
             {step === 1 && (
               <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
                 <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-sky-500/15 border border-sky-500/30 rounded-xl flex items-center justify-center">
-                    <Building2 size={19} className="text-sky-400" />
+                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                    <Building2 size={19} className="text-emerald-400" />
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-white">Identité de l'entreprise</h2>
                     <p className="text-xs text-gray-500">Informations légales et secteur d'activité</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
+                <motion.div
+                  variants={fieldStagger}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <motion.div variants={fieldItem} className="md:col-span-2">
                     <Field label="Nom Légal" name="legalName" value={form.legalName} onChange={handleChange}
-                      placeholder="Ex: SARL INNOVATION TECH CONGO" required colorKey="sky" icon={Building2} />
-                  </div>
-                  <Field label="Nom Commercial" name="tradeName" value={form.tradeName} onChange={handleChange}
-                    placeholder="Ex: InnoTech" colorKey="sky" />
-                  <Field label="Secteur d'Activité" name="industry" value={form.industry} onChange={handleChange}
-                    placeholder="Ex: Technologie, Commerce..." colorKey="sky" />
-                  <Field label="N° RCCM" name="rccmNumber" value={form.rccmNumber} onChange={handleChange}
-                    placeholder="CG-BZV-01-2024-B12-00123" required colorKey="sky" mono />
-                  <Field label="N° CNSS Employeur" name="cnssNumber" value={form.cnssNumber} onChange={handleChange}
-                    placeholder="123456789" mono colorKey="sky" hint="Optionnel" />
-                  <div className="md:col-span-2">
+                      placeholder="Ex: SARL INNOVATION TECH CONGO" required colorKey="brand" icon={Building2} />
+                  </motion.div>
+                  <motion.div variants={fieldItem}>
+                    <Field label="Nom Commercial" name="tradeName" value={form.tradeName} onChange={handleChange}
+                      placeholder="Ex: InnoTech" colorKey="brand" />
+                  </motion.div>
+                  <motion.div variants={fieldItem}>
+                    <Field label="Secteur d'Activité" name="industry" value={form.industry} onChange={handleChange}
+                      placeholder="Ex: Technologie, Commerce..." colorKey="brand" />
+                  </motion.div>
+                  <motion.div variants={fieldItem}>
+                    <Field label="N° RCCM" name="rccmNumber" value={form.rccmNumber} onChange={handleChange}
+                      placeholder="CG-BZV-01-2024-B12-00123" required colorKey="brand" mono />
+                  </motion.div>
+                  <motion.div variants={fieldItem}>
+                    <Field label="N° CNSS Employeur" name="cnssNumber" value={form.cnssNumber} onChange={handleChange}
+                      placeholder="123456789" mono colorKey="brand" hint="Optionnel" />
+                  </motion.div>
+                  <motion.div variants={fieldItem} className="md:col-span-2">
                     <Field label="N° Fiscal — NIU" name="taxNumber" value={form.taxNumber} onChange={handleChange}
-                      placeholder="M092500001234" mono colorKey="sky" hint="Optionnel" />
-                  </div>
-                </div>
+                      placeholder="M092500001234" mono colorKey="brand" hint="Optionnel" />
+                  </motion.div>
+                </motion.div>
               </div>
             )}
 
@@ -505,20 +519,29 @@ export default function CreateCompanyPage() {
                     <p className="text-xs text-gray-500">Adresse et coordonnées de votre entreprise</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
+                <motion.div
+                  variants={fieldStagger}
+                  initial="hidden"
+                  animate="show"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <motion.div variants={fieldItem} className="md:col-span-2">
                     <Field label="Adresse Complète" name="address" value={form.address} onChange={handleChange}
-                      placeholder="Ex: 123 Avenue de l'Indépendance" required colorKey="emerald" icon={MapPin} />
-                  </div>
-                  <Field label="Ville" name="city" value={form.city} onChange={handleChange}
-                    placeholder="Brazzaville, Pointe-Noire..." required colorKey="emerald" />
-                  <Field label="Téléphone" name="phone" value={form.phone} onChange={handleChange}
-                    placeholder="+242 06 123 45 67" required colorKey="emerald" icon={Phone} />
-                  <div className="md:col-span-2">
+                      placeholder="Ex: 123 Avenue de l'Indépendance" required colorKey="brand" icon={MapPin} />
+                  </motion.div>
+                  <motion.div variants={fieldItem}>
+                    <Field label="Ville" name="city" value={form.city} onChange={handleChange}
+                      placeholder="Brazzaville, Pointe-Noire..." required colorKey="brand" />
+                  </motion.div>
+                  <motion.div variants={fieldItem}>
+                    <Field label="Téléphone" name="phone" value={form.phone} onChange={handleChange}
+                      placeholder="+242 06 123 45 67" required colorKey="brand" icon={Phone} />
+                  </motion.div>
+                  <motion.div variants={fieldItem} className="md:col-span-2">
                     <Field label="Email de Contact" name="email" value={form.email} onChange={handleChange}
-                      placeholder="contact@entreprise.cg" required type="email" colorKey="emerald" icon={Mail} />
-                  </div>
-                </div>
+                      placeholder="contact@entreprise.cg" required type="email" colorKey="brand" icon={Mail} />
+                  </motion.div>
+                </motion.div>
               </div>
             )}
 
@@ -526,8 +549,8 @@ export default function CreateCompanyPage() {
             {step === 3 && (
               <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
                 <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-purple-500/15 border border-purple-500/30 rounded-xl flex items-center justify-center">
-                    <BookOpen size={19} className="text-purple-400" />
+                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                    <BookOpen size={19} className="text-emerald-400" />
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-white">Convention Collective</h2>
@@ -549,13 +572,13 @@ export default function CreateCompanyPage() {
                       exit={{ opacity: 0, height: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-3 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-start gap-3">
-                        <Award size={15} className="text-purple-400 mt-0.5 shrink-0" />
+                      <div className="mt-3 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
+                        <Award size={15} className="text-emerald-400 mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-sm font-bold text-purple-200">
+                          <p className="text-sm font-bold text-emerald-200">
                             Convention {getConventionCatalogEntry(selectedConvention)?.label} sélectionnée ✓
                           </p>
-                          <p className="text-xs text-purple-400/70 mt-0.5">
+                          <p className="text-xs text-emerald-400/70 mt-0.5">
                             Les catégories professionnelles et salaires minimums seront disponibles pour vos employés.
                           </p>
                         </div>
@@ -579,8 +602,8 @@ export default function CreateCompanyPage() {
             {step === 4 && (
               <div className="bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 space-y-5 shadow-2xl">
                 <div className="flex items-center gap-3 pb-4 border-b border-white/8">
-                  <div className="w-10 h-10 bg-amber-500/15 border border-amber-500/30 rounded-xl flex items-center justify-center">
-                    <ShieldCheck size={19} className="text-amber-400" />
+                  <div className="w-10 h-10 bg-emerald-500/15 border border-emerald-500/30 rounded-xl flex items-center justify-center">
+                    <ShieldCheck size={19} className="text-emerald-400" />
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-white">Configuration Fiscale</h2>
@@ -590,14 +613,14 @@ export default function CreateCompanyPage() {
 
                 <div className="space-y-4">
                   {/* CNSS PATRONALE */}
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-white/[0.03] border border-white/10 hover:border-sky-500/30 hover:bg-sky-500/5 rounded-xl transition-all group">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-white/[0.03] border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 rounded-xl transition-all group">
                     <input
                       type="checkbox" name="appliesCnssEmployer" checked={form.appliesCnssEmployer}
                       onChange={handleChange}
-                      className="w-5 h-5 rounded border-gray-600 bg-white/10 text-sky-500 focus:ring-sky-500 mt-0.5 shrink-0 accent-sky-500"
+                      className="w-5 h-5 rounded border-gray-600 bg-white/10 text-emerald-500 focus:ring-emerald-500 mt-0.5 shrink-0 accent-emerald-500"
                     />
                     <div>
-                      <span className="font-bold text-white text-sm block group-hover:text-sky-400 transition-colors">
+                      <span className="font-bold text-white text-sm block group-hover:text-emerald-400 transition-colors">
                         L'entreprise paie la CNSS patronale
                       </span>
                       <p className="text-xs text-gray-500 mt-0.5">Charges patronales calculées sur les bulletins de paie</p>
@@ -612,16 +635,16 @@ export default function CreateCompanyPage() {
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="ml-9 p-4 bg-sky-500/8 border border-sky-500/25 rounded-xl">
-                          <label className="block text-[11px] font-bold text-sky-400 mb-2 uppercase tracking-wide">Taux CNSS Patronale</label>
+                        <div className="ml-9 p-4 bg-emerald-500/8 border border-emerald-500/25 rounded-xl">
+                          <label className="block text-[11px] font-bold text-emerald-400 mb-2 uppercase tracking-wide">Taux CNSS Patronale</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="number" name="cnssEmployerRate" min="0" max="50" step="0.5"
                               value={form.cnssEmployerRate} onChange={handleChange}
-                              className="w-24 p-2.5 bg-white/5 border border-sky-500/30 rounded-xl font-mono font-bold text-white focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500/50 outline-none text-sm"
+                              className="w-24 p-2.5 bg-white/5 border border-emerald-500/30 rounded-xl font-mono font-bold text-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 outline-none text-sm"
                             />
                             <span className="text-xl font-bold text-gray-500">%</span>
-                            <p className="text-xs text-gray-500">Standard Congo : <strong className="text-sky-400">16%</strong></p>
+                            <p className="text-xs text-gray-500">Standard Congo : <strong className="text-emerald-400">16%</strong></p>
                           </div>
                         </div>
                       </motion.div>
@@ -714,7 +737,7 @@ export default function CreateCompanyPage() {
               onClick={handleNext}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
-              className={`px-7 py-2.5 bg-gradient-to-r ${col.grad} text-white font-bold rounded-xl shadow-lg ${col.glow} flex items-center gap-2 text-sm transition-all`}
+              className="px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl flex items-center gap-2 text-sm transition-all"
             >
               Suivant <ArrowRight size={15} />
             </motion.button>
@@ -725,7 +748,7 @@ export default function CreateCompanyPage() {
               disabled={isSubmitting}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
-              className="px-8 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-bold rounded-xl shadow-xl shadow-emerald-500/25 flex items-center gap-2 disabled:opacity-50 text-sm transition-all"
+              className="px-8 py-2.5 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 text-sm transition-all"
             >
               {isSubmitting
                 ? <><Loader2 className="animate-spin" size={16} /> Création en cours...</>

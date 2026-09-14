@@ -10,6 +10,8 @@ import { NotificationProvider } from '@/components/providers/NotificationProvide
 import { AlertProvider } from '@/components/providers/AlertProvider';
 import { CompanyReminderProvider } from '@/components/providers/CompanyReminderProvider';
 import { SubscriptionReminderProvider } from '@/components/providers/SubscriptionReminderProvider';
+import { SubscriptionBlockedModal } from '@/components/providers/SubscriptionBlockedModal';
+import { SubscriptionEndedBanner } from '@/components/providers/SubscriptionEndedBanner';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import './globals.css';
 
@@ -86,8 +88,11 @@ export const metadata: Metadata = {
   // ── Icons / PWA ──────────────────────────────────────────────────────────
   manifest: '/manifest.json',
   icons: {
-    icon: '/icons/icon-192x192.png',
-    apple: '/icons/icon-192x192.png',
+    icon: [
+      { url: '/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/konza-icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
   },
   appleWebApp: {
     capable: true,
@@ -96,15 +101,19 @@ export const metadata: Metadata = {
   },
 
   // ── Verification ─────────────────────────────────────────────────────────
-  // Ajoute tes codes de vérification Google Search Console / Bing ici
-  // verification: { google: 'TON_CODE_ICI' },
+  // 👉 Étape à faire : va sur https://search.google.com/search-console,
+  // ajoute ta propriété (konza-rh.cg), choisis "Balise HTML", copie le code
+  // qui ressemble à "AbCdEfGh123..." et colle-le ci-dessous.
+  verification: {
+    google: 'Pw-_XPGXUlDyK3WOLBXinAtu_7-sB_vLJt5pg5HK3Cg',
+  },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: '#7C3AED',
+  themeColor: '#050607',
 };
 
 // ── JSON-LD Organisation ──────────────────────────────────────────────────────
@@ -150,7 +159,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         {/* Preconnect pour la perf */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://res.cloudinary.com" />
@@ -181,6 +190,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     </div>
                   </div>
                   {children}
+                  <SubscriptionBlockedModal />
+                  <SubscriptionEndedBanner />
                 </NotificationProvider>
                 </SubscriptionReminderProvider>
               </CompanyReminderProvider>

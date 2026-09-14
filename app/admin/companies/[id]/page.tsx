@@ -134,9 +134,13 @@ export default function CompanyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
-  const [modal, setModal] = useState<null | 'edit' | 'archive' | 'suspend-sub' | 'plan' | 'extend'>(null);
+  const [modal, setModal] = useState<null | 'edit' | 'archive' | 'suspend-sub' | 'plan' | 'period'>(null);
   const [planChoice, setPlanChoice] = useState('PRO');
-  const [extendDays, setExtendDays] = useState(30);
+  const [periodStart, setPeriodStart] = useState('');
+  const [periodEnd, setPeriodEnd] = useState('');
+  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
+  const [paymentMethod, setPaymentMethod] = useState('Virement bancaire');
 
   const loadCompanyDetails = async () => {
     try {
@@ -186,6 +190,14 @@ export default function CompanyDetailsPage() {
   }
 
   const isArchived = !!company.archivedAt;
+
+  const subEndInfo = company.subscription?.currentPeriodEnd
+    ? (() => {
+        const end = new Date(company.subscription.currentPeriodEnd);
+        const daysRemaining = Math.ceil((end.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+        return { daysRemaining, isExpired: daysRemaining < 0 };
+      })()
+    : null;
 
   return (
     <div className="space-y-6">
@@ -276,10 +288,26 @@ export default function CompanyDetailsPage() {
         <div className="space-y-6">
           {/* Subscription Info */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-brand-gold" />
-              Abonnement
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-brand-gold" />
+                Abonnement
+              </h3>
+              {subEndInfo && (
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 ${
+                  subEndInfo.isExpired
+                    ? 'bg-red-900/20 text-red-400 border border-red-900/50'
+                    : subEndInfo.daysRemaining <= 7
+                    ? 'bg-amber-900/20 text-amber-400 border border-amber-900/50'
+                    : 'bg-gray-800 text-gray-400 border border-gray-700'
+                }`}>
+                  {subEndInfo.isExpired && <AlertTriangle className="w-3 h-3" />}
+                  {subEndInfo.isExpired
+                    ? `Expiré depuis ${Math.abs(subEndInfo.daysRemaining)}j`
+                    : `${subEndInfo.daysRemaining}j restants`}
+                </span>
+              )}
+            </div>
             <div className="space-y-4">
               <div>
                 <div className="text-xs text-gray-500 uppercase">Plan Actuel</div>
@@ -298,8 +326,10 @@ export default function CompanyDetailsPage() {
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase">Prochain Paiement</div>
-                <div className="text-sm text-white">
+                <div className="text-xs text-gray-500 uppercase">
+                  {subEndInfo?.isExpired ? 'Période terminée le' : 'Fin de période / Prochain paiement'}
+                </div>
+                <div className={`text-sm ${subEndInfo?.isExpired ? 'text-red-400 font-semibold' : 'text-white'}`}>
                   {company.subscription?.currentPeriodEnd
                     ? new Date(company.subscription.currentPeriodEnd).toLocaleDateString('fr-FR')
                     : 'N/A'
@@ -311,10 +341,18 @@ export default function CompanyDetailsPage() {
             {/* Actions abonnement */}
             <div className="mt-5 pt-5 border-t border-gray-800 flex flex-wrap gap-2">
               <button
-                onClick={() => runAction(() => adminService.activateSubscription(companyId))}
-                disabled={busy}
-                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-900/20 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/30 disabled:opacity-50">
-                Activer
+                onClick={() => {
+                  const end = company.subscription?.currentPeriodEnd
+                    ? new Date(company.subscription.currentPeriodEnd)
+                    : new Date();
+                  setPeriodStart('');
+                  setPeriodEnd(end.toISOString().slice(0, 10));
+                  setBillingCycle(company.subscription?.billingCycle ?? 'MONTHLY');
+                  setPaymentAmount(company.subscription?.pricePerMonth ?? '');
+                  setModal('period');
+                }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-900/20 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/30">
+                Gérer la période
               </button>
               <button
                 onClick={() => setModal('suspend-sub')}
@@ -325,11 +363,6 @@ export default function CompanyDetailsPage() {
                 onClick={() => setModal('plan')}
                 className="text-xs px-3 py-1.5 rounded-lg bg-sky-900/20 text-sky-400 border border-sky-900/50 hover:bg-sky-900/30">
                 Changer de plan
-              </button>
-              <button
-                onClick={() => setModal('extend')}
-                className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">
-                Prolonger
               </button>
             </div>
           </div>
@@ -469,27 +502,102 @@ export default function CompanyDetailsPage() {
         </div>
       )}
 
-      {modal === 'extend' && (
+      {modal === 'period' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-gray-900 border border-gray-800 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-gray-800 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-white">Prolonger l'abonnement</h2>
+              <h2 className="text-lg font-bold text-white">Gérer la période de l'abonnement</h2>
               <button onClick={() => setModal(null)}><X className="w-5 h-5 text-gray-500 hover:text-white" /></button>
             </div>
-            <div className="p-5">
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Nombre de jours</label>
-              <input type="number" min={1} value={extendDays}
-                onChange={e => setExtendDays(parseInt(e.target.value) || 1)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600" />
+            <div className="p-5 space-y-4">
+              {company.subscription?.currentPeriodEnd && (
+                <p className="text-xs text-gray-500">
+                  Période actuelle : {new Date(company.subscription.currentPeriodStart ?? company.createdAt).toLocaleDateString('fr-FR')}
+                  {' → '}
+                  {new Date(company.subscription.currentPeriodEnd).toLocaleDateString('fr-FR')}
+                </p>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Début (optionnel)</label>
+                  <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Fin</label>
+                  <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600" />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button type="button"
+                  onClick={() => {
+                    const base = periodEnd ? new Date(periodEnd) : new Date();
+                    base.setMonth(base.getMonth() + 1);
+                    setPeriodEnd(base.toISOString().slice(0, 10));
+                    setBillingCycle('MONTHLY');
+                  }}
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">
+                  +1 mois depuis la fin
+                </button>
+                <button type="button"
+                  onClick={() => {
+                    const base = periodEnd ? new Date(periodEnd) : new Date();
+                    base.setFullYear(base.getFullYear() + 1);
+                    setPeriodEnd(base.toISOString().slice(0, 10));
+                    setBillingCycle('YEARLY');
+                  }}
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700">
+                  +1 an depuis la fin
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">Cycle de facturation</label>
+                <select value={billingCycle} onChange={e => setBillingCycle(e.target.value as 'MONTHLY' | 'YEARLY')}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600">
+                  <option value="MONTHLY">Mensuel</option>
+                  <option value="YEARLY">Annuel</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Montant encaissé (FCFA) — laisse à 0 si geste gratuit
+                </label>
+                <input type="number" min={0} value={paymentAmount}
+                  onChange={e => setPaymentAmount(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600" />
+              </div>
+              {!!paymentAmount && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Méthode de paiement</label>
+                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-gray-600">
+                    <option value="Virement bancaire">Virement bancaire</option>
+                    <option value="Espèces">Espèces</option>
+                    <option value="Mobile Money">Mobile Money</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </div>
+              )}
             </div>
             <div className="p-5 border-t border-gray-800 flex justify-end gap-3">
               <button onClick={() => setModal(null)} className="px-4 py-2 text-sm text-gray-400 hover:text-white">Annuler</button>
               <button
-                disabled={busy}
-                onClick={() => runAction(() => adminService.extendSubscription(companyId, extendDays))}
-                className="px-5 py-2 text-sm font-bold rounded-lg bg-gray-700 hover:bg-gray-600 text-white flex items-center gap-2 disabled:opacity-50">
+                disabled={busy || !periodEnd}
+                onClick={() => runAction(() => adminService.setSubscriptionPeriod(companyId, {
+                  startDate: periodStart || undefined,
+                  endDate: periodEnd,
+                  billingCycle,
+                  amount: paymentAmount ? Number(paymentAmount) : undefined,
+                  paymentMethod: paymentAmount ? paymentMethod : undefined,
+                }))}
+                className="px-5 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-50">
                 {busy && <Loader2 size={14} className="animate-spin" />}
-                Prolonger
+                Enregistrer
               </button>
             </div>
           </div>

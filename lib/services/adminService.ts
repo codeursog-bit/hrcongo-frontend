@@ -38,6 +38,10 @@ export const adminService = {
   getDashboardStats:  () => adminFetch<any>('/admin/stats'),
   getAnalytics:       () => adminFetch<any>('/admin/analytics'),
   getBilling:         () => adminFetch<any>('/admin/billing'),
+  // ── Présence / activité utilisateurs ────────────────────────────────────
+  getUsersOnlineNow:      () => adminFetch<any>('/admin/users/online'),
+  getUsersRecentlyOnline: (hours?: number) => adminFetch<any>(`/admin/users/recently-online${hours ? `?hours=${hours}` : ''}`),
+  getMostActiveUsers:     (period?: 'today' | 'week' | 'month') => adminFetch<any>(`/admin/users/most-active?period=${period ?? 'week'}`),
   // ── Entreprises ──────────────────────────────────────────────────────────
   getCompanies: (filters?: { status?: string; plan?: string; search?: string; includeArchived?: boolean }) => {
     const p = new URLSearchParams();
@@ -62,8 +66,23 @@ export const adminService = {
     adminFetch<any>(`/admin/companies/${id}/unarchive`, 'POST'),
 
   // ── Abonnements ──────────────────────────────────────────────────────────
-  activateSubscription: (companyId: string) =>
-    adminFetch<any>(`/admin/companies/${companyId}/subscription/activate`, 'PATCH'),
+  // ── Abonnements ──────────────────────────────────────────────────────────
+  getSubscriptions: (filters?: { expiringInDays?: number; expired?: boolean; status?: string }) => {
+    const p = new URLSearchParams();
+    if (filters?.expiringInDays !== undefined) p.set('expiringInDays', String(filters.expiringInDays));
+    if (filters?.expired) p.set('expired', 'true');
+    if (filters?.status) p.set('status', filters.status);
+    return adminFetch<any>(`/admin/subscriptions?${p}`);
+  },
+
+  activateSubscription: (companyId: string, opts?: { amount?: number; paymentMethod?: string; reason?: string }) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/activate`, 'PATCH', opts ?? {}),
+
+  setSubscriptionPeriod: (companyId: string, data: {
+    startDate?: string; endDate: string; billingCycle?: 'MONTHLY' | 'YEARLY';
+    amount?: number; paymentMethod?: string; reason?: string;
+  }) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/period`, 'PATCH', data),
 
   suspendSubscription: (companyId: string, status?: 'PAUSED' | 'CANCELED', reason?: string) =>
     adminFetch<any>(`/admin/companies/${companyId}/subscription/suspend`, 'PATCH', { status, reason }),
@@ -71,11 +90,24 @@ export const adminService = {
   changeSubscriptionPlan: (companyId: string, plan: string, pricePerMonth?: number, reason?: string) =>
     adminFetch<any>(`/admin/companies/${companyId}/subscription/plan`, 'PATCH', { plan, pricePerMonth, reason }),
 
-  extendSubscription: (companyId: string, days: number, reason?: string) =>
-    adminFetch<any>(`/admin/companies/${companyId}/subscription/extend`, 'PATCH', { days, reason }),
+  extendSubscription: (companyId: string, days: number, opts?: { amount?: number; paymentMethod?: string; reason?: string }) =>
+    adminFetch<any>(`/admin/companies/${companyId}/subscription/extend`, 'PATCH', { days, ...opts }),
 
   // ── Monitoring — données complètes ───────────────────────────────────────
   getMonitoringData: () => adminFetch<any>('/admin/monitoring'),
+
+  getSystemLogs: (filters?: { page?: number; limit?: number; source?: string; level?: string; companyId?: string; from?: string; to?: string }) => {
+    const p = new URLSearchParams();
+    if (filters?.page) p.set('page', String(filters.page));
+    if (filters?.limit) p.set('limit', String(filters.limit));
+    if (filters?.source) p.set('source', filters.source);
+    if (filters?.level) p.set('level', filters.level);
+    if (filters?.companyId) p.set('companyId', filters.companyId);
+    if (filters?.from) p.set('from', filters.from);
+    if (filters?.to) p.set('to', filters.to);
+    return adminFetch<any>(`/admin/monitoring/system-logs?${p}`);
+  },
+  getSystemLogSources: () => adminFetch<any>('/admin/monitoring/system-logs/sources'),
 
   // ── Audit logs — filtrables ───────────────────────────────────────────────
   getAuditLogs: (filters?: {

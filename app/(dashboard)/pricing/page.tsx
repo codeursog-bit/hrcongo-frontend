@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSubscription, usePlans } from '@/hooks/useSubscription';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
+import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
 import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
 import { api } from '@/services/api';
 import {
@@ -38,20 +39,21 @@ function PricingContent() {
   const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
 
   // 🔀 Bascule automatique de prestataire — voir GET /subscriptions/payment-provider.
-  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | 'NONE' | null>(null);
+  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
 
   useEffect(() => {
-    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
+    api.get<{ provider: 'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
       .then((r) => setActiveProvider(r.provider))
       .catch(() => setActiveProvider('NONE')); // repli prudent si l'appel échoue — jamais planter
   }, []);
 
-  // Moteki initie ET déclenche le paiement en un seul appel (fait par
-  // MotekiCheckoutModal lui-même). YabetooPay a besoin d'un PaymentIntent
-  // créé d'abord via /subscriptions/upgrade (flux original en 2 étapes,
-  // inchangé) avant d'ouvrir son propre modal. NONE = aucun prestataire
-  // configuré côté serveur, on ne tente rien et on prévient.
+  // Moteki et Chariow initient ET déclenchent le paiement en un seul appel
+  // (fait par leur modal respectif — checkoutTarget sert aux deux, le
+  // rendu choisit le bon composant selon activeProvider). YabetooPay a
+  // besoin d'un PaymentIntent créé d'abord via /subscriptions/upgrade
+  // (flux original en 2 étapes, inchangé) avant d'ouvrir son propre modal.
+  // NONE = aucun prestataire configuré côté serveur, on ne tente rien.
   const handleUpgrade = async (plan: 'BASIC' | 'PRO' | 'ENTERPRISE') => {
     const planData = plans?.[plan];
     const amount = billingPeriod === 'yearly' ? planData?.priceYearly : planData?.priceMonthly;
@@ -335,8 +337,20 @@ function PricingContent() {
       </div>
 
       {/* Modal paiement — Moteki */}
-      {checkoutTarget && (
+      {checkoutTarget && activeProvider === 'MOTEKI' && (
         <MotekiCheckoutModal
+          plan={checkoutTarget.plan}
+          billingPeriod={checkoutTarget.billingPeriod}
+          amount={checkoutTarget.amount}
+          planLabel={PLAN_LABELS[checkoutTarget.plan] ?? checkoutTarget.plan}
+          onClose={() => setCheckoutTarget(null)}
+          onError={(msg) => toast.error(msg)}
+        />
+      )}
+
+      {/* Modal paiement — Chariow (redondance de Moteki) */}
+      {checkoutTarget && activeProvider === 'CHARIOW' && (
+        <ChariowCheckoutModal
           plan={checkoutTarget.plan}
           billingPeriod={checkoutTarget.billingPeriod}
           amount={checkoutTarget.amount}

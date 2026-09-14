@@ -13,6 +13,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   Loader2, ArrowLeft, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, Download, Wallet, Info, FileText, ScrollText, Lock, Unlock, FileDown,
+  Pencil, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -57,6 +58,16 @@ export default function LeaveDetailPage() {
   const [showPrintAuthModal, setShowPrintAuthModal] = useState(false);
   const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
   const [isConfirmingReturn, setIsConfirmingReturn] = useState(false);
+  // ✅ Modifier / Supprimer — réservé RH/Admin (même rôles que canApprove),
+  // pour un congé/planification quelle que soit son origine (demande
+  // employé, admin depuis "Nouvelle demande", ou planification RH).
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ type: 'ANNUAL' as 'ANNUAL' | 'ANNUAL_ANTICIPATED', startDate: '', endDate: '' });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const load = async () => {
     try {
@@ -109,6 +120,10 @@ export default function LeaveDetailPage() {
   const plannedDays = leave ? Number(leave.daysCount) : 0;
   const baseRemaining = Math.max(0, 26 - plannedDays);
   const seniorityRemaining = Math.max(0, entitledSeniorityDays - Math.max(0, plannedDays - 26));
+  // ✅ Un congé de rattrapage (carriedFromLeaveId) ne ferme jamais de cycle
+  // et n'a jamais d'ancienneté/motif de report à saisir — ces notions ne
+  // s'appliquent qu'au congé ANNUAL classique qui clôt le cycle.
+  const isCarryover = !!leave?.carriedFromLeaveId;
 
   // ✅ CORRECTIF (demande explicite) : le motif de réduction est déjà saisi
   // à la CRÉATION de la demande (voir /conges/nouveau — popup obligatoire
@@ -117,7 +132,7 @@ export default function LeaveDetailPage() {
   // resumptionNote avec ce texte (l'approbateur peut toujours l'affiner
   // avant validation, mais part du motif déjà donné par le RH/employé).
   useEffect(() => {
-    if (!leave || leave.status !== 'PENDING' || leave.type !== 'ANNUAL') return;
+    if (!leave || leave.status !== 'PENDING' || leave.type !== 'ANNUAL' || isCarryover) return;
     if (seniorityRemaining > 0) {
       setExtraDaysGranted(String(Math.round(seniorityRemaining * 2) / 2));
     }
@@ -132,7 +147,7 @@ export default function LeaveDetailPage() {
   const handleDecision = async (status: 'APPROVED' | 'REJECTED') => {
     if (!leave) return;
     if (status === 'REJECTED' && !rejectionReason.trim()) { setRejectMode(true); return; }
-    if (status === 'APPROVED' && leave.type === 'ANNUAL' && (baseRemaining > 0 || Number(extraDaysGranted) > 0) && !resumptionNote.trim()) {
+    if (status === 'APPROVED' && leave.type === 'ANNUAL' && !isCarryover && (baseRemaining > 0 || Number(extraDaysGranted) > 0) && !resumptionNote.trim()) {
       alert('Merci de préciser le motif de report (il apparaîtra sur la lettre officielle).');
       return;
     }
@@ -165,6 +180,54 @@ export default function LeaveDetailPage() {
       alert(e?.message || "Erreur lors de l'annulation");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  // ✅ Modifier — dates/type EN PLACE, jamais de duplication (voir
+  // updateLeavePlanning côté back) : la même ligne est mise à jour, le
+  // solde n'est ajusté que sur l'écart.
+  const openEditModal = () => {
+    if (!leave) return;
+    setEditError('');
+    setEditForm({
+      type: leave.type === 'ANNUAL_ANTICIPATED' ? 'ANNUAL_ANTICIPATED' : 'ANNUAL',
+      startDate: new Date(leave.startDate).toISOString().slice(0, 10),
+      endDate: new Date(leave.endDate).toISOString().slice(0, 10),
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!leave) return;
+    setIsSavingEdit(true);
+    setEditError('');
+    try {
+      await api.patch(`/leaves/${leave.id}`, {
+        type: editForm.type,
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
+      });
+      setShowEditModal(false);
+      await load();
+    } catch (e: any) {
+      setEditError(e?.message || 'Erreur lors de la modification du congé');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // ✅ Supprimer définitivement — restaure le solde puis retire la ligne
+  // (voir deleteLeave côté back) ; distinct d'Annuler, qui garde une trace.
+  const handleDelete = async () => {
+    if (!leave) return;
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      await api.delete(`/leaves/${leave.id}`);
+      router.push(bp('/conges'));
+    } catch (e: any) {
+      setDeleteError(e?.message || 'Erreur lors de la suppression du congé');
+      setIsDeleting(false);
     }
   };
 
@@ -315,9 +378,16 @@ export default function LeaveDetailPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-400">{leave.employee?.position}{leave.employee?.department ? ` · ${leave.employee.department.name}` : ''}</span>
-              <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[leave.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
-                {(STATUS_CONFIG[leave.status as Status] ?? STATUS_CONFIG.PENDING).label}
-              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                {isCarryover && (
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400">
+                    Rattrapage — non payé
+                  </span>
+                )}
+                <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[leave.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
+                  {(STATUS_CONFIG[leave.status as Status] ?? STATUS_CONFIG.PENDING).label}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 text-sm bg-gray-50 dark:bg-gray-700/50 px-3.5 py-2.5 rounded-xl">
@@ -328,7 +398,17 @@ export default function LeaveDetailPage() {
               <span className="ml-auto font-bold text-xs text-gray-500">{Math.round(Number(leave.daysCount))}j</span>
             </div>
 
-            {leave.balance && (
+            {isCarryover ? (
+              <div className="flex items-start gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-sky-100 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-900/10">
+                <Info size={14} className="text-sky-500 mt-0.5 shrink-0" />
+                <span className="text-sky-700 dark:text-sky-300">
+                  Repos de rattrapage — jours non pris suite au retour anticipé du congé
+                  {leave.carriedFromLeave ? ` du ${new Date(leave.carriedFromLeave.startDate).toLocaleDateString('fr-FR')} au ${new Date(leave.carriedFromLeave.endDate).toLocaleDateString('fr-FR')}` : ''}
+                  {leave.carriedFromLeave?.actualReturnDate ? ` (retour le ${new Date(leave.carriedFromLeave.actualReturnDate).toLocaleDateString('fr-FR')})` : ''}.
+                  Jamais payé, sans impact sur le solde ni le cycle en cours.
+                </span>
+              </div>
+            ) : leave.balance && (
               <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700">
                 <Wallet size={14} className="text-gray-400" />
                 Solde {new Date(leave.startDate).getFullYear()} : {Math.round(Number(leave.balance.annualRemaining))}j restants sur {Math.round(Number(leave.balance.annualEntitled))}j
@@ -353,7 +433,7 @@ export default function LeaveDetailPage() {
               <div className="pt-1 space-y-3 border-t border-gray-100 dark:border-gray-700">
                 {!rejectMode ? (
                   <>
-                    {leave.type === 'ANNUAL' && (
+                    {leave.type === 'ANNUAL' && !isCarryover && (
                       <div className="space-y-2 pt-3">
                         <div>
                           <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Jours d&apos;ancienneté reportés (optionnel)</label>
@@ -403,6 +483,21 @@ export default function LeaveDetailPage() {
               <button onClick={handleCancel} disabled={isProcessing} className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
                 Annuler cette demande
               </button>
+            )}
+
+            {/* ✅ Modifier / Supprimer — réservé RH/Admin, quelle que soit
+                l'origine du congé (demande employé, admin, ou planification). */}
+            {canApprove && (
+              <div className="flex gap-2">
+                {['PENDING', 'APPROVED'].includes(leave.status) && (
+                  <button onClick={openEditModal} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 flex items-center justify-center gap-2">
+                    <Pencil size={14} /> Modifier
+                  </button>
+                )}
+                <button onClick={() => { setDeleteError(''); setShowDeleteConfirm(true); }} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-2">
+                  <Trash2 size={14} /> Supprimer
+                </button>
+              </div>
             )}
 
             {leave.status === 'APPROVED' && canApprove && (
@@ -577,6 +672,101 @@ export default function LeaveDetailPage() {
         onConfirm={handleSetPrintAuthorization}
         employeeName={`${leave.employee?.firstName || ''} ${leave.employee?.lastName || ''}`.trim()}
       />
+
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Modifier ce congé</h2>
+              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">
+              {isCarryover
+                ? "Modifie les dates de ce rattrapage — reste toujours non payé et sans impact sur le solde/cycle en cours, plafonné au reliquat disponible."
+                : "Modifie directement cette demande — les dates/le type sont ajustés sur la même ligne, sans jamais en créer une nouvelle ni impacter le calendrier en double."}
+            </p>
+            <div className="space-y-3">
+              {!isCarryover && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Type</label>
+                  <select
+                    value={editForm.type}
+                    onChange={e => setEditForm(f => ({ ...f, type: e.target.value as any }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  >
+                    <option value="ANNUAL">Annuel</option>
+                    <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
+                  </select>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <input
+                    type="date"
+                    value={editForm.startDate}
+                    onChange={e => setEditForm(f => ({ ...f, startDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <input
+                    type="date"
+                    value={editForm.endDate}
+                    onChange={e => setEditForm(f => ({ ...f, endDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+              </div>
+            </div>
+            {editError && <div className="text-xs text-red-500">{editError}</div>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
+              >
+                {isSavingEdit ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Supprimer ce congé ?</h2>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Cette demande sera définitivement supprimée et le solde de congé restauré si elle avait déjà été approuvée. Cette action est irréversible.
+            </p>
+            {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Annuler
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 disabled:opacity-40"
+              >
+                {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -98,7 +98,28 @@ async function request<T>(
     }
 
     if (!response.ok) {
-      throw new Error(data.message || `Erreur ${response.status}`);
+      // 🔔 Abonnement/essai terminé, quota dépassé... — détecté une seule
+      // fois ici, peu importe l'action bloquée (ajout employé, formation,
+      // congé, pointage, offre d'emploi...). On déclenche un événement
+      // global écouté par <SubscriptionBlockedModal> (montée dans le
+      // layout) pour afficher une vraie modale au lieu d'un message perdu
+      // dans un toast générique — voir SubscriptionGuard.throwSubscriptionBlocked
+      // côté backend pour la liste des points qui l'utilisent.
+      if (data?.error === 'SUBSCRIPTION_BLOCKED' && typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('subscription-blocked', {
+            detail: {
+              message: data.message || 'Accès bloqué — abonnement requis.',
+              audience: data.audience === 'EMPLOYEE' ? 'EMPLOYEE' : 'ADMIN',
+            },
+          }),
+        );
+      }
+      const err = new Error(data.message || `Erreur ${response.status}`);
+      (err as any).code = data.error;       // ex: 'OUT_OF_GEOFENCE', 'LOCATION_REQUIRED'
+      (err as any).status = response.status;
+      (err as any).data = data;
+      throw err;
     }
 
     return data as T;

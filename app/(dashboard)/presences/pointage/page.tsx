@@ -339,7 +339,9 @@ export default function AttendanceCheckInPage() {
   // ── Action check-in / check-out ───────────────────────────────────────────
   const handleAction = async () => {
     if (!employeeId) return;
-    if (!geoState.allowed && !geoState.isMockedSuspect && !isOffline) return;
+    // ✅ Plus de blocage/forçage côté client : on envoie toujours la
+    // position qu'on a (même mauvaise ou absente), et c'est le backend qui
+    // décide d'accepter ou de rejeter avec un message clair.
 
     setIsProcessing(true);
     try {
@@ -349,7 +351,6 @@ export default function AttendanceCheckInPage() {
           employeeId,
           latitude:  geoState.latitude  || undefined,
           longitude: geoState.longitude || undefined,
-          notes: (geoState.isMockedSuspect && !geoState.allowed) ? 'SUSPICIOUS_LOCATION' : undefined,
         });
 
         if (result.success) {
@@ -374,14 +375,15 @@ export default function AttendanceCheckInPage() {
             });
           } else if (result.offline) {
             addNotification({ type: 'ALERT', title: 'Mode Hors Ligne', message: result.message });
-          } else if (geoState.isMockedSuspect && !geoState.allowed) {
-            addNotification({
-              type:    'ALERT',
-              title:   'Position Incertaine',
-              message: `Pointage validé mais signalé. Précision GPS faible (${geoState.accuracy}m).`,
-            });
           } else {
-            addNotification({ type: 'CHECK_IN', title: 'Pointage Réussi', message: `Bonne journée ${employeeName} !` });
+            const siteName = data.checkInSiteName;
+            addNotification({
+              type: 'CHECK_IN',
+              title: 'Pointage Réussi',
+              message: siteName
+                ? `Bonne journée ${employeeName} ! (${siteName})`
+                : `Bonne journée ${employeeName} !`,
+            });
           }
 
           // Rafraîchir todayAttendance
@@ -390,6 +392,14 @@ export default function AttendanceCheckInPage() {
             const myAtt = todayData.find((a: any) => a.employeeId === employeeId);
             if (myAtt) setTodayAttendance(myAtt);
           } catch (_) { /* silencieux */ }
+        } else {
+          // ✅ Rejet backend (hors zone, position requise, etc.) — ne pas
+          // rester silencieux : c'est justement le cas qu'on doit gérer.
+          addNotification({
+            type: 'ALERT',
+            title: 'Pointage refusé',
+            message: result.message || 'Impossible de pointer depuis cette position.',
+          });
         }
 
       } else {
@@ -526,11 +536,13 @@ export default function AttendanceCheckInPage() {
             </div>
           )}
 
+          {/* ℹ️ Purement informatif : le bouton reste actif, c'est le
+              backend qui accepte ou rejette réellement le pointage. */}
           {!geoState.loading && !geoState.error && !geoState.allowed && !geoState.isMockedSuspect && status === 'idle' && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-left">
-              <div className="flex items-center gap-2 text-red-400 font-bold mb-1"><Ban size={18} /> Accès Refusé</div>
+              <div className="flex items-center gap-2 text-red-400 font-bold mb-1"><Ban size={18} /> Hors zone (probable)</div>
               <p className="text-xs text-red-200">
-                Vous êtes à <strong>{geoState.distance}m</strong> du bureau. Zone autorisée : {companySettings?.allowedRadius || 100}m.
+                Vous semblez à <strong>{geoState.distance}m</strong> du bureau. Zone autorisée : {companySettings?.allowedRadius || 100}m. Vous pouvez essayer de pointer, le serveur vérifiera votre position.
               </p>
             </div>
           )}
@@ -539,7 +551,7 @@ export default function AttendanceCheckInPage() {
             <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-left">
               <div className="flex items-center gap-2 text-yellow-400 font-bold mb-1"><Wifi size={18} /> Signal Faible</div>
               <p className="text-xs text-yellow-200">
-                Position imprécise ({geoState.accuracy}m). Autorisé exceptionnellement, sera signalé.
+                Position imprécise ({geoState.accuracy}m). Le serveur tranchera au moment du pointage.
               </p>
             </div>
           )}
@@ -566,17 +578,16 @@ export default function AttendanceCheckInPage() {
               }`}>
                 <Fingerprint size={48} strokeWidth={1.5} />
               </div>
+              {/* ✅ Le bouton reste toujours actif : plus de blocage/forçage
+                  côté client. On tente toujours le pointage, le backend est
+                  seul juge (voir attendance-check.service.ts). */}
               <button
                 onClick={handleAction}
-                disabled={isProcessing || (!geoState.allowed && !geoState.isMockedSuspect && !isOffline) || geoState.loading}
-                className={`w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 ${
-                  (geoState.allowed || geoState.isMockedSuspect || isOffline)
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-emerald-500/25'
-                    : 'bg-slate-700 text-slate-400 cursor-not-allowed border border-white/5'
-                }`}
+                disabled={isProcessing || geoState.loading}
+                className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-emerald-500/25"
               >
                 {isProcessing ? <Loader2 className="animate-spin" /> : <Clock size={20} />}
-                {isOffline ? 'Pointer (Hors Ligne)' : geoState.allowed ? "Pointer l'Entrée" : geoState.isMockedSuspect ? 'Forcer (Signal Faible)' : 'Hors Zone'}
+                {isOffline ? 'Pointer (Hors Ligne)' : "Pointer l'Entrée"}
               </button>
             </>
           )}

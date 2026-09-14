@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Calendar, Download, Loader2, CreditCard, TrendingUp, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { Download, Loader2, CreditCard, TrendingUp, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 import { RevenueCharts }   from '@/components/admin/billing/RevenueCharts';
 import { TransactionList } from '@/components/admin/billing/TransactionList';
 import { adminService }    from '@/lib/services/adminService';
@@ -20,7 +20,6 @@ const fmtDate = (d: string) => new Date(d).toLocaleString('fr-FR', {
 export default function BillingPage() {
   const [stats,     setStats]     = useState<any>(null);
   const [loading,   setLoading]   = useState(true);
-  const [dateRange, setDateRange] = useState('Janvier 2025');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +69,13 @@ export default function BillingPage() {
     value: r.value ?? r.amount ?? 0,
   }));
 
+  // Évolution réelle vs mois précédent (au lieu d'un +12.5% figé) — null si
+  // pas assez d'historique pour comparer.
+  const prevMonthRevenue = revenueHistory[revenueHistory.length - 2]?.value;
+  const mrrGrowth = prevMonthRevenue
+    ? Math.round(((totalRev - prevMonthRevenue) / prevMonthRevenue) * 100)
+    : null;
+
   return (
     <div className="space-y-8">
 
@@ -83,18 +89,6 @@ export default function BillingPage() {
           <p className="text-gray-400 text-sm mt-1">Gérer tous les paiements et flux de revenus</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="bg-gray-900 border border-gray-700 text-white pl-9 pr-8 py-2 rounded-lg text-sm outline-none cursor-pointer hover:bg-gray-800 transition-colors"
-            >
-              <option>Janvier 2025</option>
-              <option>Décembre 2024</option>
-              <option>Novembre 2024</option>
-            </select>
-          </div>
           <button
             onClick={load}
             disabled={loading}
@@ -146,9 +140,15 @@ export default function BillingPage() {
               <span className="text-xl font-medium text-gray-500">FCFA</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-emerald-400 bg-emerald-900/20 px-2 py-1 rounded text-sm font-bold">
-                +12.5%
-              </span>
+              {mrrGrowth !== null ? (
+                <span className={`px-2 py-1 rounded text-sm font-bold ${
+                  mrrGrowth >= 0 ? 'text-emerald-400 bg-emerald-900/20' : 'text-red-400 bg-red-900/20'
+                }`}>
+                  {mrrGrowth >= 0 ? '+' : ''}{mrrGrowth}%
+                </span>
+              ) : (
+                <span className="text-gray-600 bg-gray-800 px-2 py-1 rounded text-sm">Pas assez d'historique</span>
+              )}
               <span className="text-gray-500 text-sm">vs mois dernier</span>
             </div>
           </div>

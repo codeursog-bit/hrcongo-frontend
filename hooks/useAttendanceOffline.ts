@@ -144,7 +144,17 @@ export function useAttendanceOffline() {
           ...response,
         };
 
-      } catch (apiError) {
+      } catch (apiError: any) {
+        // ✅ Le serveur a répondu avec un rejet métier (ex: OUT_OF_GEOFENCE,
+        // LOCATION_REQUIRED, abonnement bloqué...) — ce n'est PAS une
+        // coupure réseau, il ne faut surtout pas mettre ça en file offline
+        // (l'employé penserait que son pointage est "réussi" alors qu'il a
+        // été refusé). Seule l'absence de `code` signale que `fetch` a
+        // échoué avant même d'atteindre le serveur (vraie coupure réseau).
+        if (apiError?.code) {
+          throw apiError;
+        }
+
         // Vrai échec réseau → fallback offline
         await addAttendanceToQueue({
           employeeId: data.employeeId,

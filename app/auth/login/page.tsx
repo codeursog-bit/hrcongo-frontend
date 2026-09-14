@@ -83,6 +83,32 @@ type LoginFormValues      = z.infer<typeof loginSchema>;
 type PasswordChangeValues = z.infer<typeof passwordChangeSchema>;
 
 // =============================================================================
+// COMPOSANT : Particules flottantes (identique à la page d'inscription)
+// =============================================================================
+
+function FloatingDots() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+      {Array.from({ length: 18 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: `${Math.random() * 4 + 1}px`,
+            height: `${Math.random() * 4 + 1}px`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            background: i % 2 === 0 ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)',
+          }}
+          animate={{ y: [0, -30, 0], opacity: [0.2, 0.6, 0.2] }}
+          transition={{ duration: Math.random() * 4 + 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// =============================================================================
 // COMPOSANT : Critère mot de passe
 // =============================================================================
 
@@ -149,13 +175,13 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-gradient-to-br from-gray-900 to-black border-t sm:border border-cyan-500/20 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-cyan-500/10 w-full sm:max-w-md"
+          className="bg-gradient-to-br from-gray-900 to-black border-t sm:border border-emerald-500/20 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-emerald-500/10 w-full sm:max-w-md"
         >
           <div className="p-6 sm:p-8">
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-2xl shrink-0">
-                <Smartphone className="text-cyan-400" size={28} />
+              <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 rounded-2xl shrink-0">
+                <Smartphone className="text-emerald-400" size={28} />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Vérification en 2 étapes</h3>
@@ -164,11 +190,11 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
             </div>
 
             {/* Instructions */}
-            <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4 mb-6 space-y-3">
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 space-y-3">
               <div className="flex items-start gap-2">
-                <Smartphone size={15} className="text-cyan-400 shrink-0 mt-0.5" />
-                <p className="text-sm text-cyan-200">
-                  Entrez le code à <span className="font-bold text-cyan-400">6 chiffres</span> affiché
+                <Smartphone size={15} className="text-emerald-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-emerald-200">
+                  Entrez le code à <span className="font-bold text-emerald-400">6 chiffres</span> affiché
                   dans Google Authenticator, Authy ou Aegis.
                   Le code change toutes les <span className="font-bold">30 secondes</span>.
                 </p>
@@ -209,7 +235,7 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
                   onChange={handleCodeChange}
                   placeholder="000000"
                   autoFocus
-                  className="w-full text-center text-3xl font-mono tracking-[0.5em] py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                  className="w-full text-center text-3xl font-mono tracking-[0.5em] py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                 />
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Code TOTP (6 chiffres) ou code de secours (8 caractères)
@@ -228,7 +254,7 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
                 <button
                   type="submit"
                   disabled={isSubmitting || code.length < 6}
-                  className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-sm text-white hover:shadow-lg hover:shadow-cyan-500/30 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-[#FAFAFA] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-40 flex items-center justify-center gap-2"
                 >
                   {isSubmitting
                     ? <Loader2 className="animate-spin" size={18} />
@@ -310,12 +336,12 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-gradient-to-br from-gray-900 to-black border-t sm:border border-cyan-500/20 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-cyan-500/10 w-full sm:max-w-md max-h-[95vh] overflow-y-auto"
+          className="bg-gradient-to-br from-gray-900 to-black border-t sm:border border-emerald-500/20 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-emerald-500/10 w-full sm:max-w-md max-h-[95vh] overflow-y-auto"
         >
           <div className="p-5 sm:p-8">
             <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
-              <div className="p-2.5 sm:p-3 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-xl sm:rounded-2xl shrink-0">
-                <Shield className="text-cyan-400" size={28} />
+              <div className="p-2.5 sm:p-3 bg-gradient-to-br from-emerald-500/20 to-emerald-700/20 rounded-xl sm:rounded-2xl shrink-0">
+                <Shield className="text-emerald-400" size={28} />
               </div>
               <div className="min-w-0">
                 <h3 className="text-xl sm:text-2xl font-bold text-white truncate">Sécurisez votre compte</h3>
@@ -350,7 +376,7 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
                   <input
                     {...register('newPassword')}
                     type={showNewPassword ? 'text' : 'password'}
-                    className={`w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.newPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-cyan-500/50'}`}
+                    className={`w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.newPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
                     placeholder="Minimum 8 caractères"
                   />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
@@ -384,7 +410,7 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
                   <input
                     {...register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
-                    className={`w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-cyan-500/50'}`}
+                    className={`w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
                     placeholder="Retapez votre mot de passe"
                   />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
@@ -396,7 +422,7 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
 
               <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2 sm:pt-4">
                 <button type="button" onClick={onCancel} disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 border border-white/10 rounded-xl font-bold text-sm text-gray-300 hover:bg-white/5 transition-all disabled:opacity-50">Annuler</button>
-                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl font-bold text-sm text-white hover:shadow-lg hover:shadow-cyan-500/50 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 sm:py-3 bg-[#FAFAFA] hover:bg-white rounded-xl font-bold text-sm text-black transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                   {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <><CheckCircle2 size={18} />Valider</>}
                 </button>
               </div>
@@ -503,25 +529,25 @@ function LoginContent() {
   };
 
   return (
-    <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#020617] text-white font-sans overflow-x-hidden">
+    <div className="flex min-h-screen min-h-[100dvh] w-full bg-[#050607] text-white font-sans overflow-x-hidden">
 
-      {/* ── Fond : logo Konza centré, grand et discret ── */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
-        <div className="relative w-[520px] h-[260px] opacity-[0.06]">
-          <Image
-            src="/logos/konza_logo_h_color.png"
-            alt=""
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
+      {/* ── Fond : identique au Hero de la page d'accueil, avec l'ondulation ── */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px] animate-pulse" />
+        <div
+          className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px] animate-pulse"
+          style={{ animationDelay: '1s' }}
+        />
       </div>
-
-      {/* Halo cyan haut-droite */}
-      <div className="fixed top-0 right-0 w-[300px] sm:w-[500px] lg:w-[700px] h-[300px] sm:h-[500px] lg:h-[700px] bg-cyan-600/10 rounded-full blur-[100px] lg:blur-[140px] animate-pulse pointer-events-none" />
-      {/* Halo bleu bas-gauche */}
-      <div className="fixed bottom-0 left-0 w-[300px] sm:w-[500px] lg:w-[700px] h-[300px] sm:h-[500px] lg:h-[700px] bg-blue-600/10 rounded-full blur-[100px] lg:blur-[140px] pointer-events-none" />
+      <div
+        className="pointer-events-none fixed inset-0 -z-10 opacity-[0.05]"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
+      <FloatingDots />
 
       {/* ── Panneau gauche (desktop) ── */}
       <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12 z-10">
@@ -538,7 +564,7 @@ function LoginContent() {
                 src="/logos/konza_logo_h_color.png"
                 alt="Konza"
                 fill
-                className="object-contain drop-shadow-[0_0_32px_rgba(6,182,212,0.35)]"
+                className="object-contain drop-shadow-[0_0_32px_rgba(16,185,129,0.35)]"
                 priority
               />
             </div>
@@ -551,9 +577,7 @@ function LoginContent() {
             className="text-6xl font-extrabold text-white mb-6 tracking-tight leading-tight"
           >
             Le Futur de la <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-              Gestion RH
-            </span>
+            Gestion RH
           </motion.h1>
 
           <motion.p
@@ -590,7 +614,7 @@ function LoginContent() {
                 src="/logos/konza_logo_h_color.png"
                 alt="Konza"
                 fill
-                className="object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                className="object-contain drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]"
                 priority
               />
             </div>
@@ -619,13 +643,13 @@ function LoginContent() {
                 <label className="block text-xs sm:text-sm font-bold text-gray-300 mb-1.5">Email ou téléphone</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                    <Mail className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.email ? 'text-red-400' : 'text-gray-500 group-focus-within:text-cyan-400'}`} />
+                    <Mail className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.email ? 'text-red-400' : 'text-gray-500 group-focus-within:text-emerald-400'}`} />
                   </div>
                   <input
                     {...register('email')}
                     type="text"
                     autoComplete="username"
-                    className={`block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/50'}`}
+                    className={`block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
                     placeholder="admin@konza-rh.cg ou 06 xxx xx xx"
                   />
                 </div>
@@ -638,12 +662,12 @@ function LoginContent() {
                 </div>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                    <Lock className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.password ? 'text-red-400' : 'text-gray-500 group-focus-within:text-cyan-400'}`} />
+                    <Lock className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${errors.password ? 'text-red-400' : 'text-gray-500 group-focus-within:text-emerald-400'}`} />
                   </div>
                   <input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
-                    className={`block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-cyan-500/50 focus:ring-cyan-500/50'}`}
+                    className={`block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
                     placeholder="••••••••"
                   />
                   <button
@@ -658,7 +682,7 @@ function LoginContent() {
               </div>
 
               <div className="flex justify-end -mt-1">
-                <Link href="/auth/forgot-password" className="text-xs text-gray-400 hover:text-cyan-400 transition-colors">
+                <Link href="/auth/forgot-password" className="text-xs text-gray-400 hover:text-emerald-400 transition-colors">
                   Mot de passe oublié ?
                 </Link>
               </div>
@@ -666,7 +690,7 @@ function LoginContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 border border-transparent rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] text-sm font-bold text-black bg-gradient-to-r from-cyan-400 to-blue-500 hover:to-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-70 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
+                className="w-full flex justify-center items-center gap-2 py-3 sm:py-4 px-4 rounded-xl text-sm font-bold text-black bg-[#FAFAFA] hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#050607] focus:ring-white/40 disabled:opacity-70 disabled:cursor-not-allowed transition-all transform active:scale-[0.98]"
               >
                 {isLoading
                   ? <Loader2 className="animate-spin" size={18} />
@@ -678,7 +702,7 @@ function LoginContent() {
             <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-white/10 text-center">
               <p className="text-xs sm:text-sm text-gray-400">
                 Nouveau ici ?{' '}
-                <Link href="/auth/register" className="font-bold text-cyan-400 hover:text-white transition-colors">
+                <Link href="/auth/register" className="font-bold text-emerald-400 hover:text-white transition-colors">
                   Créer un compte
                 </Link>
               </p>
@@ -718,8 +742,8 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen w-full bg-[#020617] items-center justify-center">
-        <Loader2 className="animate-spin text-cyan-400" size={32} />
+      <div className="flex min-h-screen w-full bg-[#050607] items-center justify-center">
+        <Loader2 className="animate-spin text-emerald-400" size={32} />
       </div>
     }>
       <LoginContent />

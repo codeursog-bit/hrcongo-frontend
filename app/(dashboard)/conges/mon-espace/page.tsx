@@ -1,68 +1,64 @@
 'use client';
 
 // ============================================================================
-// 📁 app/(dashboard)/presences/absences/mon-espace/page.tsx
-// ✅ Espace employé — historique de mes demandes d'absence
-// ✅ v2 : vue maître-détail (liste paginée + panneau de détail précis),
-//    cohérente avec la page de gestion RH.
+// 📁 app/(dashboard)/conges/mon-espace/page.tsx
+// ✅ Espace employé — mon solde de congé + mes demandes + mon reliquat de
+//    retour anticipé (jours non pris à rattraper, non payés).
+// ✅ CORRECTIF : cette page contenait par erreur le code de la page absences
+//    (presences/absences/mon-espace) — reconstruite ici pour ce qu'elle doit
+//    réellement être : l'espace congé de l'employé connecté.
 // ============================================================================
 
-import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 import {
-  Plus, Loader2, Clock, CheckCircle2, XCircle, Ban,
-  Calendar, ArrowRight, Printer, X, Paperclip, Info, Wallet,
-  Stethoscope, FileText, Sparkles, Lock,
+  Loader2, Clock, CheckCircle2, XCircle, Ban, Calendar, ArrowRight,
+  Wallet, Info, Umbrella, Zap, X, Check, AlertTriangle, History,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
-import { useBasePath } from '@/hooks/useBasePath';
-import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import { printAbsenceRequest } from '@/lib/absence-print';
-import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
-import AbsenceSubNav from '@/components/AbsenceSubNav';
+import CongeSubNav from '@/components/CongeSubNav';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }> = {
   PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
-  APPROVED:  { label: 'Approuvée',  badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
-  REJECTED:  { label: 'Refusée',    badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
-  CANCELLED: { label: 'Annulée',    badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
+  APPROVED:  { label: 'Approuvé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
+  REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
+  CANCELLED: { label: 'Annulé',     badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
 };
 
-const TYPE_CONFIG: Record<string, { label: string; icon: any; dot: string }> = {
-  MALADIE:         { label: 'Maladie',         icon: Stethoscope, dot: 'bg-red-400' },
-  CONVENTIONNELLE: { label: 'Conventionnelle', icon: FileText,    dot: 'bg-violet-400' },
-  EXCEPTIONNELLE:  { label: 'Exceptionnelle',  icon: Sparkles,    dot: 'bg-amber-400' },
-};
+const TYPE_LABELS: Record<string, string> = { ANNUAL: 'Congé annuel', ANNUAL_ANTICIPATED: 'Congé annuel anticipé' };
+const TYPE_ICONS: Record<string, any> = { ANNUAL: Umbrella, ANNUAL_ANTICIPATED: Zap };
 
-const PAGE_SIZE = 10;
+const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR');
 
-export default function MonEspaceAbsencesPage() {
-  const { bp } = useBasePath();
-  const [requests, setRequests] = useState<any[]>([]);
-  const [employee, setEmployee] = useState<any>(null);
-  const [company, setCompany]   = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+export default function MonEspaceCongesPage() {
   const [userRole, setUserRole] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [balance, setBalance] = useState<any>(null);
+  const [myLeaves, setMyLeaves] = useState<any[]>([]);
+  const [carryover, setCarryover] = useState<any[]>([]);
+
+  // ✅ Demande de rattrapage (bouton "Demander mes jours restants")
+  const [requesting, setRequesting] = useState<any>(null); // le reliquat source choisi
+  const [requestForm, setRequestForm] = useState({ startDate: '', endDate: '' });
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestError, setRequestError] = useState('');
+
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const load = async () => {
     try {
-      const [reqs, emp, me]: any = await Promise.all([
-        api.get('/absence-requests/me'),
-        api.get('/employees/me').catch(() => null),
-        api.get('/auth/me').catch(() => null),
-      ]);
-      setRequests(reqs || []);
-      setEmployee(emp);
-      setCompany(me?.company ?? null);
-      setSelectedId(reqs?.[0]?.id ?? null);
+      const bal: any = await api.get<any>('/leaves/me/balance').catch(() => null);
+      const leaves: any[] = await api.get<any[]>('/leaves/me').catch(() => []);
+      setBalance(bal);
+      setMyLeaves(leaves || []);
+      if (bal?.employeeId) {
+        const co = await api.get<any[]>(`/leaves/carryover/${bal.employeeId}`).catch(() => []);
+        setCarryover(co || []);
+      }
     } catch (e) {
-      console.error('Erreur chargement de mes demandes', e);
+      console.error('Erreur chargement de mon espace congés', e);
     } finally {
       setIsLoading(false);
     }
@@ -76,211 +72,262 @@ export default function MonEspaceAbsencesPage() {
     } catch {}
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil(requests.length / PAGE_SIZE));
-  const paginated   = useMemo(() => requests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [requests, page]);
-  const selected    = requests.find(r => r.id === selectedId) || null;
+  const openRequestModal = (source: any) => {
+    setRequestError('');
+    setRequesting(source);
+    setRequestForm({ startDate: '', endDate: '' });
+  };
 
-  const handleCancel = async (id: string) => {
-    setCancelling(id);
+  const submitCarryoverRequest = async () => {
+    if (!requesting || !balance?.employeeId) return;
+    if (!requestForm.startDate || !requestForm.endDate) {
+      setRequestError('Renseigne une date de départ et une date de retour');
+      return;
+    }
+    setIsSubmittingRequest(true);
+    setRequestError('');
     try {
-      await api.patch(`/absence-requests/${id}/cancel`, {});
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'CANCELLED' } : r));
+      await api.post('/leaves', {
+        employeeId: balance.employeeId,
+        type: 'ANNUAL',
+        startDate: requestForm.startDate,
+        endDate: requestForm.endDate,
+        reason: 'Demande de rattrapage — reliquat de retour anticipé (repos non payé)',
+        carriedFromLeaveId: requesting.sourceLeaveId,
+      });
+      setRequesting(null);
+      await load();
     } catch (e: any) {
-      alert(e?.message || "Erreur lors de l'annulation");
+      setRequestError(e?.message || 'Erreur lors de la demande de rattrapage');
     } finally {
-      setCancelling(null);
+      setIsSubmittingRequest(false);
     }
   };
 
-  const printData = selected ? {
-    reference: `DEA-${selected.id.slice(0, 8).toUpperCase()}`,
-    company: {
-      legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo,
-      rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone,
-      cachetUrl: company?.cachetUrl,
-    },
-    employee: {
-      firstName: employee?.firstName || '', lastName: employee?.lastName || '',
-      position: employee?.position, departmentName: employee?.department?.name,
-    },
-    type: selected.type, subType: selected.subType, reason: selected.reason, isPaid: selected.isPaid,
-    startDate: selected.startDate, endDate: selected.endDate, workingDays: selected.workingDays,
-    hasAttachment: !!selected.attachmentUrl, status: selected.status,
-    requestedAt: selected.requestedAt || selected.createdAt,
-    reviewedByName: selected.reviewedByUser?.email,
-    reviewedAt: selected.reviewedAt,
-    rejectionReason: selected.rejectionReason,
-  } : null;
+  const handleCancel = async (leaveId: string) => {
+    if (!confirm('Annuler cette demande de congé ?')) return;
+    setCancellingId(leaveId);
+    try {
+      await api.patch(`/leaves/${leaveId}/cancel`, {});
+      await load();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de l'annulation");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   if (isLoading) {
-    return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+    return (
+      <div className="p-6 max-w-5xl mx-auto">
+        <CongeSubNav userRole={userRole} />
+        <div className="flex items-center justify-center py-24">
+          <Loader2 size={28} className="animate-spin text-sky-500" />
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
-      <PresenceModuleSwitcher />
-      <AbsenceSubNav userRole={userRole} />
+  const baseAccrued = balance ? Number(balance.annualEntitled) - Number(balance.seniorityDays || 0) : 0;
+  const gapToFullBase = Math.max(0, 26 - baseAccrued);
+  const pctUsed = balance && Number(balance.annualEntitled) > 0
+    ? Math.min(100, Math.round((Number(balance.annualTaken) / Number(balance.annualEntitled)) * 100))
+    : 0;
 
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Mon espace</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mes demandes d&apos;absence</h1>
-        </div>
-        <Link href={bp('/presences/absences/nouveau')} className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/30">
-          <Plus size={18} /> Nouvelle demande
-        </Link>
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <CongeSubNav userRole={userRole} />
+
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mon espace congés</h1>
+        <p className="text-sm text-gray-400">Mon solde, mes demandes et mes jours à rattraper</p>
       </div>
 
-      {requests.length === 0 ? (
-        <div className="text-center py-24 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-          <Calendar size={32} className="text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Aucune demande pour l&apos;instant</h3>
-          <p className="text-gray-400 text-sm">Vos demandes d&apos;autorisation d&apos;absence apparaîtront ici.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* ── LISTE (MAÎTRE) ── */}
-          <div className="lg:col-span-4 space-y-3">
-            {paginated.map(r => {
-              const tCfg = TYPE_CONFIG[r.type] ?? TYPE_CONFIG.EXCEPTIONNELLE;
-              const sCfg = STATUS_CONFIG[r.status as Status] ?? STATUS_CONFIG.PENDING;
-              const active = r.id === selectedId;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedId(r.id)}
-                  className={`w-full text-left p-4 rounded-2xl border transition-all ${
-                    active ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{tCfg.label}</p>
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${tCfg.dot}`} />
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
-                    <span className="font-mono">{new Date(r.startDate).toLocaleDateString('fr-FR')}</span>
-                    <ArrowRight size={11} />
-                    <span className="font-mono">{new Date(r.endDate).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                  <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
-                </button>
-              );
-            })}
-
-            {requests.length > PAGE_SIZE && (
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-30"
-                >
-                  Précédent
-                </button>
-                <span className="text-xs text-gray-400">Page {page} / {totalPages} · {requests.length} demande{requests.length > 1 ? 's' : ''}</span>
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-30"
-                >
-                  Suivant
-                </button>
-              </div>
-            )}
+      {/* ── Solde ── */}
+      {balance && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 mb-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">
+            <Wallet size={16} className="text-sky-500" /> Mon solde de congé
           </div>
-
-          {/* ── DÉTAIL ── */}
-          <div className="lg:col-span-8">
-            {!selected ? (
-              <div className="h-full min-h-[300px] flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-400 text-sm">
-                Sélectionnez une demande dans la liste
-              </div>
-            ) : (
-              <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.EXCEPTIONNELLE).label}</h2>
-                    <p className="text-sm text-gray-400">Demandée le {new Date(selected.requestedAt || selected.createdAt).toLocaleDateString('fr-FR')}</p>
-                  </div>
-                  <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
-                    {(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).label}
-                  </span>
-                </div>
-
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm bg-gray-50 dark:bg-gray-700/50 px-3.5 py-2.5 rounded-xl">
-                      <Calendar size={14} className="text-gray-400" />
-                      <span className="font-mono text-xs">{new Date(selected.startDate).toLocaleDateString('fr-FR')}</span>
-                      <ArrowRight size={12} className="text-gray-300" />
-                      <span className="font-mono text-xs">{new Date(selected.endDate).toLocaleDateString('fr-FR')}</span>
-                      <span className="ml-auto font-bold text-xs text-gray-500">{Number(selected.workingDays)}j ouvrables</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <Wallet size={14} className="text-gray-400" />
-                      {selected.isPaid ? 'Absence payée demandée' : 'Absence non-payée demandée'}
-                    </div>
-
-                    {selected.attachmentUrl && (
-                      <a href={selected.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700 text-sky-600 hover:underline">
-                        <Paperclip size={14} /> Voir mon justificatif
-                      </a>
-                    )}
-
-                    <div className="text-sm">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p>
-                      <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3.5 rounded-xl">{selected.reason}</p>
-                    </div>
-
-                    {selected.status === 'REJECTED' && selected.rejectionReason && (
-                      <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">
-                        <Info size={14} className="shrink-0 mt-0.5" /> {selected.rejectionReason}
-                      </div>
-                    )}
-
-                    {selected.status !== 'PENDING' && selected.reviewedAt && (
-                      <p className="text-xs text-gray-400">
-                        Traitée le {new Date(selected.reviewedAt).toLocaleDateString('fr-FR')}
-                      </p>
-                    )}
-
-                    <div className="flex gap-2 pt-2">
-                      {selected.status === 'APPROVED' && !selected.printAuthorized ? (
-                        <div className="flex-1 py-2.5 border border-dashed border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-400 flex items-center justify-center gap-2">
-                          <Lock size={14} /> Impression non autorisée par le RH
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setTimeout(() => printAbsenceRequest(), 50)}
-                          className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          <Printer size={16} /> Imprimer
-                        </button>
-                      )}
-                      {selected.status === 'PENDING' && (
-                        <button
-                          onClick={() => handleCancel(selected.id)}
-                          disabled={cancelling === selected.id}
-                          className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40"
-                        >
-                          {cancelling === selected.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Annuler
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Aperçu imprimable */}
-                  <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-3 overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                      {printData && <AbsenceRequestPrintable data={printData as any} />}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+          <div className="grid grid-cols-3 gap-4 text-center mb-3">
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(Number(balance.annualEntitled))}j</p>
+              <p className="text-xs text-gray-400">Acquis</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(Number(balance.annualTaken))}j</p>
+              <p className="text-xs text-gray-400">Pris</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{Math.round(Number(balance.annualRemaining))}j</p>
+              <p className="text-xs text-gray-400">Restant</p>
+            </div>
           </div>
+          <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden mb-2">
+            <div className="h-full bg-sky-500" style={{ width: `${pctUsed}%` }} />
+          </div>
+          {gapToFullBase > 0 && (
+            <p className="text-xs text-sky-500 dark:text-sky-400">
+              Encore {Math.round(gapToFullBase * 10) / 10}j avant d'atteindre les 26j légaux de mon cycle en cours
+            </p>
+          )}
+          {!balance.canTakeAnnualLeave && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
+              <Info size={12} /> Encore {balance.monthsUntilEligible} mois avant les 12 mois d'ancienneté requis pour un congé annuel normal
+            </p>
+          )}
         </div>
       )}
+
+      {/* ── Reliquat de retour anticipé — jours non pris à rattraper ── */}
+      {carryover.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 mb-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-amber-700 dark:text-amber-300 mb-3">
+            <History size={16} /> Jours restants à prendre (cycle précédent)
+          </div>
+          <div className="space-y-3">
+            {carryover.map(co => (
+              <div key={co.sourceLeaveId} className="bg-white dark:bg-gray-800 rounded-xl p-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-gray-700 dark:text-gray-200">
+                    Congé {co.cycleLabel ? `du cycle ${co.cycleLabel}` : ''} — {fmtDate(co.originalStartDate)} au {fmtDate(co.originalEndDate)}
+                  </p>
+                  <p className="text-xs text-gray-400">Retour anticipé le {fmtDate(co.actualReturnDate)}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{Math.round(co.remainingDays * 10) / 10}j</span>
+                  <button
+                    onClick={() => openRequestModal(co)}
+                    className="text-xs font-bold px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    Demander mes jours restants
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-3">
+            Ce reliquat ne fait jamais partie de mon cycle en cours et n'est jamais payé une seconde fois — c'est un repos physique, à faire valider par le RH comme une demande normale.
+          </p>
+        </div>
+      )}
+
+      {/* ── Historique de mes demandes ── */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-200">
+          Mes demandes
+        </div>
+        {myLeaves.length === 0 ? (
+          <div className="text-center py-16">
+            <Calendar size={28} className="text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Aucune demande de congé pour le moment.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
+            {myLeaves.map(leave => {
+              const st = STATUS_CONFIG[leave.status as Status] || STATUS_CONFIG.PENDING;
+              const StIcon = st.icon;
+              const Icon = TYPE_ICONS[leave.type] || Umbrella;
+              return (
+                <div key={leave.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon size={16} className="text-gray-400 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-1.5 flex-wrap">
+                        {leave.carriedFromLeaveId ? 'Rattrapage — reliquat non payé' : (TYPE_LABELS[leave.type] || leave.type)}
+                        {leave.carriedFromLeaveId && (
+                          <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
+                            Non payé
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                        {fmtDate(leave.startDate)} <ArrowRight size={10} /> {fmtDate(leave.endDate)} · {Math.round(Number(leave.daysCount))}j
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-[11px] font-semibold px-2 py-1 rounded-lg border flex items-center gap-1 ${st.badge}`}>
+                      <StIcon size={11} /> {st.label}
+                    </span>
+                    {['PENDING', 'APPROVED'].includes(leave.status) && (
+                      <button
+                        onClick={() => handleCancel(leave.id)}
+                        disabled={cancellingId === leave.id}
+                        className="text-xs font-semibold text-gray-400 hover:text-red-500 disabled:opacity-40"
+                      >
+                        {cancellingId === leave.id ? <Loader2 size={12} className="animate-spin" /> : 'Annuler'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Modale : demander mes jours restants ── */}
+      <AnimatePresence>
+        {requesting && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Demander mes jours restants</h2>
+                <button onClick={() => setRequesting(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="text-xs text-gray-400">
+                Il te reste <strong>{Math.round(requesting.remainingDays * 10) / 10}j</strong> à rattraper sur ton congé du {fmtDate(requesting.originalStartDate)} au {fmtDate(requesting.originalEndDate)}. Ce repos n'est pas payé une seconde fois et n'affecte pas ton solde en cours — le RH validera comme une demande normale.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <input
+                    type="date"
+                    value={requestForm.startDate}
+                    onChange={e => setRequestForm(f => ({ ...f, startDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <input
+                    type="date"
+                    value={requestForm.endDate}
+                    onChange={e => setRequestForm(f => ({ ...f, endDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+              </div>
+              {requestError && (
+                <div className="flex items-start gap-2 text-xs text-red-500">
+                  <AlertTriangle size={14} className="mt-0.5 shrink-0" /> {requestError}
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <button onClick={() => setRequesting(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  Annuler
+                </button>
+                <button
+                  onClick={submitCarryoverRequest}
+                  disabled={isSubmittingRequest}
+                  className="px-4 py-2 text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 disabled:opacity-40"
+                >
+                  {isSubmittingRequest ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Envoyer la demande
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

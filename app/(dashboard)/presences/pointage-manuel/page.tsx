@@ -48,6 +48,12 @@ export default function PointageManuelPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  // ✅ Chaque heure a maintenant son propre interrupteur : on peut
+  // enregistrer l'entrée seule (l'employé vient d'arriver, on ne connaît
+  // pas encore sa sortie), la sortie seule (complément plus tard dans la
+  // journée), ou les deux si besoin d'une correction complète.
+  const [recordCheckIn, setRecordCheckIn] = useState(true);
+  const [recordCheckOut, setRecordCheckOut] = useState(false);
   const [checkInTime, setCheckInTime] = useState('08:00');
   const [checkOutTime, setCheckOutTime] = useState('17:00');
   const [notes, setNotes] = useState('');
@@ -131,8 +137,8 @@ export default function PointageManuelPage() {
       return;
     }
 
-    if (!checkInTime && !checkOutTime) {
-      alert('Veuillez renseigner au moins une heure');
+    if (!recordCheckIn && !recordCheckOut) {
+      alert('Veuillez activer au moins une heure (entrée ou sortie)');
       return;
     }
 
@@ -146,11 +152,11 @@ export default function PointageManuelPage() {
         selectedDate
       );
 
-      const checkInDateTime = checkInTime
+      const checkInDateTime = recordCheckIn && checkInTime
         ? new Date(`${selectedDate}T${checkInTime}:00`).toISOString()
         : undefined;
 
-      const checkOutDateTime = checkOutTime
+      const checkOutDateTime = recordCheckOut && checkOutTime
         ? new Date(`${selectedDate}T${checkOutTime}:00`).toISOString()
         : undefined;
 
@@ -182,6 +188,8 @@ export default function PointageManuelPage() {
       setTimeout(() => {
         setShowSuccess(false);
         setSelectedEmployee(null);
+        setRecordCheckIn(true);
+        setRecordCheckOut(false);
         setCheckInTime('08:00');
         setCheckOutTime('17:00');
         setNotes('');
@@ -460,37 +468,54 @@ export default function PointageManuelPage() {
               />
             </div>
 
-            {/* Heures */}
+            {/* Heures — chacune activable indépendamment */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-300 mb-2">
-                  <Clock size={16} className="inline mr-2 text-green-400"/>
+              <div className={`p-3 rounded-xl border transition-colors ${recordCheckIn ? 'border-green-500/40 bg-green-500/5' : 'border-slate-700 bg-slate-700/20 opacity-60'}`}>
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-300 mb-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={recordCheckIn}
+                    onChange={(e) => setRecordCheckIn(e.target.checked)}
+                    className="w-4 h-4 accent-green-500"
+                  />
+                  <Clock size={16} className="text-green-400"/>
                   Heure d'Entrée
                 </label>
                 <input
                   type="time"
                   value={checkInTime}
+                  disabled={!recordCheckIn}
                   onChange={(e) => setCheckInTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-300 mb-2">
-                  <Clock size={16} className="inline mr-2 text-red-400"/>
+              <div className={`p-3 rounded-xl border transition-colors ${recordCheckOut ? 'border-red-500/40 bg-red-500/5' : 'border-slate-700 bg-slate-700/20 opacity-60'}`}>
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-300 mb-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={recordCheckOut}
+                    onChange={(e) => setRecordCheckOut(e.target.checked)}
+                    className="w-4 h-4 accent-red-500"
+                  />
+                  <Clock size={16} className="text-red-400"/>
                   Heure de Sortie
                 </label>
                 <input
                   type="time"
                   value={checkOutTime}
+                  disabled={!recordCheckOut}
                   onChange={(e) => setCheckOutTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
+            <p className="text-xs text-slate-500 -mt-2">
+              Astuce : activez seulement "Entrée" si l'employé vient d'arriver et que sa sortie n'est pas encore connue — vous pourrez revenir compléter la sortie plus tard sur ce même pointage.
+            </p>
 
-            {/* Aperçu durée */}
-            {checkInTime && checkOutTime && (
+            {/* Aperçu durée — uniquement si les deux sont activées */}
+            {recordCheckIn && recordCheckOut && checkInTime && checkOutTime && (
               <div className="bg-slate-700/30 rounded-xl p-3 flex items-center justify-between">
                 <span className="text-sm text-slate-400">Durée totale</span>
                 <span className="text-lg font-bold text-white">
@@ -527,7 +552,13 @@ export default function PointageManuelPage() {
               className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-blue-500/25 flex justify-center items-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? <Loader2 className="animate-spin" size={20}/> : <Save size={20}/>}
-              {isSubmitting ? 'Enregistrement...' : 'Enregistrer le Pointage'}
+              {isSubmitting
+                ? 'Enregistrement...'
+                : recordCheckIn && recordCheckOut
+                  ? "Enregistrer l'Entrée et la Sortie"
+                  : recordCheckIn
+                    ? "Enregistrer l'Entrée seule"
+                    : "Enregistrer la Sortie seule"}
             </button>
 
           </div>

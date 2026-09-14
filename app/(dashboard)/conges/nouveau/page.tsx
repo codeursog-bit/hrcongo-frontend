@@ -602,21 +602,17 @@ export default function NewLeaveRequestPage() {
   const displayName = myEmployee
     ? `${myEmployee.firstName} ${myEmployee.lastName}` : '—';
 
-  const isRHOrAdmin = !!currentUser &&
-    ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(currentUser.role);
-
   // Vérification éligibilité congé annuel — l'anticipé existe précisément
   // pour déroger à cette règle des 12 mois, donc il n'est jamais bloqué ici.
-  // ✅ CORRECTIF (demande explicite) : ce blocage ne s'applique qu'à un
-  // employé en auto-service. Un RH/Admin qui planifie pour quelqu'un
-  // d'autre voit le même avertissement mais n'est jamais empêché de valider
-  // (le backend applique la même règle — voir leaves.service.ts/create()).
+  // ✅ CORRECTIF (demande explicite) : ce n'est plus jamais bloquant, même
+  // pour un employé en auto-service — seulement informatif. La demande part
+  // quand même vers le RH, qui tranche à la validation avec le solde réel
+  // du moment (le backend ne bloque plus non plus — voir leaves.service.ts/create()).
   const notEligible = formData.type === 'ANNUAL' && selectedBalance &&
     !selectedBalance.canTakeAnnualLeave;
 
   const canSubmit = !isSubmitting && !showConfirmation &&
-    !!calculationDetails && !!formData.employeeId &&
-    !calculationDetails.insufficientBalance && !(notEligible && !isRHOrAdmin);
+    !!calculationDetails && !!formData.employeeId;
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
@@ -754,15 +750,13 @@ export default function NewLeaveRequestPage() {
             </div>
           )}
 
-          {/* 🆕 Alerte éligibilité — bloquante pour l'employé, informative pour RH/Admin */}
+          {/* 🆕 Alerte éligibilité — informative uniquement, n'empêche plus la soumission */}
           {notEligible && selectedBalance && (
             <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
               <Lock size={18} className="text-amber-500 mt-0.5 shrink-0" />
               <p className="text-sm text-amber-700 dark:text-amber-300">
                 Les congés annuels sont normalement accessibles après <strong>12 mois</strong> d'ancienneté (Code du travail congolais). Ancienneté actuelle : <strong>{Math.round(selectedBalance.monthsWorked)} mois</strong>. Encore <strong>{Math.round(selectedBalance.monthsUntilEligible)} mois</strong> requis.
-                {isRHOrAdmin
-                  ? ' En tant que RH/Admin, vous pouvez tout de même valider ce départ à titre exceptionnel — ce sera enregistré comme tel.'
-                  : ' Pour un départ avant ce délai, le congé annuel anticipé est disponible.'}
+                {' '}Vous pouvez tout de même soumettre cette demande — le RH décidera à la validation.
               </p>
             </div>
           )}
@@ -885,12 +879,12 @@ export default function NewLeaveRequestPage() {
             </div>
           </div>
 
-          {/* 🆕 Alerte solde insuffisant */}
+          {/* 🆕 Alerte solde insuffisant — informative uniquement, n'empêche plus la soumission */}
           {calculationDetails?.insufficientBalance && (
             <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
               <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
               <p className="text-sm text-red-600 dark:text-red-400">
-                Solde insuffisant : vous demandez <strong>{calculationDetails.ouvrables} jours</strong> mais il vous en reste <strong>{Math.round(Number(selectedBalance?.annualRemaining ?? 0))}</strong>.
+                Solde insuffisant à ce jour : vous demandez <strong>{calculationDetails.ouvrables} jours</strong> mais il en reste <strong>{Math.round(Number(selectedBalance?.annualRemaining ?? 0))}</strong>. Vous pouvez tout de même soumettre — le RH décidera à la validation selon le solde réel à ce moment-là.
               </p>
             </div>
           )}

@@ -8,15 +8,15 @@ import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
 
 const C = {
-  bg:'#020817',card:'#0A1628',cardHov:'#0F1E35',
+  bg:'#050607',card:'#0B0C0F',cardHov:'#111317',
   border:'rgba(255,255,255,0.07)',
-  cyan:'#06B6D4',blue:'#3B82F6',purple:'#8B5CF6',
+  cyan:'#10B981',blue:'#059669',purple:'#64748B',
   green:'#10B981',orange:'#F59E0B',pink:'#EC4899',
   red:'#EF4444',
   text:'#F8FAFC',muted:'#64748B',sub:'#94A3B8',
 };
 
-function GridBg(){return(<div style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none',backgroundImage:`linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)`,backgroundSize:'44px 44px'}}/>);}
+function GridBg(){return(<div style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none',opacity:0.05,backgroundImage:`linear-gradient(to right, #fff 1px,transparent 1px),linear-gradient(to bottom, #fff 1px,transparent 1px)`,backgroundSize:'48px 48px'}}/>);}
 function Blob({color,style}:{color:string;style:React.CSSProperties}){return<div style={{position:'absolute',borderRadius:'50%',filter:'blur(120px)',opacity:0.1,pointerEvents:'none',background:color,...style}}/>;}
 
 function useReveal(){
@@ -68,7 +68,7 @@ export default function AboutPage(){
           <Chip>// Qui sommes-nous</Chip>
           <h1 style={{fontSize:'clamp(36px,6vw,68px)',fontWeight:900,letterSpacing:'-0.04em',lineHeight:1.05,margin:'20px 0 22px'}}>
             Fabriqué à Pointe-Noire.<br/>
-            <span style={{background:'linear-gradient(135deg,#06B6D4,#3B82F6,#8B5CF6)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Pour le Congo entier.</span>
+            <span style={{background:'linear-gradient(135deg,#10B981,#059669,#64748B)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Pour le Congo entier.</span>
           </h1>
           <p style={{fontSize:19,color:C.sub,lineHeight:1.75,maxWidth:600,margin:'0 auto'}}>
             Konza RH est né d'un constat simple :{' '}
@@ -109,7 +109,7 @@ export default function AboutPage(){
       </section>
 
       {/* VALEURS */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,background:'rgba(6,182,212,0.015)'}}>
+      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,background:'rgba(16,185,129,0.015)'}}>
         <Blob color={C.purple} style={{width:500,height:500,bottom:-100,right:-100}}/>
         <div style={{maxWidth:1280,margin:'0 auto',padding:'90px 32px'}}>
           <Reveal><div style={{textAlign:'center',marginBottom:52}}><Chip>// Nos valeurs</Chip><h2 style={{fontSize:'clamp(26px,4vw,44px)',fontWeight:900,letterSpacing:'-0.03em',lineHeight:1.1,marginTop:18}}>Ce qui guide chaque décision</h2></div></Reveal>
@@ -138,7 +138,7 @@ export default function AboutPage(){
       </section>
 
       {/* STATS */}
-      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,background:'rgba(6,182,212,0.02)'}}>
+      <section style={{position:'relative',zIndex:1,borderTop:`1px solid ${C.border}`,background:'rgba(16,185,129,0.02)'}}>
         <div style={{maxWidth:1280,margin:'0 auto',padding:'72px 32px'}}>
           <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:20}} className="stats-grid">
             {[{val:'50+',label:'Entreprises actives',c:C.cyan},{val:'2 000+',label:'Employés gérés',c:C.blue},{val:'< 3 min',label:'Pour 500 bulletins',c:C.green},{val:'100 %',label:'Conformité CGI',c:C.purple}].map(s=>(
@@ -174,17 +174,17 @@ export default function AboutPage(){
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 function Chip({children}:{children:React.ReactNode}){
-  return<div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',background:'rgba(6,182,212,0.08)',border:'1px solid rgba(6,182,212,0.2)',borderRadius:99,fontSize:12,fontWeight:700,color:C.cyan,letterSpacing:'0.08em',textTransform:'uppercase' as const}}>{children}</div>;
+  return<div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 16px',background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:99,fontSize:12,fontWeight:700,color:C.cyan,letterSpacing:'0.08em',textTransform:'uppercase' as const}}>{children}</div>;
 }
 function GradBtn({href,children}:{href:string;children:React.ReactNode}){
-  return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#06B6D4,#3B82F6)',color:'#fff',textDecoration:'none',fontWeight:800,fontSize:15,padding:'14px 30px',borderRadius:12,boxShadow:'0 0 40px rgba(6,182,212,0.3)'}}>{children}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></Link>;
+  return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#10B981,#059669)',color:'#fff',textDecoration:'none',fontWeight:800,fontSize:15,padding:'14px 30px',borderRadius:12,boxShadow:'0 0 40px rgba(16,185,129,0.3)'}}>{children}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></Link>;
 }
 function GhostBtn({href,children}:{href:string;children:React.ReactNode}){
   return<Link href={href} style={{display:'inline-flex',alignItems:'center',gap:8,background:'transparent',color:C.text,textDecoration:'none',fontWeight:700,fontSize:15,padding:'14px 24px',borderRadius:12,border:`1px solid ${C.border}`}}>{children}</Link>;
 }
 function ValCard({icon,title,desc}:{icon:string;title:string;desc:string}){
   const[h,sH]=useState(false);
-  return<div onMouseEnter={()=>sH(true)} onMouseLeave={()=>sH(false)} style={{background:h?C.cardHov:C.card,border:`1px solid ${h?'rgba(6,182,212,0.3)':C.border}`,borderRadius:16,padding:'30px',transition:'all 0.25s ease',transform:h?'translateY(-4px)':'none'}}>
+  return<div onMouseEnter={()=>sH(true)} onMouseLeave={()=>sH(false)} style={{background:h?C.cardHov:C.card,border:`1px solid ${h?'rgba(16,185,129,0.3)':C.border}`,borderRadius:16,padding:'30px',transition:'all 0.25s ease',transform:h?'translateY(-4px)':'none'}}>
     <div style={{fontSize:30,marginBottom:14}}>{icon}</div>
     <h3 style={{fontSize:17,fontWeight:800,color:C.text,marginBottom:10,letterSpacing:'-0.02em'}}>{title}</h3>
     <p style={{fontSize:14,color:C.sub,lineHeight:1.75}}>{desc}</p>
@@ -210,5 +210,5 @@ function TeamCard({name,role,bio,img,tags,color}:{name:string;role:string;bio:st
   </div>;
 }
 function Styles({extra=''}:{extra?:string}){
-  return<style>{`*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}::-webkit-scrollbar{width:6px;background:#020817}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}@media(max-width:900px){.ab-grid,.team-grid{grid-template-columns:1fr!important}}@media(max-width:700px){.val-grid,.stats-grid{grid-template-columns:1fr!important}}${extra}`}</style>;
+  return<style>{`*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}::-webkit-scrollbar{width:6px;background:#050607}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}@media(max-width:900px){.ab-grid,.team-grid{grid-template-columns:1fr!important}}@media(max-width:700px){.val-grid,.stats-grid{grid-template-columns:1fr!important}}${extra}`}</style>;
 }

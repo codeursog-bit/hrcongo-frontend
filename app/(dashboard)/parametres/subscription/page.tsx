@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
+import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
 import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ export default function SubscriptionPage() {
   // serveur, sinon YABETOOPAY reprend le relais automatiquement — voir
   // GET /subscriptions/payment-provider). null tant qu'on ne sait pas encore,
   // 'NONE' si aucun des deux n'est configuré côté serveur.
-  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'YABETOOPAY' | 'NONE' | null>(null);
+  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error') => setToast({ message, type });
@@ -158,7 +159,7 @@ export default function SubscriptionPage() {
   useEffect(() => { fetchSubscription(); }, [fetchSubscription]);
 
   useEffect(() => {
-    api.get<{ provider: 'MOTEKI' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
+    api.get<{ provider: 'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
       .then((r) => setActiveProvider(r.provider))
       .catch(() => setActiveProvider('NONE')); // repli prudent si l'appel échoue — jamais planter
   }, []);
@@ -525,8 +526,20 @@ export default function SubscriptionPage() {
       )}
 
       {/* Modal paiement — Moteki */}
-      {checkoutTarget && (
+      {checkoutTarget && activeProvider === 'MOTEKI' && (
         <MotekiCheckoutModal
+          plan={checkoutTarget.plan}
+          billingPeriod={checkoutTarget.billingPeriod}
+          amount={checkoutTarget.amount}
+          planLabel={PLAN_STYLES[checkoutTarget.plan]?.label ?? checkoutTarget.plan}
+          onClose={() => setCheckoutTarget(null)}
+          onError={(msg) => showToast(msg, 'error')}
+        />
+      )}
+
+      {/* Modal paiement — Chariow (redondance de Moteki) */}
+      {checkoutTarget && activeProvider === 'CHARIOW' && (
+        <ChariowCheckoutModal
           plan={checkoutTarget.plan}
           billingPeriod={checkoutTarget.billingPeriod}
           amount={checkoutTarget.amount}

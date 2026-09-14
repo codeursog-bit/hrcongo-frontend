@@ -265,6 +265,8 @@ export interface Subscription {
   daysLeftInPeriod?: number | null;
   /** false si l'entreprise est volontairement sur le plan Gratuit (rien à renouveler) */
   willRevertToFree?: boolean;
+  /** Renseigné si l'entreprise vient d'être rétrogradée faute de renouvellement (null si jamais payé) */
+  downgradedAt?: string | null;
 }
 
 export interface UsageStats {

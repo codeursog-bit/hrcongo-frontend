@@ -1,87 +1,95 @@
-// ============================================================================
-// 📁 components/landing/Features.tsx
-// ============================================================================
 'use client';
 
-import React from 'react';
-import { Zap, Shield, MapPin, Calendar, DollarSign, Users } from 'lucide-react';
-
-const features = [
-  { 
-    icon: Zap, 
-    title: "Paie Automatique", 
-    desc: "Génération des bulletins en un clic. Calculs fiscaux, CNSS et IRPP/ITS inclus.",
-    color: "text-yellow-400", 
-    bg: "bg-yellow-500/10"
-  },
-  { 
-    icon: Shield, 
-    title: "Conformité Garantie", 
-    desc: "Toutes les règles légales congolaises appliquées automatiquement. Zéro risque.",
-    color: "text-emerald-400", 
-    bg: "bg-emerald-500/10"
-  },
-  { 
-    icon: MapPin, 
-    title: "Pointage Intelligent", 
-    desc: "Vos équipes pointent depuis leur téléphone. Géolocalisation et alertes incluses.",
-    color: "text-pink-400", 
-    bg: "bg-pink-500/10"
-  },
-  { 
-    icon: Calendar, 
-    title: "Gestion des Congés", 
-    desc: "Demandes en ligne, validation rapide, soldes automatiques. Simple et efficace.",
-    color: "text-blue-400", 
-    bg: "bg-blue-500/10"
-  },
-  { 
-    icon: DollarSign, 
-    title: "Prêts & Avances", 
-    desc: "Gérez les demandes avec validation automatique des montants légaux.",
-    color: "text-purple-400", 
-    bg: "bg-purple-500/10"
-  },
-  { 
-    icon: Users, 
-    title: "Recrutement", 
-    desc: "Publiez vos offres, gérez les candidatures et recrutez en quelques clics.",
-    color: "text-orange-400", 
-    bg: "bg-orange-500/10"
-  }
-];
-
-export function Features() {
+export function FeatureBento() {
   return (
-    <section id="fonctionnalités" className="py-16 sm:py-24 lg:py-32 relative px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 sm:mb-20">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 px-4">
-            Tout Ce Dont Vous Avez Besoin
-          </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-400 max-w-2xl mx-auto px-4">
-            Une suite complète pour gérer vos employés efficacement
-          </p>
-        </div>
+    <section className="bg-[#050607] px-6 py-24">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="max-w-xl text-[32px] font-semibold leading-tight tracking-[-0.02em] text-[#FAFAFA] sm:text-[38px]">
+          Tout ce qu'il faut pour gérer la paie, sans tableur.
+        </h2>
+        <p className="mt-4 max-w-lg text-[16px] text-[#8B8F98]">
+          Chaque module remplace un fichier Excel ou une démarche manuelle par
+          un flux qui se met à jour automatiquement.
+        </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {features.map((feat, i) => {
-            const Icon = feat.icon;
-            return (
-              <div 
-                key={i}
-                className="group p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all hover:-translate-y-2"
-              >
-                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${feat.bg} ${feat.color} flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform`}>
-                  <Icon size={24} className="sm:w-7 sm:h-7" />
+        <div className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {/* Grande carte — le point fort du produit */}
+          <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0B0C0F] p-8 transition-colors hover:border-white/[0.14] md:col-span-2 md:row-span-2">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#D4A548]/[0.06] blur-3xl" />
+            <h3 className="text-[20px] font-medium text-[#FAFAFA]">
+              Bulletins générés automatiquement
+            </h3>
+            <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-[#8B8F98]">
+              Absences, primes et heures supplémentaires du mois sont pris en
+              compte sans ressaisie. 500 fiches sont calculées et exportées en
+              moins de 3 minutes.
+            </p>
+            <div className="mt-8 space-y-2">
+              {[
+                { label: 'Marie N.', role: 'Comptable', status: 'Généré' },
+                { label: 'Paul K.', role: 'Technicien', status: 'Généré' },
+                { label: 'Sarah B.', role: 'Assistante RH', status: 'En cours' },
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 text-[13px]"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-[#FAFAFA]">{row.label}</span>
+                    <span className="text-[#8B8F98]">{row.role}</span>
+                  </div>
+                  <span
+                    className={
+                      row.status === 'Généré'
+                        ? 'text-[#D4A548]'
+                        : 'text-[#8B8F98]'
+                    }
+                  >
+                    {row.status}
+                  </span>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">{feat.title}</h3>
-                <p className="text-sm sm:text-base text-slate-400 leading-relaxed">{feat.desc}</p>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          </div>
+
+          <FeatureCard
+            title="Congés & absences"
+            description="Soldes calculés automatiquement, demandes validées en un clic par le responsable."
+          />
+          <FeatureCard
+            title="Export CNSS prêt à déposer"
+            description="La déclaration CNSS et la TUS sont préparées dans le format attendu, chaque mois."
+          />
+          <FeatureCard
+            title="Espace employé mobile"
+            description="Chaque employé consulte ses bulletins et pose ses congés depuis son téléphone."
+            wide
+          />
         </div>
       </div>
     </section>
+  );
+}
+
+function FeatureCard({
+  title,
+  description,
+  wide = false,
+}: {
+  title: string;
+  description: string;
+  wide?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-white/[0.08] bg-[#0B0C0F] p-6 transition-colors hover:border-white/[0.14] ${
+        wide ? 'md:col-span-1' : ''
+      }`}
+    >
+      <h3 className="text-[16px] font-medium text-[#FAFAFA]">{title}</h3>
+      <p className="mt-2 text-[14px] leading-relaxed text-[#8B8F98]">
+        {description}
+      </p>
+    </div>
   );
 }

@@ -41,7 +41,8 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
     ...(canManage ? [{ href: '/conges/planning',   label: 'Suivi de congé', icon: Plane }] : []),
     ...(canManage ? [{ href: '/conges/calendrier', label: 'Calendrier',     icon: CalendarDays }] : []),
     ...(canManage ? [{ href: '/conges/soldes',     label: 'Soldes',         icon: Wallet }] : []),
-    ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins }] : [])
+    ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins }] : []),
+    ...(canManage ? [{ href: '/conges/gestion',   label: 'gestion et retour anticipés', icon: Plane }] : []),
     
   ];
 

@@ -56,7 +56,25 @@ function SuccessContent() {
     }
   }
 
-  const plan      = searchParams.get('plan') ?? pendingCheckout.plan ?? '';
+  // 🛒 Retour Chariow : contrairement à Moteki, on CONTRÔLE le redirect_url
+  // envoyé à Chariow (voir ChariowCheckoutModal), mais le paymentId n'existe
+  // que côté backend une fois l'appel /checkout terminé — donc trop tard
+  // pour être inclus dans ce redirect_url. On relit le paymentId mémorisé
+  // en sessionStorage juste avant la redirection, comme pour Moteki. Seul
+  // `provider=chariow` est fiable dans l'URL de retour elle-même.
+  let pendingChariowCheckout: { plan?: string; billingPeriod?: string; paymentId?: string } = {};
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = sessionStorage.getItem('pendingChariowCheckout');
+      if (raw) pendingChariowCheckout = JSON.parse(raw);
+    } catch {
+      // ignore
+    }
+  }
+  const chariowProvider = searchParams.get('provider') === 'chariow';
+  const chariowPaymentId = pendingChariowCheckout.paymentId;
+
+  const plan      = searchParams.get('plan') ?? pendingCheckout.plan ?? pendingChariowCheckout.plan ?? '';
   const immediate = searchParams.get('immediate') === 'true' || motekiStatus === 'success';
   const failed    = searchParams.get('failed') === 'true' || motekiStatus === 'cancel';
 
@@ -66,6 +84,7 @@ function SuccessContent() {
   const getInitialStatus = (): PageStatus => {
     if (failed)    return 'failed';
     if (immediate) return 'checking';
+    if (chariowProvider) return 'checking'; // on vérifie tout de suite, jamais d'hypothèse a priori
     return 'waiting';
   };
 
@@ -92,6 +111,23 @@ function SuccessContent() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 🛒 Chariow : même principe que Moteki ci-dessus — même chose en best-
+  // effort, le cron `check-pending-chariow-sales` (toutes les 5 min) prend
+  // le relais si cet appel échoue ou si le paiement n'est pas encore traité.
+  useEffect(() => {
+    if (!chariowProvider || !chariowPaymentId) return;
+    (async () => {
+      try {
+        await api.post(`/subscriptions/chariow/check-sale/${chariowPaymentId}`, {});
+      } catch {
+        // pas grave — le cron de polling réessaiera dans les minutes qui suivent
+      } finally {
+        refetch();
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+
   // ── Vérification initiale si paiement immédiat ────────────────────────────
   useEffect(() => {
     if (!immediate) return;
@@ -109,7 +145,10 @@ function SuccessContent() {
     if (subscription?.status === 'ACTIVE') {
       setStatus('success');
       if (attempts > 0) toast.success('🎉 Abonnement activé !');
-      try { sessionStorage.removeItem('pendingSubscriptionCheckout'); } catch {}
+      try {
+        sessionStorage.removeItem('pendingSubscriptionCheckout');
+        sessionStorage.removeItem('pendingChariowCheckout');
+      } catch {}
     } else {
       // Pas encore activé → retour en attente
       setStatus('waiting');

@@ -6,7 +6,7 @@ import {
   Calendar, Check, X, Clock, ArrowRight, UserCircle,
   Loader2, AlertCircle, FileText, CheckCircle2, XCircle,
   MessageSquare, Info, Wallet, Users, TrendingUp, BarChart3,
-  AlertTriangle, Eye
+  AlertTriangle, Eye, Search, Filter,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
@@ -35,6 +35,8 @@ interface LeaveRequest {
   reason?:   string;
   status:    LeaveStatus;
   createdAt: string;
+  // ✅ Rattrapage d'un reliquat de retour anticipé — voir createCarryoverLeave/Request côté backend.
+  carriedFromLeaveId?: string | null;
 }
 
 interface ProvisionSummary {
@@ -56,6 +58,8 @@ const TYPE_CONFIG: Record<LeaveType, { label: string; dot: string; badge: string
 
 const fmtXAF = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n));
 
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
 // ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function LeaveManagementPage() {
@@ -69,6 +73,12 @@ export default function LeaveManagementPage() {
   const [isProcessing, setIsProcessing]       = useState(false);
   const [userRole, setUserRole]     = useState<string>('');
   const [isRH, setIsRH]             = useState(false);
+  // ✅ Filtres onglet Historique — par période (mois/année) et recherche par
+  // nom d'employé. Purement côté front : la liste complète est déjà chargée
+  // via /leaves, on ne fait qu'affiner l'affichage, sans rappel serveur.
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyMonth, setHistoryMonth]   = useState<number | 'ALL'>('ALL');
+  const [historyYear, setHistoryYear]     = useState<number | 'ALL'>('ALL');
 
   useEffect(() => {
     try {
@@ -105,6 +115,27 @@ export default function LeaveManagementPage() {
 
   const pendingLeaves = useMemo(() => leaves.filter(l => l.status === 'PENDING'),  [leaves]);
   const historyLeaves = useMemo(() => leaves.filter(l => l.status !== 'PENDING'),  [leaves]);
+
+  // ✅ Années disponibles pour le sélecteur — dérivées des données réellement
+  // chargées (+ année en cours, toujours présente même sans historique).
+  const historyYearOptions = useMemo(() => {
+    const years = new Set<number>([new Date().getFullYear()]);
+    historyLeaves.forEach(l => years.add(new Date(l.startDate).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a);
+  }, [historyLeaves]);
+
+  const filteredHistoryLeaves = useMemo(() => {
+    const search = historySearch.trim().toLowerCase();
+    return historyLeaves.filter(l => {
+      if (historyYear !== 'ALL' && new Date(l.startDate).getFullYear() !== historyYear) return false;
+      if (historyMonth !== 'ALL' && new Date(l.startDate).getMonth() + 1 !== historyMonth) return false;
+      if (search) {
+        const fullName = `${l.employee.firstName} ${l.employee.lastName}`.toLowerCase();
+        if (!fullName.includes(search)) return false;
+      }
+      return true;
+    });
+  }, [historyLeaves, historySearch, historyMonth, historyYear]);
 
   // Alertes provision critiques
   const criticalCount = useMemo(
@@ -351,6 +382,12 @@ export default function LeaveManagementPage() {
                               Congé sans solde — aucune indemnité versée
                             </p>
                           )}
+                          {leave.carriedFromLeaveId && (
+                            <p className="text-xs text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 px-3 py-1.5 rounded-lg mb-3 flex items-center gap-1.5">
+                              <Info size={12} className="text-sky-500" />
+                              Rattrapage d'un reliquat de retour anticipé — non payé, sans impact sur le solde/cycle en cours
+                            </p>
+                          )}
                           {leave.reason && (
                             <p className="text-xs text-gray-400 italic border-l-2 border-gray-200 dark:border-gray-600 pl-3 mb-4 truncate">
                               "{leave.reason}"
@@ -389,11 +426,56 @@ export default function LeaveManagementPage() {
 
         {/* TAB HISTORY */}
         {activeTab === 'HISTORY' && (
-          <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-            {historyLeaves.length === 0 ? (
+          <motion.div key="history" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-4">
+            {/* ── Filtres historique : période + recherche par nom ── */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex flex-wrap items-center gap-2">
+              <Filter size={16} className="text-gray-400 shrink-0" />
+              <select
+                value={historyMonth}
+                onChange={e => setHistoryMonth(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+                className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5"
+              >
+                <option value="ALL">Tous les mois</option>
+                {MONTHS.map((m, i) => (
+                  <option key={m} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select
+                value={historyYear}
+                onChange={e => setHistoryYear(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+                className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5"
+              >
+                <option value="ALL">Toutes les années</option>
+                {historyYearOptions.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <div className="relative flex-1 min-w-[200px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={historySearch}
+                  onChange={e => setHistorySearch(e.target.value)}
+                  placeholder="Rechercher un employé par nom…"
+                  className="w-full text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg pl-9 pr-3 py-1.5"
+                />
+              </div>
+              {(historySearch || historyMonth !== 'ALL' || historyYear !== 'ALL') && (
+                <button
+                  onClick={() => { setHistorySearch(''); setHistoryMonth('ALL'); setHistoryYear('ALL'); }}
+                  className="text-xs font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 px-2"
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </div>
+
+            {filteredHistoryLeaves.length === 0 ? (
               <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
                 <Clock size={32} className="text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">Aucun historique disponible.</p>
+                <p className="text-gray-400 text-sm">
+                  {historyLeaves.length === 0 ? 'Aucun historique disponible.' : 'Aucun résultat pour ces filtres.'}
+                </p>
               </div>
             ) : (
               <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
@@ -407,7 +489,7 @@ export default function LeaveManagementPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-                    {historyLeaves.map(leave => {
+                    {filteredHistoryLeaves.map(leave => {
                       const cfg = TYPE_CONFIG[leave.type] ?? TYPE_CONFIG.ANNUAL;
                       return (
                         <tr key={leave.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
@@ -422,6 +504,11 @@ export default function LeaveManagementPage() {
                               <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
                               {cfg.label}
                             </span>
+                            {leave.carriedFromLeaveId && (
+                              <span className="inline-block mt-1 text-[10px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 px-1.5 py-0.5 rounded">
+                                Rattrapage — non payé
+                              </span>
+                            )}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono text-gray-500">
                             {new Date(leave.startDate).toLocaleDateString('fr-FR')} → {new Date(leave.endDate).toLocaleDateString('fr-FR')}
@@ -505,6 +592,9 @@ export default function LeaveManagementPage() {
                   Type : <strong className="text-gray-900 dark:text-white">{TYPE_CONFIG[modalData.leave.type]?.label}</strong>
                   {modalData.leave.type === 'UNPAID' && (
                     <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-600 text-gray-500 px-2 py-0.5 rounded-full">Sans indemnité</span>
+                  )}
+                  {modalData.leave.carriedFromLeaveId && (
+                    <span className="ml-2 text-xs bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 px-2 py-0.5 rounded-full">Rattrapage — non payé</span>
                   )}
                 </p>
               </div>

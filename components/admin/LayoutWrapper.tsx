@@ -106,7 +106,7 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
         totalCompanies: stats.totalCompanies,
         totalUsers:     stats.totalUsers,
         totalMRR:       stats.totalMRR,
-        growth:         12.5,
+        growth:         stats.growth ?? 0,
       });
     } catch (err) {
       console.error('Erreur stats header:', err);

@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Search, Loader2, AlertTriangle, AlertCircle,
-  CheckCircle2, Lock, TrendingUp, Filter, ChevronRight, RefreshCw, Pencil, X, Check
+  CheckCircle2, Lock, TrendingUp, Filter, ChevronRight, RefreshCw, Pencil, X, Check,
+  History, Trash2, Umbrella, Zap,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
@@ -60,6 +61,19 @@ const ALERT_CONFIG = {
   LOCKED:   { label: 'Pas encore éligible', icon: Lock,      color: 'text-gray-400',   badge: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400', bar: 'bg-gray-300' },
 };
 
+// ✅ Historique par employé (panneau) — mêmes libellés que /conges/gestion,
+// pour une lecture cohérente d'une page à l'autre.
+const TYPE_LABELS: Record<string, string> = { ANNUAL: 'Annuel', ANNUAL_ANTICIPATED: 'Annuel anticipé' };
+const TYPE_ICONS: Record<string, any> = { ANNUAL: Umbrella, ANNUAL_ANTICIPATED: Zap };
+const STATUS_LABELS: Record<string, string> = { PENDING: 'En attente', APPROVED: 'Approuvé', REJECTED: 'Refusé', CANCELLED: 'Annulé' };
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
+  APPROVED: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+  REJECTED: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400',
+  CANCELLED: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
+};
+function fmtDate(d: string) { return new Date(d).toLocaleDateString('fr-FR'); }
+
 // ─── Composant principal ─────────────────────────────────────────────────────
 
 export default function LeaveBalancesAdminPage() {
@@ -77,6 +91,20 @@ export default function LeaveBalancesAdminPage() {
   const [lastLeaveEnd, setLastLeaveEnd] = useState('');
   const [remainingDays, setRemainingDays] = useState('');
   const [isSavingAdjust, setIsSavingAdjust] = useState(false);
+
+  // ✅ Historique par employé + modifier/supprimer un congé directement
+  // depuis cette page — cohérent avec /conges/gestion et /conges/[id] :
+  // même panneau, mêmes endpoints (PATCH/DELETE /leaves/:id).
+  const [historyEmployee, setHistoryEmployee] = useState<EmployeeBalance | null>(null);
+  const [history, setHistory] = useState<any>(null);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ type: 'ANNUAL' as 'ANNUAL' | 'ANNUAL_ANTICIPATED', startDate: '', endDate: '' });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [deletingItem, setDeletingItem] = useState<any>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const canAdjust = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
 
@@ -108,6 +136,68 @@ export default function LeaveBalancesAdminPage() {
       alert(e?.message || "Erreur lors de la reprise du solde");
     } finally {
       setIsSavingAdjust(false);
+    }
+  };
+
+  // ✅ Ouvre l'historique des congés de l'employé — pour corriger le solde à
+  // la source (modifier/supprimer le congé en cause) plutôt que d'écraser le
+  // solde à la main.
+  const openHistory = async (bal: EmployeeBalance) => {
+    setHistoryEmployee(bal);
+    setIsLoadingHistory(true);
+    try {
+      const data = await api.get(`/leaves/employee-history/${bal.employeeId}`);
+      setHistory(data);
+    } catch (e) {
+      console.error('Erreur historique employé', e);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  const openEditItem = (item: any) => {
+    setEditError('');
+    setEditingItem(item);
+    setEditForm({
+      type: item.type === 'ANNUAL_ANTICIPATED' ? 'ANNUAL_ANTICIPATED' : 'ANNUAL',
+      startDate: new Date(item.startDate).toISOString().slice(0, 10),
+      endDate: new Date(item.endDate).toISOString().slice(0, 10),
+    });
+  };
+
+  const saveEditItem = async () => {
+    if (!editingItem) return;
+    setIsSavingEdit(true);
+    setEditError('');
+    try {
+      await api.patch(`/leaves/${editingItem.id}`, {
+        type: editForm.type,
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
+      });
+      setEditingItem(null);
+      if (historyEmployee) await openHistory(historyEmployee);
+      await load();
+    } catch (e: any) {
+      setEditError(e?.message || 'Erreur lors de la modification du congé');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const confirmDeleteItem = async () => {
+    if (!deletingItem) return;
+    setIsDeletingItem(true);
+    setDeleteError('');
+    try {
+      await api.delete(`/leaves/${deletingItem.id}`);
+      setDeletingItem(null);
+      if (historyEmployee) await openHistory(historyEmployee);
+      await load();
+    } catch (e: any) {
+      setDeleteError(e?.message || 'Erreur lors de la suppression du congé');
+    } finally {
+      setIsDeletingItem(false);
     }
   };
 
@@ -362,6 +452,19 @@ export default function LeaveBalancesAdminPage() {
                       Acquis {Math.round(bal.annualEntitled)}j · Pris {Math.round(bal.annualTaken)}j
                       {bal.seniorityDays > 0 && <span> (dont {Math.round(bal.seniorityDays)}j ancienneté)</span>}
                     </p>
+                    {(() => {
+                      // ✅ Progression vers le plafond légal de base (26j/an,
+                      // hors bonus ancienneté qui s'ajoute par-dessus) — utile
+                      // pour savoir à quel moment son solde sera "complet".
+                      const baseAccrued = Number(bal.annualEntitled) - Number(bal.seniorityDays || 0);
+                      const gapToFullBase = Math.max(0, 26 - baseAccrued);
+                      if (gapToFullBase <= 0) return null;
+                      return (
+                        <p className="text-xs text-sky-500 dark:text-sky-400 mt-0.5">
+                          Encore {Math.round(gapToFullBase * 10) / 10}j avant d'atteindre les 26j légaux
+                        </p>
+                      );
+                    })()}
                     {bal.cycleEndDate && (
                       <p className="text-xs text-gray-400">
                         Fin de cycle prévue : {new Date(bal.cycleEndDate).toLocaleDateString('fr-FR')}
@@ -400,6 +503,15 @@ export default function LeaveBalancesAdminPage() {
                   {/* Action */}
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
+                      {canAdjust && (
+                        <button
+                          onClick={() => openHistory(bal)}
+                          title="Voir l'historique de ses congés (modifier / supprimer)"
+                          className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center"
+                        >
+                          <History size={14} className="text-gray-400" />
+                        </button>
+                      )}
                       {canAdjust && (
                         <button
                           onClick={() => openAdjust(bal)}
@@ -504,6 +616,180 @@ export default function LeaveBalancesAdminPage() {
                 className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
               >
                 {isSavingAdjust ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />} Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Panneau historique des congés de l'employé (modifier / supprimer) ── */}
+      <AnimatePresence>
+        {historyEmployee && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 flex justify-end"
+            onClick={() => setHistoryEmployee(null)}
+          >
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'tween', duration: 0.25 }}
+              className="w-full max-w-md h-full bg-white dark:bg-gray-800 overflow-y-auto p-6 space-y-4"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">{historyEmployee.employeeName}</h2>
+                  <p className="text-xs text-gray-400">Historique des congés</p>
+                </div>
+                <button onClick={() => setHistoryEmployee(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {isLoadingHistory ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 size={24} className="animate-spin text-sky-500" />
+                </div>
+              ) : !history?.history?.length ? (
+                <p className="text-sm text-gray-400 text-center py-16">Aucun congé enregistré pour cet employé.</p>
+              ) : (
+                <div className="space-y-2">
+                  {history.history.map((h: any) => {
+                    const Icon = TYPE_ICONS[h.type] || Umbrella;
+                    return (
+                      <div key={`${h.kind}-${h.id}`} className="p-3 border border-gray-100 dark:border-gray-700 rounded-xl">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <Icon size={14} className="text-gray-400" />
+                            {TYPE_LABELS[h.type] || h.type}
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold ${STATUS_COLORS[h.status] || ''}`}>
+                            {STATUS_LABELS[h.status] || h.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-400">{fmtDate(h.startDate)} → {fmtDate(h.endDate)} · {Math.round(Number(h.daysCount))}j</p>
+                        {h.reason && <p className="text-xs text-gray-400 mt-1 italic">"{h.reason}"</p>}
+                        {h.kind === 'LEAVE' && h.returnConfirmed && Number(h.forfeitedDays) > 0 && (
+                          <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 inline-block px-1.5 py-0.5 rounded mt-1">
+                            ↩ Retour anticipé le {fmtDate(h.actualReturnDate)} · {Math.round(Number(h.forfeitedDays))}j non pris
+                          </p>
+                        )}
+                        {h.kind === 'LEAVE' && h.isCarryover && (
+                          <p className="text-[11px] font-semibold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 inline-block px-1.5 py-0.5 rounded mt-1 ml-1">
+                            Rattrapage — non payé
+                          </p>
+                        )}
+                        {h.kind === 'LEAVE' && (
+                          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            <button
+                              onClick={() => openEditItem(h)}
+                              className="text-xs font-semibold px-2 py-1 rounded-lg text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 flex items-center gap-1"
+                            >
+                              <Pencil size={12} /> Modifier
+                            </button>
+                            <button
+                              onClick={() => { setDeleteError(''); setDeletingItem(h); }}
+                              className="text-xs font-semibold px-2 py-1 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1"
+                            >
+                              <Trash2 size={12} /> Supprimer
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {editingItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Modifier ce congé</h2>
+              <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">
+              Modifie directement cette demande — dates/type ajustés sur la même ligne, sans jamais en créer une nouvelle ni impacter le calendrier en double.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Type</label>
+                <select
+                  value={editForm.type}
+                  onChange={e => setEditForm(f => ({ ...f, type: e.target.value as any }))}
+                  className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                >
+                  <option value="ANNUAL">Annuel</option>
+                  <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <input
+                    type="date"
+                    value={editForm.startDate}
+                    onChange={e => setEditForm(f => ({ ...f, startDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <input
+                    type="date"
+                    value={editForm.endDate}
+                    onChange={e => setEditForm(f => ({ ...f, endDate: e.target.value }))}
+                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  />
+                </div>
+              </div>
+            </div>
+            {editError && <div className="text-xs text-red-500">{editError}</div>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setEditingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Annuler
+              </button>
+              <button
+                onClick={saveEditItem}
+                disabled={isSavingEdit}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
+              >
+                {isSavingEdit ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deletingItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={20} />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Supprimer ce congé ?</h2>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Le congé du {fmtDate(deletingItem.startDate)} au {fmtDate(deletingItem.endDate)} sera définitivement supprimé et le solde restauré s'il avait déjà été approuvé. Cette action est irréversible.
+            </p>
+            {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setDeletingItem(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                Annuler
+              </button>
+              <button
+                onClick={confirmDeleteItem}
+                disabled={isDeletingItem}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 disabled:opacity-40"
+              >
+                {isDeletingItem ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Supprimer
               </button>
             </div>
           </div>

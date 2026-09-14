@@ -75,7 +75,7 @@
 //         className={`absolute rounded-sm ${
 //           ['w-2 h-3', 'w-3 h-2', 'w-2 h-2', 'w-1.5 h-4'][Math.floor(Math.random() * 4)]
 //         } ${
-//           ['bg-cyan-400', 'bg-purple-500', 'bg-emerald-400', 'bg-pink-400', 'bg-amber-400', 'bg-blue-400'][
+//           ['bg-emerald-400', 'bg-amber-500', 'bg-emerald-400', 'bg-amber-400', 'bg-amber-400', 'bg-emerald-500'][
 //             Math.floor(Math.random() * 6)
 //           ]
 //         }`}
@@ -96,10 +96,10 @@
 // };
 
 // const inputClass =
-//   'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 px-4';
+//   'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 px-4';
 
 // const inputWithIconClass =
-//   'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 pl-11 pr-4';
+//   'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 pl-11 pr-4';
 
 // // ── Floating particles ────────────────────────────────────────────────────────
 // const FloatingDots = () => (
@@ -113,7 +113,7 @@
 //           height: `${Math.random() * 4 + 1}px`,
 //           left:   `${Math.random() * 100}%`,
 //           top:    `${Math.random() * 100}%`,
-//           background: i % 2 === 0 ? 'rgba(6,182,212,0.4)' : 'rgba(168,85,247,0.4)',
+//           background: i % 2 === 0 ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)',
 //         }}
 //         animate={{ y: [0, -30, 0], opacity: [0.2, 0.6, 0.2] }}
 //         transition={{ duration: Math.random() * 4 + 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }}
@@ -216,12 +216,12 @@
 //   };
 
 //   return (
-//     <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+//     <div className="min-h-screen bg-[#050607] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
 //       {/* ── Fond ── */}
-//       <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[130px] pointer-events-none" />
-//       <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[130px] pointer-events-none" />
-//       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-600/6 rounded-full blur-[100px] pointer-events-none" />
+//       <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[130px] pointer-events-none" />
+//       <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-amber-600/10 rounded-full blur-[130px] pointer-events-none" />
+//       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-emerald-700/6 rounded-full blur-[100px] pointer-events-none" />
 
 //       {/* Logo watermark */}
 //       <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
@@ -237,7 +237,7 @@
 //       <div
 //         className="fixed inset-0 pointer-events-none opacity-[0.025]"
 //         style={{
-//           backgroundImage: `linear-gradient(rgba(6,182,212,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.5) 1px, transparent 1px)`,
+//           backgroundImage: `linear-gradient(rgba(16,185,129,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,0.5) 1px, transparent 1px)`,
 //           backgroundSize: '60px 60px',
 //         }}
 //       />
@@ -250,7 +250,7 @@
 //               src="/logos/konza_logo_h_color.png"
 //               alt="Konza"
 //               fill
-//               className="object-contain drop-shadow-[0_0_16px_rgba(6,182,212,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(6,182,212,0.6)] transition-all"
+//               className="object-contain drop-shadow-[0_0_16px_rgba(16,185,129,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(16,185,129,0.6)] transition-all"
 //               priority
 //             />
 //           </div>
@@ -276,9 +276,9 @@
 //                   initial={{ opacity: 0, y: -10 }}
 //                   animate={{ opacity: 1, y: 0 }}
 //                   transition={{ delay: 0.1 }}
-//                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-5"
+//                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-5"
 //                 >
-//                   <Zap size={12} className="fill-cyan-400" />
+//                   <Zap size={12} className="fill-emerald-400" />
 //                   1 mois d'essai gratuit — sans carte bancaire
 //                 </motion.div>
 
@@ -289,7 +289,7 @@
 //                   className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3"
 //                 >
 //                   Rejoignez{' '}
-//                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+//                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-emerald-600">
 //                     Konza
 //                   </span>
 //                 </motion.h1>
@@ -317,14 +317,14 @@
 //                   transition={{ delay: 0.25 }}
 //                   whileHover={{ scale: 1.02, y: -3 }}
 //                   whileTap={{ scale: 0.98 }}
-//                   className="group relative bg-gradient-to-br from-white/5 to-cyan-500/5 hover:from-cyan-500/10 hover:to-blue-600/10 border border-white/10 hover:border-cyan-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
+//                   className="group relative bg-gradient-to-br from-white/5 to-emerald-500/5 hover:from-emerald-500/10 hover:to-emerald-700/10 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
 //                 >
-//                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-600/0 group-hover:from-cyan-500/5 group-hover:to-blue-600/5 transition-all duration-300 rounded-2xl" />
+//                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-700/0 group-hover:from-emerald-500/5 group-hover:to-emerald-700/5 transition-all duration-300 rounded-2xl" />
 
 //                   {/* Badges */}
 //                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-//                     <div className="flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
-//                       <Zap size={9} className="fill-cyan-400" /> 1 mois gratuit
+//                     <div className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+//                       <Zap size={9} className="fill-emerald-400" /> 1 mois gratuit
 //                     </div>
 //                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Star size={9} className="fill-amber-400" /> Le plus choisi
@@ -332,8 +332,8 @@
 //                   </div>
 
 //                   <div className="relative">
-//                     <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/25 to-blue-600/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-cyan-500/35 group-hover:to-blue-600/30 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.25)]">
-//                       <Building2 size={26} className="text-cyan-400" />
+//                     <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/25 to-emerald-700/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-emerald-500/35 group-hover:to-emerald-700/30 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.25)]">
+//                       <Building2 size={26} className="text-emerald-400" />
 //                     </div>
 
 //                     <h3 className="text-white font-bold text-xl mb-2">Je suis une entreprise</h3>
@@ -348,20 +348,20 @@
 //                         'Rapports RH automatisés',
 //                       ].map((f) => (
 //                         <li key={f} className="flex items-center gap-2 text-xs text-gray-300">
-//                           <CheckCircle2 size={13} className="text-cyan-400 shrink-0" /> {f}
+//                           <CheckCircle2 size={13} className="text-emerald-400 shrink-0" /> {f}
 //                         </li>
 //                       ))}
 //                     </ul>
 
 //                     <div className="flex items-center justify-between">
-//                       <div className="flex items-center gap-1.5 text-cyan-400 text-sm font-bold group-hover:gap-2.5 transition-all">
+//                       <div className="flex items-center gap-1.5 text-emerald-400 text-sm font-bold group-hover:gap-2.5 transition-all">
 //                         Commencer gratuitement <ArrowRight size={15} />
 //                       </div>
 //                       <div className="flex -space-x-2">
-//                         {['bg-cyan-500', 'bg-blue-500', 'bg-indigo-500'].map((c, i) => (
-//                           <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#020617] ${c}`} />
+//                         {['bg-emerald-500', 'bg-emerald-600', 'bg-emerald-600'].map((c, i) => (
+//                           <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#050607] ${c}`} />
 //                         ))}
-//                         <div className="w-6 h-6 rounded-full border-2 border-[#020617] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
+//                         <div className="w-6 h-6 rounded-full border-2 border-[#050607] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
 //                       </div>
 //                     </div>
 //                   </div>
@@ -375,13 +375,13 @@
 //                   transition={{ delay: 0.32 }}
 //                   whileHover={{ scale: 1.02, y: -3 }}
 //                   whileTap={{ scale: 0.98 }}
-//                   className="group relative bg-gradient-to-br from-white/5 to-purple-500/5 hover:from-purple-500/10 hover:to-violet-600/10 border border-white/10 hover:border-purple-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
+//                   className="group relative bg-gradient-to-br from-white/5 to-amber-500/5 hover:from-amber-500/10 hover:to-amber-700/10 border border-white/10 hover:border-amber-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
 //                 >
-//                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-violet-600/0 group-hover:from-purple-500/5 group-hover:to-violet-600/5 transition-all duration-300 rounded-2xl" />
+//                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-700/0 group-hover:from-amber-500/5 group-hover:to-amber-700/5 transition-all duration-300 rounded-2xl" />
 
 //                   {/* Badges */}
 //                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-//                     <div className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
+//                     <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Sparkles size={9} /> 1 mois gratuit
 //                     </div>
 //                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
@@ -390,8 +390,8 @@
 //                   </div>
 
 //                   <div className="relative">
-//                     <div className="w-14 h-14 bg-gradient-to-br from-purple-500/25 to-violet-600/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-purple-500/35 group-hover:to-violet-600/30 transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.15)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.25)]">
-//                       <Briefcase size={26} className="text-purple-400" />
+//                     <div className="w-14 h-14 bg-gradient-to-br from-amber-500/25 to-amber-700/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-amber-500/35 group-hover:to-amber-700/30 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+//                       <Briefcase size={26} className="text-amber-400" />
 //                     </div>
 
 //                     <h3 className="text-white font-bold text-xl mb-2">Je suis un cabinet RH</h3>
@@ -406,16 +406,16 @@
 //                         'Facturez plus, travaillez moins',
 //                       ].map((f) => (
 //                         <li key={f} className="flex items-center gap-2 text-xs text-gray-300">
-//                           <CheckCircle2 size={13} className="text-purple-400 shrink-0" /> {f}
+//                           <CheckCircle2 size={13} className="text-amber-400 shrink-0" /> {f}
 //                         </li>
 //                       ))}
 //                     </ul>
 
 //                     <div className="flex items-center justify-between">
-//                       <div className="flex items-center gap-1.5 text-purple-400 text-sm font-bold group-hover:gap-2.5 transition-all">
+//                       <div className="flex items-center gap-1.5 text-amber-400 text-sm font-bold group-hover:gap-2.5 transition-all">
 //                         Essai gratuit <Sparkles size={14} />
 //                       </div>
-//                       <div className="flex items-center gap-1 text-xs text-purple-400/70">
+//                       <div className="flex items-center gap-1 text-xs text-amber-400/70">
 //                         <TrendingUp size={12} /> Plan Growth
 //                       </div>
 //                     </div>
@@ -443,7 +443,7 @@
 
 //               <p className="text-center text-xs text-gray-500">
 //                 Déjà un compte ?{' '}
-//                 <Link href="/auth/login" className="text-cyan-400 hover:text-white transition-colors font-semibold">
+//                 <Link href="/auth/login" className="text-emerald-400 hover:text-white transition-colors font-semibold">
 //                   Se connecter
 //                 </Link>
 //               </p>
@@ -459,8 +459,8 @@
 //                 </button>
 //                 <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
 //                   accountType === 'CABINET'
-//                     ? 'text-purple-400 border-purple-500/40 bg-purple-500/10'
-//                     : 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10'
+//                     ? 'text-amber-400 border-amber-500/40 bg-amber-500/10'
+//                     : 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
 //                 }`}>
 //                   {accountType === 'CABINET' ? '🏢 Cabinet RH' : '🏬 Entreprise'}
 //                 </span>
@@ -489,36 +489,36 @@
 //                   {accountType === 'CABINET' && (
 //                     <>
 //                       <div className="relative group">
-//                         <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+//                         <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-amber-400 transition-colors" />
 //                         <input {...form.register('cabinetName')} className={inputWithIconClass} placeholder="Nom du cabinet (ex: GL Conseil RH)" />
 //                         {form.formState.errors.cabinetName && <p className="text-xs text-red-400 mt-1">{form.formState.errors.cabinetName.message}</p>}
 //                       </div>
 //                       <div>
 //                         <div className="relative group">
-//                           <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+//                           <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-amber-400 transition-colors" />
 //                           <input {...form.register('subdomain')} className={inputWithIconClass} placeholder="sous-domaine (ex: gl-conseil)" />
 //                         </div>
 //                         {subdomainValue && !form.formState.errors.subdomain && (
-//                           <p className="text-xs text-purple-400 mt-1 ml-1">Votre portail : <span className="font-mono">{subdomainValue}.konza-rh.app</span></p>
+//                           <p className="text-xs text-amber-400 mt-1 ml-1">Votre portail : <span className="font-mono">{subdomainValue}.konza-rh.app</span></p>
 //                         )}
 //                         {form.formState.errors.subdomain && <p className="text-xs text-red-400 mt-1">{form.formState.errors.subdomain.message}</p>}
 //                       </div>
 //                       <div className="relative group">
-//                         <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+//                         <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-amber-400 transition-colors" />
 //                         <input {...form.register('cabinetPhone')} className={inputWithIconClass} placeholder="Téléphone (optionnel)" />
 //                       </div>
 //                     </>
 //                   )}
 
 //                   <div className="relative group">
-//                     <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+//                     <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
 //                     <input {...form.register('email')} className={inputWithIconClass} placeholder="Email professionnel" />
 //                     {form.formState.errors.email && <p className="text-xs text-red-400 mt-1">{form.formState.errors.email.message}</p>}
 //                   </div>
 
 //                   <div>
 //                     <div className="relative group">
-//                       <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+//                       <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
 //                       <input {...form.register('password')} type={showPassword ? 'text' : 'password'} className={`${inputWithIconClass} pr-10`} placeholder="Mot de passe" />
 //                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
 //                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -548,8 +548,8 @@
 //                     disabled={isLoading}
 //                     className={`w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 ${
 //                       accountType === 'CABINET'
-//                         ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.35)] hover:shadow-[0_0_32px_rgba(168,85,247,0.5)]'
-//                         : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-[0_0_24px_rgba(6,182,212,0.35)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)]'
+//                         ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-[0_0_24px_rgba(245,158,11,0.35)] hover:shadow-[0_0_32px_rgba(245,158,11,0.5)]'
+//                         : 'bg-gradient-to-r from-emerald-400 to-emerald-600 text-black shadow-[0_0_24px_rgba(16,185,129,0.35)] hover:shadow-[0_0_32px_rgba(16,185,129,0.5)]'
 //                     }`}
 //                   >
 //                     {isLoading
@@ -566,7 +566,7 @@
 
 //               <p className="text-center text-xs text-gray-500 mt-4">
 //                 Déjà un compte ?{' '}
-//                 <Link href="/auth/login" className="text-cyan-400 hover:text-white transition-colors font-semibold">Se connecter</Link>
+//                 <Link href="/auth/login" className="text-emerald-400 hover:text-white transition-colors font-semibold">Se connecter</Link>
 //               </p>
 //             </motion.div>
 //           )}
@@ -581,7 +581,7 @@
 //                 transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
 //                 className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${
 //                   accountType === 'CABINET'
-//                     ? 'bg-purple-500/20 text-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.35)]'
+//                     ? 'bg-amber-500/20 text-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.35)]'
 //                     : 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.35)]'
 //                 }`}
 //               >
@@ -596,7 +596,7 @@
 //                   : "Votre compte est créé. Configurez maintenant votre entreprise pour commencer."}
 //               </p>
 //               {accountType === 'CABINET' && (
-//                 <p className="text-purple-400 text-xs font-mono mb-6 bg-purple-500/10 border border-purple-500/20 inline-block px-3 py-1.5 rounded-lg">
+//                 <p className="text-amber-400 text-xs font-mono mb-6 bg-amber-500/10 border border-amber-500/20 inline-block px-3 py-1.5 rounded-lg">
 //                   {form.getValues('subdomain')}.konza-rh.app
 //                 </p>
 //               )}
@@ -604,7 +604,7 @@
 //                 onClick={handleSuccess}
 //                 className={`px-8 py-3.5 rounded-xl font-bold text-sm transition-all hover:scale-105 flex items-center gap-2 mx-auto ${
 //                   accountType === 'CABINET'
-//                     ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.35)]'
+//                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-[0_0_24px_rgba(245,158,11,0.35)]'
 //                     : 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-[0_0_24px_rgba(16,185,129,0.35)]'
 //                 }`}
 //               >
@@ -622,7 +622,7 @@
 
 // export default function RegisterPage() {
 //   return (
-//     <Suspense fallback={<div className="min-h-screen bg-[#020617]" />}>
+//     <Suspense fallback={<div className="min-h-screen bg-[#050607]" />}>
 //       <RegisterForm />
 //     </Suspense>
 //   );
@@ -707,7 +707,7 @@ const Confetti = () => (
         className={`absolute rounded-sm ${
           ['w-2 h-3', 'w-3 h-2', 'w-2 h-2', 'w-1.5 h-4'][Math.floor(Math.random() * 4)]
         } ${
-          ['bg-cyan-400', 'bg-purple-500', 'bg-emerald-400', 'bg-pink-400', 'bg-amber-400', 'bg-blue-400'][
+          ['bg-emerald-400', 'bg-amber-500', 'bg-emerald-400', 'bg-amber-400', 'bg-amber-400', 'bg-emerald-500'][
             Math.floor(Math.random() * 6)
           ]
         }`}
@@ -728,10 +728,10 @@ const getPasswordStrength = (pass: string) => {
 };
 
 const inputClass =
-  'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 px-4';
+  'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 px-4';
 
 const inputWithIconClass =
-  'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all py-3 pl-11 pr-4';
+  'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 pl-11 pr-4';
 
 // ── Floating particles ────────────────────────────────────────────────────────
 const FloatingDots = () => (
@@ -745,7 +745,7 @@ const FloatingDots = () => (
           height: `${Math.random() * 4 + 1}px`,
           left:   `${Math.random() * 100}%`,
           top:    `${Math.random() * 100}%`,
-          background: i % 2 === 0 ? 'rgba(6,182,212,0.4)' : 'rgba(168,85,247,0.4)',
+          background: i % 2 === 0 ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)',
         }}
         animate={{ y: [0, -30, 0], opacity: [0.2, 0.6, 0.2] }}
         transition={{ duration: Math.random() * 4 + 4, repeat: Infinity, delay: Math.random() * 4, ease: 'easeInOut' }}
@@ -865,29 +865,15 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#050607] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-      {/* ── Fond ── */}
-      <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[130px] pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[130px] pointer-events-none" />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-600/6 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Logo watermark */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none select-none">
-        <div className="relative w-[480px] h-[220px] opacity-[0.04]">
-          <Image src="/logos/konza_logo_h_color.png" alt="" fill className="object-contain" priority />
-        </div>
+      {/* ── Fond : identique au Hero de la page d'accueil ── */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
+        <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
       </div>
 
       <FloatingDots />
-
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.025]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(6,182,212,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.5) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
 
       {/* ── Nav ── */}
       <div className="absolute top-5 left-5 z-20">
@@ -897,7 +883,7 @@ function RegisterForm() {
               src="/logos/konza_logo_h_color.png"
               alt="Konza"
               fill
-              className="object-contain drop-shadow-[0_0_16px_rgba(6,182,212,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(6,182,212,0.6)] transition-all"
+              className="object-contain drop-shadow-[0_0_16px_rgba(16,185,129,0.4)] group-hover:drop-shadow-[0_0_24px_rgba(16,185,129,0.6)] transition-all"
               priority
             />
           </div>
@@ -922,9 +908,9 @@ function RegisterForm() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-5"
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-5"
                 >
-                  <Zap size={12} className="fill-cyan-400" />
+                  <Zap size={12} className="fill-emerald-400" />
                   1 mois d'essai gratuit — sans carte bancaire
                 </motion.div>
 
@@ -934,10 +920,7 @@ function RegisterForm() {
                   transition={{ delay: 0.15 }}
                   className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-3"
                 >
-                  Rejoignez{' '}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                    Konza
-                  </span>
+                  Rejoignez Konza
                 </motion.h1>
 
                 <motion.p
@@ -957,7 +940,7 @@ function RegisterForm() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-900/20 border border-indigo-800/40 rounded-xl text-xs text-indigo-300"
+                    className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-900/20 border border-emerald-800/40 rounded-xl text-xs text-emerald-300"
                   >
                     🎉 Vous avez été invité par un partenaire — votre compte sera lié automatiquement.
                   </motion.div>
@@ -975,13 +958,13 @@ function RegisterForm() {
                   transition={{ delay: 0.25 }}
                   whileHover={{ scale: 1.02, y: -3 }}
                   whileTap={{ scale: 0.98 }}
-                  className="group relative bg-gradient-to-br from-white/5 to-cyan-500/5 hover:from-cyan-500/10 hover:to-blue-600/10 border border-white/10 hover:border-cyan-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
+                  className="group relative bg-gradient-to-br from-white/5 to-emerald-500/5 hover:from-emerald-500/10 hover:to-emerald-700/10 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-600/0 group-hover:from-cyan-500/5 group-hover:to-blue-600/5 transition-all duration-300 rounded-2xl" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-700/0 group-hover:from-emerald-500/5 group-hover:to-emerald-700/5 transition-all duration-300 rounded-2xl" />
 
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-                    <div className="flex items-center gap-1 bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      <Zap size={9} className="fill-cyan-400" /> 1 mois gratuit
+                    <div className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                      <Zap size={9} className="fill-emerald-400" /> 1 mois gratuit
                     </div>
                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Star size={9} className="fill-amber-400" /> Le plus choisi
@@ -989,8 +972,8 @@ function RegisterForm() {
                   </div>
 
                   <div className="relative">
-                    <div className="w-14 h-14 bg-gradient-to-br from-cyan-500/25 to-blue-600/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-cyan-500/35 group-hover:to-blue-600/30 transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.15)] group-hover:shadow-[0_0_30px_rgba(6,182,212,0.25)]">
-                      <Building2 size={26} className="text-cyan-400" />
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/25 to-emerald-700/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-emerald-500/35 group-hover:to-emerald-700/30 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.25)]">
+                      <Building2 size={26} className="text-emerald-400" />
                     </div>
 
                     <h3 className="text-white font-bold text-xl mb-2">Je suis une entreprise</h3>
@@ -1005,20 +988,20 @@ function RegisterForm() {
                         'Rapports RH automatisés',
                       ].map((f) => (
                         <li key={f} className="flex items-center gap-2 text-xs text-gray-300">
-                          <CheckCircle2 size={13} className="text-cyan-400 shrink-0" /> {f}
+                          <CheckCircle2 size={13} className="text-emerald-400 shrink-0" /> {f}
                         </li>
                       ))}
                     </ul>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-cyan-400 text-sm font-bold group-hover:gap-2.5 transition-all">
+                      <div className="flex items-center gap-1.5 text-emerald-400 text-sm font-bold group-hover:gap-2.5 transition-all">
                         Commencer gratuitement <ArrowRight size={15} />
                       </div>
                       <div className="flex -space-x-2">
-                        {['bg-cyan-500', 'bg-blue-500', 'bg-indigo-500'].map((c, i) => (
-                          <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#020617] ${c}`} />
+                        {['bg-emerald-500', 'bg-emerald-600', 'bg-emerald-600'].map((c, i) => (
+                          <div key={i} className={`w-6 h-6 rounded-full border-2 border-[#050607] ${c}`} />
                         ))}
-                        <div className="w-6 h-6 rounded-full border-2 border-[#020617] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
+                        <div className="w-6 h-6 rounded-full border-2 border-[#050607] bg-white/10 flex items-center justify-center text-[9px] text-gray-300 font-bold">+</div>
                       </div>
                     </div>
                   </div>
@@ -1032,12 +1015,12 @@ function RegisterForm() {
                   transition={{ delay: 0.32 }}
                   whileHover={{ scale: 1.02, y: -3 }}
                   whileTap={{ scale: 0.98 }}
-                  className="group relative bg-gradient-to-br from-white/5 to-purple-500/5 hover:from-purple-500/10 hover:to-violet-600/10 border border-white/10 hover:border-purple-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
+                  className="group relative bg-gradient-to-br from-white/5 to-amber-500/5 hover:from-amber-500/10 hover:to-amber-700/10 border border-white/10 hover:border-amber-500/40 rounded-2xl p-7 text-left transition-all duration-300 overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-violet-600/0 group-hover:from-purple-500/5 group-hover:to-violet-600/5 transition-all duration-300 rounded-2xl" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-amber-700/0 group-hover:from-amber-500/5 group-hover:to-amber-700/5 transition-all duration-300 rounded-2xl" />
 
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
-                    <div className="flex items-center gap-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
+                    <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Sparkles size={9} /> 1 mois gratuit
                     </div>
                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
@@ -1046,8 +1029,8 @@ function RegisterForm() {
                   </div>
 
                   <div className="relative">
-                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500/25 to-violet-600/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-purple-500/35 group-hover:to-violet-600/30 transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.15)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.25)]">
-                      <Briefcase size={26} className="text-purple-400" />
+                    <div className="w-14 h-14 bg-gradient-to-br from-amber-500/25 to-amber-700/20 rounded-2xl flex items-center justify-center mb-5 group-hover:from-amber-500/35 group-hover:to-amber-700/30 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:shadow-[0_0_30px_rgba(245,158,11,0.25)]">
+                      <Briefcase size={26} className="text-amber-400" />
                     </div>
 
                     <h3 className="text-white font-bold text-xl mb-2">Je suis un cabinet RH</h3>
@@ -1062,16 +1045,16 @@ function RegisterForm() {
                         'Facturez plus, travaillez moins',
                       ].map((f) => (
                         <li key={f} className="flex items-center gap-2 text-xs text-gray-300">
-                          <CheckCircle2 size={13} className="text-purple-400 shrink-0" /> {f}
+                          <CheckCircle2 size={13} className="text-amber-400 shrink-0" /> {f}
                         </li>
                       ))}
                     </ul>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-purple-400 text-sm font-bold group-hover:gap-2.5 transition-all">
+                      <div className="flex items-center gap-1.5 text-amber-400 text-sm font-bold group-hover:gap-2.5 transition-all">
                         Essai gratuit <Sparkles size={14} />
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-purple-400/70">
+                      <div className="flex items-center gap-1 text-xs text-amber-400/70">
                         <TrendingUp size={12} /> Plan Growth
                       </div>
                     </div>
@@ -1099,7 +1082,7 @@ function RegisterForm() {
 
               <p className="text-center text-xs text-gray-500">
                 Déjà un compte ?{' '}
-                <Link href="/auth/login" className="text-cyan-400 hover:text-white transition-colors font-semibold">
+                <Link href="/auth/login" className="text-emerald-400 hover:text-white transition-colors font-semibold">
                   Se connecter
                 </Link>
               </p>
@@ -1115,8 +1098,8 @@ function RegisterForm() {
                 </button>
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
                   accountType === 'CABINET'
-                    ? 'text-purple-400 border-purple-500/40 bg-purple-500/10'
-                    : 'text-cyan-400 border-cyan-500/40 bg-cyan-500/10'
+                    ? 'text-amber-400 border-amber-500/40 bg-amber-500/10'
+                    : 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
                 }`}>
                   {accountType === 'CABINET' ? '🏢 Cabinet RH' : '🏬 Entreprise'}
                 </span>
@@ -1132,7 +1115,7 @@ function RegisterForm() {
 
                 {/* Bandeau affilié */}
                 {hasAffiliateRef && (
-                  <div className="mb-4 px-4 py-2.5 bg-indigo-900/20 border border-indigo-800/40 rounded-xl text-xs text-indigo-300 flex items-center gap-2">
+                  <div className="mb-4 px-4 py-2.5 bg-emerald-900/20 border border-emerald-800/40 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
                     🎉 Vous avez été invité par un partenaire — votre compte sera lié automatiquement.
                   </div>
                 )}
@@ -1152,36 +1135,36 @@ function RegisterForm() {
                   {accountType === 'CABINET' && (
                     <>
                       <div className="relative group">
-                        <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                        <Briefcase size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-amber-400 transition-colors" />
                         <input {...form.register('cabinetName')} className={inputWithIconClass} placeholder="Nom du cabinet (ex: GL Conseil RH)" />
                         {form.formState.errors.cabinetName && <p className="text-xs text-red-400 mt-1">{form.formState.errors.cabinetName.message}</p>}
                       </div>
                       <div>
                         <div className="relative group">
-                          <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                          <Globe size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-amber-400 transition-colors" />
                           <input {...form.register('subdomain')} className={inputWithIconClass} placeholder="sous-domaine (ex: gl-conseil)" />
                         </div>
                         {subdomainValue && !form.formState.errors.subdomain && (
-                          <p className="text-xs text-purple-400 mt-1 ml-1">Votre portail : <span className="font-mono">{subdomainValue}.konza-rh.app</span></p>
+                          <p className="text-xs text-amber-400 mt-1 ml-1">Votre portail : <span className="font-mono">{subdomainValue}.konza-rh.app</span></p>
                         )}
                         {form.formState.errors.subdomain && <p className="text-xs text-red-400 mt-1">{form.formState.errors.subdomain.message}</p>}
                       </div>
                       <div className="relative group">
-                        <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+                        <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-amber-400 transition-colors" />
                         <input {...form.register('cabinetPhone')} className={inputWithIconClass} placeholder="Téléphone (optionnel)" />
                       </div>
                     </>
                   )}
 
                   <div className="relative group">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
                     <input {...form.register('email')} className={inputWithIconClass} placeholder="Email professionnel" />
                     {form.formState.errors.email && <p className="text-xs text-red-400 mt-1">{form.formState.errors.email.message}</p>}
                   </div>
 
                   <div>
                     <div className="relative group">
-                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
+                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
                       <input {...form.register('password')} type={showPassword ? 'text' : 'password'} className={`${inputWithIconClass} pr-10`} placeholder="Mot de passe" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -1209,11 +1192,7 @@ function RegisterForm() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className={`w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-50 ${
-                      accountType === 'CABINET'
-                        ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.35)] hover:shadow-[0_0_32px_rgba(168,85,247,0.5)]'
-                        : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-[0_0_24px_rgba(6,182,212,0.35)] hover:shadow-[0_0_32px_rgba(6,182,212,0.5)]'
-                    }`}
+                    className="w-full flex justify-center items-center gap-2 py-3.5 rounded-xl font-bold text-sm text-black bg-[#FAFAFA] hover:bg-white transition-all active:scale-[0.98] disabled:opacity-50"
                   >
                     {isLoading
                       ? <Loader2 className="animate-spin" size={18} />
@@ -1229,7 +1208,7 @@ function RegisterForm() {
 
               <p className="text-center text-xs text-gray-500 mt-4">
                 Déjà un compte ?{' '}
-                <Link href="/auth/login" className="text-cyan-400 hover:text-white transition-colors font-semibold">Se connecter</Link>
+                <Link href="/auth/login" className="text-emerald-400 hover:text-white transition-colors font-semibold">Se connecter</Link>
               </p>
             </motion.div>
           )}
@@ -1244,7 +1223,7 @@ function RegisterForm() {
                 transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
                 className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${
                   accountType === 'CABINET'
-                    ? 'bg-purple-500/20 text-purple-400 shadow-[0_0_40px_rgba(168,85,247,0.35)]'
+                    ? 'bg-amber-500/20 text-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.35)]'
                     : 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.35)]'
                 }`}
               >
@@ -1259,17 +1238,13 @@ function RegisterForm() {
                   : "Votre compte est créé. Configurez maintenant votre entreprise pour commencer."}
               </p>
               {accountType === 'CABINET' && (
-                <p className="text-purple-400 text-xs font-mono mb-6 bg-purple-500/10 border border-purple-500/20 inline-block px-3 py-1.5 rounded-lg">
+                <p className="text-amber-400 text-xs font-mono mb-6 bg-amber-500/10 border border-amber-500/20 inline-block px-3 py-1.5 rounded-lg">
                   {form.getValues('subdomain')}.konza-rh.app
                 </p>
               )}
               <button
                 onClick={handleSuccess}
-                className={`px-8 py-3.5 rounded-xl font-bold text-sm transition-all hover:scale-105 flex items-center gap-2 mx-auto ${
-                  accountType === 'CABINET'
-                    ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-[0_0_24px_rgba(168,85,247,0.35)]'
-                    : 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-[0_0_24px_rgba(16,185,129,0.35)]'
-                }`}
+                className="px-8 py-3.5 rounded-xl font-bold text-sm text-black bg-[#FAFAFA] hover:bg-white transition-all hover:scale-105 flex items-center gap-2 mx-auto"
               >
                 {accountType === 'CABINET' ? 'Accéder à mon cabinet' : 'Créer mon entreprise'}
                 <ArrowRight size={16} />
@@ -1285,7 +1260,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#020617]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#050607]" />}>
       <RegisterForm />
     </Suspense>
   );
