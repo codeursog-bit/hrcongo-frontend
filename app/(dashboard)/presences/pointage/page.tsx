@@ -305,26 +305,30 @@ export default function AttendanceCheckInPage() {
   // ── GPS Watch ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!companySettings) return;
+
+    // Callback partagé entre watchPosition et le filet de sécurité ci-dessous
+    const handlePositionSuccess = (pos: GeolocationPosition) => {
+      const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
+      const cLat   = companySettings.latitude;
+      const cLng   = companySettings.longitude;
+      const radius = companySettings.allowedRadius || 100;
+      let isAllowed = false;
+      let dist = 0;
+      if (!cLat || !cLng) {
+        isAllowed = true;
+      } else {
+        dist      = getDistanceFromLatLonInMeters(uLat, uLng, cLat, cLng);
+        isAllowed = dist <= radius;
+      }
+      setGeoState({
+        allowed: isAllowed, distance: Math.round(dist), accuracy: Math.round(accuracy),
+        latitude: uLat, longitude: uLng, error: null, loading: false,
+        isMockedSuspect: accuracy > 100,
+      });
+    };
+
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
-        const cLat   = companySettings.latitude;
-        const cLng   = companySettings.longitude;
-        const radius = companySettings.allowedRadius || 100;
-        let isAllowed = false;
-        let dist = 0;
-        if (!cLat || !cLng) {
-          isAllowed = true;
-        } else {
-          dist      = getDistanceFromLatLonInMeters(uLat, uLng, cLat, cLng);
-          isAllowed = dist <= radius;
-        }
-        setGeoState({
-          allowed: isAllowed, distance: Math.round(dist), accuracy: Math.round(accuracy),
-          latitude: uLat, longitude: uLng, error: null, loading: false,
-          isMockedSuspect: accuracy > 100,
-        });
-      },
+      handlePositionSuccess,
       (err) => {
         const msg = err.code === 1
           ? 'Vous devez autoriser la géolocalisation pour pointer.'
@@ -333,7 +337,27 @@ export default function AttendanceCheckInPage() {
       },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
     );
-    return () => navigator.geolocation.clearWatch(watchId);
+
+    // ✅ Filet de sécurité : certains navigateurs/OS ne redéclenchent pas
+    // watchPosition si le mouvement est jugé "pas assez significatif",
+    // laissant un vieux relevé affiché indéfiniment (le fameux "il faut
+    // actualiser la page"). On force donc une lecture fraîche toutes les
+    // 8 secondes, en totale discrétion : pas de spinner, pas de reload,
+    // juste le badge qui se met à jour tout seul si besoin. Les erreurs de
+    // ce sondage sont ignorées (silencieuses) pour ne jamais perturber
+    // l'utilisateur avec un souci ponctuel/temporaire de signal.
+    const pollId = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        handlePositionSuccess,
+        () => { /* silencieux : watchPosition reste la source d'erreur */ },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+      );
+    }, 3000);
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      clearInterval(pollId);
+    };
   }, [companySettings]);
 
   // ── Action check-in / check-out ───────────────────────────────────────────
