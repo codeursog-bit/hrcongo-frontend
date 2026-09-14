@@ -2,6 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { Navbar } from '@/components/landing/Navbar';
+import { Footer } from '@/components/landing/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -541,6 +543,8 @@ export default function PricingPage() {
       <div style={{ position:'fixed', left:-160, bottom:0, width:500, height:500, borderRadius:'50%',
         background:'rgba(212,165,72,0.06)', filter:'blur(130px)', pointerEvents:'none', zIndex:0 }}/>
 
+      <Navbar />
+
       {/* ── Hero ── */}
       <section style={{ textAlign: 'center', padding: '64px 24px 48px', position: 'relative', zIndex: 1 }}>
         {/* Glow décoratif */}
@@ -905,6 +909,8 @@ export default function PricingPage() {
         }
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
       `}</style>
+
+      <Footer />
     </main>
   );
 }

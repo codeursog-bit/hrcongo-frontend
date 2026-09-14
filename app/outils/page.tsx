@@ -5,6 +5,8 @@
 // ============================================================================
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Navbar } from '@/components/landing/Navbar';
+import { Footer } from '@/components/landing/Footer';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
@@ -81,12 +83,12 @@ const TOOLS = [
 ];
 
 const COLOR_MAP: Record<string, { bg: string; border: string; badge: string; text: string }> = {
-  violet: { bg: 'bg-violet-50 dark:bg-violet-900/20', border: 'border-violet-200 dark:border-violet-800', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-700 dark:text-violet-300' },
-  indigo: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', badge: 'bg-indigo-100 text-indigo-700', text: 'text-indigo-700 dark:text-indigo-300' },
-  emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-200 dark:border-emerald-800', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700 dark:text-emerald-300' },
-  rose: { bg: 'bg-rose-50 dark:bg-rose-900/20', border: 'border-rose-200 dark:border-rose-800', badge: 'bg-rose-100 text-rose-700', text: 'text-rose-700 dark:text-rose-300' },
-  orange: { bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', badge: 'bg-orange-100 text-orange-700', text: 'text-orange-700 dark:text-orange-300' },
-  amber: { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-200 dark:border-amber-800', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700 dark:text-amber-300' },
+  violet: { bg: 'bg-violet-900/20', border: 'border-violet-800', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-300' },
+  indigo: { bg: 'bg-indigo-900/20', border: 'border-indigo-800', badge: 'bg-indigo-100 text-indigo-700', text: 'text-indigo-300' },
+  emerald: { bg: 'bg-emerald-900/20', border: 'border-emerald-800', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-300' },
+  rose: { bg: 'bg-rose-900/20', border: 'border-rose-800', badge: 'bg-rose-100 text-rose-700', text: 'text-rose-300' },
+  orange: { bg: 'bg-orange-900/20', border: 'border-orange-800', badge: 'bg-orange-100 text-orange-700', text: 'text-orange-300' },
+  amber: { bg: 'bg-amber-900/20', border: 'border-amber-800', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-300' },
 };
 
 // JSON-LD ItemList
@@ -114,7 +116,10 @@ export default function OutilsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(toolsJsonLd) }}
       />
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen bg-[#050607]">
+        <Navbar />
+        <div className="fixed -right-40 -top-40 w-[600px] h-[600px] bg-white/[0.04] rounded-full blur-[130px] pointer-events-none" />
+        <div className="fixed -left-40 bottom-0 w-[500px] h-[500px] bg-[#D4A548]/[0.06] rounded-full blur-[130px] pointer-events-none" />
         {/* Hero */}
         <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-violet-950 text-white">
           <div className="max-w-5xl mx-auto px-4 pt-20 pb-12">
@@ -142,7 +147,7 @@ export default function OutilsPage() {
                   key={tool.href}
                   href={tool.href}
                   className={`group relative flex flex-col p-5 rounded-2xl border-2 transition-all hover:scale-[1.02] hover:shadow-lg
-                    ${tool.featured ? `${c.bg} ${c.border}` : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-violet-300'}`}
+                    ${tool.featured ? `${c.bg} ${c.border}` : 'hover:border-violet-300 bg-gray-800 border-gray-700'}`}
                 >
                   {tool.featured && (
                     <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 bg-violet-500 text-white rounded-full">
@@ -150,17 +155,17 @@ export default function OutilsPage() {
                     </span>
                   )}
                   <span className="text-3xl mb-3">{tool.icon}</span>
-                  <h2 className={`font-black text-sm mb-2 ${tool.featured ? c.text : 'text-gray-900 dark:text-white'}`}>
+                  <h2 className={`font-black text-sm mb-2 ${tool.featured ? c.text : 'text-white'}`}>
                     {tool.title}
                   </h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mb-4 flex-1">
+                  <p className="text-xs leading-relaxed mb-4 flex-1 text-gray-400">
                     {tool.desc}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {tool.tags.map((tag) => (
                       <span
                         key={tag}
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tool.featured ? c.badge : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${tool.featured ? c.badge : 'bg-gray-700 text-gray-300'}`}
                       >
                         {tag}
                       </span>
@@ -172,8 +177,8 @@ export default function OutilsPage() {
           </div>
 
           {/* Section SEO textuelle — importante pour Google */}
-          <div className="mt-16 prose prose-sm dark:prose-invert max-w-none">
-            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-4">
+          <div className="mt-16 prose prose-sm max-w-none prose-invert">
+            <h2 className="text-xl font-black mb-4 text-white">
               Guide complet de la paie au Congo-Brazzaville 2026
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -195,14 +200,15 @@ export default function OutilsPage() {
                   content: `Le TUS (Taxe Unique sur les Salaires) est une charge patronale de 7,5% sur le salaire brut total, répartie entre la DGI (2,025%, versé via eTax) et la CNSS (5,475%, déclaration mensuelle CNSS). Il n'y a pas de plafond d'assiette pour le TUS.`,
                 },
               ].map(({ title, content }) => (
-                <div key={title} className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-2">{title}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{content}</p>
+                <div key={title} className="p-4 rounded-xl border bg-gray-800 border-gray-700">
+                  <h3 className="font-bold text-sm mb-2 text-white">{title}</h3>
+                  <p className="text-xs leading-relaxed text-gray-400">{content}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
+        <Footer />
       </div>
     </>
   );
