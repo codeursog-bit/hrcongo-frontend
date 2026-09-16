@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import TusCalculatorClient from './TusCalculatorClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
-  title: 'Calcul TUS Congo 2026 — Taxe Unique sur les Salaires, taux 7,5%',
+  title: 'Calcul TUS Congo 2026 — Taux 7,5%',
   description:
-    'Calculez le TUS (Taxe Unique sur les Salaires) au Congo-Brazzaville 2026 : 7,5% sur le salaire brut, réparti entre DGI (2,025%) et CNSS (5,475%). Exemples, tableau et explications simples.',
+    'Calculez le TUS Congo 2026 : 7,5% du salaire brut, réparti DGI 2,025% + CNSS 5,475%. Charge 100% patronale. Exemple chiffré inclus.',
   alternates: { canonical: `${SITE_URL}/outils/calcul-tus-congo` },
   keywords: [
     'calcul TUS Congo 2026','taxe unique salaires Congo','TUS DGI Congo','TUS CNSS Congo',

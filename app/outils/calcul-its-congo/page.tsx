@@ -7,12 +7,12 @@
 import type { Metadata } from 'next';
 import ItsCalculatorClient from './ItsCalculatorClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
-  title: 'Calcul ITS Congo 2026 — Barème progressif, Abattement, Parts fiscales',
+  title: 'Calcul ITS Congo 2026 — Barème, Abattement',
   description:
-    'Calculez l\'ITS (Impôt sur les Traitements et Salaires) au Congo-Brazzaville 2026. Barème officiel Ordonnance n°2025-44 : 5 tranches, abattement 20%, quotient familial jusqu\'à 6,5 parts. Gratuit et instantané.',
+    'Calculez l\'ITS Congo 2026 : barème Ordonnance n°2025-44, 5 tranches, abattement 20%, quotient familial jusqu\'à 6,5 parts. Gratuit et instantané.',
   alternates: { canonical: `${SITE_URL}/outils/calcul-its-congo` },
   keywords: [
     'calcul ITS Congo 2026', 'ITS Congo Brazzaville', 'barème ITS Congo',

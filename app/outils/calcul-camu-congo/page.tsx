@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import CamuCalculatorClient from './CamuCalculatorClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
-  title: 'Calcul CAMU Congo 2026 — Assurance Maladie, taux salarié & employeur',
+  title: 'Calcul CAMU Congo 2026 — Taux salarié & employeur',
   description:
-    'Calculez la CAMU au Congo-Brazzaville 2026 : salarié 2,27% + employeur 4,55%, plafond 600 000 FCFA. Explications simples, exemples chiffrés. Conforme Loi n°37-2014.',
+    'Calculez la CAMU Congo 2026 : salarié 2,27% + employeur 4,55%, plafond 600 000 FCFA. Conforme Loi n°37-2014. Exemples chiffrés inclus.',
   alternates: { canonical: `${SITE_URL}/outils/calcul-camu-congo` },
   keywords: [
     'calcul CAMU Congo 2026','CAMU Congo Brazzaville','assurance maladie universelle Congo',

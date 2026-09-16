@@ -7,12 +7,12 @@
 import type { Metadata } from 'next';
 import SimulateurPublicPage from './SimulateurClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
-  title: 'Calculateur Salaire Net Congo 2026 — ITS, CNSS, CAMU gratuit',
+  title: 'Simulateur Salaire Congo 2026 — ITS, CNSS, CAMU',
   description:
-    'Calculez votre salaire net au Congo-Brazzaville 2026 : ITS barème progressif, CNSS 4%, TUS 7,5%, CAMU, heures supplémentaires, quotient familial. Conforme Ordonnance n°2025-44. Gratuit et instantané.',
+    'Calculez votre salaire net au Congo-Brazzaville 2026 : ITS, CNSS, TUS, CAMU, heures sup, quotient familial. Conforme Ordonnance 2025-44. Gratuit et instantané.',
   alternates: {
     canonical: `${SITE_URL}/simulateur`,
   },

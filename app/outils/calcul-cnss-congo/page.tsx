@@ -5,12 +5,12 @@
 import type { Metadata } from 'next';
 import CnssCalculatorClient from './CnssCalculatorClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
-  title: 'Calcul CNSS Congo 2026 — Taux salarié & employeur, plafonds officiels',
+  title: 'Calcul CNSS Congo 2026 — Taux & plafonds',
   description:
-    'Calculez vos cotisations CNSS au Congo-Brazzaville 2026. Salarié : 4% (plaf. 1 200 000 FCFA). Employeur : pensions 8% + famille 10,03% + accidents 2,25%. Exemples chiffrés, tableaux et explications simples.',
+    'Calculez vos cotisations CNSS Congo 2026 : salarié 4% (plaf. 1 200 000 FCFA), employeur pensions 8% + famille 10,03% + accidents 2,25%. Exemples chiffrés.',
   alternates: { canonical: `${SITE_URL}/outils/calcul-cnss-congo` },
   keywords: [
     'calcul CNSS Congo 2026', 'taux CNSS Congo Brazzaville', 'cotisation CNSS employeur Congo',
