@@ -37,13 +37,35 @@ async function tryRefreshToken(): Promise<boolean> {
 }
 
 // ─── Redirection 401 — uniquement si le refresh a aussi échoué ───────────────
+// 🐛 FIX (2026-09-16) : certains hooks (ex: useSubscription, via
+// SubscriptionReminderProvider monté dans le layout racine) peuvent encore
+// partir en 401 sur une page publique dans des cas limites. On ajoute donc
+// une deuxième barrière ici, en plus du fix côté hook : un 401 sur une page
+// publique ne doit JAMAIS rediriger un visiteur anonyme vers /auth/login.
 function handle401() {
   if (typeof window === 'undefined') return;
   const path         = window.location.pathname;
   const isAdminRoute = path.startsWith('/admin');
   const isAuthPage   = path.includes('/login') || path.includes('/register');
 
-  if (!isAuthPage) {
+  // Pages publiques (accessibles sans connexion) — à ajuster si de nouvelles
+  // routes publiques sont ajoutées à l'app.
+  const isPublicPage =
+    path === '/' ||
+    path.startsWith('/blog') ||
+    path.startsWith('/tarifs') ||
+    path.startsWith('/outils') ||
+    path.startsWith('/simulateur') ||
+    path.startsWith('/contact') ||
+    path.startsWith('/qui-sommes-nous') ||
+    path.startsWith('/docs') ||
+    path.startsWith('/register') ||
+    path.startsWith('/entreprises') ||
+    path.startsWith('/jobs') ||
+    path.startsWith('/affiliate/login') ||
+    path.startsWith('/verify');
+
+  if (!isAuthPage && !isPublicPage) {
     // Nettoyer uniquement les données d'affichage (pas les tokens — ils sont en cookie)
     localStorage.removeItem('user');
     window.location.href = isAdminRoute ? '/admin/login' : '/auth/login';
@@ -297,7 +319,7 @@ export const api = {
   post:   <T>(endpoint: string, body: any)   => request<T>(endpoint, 'POST', body),
   put:    <T>(endpoint: string, body: any)   => request<T>(endpoint, 'PUT', body),
   patch:  <T>(endpoint: string, body: any)   => request<T>(endpoint, 'PATCH', body),
-  delete: <T>(endpoint: string)              => request<T>(endpoint, 'DELETE'),
+  delete: <T>(endpoint: string, body?: any) => request<T>(endpoint, 'DELETE', body),
   postFormData: <T>(endpoint: string, fd: FormData) => requestFormData<T>(endpoint, fd, 'POST'),
   putFormData:  <T>(endpoint: string, fd: FormData) => requestFormData<T>(endpoint, fd, 'PUT'),
   getBlob: (endpoint: string) => requestBlob(endpoint),
