@@ -6,7 +6,7 @@
     "dev": "next dev",
     "check-types": "tsc --noEmit",
     "build": "npm run check-types && next build",
-    "start": "cd .next/standalone && node server.js",
+    "start": "node server.js",
     "lint": "next lint"
   },
   "dependencies": {
