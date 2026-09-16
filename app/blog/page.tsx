@@ -7,10 +7,10 @@
 import type { Metadata } from 'next';
 import BlogClientPage from './BlogClient';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza.cg';
 
 export const metadata: Metadata = {
-  title: 'Blog RH Congo — Paie, Fiscalité 2026',
+  title: 'Blog RH Congo — Paie, Droit du travail, Fiscalité 2026',
   description:
     'Actualités RH Congo-Brazzaville : ITS 2026, CAMU, CNSS, TUS, droit du travail congolais, gestion paie. Articles par des DRH et l\'équipe Konza.',
   alternates: {

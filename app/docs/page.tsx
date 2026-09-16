@@ -973,7 +973,7 @@ export default function DocsPage() {
         <div className="relative pl-10 space-y-0">
           <div className="absolute left-[19px] top-10 bottom-10 w-px bg-gradient-to-b from-[#10B981] via-[#10B981]/30 to-transparent" />
           {[
-            { title: 'Créer votre compte', body: <>Rendez-vous sur <strong className="text-white">hrcongo.app/auth/register</strong>. Email professionnel + mot de passe fort. Un lien de confirmation est envoyé automatiquement.</> },
+            { title: 'Créer votre compte', body: <>Rendez-vous sur <strong className="text-white">konza-rh.cg/auth/register</strong>. Email professionnel + mot de passe fort. Un lien de confirmation est envoyé automatiquement.</> },
             { title: 'Confirmer votre email', body: <>Cliquez sur le lien reçu (valable <strong className="text-white">24h</strong>). Vérifiez vos spams si vous ne recevez rien. Sans confirmation, l'accès est limité.</> },
             { title: 'Configurer votre entreprise ou cabinet', body: <>Un assistant apparaît à la première connexion. Il vous guide pour créer votre entreprise ou votre cabinet. <strong className="text-white">Ne le fermez pas</strong> — il n'apparaît qu'une seule fois.</>, link: { href: '#entreprise-cabinet', label: '→ Guide Entreprise / Cabinet' } },
             { title: 'Créer vos départements', body: <>Avant d'ajouter des employés, créez au moins un département. Chaque employé y sera rattaché lors de sa création.</>, link: { href: '#departements', label: '→ Guide Départements' } },

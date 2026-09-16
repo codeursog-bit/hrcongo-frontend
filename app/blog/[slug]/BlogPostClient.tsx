@@ -2,6 +2,15 @@
 // 📁 app/blog/[slug]/BlogPostClient.tsx
 // Wrapper client du composant existant, accepte initialPost pour le SSR
 // ============================================================================
+// 🎨 REFONTE LISIBILITÉ (2026-09-16) :
+// L'ancien rendu du contenu était une simple chaîne de .replace() regex qui ne
+// gérait ni les listes (- item / 1. item), ni les tableaux, ni les liens
+// [texte](url) — tout ce qui n'était pas un titre/citation/gras finissait fondu
+// en un seul paragraphe. Remplacé par un vrai petit parseur par blocs
+// (renderArticleContent) qui produit du HTML sémantique (h2/h3/h4, ul, ol,
+// table, blockquote, p, a) + extrait un sommaire (table des matières) affiché
+// dans la sidebar avec suivi du scroll, et un temps de lecture estimé.
+// ============================================================================
 'use client';
 
 // Ce fichier est juste un re-export de ton composant existant app/blog/[slug]/page.tsx
@@ -12,7 +21,7 @@
 //   export default function BlogPostClient({ slug, initialPost }: Props)
 // Et tu utilises initialPost pour pré-remplir le state (évite le premier fetch côté client)
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/landing/Navbar';
@@ -29,6 +38,8 @@ type Post = {
     company?: { tradeName?: string; legalName: string; logo?: string } };
   company?: { tradeName?: string; legalName: string };
 };
+
+type TocEntry = { id: string; text: string; level: 2 | 3 };
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const C = {
@@ -69,6 +80,164 @@ function getFingerprint(): string {
   return fp!;
 }
 
+// ============================================================================
+// 📝 PARSEUR DE CONTENU — remplace l'ancienne chaîne de regex.replace()
+// ============================================================================
+// Convention conservée (compat articles déjà publiés) :
+//   # titre   → <h2>   (section principale, entre dans le sommaire)
+//   ## titre  → <h3>   (sous-section, entre dans le sommaire)
+//   ### titre → <h4>   (détail, n'entre pas dans le sommaire)
+//   > citation → bloc "callout" mis en avant (citations légales, définitions)
+//   - item / * item → <ul>
+//   1. item         → <ol>
+//   | a | b |  suivi de | - | - |  → tableau (barèmes, taux...)
+//   **gras**, *italique*, `code`, [texte](url)
+// ============================================================================
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // enlève les accents
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 60);
+}
+
+function renderInline(text: string): string {
+  return text
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+function renderArticleContent(markdown: string): { html: string; toc: TocEntry[] } {
+  const lines = markdown.replace(/\r\n/g, '\n').split('\n');
+  const toc: TocEntry[] = [];
+  const usedIds = new Set<string>();
+  let html = '';
+  let listType: 'ul' | 'ol' | null = null;
+
+  const closeList = () => {
+    if (listType) { html += `</${listType}>`; listType = null; }
+  };
+
+  const uniqueId = (base: string) => {
+    let id = base || 'section';
+    let n = 2;
+    while (usedIds.has(id)) { id = `${base}-${n}`; n++; }
+    usedIds.add(id);
+    return id;
+  };
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (!line.trim()) { closeList(); i++; continue; }
+
+    let m: RegExpMatchArray | null;
+
+    // ── Titres ────────────────────────────────────────────────────────────
+    if ((m = line.match(/^### (.+)/))) {
+      closeList();
+      html += `<h4>${renderInline(m[1])}</h4>`;
+      i++; continue;
+    }
+    if ((m = line.match(/^## (.+)/))) {
+      closeList();
+      const id = uniqueId(slugify(m[1]));
+      toc.push({ id, text: m[1], level: 3 });
+      html += `<h3 id="${id}">${renderInline(m[1])}</h3>`;
+      i++; continue;
+    }
+    if ((m = line.match(/^# (.+)/))) {
+      closeList();
+      const id = uniqueId(slugify(m[1]));
+      toc.push({ id, text: m[1], level: 2 });
+      html += `<h2 id="${id}">${renderInline(m[1])}</h2>`;
+      i++; continue;
+    }
+
+    // ── Citation / callout ─────────────────────────────────────────────────
+    if ((m = line.match(/^> ?(.+)/))) {
+      closeList();
+      const quoteLines = [m[1]];
+      i++;
+      while (i < lines.length && lines[i].match(/^> ?(.*)/)) {
+        quoteLines.push(lines[i].replace(/^> ?/, ''));
+        i++;
+      }
+      html += `<blockquote>${quoteLines.map(l => `<p>${renderInline(l)}</p>`).join('')}</blockquote>`;
+      continue;
+    }
+
+    // ── Tableau (| a | b |) ─────────────────────────────────────────────────
+    if (line.trim().startsWith('|') && lines[i + 1] && /^\s*\|?[\s:-]+\|[\s:|-]*\|?\s*$/.test(lines[i + 1])) {
+      closeList();
+      const parseRow = (row: string) =>
+        row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+      const header = parseRow(line);
+      i += 2; // saute la ligne d'en-tête + la ligne séparatrice
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        rows.push(parseRow(lines[i]));
+        i++;
+      }
+      html += '<div class="article-table-wrap"><table><thead><tr>' +
+        header.map(h => `<th>${renderInline(h)}</th>`).join('') +
+        '</tr></thead><tbody>' +
+        rows.map(r => `<tr>${r.map(c => `<td>${renderInline(c)}</td>`).join('')}</tr>`).join('') +
+        '</tbody></table></div>';
+      continue;
+    }
+
+    // ── Liste non-ordonnée ───────────────────────────────────────────────────
+    if ((m = line.match(/^[-*] (.+)/))) {
+      if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; }
+      html += `<li>${renderInline(m[1])}</li>`;
+      i++; continue;
+    }
+
+    // ── Liste ordonnée ───────────────────────────────────────────────────────
+    if ((m = line.match(/^\d+\. (.+)/))) {
+      if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; }
+      html += `<li>${renderInline(m[1])}</li>`;
+      i++; continue;
+    }
+
+    // ── Séparateur ───────────────────────────────────────────────────────────
+    if (/^---+$/.test(line.trim())) {
+      closeList();
+      html += '<hr />';
+      i++; continue;
+    }
+
+    // ── Paragraphe (accumulation jusqu'à ligne vide ou nouveau bloc) ────────
+    closeList();
+    const para = [line];
+    i++;
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !/^(#{1,3} |> ?|[-*] |\d+\. |---+$|\|)/.test(lines[i])
+    ) {
+      para.push(lines[i]);
+      i++;
+    }
+    html += `<p>${renderInline(para.join(' '))}</p>`;
+  }
+  closeList();
+
+  return { html, toc };
+}
+
+function estimateReadingTime(markdown: string): number {
+  const plain = markdown.replace(/[#>*`\-|]/g, ' ').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  const words = plain.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {
   slug: string;
@@ -83,6 +252,8 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
   const [likes,   setLikes]   = useState(initialPost?.likesCount || 0);
   const [copied,  setCopied]  = useState(false);
   const [related, setRelated] = useState<Post[]>([]);
+  const [activeId, setActiveId] = useState<string>('');
+  const articleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialPost) {
@@ -125,6 +296,37 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
     }
     load();
   }, [slug, initialPost]);
+
+  // ── Contenu parsé + sommaire (mémoïsé, ne recalcule que si le contenu change) ──
+  const { html: contentHtml, toc } = useMemo(
+    () => (post ? renderArticleContent(post.content) : { html: '', toc: [] }),
+    [post?.content],
+  );
+  const readingTime = useMemo(
+    () => (post ? estimateReadingTime(post.content) : 0),
+    [post?.content],
+  );
+
+  // ── Sommaire : suivi de la section visible au scroll ────────────────────────
+  useEffect(() => {
+    if (!toc.length) return;
+    const headings = toc
+      .map(t => document.getElementById(t.id))
+      .filter((el): el is HTMLElement => !!el);
+    if (!headings.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter(e => e.isIntersecting);
+        if (visible.length > 0) {
+          setActiveId(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-100px 0px -70% 0px' },
+    );
+    headings.forEach(h => observer.observe(h));
+    return () => observer.disconnect();
+  }, [toc, contentHtml]);
 
   async function handleLike() {
     if (!post) return;
@@ -184,9 +386,10 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
   const role   = ROLE_LABEL[post.author.role] || post.author.role;
   const company = post.author.company?.tradeName || post.author.company?.legalName || '';
   const date   = new Date(post.publishedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const updated = post.updatedAt && post.updatedAt !== post.publishedAt
+    ? new Date(post.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
-  // Rendu simplifié — tu peux coller ici l'intégralité de ton BlogPostPage existant
-  // en remplaçant juste l'en-tête (useParams → props)
   return (
     <div style={{ background: C.bg, minHeight: '100vh', fontFamily: "system-ui,-apple-system,'Segoe UI',sans-serif", color: C.text, position: 'relative', overflowX: 'hidden' }}>
       <div style={{ position:'fixed', top:-160, right:-160, width:600, height:600, borderRadius:'50%',
@@ -235,7 +438,11 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{author}</div>
-                <div style={{ fontSize: 12, color: C.muted }}>{role}{company && !isSA ? ` · ${company}` : ''} · <time dateTime={post.publishedAt}>{date}</time></div>
+                <div style={{ fontSize: 12, color: C.muted }}>
+                  {role}{company && !isSA ? ` · ${company}` : ''} · <time dateTime={post.publishedAt}>{date}</time>
+                  {updated && <> · <span title={`Mis à jour le ${updated}`}>mis à jour {updated}</span></>}
+                  {' · '}{readingTime} min de lecture
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -263,27 +470,43 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
       {/* Contenu article */}
       <section style={{ position: 'relative', zIndex: 1, padding: '40px 32px 80px' }}>
         <div style={{ maxWidth: 840, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 220px', gap: 48, alignItems: 'start' }} className="article-layout">
-          <article>
-            {/* Contenu — on garde ton RenderContent existant */}
-            <div style={{ fontSize: 15.5, color: C.sub, lineHeight: 1.8 }}
-              dangerouslySetInnerHTML={{
-                __html: post.content
-                  .replace(/^# (.+)$/gm, '<h2 style="font-size:clamp(20px,2.5vw,28px);font-weight:900;color:#F8FAFC;margin:32px 0 16px;letter-spacing:-0.03em">$1</h2>')
-                  .replace(/^## (.+)$/gm, '<h3 style="font-size:20px;font-weight:800;color:#F8FAFC;margin:28px 0 12px">$1</h3>')
-                  .replace(/^### (.+)$/gm, '<h4 style="font-size:17px;font-weight:700;color:#F8FAFC;margin:22px 0 10px">$1</h4>')
-                  .replace(/^> (.+)$/gm, '<blockquote style="margin:24px 0;padding:16px 20px;border-left:3px solid #10B981;background:rgba(16,185,129,0.05);border-radius:0 8px 8px 0"><p style="font-style:italic;color:#94A3B8;margin:0">$1</p></blockquote>')
-                  .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#F8FAFC;font-weight:700">$1</strong>')
-                  .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                  .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:13px;color:#10B981">$1</code>')
-                  .replace(/\n\n/g, '</p><p style="margin:12px 0;font-size:15.5px;color:#94A3B8;line-height:1.8">')
-                  .replace(/^(?!<)(.)/m, '<p style="margin:12px 0;font-size:15.5px;color:#94A3B8;line-height:1.8">$1')
-                  + '</p>'
-              }}
-            />
-          </article>
+          <article
+            ref={articleRef}
+            className="article-content"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
 
           {/* Sidebar sticky */}
           <aside style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 20 }} className="article-sidebar">
+
+            {/* Sommaire — nouveau, suit la section active au scroll */}
+            {toc.length > 1 && (
+              <nav aria-label="Sommaire" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Sommaire</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {toc.map(t => (
+                    <a
+                      key={t.id}
+                      href={`#${t.id}`}
+                      style={{
+                        fontSize: 12.5,
+                        lineHeight: 1.5,
+                        padding: t.level === 3 ? '5px 0 5px 14px' : '5px 0',
+                        color: activeId === t.id ? cc.c : C.sub,
+                        fontWeight: activeId === t.id ? 700 : 500,
+                        borderLeft: `2px solid ${activeId === t.id ? cc.c : 'transparent'}`,
+                        paddingLeft: t.level === 3 ? 14 : 10,
+                        textDecoration: 'none',
+                        transition: 'color .15s, border-color .15s',
+                      }}
+                    >
+                      {t.text}
+                    </a>
+                  ))}
+                </div>
+              </nav>
+            )}
+
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 20 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Auteur</p>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -317,7 +540,7 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
             <div style={{ background: 'linear-gradient(135deg,rgba(71,85,105,0.15),rgba(100,116,139,0.1))', border: '1px solid rgba(71,85,105,0.2)', borderRadius: 14, padding: 18 }}>
               <p style={{ fontSize: 12, fontWeight: 800, color: C.text, marginBottom: 6 }}>Gérez la paie de votre entreprise</p>
               <p style={{ fontSize: 11, color: C.sub, lineHeight: 1.5, marginBottom: 12 }}>Bulletins PDF, CNSS, CAMU, congés — conforme droit congolais.</p>
-              <Link href="https://app.konza.cg" target="_blank"
+              <Link href="/auth/register"
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'linear-gradient(135deg,#475569,#64748B)', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 12, padding: '8px 14px', borderRadius: 9 }}>
                 Essayer Konza →
               </Link>
@@ -331,7 +554,75 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
       </section>
 
       <Footer />
-      <style>{`*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}::-webkit-scrollbar{width:6px;background:#050607}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}@media(max-width:768px){.article-layout{grid-template-columns:1fr!important}.article-sidebar{display:none!important}}`}</style>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        ::-webkit-scrollbar{width:6px;background:#050607}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+
+        /* ── Typographie du corps d'article ─────────────────────────────── */
+        .article-content{font-size:16px;color:${C.sub};line-height:1.85}
+        .article-content h2{
+          scroll-margin-top:100px;
+          font-size:clamp(20px,2.5vw,28px);font-weight:900;color:${C.text};
+          letter-spacing:-0.03em;margin:44px 0 16px;padding-top:8px;
+          border-top:1px solid ${C.border};
+        }
+        .article-content h2:first-child{border-top:none;padding-top:0;margin-top:0}
+        .article-content h3{scroll-margin-top:100px;font-size:20px;font-weight:800;color:${C.text};margin:30px 0 12px}
+        .article-content h4{font-size:16.5px;font-weight:700;color:${C.text};margin:22px 0 8px}
+        .article-content p{margin:0 0 18px;font-size:16px;color:${C.sub};line-height:1.85}
+        .article-content strong{color:${C.text};font-weight:700}
+        .article-content em{font-style:italic}
+        .article-content code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace;font-size:13.5px;color:#10B981}
+        .article-content a{color:#2DD4BF;text-decoration:underline;text-underline-offset:2px}
+        .article-content a:hover{color:#5EEAD4}
+        .article-content hr{border:none;border-top:1px solid ${C.border};margin:32px 0}
+
+        /* ── Listes : marqueurs colorés, espacement propre entre items ───── */
+        .article-content ul,.article-content ol{margin:0 0 20px;padding-left:0;list-style:none}
+        .article-content ul li,.article-content ol li{
+          position:relative;padding-left:28px;margin-bottom:10px;font-size:16px;line-height:1.7;color:${C.sub};
+        }
+        .article-content ul li::before{
+          content:'';position:absolute;left:6px;top:11px;width:6px;height:6px;border-radius:50%;
+          background:#10B981;
+        }
+        .article-content ol{counter-reset:kz-ol}
+        .article-content ol li{counter-increment:kz-ol}
+        .article-content ol li::before{
+          content:counter(kz-ol);position:absolute;left:0;top:0;
+          width:20px;height:20px;border-radius:6px;background:rgba(16,185,129,0.12);color:#10B981;
+          font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
+        }
+
+        /* ── Citations / callouts (lois, définitions clés) ────────────────── */
+        .article-content blockquote{
+          margin:24px 0;padding:16px 20px;border-left:3px solid #10B981;
+          background:rgba(16,185,129,0.05);border-radius:0 10px 10px 0;
+        }
+        .article-content blockquote p{
+          font-style:italic;color:${C.sub};margin:0 0 6px;font-size:15px;
+        }
+        .article-content blockquote p:last-child{margin-bottom:0}
+
+        /* ── Tableaux (barèmes, taux, plafonds) ───────────────────────────── */
+        .article-table-wrap{margin:24px 0;overflow-x:auto;border:1px solid ${C.border};border-radius:12px}
+        .article-content table{width:100%;border-collapse:collapse;font-size:14px}
+        .article-content thead th{
+          background:rgba(255,255,255,0.04);color:${C.text};font-weight:700;text-align:left;
+          padding:10px 14px;border-bottom:1px solid ${C.border};white-space:nowrap;
+        }
+        .article-content tbody td{padding:10px 14px;border-bottom:1px solid ${C.border};color:${C.sub}}
+        .article-content tbody tr:last-child td{border-bottom:none}
+        .article-content tbody tr:hover{background:rgba(255,255,255,0.02)}
+
+        @media(max-width:768px){
+          .article-layout{grid-template-columns:1fr!important}
+          .article-sidebar{display:none!important}
+          .article-content{font-size:15.5px}
+        }
+      `}</style>
     </div>
   );
 }

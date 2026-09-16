@@ -59,11 +59,15 @@ function MdToolbar({ onInsert }: { onInsert: (b: string, a?: string, p?: string)
   const tools = [
     { l:'H1', a:()=>onInsert('# ','','Titre principal'),          title:'Titre H1' },
     { l:'H2', a:()=>onInsert('\n## ','','Sous-section'),           title:'Titre H2' },
+    { l:'H3', a:()=>onInsert('\n### ','','Détail'),                title:'Titre H3' },
     { l:'B',  a:()=>onInsert('**','**','gras'),    cls:'font-black',title:'Gras' },
     { l:'I',  a:()=>onInsert('*','*','italique'),  cls:'italic',    title:'Italique' },
     { l:'`',  a:()=>onInsert('`','`','code'),                       title:'Code inline' },
-    { l:'–',  a:()=>onInsert('\n- ','','élément'),                  title:'Liste' },
-    { l:'❝',  a:()=>onInsert('\n> ','','citation importante'),      title:'Citation' },
+    { l:'–',  a:()=>onInsert('\n- ','','élément'),                  title:'Liste à puces' },
+    { l:'1.', a:()=>onInsert('\n1. ','','élément'),                 title:'Liste numérotée' },
+    { l:'🔗', a:()=>onInsert('[','](https://)','texte du lien'),    title:'Lien' },
+    { l:'▦',  a:()=>onInsert('\n| Colonne 1 | Colonne 2 |\n| --- | --- |\n| ',' |\n',   'valeur'), title:'Tableau' },
+    { l:'❝',  a:()=>onInsert('\n> ','','citation importante'),      title:'Citation / callout' },
     { l:'FAQ',a:()=>onInsert('\n## Questions fréquentes\n\n**Q : ','**\n\nR : Votre réponse ici.'), title:'Bloc FAQ (SEO)' },
     { l:'—',  a:()=>onInsert('\n---\n'),                            title:'Séparateur' },
     { l:'CTA',a:()=>onInsert('\n---\n> 📊 **Gérez la paie de votre équipe avec Konza** — [Essai gratuit →](https://konza-rh.cg/auth/register)\n'), title:'Ajouter CTA' },
@@ -88,27 +92,58 @@ function Preview({ content, isSA }: { content: string; isSA?: boolean }) {
       <p className="text-sm text-slate-500">L'aperçu s'affichera ici</p>
     </div>
   );
-  return (
-    <div className="text-sm text-slate-300 leading-relaxed min-h-[300px]">
-      {content.split('\n').map((line, i) => {
-        if (line.startsWith('# '))  return <h1 key={i} className="text-2xl font-black text-white mt-4 mb-2">{line.slice(2)}</h1>;
-        if (line.startsWith('## ')) return <h2 key={i} className="text-xl font-bold text-white mt-3 mb-1.5">{line.slice(3)}</h2>;
-        if (line.startsWith('### '))return <h3 key={i} className="text-lg font-bold text-white mt-2 mb-1">{line.slice(4)}</h3>;
-        if (line.startsWith('> '))  return <blockquote key={i} className={`border-l-2 ${isSA?'border-amber-400':'border-cyan-500'} pl-3 italic text-slate-400 my-2`}>{line.slice(2)}</blockquote>;
-        if (line.startsWith('- ') || line.startsWith('* ')) return (
-          <div key={i} className="flex gap-2 my-1"><span className={`${isSA?'text-amber-400':'text-cyan-400'} flex-shrink-0`}>→</span><span>{line.slice(2)}</span></div>
-        );
-        if (line.startsWith('---')) return <hr key={i} className="border-white/10 my-3"/>;
-        if (!line.trim()) return <div key={i} className="h-2"/>;
-        const html = line
-          .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-          .replace(/\*(.+?)\*/g, '<em>$1</em>')
-          .replace(/`(.+?)`/g, `<code class="bg-white/10 ${isSA?'text-amber-400':'text-cyan-400'} px-1 rounded text-xs font-mono">$1</code>`)
-          .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-cyan-400 underline" target="_blank">$1</a>');
-        return <p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: html }}/>;
-      })}
-    </div>
-  );
+  const lines = content.split('\n');
+  const nodes: React.ReactNode[] = [];
+  let i = 0;
+  let olIndex = 0;
+  const inline = (text: string) => text
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, `<code class="bg-white/10 ${isSA?'text-amber-400':'text-cyan-400'} px-1 rounded text-xs font-mono">$1</code>`)
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-cyan-400 underline" target="_blank">$1</a>');
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Tableau : | a | b | suivi de | --- | --- |
+    if (line.trim().startsWith('|') && lines[i+1] && /^\s*\|?[\s:-]+\|[\s:|-]*\|?\s*$/.test(lines[i+1])) {
+      const parseRow = (row: string) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+      const header = parseRow(line);
+      i += 2;
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) { rows.push(parseRow(lines[i])); i++; }
+      nodes.push(
+        <div key={`t${i}`} className="my-3 overflow-x-auto rounded-lg border border-white/10">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-white/5">{header.map((h,hi) => <th key={hi} className="text-left px-3 py-2 font-bold text-white border-b border-white/10">{h}</th>)}</tr></thead>
+            <tbody>{rows.map((r,ri) => <tr key={ri}>{r.map((c,ci) => <td key={ci} className="px-3 py-2 border-b border-white/5 text-slate-300">{c}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    if (line.startsWith('### ')) { nodes.push(<h4 key={i} className="text-base font-bold text-white mt-2 mb-1">{line.slice(4)}</h4>); i++; continue; }
+    if (line.startsWith('## '))  { nodes.push(<h3 key={i} className="text-lg font-bold text-white mt-2 mb-1">{line.slice(3)}</h3>); i++; continue; }
+    if (line.startsWith('# '))   { nodes.push(<h2 key={i} className="text-xl font-bold text-white mt-3 mb-1.5">{line.slice(2)}</h2>); i++; continue; }
+    if (line.startsWith('> '))   { nodes.push(<blockquote key={i} className={`border-l-2 ${isSA?'border-amber-400':'border-cyan-500'} pl-3 italic text-slate-400 my-2`}>{line.slice(2)}</blockquote>); i++; continue; }
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      nodes.push(<div key={i} className="flex gap-2 my-1"><span className={`${isSA?'text-amber-400':'text-cyan-400'} flex-shrink-0`}>→</span><span dangerouslySetInnerHTML={{__html:inline(line.slice(2))}}/></div>);
+      i++; continue;
+    }
+    const olMatch = line.match(/^\d+\. (.+)/);
+    if (olMatch) {
+      olIndex++;
+      nodes.push(<div key={i} className="flex gap-2 my-1"><span className={`${isSA?'text-amber-400':'text-cyan-400'} flex-shrink-0 font-bold text-xs`}>{olIndex}.</span><span dangerouslySetInnerHTML={{__html:inline(olMatch[1])}}/></div>);
+      i++; continue;
+    }
+    olIndex = 0;
+    if (line.startsWith('---')) { nodes.push(<hr key={i} className="border-white/10 my-3"/>); i++; continue; }
+    if (!line.trim()) { nodes.push(<div key={i} className="h-2"/>); i++; continue; }
+    nodes.push(<p key={i} className="my-1" dangerouslySetInnerHTML={{ __html: inline(line) }}/>);
+    i++;
+  }
+  return <div className="text-sm text-slate-300 leading-relaxed min-h-[300px]">{nodes}</div>;
 }
 
 // ─── Upload Image ─────────────────────────────────────────────────────────────
@@ -278,6 +313,7 @@ export function BlogEditor({
   const [status,  setStatus]  = useState<'idle'|'saving'|'publishing'|'success'|'error'>('idle');
   const [err,     setErr]     = useState('');
   const [newSlug, setNewSlug] = useState('');
+  const [showHelp, setShowHelp] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-remplir seoTitle depuis title
@@ -465,10 +501,47 @@ export function BlogEditor({
             {tab === 'write' && (
               <>
                 <MdToolbar onInsert={insertMd}/>
-                {/* Guide structure SEO */}
-                <div className="px-4 py-2 bg-white/2 border-b border-white/5 flex items-center gap-2">
-                  <Info size={11} className="text-slate-600 flex-shrink-0"/>
-                  <span className="text-[10px] text-slate-600">Structure recommandée : H1 (titre) → H2 (sections) → H2 "Questions fréquentes" → CTA final</span>
+                {/* Guide structure SEO + légende syntaxe */}
+                <div className="border-b border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setShowHelp(v => !v)}
+                    className="w-full px-4 py-2 bg-white/2 flex items-center gap-2 text-left hover:bg-white/[0.04] transition-colors"
+                  >
+                    <Info size={11} className="text-slate-600 flex-shrink-0"/>
+                    <span className="text-[10px] text-slate-600 flex-1">
+                      Structure recommandée : H1 (titre) → H2 (sections) → H2 "Questions fréquentes" → CTA final
+                    </span>
+                    <span className="text-[10px] text-slate-500 flex-shrink-0">
+                      {showHelp ? 'Masquer la syntaxe ▲' : 'Voir toute la syntaxe ▼'}
+                    </span>
+                  </button>
+                  {showHelp && (
+                    <div className="px-4 py-3 bg-[#020817] grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
+                      {[
+                        ['# Titre',              'Titre de section (H1)'],
+                        ['## Sous-titre',        'Sous-section (H2)'],
+                        ['### Détail',           'Titre de détail (H3)'],
+                        ['**gras**',             'Texte en gras'],
+                        ['*italique*',           'Texte en italique'],
+                        ['`code`',               'Texte en style code'],
+                        ['- élément',            'Liste à puces'],
+                        ['1. élément',           'Liste numérotée'],
+                        ['[texte](https://...)', 'Lien cliquable'],
+                        ['> citation',           'Citation / bloc mis en avant'],
+                        ['---',                  'Ligne de séparation'],
+                        ['| A | B |\n| - | - |\n| 1 | 2 |', 'Tableau (barèmes, taux...)'],
+                      ].map(([syntax, desc]) => (
+                        <div key={syntax} className="flex items-baseline gap-2 py-0.5">
+                          <code className="bg-white/8 text-cyan-400 px-1.5 py-0.5 rounded font-mono whitespace-pre text-[10px] flex-shrink-0">{syntax}</code>
+                          <span className="text-slate-500">{desc}</span>
+                        </div>
+                      ))}
+                      <p className="col-span-full text-slate-600 mt-1.5 pt-1.5 border-t border-white/5">
+                        Chaque bouton de la barre d'outils ci-dessus insère directement la bonne syntaxe — pas besoin de la retaper à la main. Bascule sur l'onglet "👁 Aperçu" pour voir le rendu en temps réel.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <textarea
                   ref={taRef} value={form.content} onChange={set('content')}

@@ -11,7 +11,7 @@ import { Footer } from '@/components/landing/Footer';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
 
 export const metadata: Metadata = {
-  title: 'Outils RH & Paie Congo-Brazzaville 2026 — Calculateurs gratuits',
+  title: 'Outils RH & Paie Congo 2026 — Calculateurs gratuits',
   description:
     'Calculateurs gratuits pour les entreprises congolaises : ITS 2026, CNSS, CAMU, TUS, heures supplémentaires, cotisations patronales. Conformes au droit congolais.',
   alternates: { canonical: `${SITE_URL}/outils` },
