@@ -1,8 +1,3 @@
-// ============================================================================
-// 📁 app/robots.ts — Robots.txt dynamique
-// ✅ Bloque les routes dashboard/admin pour les crawlers
-// ✅ Autorise toutes les pages publiques + sitemap
-// ============================================================================
 import type { MetadataRoute } from 'next';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
@@ -38,6 +33,16 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'Googlebot',
+        allow: '/',
+        disallow: ['/admin/', '/api/', '/auth/'],
+      },
+      {
+        userAgent: 'Bingbot',
+        allow: '/',
+        disallow: ['/admin/', '/api/', '/auth/'],
+      },
+      {
+        userAgent: ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'ClaudeBot', 'anthropic-ai'],
         allow: '/',
         disallow: ['/admin/', '/api/', '/auth/'],
       },
