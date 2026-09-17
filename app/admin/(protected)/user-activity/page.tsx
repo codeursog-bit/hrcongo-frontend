@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Radio, RefreshCw, Loader2, Clock, Trophy, Circle,
+  Radio, RefreshCw, Loader2, Clock, Trophy, Circle, BellRing, BellOff, AlertTriangle,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
 
@@ -32,20 +32,23 @@ export default function UserActivityPage() {
   const [online, setOnline] = useState<any[]>([]);
   const [recent, setRecent] = useState<any[]>([]);
   const [topUsers, setTopUsers] = useState<any[]>([]);
+  const [pushStatus, setPushStatus] = useState<any>(null);
   const [period, setPeriod] = useState<Period>('week');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [o, r, t] = await Promise.all([
+      const [o, r, t, p] = await Promise.all([
         adminService.getUsersOnlineNow(),
         adminService.getUsersRecentlyOnline(24),
         adminService.getMostActiveUsers(period),
+        adminService.getPushStatus(),
       ]);
       setOnline(o ?? []);
       setRecent(r ?? []);
       setTopUsers(t ?? []);
+      setPushStatus(p ?? null);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [period]);
@@ -132,6 +135,48 @@ export default function UserActivityPage() {
           </div>
         </div>
       </div>
+
+      {/* Notifications push */}
+      {pushStatus && (
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BellRing size={15} className="text-violet-400" />
+              <p className="font-bold text-white text-sm">Notifications push</p>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="text-emerald-400 font-semibold">{pushStatus.activeDeviceCount} actifs</span>
+              {pushStatus.brokenCount > 0 && (
+                <span className="text-amber-400 font-semibold flex items-center gap-1">
+                  <AlertTriangle size={11} /> {pushStatus.brokenCount} activé(s) sans appareil
+                </span>
+              )}
+              <span className="text-gray-600">{pushStatus.totalUsers - pushStatus.enabledCount} désactivé(s)</span>
+            </div>
+          </div>
+          <div className="max-h-72 overflow-y-auto divide-y divide-gray-800">
+            {pushStatus.users.length === 0 ? (
+              <p className="text-sm text-gray-600 text-center py-10">Personne n'a activé les notifications</p>
+            ) : pushStatus.users.map((u: any, i: number) => (
+              <div key={i} className="flex items-center justify-between px-5 py-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{u.name}</p>
+                  <p className="text-xs text-gray-600 truncate">{u.companyName ?? 'Plateforme'} · {u.role}</p>
+                </div>
+                {u.status === 'active' ? (
+                  <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 shrink-0">
+                    <BellRing size={11} /> ACTIF{u.deviceCount > 1 ? ` · ${u.deviceCount} appareils` : ''}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-amber-400 flex items-center gap-1 shrink-0" title="Activé côté profil mais aucun appareil enregistré">
+                    <BellOff size={11} /> SANS APPAREIL
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Top utilisateurs actifs */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">

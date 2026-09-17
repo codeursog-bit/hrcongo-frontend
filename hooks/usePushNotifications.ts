@@ -219,8 +219,11 @@ export function usePushNotifications() {
     setIsLoading(true);
     try {
       const sub = await registration.pushManager.getSubscription();
+      const endpoint = sub?.endpoint; // capturé avant unsubscribe() côté navigateur
       if (sub) await sub.unsubscribe();
-      await api.delete('/notifications/push/unsubscribe');
+      // On cible cet appareil précisément — les autres appareils de ce
+      // compte (s'il y en a) restent abonnés.
+      await api.delete('/notifications/push/unsubscribe', { data: { endpoint } });
       setIsSubscribed(false);
       return true;
     } catch (err) {

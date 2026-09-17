@@ -13,7 +13,7 @@
 // 🆕 PresenceSubNav intégré (navigation entre pages du module Présences)
 // ============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Clock, MapPin, LogOut, ArrowLeft, Loader2, CheckCircle2,
@@ -22,6 +22,7 @@ import {
   CheckCircle, XCircle, Info, Sparkles,
 } from 'lucide-react';
 import { attendanceApi } from '@/services/attendance-api';
+import GeofenceRadiusPreview, { computeMetersOffset } from '@/components/GeofenceRadiusPreview';
 import { api } from '@/services/api';
 import { getDistanceFromLatLonInMeters } from '@/utils/geo';
 import { useNotification } from '@/components/providers/NotificationProvider';
@@ -69,17 +70,17 @@ function AttendanceToast({
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm">
       <div className={`backdrop-blur-xl border rounded-2xl p-4 shadow-2xl ${
-        isEarly ? 'bg-sky-900/95 border-sky-500/40' : 'bg-orange-900/95 border-orange-500/40'
+        isEarly ? 'bg-emerald-900/95 border-emerald-500/40' : 'bg-amber-900/95 border-amber-500/40'
       }`}>
         <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-xl flex-shrink-0 ${isEarly ? 'bg-sky-500/20' : 'bg-orange-500/20'}`}>
-            <Sparkles size={16} className={isEarly ? 'text-sky-400' : 'text-orange-400'} />
+          <div className={`p-2 rounded-xl flex-shrink-0 ${isEarly ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>
+            <Sparkles size={16} className={isEarly ? 'text-emerald-400' : 'text-amber-400'} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`font-bold text-sm ${isEarly ? 'text-sky-200' : 'text-orange-200'}`}>{title}</p>
-            <p className={`text-xs mt-1 leading-relaxed ${isEarly ? 'text-sky-300/80' : 'text-orange-300/80'}`}>{message}</p>
+            <p className={`font-bold text-sm ${isEarly ? 'text-emerald-200' : 'text-amber-200'}`}>{title}</p>
+            <p className={`text-xs mt-1 leading-relaxed ${isEarly ? 'text-emerald-300/80' : 'text-amber-300/80'}`}>{message}</p>
           </div>
-          <button onClick={onClose} className={`flex-shrink-0 mt-0.5 ${isEarly ? 'text-sky-500 hover:text-sky-300' : 'text-orange-500 hover:text-orange-300'}`}>
+          <button onClick={onClose} className={`flex-shrink-0 mt-0.5 ${isEarly ? 'text-emerald-500 hover:text-emerald-300' : 'text-amber-500 hover:text-amber-300'}`}>
             <XCircle size={16} />
           </button>
         </div>
@@ -155,20 +156,20 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'PENDING_APPROVAL') {
     return (
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-3xl p-6 space-y-4">
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-blue-500/20 rounded-xl flex-shrink-0">
-            <Clock size={20} className="text-blue-400 animate-pulse" />
+          <div className="p-2.5 bg-amber-500/20 rounded-xl flex-shrink-0">
+            <Clock size={20} className="text-amber-400 animate-pulse" />
           </div>
           <div>
-            <p className="font-bold text-blue-300">En attente de validation</p>
-            <p className="text-blue-400/80 text-xs mt-0.5">
-              Votre demande de <strong className="text-blue-300">{Number(attendance.pendingOvertimeHours || 0).toFixed(1)}h supplémentaires</strong> a été envoyée à votre responsable.
+            <p className="font-bold text-amber-300">En attente de validation</p>
+            <p className="text-amber-400/80 text-xs mt-0.5">
+              Votre demande de <strong className="text-amber-300">{Number(attendance.pendingOvertimeHours || 0).toFixed(1)}h supplémentaires</strong> a été envoyée à votre responsable.
             </p>
           </div>
         </div>
         <div className="px-4 py-3 bg-slate-800/60 rounded-2xl text-xs text-slate-400 flex items-center gap-2">
-          <Info size={13} className="text-blue-400 flex-shrink-0" />
+          <Info size={13} className="text-amber-400 flex-shrink-0" />
           Votre responsable recevra une notification. Les heures ne seront comptées qu'après sa validation.
         </div>
         {attendance.overtimeRequestedAt && (
@@ -212,6 +213,30 @@ function OvertimeWorkflowCard({
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
+// ✅ Messages encourageants, tirés au sort par palier de distance —
+// affichés dans le radar pendant que l'employé se rapproche de la zone.
+// Purement cosmétique/motivant, aucun impact sur la décision d'autorisation
+// (qui reste entièrement gérée par le backend).
+// ✅ Au-delà de ce dépassement (en mètres, par rapport au rayon autorisé),
+// le radar + les messages motivants n'ont plus de sens : ce n'est plus "un
+// petit effort pour se rapprocher", c'est un vrai trajet — voire le signe
+// que l'employé n'est simplement pas au bon endroit. 100m ≈ 1-2 minutes de
+// marche, la limite raisonnable d'un "rapprochement".
+const RADAR_MAX_OVERSHOOT_METERS = 100;
+
+const MOTIVATION_FAR: Array<(d: number) => string> = [
+  (d) => `Encore ${d}m à parcourir — vous y êtes presque 💪`,
+  (d) => `Continuez, plus que ${d}m avant la zone !`,
+  (d) => `Allez, encore un effort : ${d}m et c'est bon 🚶`,
+  (d) => `${d}m restants — vous progressez bien !`,
+];
+const MOTIVATION_CLOSE: Array<(d: number) => string> = [
+  (d) => `Presque arrivé ! Plus que ${d}m 🚀`,
+  (d) => `Vous chauffez, ${d}m et vous y êtes !`,
+  (d) => `Dernier effort : ${d}m à peine 👏`,
+  (d) => `Ça y est presque — ${d}m seulement !`,
+];
+
 export default function AttendanceCheckInPage() {
   const { bp } = useBasePath();
   const router = useRouter();
@@ -248,6 +273,46 @@ export default function AttendanceCheckInPage() {
   });
 
   const [companySettings, setCompanySettings] = useState<any>(null);
+  // ✅ Animation du scan biométrique (purement visuel, ne simule aucune
+  // vraie biométrie — juste un retour visuel satisfaisant au clic)
+  const [scanAnim, setScanAnim] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  // ✅ Depuis quand on est "mal" positionné (hors zone / signal faible) —
+  // sert à décider quand afficher le petit bouton d'actualisation manuelle
+  const [badSince, setBadSince] = useState<number | null>(null);
+  // ✅ Panneau "Où suis-je ?" — se replie tout seul dès qu'on entre dans la
+  // zone (feedback positif immédiat, pas besoin de fermer soi-même).
+  const [showRadar, setShowRadar] = useState(false);
+  useEffect(() => {
+    if (geoState.allowed && showRadar) setShowRadar(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoState.allowed]);
+  useEffect(() => {
+    const allowedRadius = companySettings?.allowedRadius || 100;
+    const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
+    if (showRadar && overshoot > RADAR_MAX_OVERSHOOT_METERS) setShowRadar(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoState.distance, showRadar]);
+
+  // ✅ Message encourageant, mis à jour par palier de ~8m plutôt qu'à
+  // chaque relevé GPS (sinon ça clignoterait avec le bruit naturel du GPS).
+  const [motivMsg, setMotivMsg] = useState<string | null>(null);
+  const motivBucketRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!showRadar || geoState.allowed || status !== 'idle') {
+      motivBucketRef.current = null;
+      return;
+    }
+    const allowedRadius = companySettings?.allowedRadius || 100;
+    const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
+    const bucket = Math.floor(overshoot / 8);
+    if (bucket !== motivBucketRef.current) {
+      motivBucketRef.current = bucket;
+      const pool = overshoot <= 15 ? MOTIVATION_CLOSE : MOTIVATION_FAR;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      setMotivMsg(pick(Math.round(overshoot)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showRadar, geoState.distance, geoState.allowed, status]);
 
   // ── Rôle utilisateur (pour PresenceSubNav) ──────────────────────────────────
   useEffect(() => {
@@ -303,10 +368,11 @@ export default function AttendanceCheckInPage() {
   }, []);
 
   // ── GPS Watch ─────────────────────────────────────────────────────────────
+  const handlePositionSuccessRef = React.useRef<(pos: GeolocationPosition) => void>();
+
   useEffect(() => {
     if (!companySettings) return;
 
-    // Callback partagé entre watchPosition et le filet de sécurité ci-dessous
     const handlePositionSuccess = (pos: GeolocationPosition) => {
       const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
       const cLat   = companySettings.latitude;
@@ -325,16 +391,32 @@ export default function AttendanceCheckInPage() {
         latitude: uLat, longitude: uLng, error: null, loading: false,
         isMockedSuspect: accuracy > 100,
       });
+      // Suivi du temps passé "hors zone" pour le bouton d'actualisation manuelle
+      setBadSince(prev => {
+        const isBad = !isAllowed && accuracy <= 100;
+        if (isBad) return prev ?? Date.now();
+        return null;
+      });
     };
+    handlePositionSuccessRef.current = handlePositionSuccess;
+
+    const handlePositionError = (err: GeolocationPositionError) => {
+      const msg = err.code === 1
+        ? 'Vous devez autoriser la géolocalisation pour pointer.'
+        : 'Impossible de vous localiser.';
+      setGeoState(p => ({ ...p, error: msg, loading: false, allowed: false }));
+    };
+
+    // ✅ Lecture immédiate dès que companySettings est prêt, sans attendre le
+    // premier callback (parfois lent) de watchPosition — pour que la
+    // position se trouve vite et ne frustre pas l'utilisateur.
+    navigator.geolocation.getCurrentPosition(handlePositionSuccess, handlePositionError, {
+      enableHighAccuracy: true, timeout: 15000, maximumAge: 5000,
+    });
 
     const watchId = navigator.geolocation.watchPosition(
       handlePositionSuccess,
-      (err) => {
-        const msg = err.code === 1
-          ? 'Vous devez autoriser la géolocalisation pour pointer.'
-          : 'Impossible de vous localiser.';
-        setGeoState(p => ({ ...p, error: msg, loading: false, allowed: false }));
-      },
+      handlePositionError,
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
     );
 
@@ -342,23 +424,51 @@ export default function AttendanceCheckInPage() {
     // watchPosition si le mouvement est jugé "pas assez significatif",
     // laissant un vieux relevé affiché indéfiniment (le fameux "il faut
     // actualiser la page"). On force donc une lecture fraîche toutes les
-    // 8 secondes, en totale discrétion : pas de spinner, pas de reload,
+    // 5 secondes, en totale discrétion : pas de spinner, pas de reload,
     // juste le badge qui se met à jour tout seul si besoin. Les erreurs de
     // ce sondage sont ignorées (silencieuses) pour ne jamais perturber
     // l'utilisateur avec un souci ponctuel/temporaire de signal.
     const pollId = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         handlePositionSuccess,
-        () => { /* silencieux : watchPosition reste la source d'erreur */ },
+        () => { /* silencieux : watchPosition/erreur initiale restent la source d'erreur affichée */ },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
       );
-    }, 3000);
+    }, 4000);
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
       clearInterval(pollId);
     };
   }, [companySettings]);
+
+  // ✅ Actualisation manuelle (bouton) : relit la position tout de suite,
+  // sans attendre le prochain sondage automatique.
+  const handleManualRefresh = useCallback(() => {
+    if (!handlePositionSuccessRef.current) return;
+    setGeoState(p => ({ ...p, loading: true }));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => handlePositionSuccessRef.current?.(pos),
+      () => setGeoState(p => ({ ...p, loading: false })),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  }, []);
+
+  // ✅ Capture une position 100% fraîche, exactement à l'instant du clic sur
+  // "Pointer" — plutôt que de réutiliser la dernière valeur en mémoire
+  // (potentiellement vieille de quelques secondes à cause du sondage
+  // périodique). C'est CETTE position, capturée à l'instant T du clic, qui
+  // est envoyée au backend juste après.
+  const captureFreshPosition = (): Promise<GeolocationPosition | null> => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) { resolve(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos),
+        () => resolve(null), // échec de capture → on retombera sur le dernier relevé connu
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+      );
+    });
+  };
 
   // ── Action check-in / check-out ───────────────────────────────────────────
   const handleAction = async () => {
@@ -368,13 +478,24 @@ export default function AttendanceCheckInPage() {
     // décide d'accepter ou de rejeter avec un message clair.
 
     setIsProcessing(true);
+    setScanAnim('scanning'); // 🔵 anneau qui pulse, façon lecteur d'empreinte
+
+    // ✅ On capture la position pile à l'instant du clic — pas la dernière
+    // valeur mémorisée (qui peut dater de quelques secondes) — et c'est
+    // cette capture-là qu'on envoie directement au backend.
+    const freshPos = await captureFreshPosition();
+    const sendLat = freshPos ? freshPos.coords.latitude  : (geoState.latitude  || undefined);
+    const sendLng = freshPos ? freshPos.coords.longitude : (geoState.longitude || undefined);
+    if (freshPos) handlePositionSuccessRef.current?.(freshPos); // le badge reste synchronisé avec ce qui est envoyé
+
+    let scanOutcome: 'success' | 'error' = 'success';
     try {
       if (status === 'idle') {
         // ── CHECK-IN ────────────────────────────────────────────────────────
         const result = await offlineCheckIn({
           employeeId,
-          latitude:  geoState.latitude  || undefined,
-          longitude: geoState.longitude || undefined,
+          latitude:  sendLat,
+          longitude: sendLng,
         });
 
         if (result.success) {
@@ -419,19 +540,31 @@ export default function AttendanceCheckInPage() {
         } else {
           // ✅ Rejet backend (hors zone, position requise, etc.) — ne pas
           // rester silencieux : c'est justement le cas qu'on doit gérer.
+          scanOutcome = 'error';
           addNotification({
             type: 'ALERT',
             title: 'Pointage refusé',
             message: result.message || 'Impossible de pointer depuis cette position.',
           });
+          // ✅ Si le refus est lié à la position ET que la distance reste
+          // raisonnable, on enchaîne directement sur le radar. Au-delà du
+          // seuil "trop loin", ouvrir le radar n'aiderait pas.
+          const errCode = (result as any)?.code;
+          const errDistance = (result as any)?.data?.distance;
+          const allowedRadius = companySettings?.allowedRadius || 100;
+          const withinRadarRange =
+            errDistance == null || (errDistance - allowedRadius) <= RADAR_MAX_OVERSHOOT_METERS;
+          if ((errCode === 'OUT_OF_GEOFENCE' || errCode === 'LOCATION_REQUIRED') && withinRadarRange) {
+            setShowRadar(true);
+          }
         }
 
       } else {
         // ── CHECK-OUT ────────────────────────────────────────────────────────
         await attendanceApi.checkOut({
           employeeId,
-          latitude:  geoState.latitude  || undefined,
-          longitude: geoState.longitude || undefined,
+          latitude:  sendLat,
+          longitude: sendLng,
         });
         setStatus('completed');
         setShowConfetti(true);
@@ -440,9 +573,12 @@ export default function AttendanceCheckInPage() {
       }
     } catch (e: any) {
       console.error(e);
+      scanOutcome = 'error';
       addNotification({ type: 'ALERT', title: 'Erreur de pointage', message: e.message || 'Erreur technique.' });
     } finally {
       setIsProcessing(false);
+      setScanAnim(scanOutcome); // 🟢 succès ou 🔴 échec, bref, puis retour au neutre
+      setTimeout(() => setScanAnim('idle'), 1400);
     }
   };
 
@@ -482,7 +618,7 @@ export default function AttendanceCheckInPage() {
   const getGpsBadge = () => {
     if (geoState.loading)         return { color: 'bg-gray-800 text-gray-400',                              icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
     if (geoState.error)           return { color: 'bg-red-900/50 text-red-200 border-red-800',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
-    if (isOffline)                return { color: 'bg-orange-900/50 text-orange-200 border-orange-800',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
+    if (isOffline)                return { color: 'bg-amber-900/50 text-amber-200 border-amber-800',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
     if (geoState.allowed)         return { color: 'bg-emerald-900/50 text-emerald-300 border-emerald-800', icon: <MapPin size={12} />, text: `Zone OK (${geoState.distance}m)` };
     if (geoState.isMockedSuspect) return { color: 'bg-yellow-900/50 text-yellow-200 border-yellow-700',    icon: <Wifi size={12} />,   text: `Signal Faible (${geoState.accuracy}m)` };
     return                               { color: 'bg-red-900/50 text-red-200 border-red-800',              icon: <Ban size={12} />,    text: `Hors Zone (${geoState.distance}m)` };
@@ -538,7 +674,7 @@ export default function AttendanceCheckInPage() {
         <p className="text-slate-400 mt-2 text-lg capitalize">
           {currentTime?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
-        {employeeName && <p className="text-sky-400 font-bold mt-2">Bonjour, {employeeName}</p>}
+        {employeeName && <p className="text-emerald-400 font-bold mt-2">Bonjour, {employeeName}</p>}
       </div>
 
       {/* Contenu */}
@@ -581,34 +717,157 @@ export default function AttendanceCheckInPage() {
           )}
 
           {isOffline && status === 'idle' && (
-            <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 text-left">
-              <div className="flex items-center gap-2 text-orange-400 font-bold mb-1"><Wifi size={18} /> Mode Hors Ligne</div>
-              <p className="text-xs text-orange-200">Pointage enregistré localement, synchronisé dès le retour du réseau.</p>
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
+              <div className="flex items-center gap-2 text-amber-400 font-bold mb-1"><Wifi size={18} /> Mode Hors Ligne</div>
+              <p className="text-xs text-amber-200">Pointage enregistré localement, synchronisé dès le retour du réseau.</p>
             </div>
           )}
 
           {/* États */}
           {status === 'loading' && (
-            <div className="py-10"><Loader2 className="animate-spin mx-auto text-sky-500" size={32} /></div>
+            <div className="py-10"><Loader2 className="animate-spin mx-auto text-emerald-500" size={32} /></div>
           )}
 
           {status === 'idle' && (
             <>
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-500 ${
-                geoState.allowed || isOffline
-                  ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
-                  : geoState.isMockedSuspect ? 'bg-yellow-500/20 text-yellow-400'
-                  : 'bg-slate-700/50 text-slate-500'
-              }`}>
-                <Fingerprint size={48} strokeWidth={1.5} />
-              </div>
+              {/* ✅ L'empreinte est maintenant cliquable et déclenche le
+                  pointage elle-même (comme le bouton) — avec une animation
+                  de "scan" purement visuelle : ça donne l'impression d'un
+                  vrai lecteur biométrique, sans en être un. */}
+              <button
+                type="button"
+                onClick={handleAction}
+                disabled={isProcessing || geoState.loading}
+                aria-label="Pointer l'entrée"
+                className={`relative w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-300 focus:outline-none active:scale-90 disabled:cursor-not-allowed ${
+                  scanAnim === 'success'
+                    ? 'bg-emerald-500/30 text-emerald-300 scale-110 shadow-[0_0_40px_rgba(16,185,129,0.5)]'
+                    : scanAnim === 'error'
+                    ? 'bg-red-500/30 text-red-300 shadow-[0_0_30px_rgba(239,68,68,0.4)]'
+                    : scanAnim === 'scanning'
+                    ? 'bg-emerald-500/20 text-emerald-300'
+                    : geoState.allowed || isOffline
+                    ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
+                    : geoState.isMockedSuspect ? 'bg-yellow-500/20 text-yellow-400'
+                    : 'bg-slate-700/50 text-slate-500'
+                }`}
+              >
+                {/* Anneau de scan qui pulse vers l'extérieur */}
+                {scanAnim === 'scanning' && (
+                  <span className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping" />
+                )}
+                {scanAnim === 'success' && (
+                  <span className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping" />
+                )}
+
+                {scanAnim === 'success' ? (
+                  <CheckCircle2 size={44} strokeWidth={1.5} />
+                ) : scanAnim === 'error' ? (
+                  <XCircle size={44} strokeWidth={1.5} className="animate-pulse" />
+                ) : (
+                  <Fingerprint size={48} strokeWidth={1.5} className={scanAnim === 'scanning' ? 'animate-pulse' : ''} />
+                )}
+              </button>
+
+              {/* ✅ "Où suis-je ?" : radar inline, seulement dans une plage
+                  "raisonnable" de dépassement (≤ RADAR_MAX_OVERSHOOT_METERS).
+                  Au-delà, un simple message informatif sans radar ni ton
+                  motivant — ça n'aurait pas de sens de dire "encore un
+                  effort !" à quelqu'un à 800m du bureau. */}
+              {(() => {
+                const allowedRadius = companySettings?.allowedRadius || 100;
+                const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
+                const isTooFar = overshoot > RADAR_MAX_OVERSHOOT_METERS;
+                const showRadarButton =
+                  status === 'idle' && !geoState.allowed && !geoState.error && !isTooFar;
+
+                // Trop loin : message sobre, pas de radar/ton motivant
+                if (status === 'idle' && !geoState.allowed && !geoState.error && isTooFar) {
+                  return (
+                    <div className="mb-6 -mt-2 text-center">
+                      <p className="text-xs text-slate-400">
+                        Vous semblez loin de la zone autorisée (~{Math.round(geoState.distance ?? 0)}m).
+                        Si vous pensez être au bon endroit, contactez votre RH — sinon, le pointage manuel reste disponible.
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (!showRadarButton && !showRadar) return null;
+
+                return (
+                  <div className="mb-6 -mt-2">
+                    {!showRadar ? (
+                      <div className="text-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowRadar(true)}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition-colors"
+                        >
+                          <MapPin size={14} /> Où suis-je par rapport à la zone ?
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700">
+                        <GeofenceRadiusPreview
+                          radius={allowedRadius}
+                          userOffset={
+                            geoState.latitude && geoState.longitude && companySettings?.latitude && companySettings?.longitude
+                              ? computeMetersOffset(
+                                  companySettings.latitude, companySettings.longitude,
+                                  geoState.latitude, geoState.longitude,
+                                )
+                              : null
+                          }
+                        />
+                        {/* ✅ Message encourageant — purement motivant, sans
+                            aucun rôle dans la décision d'autorisation */}
+                        {motivMsg && (
+                          <p className="mt-3 text-center text-sm font-medium text-emerald-300 animate-pulse">
+                            {motivMsg}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setShowRadar(false)}
+                          className="mt-2 w-full text-center text-[11px] text-slate-400 hover:text-slate-300"
+                        >
+                          Fermer
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* ✅ Bouton d'actualisation manuelle : discret, n'apparaît QUE
+                  si on est mal positionné depuis un moment (pas au premier
+                  instant — laisser le sondage automatique faire son travail
+                  d'abord, ~12s), pour ne pas encombrer l'écran inutilement. */}
+              {badSince && currentTime && (currentTime.getTime() - badSince > 12000) && status === 'idle' && (
+                <div className="mb-6 -mt-4 text-center">
+                  <p className="text-xs text-slate-400 mb-2">
+                    {geoState.allowed ? '' : `Vous semblez hors zone ou un peu loin (${geoState.distance}m).`}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleManualRefresh}
+                    disabled={geoState.loading}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700/60 text-slate-300 hover:bg-slate-700 transition-colors disabled:opacity-50"
+                  >
+                    {geoState.loading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
+                    Actualiser ma position
+                  </button>
+                </div>
+              )}
+
               {/* ✅ Le bouton reste toujours actif : plus de blocage/forçage
                   côté client. On tente toujours le pointage, le backend est
                   seul juge (voir attendance-check.service.ts). */}
               <button
                 onClick={handleAction}
                 disabled={isProcessing || geoState.loading}
-                className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-emerald-500/25"
+                className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600"
               >
                 {isProcessing ? <Loader2 className="animate-spin" /> : <Clock size={20} />}
                 {isOffline ? 'Pointer (Hors Ligne)' : "Pointer l'Entrée"}
@@ -618,7 +877,7 @@ export default function AttendanceCheckInPage() {
 
           {status === 'working' && !hasOvertimeWorkflow && (
             <>
-              <div className="w-20 h-20 bg-sky-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-sky-400 animate-pulse border border-sky-500/30">
+              <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-400 animate-pulse border border-emerald-500/30">
                 <Clock size={32} />
               </div>
               <h2 className="text-2xl font-bold mb-2 text-white">Au travail</h2>
@@ -640,7 +899,7 @@ export default function AttendanceCheckInPage() {
 
           {status === 'completed' && !hasOvertimeWorkflow && (
             <>
-              <div className="w-20 h-20 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-400 border border-indigo-500/30">
+              <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-400 border border-amber-500/30">
                 <CheckCircle2 size={32} />
               </div>
               <h2 className="text-2xl font-bold mb-2 text-white">À demain !</h2>
@@ -685,7 +944,7 @@ export default function AttendanceCheckInPage() {
                 const isToday = new Date().toDateString() === date.toDateString();
                 const hasOT   = record.overtime10 > 0 || record.overtime25 > 0 || record.overtime50 > 0;
                 return (
-                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isToday ? 'bg-sky-500/10 border-sky-500/30' : 'bg-white/5 border-white/5'}`}>
+                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/5'}`}>
                     <div>
                       <p className="font-bold text-slate-200 text-sm capitalize">
                         {date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}
@@ -703,18 +962,18 @@ export default function AttendanceCheckInPage() {
                     </div>
                     <div className="flex flex-col gap-1 items-end">
                       {record.status === 'LATE' && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold">RETARD</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">RETARD</span>
                       )}
                       {record.notes === 'SUSPICIOUS_LOCATION' && (
                         <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold">SUSPECT</span>
                       )}
                       {hasOT && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold flex items-center gap-1">
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
                           <Zap size={9} /> HS
                         </span>
                       )}
                       {record.overtimeStatus === 'PENDING_APPROVAL' && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold">EN ATTENTE</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">EN ATTENTE</span>
                       )}
                     </div>
                   </div>

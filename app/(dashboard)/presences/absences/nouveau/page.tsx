@@ -213,17 +213,17 @@ export default function NouvelleAbsencePage() {
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={40} />
         </motion.div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Demande envoyée</h1>
-        <p className="text-gray-400 text-sm mb-8">
+        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Demande envoyée</h1>
+        <p className="text-[var(--text-muted)] text-sm mb-8">
           {onBehalf
             ? "La demande d'autorisation d'absence a été enregistrée pour l'employé sélectionné."
             : "Votre demande d'autorisation d'absence a été transmise. Vous serez notifié dès qu'elle sera traitée."}
         </p>
         <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm">
+          <button onClick={() => router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">
             {onBehalf ? 'Voir les demandes' : 'Voir mes demandes'}
           </button>
-          <button onClick={() => { setIsDone(false); setStartDate(''); setEndDate(''); setReason(''); }} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-sm text-gray-600 dark:text-gray-300">
+          <button onClick={() => { setIsDone(false); setStartDate(''); setEndDate(''); setReason(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
             Nouvelle demande
           </button>
         </div>
@@ -237,19 +237,19 @@ export default function NouvelleAbsencePage() {
       <AbsenceSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+        <button onClick={() => router.push(bp('/presences/absences'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
           <ArrowLeft size={18} />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nouvelle demande d&apos;absence</h1>
-          <p className="text-gray-400 text-sm">Remplissez le formulaire{showPreview ? ' — l\u2019aperçu à droite se met à jour en direct' : ''}</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Nouvelle demande d&apos;absence</h1>
+          <p className="text-[var(--text-muted)] text-sm">Remplissez le formulaire{showPreview ? ' — l\u2019aperçu à droite se met à jour en direct' : ''}</p>
         </div>
         <button
           onClick={() => setShowPreview(s => !s)}
           className={`px-4 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 shrink-0 border transition-colors ${
             showPreview
-              ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300'
-              : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+              ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+              : 'border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
           }`}
         >
           {showPreview ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -262,33 +262,33 @@ export default function NouvelleAbsencePage() {
         <div className={`${showPreview ? 'xl:col-span-2' : 'max-w-2xl mx-auto w-full'} space-y-5`}>
 
           {isApprover && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pour qui ?</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Pour qui ?</label>
                 <button
                   onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }}
-                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-sky-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
                 </button>
               </div>
               {!onBehalf ? (
-                <p className="text-sm text-gray-500">Pour moi-même</p>
+                <p className="text-sm text-[var(--text-muted)]">Pour moi-même</p>
               ) : (
                 <div className="space-y-2">
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {filteredEmployees.map(e => (
                       <button
                         key={e.id}
                         onClick={() => setSelectedEmployeeId(e.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 font-semibold' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-semibold' : 'hover:bg-[var(--surface-2)]'}`}
                       >
                         {e.firstName} {e.lastName}
-                        {e.department?.name && <span className="text-xs text-gray-400">{e.department.name}</span>}
+                        {e.department?.name && <span className="text-xs text-[var(--text-muted)]">{e.department.name}</span>}
                       </button>
                     ))}
                   </div>
@@ -297,8 +297,8 @@ export default function NouvelleAbsencePage() {
             </div>
           )}
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Type d&apos;absence</label>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type d&apos;absence</label>
             <div className="grid grid-cols-1 gap-2">
               {TYPE_OPTIONS.map(opt => {
                 const Icon = opt.icon;
@@ -308,22 +308,22 @@ export default function NouvelleAbsencePage() {
                     key={opt.value}
                     onClick={() => handleTypeChange(opt.value)}
                     className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
-                      active ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'
+                      active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-sky-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
                       <Icon size={18} />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-gray-900 dark:text-white">{opt.label}</p>
-                      <p className="text-xs text-gray-400">{opt.hint}</p>
+                      <p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{opt.hint}</p>
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-4 mb-2 block">Motif précis</label>
+            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mt-4 mb-2 block">Motif précis</label>
             <div className="flex flex-wrap gap-2">
               {SUBTYPE_OPTIONS[type].map(opt => (
                 <button
@@ -331,8 +331,8 @@ export default function NouvelleAbsencePage() {
                   onClick={() => setSubType(opt.value)}
                   className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     subType === opt.value
-                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300'
-                      : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300'
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                   }`}
                 >
                   {opt.label}
@@ -341,17 +341,17 @@ export default function NouvelleAbsencePage() {
             </div>
           </div>
 
-          <div className="bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800 rounded-2xl p-4 space-y-3">
+          <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 space-y-3">
             <div>
-              <label className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase tracking-wider block">
+              <label className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">
                 Vous ne connaissez pas votre date de reprise ?
               </label>
-              <p className="text-xs text-sky-600/80 dark:text-sky-400/80 mt-1">
+              <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
                 Optionnel — utile si vous savez combien de jours vous voulez prendre, mais pas encore la date exacte de retour
                 (ça dépend des dimanches et jours fériés entre les deux). Indiquez le nombre de jours ci-dessous, on calcule
                 la date de reprise et on la remplit pour vous plus bas.
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-[var(--text-muted)] mt-1">
                 Vous connaissez déjà vos deux dates (ex: du 1er au 30) ? Ignorez ce bloc et remplissez directement les champs en bas.
               </p>
             </div>
@@ -361,26 +361,26 @@ export default function NouvelleAbsencePage() {
                 placeholder="Ex : 12 jours"
                 value={desiredDays}
                 onChange={e => setDesiredDays(e.target.value)}
-                className="flex-1 px-3 py-2.5 rounded-xl border border-sky-200 dark:border-sky-700 dark:bg-gray-900 text-sm"
+                className="flex-1 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-[var(--surface)] text-sm"
               />
               <button
                 type="button"
                 onClick={handleCalculateReturn}
                 disabled={isCalculatingReturn || !selectedTargetEmployee?.id || !startDate || !desiredDays}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
               >
                 {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
                 Calculer la date de reprise
               </button>
             </div>
-            {!startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
+            {!startDate && <p className="text-xs text-emerald-600 dark:text-emerald-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
             {returnCalc && (
-              <div className="pt-2 border-t border-sky-100 dark:border-sky-800 space-y-1.5">
-                <p className="text-sm text-sky-700 dark:text-sky-300">
+              <div className="pt-2 border-t border-emerald-100 dark:border-emerald-800 space-y-1.5">
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">
                   Reprise du travail : <strong>{new Date(returnCalc.returnDate).toLocaleDateString('fr-FR')}</strong>
                 </p>
                 {(returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
-                  <details className="text-xs text-sky-600 dark:text-sky-400">
+                  <details className="text-xs text-emerald-600 dark:text-emerald-400">
                     <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
                     <div className="mt-2 space-y-1 pl-2">
                       <p>{returnCalc.sundaysSkipped} dimanche(s) exclu(s) de la période</p>
@@ -399,58 +399,58 @@ export default function NouvelleAbsencePage() {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Date de départ</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
                 <div className="relative">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Reprise du travail</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Reprise du travail</label>
                 <div className="relative">
-                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
             </div>
 
             {workingDays > 0 && (
-              <div className="flex items-center gap-2 text-sm bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 px-3 py-2 rounded-lg">
+              <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
                 <Info size={14} /> {workingDays} jour{workingDays > 1 ? 's' : ''} ouvrable{workingDays > 1 ? 's' : ''} d&apos;absence
               </div>
             )}
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Motif de l&apos;absence</label>
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif de l&apos;absence</label>
               <textarea
                 value={reason}
                 onChange={e => setReason(e.target.value)}
                 rows={3}
                 placeholder="Expliquez brièvement le motif de votre absence…"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm resize-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
               <div className="flex items-center gap-2">
-                <Wallet size={16} className="text-gray-400" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Absence payée souhaitée</span>
+                <Wallet size={16} className="text-[var(--text-muted)]" />
+                <span className="text-sm font-medium text-[var(--text)]">Absence payée souhaitée</span>
               </div>
               <button
                 onClick={() => setIsPaid(!isPaid)}
-                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
               >
                 <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${isPaid ? 'left-5' : 'left-0.5'}`} />
               </button>
             </div>
-            <p className="text-[11px] text-gray-400 -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
+            <p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Justificatif (optionnel)</label>
-              <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 text-sm text-gray-500 cursor-pointer hover:border-sky-400 hover:text-sky-500 transition-colors">
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Justificatif (optionnel)</label>
+              <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
                 <Paperclip size={16} />
                 {uploading ? 'Envoi en cours…' : uploadedUrl ? 'Justificatif joint ✓' : 'Joindre un certificat / document'}
                 <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
@@ -463,7 +463,7 @@ export default function NouvelleAbsencePage() {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="w-full py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 transition-all"
+            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all"
           >
             {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
             {onBehalf ? 'Créer la demande' : 'Envoyer la demande'}
@@ -474,8 +474,8 @@ export default function NouvelleAbsencePage() {
         {showPreview && (
         <div className="xl:col-span-3">
           <div className="sticky top-6">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Aperçu du document</p>
-            <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-4 overflow-auto max-h-[85vh] border border-gray-200 dark:border-gray-700">
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Aperçu du document</p>
+            <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto max-h-[85vh] border border-[var(--border)]">
               <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
                 <AbsenceRequestPrintable data={previewData as any} />
               </div>

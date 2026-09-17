@@ -31,13 +31,13 @@ const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }>
   PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
   APPROVED:  { label: 'Autorisé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
-  CANCELLED: { label: 'Annulé',     badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
+  CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; dot: string }> = {
   URGENCE: { label: 'Urgence', icon: Stethoscope, dot: 'bg-red-400' },
   MISSION: { label: 'Mission', icon: Briefcase,   dot: 'bg-violet-400' },
-  AUTRE:   { label: 'Autre',   icon: HelpCircle,  dot: 'bg-gray-400' },
+  AUTRE:   { label: 'Autre',   icon: HelpCircle,  dot: 'bg-[var(--text-muted)]' },
 };
 
 export default function PermissionsManagementPage() {
@@ -150,7 +150,7 @@ export default function PermissionsManagementPage() {
     finally { setIsExportingPdf(false); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
@@ -159,22 +159,22 @@ export default function PermissionsManagementPage() {
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Ressources Humaines</p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Tickets de permission</h1>
-          <p className="text-gray-400 text-sm mt-1">Urgences · Missions d&apos;entreprise à l&apos;extérieur</p>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Ressources Humaines</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Tickets de permission</h1>
+          <p className="text-[var(--text-muted)] text-sm mt-1">Urgences · Missions d&apos;entreprise à l&apos;extérieur</p>
         </div>
-        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/30 w-fit">
+        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30 w-fit">
           <Plus size={18} /> Nouveau ticket
         </Link>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'overview' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+      <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
+        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <LayoutDashboard size={14} /> Vue d&apos;ensemble
         </button>
-        <button onClick={() => setTab('tickets')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'tickets' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+        <button onClick={() => setTab('tickets')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'tickets' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Ticket size={14} /> Tickets
-          {pendingCount > 0 && <span className="bg-orange-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+          {pendingCount > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
         </button>
       </div>
 
@@ -190,26 +190,26 @@ export default function PermissionsManagementPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ── LISTE ── */}
         <div className="lg:col-span-4 space-y-4">
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-            <button onClick={() => setFilter('PENDING')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${filter === 'PENDING' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+          <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
+            <button onClick={() => setFilter('PENDING')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${filter === 'PENDING' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               À traiter
-              {pendingCount > 0 && <span className="bg-orange-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
+              {pendingCount > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{pendingCount}</span>}
             </button>
-            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === 'ALL' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${filter === 'ALL' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               Toutes
             </button>
           </div>
 
           <div className="relative">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-sm" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
           </div>
 
           <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filtered.length === 0 ? (
-              <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+              <div className="text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
                 <CheckCircle2 size={28} className="text-emerald-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Rien à afficher ici.</p>
+                <p className="text-sm text-[var(--text-muted)]">Rien à afficher ici.</p>
               </div>
             ) : filtered.map(t => {
               const tCfg = TYPE_CONFIG[t.type] ?? TYPE_CONFIG.AUTRE;
@@ -220,23 +220,23 @@ export default function PermissionsManagementPage() {
                 <div
                   key={t.id}
                   onClick={() => { setSelectedId(t.id); setRejectMode(false); setRejectionReason(''); }}
-                  className={`w-full text-left p-4 rounded-2xl border cursor-pointer transition-all flex gap-3 items-start ${active ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'}`}
+                  className={`w-full text-left p-4 rounded-2xl border cursor-pointer transition-all flex gap-3 items-start ${active ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}
                 >
                   <button
                     onClick={(e) => { e.stopPropagation(); openEmployeeHistory(t.employee); }}
                     title="Voir l'historique complet de cet employé"
-                    className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500 dark:text-gray-300 text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-sky-400 transition-all"
+                    className="w-10 h-10 rounded-xl bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)] text-xs shrink-0 overflow-hidden hover:ring-2 hover:ring-emerald-400 transition-all"
                   >
                     {t.employee?.photoUrl ? <img src={t.employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
                   </button>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(t.employee); }} className="font-semibold text-sm text-gray-900 dark:text-white truncate hover:underline text-left">
+                      <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(t.employee); }} className="font-semibold text-sm text-[var(--text)] truncate hover:underline text-left">
                         {t.employee?.firstName} {t.employee?.lastName}
                       </button>
                       <span className={`w-2 h-2 rounded-full shrink-0 ${tCfg.dot}`} />
                     </div>
-                    <p className="text-xs text-gray-400 truncate">{tCfg.label} · {new Date(t.departureTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate">{tCfg.label} · {new Date(t.departureTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
                     <span className={`inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
                   </div>
                 </div>
@@ -248,22 +248,22 @@ export default function PermissionsManagementPage() {
         {/* ── DÉTAIL ── */}
         <div className="lg:col-span-8">
           {!selected ? (
-            <div className="h-full min-h-[400px] flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-400 text-sm">
+            <div className="h-full min-h-[400px] flex items-center justify-center bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-[var(--text-muted)] text-sm">
               Sélectionnez un ticket dans la liste
             </div>
           ) : (
-            <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-              <div className="p-6 bg-gradient-to-br from-sky-50 to-white dark:from-gray-900 dark:to-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
+            <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+              <div className="p-6 bg-[var(--surface-2)] border-b border-[var(--border)] flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => openEmployeeHistory(selected.employee)} className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-base font-bold text-sky-600 overflow-hidden shrink-0">
+                  <button onClick={() => openEmployeeHistory(selected.employee)} className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-base font-bold text-emerald-600 overflow-hidden shrink-0">
                     {selected.employee?.photoUrl ? <img src={selected.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : `${selected.employee?.firstName?.[0] ?? ''}${selected.employee?.lastName?.[0] ?? ''}`}
                   </button>
                   <div>
-                    <button onClick={() => openEmployeeHistory(selected.employee)} className="text-xl font-bold text-gray-900 dark:text-white hover:underline flex items-center gap-2">
+                    <button onClick={() => openEmployeeHistory(selected.employee)} className="text-xl font-bold text-[var(--text)] hover:underline flex items-center gap-2">
                       {selected.employee?.firstName} {selected.employee?.lastName}
-                      <History size={15} className="text-gray-300" />
+                      <History size={15} className="text-[var(--text-muted)]" />
                     </button>
-                    <p className="text-sm text-gray-400">{selected.employee?.position}{selected.employee?.department ? ` · ${selected.employee.department.name}` : ''}</p>
+                    <p className="text-sm text-[var(--text-muted)]">{selected.employee?.position}{selected.employee?.department ? ` · ${selected.employee.department.name}` : ''}</p>
                   </div>
                 </div>
                 <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
@@ -281,14 +281,14 @@ export default function PermissionsManagementPage() {
                   </div>
 
                   {selected.destination && (
-                    <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700">
-                      <MapPin size={14} className="text-gray-400" /> {selected.destination}
+                    <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
+                      <MapPin size={14} className="text-[var(--text-muted)]" /> {selected.destination}
                     </div>
                   )}
 
                   <div className="text-sm">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p>
-                    <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3.5 rounded-xl">{selected.reason}</p>
+                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                    <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{selected.reason}</p>
                   </div>
 
                   {selected.status === 'REJECTED' && selected.rejectionReason && (
@@ -304,7 +304,7 @@ export default function PermissionsManagementPage() {
                           <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                             <Check size={16} /> Autoriser
                           </button>
-                          <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-gray-200 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                          <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                             <X size={16} /> Refuser
                           </button>
                         </div>
@@ -315,7 +315,7 @@ export default function PermissionsManagementPage() {
                             <button onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                               {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
                             </button>
-                            <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-gray-200 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500">Annuler</button>
+                            <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
                           </div>
                         </div>
                       )}
@@ -323,20 +323,20 @@ export default function PermissionsManagementPage() {
                   )}
 
                   {selected.status === 'APPROVED' && !selected.actualReturnTime && (
-                    <button onClick={handleMarkReturn} disabled={isProcessing} className="w-full py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <button onClick={handleMarkReturn} disabled={isProcessing} className="w-full py-3 bg-[var(--text)] text-[var(--bg)] text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                       {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />} Marquer le retour
                     </button>
                   )}
 
                   <div className="flex gap-2">
-                    <button onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <button onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                       <Printer size={16} /> Imprimer
                     </button>
-                    <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
+                    <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
                       {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
                     </button>
                   </div>
-                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu du ticket
                   </button>
                 </div>
@@ -363,8 +363,8 @@ export default function PermissionsManagementPage() {
 
 function DetailTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'sky' | 'emerald' | 'amber' | 'violet' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200',
-    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300',
+    slate: 'bg-[var(--surface-2)] text-[var(--text)]',
+    sky: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
     emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
     amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
     violet: 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300',

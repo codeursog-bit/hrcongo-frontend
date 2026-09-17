@@ -24,7 +24,7 @@ const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }>
   PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
   APPROVED:  { label: 'Approuvé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
-  CANCELLED: { label: 'Annulé',     badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
+  CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]', icon: Ban },
 };
 
 const TYPE_LABELS: Record<string, string> = { ANNUAL: 'Congé annuel', ANNUAL_ANTICIPATED: 'Congé annuel anticipé' };
@@ -122,7 +122,7 @@ export default function MonEspaceCongesPage() {
       <div className="p-6 max-w-5xl mx-auto">
         <CongeSubNav userRole={userRole} />
         <div className="flex items-center justify-center py-24">
-          <Loader2 size={28} className="animate-spin text-sky-500" />
+          <Loader2 size={28} className="animate-spin text-emerald-500" />
         </div>
       </div>
     );
@@ -139,35 +139,35 @@ export default function MonEspaceCongesPage() {
       <CongeSubNav userRole={userRole} />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mon espace congés</h1>
-        <p className="text-sm text-gray-400">Mon solde, mes demandes et mes jours à rattraper</p>
+        <h1 className="text-2xl font-bold text-[var(--text)]">Mon espace congés</h1>
+        <p className="text-sm text-[var(--text-muted)]">Mon solde, mes demandes et mes jours à rattraper</p>
       </div>
 
       {/* ── Solde ── */}
       {balance && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 mb-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">
-            <Wallet size={16} className="text-sky-500" /> Mon solde de congé
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 mb-4">
+          <div className="flex items-center gap-2 text-sm font-bold text-[var(--text-muted)] mb-3">
+            <Wallet size={16} className="text-emerald-500" /> Mon solde de congé
           </div>
           <div className="grid grid-cols-3 gap-4 text-center mb-3">
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(Number(balance.annualEntitled))}j</p>
-              <p className="text-xs text-gray-400">Acquis</p>
+              <p className="text-2xl font-bold text-[var(--text)]">{Math.round(Number(balance.annualEntitled))}j</p>
+              <p className="text-xs text-[var(--text-muted)]">Acquis</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(Number(balance.annualTaken))}j</p>
-              <p className="text-xs text-gray-400">Pris</p>
+              <p className="text-2xl font-bold text-[var(--text)]">{Math.round(Number(balance.annualTaken))}j</p>
+              <p className="text-xs text-[var(--text-muted)]">Pris</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{Math.round(Number(balance.annualRemaining))}j</p>
-              <p className="text-xs text-gray-400">Restant</p>
+              <p className="text-xs text-[var(--text-muted)]">Restant</p>
             </div>
           </div>
-          <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden mb-2">
-            <div className="h-full bg-sky-500" style={{ width: `${pctUsed}%` }} />
+          <div className="h-2 rounded-full bg-[var(--surface-2)] overflow-hidden mb-2">
+            <div className="h-full bg-emerald-500" style={{ width: `${pctUsed}%` }} />
           </div>
           {gapToFullBase > 0 && (
-            <p className="text-xs text-sky-500 dark:text-sky-400">
+            <p className="text-xs text-emerald-500 dark:text-emerald-400">
               Encore {Math.round(gapToFullBase * 10) / 10}j avant d'atteindre les 26j légaux de mon cycle en cours
             </p>
           )}
@@ -187,12 +187,12 @@ export default function MonEspaceCongesPage() {
           </div>
           <div className="space-y-3">
             {carryover.map(co => (
-              <div key={co.sourceLeaveId} className="bg-white dark:bg-gray-800 rounded-xl p-3 flex items-center justify-between gap-3">
+              <div key={co.sourceLeaveId} className="bg-[var(--surface)] rounded-xl p-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-200">
+                  <p className="text-sm text-[var(--text-muted)]">
                     Congé {co.cycleLabel ? `du cycle ${co.cycleLabel}` : ''} — {fmtDate(co.originalStartDate)} au {fmtDate(co.originalEndDate)}
                   </p>
-                  <p className="text-xs text-gray-400">Retour anticipé le {fmtDate(co.actualReturnDate)}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Retour anticipé le {fmtDate(co.actualReturnDate)}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{Math.round(co.remainingDays * 10) / 10}j</span>
@@ -213,17 +213,17 @@ export default function MonEspaceCongesPage() {
       )}
 
       {/* ── Historique de mes demandes ── */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 text-sm font-bold text-gray-700 dark:text-gray-200">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+        <div className="px-5 py-3 border-b border-[var(--border)] text-sm font-bold text-[var(--text-muted)]">
           Mes demandes
         </div>
         {myLeaves.length === 0 ? (
           <div className="text-center py-16">
-            <Calendar size={28} className="text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">Aucune demande de congé pour le moment.</p>
+            <Calendar size={28} className="text-[var(--text-muted)] mx-auto mb-2" />
+            <p className="text-sm text-[var(--text-muted)]">Aucune demande de congé pour le moment.</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
+          <div className="divide-y divide-[var(--border)]">
             {myLeaves.map(leave => {
               const st = STATUS_CONFIG[leave.status as Status] || STATUS_CONFIG.PENDING;
               const StIcon = st.icon;
@@ -231,9 +231,9 @@ export default function MonEspaceCongesPage() {
               return (
                 <div key={leave.id} className="px-5 py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <Icon size={16} className="text-gray-400 shrink-0" />
+                    <Icon size={16} className="text-[var(--text-muted)] shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-1.5 flex-wrap">
+                      <p className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-1.5 flex-wrap">
                         {leave.carriedFromLeaveId ? 'Rattrapage — reliquat non payé' : (TYPE_LABELS[leave.type] || leave.type)}
                         {leave.carriedFromLeaveId && (
                           <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
@@ -241,7 +241,7 @@ export default function MonEspaceCongesPage() {
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                      <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
                         {fmtDate(leave.startDate)} <ArrowRight size={10} /> {fmtDate(leave.endDate)} · {Math.round(Number(leave.daysCount))}j
                       </p>
                     </div>
@@ -254,7 +254,7 @@ export default function MonEspaceCongesPage() {
                       <button
                         onClick={() => handleCancel(leave.id)}
                         disabled={cancellingId === leave.id}
-                        className="text-xs font-semibold text-gray-400 hover:text-red-500 disabled:opacity-40"
+                        className="text-xs font-semibold text-[var(--text-muted)] hover:text-red-500 disabled:opacity-40"
                       >
                         {cancellingId === leave.id ? <Loader2 size={12} className="animate-spin" /> : 'Annuler'}
                       </button>
@@ -276,34 +276,34 @@ export default function MonEspaceCongesPage() {
           >
             <motion.div
               initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
+              className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Demander mes jours restants</h2>
-                <button onClick={() => setRequesting(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <h2 className="text-lg font-bold text-[var(--text)]">Demander mes jours restants</h2>
+                <button onClick={() => setRequesting(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[var(--text-muted)]">
                 Il te reste <strong>{Math.round(requesting.remainingDays * 10) / 10}j</strong> à rattraper sur ton congé du {fmtDate(requesting.originalStartDate)} au {fmtDate(requesting.originalEndDate)}. Ce repos n'est pas payé une seconde fois et n'affecte pas ton solde en cours — le RH validera comme une demande normale.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de départ</label>
                   <input
                     type="date"
                     value={requestForm.startDate}
                     onChange={e => setRequestForm(f => ({ ...f, startDate: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface-2)] rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de retour</label>
                   <input
                     type="date"
                     value={requestForm.endDate}
                     onChange={e => setRequestForm(f => ({ ...f, endDate: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface-2)] rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
@@ -313,7 +313,7 @@ export default function MonEspaceCongesPage() {
                 </div>
               )}
               <div className="flex justify-end gap-2 pt-2">
-                <button onClick={() => setRequesting(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+                <button onClick={() => setRequesting(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                   Annuler
                 </button>
                 <button

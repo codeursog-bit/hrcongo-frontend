@@ -119,32 +119,32 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-lg bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
         </div>
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-[var(--text)]">
               {initial?.id ? 'Modifier' : 'Nouveau shift'}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Durée : <strong className="text-sky-500">{duration}h</strong>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              Durée : <strong className="text-emerald-500">{duration}h</strong>
               {crosses && <span className="ml-1 text-amber-500">(traverse minuit)</span>}
             </p>
           </div>
-          <button onClick={onCancel} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X size={18} className="text-gray-400" />
+          <button onClick={onCancel} className="p-2 rounded-xl hover:bg-[var(--surface-2)]">
+            <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
         <div className="p-6 max-h-[72vh] overflow-y-auto space-y-5">
           {!initial?.id && (
             <div>
-              <p className="text-xs font-bold text-gray-500 uppercase mb-2">Démarrage rapide</p>
+              <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Démarrage rapide</p>
               <div className="grid grid-cols-4 gap-2">
                 {PRESETS.map(p => (
                   <button key={p.name} onClick={() => { setName(p.name); setSh(p.sh); setSm(0); setEh(p.eh); setEm(0); setNight(p.night); setColor(p.color); }}
-                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-sky-400 text-xs font-bold text-gray-600 dark:text-gray-300 transition-all"
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 border-[var(--border)] hover:border-emerald-400 text-xs font-bold text-[var(--text-muted)] transition-all"
                     style={{ borderColor: name === p.name ? p.color : undefined }}>
                     <span>{p.night ? '🌙' : p.sh < 12 ? '☀️' : '🌆'}</span>
                     {p.name}
@@ -154,10 +154,10 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
             </div>
           )}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Nom <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-bold text-[var(--text-muted)] mb-1.5">Nom <span className="text-red-500">*</span></label>
             <input type="text" value={name} onChange={e => setName(e.target.value)}
               placeholder="Ex : Matin, Nuit, Garde pharmacie..."
-              className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20" />
+              className="w-full px-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[
@@ -165,14 +165,14 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
               { label: 'Fin', h: eh, m: em, setH: setEh, setM: setEm },
             ].map(({ label, h, m, setH, setM }) => (
               <div key={label}>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
+                <label className="block text-sm font-bold text-[var(--text-muted)] mb-1.5">{label}</label>
                 <div className="flex gap-2">
                   <select value={h} onChange={e => setH(+e.target.value)}
-                    className="flex-1 px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500">
+                    className="flex-1 px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500">
                     {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, '0')}h</option>)}
                   </select>
                   <select value={m} onChange={e => setM(+e.target.value)}
-                    className="w-20 px-2 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500">
+                    className="w-20 px-2 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500">
                     {[0, 15, 30, 45].map(v => <option key={v} value={v}>{String(v).padStart(2, '0')}</option>)}
                   </select>
                 </div>
@@ -181,33 +181,33 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <button type="button" onClick={() => setNight(!night)}
-              className={`w-11 h-6 rounded-full transition-colors ${night ? 'bg-sky-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+              className={`w-11 h-6 rounded-full transition-colors ${night ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
               <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mt-0.5 ${night ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
             </button>
             <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5"><Moon size={14} className="text-sky-500" /> Shift de nuit</p>
-              <p className="text-xs text-gray-500">Ouvre droit à la prime de nuit</p>
+              <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-1.5"><Moon size={14} className="text-emerald-500" /> Shift de nuit</p>
+              <p className="text-xs text-[var(--text-muted)]">Ouvre droit à la prime de nuit</p>
             </div>
           </label>
           {night && (
             <div>
-              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">Prime de nuit (%)</label>
+              <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Prime de nuit (%)</label>
               <input type="number" min={0} max={100} step={5} value={premium} onChange={e => setPremium(+e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                className="w-full px-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
             </div>
           )}
           <label className="flex items-center gap-3 cursor-pointer">
             <button type="button" onClick={() => setDefault(!isDefault)}
-              className={`w-11 h-6 rounded-full transition-colors ${isDefault ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+              className={`w-11 h-6 rounded-full transition-colors ${isDefault ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
               <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform mt-0.5 ${isDefault ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
             </button>
             <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Shift par défaut</p>
-              <p className="text-xs text-gray-500">Appliqué aux employés sans planning spécifique</p>
+              <p className="text-sm font-semibold text-[var(--text)]">Shift par défaut</p>
+              <p className="text-xs text-[var(--text-muted)]">Appliqué aux employés sans planning spécifique</p>
             </div>
           </label>
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase mb-2">Couleur</p>
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Couleur</p>
             <div className="flex gap-2 flex-wrap">
               {SHIFT_COLORS.map(c => (
                 <button key={c} onClick={() => setColor(c)}
@@ -217,12 +217,12 @@ function ShiftModal({ initial, onSave, onCancel, saving }: {
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
-          <button onClick={onCancel} className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold">Annuler</button>
+        <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
+          <button onClick={onCancel} className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold">Annuler</button>
           <button
             onClick={() => onSave({ name: name.trim(), startHour: sh, startMinute: sm, endHour: eh, endMinute: em, isNightShift: night || crosses, nightPremiumRate: premium, color, isDefault, durationHours: duration, crossesMidnight: crosses })}
             disabled={!name.trim() || saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-sky-500 to-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-sky-500/20">
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {initial?.id ? 'Mettre à jour' : 'Créer'}
           </button>
@@ -282,14 +282,14 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-lg bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
         </div>
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Assigner un planning</h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X size={18} className="text-gray-400" />
+        <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h3 className="text-lg font-bold text-[var(--text)]">Assigner un planning</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--surface-2)]">
+            <X size={18} className="text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -297,23 +297,23 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Shift */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
               Shift <span className="text-red-500">*</span>
             </label>
             <div className="space-y-1.5">
               {shifts.map(s => (
                 <button key={s.id} onClick={() => setShiftId(s.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-all ${shiftId === s.id ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border-2 text-left transition-all ${shiftId === s.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-1.5">
+                    <p className="font-bold text-sm text-[var(--text)] flex items-center gap-1.5">
                       <ShiftIcon shift={s} />
                       {s.name}
                       {s.isDefault && <span className="ml-1 px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded text-[10px] font-bold">Défaut</span>}
                     </p>
-                    <p className="text-xs text-gray-500">{fmtHHMM(s.startHour, s.startMinute)} → {fmtHHMM(s.endHour, s.endMinute)} · {s.durationHours}h{s.nightPremiumRate > 0 ? ` · +${s.nightPremiumRate}%` : ''}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{fmtHHMM(s.startHour, s.startMinute)} → {fmtHHMM(s.endHour, s.endMinute)} · {s.durationHours}h{s.nightPremiumRate > 0 ? ` · +${s.nightPremiumRate}%` : ''}</p>
                   </div>
-                  {shiftId === s.id && <Check size={14} className="text-sky-500 flex-shrink-0" />}
+                  {shiftId === s.id && <Check size={14} className="text-emerald-500 flex-shrink-0" />}
                 </button>
               ))}
             </div>
@@ -321,11 +321,11 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Type */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Type</label>
-            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
+            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Type</label>
+            <div className="flex bg-[var(--surface-2)] rounded-xl p-1 gap-1">
               {(['date', 'recurring'] as const).map(t => (
                 <button key={t} onClick={() => setType(t)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === t ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+                  className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === t ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
                   {t === 'date' ? '📅 Date précise' : '🔄 Récurrent'}
                 </button>
               ))}
@@ -335,20 +335,20 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
           {/* Contenu selon type */}
           {type === 'date' ? (
             <div>
-              <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">Date</label>
+              <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Date</label>
               <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                className="w-full px-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
             </div>
           ) : (
             <div className="space-y-4">
               {/* Jours multi-sélection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                  <label className="text-xs font-bold text-[var(--text-muted)]">
                     Jours <span className="text-red-500">*</span>
                   </label>
                   {selectedDays.length > 0 && (
-                    <span className="text-[10px] font-bold text-sky-500">
+                    <span className="text-[10px] font-bold text-emerald-500">
                       {selectedDays.length} jour{selectedDays.length > 1 ? 's' : ''} sélectionné{selectedDays.length > 1 ? 's' : ''}
                     </span>
                   )}
@@ -362,8 +362,8 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
                         onClick={() => toggleDay(i)}
                         className={`flex flex-col items-center py-2.5 rounded-xl text-xs font-bold transition-all ${
                           isSelected
-                            ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30 scale-105'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30 scale-105'
+                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
                         }`}
                       >
                         {d}
@@ -381,7 +381,7 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
                     { label: 'Week-end', days: [6, 0] },
                   ].map(({ label, days }) => (
                     <button key={label} onClick={() => setSelectedDays(days)}
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors">
                       {label}
                     </button>
                   ))}
@@ -397,18 +397,18 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
               {/* Période */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                    Du <span className="text-gray-400 font-normal">(optionnel)</span>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">
+                    Du <span className="text-[var(--text-muted)] font-normal">(optionnel)</span>
                   </label>
                   <input type="date" value={validFrom} onChange={e => setValidFrom(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                    className="w-full px-3 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1">
-                    Au <span className="text-gray-400 font-normal">(optionnel)</span>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">
+                    Au <span className="text-[var(--text-muted)] font-normal">(optionnel)</span>
                   </label>
                   <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)}
-                    className="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                    className="w-full px-3 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
                 </div>
               </div>
             </div>
@@ -416,29 +416,29 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Employé */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
               Employé <span className="text-red-500">*</span>
             </label>
             <div className="relative mb-2">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full pl-8 pr-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+                className="w-full pl-8 pr-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
             </div>
             <div className="max-h-40 overflow-y-auto space-y-1.5">
               {filtered.length === 0 ? (
-                <p className="text-center text-sm text-gray-400 py-4">Aucun employé trouvé</p>
+                <p className="text-center text-sm text-[var(--text-muted)] py-4">Aucun employé trouvé</p>
               ) : filtered.map(emp => (
                 <button key={emp.id} onClick={() => setEmpId(emp.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-all ${empId === emp.id ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}`}>
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-all ${empId === emp.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
                   {emp.photoUrl
                     ? <img src={emp.photoUrl} className="w-8 h-8 rounded-lg object-cover" alt="" />
-                    : <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white">{emp.firstName[0]}{emp.lastName[0]}</div>
+                    : <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs font-bold text-white">{emp.firstName[0]}{emp.lastName[0]}</div>
                   }
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{emp.firstName} {emp.lastName}</p>
-                    <p className="text-xs text-gray-500 truncate">{emp.department?.name}</p>
+                    <p className="font-semibold text-sm text-[var(--text)] truncate">{emp.firstName} {emp.lastName}</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate">{emp.department?.name}</p>
                   </div>
-                  {empId === emp.id && <Check size={14} className="text-sky-500 flex-shrink-0" />}
+                  {empId === emp.id && <Check size={14} className="text-emerald-500 flex-shrink-0" />}
                 </button>
               ))}
             </div>
@@ -446,21 +446,21 @@ function AssignModal({ shifts, employees, onAssign, onClose, saving }: {
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">
-              Notes <span className="text-gray-400 font-normal">(optionnel)</span>
+            <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">
+              Notes <span className="text-[var(--text-muted)] font-normal">(optionnel)</span>
             </label>
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Ex : Remplacement congé..."
-              className="w-full px-4 py-2 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+              className="w-full px-4 py-2 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold">Annuler</button>
+        <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
+          <button onClick={onClose} className="flex-1 px-4 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold">Annuler</button>
           <button
             onClick={handleAssign}
             disabled={!canSubmit || saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             {type === 'recurring' && selectedDays.length > 1 ? `Assigner (${selectedDays.length} jours)` : 'Assigner'}
           </button>
@@ -522,7 +522,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 size={28} className="animate-spin text-sky-500" />
+        <Loader2 size={28} className="animate-spin text-emerald-500" />
       </div>
     );
   }
@@ -531,42 +531,42 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
     <div className="space-y-4">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-gray-900 dark:text-white">{employees.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1"><Users size={11} />Total</p>
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-black text-[var(--text)]">{employees.length}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5 flex items-center justify-center gap-1"><Users size={11} />Total</p>
         </div>
         <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
           <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{assignedCount}</p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center justify-center gap-1"><UserCheck size={11} />Avec planning</p>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-gray-500">{withoutShiftCount}</p>
-          <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1"><UserX size={11} />Horaires globaux</p>
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl p-4 text-center">
+          <p className="text-2xl font-black text-[var(--text-muted)]">{withoutShiftCount}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-0.5 flex items-center justify-center gap-1"><UserX size={11} />Horaires globaux</p>
         </div>
       </div>
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-2">
         <div className="relative flex-1 min-w-[180px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input type="text" placeholder="Rechercher un employé..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-4 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:border-sky-500" />
+            className="w-full pl-8 pr-4 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm focus:border-emerald-500" />
         </div>
         <select value={filterShift} onChange={e => setFilterShift(e.target.value)}
-          className="px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 focus:border-sky-500">
+          className="px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm text-[var(--text-muted)] focus:border-emerald-500">
           <option value="">Tous les shifts</option>
           {shifts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
+        <div className="flex bg-[var(--surface-2)] rounded-xl p-1 gap-1">
           {([['all', 'Tous'], ['date', '📅'], ['recurring', '🔄']] as const).map(([val, label]) => (
             <button key={val} onClick={() => setFilterType(val as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterType === val ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterType === val ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               {label}
             </button>
           ))}
         </div>
         <button onClick={() => setShowAll(v => !v)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${showAll ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400' : 'border-gray-200 dark:border-gray-700 text-gray-500'}`}>
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${showAll ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}>
           <Eye size={13} />
           {showAll ? 'Shiftés + Globaux' : 'Shiftés seulement'}
         </button>
@@ -574,50 +574,50 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
-          <Users size={28} className="text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-500 font-semibold mb-1">
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 text-center">
+          <Users size={28} className="text-[var(--text-muted)] mx-auto mb-3" />
+          <p className="text-sm text-[var(--text-muted)] font-semibold mb-1">
             {assignedCount === 0 ? 'Aucun employé n\'a encore de shift assigné' : 'Aucun résultat'}
           </p>
-          {assignedCount === 0 && <p className="text-xs text-gray-400">Cliquez sur "Assigner" pour lier un employé à un planning.</p>}
+          {assignedCount === 0 && <p className="text-xs text-[var(--text-muted)]">Cliquez sur "Assigner" pour lier un employé à un planning.</p>}
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Employé</p>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider hidden sm:block">Planning assigné</p>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Statut</p>
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-3 bg-[var(--surface-2)]/50 border-b border-[var(--border)]">
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employé</p>
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider hidden sm:block">Planning assigné</p>
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Statut</p>
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+          <div className="divide-y divide-[var(--border)]">
             {filtered.map(({ employee, assignments: empAssignments, hasShift }) => (
-              <div key={employee.id} className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-4 items-start hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+              <div key={employee.id} className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_3fr_auto] gap-4 px-5 py-4 items-start hover:bg-[var(--surface-2)]/30 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   {employee.photoUrl
                     ? <img src={employee.photoUrl} className="w-9 h-9 rounded-xl object-cover flex-shrink-0" alt="" />
-                    : <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">{employee.firstName[0]}{employee.lastName[0]}</div>
+                    : <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">{employee.firstName[0]}{employee.lastName[0]}</div>
                   }
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{employee.firstName} {employee.lastName}</p>
+                    <p className="font-semibold text-sm text-[var(--text)] truncate">{employee.firstName} {employee.lastName}</p>
                     {employee.department?.name && (
-                      <p className="text-xs text-gray-500 truncate flex items-center gap-1"><Building2 size={10} />{employee.department.name}</p>
+                      <p className="text-xs text-[var(--text-muted)] truncate flex items-center gap-1"><Building2 size={10} />{employee.department.name}</p>
                     )}
-                    {employee.position && <p className="text-[10px] text-gray-400 truncate mt-0.5">{employee.position}</p>}
+                    {employee.position && <p className="text-[10px] text-[var(--text-muted)] truncate mt-0.5">{employee.position}</p>}
                   </div>
                 </div>
                 <div className="hidden sm:flex flex-col gap-1.5 min-w-0">
                   {!hasShift ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs text-gray-400 italic"><Info size={11} />Horaires officiels de l'entreprise</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] italic"><Info size={11} />Horaires officiels de l'entreprise</span>
                   ) : (
                     empAssignments.map(a => (
                       <div key={a.id} className="flex items-center gap-2 flex-wrap">
                         <ShiftBadge shift={a.shift} small />
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
                           {a.specificDate ? (
                             <><Calendar size={10} />{new Date(a.specificDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</>
                           ) : a.dayOfWeek !== undefined ? (
                             <><Repeat size={10} />{DAY_NAMES_FULL[a.dayOfWeek]}s
                               {(a.validFrom || a.validUntil) && (
-                                <span className="text-gray-400">
+                                <span className="text-[var(--text-muted)]">
                                   {a.validFrom ? ` · du ${new Date(a.validFrom).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
                                   {a.validUntil ? ` au ${new Date(a.validUntil).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}` : ''}
                                 </span>
@@ -625,7 +625,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
                             </>
                           ) : null}
                         </span>
-                        {a.notes && <span className="text-[10px] text-gray-400 italic truncate max-w-[120px]" title={a.notes}>💬 {a.notes}</span>}
+                        {a.notes && <span className="text-[10px] text-[var(--text-muted)] italic truncate max-w-[120px]" title={a.notes}>💬 {a.notes}</span>}
                       </div>
                     ))
                   )}
@@ -634,14 +634,14 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
                   {hasShift ? (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-[10px] font-bold"><UserCheck size={10} />Shifté</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg text-[10px] font-bold"><Clock size={10} />Global</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-lg text-[10px] font-bold"><Clock size={10} />Global</span>
                   )}
                 </div>
               </div>
             ))}
           </div>
-          <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <p className="text-xs text-gray-500">{assignedCount} avec planning · {withoutShiftCount} horaires globaux</p>
+          <div className="px-5 py-3 bg-[var(--surface-2)]/50 border-t border-[var(--border)] flex items-center justify-between">
+            <p className="text-xs text-[var(--text-muted)]">{assignedCount} avec planning · {withoutShiftCount} horaires globaux</p>
             <button
               onClick={() => {
                 const lines = ['Nom,Département,Poste,Shift,Type,Détail'];
@@ -662,7 +662,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
                 a.href = url; a.download = `plannings-${new Date().toISOString().split('T')[0]}.csv`; a.click();
                 URL.revokeObjectURL(url);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors">
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
               <Download size={12} />Export CSV
             </button>
           </div>
@@ -847,36 +847,36 @@ export default function ShiftsPage() {
 
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => router.back()} className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-          <ArrowLeft size={20} className="text-gray-600 dark:text-gray-300" />
+        <button onClick={() => router.back()} className="p-2 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--border)] transition-colors">
+          <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">Plannings & Shifts</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Gérez les horaires flexibles — Matin, Soir, Nuit, Garde</p>
+          <h1 className="text-2xl font-black text-[var(--text)]">Plannings & Shifts</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">Gérez les horaires flexibles — Matin, Soir, Nuit, Garde</p>
         </div>
         <div className="flex items-center gap-2">
           {canAssign && shifts.length > 0 && (
             <button onClick={() => setAssignModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all">
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all">
               <Plus size={15} />Assigner
             </button>
           )}
           {isAdmin && (
             <button onClick={() => setShiftModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all">
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all">
               <Plus size={15} />Nouveau shift
             </button>
           )}
-          <button onClick={fetchData} className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 transition-colors">
-            <RefreshCw size={18} className={`text-gray-500 ${loading ? 'animate-spin' : ''}`} />
+          <button onClick={fetchData} className="p-2 rounded-xl bg-[var(--surface-2)] hover:bg-[var(--border)] transition-colors">
+            <RefreshCw size={18} className={`text-[var(--text-muted)] ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Banner info */}
-      <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl p-4 flex items-start gap-3">
-        <AlertCircle size={18} className="text-sky-500 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-sky-700 dark:text-sky-400">
+      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-start gap-3">
+        <AlertCircle size={18} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-emerald-700 dark:text-emerald-400">
           Un shift assigné remplace l'heure officielle globale pour le calcul des retards et heures sup.
           Un employé à <strong>18h</strong> n'est pas en retard à 8h — son planning prime.
         </p>
@@ -893,13 +893,13 @@ export default function ShiftsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5 gap-1">
+      <div className="flex bg-[var(--surface-2)] rounded-2xl p-1.5 gap-1">
         <button onClick={() => setActiveTab('shifts')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'shifts' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'shifts' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
           <Clock size={15} />Shifts ({shifts.length})
         </button>
         <button onClick={() => setActiveTab('employees')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'employees' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'employees' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
           <Users size={15} />Employés & Plannings
           {assignments.length > 0 && (
             <span className="px-1.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
@@ -911,22 +911,22 @@ export default function ShiftsPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="animate-spin text-sky-500" />
+          <Loader2 size={32} className="animate-spin text-emerald-500" />
         </div>
       ) : activeTab === 'shifts' ? (
         <div className="space-y-6">
           {shifts.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-12 text-center">
-              <div className="w-16 h-16 bg-sky-50 dark:bg-sky-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock size={28} className="text-sky-400" />
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 text-center">
+              <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock size={28} className="text-emerald-400" />
               </div>
-              <p className="font-bold text-gray-700 dark:text-gray-200 mb-1">Aucun shift configuré</p>
-              <p className="text-sm text-gray-500 mb-5">
+              <p className="font-bold text-[var(--text)] mb-1">Aucun shift configuré</p>
+              <p className="text-sm text-[var(--text-muted)] mb-5">
                 {isAdmin ? 'Créez des shifts pour gérer les horaires flexibles.' : "Aucun planning n'a encore été créé."}
               </p>
               {isAdmin && (
                 <button onClick={() => setShiftModal(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 text-white rounded-xl text-sm font-bold">
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold">
                   <Plus size={15} />Créer le premier shift
                 </button>
               )}
@@ -934,12 +934,12 @@ export default function ShiftsPage() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {shifts.map(shift => (
-                <div key={shift.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 hover:shadow-md transition-all group">
+                <div key={shift.id} className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 hover:shadow-md transition-all group">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: shift.color }} />
                       <div>
-                        <p className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5 text-sm">
+                        <p className="font-bold text-[var(--text)] flex items-center gap-1.5 text-sm">
                           <ShiftIcon shift={shift} />{shift.name}
                         </p>
                         {shift.isDefault && (
@@ -949,8 +949,8 @@ export default function ShiftsPage() {
                     </div>
                     {isAdmin && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setEditingShift(shift)} className="p-1.5 hover:bg-sky-100 dark:hover:bg-sky-900/30 rounded-lg transition-colors">
-                          <Edit2 size={13} className="text-sky-500" />
+                        <button onClick={() => setEditingShift(shift)} className="p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg transition-colors">
+                          <Edit2 size={13} className="text-emerald-500" />
                         </button>
                         <button onClick={() => handleDelete(shift.id)} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors">
                           <Trash2 size={13} className="text-red-400" />
@@ -958,16 +958,16 @@ export default function ShiftsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
+                  <div className="space-y-1.5 text-xs text-[var(--text-muted)]">
                     <div className="flex items-center justify-between">
                       <span>Horaires</span>
-                      <span className="font-mono font-bold text-gray-900 dark:text-white">
+                      <span className="font-mono font-bold text-[var(--text)]">
                         {fmtHHMM(shift.startHour, shift.startMinute)} → {fmtHHMM(shift.endHour, shift.endMinute)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Durée</span>
-                      <span className="font-bold text-sky-600 dark:text-sky-400">{shift.durationHours}h</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{shift.durationHours}h</span>
                     </div>
                     {shift.crossesMidnight && (
                       <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
@@ -977,14 +977,14 @@ export default function ShiftsPage() {
                     {shift.isNightShift && shift.nightPremiumRate > 0 && (
                       <div className="flex items-center justify-between">
                         <span>Prime nuit</span>
-                        <span className="font-bold text-purple-600 dark:text-purple-400">+{shift.nightPremiumRate}%</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400">+{shift.nightPremiumRate}%</span>
                       </div>
                     )}
                   </div>
                   {assignments.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
-                      <Users size={11} className="text-gray-400" />
-                      <span className="text-xs text-gray-500">
+                    <div className="mt-3 pt-3 border-t border-[var(--border)] flex items-center gap-1.5">
+                      <Users size={11} className="text-[var(--text-muted)]" />
+                      <span className="text-xs text-[var(--text-muted)]">
                         {new Set(assignments.filter(a => a.shiftId === shift.id).map(a => a.employeeId)).size} employé(s)
                       </span>
                     </div>
@@ -995,9 +995,9 @@ export default function ShiftsPage() {
           )}
 
           {canAssign && shifts.length > 0 && (
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                <Info size={15} className="text-sky-500" />Cas d'usage
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text-muted)] mb-4 flex items-center gap-2">
+                <Info size={15} className="text-emerald-500" />Cas d'usage
               </h3>
               <div className="grid sm:grid-cols-3 gap-3">
                 {[
@@ -1005,10 +1005,10 @@ export default function ShiftsPage() {
                   { emoji: '🏭', title: 'Usine 3×8', desc: 'Matin / Soir / Nuit en rotation hebdomadaire' },
                   { emoji: '🔐', title: 'Sécurité / Gardiennage', desc: 'Shifts 12h avec prime nuit calculée automatiquement' },
                 ].map(uc => (
-                  <div key={uc.title} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div key={uc.title} className="p-4 bg-[var(--surface-2)] rounded-xl">
                     <p className="text-2xl mb-2">{uc.emoji}</p>
-                    <p className="text-sm font-bold text-gray-800 dark:text-white mb-1">{uc.title}</p>
-                    <p className="text-xs text-gray-500">{uc.desc}</p>
+                    <p className="text-sm font-bold text-[var(--text)] mb-1">{uc.title}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{uc.desc}</p>
                   </div>
                 ))}
               </div>

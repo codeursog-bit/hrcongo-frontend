@@ -1,356 +1,3 @@
-// 'use client';
-
-// import React, { useState, useEffect, useMemo } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { ArrowLeft, Send, Loader2, Info, CheckCircle2, Calculator, CalendarDays, User, Umbrella, Stethoscope, Baby, Ban, Star } from 'lucide-react';
-// import { motion, AnimatePresence } from 'framer-motion';
-// import { api } from '@/services/api';
-// import { FancySelect } from '@/components/ui/FancySelect';
-
-// export default function NewLeaveRequestPage() {
-//   const router = useRouter();
-//   const [employees, setEmployees] = useState<any[]>([]);
-//   const [currentUser, setCurrentUser] = useState<any>(null);
-//   const [myEmployee, setMyEmployee] = useState<any>(null);
-//   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true);
-//   const [loadError, setLoadError] = useState<string | null>(null);
-//   const [formData, setFormData] = useState({
-//     employeeId: '',
-//     type: 'ANNUAL',
-//     startDate: '',
-//     endDate: '',
-//     reason: ''
-//   });
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [showConfirmation, setShowConfirmation] = useState(false);
-
-//   useEffect(() => {
-//     const loadData = async () => {
-//       try {
-//         const storedUser = localStorage.getItem('user');
-//         if (!storedUser) { router.push('/login'); return; }
-
-//         const user = JSON.parse(storedUser);
-//         setCurrentUser(user);
-
-//         // ── ADMIN / HR / SUPER_ADMIN ──────────────────────────────────────────
-//         // Gèrent les congés pour tous les employés — pas de fiche perso requise
-//         if (['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(user.role)) {
-//           try {
-//             // ✅ /employees/simple : liste légère, pas d'objet paginé
-//             const data = await api.get<any[]>('/employees/simple');
-//             const list = Array.isArray(data) ? data : [];
-//             setEmployees(list);
-//             if (list.length > 0) {
-//               setFormData(prev => ({ ...prev, employeeId: list[0].id }));
-//             } else {
-//               setLoadError("Aucun employé dans l'entreprise.");
-//             }
-//           } catch (err) {
-//             console.error('Erreur chargement employés:', err);
-//             setLoadError("Impossible de charger la liste des employés.");
-//           }
-
-//         // ── MANAGER ───────────────────────────────────────────────────────────
-//         // Peut poser pour lui-même + membres de son département
-//         } else if (user.role === 'MANAGER') {
-//           try {
-//             const [emp, deptList] = await Promise.all([
-//               api.get<any>('/employees/me').catch(() => null),
-//               // /employees/simple filtre déjà par département côté backend
-//               api.get<any[]>('/employees/simple').catch(() => [])
-//             ]);
-
-//             const list: any[] = Array.isArray(deptList) ? [...deptList] : [];
-
-//             if (emp?.id) {
-//               setMyEmployee(emp);
-//               // Ajouter le manager en tête s'il n'est pas déjà dans la liste
-//               if (!list.some(e => e.id === emp.id)) {
-//                 list.unshift({
-//                   id: emp.id,
-//                   firstName: emp.firstName,
-//                   lastName: emp.lastName,
-//                   position: emp.position,
-//                   department: emp.department,
-//                 });
-//               }
-//               setFormData(prev => ({ ...prev, employeeId: emp.id }));
-//             } else if (list.length > 0) {
-//               setFormData(prev => ({ ...prev, employeeId: list[0].id }));
-//             }
-
-//             setEmployees(list);
-//             if (list.length === 0) {
-//               setLoadError("Aucun employé accessible dans votre département.");
-//             }
-//           } catch (err) {
-//             console.error('Erreur chargement employés manager:', err);
-//             setLoadError("Impossible de charger les employés.");
-//           }
-
-//         // ── EMPLOYEE ──────────────────────────────────────────────────────────
-//         // Pose uniquement pour lui-même
-//         } else {
-//           try {
-//             const emp = await api.get<any>('/employees/me');
-//             if (emp?.id) {
-//               setMyEmployee(emp);
-//               setFormData(prev => ({ ...prev, employeeId: emp.id }));
-//             } else {
-//               setLoadError("Profil employé introuvable. Contactez votre RH.");
-//             }
-//           } catch (err) {
-//             console.error('Erreur profil employé:', err);
-//             setLoadError("Impossible de récupérer votre profil.");
-//           }
-//         }
-//       } catch (err) {
-//         console.error('Erreur chargement:', err);
-//         setLoadError("Erreur inattendue lors du chargement.");
-//       } finally {
-//         setIsLoadingEmployees(false);
-//       }
-//     };
-
-//     loadData();
-//   }, [router]);
-
-//   const calculationDetails = useMemo(() => {
-//     if (!formData.startDate || !formData.endDate) return null;
-//     const start = new Date(formData.startDate);
-//     const end   = new Date(formData.endDate);
-//     if (end < start) return null;
-
-//     let businessDays = 0, weekendDays = 0, totalDays = 0;
-//     const cur = new Date(start);
-//     while (cur <= end) {
-//       const day = cur.getDay();
-//       totalDays++;
-//       if (day === 0 || day === 6) weekendDays++;
-//       else businessDays++;
-//       cur.setDate(cur.getDate() + 1);
-//     }
-//     return { businessDays, weekendDays, totalDays };
-//   }, [formData.startDate, formData.endDate]);
-
-//   const handleSubmit = async () => {
-//     setIsSubmitting(true);
-//     try {
-//       await api.post('/leaves', {
-//         employeeId: formData.employeeId,
-//         type:       formData.type,
-//         startDate:  formData.startDate,
-//         endDate:    formData.endDate,
-//         reason:     formData.reason
-//       });
-//       setShowConfirmation(true);
-//       setTimeout(() => router.push('/conges/mon-espace'), 2500);
-//     } catch (e: any) {
-//       console.error('Erreur soumission congé:', e);
-//       alert(e?.message || "Erreur lors de la demande");
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   // Rôles qui voient une liste de sélection
-//   const showEmployeeSelect = currentUser &&
-//     ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(currentUser.role);
-
-//   // Nom affiché pour EMPLOYEE (pas de liste)
-//   const displayName = myEmployee
-//     ? `${myEmployee.firstName} ${myEmployee.lastName}`
-//     : '—';
-
-//   return (
-//     <div className="max-w-3xl mx-auto py-8 px-4">
-
-//       <AnimatePresence>
-//         {showConfirmation && (
-//           <motion.div
-//             initial={{ opacity: 0, scale: 0.9 }}
-//             animate={{ opacity: 1, scale: 1 }}
-//             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-//           >
-//             <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100 dark:border-gray-700">
-//               <div className="mx-auto w-20 h-20 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mb-6 text-sky-600">
-//                 <Send size={40} />
-//               </div>
-//               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Demande Envoyée !</h2>
-//               <p className="text-gray-500 dark:text-gray-400 mb-4">
-//                 Votre demande de <strong>{calculationDetails?.businessDays} jours</strong> a été transmise pour validation.
-//               </p>
-//               <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-//                 <motion.div className="h-full bg-sky-500" initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2.5 }} />
-//               </div>
-//             </div>
-//           </motion.div>
-//         )}
-//       </AnimatePresence>
-
-//       {/* Header */}
-//       <div className="flex items-center gap-4 mb-8">
-//         <button onClick={() => router.back()} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-//           <ArrowLeft size={20} className="text-gray-500 dark:text-gray-400" />
-//         </button>
-//         <div>
-//           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planifier une absence</h1>
-//           <p className="text-sm text-gray-500 dark:text-gray-400">Remplissez le formulaire pour soumettre votre demande.</p>
-//         </div>
-//       </div>
-
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-//         <div className="lg:col-span-2 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700">
-
-//           {/* Info solde */}
-//           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex gap-3 items-start">
-//             <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
-//             <p className="text-sm text-blue-700 dark:text-blue-300">
-//               Chaque mois travaillé ajoute <strong>2,5 jours</strong> à votre solde. Ce solde est utilisé uniquement pour les jours ouvrés (Lun-Ven) de votre absence.
-//             </p>
-//           </div>
-
-//           {/* Sélection employé */}
-//           {isLoadingEmployees ? (
-//             <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-600 flex items-center gap-3">
-//               <Loader2 className="animate-spin text-gray-400" size={20} />
-//               <span className="text-sm text-gray-500 dark:text-gray-400">Chargement...</span>
-//             </div>
-
-//           ) : loadError && showEmployeeSelect ? (
-//             <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">
-//               {loadError}
-//             </div>
-
-//           ) : showEmployeeSelect ? (
-//             <FancySelect
-//               label="Employé concerné"
-//               value={formData.employeeId}
-//               onChange={(v) => setFormData({ ...formData, employeeId: v })}
-//               icon={User}
-//               options={employees.map(emp => ({
-//                 value: emp.id,
-//                 label: `${emp.firstName} ${emp.lastName}${emp.department?.name ? ` · ${emp.department.name}` : ''}`
-//               }))}
-//             />
-
-//           ) : loadError ? (
-//             // EMPLOYEE sans profil trouvé
-//             <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">
-//               {loadError}
-//             </div>
-
-//           ) : (
-//             // EMPLOYEE — affichage fixe
-//             <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-600 flex items-center gap-4">
-//               <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-600 flex items-center justify-center">
-//                 <User size={20} />
-//               </div>
-//               <div>
-//                 <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">Demandeur</p>
-//                 <p className="font-bold text-gray-900 dark:text-white">{displayName}</p>
-//               </div>
-//             </div>
-//           )}
-
-//           {/* Type d'absence */}
-//           <FancySelect
-//             label="Type d'absence"
-//             value={formData.type}
-//             onChange={(v) => setFormData({ ...formData, type: v })}
-//             icon={Umbrella}
-//             options={[
-//               { value: 'ANNUAL',    label: 'Congés Annuels (Payés)',        icon: Umbrella },
-//               { value: 'SICK',      label: 'Maladie (Justificatif requis)', icon: Stethoscope },
-//               { value: 'MATERNITY', label: 'Maternité',                     icon: Baby },
-//               { value: 'PATERNITY', label: 'Paternité',                     icon: User },
-//               { value: 'UNPAID',    label: 'Sans Solde',                    icon: Ban },
-//               { value: 'SPECIAL',   label: 'Événement Familial',            icon: Star },
-//             ]}
-//           />
-
-//           {/* Dates */}
-//           <div className="grid grid-cols-2 gap-6">
-//             <div>
-//               <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Du (Inclus)</label>
-//               <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-//                 className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium" />
-//             </div>
-//             <div>
-//               <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Au (Inclus)</label>
-//               <input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-//                 className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium" />
-//             </div>
-//           </div>
-
-//           {/* Motif */}
-//           <div>
-//             <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Motif & Commentaires</label>
-//             <textarea value={formData.reason} onChange={e => setFormData({ ...formData, reason: e.target.value })}
-//               className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium resize-none"
-//               rows={3} placeholder="Ex: Voyage prévu, RDV médical, etc..." />
-//           </div>
-
-//           <button
-//             onClick={handleSubmit}
-//             disabled={isSubmitting || showConfirmation || !calculationDetails || !formData.employeeId}
-//             className="w-full py-4 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all transform hover:scale-[1.02]"
-//           >
-//             {isSubmitting ? <Loader2 className="animate-spin" /> : <Send size={20} />}
-//             Soumettre pour validation
-//           </button>
-//         </div>
-
-//         {/* Sidebar simulation */}
-//         <div className="lg:col-span-1">
-//           <div className="bg-gradient-to-br from-gray-900 to-slate-800 dark:from-slate-800 dark:to-black text-white p-6 rounded-3xl shadow-xl">
-//             <div className="flex items-center gap-2 mb-6 opacity-80">
-//               <Calculator size={20} />
-//               <span className="text-sm font-bold uppercase tracking-wider">Simulation</span>
-//             </div>
-
-//             {calculationDetails ? (
-//               <div className="space-y-6">
-//                 <div className="text-center">
-//                   <span className="text-5xl font-extrabold">{calculationDetails.businessDays}</span>
-//                   <p className="text-sm text-gray-400 font-medium mt-1">Jours à déduire</p>
-//                 </div>
-//                 <div className="bg-white/10 rounded-xl p-4 space-y-3">
-//                   <div className="flex justify-between text-sm">
-//                     <span className="text-gray-300">Durée totale</span>
-//                     <span className="font-bold">{calculationDetails.totalDays} jours</span>
-//                   </div>
-//                   <div className="flex justify-between text-sm">
-//                     <span className="text-gray-300">Week-ends (Gratuit)</span>
-//                     <span className="font-bold text-emerald-400">-{calculationDetails.weekendDays} jours</span>
-//                   </div>
-//                   <div className="h-px bg-white/20 my-2" />
-//                   <div className="flex justify-between text-sm">
-//                     <span className="text-white font-bold">Impact Solde</span>
-//                     <span className="font-bold text-orange-400">-{calculationDetails.businessDays}</span>
-//                   </div>
-//                 </div>
-//                 <div className="flex items-start gap-2 text-xs text-gray-400 leading-relaxed">
-//                   <CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-//                   <p>Les samedis et dimanches ne sont pas décomptés de votre solde de congés.</p>
-//                 </div>
-//               </div>
-//             ) : (
-//               <div className="flex flex-col items-center justify-center py-10 text-gray-500">
-//                 <CalendarDays size={48} className="mb-4 opacity-20" />
-//                 <p className="text-center text-sm">Sélectionnez vos dates pour voir la simulation.</p>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -624,16 +271,16 @@ export default function NewLeaveRequestPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-gray-100 dark:border-gray-700">
-              <div className="mx-auto w-20 h-20 bg-sky-100 dark:bg-sky-900/30 rounded-full flex items-center justify-center mb-6 text-sky-600">
+            <div className="bg-[var(--surface)] rounded-2xl p-8 max-w-sm w-full text-center shadow-xl border border-[var(--border)]">
+              <div className="mx-auto w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mb-6 text-emerald-600">
                 <Send size={40} />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Demande Envoyée !</h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Demande Envoyée !</h2>
+              <p className="text-[var(--text-muted)] mb-4">
                 Votre demande de <strong>{calculationDetails?.ouvrables} jours</strong> a été transmise.
               </p>
-              <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-sky-500" initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2.5 }} />
+              <div className="w-full h-1 bg-[var(--border)] rounded-full overflow-hidden">
+                <motion.div className="h-full bg-emerald-500" initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 2.5 }} />
               </div>
             </div>
           </motion.div>
@@ -647,14 +294,14 @@ export default function NewLeaveRequestPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           >
-            <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-700">
+            <div className="bg-[var(--surface)] rounded-2xl p-6 max-w-md w-full shadow-xl border border-[var(--border)]">
               <div className="flex items-start gap-3 mb-4">
                 <div className="w-10 h-10 shrink-0 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-600">
                   <AlertTriangle size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Motif requis</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <h2 className="text-lg font-bold text-[var(--text)]">Motif requis</h2>
+                  <p className="text-sm text-[var(--text-muted)] mt-1">
                     Ce congé ({calculationDetails?.ouvrables}j) est inférieur au solde dû
                     ({selectedBalance ? Math.round(Number(selectedBalance.annualRemaining)) : '—'}j).
                     Précisez le motif de cette réduction — il apparaîtra sur la lettre de départ.
@@ -667,15 +314,15 @@ export default function NewLeaveRequestPage() {
                 value={motifDraft}
                 onChange={e => setMotifDraft(e.target.value)}
                 placeholder="Ex : récupérés après le rangement de la promotion d'Août 2026"
-                className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full p-3 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] outline-none focus:ring-2 focus:ring-amber-400"
               />
-              <p className="text-xs text-gray-400 mt-1.5">Ce texte complète directement « ...seront <strong>{motifDraft || '…'}</strong>. » sur la lettre — pas de phrase complète, juste la suite.</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1.5">Ce texte complète directement « ...seront <strong>{motifDraft || '…'}</strong>. » sur la lettre — pas de phrase complète, juste la suite.</p>
 
               <div className="flex gap-2 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowMotifPrompt(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 font-semibold text-sm"
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-muted)] font-semibold text-sm"
                 >
                   Annuler
                 </button>
@@ -697,31 +344,31 @@ export default function NewLeaveRequestPage() {
 
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => router.back()} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-          <ArrowLeft size={20} className="text-gray-500 dark:text-gray-400" />
+        <button onClick={() => router.back()} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
+          <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Planifier une absence</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Remplissez le formulaire pour soumettre votre demande.</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Planifier une absence</h1>
+          <p className="text-sm text-[var(--text-muted)]">Remplissez le formulaire pour soumettre votre demande.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div className="lg:col-span-2 space-y-6 bg-[var(--surface)] p-8 rounded-2xl shadow-sm border border-[var(--border)]">
 
           {/* ✅ Loi congolaise — taux corrigé */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex gap-3 items-start">
-            <Info className="text-blue-500 shrink-0 mt-0.5" size={18} />
-            <p className="text-sm text-blue-700 dark:text-blue-300">
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800 flex gap-3 items-start">
+            <Info className="text-emerald-500 shrink-0 mt-0.5" size={18} />
+            <p className="text-sm text-emerald-700 dark:text-emerald-300">
               Droit congolais : <strong>{CONGO_MONTHLY_RATE} jours</strong> acquis par mois travaillé (26j/an). Seuls les jours ouvrés (Lun–Ven) sont décomptés.
             </p>
           </div>
 
           {/* Sélection employé */}
           {isLoadingEmployees ? (
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-600 flex items-center gap-3">
-              <Loader2 className="animate-spin text-gray-400" size={20} />
-              <span className="text-sm text-gray-500 dark:text-gray-400">Chargement...</span>
+            <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center gap-3">
+              <Loader2 className="animate-spin text-[var(--text-muted)]" size={20} />
+              <span className="text-sm text-[var(--text-muted)]">Chargement...</span>
             </div>
           ) : loadError && showEmployeeSelect ? (
             <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-amber-700 dark:text-amber-300 text-sm">{loadError}</div>
@@ -739,13 +386,13 @@ export default function NewLeaveRequestPage() {
           ) : loadError ? (
             <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{loadError}</div>
           ) : (
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-600 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-600 flex items-center justify-center">
+            <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 flex items-center justify-center">
                 <User size={20} />
               </div>
               <div>
-                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Demandeur</p>
-                <p className="font-bold text-gray-900 dark:text-white">{displayName}</p>
+                <p className="text-xs text-[var(--text-muted)] uppercase font-bold tracking-wider">Demandeur</p>
+                <p className="font-bold text-[var(--text)]">{displayName}</p>
               </div>
             </div>
           )}
@@ -784,9 +431,9 @@ export default function NewLeaveRequestPage() {
             ]}
           />
 
-          <div className="flex items-start gap-3 p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 rounded-xl">
-            <Info size={16} className="text-sky-500 mt-0.5 shrink-0" />
-            <p className="text-xs text-sky-700 dark:text-sky-300">
+          <div className="flex items-start gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl">
+            <Info size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-emerald-700 dark:text-emerald-300">
               Maladie, maternité, paternité, mariage, décès et autres événements se déclarent désormais depuis{' '}
               <Link href={bp('/presences/absences/nouveau')} className="font-bold underline">le module Absences</Link>.
             </p>
@@ -803,18 +450,18 @@ export default function NewLeaveRequestPage() {
           )}
 
           {/* 🆕 Calcul automatique de la date de retour */}
-          <div className="p-4 bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-800 rounded-xl space-y-3">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-xl space-y-3">
             <div>
-              <label className="block text-sm font-bold text-sky-700 dark:text-sky-300">
+              <label className="block text-sm font-bold text-emerald-700 dark:text-emerald-300">
                 Vous ne connaissez pas la date de retour ?
               </label>
-              <p className="text-xs text-sky-600/80 dark:text-sky-400/80 mt-1">
+              <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
                 Optionnel. En congé, on connaît souvent le <strong>solde de jours</strong> (affiché plus haut : "Solde
                 disponible") avant de connaître la date exacte de retour — parce que ça dépend des dimanches et jours
                 fériés compris dans la période. Indiquez ici le nombre de jours à consommer (ex: le solde affiché, ou une
                 partie), on calcule la vraie date de reprise et on la remplit pour vous plus bas.
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-[var(--text-muted)] mt-1">
                 Vous connaissez déjà les deux dates exactes (départ et retour) ? Ignorez ce bloc et remplissez-les directement ci-dessous.
               </p>
             </div>
@@ -824,27 +471,27 @@ export default function NewLeaveRequestPage() {
                 placeholder="Ex : 26 jours"
                 value={desiredDays}
                 onChange={e => setDesiredDays(e.target.value)}
-                className="flex-1 p-3 border border-sky-200 dark:border-sky-700 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white outline-none"
+                className="flex-1 p-3 border border-emerald-200 dark:border-emerald-700 rounded-xl bg-[var(--surface)] text-[var(--text)] outline-none"
               />
               <button
                 type="button"
                 onClick={handleCalculateReturn}
                 disabled={isCalculatingReturn || !formData.employeeId || !formData.startDate || !desiredDays}
-                className="px-4 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
+                className="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
               >
                 {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : <Calculator size={16} />}
                 Calculer la date de reprise
               </button>
             </div>
-            {!formData.startDate && <p className="text-xs text-sky-600 dark:text-sky-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
+            {!formData.startDate && <p className="text-xs text-emerald-600 dark:text-emerald-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
 
             {returnCalc && (
-              <div className="pt-3 border-t border-sky-100 dark:border-sky-800 space-y-2">
-                <p className="text-sm text-sky-700 dark:text-sky-300">
+              <div className="pt-3 border-t border-emerald-100 dark:border-emerald-800 space-y-2">
+                <p className="text-sm text-emerald-700 dark:text-emerald-300">
                   Date de reprise du travail : <strong>{new Date(returnCalc.returnDate).toLocaleDateString('fr-FR')}</strong>
                 </p>
                 {(returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
-                  <details className="text-xs text-sky-600 dark:text-sky-400">
+                  <details className="text-xs text-emerald-600 dark:text-emerald-400">
                     <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
                     <div className="mt-2 space-y-1 pl-2">
                       <p>{returnCalc.sundaysSkipped} dimanche(s) exclu(s) de la période</p>
@@ -866,16 +513,16 @@ export default function NewLeaveRequestPage() {
           {/* Dates */}
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Du (Inclus)</label>
+              <label className="block text-sm font-bold mb-2 text-[var(--text-muted)]">Du (Inclus)</label>
               <input type="date" value={formData.startDate}
                 onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium" />
+                className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium" />
             </div>
             <div>
-              <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Au (Inclus)</label>
+              <label className="block text-sm font-bold mb-2 text-[var(--text-muted)]">Au (Inclus)</label>
               <input type="date" value={formData.endDate}
                 onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium" />
+                className="w-full p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium" />
             </div>
           </div>
 
@@ -891,7 +538,7 @@ export default function NewLeaveRequestPage() {
 
           {/* Motif */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-bold mb-2 text-[var(--text-muted)]">
               Motif & Commentaires
               {isReducedAnnual && <span className="text-amber-600 ml-1">(obligatoire — congé réduit)</span>}
             </label>
@@ -903,7 +550,7 @@ export default function NewLeaveRequestPage() {
             )}
             <textarea value={formData.reason}
               onChange={e => setFormData({ ...formData, reason: e.target.value })}
-              className={`w-full p-4 border rounded-xl bg-white dark:bg-gray-700/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 outline-none font-medium resize-none ${isReducedAnnual && !formData.reason?.trim() ? 'border-amber-400 dark:border-amber-600' : 'border-gray-200 dark:border-gray-600'}`}
+              className={`w-full p-4 border rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 outline-none font-medium resize-none ${isReducedAnnual && !formData.reason?.trim() ? 'border-amber-400 dark:border-amber-600' : 'border-[var(--border)]'}`}
               rows={3} placeholder="Ex: Voyage prévu, RDV médical..." />
           </div>
 
@@ -917,7 +564,7 @@ export default function NewLeaveRequestPage() {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="w-full py-4 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all transform hover:scale-[1.02]"
+            className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex justify-center items-center gap-2 shadow-lg transition-all transform hover:scale-[1.02]"
           >
             {isSubmitting ? <Loader2 className="animate-spin" /> : <Send size={20} />}
             Soumettre pour validation
@@ -926,7 +573,7 @@ export default function NewLeaveRequestPage() {
 
         {/* Sidebar simulation */}
         <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-gray-900 to-slate-800 dark:from-slate-800 dark:to-black text-white p-6 rounded-3xl shadow-xl">
+          <div className="bg-[#050607] text-white p-6 rounded-2xl shadow-xl">
             <div className="flex items-center gap-2 mb-6 opacity-80">
               <Calculator size={20} />
               <span className="text-sm font-bold uppercase tracking-wider">Simulation</span>
@@ -938,25 +585,25 @@ export default function NewLeaveRequestPage() {
                   <span className={`text-5xl font-extrabold ${calculationDetails.insufficientBalance ? 'text-red-400' : ''}`}>
                     {calculationDetails.ouvrables}
                   </span>
-                  <p className="text-sm text-gray-400 font-medium mt-1">Jours ouvrables décomptés</p>
-                  <p className="text-xs text-gray-500 mt-0.5">(lun → sam, dimanches exclus)</p>
+                  <p className="text-sm text-[var(--text-muted)] font-medium mt-1">Jours ouvrables décomptés</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">(lun → sam, dimanches exclus)</p>
                 </div>
 
                 <div className="bg-white/10 rounded-xl p-4 space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Durée totale</span>
+                    <span className="text-white/60">Durée totale</span>
                     <span className="font-bold">{calculationDetails.totalDays} jours</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Dimanches exclus</span>
+                    <span className="text-white/60">Dimanches exclus</span>
                     <span className="font-bold text-emerald-400">−{calculationDetails.dimanchesDays} jour{calculationDetails.dimanchesDays > 1 ? 's' : ''}</span>
                   </div>
                   {selectedBalance?.canTakeAnnualLeave && ['ANNUAL', 'ANNUAL_ANTICIPATED'].includes(formData.type) && (
                     <>
                       <div className="h-px bg-white/20" />
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">Solde après</span>
-                        <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-sky-300'}`}>
+                        <span className="text-white/60">Solde après</span>
+                        <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-emerald-300'}`}>
                           {Math.round(Number(selectedBalance.annualRemaining) - calculationDetails.ouvrables)}j
                         </span>
                       </div>
@@ -965,7 +612,7 @@ export default function NewLeaveRequestPage() {
                   <div className="h-px bg-white/20" />
                   <div className="flex justify-between text-sm">
                     <span className="text-white font-bold">Impact Solde</span>
-                    <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-orange-400'}`}>
+                    <span className={`font-bold ${calculationDetails.insufficientBalance ? 'text-red-400' : 'text-amber-400'}`}>
                       −{calculationDetails.ouvrables}j
                     </span>
                   </div>
@@ -984,7 +631,7 @@ export default function NewLeaveRequestPage() {
                 )}
 
                 {/* Type info */}
-                <div className="flex items-start gap-2 text-xs text-gray-400 leading-relaxed">
+                <div className="flex items-start gap-2 text-xs text-[var(--text-muted)] leading-relaxed">
                   <CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" />
                   <p>
                     {formData.type === 'ANNUAL_ANTICIPATED'
@@ -994,7 +641,7 @@ export default function NewLeaveRequestPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+              <div className="flex flex-col items-center justify-center py-10 text-[var(--text-muted)]">
                 <CalendarDays size={48} className="mb-4 opacity-20" />
                 <p className="text-center text-sm">Sélectionnez vos dates pour voir la simulation.</p>
               </div>

@@ -212,7 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [hasAttendanceAllPermission, setHasAttendanceAllPermission] = useState(false);
 
   const isWhiteLabel = !!(brandName || brandLogo);
-  const accentColor = brandColor || '#0ea5e9';
+  const accentColor = brandColor || '#10B981';
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -223,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           id: parsed.id,
           name: `${parsed.firstName} ${parsed.lastName}`,
           role: (parsed.role as UserRole) || 'EMPLOYEE',
-          avatarUrl: `https://ui-avatars.com/api/?name=${parsed.firstName}+${parsed.lastName}&background=random&color=fff&background=0ea5e9`,
+          avatarUrl: `https://ui-avatars.com/api/?name=${parsed.firstName}+${parsed.lastName}&background=random&color=fff&background=10B981`,
           isOnline: true,
         });
         setHasAttendanceAllPermission(!!parsed.canRecordAttendanceForAll); // 🆕
@@ -319,8 +319,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden print:hidden" onClick={onClose} />
       )}
 
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[280px] m-4 rounded-[2rem] bg-white/80 border border-white/50 shadow-xl shadow-slate-200/50 dark:bg-slate-900/80 dark:border-white/10 dark:shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] backdrop-blur-2xl transform transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col overflow-hidden ${isOpen ? 'translate-x-0' : '-translate-x-[120%] md:translate-x-0'} print:hidden`}>
-        <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-60" style={{ background: isWhiteLabel ? `linear-gradient(to right, transparent, ${accentColor}, transparent)` : 'linear-gradient(to right, transparent, #06b6d4, transparent)' }} />
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] flex flex-col overflow-hidden transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+        <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: isWhiteLabel ? `linear-gradient(to right, transparent, ${accentColor}, transparent)` : 'linear-gradient(to right, transparent, #10B981, transparent)' }} />
 
         {/* Logo Section */}
         <div className="px-6 pt-5 pb-2">
@@ -347,7 +347,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Image src="/logos/konza_logo_h_white.png" alt="Konza RH Logo" width={507} height={240} priority className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80" style={{ width: '170px', height: 'auto', objectFit: 'contain' }} />
               <div className="flex items-center gap-1.5 mt-1.5 pl-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
-                <span className="text-[10px] text-slate-500 dark:text-cyan-400 font-bold tracking-widest uppercase">Online</span>
+                <span className="text-[10px] text-slate-500 dark:text-emerald-400 font-bold tracking-widest uppercase">Online</span>
               </div>
             </Link>
           )}
@@ -355,78 +355,109 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Profile Card */}
         <div className="px-4 pb-4 pt-2">
-          <div className="bg-slate-50/80 dark:bg-white/5 rounded-2xl p-3 flex items-center gap-3 border border-slate-100 dark:border-white/5 hover:border-sky-200 dark:hover:border-white/10 transition-colors group">
+          <div className="rounded-xl p-3 flex items-center gap-3 transition-colors group" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <div className="relative shrink-0">
               {user ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-xl object-cover ring-2 ring-white dark:ring-white/10 shadow-sm" />
+                <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-lg object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                <div className="w-9 h-9 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
               )}
             </div>
             <div className="flex-1 min-w-0">
               {user ? (
                 <>
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate">{user.name}</h3>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-white dark:bg-white/10 text-sky-600 dark:text-cyan-300 border border-slate-100 dark:border-white/5 shadow-sm" style={isWhiteLabel ? { color: accentColor } : {}}>
+                  <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{user.name}</h3>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold text-emerald-600 dark:text-emerald-400" style={isWhiteLabel ? { color: accentColor } : {}}>
                     {roleLabels[user.role] || user.role}
                   </span>
                 </>
               ) : (
-                <div className="h-8 w-20 bg-slate-200 dark:bg-slate-700/50 rounded animate-pulse" />
+                <div className="h-8 w-20 rounded animate-pulse" style={{ background: 'var(--border)' }} />
               )}
             </div>
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-1 custom-scrollbar">
-          {[
-            ...navItems.filter(item => user && item.allowedRoles.includes(user.role)),
-            ...secretaryExtraItems, // 🆕 accès étendu si permission "secrétaire" active
-          ]
-            .map(item => {
+        <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-0.5 custom-scrollbar">
+          {(() => {
+            // 🆕 Regroupement visuel des menus par thème — purement d'affichage,
+            //    ne touche ni à la liste filtrée par rôle ni aux permissions.
+            const CATEGORY: Record<string, string> = {
+              employes: 'Gestion RH', paie: 'Gestion RH', loans: 'Gestion RH', conges: 'Gestion RH',
+              presences_equipe_admin: 'Gestion RH', pointage_manuel_admin: 'Gestion RH',
+              presences_equipe_secretary: 'Gestion RH', pointage_manuel_secretary: 'Gestion RH',
+              mon_equipe: 'Mon équipe', conges_manager: 'Mon équipe', presences_equipe_manager: 'Mon équipe', pointage_manuel_manager: 'Mon équipe',
+              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_prets_manager: 'Mon espace',
+              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_prets: 'Mon espace',
+              recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
+            };
+
+            const items = [
+              ...navItems.filter(item => user && item.allowedRoles.includes(user.role)),
+              ...secretaryExtraItems,
+            ];
+
+            let lastCategory: string | null = null;
+
+            return items.map(item => {
               const active = isActive(item.path);
               const fullPath = buildPath(item.path);
+              const category = CATEGORY[item.id] || null;
+              const showLabel = category && category !== lastCategory;
+              lastCategory = category;
 
               return (
-                <Link
-                  key={item.id}
-                  href={fullPath}
-                  onClick={() => { if (window.innerWidth < 768) onClose(); }}
-                  className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group overflow-hidden ${active ? 'text-sky-700 dark:text-white bg-sky-50 dark:bg-white/5 border border-sky-100 dark:border-cyan-500/30 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 border border-transparent'}`}
-                  style={active && isWhiteLabel ? { color: accentColor, background: `${accentColor}12`, borderColor: `${accentColor}40` } : {}}
-                >
-                  {active && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full" style={{ background: isWhiteLabel ? accentColor : '#0ea5e9', boxShadow: isWhiteLabel ? `0 0 15px ${accentColor}80` : '0 0 15px #0ea5e9' }} />
+                <React.Fragment key={item.id}>
+                  {showLabel && (
+                    <div className="px-4 pt-4 pb-1.5 first:pt-1">
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{category}</span>
+                    </div>
                   )}
-                  <item.icon size={20} className={`transition-all duration-300 z-10 ${active ? 'scale-110' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-200'}`} style={active && isWhiteLabel ? { color: accentColor } : {}} />
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
+                  <Link
+                    href={fullPath}
+                    onClick={() => { if (window.innerWidth < 768) onClose(); }}
+                    className="relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 group"
+                    style={{
+                      color: active ? (isWhiteLabel ? accentColor : 'var(--text)') : 'var(--text-muted)',
+                      background: active ? (isWhiteLabel ? `${accentColor}14` : 'var(--brand-soft)') : 'transparent',
+                    }}
+                  >
+                    {active && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: isWhiteLabel ? accentColor : '#10B981' }} />
+                    )}
+                    <item.icon size={18} className="transition-transform duration-200 group-hover:scale-105" style={active && isWhiteLabel ? { color: accentColor } : {}} />
+                    <span>{item.label}</span>
+                  </Link>
+                </React.Fragment>
               );
-            })}
+            });
+          })()}
 
           {showAutreMenu && (
-            <div className="pt-2">
+            <div className="pt-3">
               <button
                 onClick={() => setIsAutreOpen(!isAutreOpen)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                style={{ color: 'var(--text-muted)' }}
               >
                 <div className="flex items-center gap-3">
-                  <Hexagon size={20} className="text-slate-400" />
+                  <Hexagon size={18} />
                   <span>Autre</span>
                 </div>
-                {isAutreOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {isAutreOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
-              
+
               {isAutreOpen && (
-                <div className="mt-1 ml-4 pl-4 border-l border-slate-100 dark:border-white/10 space-y-1">
+                <div className="mt-0.5 ml-[26px] pl-3 space-y-0.5" style={{ borderLeft: '1px solid var(--border)' }}>
                   {autreItems.map((sub) => {
                     const subActive = pathname === sub.path;
                     return (
                       <Link
                         key={sub.path}
                         href={sub.path}
-                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-xs font-medium transition-all relative ${subActive ? 'text-sky-600 dark:text-cyan-400 bg-sky-50/50 dark:bg-white/5' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative"
+                        style={{ color: subActive ? '#10B981' : 'var(--text-muted)', background: subActive ? 'var(--brand-soft)' : 'transparent' }}
                       >
                         <sub.icon size={14} />
                         {sub.label}
@@ -446,8 +477,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-slate-100 dark:border-white/5">
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-100 dark:hover:border-red-500/20 group">
+        <div className="p-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all group">
             <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
             <span>Déconnexion</span>
           </button>

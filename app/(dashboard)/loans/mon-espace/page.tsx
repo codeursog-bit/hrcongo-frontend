@@ -25,18 +25,18 @@ const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }>
   PENDING:    { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock },
   PENDING_DG: { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock }, // legacy, plus produit
   ACTIVE:     { label: 'Actif',       cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
-  PAID:       { label: 'Soldé',       cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
+  PAID:       { label: 'Soldé',       cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
   REJECTED:   { label: 'Refusé',      cls: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300', icon: XCircle },
-  CANCELLED:  { label: 'Annulé',      cls: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400', icon: Ban },
+  CANCELLED:  { label: 'Annulé',      cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const ADVANCE_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   PENDING:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock },
   APPROVED:  { label: 'Approuvée',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
-  PAID:      { label: 'Remboursée (espèces)', cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
-  DEDUCTED:  { label: 'Déduite',    cls: 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300', icon: CheckCircle2 },
+  PAID:      { label: 'Remboursée (espèces)', cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
+  DEDUCTED:  { label: 'Déduite',    cls: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusée',    cls: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300', icon: XCircle },
-  CANCELLED: { label: 'Annulée',    cls: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400', icon: Ban },
+  CANCELLED: { label: 'Annulée',    cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const TYPE_ICON: Record<string, any> = { ARGENT: Banknote, MARCHANDISE: Package, AUTRE: HelpCircle };
@@ -235,7 +235,7 @@ export default function MonEspacePretsAvancesPage() {
     });
   }, [items, historyByLoan]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
@@ -243,17 +243,17 @@ export default function MonEspacePretsAvancesPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Mon espace</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mes prêts & avances</h1>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Mon espace</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Mes prêts & avances</h1>
         </div>
-        <Link href={bp('/loans/nouveau')} className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/30">
+        <Link href={bp('/loans/nouveau')} className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30">
           <Plus size={18} /> Nouvelle demande
         </Link>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Mes validations</button>
-        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Suivi de mes dettes</button>
+      <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
+        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Mes validations</button>
+        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Suivi de mes dettes</button>
       </div>
 
       {mySpaceTab === 'validations' && (
@@ -268,9 +268,9 @@ export default function MonEspacePretsAvancesPage() {
       )}
 
       {items.length === 0 ? (
-        <div className="text-center py-24 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-          <Wallet size={32} className="text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Aucune demande pour l&apos;instant</h3>
+        <div className="text-center py-24 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
+          <Wallet size={32} className="text-[var(--text-muted)] mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-[var(--text)] mb-1">Aucune demande pour l&apos;instant</h3>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -282,12 +282,12 @@ export default function MonEspacePretsAvancesPage() {
               const StatusIcon = cfg.icon;
               const active = item.id === selectedId;
               return (
-                <button key={item.id} onClick={() => setSelectedId(item.id)} className={`w-full text-left p-4 rounded-2xl border transition-all ${active ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'}`}>
+                <button key={item.id} onClick={() => setSelectedId(item.id)} className={`w-full text-left p-4 rounded-2xl border transition-all ${active ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border)]'}`}>
                   <div className="flex items-center gap-2">
-                    <Icon size={14} className="text-gray-400" />
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{isLoan ? `Prêt ${item.data.type.toLowerCase()}` : 'Avance sur salaire'}</p>
+                    <Icon size={14} className="text-[var(--text-muted)]" />
+                    <p className="font-semibold text-sm text-[var(--text)]">{isLoan ? `Prêt ${item.data.type.toLowerCase()}` : 'Avance sur salaire'}</p>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">{Number(item.data.amount).toLocaleString('fr-FR')} FCFA · {new Date(item.data.createdAt).toLocaleDateString('fr-FR')}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{Number(item.data.amount).toLocaleString('fr-FR')} FCFA · {new Date(item.data.createdAt).toLocaleDateString('fr-FR')}</p>
                   <span className={`inline-flex items-center gap-1 mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${cfg.cls}`}><StatusIcon size={10} /> {cfg.label}</span>
                 </button>
               );
@@ -295,22 +295,22 @@ export default function MonEspacePretsAvancesPage() {
 
             {items.length > PAGE_SIZE && (
               <div className="flex items-center justify-between pt-1">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-30">Précédent</button>
-                <span className="text-xs text-gray-400">Page {page} / {totalPages}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-30">Suivant</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Précédent</button>
+                <span className="text-xs text-[var(--text-muted)]">Page {page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Suivant</button>
               </div>
             )}
           </div>
 
           <div className="lg:col-span-8">
             {!selected ? (
-              <div className="h-full min-h-[300px] flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-400 text-sm">Sélectionnez une demande</div>
+              <div className="h-full min-h-[300px] flex items-center justify-center bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-[var(--text-muted)] text-sm">Sélectionnez une demande</div>
             ) : (
-              <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
+              <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+                <div className="p-6 border-b border-[var(--border)] flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{selected.kind === 'loan' ? `Prêt ${selected.data.type.toLowerCase()}` : 'Avance sur salaire'}</h2>
-                    <p className="text-sm text-gray-400">Demandé le {new Date(selected.data.createdAt).toLocaleDateString('fr-FR')}</p>
+                    <h2 className="text-lg font-bold text-[var(--text)]">{selected.kind === 'loan' ? `Prêt ${selected.data.type.toLowerCase()}` : 'Avance sur salaire'}</h2>
+                    <p className="text-sm text-[var(--text-muted)]">Demandé le {new Date(selected.data.createdAt).toLocaleDateString('fr-FR')}</p>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(selected.kind === 'loan' ? (LOAN_STATUS_CFG[selected.data.status] ?? LOAN_STATUS_CFG.PENDING) : (ADVANCE_STATUS_CFG[selected.data.status] ?? ADVANCE_STATUS_CFG.PENDING)).cls}`}>
                     {(selected.kind === 'loan' ? (LOAN_STATUS_CFG[selected.data.status] ?? LOAN_STATUS_CFG.PENDING) : (ADVANCE_STATUS_CFG[selected.data.status] ?? ADVANCE_STATUS_CFG.PENDING)).label}
@@ -319,18 +319,18 @@ export default function MonEspacePretsAvancesPage() {
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Montant</p><p className="font-bold text-gray-900 dark:text-white">{Number(selected.data.amount).toLocaleString('fr-FR')} FCFA</p></div>
+                    <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Montant</p><p className="font-bold text-[var(--text)]">{Number(selected.data.amount).toLocaleString('fr-FR')} FCFA</p></div>
                     {selected.kind === 'loan' && (
-                      <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40"><p className="text-[11px] text-gray-400">Solde restant</p><p className="font-bold text-gray-900 dark:text-white">{Number(selected.data.remainingBalance).toLocaleString('fr-FR')} FCFA</p></div>
+                      <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Solde restant</p><p className="font-bold text-[var(--text)]">{Number(selected.data.remainingBalance).toLocaleString('fr-FR')} FCFA</p></div>
                     )}
-                    {selected.data.reason && <div className="text-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p><p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3 rounded-xl">{selected.data.reason}</p></div>}
+                    {selected.data.reason && <div className="text-sm"><p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p><p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3 rounded-xl">{selected.data.reason}</p></div>}
                     {selected.data.status === 'REJECTED' && selected.data.rejectionReason && (
                       <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">Motif du refus : {selected.data.rejectionReason}</div>
                     )}
 
                     <div className="flex gap-2 pt-1 flex-wrap">
                       {['PENDING', 'PENDING_DG'].includes(selected.data.status) && (
-                        <button onClick={() => handleCancel(selected)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
+                        <button onClick={() => handleCancel(selected)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Annuler
                         </button>
                       )}
@@ -339,22 +339,22 @@ export default function MonEspacePretsAvancesPage() {
                       {selected.data.printAuthorized ? (
                         <>
                           {/* Impression 100% côté navigateur, aucune dépendance serveur — marche pour Orca comme pour les autres */}
-                          <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
+                          <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</button>
                           {docData?.company?.documentTemplate === 'ORCA' ? (
-                            <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
+                            <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
                           ) : (
-                            <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                            <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
                           )}
                         </>
                       ) : (
-                        <div className="flex-1 py-2.5 border border-dashed border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-400 flex items-center justify-center gap-2">
+                        <div className="flex-1 py-2.5 border border-dashed border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2">
                           <Lock size={14} /> Impression non autorisée par le RH
                         </div>
                       )}
                     </div>
 
                     {selected.data.printAuthorized && (
-                      <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                         <Eye size={16} /> Aperçu de la fiche
                       </button>
                     )}
@@ -386,8 +386,8 @@ export default function MonEspacePretsAvancesPage() {
             <MyKpiCard label="Mensualité en cours" value={myKpis.monthlyLoad} tone="sky" />
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Évolution de mes dettes (12 derniers mois)</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de mes dettes (12 derniers mois)</p>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -401,13 +401,13 @@ export default function MonEspacePretsAvancesPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Historique complet</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+            <div className="p-4 border-b border-[var(--border)]">
+              <p className="text-sm font-bold text-[var(--text)]">Historique complet</p>
             </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            <div className="divide-y divide-[var(--border)]">
               {items.length === 0 ? (
-                <p className="text-center py-12 text-gray-400 text-sm">Aucune dette pour l&apos;instant.</p>
+                <p className="text-center py-12 text-[var(--text-muted)] text-sm">Aucune dette pour l&apos;instant.</p>
               ) : items.map(item => {
                 const isLoan = item.kind === 'loan';
                 const cfg = isLoan ? (LOAN_STATUS_CFG[item.data.status] ?? LOAN_STATUS_CFG.PENDING) : (ADVANCE_STATUS_CFG[item.data.status] ?? ADVANCE_STATUS_CFG.PENDING);
@@ -415,10 +415,10 @@ export default function MonEspacePretsAvancesPage() {
                 return (
                   <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      <p className="text-sm font-semibold text-[var(--text)]">
                         {new Date(item.data.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {isLoan ? `Prêt ${item.data.type?.toLowerCase()}` : 'Avance sur salaire'} · {Number(item.data.amount).toLocaleString('fr-FR')} FCFA
                       </p>
-                      {item.data.reason && <p className="text-xs text-gray-400 mt-0.5">{item.data.reason}</p>}
+                      {item.data.reason && <p className="text-xs text-[var(--text-muted)] mt-0.5">{item.data.reason}</p>}
                     </div>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><StatusIcon size={10} /> {cfg.label}</span>
                   </div>
@@ -444,10 +444,10 @@ export default function MonEspacePretsAvancesPage() {
 
 function MyKpiCard({ label, value, tone, isCount }: { label: string; value: number; tone: 'slate' | 'emerald' | 'amber' | 'sky'; isCount?: boolean }) {
   const cls: Record<string, string> = {
-    slate: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-100 dark:border-gray-700',
+    slate: 'bg-[var(--surface)] text-[var(--text)] border-[var(--border)]',
     emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
     amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900',
-    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900',
+    sky: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
   };
   return (
     <div className={`rounded-2xl border p-4 ${cls[tone]}`}>

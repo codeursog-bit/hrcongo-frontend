@@ -65,8 +65,8 @@ export default function PresenceSubNav({ userRole, canRecordAttendanceForAll = f
             href={bp(l.href)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
               active
-                ? 'bg-sky-500 text-white shadow-sm'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                ? 'bg-emerald-500 text-white shadow-sm'
+                : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
             }`}
           >
             <Icon size={14} /> {l.label}

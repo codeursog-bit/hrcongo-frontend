@@ -257,25 +257,25 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-center items-center min-h-[600px]">
-        <Loader2 className="animate-spin text-sky-500" size={48} />
+      <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] flex justify-center items-center min-h-[600px]">
+        <Loader2 className="animate-spin text-emerald-500" size={48} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+      <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)]">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-sky-500 rounded-xl">
+            <div className="p-3 bg-emerald-500 rounded-xl">
               <BarChart3 size={24} className="text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Vue par Département</h3>
-              <p className="text-sm text-gray-500 capitalize">{weekLabel}</p>
+              <h3 className="text-xl font-bold text-[var(--text)]">Vue par Département</h3>
+              <p className="text-sm text-[var(--text-muted)] capitalize">{weekLabel}</p>
               {userRole === 'MANAGER' && userDepartment && !canRecordAttendanceForAll && (
-                <p className="text-xs text-sky-600 dark:text-sky-400 mt-1 flex items-center gap-1">
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
                   <BarChart3 size={12} /> Vue limitée au département : {userDepartment}
                 </p>
               )}
@@ -283,20 +283,20 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => setWeekAnchor(addDays(monday, -7))} className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors" title="Semaine précédente">
+            <button onClick={() => setWeekAnchor(addDays(monday, -7))} className="p-2.5 hover:bg-[var(--surface-2)] rounded-xl transition-colors" title="Semaine précédente">
               <ChevronLeft size={20} />
             </button>
-            <button onClick={() => setWeekAnchor(new Date())} className="px-3 py-2 text-xs font-bold text-sky-500 hover:text-sky-600 rounded-lg border border-sky-100 dark:border-sky-900">
+            <button onClick={() => setWeekAnchor(new Date())} className="px-3 py-2 text-xs font-bold text-emerald-500 hover:text-emerald-600 rounded-lg border border-emerald-100 dark:border-emerald-900">
               Cette semaine
             </button>
-            <button onClick={() => setWeekAnchor(addDays(monday, 7))} disabled={monday >= startOfWeek(new Date())} className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors disabled:opacity-30" title="Semaine suivante">
+            <button onClick={() => setWeekAnchor(addDays(monday, 7))} disabled={monday >= startOfWeek(new Date())} className="p-2.5 hover:bg-[var(--surface-2)] rounded-xl transition-colors disabled:opacity-30" title="Semaine suivante">
               <ChevronRight size={20} />
             </button>
-            <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-            <button onClick={() => setTimeout(() => printReport(REPORT_ID), 50)} title="Imprimer le rapport" className="p-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-500">
+            <div className="w-px h-6 bg-[var(--border)] mx-1" />
+            <button onClick={() => setTimeout(() => printReport(REPORT_ID), 50)} title="Imprimer le rapport" className="p-2.5 border border-[var(--border)] hover:bg-[var(--surface-2)] rounded-xl transition-colors text-[var(--text-muted)]">
               <Printer size={18} />
             </button>
-            <button onClick={handleDownloadPdf} disabled={isExportingPdf} title="Télécharger en PDF" className="p-2.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-500 disabled:opacity-40">
+            <button onClick={handleDownloadPdf} disabled={isExportingPdf} title="Télécharger en PDF" className="p-2.5 border border-[var(--border)] hover:bg-[var(--surface-2)] rounded-xl transition-colors text-[var(--text-muted)] disabled:opacity-40">
               {isExportingPdf ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
             </button>
           </div>
@@ -304,17 +304,17 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
 
         {departmentStats.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-              <BarChart3 size={32} className="text-gray-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--surface-2)] mb-4">
+              <BarChart3 size={32} className="text-[var(--text-muted)]" />
             </div>
-            <p className="text-gray-500">Aucune donnée disponible pour cette semaine</p>
+            <p className="text-[var(--text-muted)]">Aucune donnée disponible pour cette semaine</p>
           </div>
         ) : (
           <div className="space-y-6">
             {/* Tous les départements ensemble — en pourcentage */}
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <BarChart3 size={16} className="text-sky-500" /> Taux par Département (%)
+              <h4 className="font-bold text-[var(--text)] mb-3 flex items-center gap-2">
+                <BarChart3 size={16} className="text-emerald-500" /> Taux par Département (%)
               </h4>
               <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={departmentChartData} onClick={(e: any) => e?.activeLabel && openDepartmentDetail(e.activeLabel)}>
@@ -324,18 +324,18 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
                   <Tooltip formatter={(v: number) => `${v}%`} />
                   <Legend />
                   <Bar dataKey="Présence" fill="#10b981" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Retards" fill="#f97316" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Retards" fill="#F59E0B" radius={[4, 4, 0, 0]} cursor="pointer" />
                   <Bar dataKey="Absences" fill="#ef4444" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Remote" fill="#a855f7" radius={[4, 4, 0, 0]} cursor="pointer" />
-                  <Bar dataKey="Congés" fill="#0ea5e9" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Remote" fill="#34D399" radius={[4, 4, 0, 0]} cursor="pointer" />
+                  <Bar dataKey="Congés" fill="#FBBF24" radius={[4, 4, 0, 0]} cursor="pointer" />
                 </BarChart>
               </ResponsiveContainer>
-              <p className="text-xs text-gray-400 mt-2">Cliquez sur une barre pour voir le détail du département.</p>
+              <p className="text-xs text-[var(--text-muted)] mt-2">Cliquez sur une barre pour voir le détail du département.</p>
             </div>
 
             {/* Courbe d'évolution sur les 7 jours de la semaine */}
             <div>
-              <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+              <h4 className="font-bold text-[var(--text)] mb-3 flex items-center gap-2">
                 <TrendingUp size={16} className="text-emerald-500" /> Évolution sur la Semaine
               </h4>
               <ResponsiveContainer width="100%" height={280}>
@@ -347,7 +347,7 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
                   <Legend />
                   <Line type="monotone" dataKey="Présence" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="Absence" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Congé" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="Congé" stroke="#F59E0B" strokeWidth={2.5} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -358,7 +358,7 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
                 <button
                   key={dept.name}
                   onClick={() => openDepartmentDetail(dept.name)}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-full border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors"
                 >
                   {dept.name} · voir le détail
                 </button>
@@ -370,27 +370,27 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
 
       {/* Résumé global */}
       {departmentStats.length > 1 && (
-        <div className="bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl p-6">
-          <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <BarChart3 size={20} className="text-sky-500" />
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+          <h4 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
+            <BarChart3 size={20} className="text-emerald-500" />
             Résumé global de la semaine
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-sky-600 dark:text-sky-400">{departmentStats.length}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Départements</p>
+              <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{departmentStats.length}</div>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Départements</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{departmentStats.reduce((sum, d) => sum + d.present, 0)}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Total présents</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Total présents</p>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">{departmentStats.reduce((sum, d) => sum + d.late, 0)}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Total retards</p>
+              <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">{departmentStats.reduce((sum, d) => sum + d.late, 0)}</div>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Total retards</p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-red-600 dark:text-red-400">{departmentStats.reduce((sum, d) => sum + d.absent, 0)}</div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Total absents</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Total absents</p>
             </div>
           </div>
         </div>

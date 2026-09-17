@@ -11,8 +11,10 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, UserCheck, UserX, Timer, MapPin, Calendar, ChevronLeft,
   ChevronRight, Search, CalendarOff, Inbox, Printer, Download, Loader2,
+  Trash2,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { attendanceApi } from '@/services/attendance-api';
 import EmployeeDayDetailSidebar, { EmployeeDayDetail } from '@/components/EmployeeDayDetailSidebar';
 import DailyAttendanceReportPrintable from '@/components/DailyAttendanceReportPrintable';
 import { printReport, downloadReportPDF } from '@/lib/report-print';
@@ -38,6 +40,10 @@ export default function DailyView({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
+  // ✅ Suppression réservée aux admins + RH manager — le backend applique la
+  // même règle (RolesGuard), ceci n'est qu'un affichage conditionnel côté UI.
+  const isAdmin = ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN'].includes(userRole);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<EmployeeDayDetail | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
@@ -90,18 +96,44 @@ export default function DailyView({
   const formatTime = (dateString?: string) =>
     dateString ? new Date(dateString).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-';
 
+  // ✅ Suppression d'un pointage — définitive, un motif est obligatoire
+  // (le backend le revérifie de toute façon). On demande confirmation +
+  // motif via deux petites invites plutôt qu'une modale dédiée, pour rester
+  // simple ; à remplacer par une vraie modale si besoin plus tard.
+  const handleDeleteAttendance = async (attendanceId: string, employeeName: string) => {
+    const reason = window.prompt(
+      `Suppression définitive du pointage de ${employeeName}.\n\nMotif de la suppression (obligatoire) :`
+    );
+    if (reason === null) return; // annulé
+    if (reason.trim().length < 3) {
+      alert('Motif trop court (3 caractères minimum).');
+      return;
+    }
+    if (!window.confirm(`Confirmer la suppression définitive ? Cette action est irréversible.`)) return;
+
+    setDeletingId(attendanceId);
+    try {
+      await attendanceApi.deleteAttendance(attendanceId, reason.trim());
+      await fetchDailyData();
+    } catch (e: any) {
+      alert(e.message || 'Erreur lors de la suppression.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     const colors: any = {
       PRESENT: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      LATE: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      LATE: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
       ABSENT_UNPAID: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      ABSENT_PAID: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      REMOTE: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      ON_LEAVE: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-      LEAVE: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',
-      HOLIDAY: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      ABSENT_PAID: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+      REMOTE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      ON_LEAVE: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
+      LEAVE: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
+      HOLIDAY: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
     };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return colors[status] || 'bg-[var(--surface-2)] text-[var(--text-muted)]';
   };
 
   const getStatusLabel = (status: string) => {
@@ -217,32 +249,32 @@ export default function DailyView({
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+      <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)]">
         <div className="flex items-center justify-between gap-4">
           <button
             onClick={() => setSelectedDate(new Date(selectedDate.getTime() - 86400000))}
-            className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            className="p-3 hover:bg-[var(--surface-2)] rounded-xl transition-colors"
           >
             <ChevronLeft size={24} />
           </button>
 
           <div className="text-center flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize">
+            <h2 className="text-2xl font-bold text-[var(--text)] capitalize">
               {formatDate(selectedDate)}
             </h2>
             {userRole === 'MANAGER' && !canRecordAttendanceForAll && (
-              <span className="text-xs text-sky-500 font-bold mt-1 block">Votre département</span>
+              <span className="text-xs text-emerald-500 font-bold mt-1 block">Votre département</span>
             )}
             <button
               onClick={() => setSelectedDate(new Date())}
-              className="text-sm text-sky-500 hover:text-sky-600 font-medium mt-1"
+              className="text-sm text-emerald-500 hover:text-emerald-600 font-medium mt-1"
             >
               Aujourd&apos;hui
             </button>
@@ -252,7 +284,7 @@ export default function DailyView({
             <button
               onClick={() => setTimeout(() => printReport(REPORT_ID), 50)}
               title="Imprimer le rapport"
-              className="p-3 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-500"
+              className="p-3 border border-[var(--border)] hover:bg-[var(--surface-2)] rounded-xl transition-colors text-[var(--text-muted)]"
             >
               <Printer size={20} />
             </button>
@@ -260,13 +292,13 @@ export default function DailyView({
               onClick={handleDownloadPdf}
               disabled={isExportingPdf}
               title="Télécharger en PDF"
-              className="p-3 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-500 disabled:opacity-40"
+              className="p-3 border border-[var(--border)] hover:bg-[var(--surface-2)] rounded-xl transition-colors text-[var(--text-muted)] disabled:opacity-40"
             >
               {isExportingPdf ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
             </button>
             <button
               onClick={() => setSelectedDate(new Date(selectedDate.getTime() + 86400000))}
-              className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+              className="p-3 hover:bg-[var(--surface-2)] rounded-xl transition-colors"
               disabled={selectedDate >= new Date()}
             >
               <ChevronRight size={24} />
@@ -276,9 +308,9 @@ export default function DailyView({
       </div>
 
       {!isWorkingDay && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center gap-3">
-          <Calendar size={24} className="text-blue-600 dark:text-blue-400" />
-          <p className="text-sm text-blue-700 dark:text-blue-300">
+        <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 flex items-center gap-3">
+          <Calendar size={24} className="text-emerald-500" />
+          <p className="text-sm text-[var(--text-muted)]">
             <strong>Jour non ouvrable</strong> selon la configuration de l&apos;entreprise (jours configurés : {companySettings.workDays.map(d => ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][d === 7 ? 0 : d]).join(', ')})
           </p>
         </div>
@@ -308,14 +340,14 @@ export default function DailyView({
           { label: 'Remote', value: dailyStats.remote, color: 'purple', Icon: MapPin },
           { label: 'Congés', value: dailyStats.onLeave, color: 'sky', Icon: Calendar },
         ].map(({ label, value, color, Icon }) => (
-          <div key={label} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+          <div key={label} className="bg-[var(--surface)] rounded-xl p-4 border border-[var(--border)]">
             <div className="flex items-center gap-3">
               <div className={`p-2 bg-${color}-100 dark:bg-${color}-900/30 rounded-lg`}>
                 <Icon size={20} className={`text-${color}-600 dark:text-${color}-400`} />
               </div>
               <div>
                 <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
-                <p className="text-xs text-gray-500">{label}</p>
+                <p className="text-xs text-[var(--text-muted)]">{label}</p>
               </div>
             </div>
           </div>
@@ -323,17 +355,17 @@ export default function DailyView({
       </div>
 
       {/* Filtres */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]" size={20} />
               <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500"
+                className="w-full pl-10 pr-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -341,7 +373,7 @@ export default function DailyView({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+            className="px-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)]"
           >
             <option value="ALL">Tous statuts</option>
             <option value="PRESENT">Présents</option>
@@ -354,7 +386,7 @@ export default function DailyView({
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+              className="px-4 py-2 border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)]"
             >
               <option value="ALL">Tous dép.</option>
               {uniqueDepartments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
@@ -364,42 +396,45 @@ export default function DailyView({
       </div>
 
       {/* Tableau */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Employé</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Département</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Statut</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Entrée</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Site</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Sortie</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Durée</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Employé</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Département</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Statut</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Entrée</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Site</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Sortie</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Durée</th>
+                {isAdmin && (
+                  <th className="px-6 py-4 text-right text-xs font-bold text-[var(--text-muted)] uppercase">Actions</th>
+                )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-[var(--border)]">
               {filteredAttendances.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
                       {!isWorkingDay ? (
                         <>
-                          <CalendarOff size={36} className="text-gray-300" />
-                          <p className="text-lg font-bold text-gray-700 dark:text-gray-300">Jour non ouvrable</p>
-                          <p className="text-sm text-gray-500">Ce jour n&apos;est pas configuré comme jour de travail</p>
+                          <CalendarOff size={36} className="text-[var(--text-muted)]" />
+                          <p className="text-lg font-bold text-[var(--text-muted)]">Jour non ouvrable</p>
+                          <p className="text-sm text-[var(--text-muted)]">Ce jour n&apos;est pas configuré comme jour de travail</p>
                         </>
                       ) : isBeforeWorkTime ? (
                         <>
-                          <Timer size={36} className="text-gray-300" />
-                          <p className="text-lg font-bold text-gray-700 dark:text-gray-300">Avant l&apos;heure de travail</p>
-                          <p className="text-sm text-gray-500">Les absences seront comptabilisées à partir de {String(companySettings.officialStartHour).padStart(2, '0')}h{String(companySettings.lateToleranceMinutes).padStart(2, '0')}</p>
+                          <Timer size={36} className="text-[var(--text-muted)]" />
+                          <p className="text-lg font-bold text-[var(--text-muted)]">Avant l&apos;heure de travail</p>
+                          <p className="text-sm text-[var(--text-muted)]">Les absences seront comptabilisées à partir de {String(companySettings.officialStartHour).padStart(2, '0')}h{String(companySettings.lateToleranceMinutes).padStart(2, '0')}</p>
                         </>
                       ) : (
                         <>
-                          <Inbox size={36} className="text-gray-300" />
-                          <p className="text-lg font-bold text-gray-700 dark:text-gray-300">Aucun pointage</p>
-                          <p className="text-sm text-gray-500">Aucune activité enregistrée ce jour-là</p>
+                          <Inbox size={36} className="text-[var(--text-muted)]" />
+                          <p className="text-lg font-bold text-[var(--text-muted)]">Aucun pointage</p>
+                          <p className="text-sm text-[var(--text-muted)]">Aucune activité enregistrée ce jour-là</p>
                         </>
                       )}
                     </div>
@@ -410,41 +445,57 @@ export default function DailyView({
                   <tr
                     key={att.id}
                     onClick={() => setSelectedRow(att)}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer"
+                    className="hover:bg-[var(--surface-2)] transition-colors cursor-pointer"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sm font-bold text-sky-600 overflow-hidden shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-sm font-bold text-emerald-600 overflow-hidden shrink-0">
                           {att.employee.photoUrl
                             ? <img src={att.employee.photoUrl} className="w-full h-full object-cover" alt="" />
                             : `${att.employee.firstName[0]}${att.employee.lastName[0]}`}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 dark:text-white">{att.employee.firstName} {att.employee.lastName}</p>
-                          <p className="text-xs text-gray-500">{att.employee.employeeNumber || '-'}</p>
+                          <p className="font-bold text-[var(--text)]">{att.employee.firstName} {att.employee.lastName}</p>
+                          <p className="text-xs text-[var(--text-muted)]">{att.employee.employeeNumber || '-'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{att.employee.department?.name || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">{att.employee.department?.name || '-'}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(att.status)}`}>
                         {getStatusLabel(att.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">{formatTime(att.checkIn)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkIn)}</td>
+                    <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
                       {(att as any).checkInSiteName
                         ? <span className="inline-flex items-center gap-1">
                             <MapPin size={12} className="text-emerald-500" />
                             {(att as any).checkInSiteName}
                             {(att as any).checkInDistance != null && (
-                              <span className="text-gray-400">({(att as any).checkInDistance}m)</span>
+                              <span className="text-[var(--text-muted)]">({(att as any).checkInDistance}m)</span>
                             )}
                           </span>
                         : '-'}
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono text-gray-900 dark:text-white">{formatTime(att.checkOut)}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
+                    <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkOut)}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation(); // ne pas ouvrir la sidebar de détail
+                            handleDeleteAttendance(att.id, `${att.employee.firstName} ${att.employee.lastName}`);
+                          }}
+                          disabled={deletingId === att.id}
+                          title="Supprimer ce pointage (définitif)"
+                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+                        >
+                          {deletingId === att.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

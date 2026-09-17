@@ -18,11 +18,11 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      <label className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
         {label}
       </label>
       {children}
-      {hint && <p className="text-[11px] text-gray-400 dark:text-gray-500">{hint}</p>}
+      {hint && <p className="text-[11px] text-[var(--text-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -31,7 +31,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 dark:focus:border-sky-500 transition-all ${className}`}
+      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all ${className}`}
     />
   );
 }
@@ -39,10 +39,10 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
 function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-        <Icon size={13} className="text-gray-400 dark:text-gray-500" />
+      <div className="w-6 h-6 rounded-lg bg-[var(--surface-2)] flex items-center justify-center">
+        <Icon size={13} className="text-[var(--text-muted)]" />
       </div>
-      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)]">
         {label}
       </span>
     </div>
@@ -62,10 +62,10 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
 
       {/* Step title */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+        <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">
           Informations complémentaires
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-[var(--text-muted)] mt-1">
           Ces champs sont optionnels — issus de la fiche de renseignement RH
         </p>
       </div>
@@ -73,7 +73,7 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* ── Santé & Urgence ─────────────────────────────────────────────── */}
-        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] space-y-4">
           <SectionLabel icon={HeartPulse} label="Santé & Urgence" />
 
           <div className="grid grid-cols-2 gap-4">
@@ -96,12 +96,12 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
               onChange={onInputChange}
               placeholder="Ex : Asthme, diabète…"
               rows={2}
-              className="w-full px-3.5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all resize-none"
+              className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all resize-none"
             />
           </Field>
 
-          <div className="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-3">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="border-t border-[var(--border)] pt-3 space-y-3">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
               <AlertTriangle size={12} /> Personne à contacter en cas d'urgence
             </p>
             <Field label="Nom & prénom">
@@ -135,7 +135,7 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
 
         {/* ── Filiation & Divers ──────────────────────────────────────────── */}
         <div className="space-y-6">
-          <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+          <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] space-y-4">
             <SectionLabel icon={Users} label="Filiation" />
             <Field label="Nom & prénom(s) du père">
               <Input
@@ -155,7 +155,7 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
             </Field>
           </div>
 
-          <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+          <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] space-y-4">
             <SectionLabel icon={GraduationCap} label="Divers" />
 
             <Field label="Niveau d'études / diplôme le plus élevé">
@@ -169,7 +169,7 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
 
             <Field label="Langue étrangère">
               <div className="relative">
-                <Languages size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <Languages size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
                 <Input
                   name="foreignLanguages"
                   value={formData.foreignLanguages || ''}
@@ -192,16 +192,16 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
                   />
                   <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                     formData.hasDrivingLicense
-                      ? 'bg-gray-900 dark:bg-white border-gray-900 dark:border-white'
-                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                      ? 'bg-[var(--text)] border-[var(--text)]'
+                      : 'border-[var(--border)] bg-[var(--surface)]'
                   }`}>
                     {formData.hasDrivingLicense && (
-                      <Check size={11} strokeWidth={3} className="text-white dark:text-gray-900" />
+                      <Check size={11} strokeWidth={3} className="text-[var(--bg)]" />
                     )}
                   </div>
                 </div>
-                <span className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
-                  <Car size={14} className="text-gray-400" /> Permis de conduire
+                <span className="text-sm font-bold text-[var(--text)] flex items-center gap-1.5">
+                  <Car size={14} className="text-[var(--text-muted)]" /> Permis de conduire
                 </span>
               </label>
 

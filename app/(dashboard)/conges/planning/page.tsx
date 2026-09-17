@@ -108,44 +108,44 @@ export default function LeavePlanningPage() {
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Congés</p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Planning des départs</h1>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Planning des départs</h1>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={goPrevMonth} className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+          <button onClick={goPrevMonth} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
             <ChevronLeft size={18} />
           </button>
-          <span className="px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-semibold text-sm min-w-[160px] text-center">
+          <span className="px-4 py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] font-semibold text-sm min-w-[160px] text-center">
             {monthLabel}
           </span>
-          <button onClick={goNextMonth} className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+          <button onClick={goNextMonth} className="p-2.5 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
             <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-          <button onClick={() => setMode('departures')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${mode === 'departures' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+        <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
+          <button onClick={() => setMode('departures')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${mode === 'departures' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
             <Plane size={14} /> Programme des départs
           </button>
-          <button onClick={() => setMode('payable')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${mode === 'payable' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+          <button onClick={() => setMode('payable')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${mode === 'payable' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
             <Wallet size={14} /> Congé à payer
           </button>
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)]">
             <Printer size={16} /> Imprimer
           </button>
-          <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
+          <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
             {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
           </button>
           {company?.documentTemplate === 'ORCA' && (
             <button
               onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/planning/document.xlsx?month=${cursor.month}&year=${cursor.year}`, '_blank')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 rounded-xl text-sm font-bold hover:bg-sky-100 dark:hover:bg-sky-900/40"
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-xl text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
               title="Télécharger le fichier Excel original rempli (2 onglets : départs + à payer)"
             >
               <Download size={15} /> Excel (.xlsx)
@@ -155,30 +155,30 @@ export default function LeavePlanningPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>
+        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 flex items-center justify-center"><Users size={20} /></div>
-              <div><p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.count}</p><p className="text-xs text-gray-400">Employés en congé ce mois</p></div>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center"><Users size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{stats.count}</p><p className="text-xs text-[var(--text-muted)]">Employés en congé ce mois</p></div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 flex items-center justify-center"><Plane size={20} /></div>
-              <div><p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalDays}</p><p className="text-xs text-gray-400">Jours ouvrables cumulés</p></div>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center"><Plane size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{stats.totalDays}</p><p className="text-xs text-[var(--text-muted)]">Jours ouvrables cumulés</p></div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-3">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center"><Wallet size={20} /></div>
-              <div><p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(stats.totalIndemnity).toLocaleString('fr-FR')}</p><p className="text-xs text-gray-400">FCFA d&apos;indemnités estimées</p></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{Math.round(stats.totalIndemnity).toLocaleString('fr-FR')}</p><p className="text-xs text-[var(--text-muted)]">FCFA d&apos;indemnités estimées</p></div>
             </div>
           </div>
 
           {/* 🆕 Graphiques RH — tendance annuelle + répartition par département */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Jours de congé posés par mois — {cursor.year}</p>
+            <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+              <p className="text-sm font-bold text-[var(--text)] mb-4">Jours de congé posés par mois — {cursor.year}</p>
               {yearlyTrend.every(m => m.totalDays === 0) ? (
-                <p className="text-sm text-gray-400 py-8 text-center">Aucun congé posé sur {cursor.year}.</p>
+                <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucun congé posé sur {cursor.year}.</p>
               ) : (
                 <div className="flex items-end gap-1.5 h-40">
                   {yearlyTrend.map(m => {
@@ -190,11 +190,11 @@ export default function LeavePlanningPage() {
                         <div className="w-full flex items-end h-32 relative">
                           <div
                             title={`${m.totalDays}j — ${m.count} congé(s)`}
-                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-sky-500' : 'bg-sky-200 dark:bg-sky-800 group-hover:bg-sky-300 dark:group-hover:bg-sky-700'}`}
+                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : 'bg-emerald-200 dark:bg-emerald-800 group-hover:bg-emerald-300 dark:group-hover:bg-emerald-700'}`}
                             style={{ height: `${Math.max(heightPct, m.totalDays > 0 ? 4 : 0)}%` }}
                           />
                         </div>
-                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-sky-600' : 'text-gray-400'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
+                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
                       </div>
                     );
                   })}
@@ -202,10 +202,10 @@ export default function LeavePlanningPage() {
               )}
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par département — {monthLabel}</p>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+              <p className="text-sm font-bold text-[var(--text)] mb-4">Répartition par département — {monthLabel}</p>
               {deptBreakdown.length === 0 ? (
-                <p className="text-sm text-gray-400 py-8 text-center">Aucun département ce mois-ci.</p>
+                <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucun département ce mois-ci.</p>
               ) : (
                 <div className="space-y-3">
                   {deptBreakdown.map(d => {
@@ -213,11 +213,11 @@ export default function LeavePlanningPage() {
                     return (
                       <div key={d.name}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="font-medium text-gray-600 dark:text-gray-300 truncate">{d.name}</span>
-                          <span className="text-gray-400 shrink-0 ml-2">{d.days}j</span>
+                          <span className="font-medium text-[var(--text-muted)] truncate">{d.name}</span>
+                          <span className="text-[var(--text-muted)] shrink-0 ml-2">{d.days}j</span>
                         </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-violet-400 dark:bg-violet-600 rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
+                        <div className="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-400 dark:bg-amber-600 rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
                         </div>
                       </div>
                     );
@@ -227,7 +227,7 @@ export default function LeavePlanningPage() {
             </div>
           </div>
 
-          <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-4 overflow-auto border border-gray-200 dark:border-gray-700">
+          <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto border border-[var(--border)]">
             <div className="scale-[0.75] origin-top-left" style={{ width: '133%' }}>
               <LeavePlanningPrintable id={REPORT_ID} company={company || {}} monthLabel={monthLabel} rows={rows} mode={mode} />
             </div>

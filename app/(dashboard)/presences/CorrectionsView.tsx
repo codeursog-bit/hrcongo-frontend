@@ -60,7 +60,7 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   const colors = {
     success: 'bg-emerald-500',
     error:   'bg-red-500',
-    info:    'bg-sky-500',
+    info:    'bg-emerald-500',
   };
   const icons = { success: <Check size={16} />, error: <X size={16} />, info: <Info size={16} /> };
 
@@ -101,10 +101,10 @@ function LiveTimer({ checkIn }: { checkIn: string }) {
 function OvertimeBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; class: string; icon: React.ReactNode }> = {
     PENDING_EMPLOYEE: { label: 'En attente employé', class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: <HelpCircle size={12} /> },
-    PENDING_APPROVAL: { label: 'En attente patron',  class: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',   icon: <Clock size={12} /> },
+    PENDING_APPROVAL: { label: 'En attente patron',  class: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',   icon: <Clock size={12} /> },
     APPROVED:         { label: 'Approuvé',            class: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: <CheckCircle size={12} /> },
     REJECTED:         { label: 'Refusé',              class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',       icon: <XCircle size={12} /> },
-    AUTO_CLOSED:      { label: 'Auto-clôturé',        class: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',      icon: <Shield size={12} /> },
+    AUTO_CLOSED:      { label: 'Auto-clôturé',        class: 'bg-[var(--surface-2)] text-[var(--text-muted)]',      icon: <Shield size={12} /> },
   };
   const c = config[status];
   if (!c) return null;
@@ -149,8 +149,8 @@ function CorrectionModal({
 
   const statusOptions = [
     { value: 'PRESENT',      label: '✅ Présent',           color: 'text-emerald-600' },
-    { value: 'ABSENT_PAID',  label: '💼 Justifié (payé)',   color: 'text-blue-600' },
-    { value: 'REMOTE',       label: '🏠 Télétravail',       color: 'text-purple-600' },
+    { value: 'ABSENT_PAID',  label: '💼 Justifié (payé)',   color: 'text-amber-600' },
+    { value: 'REMOTE',       label: '🏠 Télétravail',       color: 'text-emerald-600' },
     { value: 'LATE',         label: '⏰ Retard',             color: 'text-amber-600' },
     { value: 'ABSENT_UNPAID',label: '❌ Non justifié',       color: 'text-red-600' },
   ];
@@ -161,23 +161,23 @@ function CorrectionModal({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-lg bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         {/* Handle mobile */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Corriger le pointage</h3>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h3 className="text-lg font-bold text-[var(--text)]">Corriger le pointage</h3>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5">
               {attendance.employee.firstName} {attendance.employee.lastName} &bull;{' '}
               {new Date(attendance.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <X size={20} className="text-gray-500" />
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--surface-2)] transition-colors">
+            <X size={20} className="text-[var(--text-muted)]" />
           </button>
         </div>
 
@@ -185,7 +185,7 @@ function CorrectionModal({
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Statut */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
               Nouveau statut <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-1 gap-2">
@@ -195,12 +195,12 @@ function CorrectionModal({
                   onClick={() => setStatus(opt.value)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left text-sm font-semibold transition-all ${
                     status === opt.value
-                      ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300'
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'border-[var(--border)] hover:border-[var(--text-muted)] text-[var(--text-muted)]'
                   }`}
                 >
                   <span className={`text-base ${status === opt.value ? '' : opt.color}`}>{opt.label}</span>
-                  {status === opt.value && <Check size={16} className="ml-auto text-sky-500" />}
+                  {status === opt.value && <Check size={16} className="ml-auto text-emerald-500" />}
                 </button>
               ))}
             </div>
@@ -210,21 +210,21 @@ function CorrectionModal({
           {showHours && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">Entrée</label>
+                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Entrée</label>
                 <input
                   type="datetime-local"
                   value={checkIn}
                   onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm font-mono focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                  className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5">Sortie</label>
+                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Sortie</label>
                 <input
                   type="datetime-local"
                   value={checkOut}
                   onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm font-mono focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
+                  className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                 />
               </div>
             </div>
@@ -232,7 +232,7 @@ function CorrectionModal({
 
           {/* Justification */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
               Justification <span className="text-red-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2 mb-2">
@@ -247,8 +247,8 @@ function CorrectionModal({
                   onClick={() => setReason(s)}
                   className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${
                     reason === s
-                      ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300'
-                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                      ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                      : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                   }`}
                 >
                   {s}
@@ -260,7 +260,7 @@ function CorrectionModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={2}
-              className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm resize-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all placeholder-gray-400"
+              className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-[var(--text-muted)]"
             />
             {!reason.trim() && (
               <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
@@ -271,17 +271,17 @@ function CorrectionModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
+        <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold transition-all"
+            className="flex-1 px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text-muted)] rounded-xl text-sm font-bold transition-all"
           >
             Annuler
           </button>
           <button
             onClick={handleSave}
             disabled={!reason.trim() || !status || saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold shadow-lg shadow-sky-500/30 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
             Valider la correction
@@ -325,50 +325,50 @@ function OvertimeApprovalModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full sm:max-w-md bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full sm:max-w-md bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
         </div>
 
-        <div className="px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="px-6 pt-5 pb-4 border-b border-[var(--border)]">
           <div className="flex items-center gap-3 mb-1">
             <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
               <Zap size={20} className="text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Heures supplémentaires</h3>
-              <p className="text-sm text-gray-500">Demande de validation</p>
+              <h3 className="text-lg font-bold text-[var(--text)]">Heures supplémentaires</h3>
+              <p className="text-sm text-[var(--text-muted)]">Demande de validation</p>
             </div>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
           {/* Infos employé */}
-          <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+          <div className="flex items-center gap-3 p-4 bg-[var(--surface-2)] rounded-2xl">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
               {item.employee.firstName[0]}{item.employee.lastName[0]}
             </div>
             <div>
-              <p className="font-bold text-gray-900 dark:text-white">
+              <p className="font-bold text-[var(--text)]">
                 {item.employee.firstName} {item.employee.lastName}
               </p>
-              <p className="text-xs text-gray-500">{item.employee.department?.name}</p>
+              <p className="text-xs text-[var(--text-muted)]">{item.employee.department?.name}</p>
             </div>
           </div>
 
           {/* Détail heures */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-sky-50 dark:bg-sky-900/20 rounded-xl text-center">
-              <p className="text-2xl font-black text-sky-600 dark:text-sky-400">
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-center">
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                 {item.pendingOvertimeHours.toFixed(1)}h
               </p>
-              <p className="text-xs text-sky-700 dark:text-sky-300 font-semibold">Heures sup déclarées</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">Heures sup déclarées</p>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+            <div className="p-3 bg-[var(--surface-2)] rounded-xl text-center">
+              <p className="text-sm font-bold text-[var(--text-muted)]">
                 {new Date(item.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-[var(--text-muted)] mt-1">
                 Entrée : {new Date(item.checkIn).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -376,14 +376,14 @@ function OvertimeApprovalModal({
 
           {showRejectForm ? (
             <div className="space-y-3">
-              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-bold text-[var(--text-muted)]">
                 Motif du refus <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-1 gap-1.5">
                 {['Heures non autorisées à l\'avance', 'Travail non confirmé', 'Erreur de déclaration'].map(r => (
                   <button key={r} onClick={() => setRejectReason(r)}
                     className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 text-left transition-all ${
-                      rejectReason === r ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400'
+                      rejectReason === r ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700' : 'border-[var(--border)] text-[var(--text-muted)]'
                     }`}
                   >{r}</button>
                 ))}
@@ -393,11 +393,11 @@ function OvertimeApprovalModal({
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm resize-none focus:border-red-400"
+                className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-red-400"
               />
               <div className="flex gap-2">
                 <button onClick={() => setShowRejectForm(false)}
-                  className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-300">
+                  className="flex-1 px-4 py-2.5 bg-[var(--surface-2)] rounded-xl text-sm font-bold text-[var(--text-muted)]">
                   Retour
                 </button>
                 <button onClick={handleReject} disabled={!rejectReason.trim() || loading}
@@ -414,7 +414,7 @@ function OvertimeApprovalModal({
                 <ThumbsDown size={16} /> Refuser
               </button>
               <button onClick={handleApprove} disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/30 transition-all">
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-colors">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <ThumbsUp size={16} />}
                 Approuver
               </button>
@@ -650,10 +650,10 @@ export default function CorrectionsView({
       {/* ── Header stats ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Absences à traiter', value: absences.length, icon: <AlertCircle size={18} />, color: 'from-red-500 to-rose-600', bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400' },
-          { label: 'HS en attente', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_APPROVAL').length, icon: <Clock size={18} />, color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
-          { label: 'Réponse employé', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_EMPLOYEE').length, icon: <HelpCircle size={18} />, color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400' },
-          { label: 'Corrections totales', value: historyLogs.length, icon: <History size={18} />, color: 'from-purple-500 to-violet-600', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400' },
+          { label: 'Absences à traiter', value: absences.length, icon: <AlertCircle size={18} />, color: 'from-red-500 to-red-600', bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400' },
+          { label: 'HS en attente', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_APPROVAL').length, icon: <Clock size={18} />, color: 'from-amber-500 to-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Réponse employé', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_EMPLOYEE').length, icon: <HelpCircle size={18} />, color: 'from-amber-500 to-emerald-600', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Corrections totales', value: historyLogs.length, icon: <History size={18} />, color: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400' },
         ].map((stat) => (
           <div key={stat.label} className={`${stat.bg} border border-current/10 rounded-2xl p-4`}>
             <div className={`${stat.text} flex items-center gap-2 mb-2`}>
@@ -668,13 +668,13 @@ export default function CorrectionsView({
       {/* ── Barre de contrôles ────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Tabs */}
-        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1">
+        <div className="flex bg-[var(--surface-2)] rounded-xl p-1 gap-1">
           <button
             onClick={() => setActiveTab('absences')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'absences'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
             <AlertCircle size={14} />
@@ -688,8 +688,8 @@ export default function CorrectionsView({
               onClick={() => setActiveTab('overtime')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
                 activeTab === 'overtime'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                  ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
               <Zap size={14} />
@@ -703,13 +703,13 @@ export default function CorrectionsView({
 
         {/* Search */}
         <div className="flex-1 min-w-48 relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
           <input
             type="text"
             placeholder="Rechercher un employé..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
           />
         </div>
 
@@ -718,8 +718,8 @@ export default function CorrectionsView({
           onClick={() => setShowHistory(!showHistory)}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
             showHistory
-              ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30'
-              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-sky-400'
+              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-400'
           }`}
         >
           <History size={16} />
@@ -729,7 +729,7 @@ export default function CorrectionsView({
         {/* Refresh */}
         <button
           onClick={() => { onRefresh(); fetchPendingOvertimes(); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-sky-400 transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-400 transition-all"
         >
           <RefreshCw size={16} />
           <span className="hidden sm:inline">Actualiser</span>
@@ -738,39 +738,39 @@ export default function CorrectionsView({
 
       {/* ── Historique timeline ───────────────────────────────────────────── */}
       {showHistory && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <History size={18} className="text-sky-500" />
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[var(--border)] flex items-center justify-between">
+            <h4 className="font-bold text-[var(--text)] flex items-center gap-2">
+              <History size={18} className="text-emerald-500" />
               Historique des modifications
             </h4>
-            {loadingHistory && <Loader2 size={16} className="animate-spin text-sky-500" />}
+            {loadingHistory && <Loader2 size={16} className="animate-spin text-emerald-500" />}
           </div>
 
-          <div className="divide-y divide-gray-50 dark:divide-gray-800 max-h-80 overflow-y-auto">
+          <div className="divide-y divide-[var(--border)] max-h-80 overflow-y-auto">
             {historyLogs.length === 0 ? (
-              <div className="p-8 text-center text-gray-400 text-sm">
+              <div className="p-8 text-center text-[var(--text-muted)] text-sm">
                 Aucune modification enregistrée ce mois
               </div>
             ) : (
               historyLogs.map((log: any, idx: number) => (
-                <div key={idx} className="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <div key={idx} className="px-5 py-4 hover:bg-[var(--surface-2)] transition-colors">
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-xs font-black text-sky-600 flex-shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-xs font-black text-emerald-600 flex-shrink-0">
                       {log.modifiedBy?.firstName?.[0]}{log.modifiedBy?.lastName?.[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="font-bold text-sm text-gray-900 dark:text-white">
+                        <span className="font-bold text-sm text-[var(--text)]">
                           {log.employee?.firstName} {log.employee?.lastName}
                         </span>
-                        <ArrowRight size={12} className="text-gray-400" />
-                        <span className="font-bold text-sm text-sky-600 dark:text-sky-400">{log.newValue}</span>
-                        <span className="ml-auto text-xs text-gray-400">
+                        <ArrowRight size={12} className="text-[var(--text-muted)]" />
+                        <span className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{log.newValue}</span>
+                        <span className="ml-auto text-xs text-[var(--text-muted)]">
                           {new Date(log.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-[var(--text-muted)]">
                         Par <span className="font-semibold">{log.modifiedBy?.firstName} {log.modifiedBy?.lastName}</span>
                         {log.reason && <> · <span className="italic">{log.reason}</span></>}
                       </p>
@@ -785,18 +785,18 @@ export default function CorrectionsView({
 
       {/* ── Contenu principal ─────────────────────────────────────────────── */}
       {activeTab === 'absences' && (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-800/80 border-b border-gray-100 dark:border-gray-700">
+              <thead className="bg-[var(--surface-2)]/80 border-b border-[var(--border)]">
                 <tr>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Employé</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">Statut</th>
-                  <th className="px-5 py-3.5 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employé</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Date</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider hidden sm:table-cell">Statut</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredAbsences.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-5 py-16 text-center">
@@ -804,37 +804,37 @@ export default function CorrectionsView({
                         <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-full">
                           <CheckCircle size={36} className="text-emerald-500" />
                         </div>
-                        <p className="text-lg font-bold text-gray-800 dark:text-white">Aucune correction nécessaire</p>
-                        <p className="text-sm text-gray-500">Tous les pointages sont conformes 🎉</p>
+                        <p className="text-lg font-bold text-[var(--text)]">Aucune correction nécessaire</p>
+                        <p className="text-sm text-[var(--text-muted)]">Tous les pointages sont conformes 🎉</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredAbsences.map((att: any) => (
-                    <tr key={att.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-800/40 transition-colors">
+                    <tr key={att.id} className="hover:bg-[var(--surface-2)] transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           {att.employee.photoUrl ? (
                             <img src={att.employee.photoUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
                           ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-sm font-black text-white">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-sm font-black text-white">
                               {att.employee.firstName[0]}{att.employee.lastName[0]}
                             </div>
                           )}
                           <div>
-                            <p className="font-bold text-sm text-gray-900 dark:text-white">
+                            <p className="font-bold text-sm text-[var(--text)]">
                               {att.employee.firstName} {att.employee.lastName}
                             </p>
-                            <p className="text-xs text-gray-500">{att.employee.department?.name}</p>
+                            <p className="text-xs text-[var(--text-muted)]">{att.employee.department?.name}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-sm font-bold text-gray-900 dark:text-white">
+                          <span className="text-sm font-bold text-[var(--text)]">
                             {new Date(att.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-[var(--text-muted)]">
                             {new Date(att.date).toLocaleDateString('fr-FR', { year: 'numeric' })}
                           </span>
                         </div>
@@ -848,7 +848,7 @@ export default function CorrectionsView({
                         <button
                           onClick={() => setEditingAtt(att)}
                           disabled={savingId === att.id}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-sky-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all hover:-translate-y-0.5 active:translate-y-0"
                         >
                           {savingId === att.id ? <Loader2 size={13} className="animate-spin" /> : <Edit3 size={13} />}
                           Corriger
@@ -867,30 +867,30 @@ export default function CorrectionsView({
       {activeTab === 'overtime' && isAdmin && (
         <div className="space-y-3">
           {filteredOvertimes.length === 0 ? (
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-16 text-center">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-16 text-center">
               <div className="flex flex-col items-center gap-3">
                 <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-full">
                   <CheckCircle size={36} className="text-emerald-500" />
                 </div>
-                <p className="text-lg font-bold text-gray-800 dark:text-white">Aucune demande en attente</p>
-                <p className="text-sm text-gray-500">Toutes les heures supplémentaires sont traitées</p>
+                <p className="text-lg font-bold text-[var(--text)]">Aucune demande en attente</p>
+                <p className="text-sm text-[var(--text-muted)]">Toutes les heures supplémentaires sont traitées</p>
               </div>
             </div>
           ) : (
             filteredOvertimes.map((item) => (
               <div key={item.id}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-700 transition-all"
+                className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 hover:shadow-lg hover:border-amber-300 dark:hover:border-amber-700 transition-all"
               >
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-base">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-base">
                       {item.employee.firstName[0]}{item.employee.lastName[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 dark:text-white">
+                      <p className="font-bold text-[var(--text)]">
                         {item.employee.firstName} {item.employee.lastName}
                       </p>
-                      <p className="text-xs text-gray-500">{item.employee.department?.name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{item.employee.department?.name}</p>
                     </div>
                   </div>
 
@@ -901,7 +901,7 @@ export default function CorrectionsView({
                     </div>
 
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 mb-0.5">Entrée</p>
+                      <p className="text-xs text-[var(--text-muted)] mb-0.5">Entrée</p>
                       <LiveTimer checkIn={item.checkIn} />
                     </div>
 
@@ -910,7 +910,7 @@ export default function CorrectionsView({
                     {item.overtimeStatus === 'PENDING_APPROVAL' && (
                       <button
                         onClick={() => setSelectedOvertime(item)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-sm font-bold shadow-md shadow-amber-500/20 transition-all hover:-translate-y-0.5"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition-all hover:-translate-y-0.5"
                       >
                         <Eye size={15} />
                         Traiter
@@ -928,15 +928,15 @@ export default function CorrectionsView({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { icon: <Check size={16} className="text-white" />, bg: 'bg-emerald-500', title: 'Oubli pointage', desc: 'Présent → Payé', tag: 'PRESENT' },
-          { icon: <Shield size={16} className="text-white" />, bg: 'bg-blue-500', title: 'Justifié', desc: 'Maladie, urgence → Payé', tag: 'ABSENT_PAID' },
-          { icon: <MapPin size={16} className="text-white" />, bg: 'bg-purple-500', title: 'Télétravail', desc: 'Distance → Payé', tag: 'REMOTE' },
+          { icon: <Shield size={16} className="text-white" />, bg: 'bg-amber-500', title: 'Justifié', desc: 'Maladie, urgence → Payé', tag: 'ABSENT_PAID' },
+          { icon: <MapPin size={16} className="text-white" />, bg: 'bg-emerald-500', title: 'Télétravail', desc: 'Distance → Payé', tag: 'REMOTE' },
           { icon: <XCircle size={16} className="text-white" />, bg: 'bg-red-500', title: 'Non justifié', desc: 'Sans correction → Déduit', tag: 'ABSENT_UNPAID' },
         ].map((item) => (
-          <div key={item.tag} className="flex items-start gap-3 p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 hover:shadow-md transition-all">
+          <div key={item.tag} className="flex items-start gap-3 p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] hover:shadow-md transition-all">
             <div className={`p-2 ${item.bg} rounded-xl flex-shrink-0`}>{item.icon}</div>
             <div>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{item.title}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+              <p className="text-sm font-bold text-[var(--text)]">{item.title}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">{item.desc}</p>
             </div>
           </div>
         ))}

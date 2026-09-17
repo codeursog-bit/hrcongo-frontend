@@ -31,7 +31,7 @@ const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }>
   PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
   APPROVED:  { label: 'Approuvé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
-  CANCELLED: { label: 'Annulé',     badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
+  CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]', icon: Ban },
 };
 
 // ✅ Pour l'instant seuls RH/Admin valident — pas de délégation "chef de service"
@@ -263,8 +263,8 @@ export default function LeaveDetailPage() {
     }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
-  if (!leave) return <div className="text-center py-24 text-gray-400">Demande introuvable.</div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (!leave) return <div className="text-center py-24 text-[var(--text-muted)]">Demande introuvable.</div>;
 
   const FORM_ID = 'leave-form-print-root';
   const LETTER_ID = 'leave-letter-print';
@@ -364,23 +364,23 @@ export default function LeaveDetailPage() {
       <CongeSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/conges'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+        <button onClick={() => router.push(bp('/conges'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
           <ArrowLeft size={18} />
         </button>
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Demande de congé</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{leave.employee?.firstName} {leave.employee?.lastName}</h1>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Demande de congé</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">{leave.employee?.firstName} {leave.employee?.lastName}</h1>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         <div className="xl:col-span-2 space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">{leave.employee?.position}{leave.employee?.department ? ` · ${leave.employee.department.name}` : ''}</span>
+              <span className="text-sm text-[var(--text-muted)]">{leave.employee?.position}{leave.employee?.department ? ` · ${leave.employee.department.name}` : ''}</span>
               <div className="flex items-center gap-2 shrink-0">
                 {isCarryover && (
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400">
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400">
                     Rattrapage — non payé
                   </span>
                 )}
@@ -390,18 +390,18 @@ export default function LeaveDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm bg-gray-50 dark:bg-gray-700/50 px-3.5 py-2.5 rounded-xl">
-              <Calendar size={14} className="text-gray-400" />
+            <div className="flex items-center gap-2 text-sm bg-[var(--surface-2)] px-3.5 py-2.5 rounded-xl">
+              <Calendar size={14} className="text-[var(--text-muted)]" />
               <span className="font-mono text-xs">{new Date(leave.startDate).toLocaleDateString('fr-FR')}</span>
-              <ArrowRight size={12} className="text-gray-300" />
+              <ArrowRight size={12} className="text-[var(--text-muted)]" />
               <span className="font-mono text-xs">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
-              <span className="ml-auto font-bold text-xs text-gray-500">{Math.round(Number(leave.daysCount))}j</span>
+              <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j</span>
             </div>
 
             {isCarryover ? (
-              <div className="flex items-start gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-sky-100 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-900/10">
-                <Info size={14} className="text-sky-500 mt-0.5 shrink-0" />
-                <span className="text-sky-700 dark:text-sky-300">
+              <div className="flex items-start gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+                <Info size={14} className="text-emerald-500 mt-0.5 shrink-0" />
+                <span className="text-emerald-700 dark:text-emerald-300">
                   Repos de rattrapage — jours non pris suite au retour anticipé du congé
                   {leave.carriedFromLeave ? ` du ${new Date(leave.carriedFromLeave.startDate).toLocaleDateString('fr-FR')} au ${new Date(leave.carriedFromLeave.endDate).toLocaleDateString('fr-FR')}` : ''}
                   {leave.carriedFromLeave?.actualReturnDate ? ` (retour le ${new Date(leave.carriedFromLeave.actualReturnDate).toLocaleDateString('fr-FR')})` : ''}.
@@ -409,17 +409,17 @@ export default function LeaveDetailPage() {
                 </span>
               </div>
             ) : leave.balance && (
-              <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700">
-                <Wallet size={14} className="text-gray-400" />
+              <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
+                <Wallet size={14} className="text-[var(--text-muted)]" />
                 Solde {new Date(leave.startDate).getFullYear()} : {Math.round(Number(leave.balance.annualRemaining))}j restants sur {Math.round(Number(leave.balance.annualEntitled))}j
-                {Number(leave.balance.seniorityDays) > 0 && <span className="text-gray-400"> (dont {Math.round(Number(leave.balance.seniorityDays))}j ancienneté)</span>}
+                {Number(leave.balance.seniorityDays) > 0 && <span className="text-[var(--text-muted)]"> (dont {Math.round(Number(leave.balance.seniorityDays))}j ancienneté)</span>}
               </div>
             )}
 
             {leave.reason && (
               <div className="text-sm">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p>
-                <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3.5 rounded-xl">{leave.reason}</p>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{leave.reason}</p>
               </div>
             )}
 
@@ -430,14 +430,14 @@ export default function LeaveDetailPage() {
             )}
 
             {leave.status === 'PENDING' && canApprove && (
-              <div className="pt-1 space-y-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="pt-1 space-y-3 border-t border-[var(--border)]">
                 {!rejectMode ? (
                   <>
                     {leave.type === 'ANNUAL' && !isCarryover && (
                       <div className="space-y-2 pt-3">
                         <div>
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Jours d&apos;ancienneté reportés (optionnel)</label>
-                          <input type="number" min="0" step="0.5" value={extraDaysGranted} onChange={e => setExtraDaysGranted(e.target.value)} placeholder="Ex : 6 — laisser vide si non applicable" className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                          <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Jours d&apos;ancienneté reportés (optionnel)</label>
+                          <input type="number" min="0" step="0.5" value={extraDaysGranted} onChange={e => setExtraDaysGranted(e.target.value)} placeholder="Ex : 6 — laisser vide si non applicable" className="w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                           {(baseRemaining > 0 || seniorityRemaining > 0) && (
                             <p className="text-xs text-amber-600 mt-1">
                               Congé partiel détecté : {plannedDays}j planifiés — il restera {baseRemaining}j de congé de base
@@ -447,11 +447,11 @@ export default function LeaveDetailPage() {
                         </div>
                         {(baseRemaining > 0 || Number(extraDaysGranted) > 0) && (
                           <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Motif de report (pour la lettre) *</label>
+                            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Motif de report (pour la lettre) *</label>
                             {leave.reason?.trim() && resumptionNote === leave.reason.trim() && (
-                              <p className="text-xs text-sky-600 dark:text-sky-400 mb-1">Repris du motif indiqué à la demande — modifiable si besoin.</p>
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">Repris du motif indiqué à la demande — modifiable si besoin.</p>
                             )}
-                            <textarea value={resumptionNote} onChange={e => setResumptionNote(e.target.value)} rows={2} placeholder="Ex : seront récupérés après la période de forte activité du service..." className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm resize-none" />
+                            <textarea value={resumptionNote} onChange={e => setResumptionNote(e.target.value)} rows={2} placeholder="Ex : seront récupérés après la période de forte activité du service..." className="w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
                           </div>
                         )}
                       </div>
@@ -460,7 +460,7 @@ export default function LeaveDetailPage() {
                       <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                         <Check size={16} /> Approuver
                       </button>
-                      <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-gray-200 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                      <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                         <X size={16} /> Refuser
                       </button>
                     </div>
@@ -472,7 +472,7 @@ export default function LeaveDetailPage() {
                       <button onClick={() => handleDecision('REJECTED')} disabled={isProcessing || !rejectionReason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                         {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
                       </button>
-                      <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-gray-200 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500">Annuler</button>
+                      <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
                     </div>
                   </div>
                 )}
@@ -480,7 +480,7 @@ export default function LeaveDetailPage() {
             )}
 
             {['PENDING', 'APPROVED'].includes(leave.status) && (
-              <button onClick={handleCancel} disabled={isProcessing} className="w-full py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
+              <button onClick={handleCancel} disabled={isProcessing} className="w-full py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40">
                 Annuler cette demande
               </button>
             )}
@@ -490,29 +490,29 @@ export default function LeaveDetailPage() {
             {canApprove && (
               <div className="flex gap-2">
                 {['PENDING', 'APPROVED'].includes(leave.status) && (
-                  <button onClick={openEditModal} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 flex items-center justify-center gap-2">
+                  <button onClick={openEditModal} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center justify-center gap-2">
                     <Pencil size={14} /> Modifier
                   </button>
                 )}
-                <button onClick={() => { setDeleteError(''); setShowDeleteConfirm(true); }} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-2">
+                <button onClick={() => { setDeleteError(''); setShowDeleteConfirm(true); }} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center gap-2">
                   <Trash2 size={14} /> Supprimer
                 </button>
               </div>
             )}
 
             {leave.status === 'APPROVED' && canApprove && (
-              <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="pt-3 border-t border-[var(--border)]">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-sm">
-                    {leave.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
-                    <span className="text-gray-600 dark:text-gray-300">
+                    {leave.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
+                    <span className="text-[var(--text-muted)]">
                       {leave.printAuthorized ? "Impression autorisée pour l'employé" : "Impression non autorisée"}
                     </span>
                   </div>
                   <button
                     onClick={() => setShowPrintAuthModal(true)}
                     disabled={isTogglingPrintAuth}
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                   >
                     {leave.printAuthorized ? 'Modifier' : 'Autoriser'}
                   </button>
@@ -521,13 +521,13 @@ export default function LeaveDetailPage() {
             )}
 
             {leave.status === 'APPROVED' && canApprove && new Date(leave.startDate) <= new Date() && (
-              <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="pt-3 border-t border-[var(--border)]">
                 {leave.returnConfirmed ? (
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 size={14} /> Retour confirmé
                       {leave.actualReturnDate && (
-                        <span className="text-gray-400 dark:text-gray-500 font-normal">
+                        <span className="text-[var(--text-muted)] font-normal">
                           — le {new Date(leave.actualReturnDate).toLocaleDateString('fr-FR')}
                         </span>
                       )}
@@ -540,14 +540,14 @@ export default function LeaveDetailPage() {
                   </div>
                 ) : showEarlyReturnForm ? (
                   <div className="space-y-2">
-                    <div className="text-sm text-gray-600 dark:text-gray-300">Date réelle de reprise du travail</div>
+                    <div className="text-sm text-[var(--text-muted)]">Date réelle de reprise du travail</div>
                     <div className="flex items-center gap-2">
                       <input
                         type="date"
                         value={actualReturnDate}
                         min={leave.startDate?.slice(0, 10)}
                         onChange={(e) => setActualReturnDate(e.target.value)}
-                        className="text-sm px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        className="text-sm px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)]"
                       />
                       <button
                         onClick={() => actualReturnDate && handleConfirmReturn(actualReturnDate)}
@@ -558,13 +558,13 @@ export default function LeaveDetailPage() {
                       </button>
                       <button
                         onClick={() => setShowEarlyReturnForm(false)}
-                        className="text-xs px-2.5 py-1.5 rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="text-xs px-2.5 py-1.5 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                       >
                         Annuler
                       </button>
                     </div>
                     {new Date(leave.endDate) > new Date() && (
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-[var(--text-muted)]">
                         Si la date choisie est avant le {new Date(leave.endDate).toLocaleDateString('fr-FR')} (retour prévu), les jours restants seront comptés comme non pris.
                       </div>
                     )}
@@ -578,7 +578,7 @@ export default function LeaveDetailPage() {
                       {new Date(leave.endDate) > new Date() && (
                         <button
                           onClick={() => { setActualReturnDate(new Date().toISOString().slice(0, 10)); setShowEarlyReturnForm(true); }}
-                          className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                         >
                           Retour anticipé
                         </button>
@@ -598,16 +598,16 @@ export default function LeaveDetailPage() {
           </div>
 
           {/* Sélecteur de document */}
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
-            <button onClick={() => setActiveDoc('form')} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${activeDoc === 'form' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+          <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
+            <button onClick={() => setActiveDoc('form')} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${activeDoc === 'form' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               <FileText size={13} /> Formulaire
             </button>
-            <button onClick={() => setActiveDoc('letter')} disabled={leave.status !== 'APPROVED'} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${activeDoc === 'letter' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+            <button onClick={() => setActiveDoc('letter')} disabled={leave.status !== 'APPROVED'} className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed ${activeDoc === 'letter' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
               <ScrollText size={13} /> Lettre d&apos;autorisation
             </button>
           </div>
           {leave.status !== 'APPROVED' && (
-            <p className="text-[11px] text-gray-400 -mt-2 px-1">La lettre officielle n&apos;est disponible qu&apos;une fois la demande approuvée.</p>
+            <p className="text-[11px] text-[var(--text-muted)] -mt-2 px-1">La lettre officielle n&apos;est disponible qu&apos;une fois la demande approuvée.</p>
           )}
 
           {(() => {
@@ -620,7 +620,7 @@ export default function LeaveDetailPage() {
                   onClick={() => canPrint && setTimeout(() => printLeaveDocument(activeId), 50)}
                   disabled={!canPrint}
                   title={!canPrint ? "Impression non autorisée par le RH" : undefined}
-                  className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Printer size={16} /> Imprimer
                 </button>
@@ -628,7 +628,7 @@ export default function LeaveDetailPage() {
                   onClick={handleDownloadPdf}
                   disabled={isExportingPdf || !canPrint}
                   title={!canPrint ? "Impression non autorisée par le RH" : undefined}
-                  className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
                 </button>
@@ -637,7 +637,7 @@ export default function LeaveDetailPage() {
                     onClick={() => canPrint && window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/${leave.id}/document.docx`, '_blank')}
                     disabled={!canPrint}
                     title={!canPrint ? "Impression non autorisée par le RH" : "Télécharger le fichier Word original rempli"}
-                    className="flex-1 py-2.5 border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 text-sm font-semibold rounded-xl text-sky-700 dark:text-sky-300 flex items-center justify-center gap-2 hover:bg-sky-100 dark:hover:bg-sky-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-1 py-2.5 border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-sm font-semibold rounded-xl text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FileDown size={16} /> .docx
                   </button>
@@ -649,7 +649,7 @@ export default function LeaveDetailPage() {
 
         {/* Aperçu */}
         <div className="xl:col-span-3">
-          <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-4 overflow-auto max-h-[85vh] border border-gray-200 dark:border-gray-700">
+          <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto max-h-[85vh] border border-[var(--border)]">
             <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
               {activeDoc === 'form'
                 ? renderFormDocument(FORM_ID)
@@ -675,14 +675,14 @@ export default function LeaveDetailPage() {
 
       {showEditModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Modifier ce congé</h2>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <h2 className="text-lg font-bold text-[var(--text)]">Modifier ce congé</h2>
+              <button onClick={() => setShowEditModal(false)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                 <X size={20} />
               </button>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--text-muted)]">
               {isCarryover
                 ? "Modifie les dates de ce rattrapage — reste toujours non payé et sans impact sur le solde/cycle en cours, plafonné au reliquat disponible."
                 : "Modifie directement cette demande — les dates/le type sont ajustés sur la même ligne, sans jamais en créer une nouvelle ni impacter le calendrier en double."}
@@ -690,11 +690,11 @@ export default function LeaveDetailPage() {
             <div className="space-y-3">
               {!isCarryover && (
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Type</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Type</label>
                   <select
                     value={editForm.type}
                     onChange={e => setEditForm(f => ({ ...f, type: e.target.value as any }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   >
                     <option value="ANNUAL">Annuel</option>
                     <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
@@ -703,28 +703,28 @@ export default function LeaveDetailPage() {
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de départ</label>
                   <input
                     type="date"
                     value={editForm.startDate}
                     onChange={e => setEditForm(f => ({ ...f, startDate: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de retour</label>
                   <input
                     type="date"
                     value={editForm.endDate}
                     onChange={e => setEditForm(f => ({ ...f, endDate: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
             </div>
             {editError && <div className="text-xs text-red-500">{editError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <button onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
               <button
@@ -741,19 +741,19 @@ export default function LeaveDetailPage() {
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Supprimer ce congé ?</h2>
+              <h2 className="text-lg font-bold text-[var(--text)]">Supprimer ce congé ?</h2>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--text-muted)]">
               Cette demande sera définitivement supprimée et le solde de congé restauré si elle avait déjà été approuvée. Cette action est irréversible.
             </p>
             {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
               <button

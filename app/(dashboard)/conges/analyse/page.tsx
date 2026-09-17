@@ -23,8 +23,8 @@ export default function AnalyseCongesPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <div className="mb-1">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analyse des congés</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        <h1 className="text-3xl font-bold text-[var(--text)]">Analyse des congés</h1>
+        <p className="text-sm text-[var(--text-muted)] mt-1">
           Calendrier, tableau de bord et tendances pluriannuelles — congés payés, maladie, maternité/paternité, sans solde et anticipés
         </p>
       </div>

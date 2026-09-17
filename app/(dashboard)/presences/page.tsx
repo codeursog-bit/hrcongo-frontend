@@ -134,7 +134,7 @@ export default function AttendancePage() {
   if (!currentUser) {
     return (
       <div className="min-h-screen pb-20 flex justify-center items-center">
-        <Loader2 className="animate-spin text-sky-500" size={48}/>
+        <Loader2 className="animate-spin text-emerald-500" size={48}/>
       </div>
     );
   }
@@ -146,27 +146,27 @@ export default function AttendancePage() {
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[var(--text)]">
               Mes Présences
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-[var(--text-muted)] text-sm">
               Votre calendrier de travail détaillé
             </p>
           </div>
           
           <div className="flex items-center gap-3">
-            <Link href={bp("/presences/pointage")} className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
+            <Link href={bp("/presences/pointage")} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 ">
               <Fingerprint size={20} /> Pointeur
             </Link>
             
-            <div className="bg-white dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center">
-              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <div className="bg-[var(--surface)] p-1.5 rounded-xl border border-[var(--border)] flex items-center">
+              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
                 <ChevronLeft size={18} />
               </button>
-              <span className="w-32 text-center font-bold text-sm capitalize text-gray-900 dark:text-white">
+              <span className="w-32 text-center font-bold text-sm capitalize text-[var(--text)]">
                 {date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
               </span>
-              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+              <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -174,8 +174,8 @@ export default function AttendancePage() {
         </div>
 
         {isLoading ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-center items-center min-h-[600px]">
-            <Loader2 className="animate-spin text-sky-500" size={48}/>
+          <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] flex justify-center items-center min-h-[600px]">
+            <Loader2 className="animate-spin text-emerald-500" size={48}/>
           </div>
         ) : (
           <EmployeeView myAttendances={myAttendances} date={date} />
@@ -190,59 +190,59 @@ export default function AttendancePage() {
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-[var(--text)]">
             Présences Équipe
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
+          <p className="text-[var(--text-muted)] text-sm">
             Gestion complète des temps et activités
           </p>
         </div>
         
         <div className="flex items-center gap-3">
-          <Link href={bp("/presences/resume")} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <Link href={bp("/presences/resume")} className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[var(--surface-2)]">
             <FileText size={20} /> Rapports
           </Link>
           
-          <Link href={bp("/presences/pointage")} className="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-sky-500/30">
+          <Link href={bp("/presences/pointage")} className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2 ">
             <Fingerprint size={20} /> Ma Pointeuse
           </Link>
 
-          <Link href={bp("/presences/absences")} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <Link href={bp("/presences/absences")} className="bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[var(--surface-2)]">
             <FileText size={20} /> Absences
           </Link>
           
-          <div className="bg-white dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center">
-            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+          <div className="bg-[var(--surface)] p-1.5 rounded-xl border border-[var(--border)] flex items-center">
+            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() - 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
               <ChevronLeft size={18} />
             </button>
-            <span className="w-32 text-center font-bold text-sm capitalize text-gray-900 dark:text-white">
+            <span className="w-32 text-center font-bold text-sm capitalize text-[var(--text)]">
               {date.toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}
             </span>
-            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <button onClick={() => setDate(new Date(date.getFullYear(), date.getMonth() + 1))} className="p-2 hover:bg-[var(--surface-2)] rounded-lg">
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-2 border border-gray-200 dark:border-gray-700 flex gap-2 overflow-x-auto">
-        <button onClick={() => setActiveTab('daily')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'daily' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+      <div className="bg-[var(--surface)] rounded-2xl p-2 border border-[var(--border)] flex gap-2 overflow-x-auto">
+        <button onClick={() => setActiveTab('daily')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'daily' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <Activity size={20} /> Journalière
         </button>
-        <button onClick={() => setActiveTab('weekly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'weekly' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+        <button onClick={() => setActiveTab('weekly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'weekly' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <BarChart3 size={20} /> Hebdomadaire
         </button>
-        <button onClick={() => setActiveTab('monthly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'monthly' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+        <button onClick={() => setActiveTab('monthly')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'monthly' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <CalendarIcon size={20} /> Mensuelle
         </button>
-        <button onClick={() => setActiveTab('corrections')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'corrections' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/30' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+        <button onClick={() => setActiveTab('corrections')} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${activeTab === 'corrections' ? 'bg-emerald-500 text-white ' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
           <Edit3 size={20} /> Corrections
         </button>
       </div>
 
       {isLoading ? (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex justify-center items-center min-h-[600px]">
-          <Loader2 className="animate-spin text-sky-500" size={48}/>
+        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] flex justify-center items-center min-h-[600px]">
+          <Loader2 className="animate-spin text-emerald-500" size={48}/>
         </div>
       ) : (
         <>

@@ -493,6 +493,17 @@ export const attendanceApi = {
   },
 
   /**
+   * ✅ SUPPRESSION : réservée ADMIN/SUPER_ADMIN côté backend (RolesGuard).
+   * Un motif est obligatoire (min. 3 caractères, vérifié aussi côté serveur).
+   */
+  deleteAttendance: async (
+    attendanceId: string,
+    reason: string,
+  ): Promise<{ success: boolean }> => {
+    return api.delete<any>(`/attendance/${attendanceId}`, { reason });
+  },
+
+  /**
    * ✅ STATISTIQUES : Agrégations mensuelles (Admin/RH)
    */
   getMonthlyStats: async (params: {

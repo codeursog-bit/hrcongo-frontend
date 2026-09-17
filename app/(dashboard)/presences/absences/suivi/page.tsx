@@ -66,8 +66,8 @@ export default function AbsencesEmployePage() {
       <PresenceModuleSwitcher />
        <AbsenceSubNav userRole={userRole} />
       <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Absences employés</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Congés, maladie, maternité, paternité, mariage, décès, naissance, non justifiée — tout au même endroit.</p>
+        <h1 className="text-xl font-bold text-[var(--text)]">Absences employés</h1>
+        <p className="text-sm text-[var(--text-muted)]">Congés, maladie, maternité, paternité, mariage, décès, naissance, non justifiée — tout au même endroit.</p>
       </div>
 
       {/* mois + année */}
@@ -77,29 +77,29 @@ export default function AbsencesEmployePage() {
             <button
               key={m}
               onClick={() => setMonth(i + 1)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${month === i + 1 ? 'bg-sky-500 border-sky-500 text-white' : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-sky-300'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${month === i + 1 ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'}`}
             >
               {m}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+          <div className="flex bg-[var(--surface-2)] p-1 rounded-xl">
             {([
               ['dashboard', 'Tableau de bord'],
               ['grille', 'Grille mensuelle'],
               ['journal', 'Journal'],
               ['comparatif', 'Comparatif'],
             ] as [Tab, string][]).map(([key, label]) => (
-              <button key={key} onClick={() => setTab(key)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tab === key ? 'bg-sky-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+              <button key={key} onClick={() => setTab(key)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${tab === key ? 'bg-emerald-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
                 {label}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl px-2 py-1.5">
-            <button onClick={() => setYear(y => y - 1)} className="p-1 text-gray-500"><ChevronLeft size={14} /></button>
+          <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-xl px-2 py-1.5">
+            <button onClick={() => setYear(y => y - 1)} className="p-1 text-[var(--text-muted)]"><ChevronLeft size={14} /></button>
             <span className="text-xs font-bold px-1">{year}</span>
-            <button onClick={() => setYear(y => y + 1)} className="p-1 text-gray-500"><ChevronRight size={14} /></button>
+            <button onClick={() => setYear(y => y + 1)} className="p-1 text-[var(--text-muted)]"><ChevronRight size={14} /></button>
           </div>
         </div>
       </div>
@@ -193,9 +193,9 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
           congé sans solde) — le congé annuel/anticipé (droit acquis) en est
           volontairement exclu, ce n'est pas un sujet de suivi RH */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Absences à surveiller par catégorie — {MONTHS_FULL[month - 1]}</p>
-          <p className="text-[11px] text-gray-400 mb-4">Hors congé annuel/anticipé (droit acquis, pas un sujet RH)</p>
+        <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+          <p className="text-sm font-bold text-[var(--text)] mb-1">Absences à surveiller par catégorie — {MONTHS_FULL[month - 1]}</p>
+          <p className="text-[11px] text-[var(--text-muted)] mb-4">Hors congé annuel/anticipé (droit acquis, pas un sujet RH)</p>
           {trackableDonut.length === 0 ? <EmptyLine /> : (
             <div className="flex items-center gap-5">
               <div className="w-[130px] h-[130px] relative shrink-0">
@@ -208,16 +208,16 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-base font-bold text-gray-900 dark:text-white">{trackableTotal}</span>
-                  <span className="text-[8.5px] text-gray-400 text-center max-w-[55px]">jours à surveiller</span>
+                  <span className="text-base font-bold text-[var(--text)]">{trackableTotal}</span>
+                  <span className="text-[8.5px] text-[var(--text-muted)] text-center max-w-[55px]">jours à surveiller</span>
                 </div>
               </div>
               <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
                 {trackableDonut.map((d, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: d.color }} />
-                    <span className="text-gray-500 dark:text-gray-400 flex-1 truncate">{d.name}</span>
-                    <span className="font-bold text-gray-800 dark:text-gray-100">{d.pct}%</span>
+                    <span className="text-[var(--text-muted)] flex-1 truncate">{d.name}</span>
+                    <span className="font-bold text-[var(--text)]">{d.pct}%</span>
                   </div>
                 ))}
               </div>
@@ -226,24 +226,24 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
         </div>
 
         <div className="flex flex-col gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex-1">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Motif dominant</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex-1">
+            <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">Motif dominant</p>
             {topMotif ? (
               <>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: topMotif.color }} />
-                  <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{topMotif.name}</span>
+                  <span className="text-sm font-bold text-[var(--text)] truncate">{topMotif.name}</span>
                 </div>
-                <p className="text-xs text-gray-400">{topMotif.value} j · {topMotif.pct}% des absences suivies</p>
+                <p className="text-xs text-[var(--text-muted)]">{topMotif.value} j · {topMotif.pct}% des absences suivies</p>
               </>
             ) : <EmptyLine />}
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex-1">
-            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Département le plus concerné</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex-1">
+            <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">Département le plus concerné</p>
             {topDept ? (
               <>
-                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{topDept.name}</p>
-                <p className="text-xs text-gray-400">{topDept.days} j à surveiller ce mois</p>
+                <p className="text-sm font-bold text-[var(--text)] truncate">{topDept.name}</p>
+                <p className="text-xs text-[var(--text-muted)]">{topDept.days} j à surveiller ce mois</p>
               </>
             ) : <EmptyLine />}
           </div>
@@ -257,39 +257,39 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
       </div>
 
       {/* classement par motif */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Classement par motif — qui, quel département</p>
-          <select value={leaderboardKey} onChange={e => setLeaderboardKey(e.target.value as LeaderboardKey)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+          <p className="text-sm font-bold text-[var(--text)]">Classement par motif — qui, quel département</p>
+          <select value={leaderboardKey} onChange={e => setLeaderboardKey(e.target.value as LeaderboardKey)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
             {Object.entries(LEADERBOARD_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Top employés</p>
+            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Top employés</p>
             {data.leaderboards[leaderboardKey].length === 0 ? <EmptyLine /> : data.leaderboards[leaderboardKey].map((e: any, i: number) => (
-              <button key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0 text-left hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-lg px-1">
+              <button key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0 text-left hover:bg-[var(--surface-2)]/30 rounded-lg px-1">
                 <RankBadge i={i} />
                 <span className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{e.name}</p>
-                  {e.departmentName && <p className="text-[11px] text-gray-400">{e.departmentName}</p>}
+                  <p className="text-sm font-semibold text-[var(--text)] truncate">{e.name}</p>
+                  {e.departmentName && <p className="text-[11px] text-[var(--text-muted)]">{e.departmentName}</p>}
                 </span>
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{e.days} j</span>
+                <span className="text-sm font-bold text-[var(--text)]">{e.days} j</span>
               </button>
             ))}
           </div>
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Top départements</p>
+            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Top départements</p>
             {data.departmentLeaderboards[leaderboardKey].length === 0 ? <EmptyLine /> : data.departmentLeaderboards[leaderboardKey].map((d: any) => {
               const max = data.departmentLeaderboards[leaderboardKey][0]?.days || 1;
               return (
                 <div key={d.departmentId} className="py-2">
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700 dark:text-gray-200">{d.name}</span>
-                    <span className="font-bold text-gray-700 dark:text-gray-200">{d.days} j</span>
+                    <span className="font-medium text-[var(--text)]">{d.name}</span>
+                    <span className="font-bold text-[var(--text)]">{d.days} j</span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                    <div className="h-full rounded-full bg-violet-500" style={{ width: `${(d.days / max) * 100}%` }} />
+                  <div className="h-1.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
+                    <div className="h-full rounded-full bg-amber-500" style={{ width: `${(d.days / max) * 100}%` }} />
                   </div>
                 </div>
               );
@@ -300,8 +300,8 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
 
       {/* vue annuelle + top scores, comme la maquette */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Vue annuelle des jours d&apos;absence — tous les employés</p>
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+          <p className="text-sm font-bold text-[var(--text)] mb-4">Vue annuelle des jours d&apos;absence — tous les employés</p>
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={annualSeries} barSize={18}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.15} />
@@ -315,20 +315,20 @@ function DashboardTab({ year, month }: { year: number; month: number; shiftMonth
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Top scores d&apos;absences</p>
-            <span className="text-xs text-gray-400">{MONTHS_FULL[month - 1]}</span>
+            <p className="text-sm font-bold text-[var(--text)]">Top scores d&apos;absences</p>
+            <span className="text-xs text-[var(--text-muted)]">{MONTHS_FULL[month - 1]}</span>
           </div>
           <div className="space-y-0.5 max-h-[260px] overflow-y-auto">
             {data.top20Month.length === 0 ? <EmptyLine /> : data.top20Month.map((e: any, i: number) => (
-              <button key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0 text-left hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-lg px-1">
+              <button key={e.employeeId} onClick={() => setDetailEmployeeId(e.employeeId)} className="w-full flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0 text-left hover:bg-[var(--surface-2)]/30 rounded-lg px-1">
                 <RankBadge i={i} />
                 <span className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{e.name}</p>
-                  {e.departmentName && <p className="text-[11px] text-gray-400">{e.departmentName}</p>}
+                  <p className="text-sm font-semibold text-[var(--text)] truncate">{e.name}</p>
+                  {e.departmentName && <p className="text-[11px] text-[var(--text-muted)]">{e.departmentName}</p>}
                 </span>
-                <span className={`text-sm font-bold ${e.days > 6 ? 'text-rose-500' : e.days > 2 ? 'text-amber-500' : 'text-gray-400'}`}>{e.days}j</span>
+                <span className={`text-sm font-bold ${e.days > 6 ? 'text-red-500' : e.days > 2 ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>{e.days}j</span>
               </button>
             ))}
           </div>
@@ -378,13 +378,13 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
     <div className="space-y-4">
       {/* bandeau "aujourd'hui", identique au module Présences */}
       {currentDay && (
-        <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
           <div className="flex-1">
-            <p className="text-sm text-sky-700 dark:text-sky-300">
+            <p className="text-sm text-emerald-700 dark:text-emerald-300">
               📅 <strong>Aujourd&apos;hui :</strong> {currentDay} {MONTHS_FULL[month - 1]} {year}
             </p>
-            <p className="text-xs text-sky-600 dark:text-sky-400 mt-1">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
               Jours ouvrables : {workingDaysCount} ce mois-ci
             </p>
           </div>
@@ -392,15 +392,15 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
       )}
 
       {/* légende — blocs de couleur pleine, comme le module Présences */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-700">
-        <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">Légende</h4>
+      <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
+        <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">Légende</h4>
         <div className="flex flex-wrap gap-4">
           {data.legend.map((l: any) => {
             const c = colorFor(l.colorKey);
             return (
               <div key={l.code} className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded" style={{ background: c.hex }} />
-                <span className="text-xs text-gray-600 dark:text-gray-400">{l.label}</span>
+                <span className="text-xs text-[var(--text-muted)]">{l.label}</span>
               </div>
             );
           })}
@@ -408,16 +408,16 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
       </div>
 
       {/* grille */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden min-h-[600px]">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-bold text-gray-900 dark:text-white">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden min-h-[600px]">
+        <div className="p-4 border-b border-[var(--border)] flex items-center justify-between flex-wrap gap-2">
+          <h3 className="font-bold text-[var(--text)]">
             Grille mensuelle
-            <span className="text-sm font-normal text-gray-500 ml-2">
+            <span className="text-sm font-normal text-[var(--text-muted)] ml-2">
               ({workingDaysCount} jours ouvrables / {data.daysInMonth} jours au total)
             </span>
           </h3>
           {departments.length > 0 && (
-            <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+            <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Tous les départements</option>
               {departments.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
@@ -425,15 +425,15 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
         </div>
 
         {filteredEmployees.length === 0 ? (
-          <div className="flex items-center justify-center py-32 text-gray-400 dark:text-gray-600">
+          <div className="flex items-center justify-center py-32 text-[var(--text-muted)]">
             <p className="text-sm">Aucun employé à afficher.</p>
           </div>
         ) : (
           <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#0ea5e9 transparent' }}>
             <div className="inline-block min-w-full align-middle">
               {/* en-tête jours */}
-              <div className="border-b border-gray-200 dark:border-gray-700 flex">
-                <div className="sticky left-0 z-20 w-48 shrink-0 bg-gray-100 dark:bg-gray-800 p-3 font-bold text-xs uppercase border-r text-gray-500">
+              <div className="border-b border-[var(--border)] flex">
+                <div className="sticky left-0 z-20 w-48 shrink-0 bg-[var(--surface-2)] p-3 font-bold text-xs uppercase border-r text-[var(--text-muted)]">
                   Employé
                 </div>
                 {days.map(d => {
@@ -443,33 +443,33 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
                   const holidayName = holidayByDay.get(String(d).padStart(2, '0')) as string | undefined;
                   return (
                     <div key={d} title={holidayName ?? ''} className={`w-10 shrink-0 text-center p-2 border-r ${
-                      isToday ? 'bg-sky-100 dark:bg-sky-900/50'
-                      : !isWorking || holidayName ? 'bg-gray-300 dark:bg-gray-700'
-                      : 'bg-gray-50 dark:bg-gray-800'
+                      isToday ? 'bg-emerald-100 dark:bg-emerald-900/50'
+                      : !isWorking || holidayName ? 'bg-[var(--border)]'
+                      : 'bg-[var(--surface-2)]'
                     }`}>
-                      <div className={`text-[10px] font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : !isWorking || holidayName ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400'}`}>
+                      <div className={`text-[10px] font-bold ${isToday ? 'text-emerald-600 dark:text-emerald-400' : !isWorking || holidayName ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'}`}>
                         {getDayName(d)}
                       </div>
-                      <div className={`text-xs font-bold ${isToday ? 'text-sky-600 dark:text-sky-400' : !isWorking || holidayName ? 'text-gray-500 dark:text-gray-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                      <div className={`text-xs font-bold ${isToday ? 'text-emerald-600 dark:text-emerald-400' : !isWorking || holidayName ? 'text-[var(--text-muted)]' : 'text-[var(--text-muted)]'}`}>
                         {d}
                       </div>
-                      {isToday && <div className="w-1.5 h-1.5 bg-sky-500 rounded-full mx-auto mt-0.5" />}
+                      {isToday && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mx-auto mt-0.5" />}
                     </div>
                   );
                 })}
               </div>
 
               {/* lignes employés */}
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="divide-y divide-[var(--border)]">
                 {filteredEmployees.map((emp: any) => (
-                  <div key={emp.id} className="flex hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                    <button onClick={() => setDetailEmployeeId(emp.id)} className="sticky left-0 z-10 w-48 shrink-0 bg-white dark:bg-gray-800 p-3 border-r flex items-center gap-3 text-left hover:text-sky-600">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
+                  <div key={emp.id} className="flex hover:bg-[var(--surface-2)] transition-colors">
+                    <button onClick={() => setDetailEmployeeId(emp.id)} className="sticky left-0 z-10 w-48 shrink-0 bg-[var(--surface)] p-3 border-r flex items-center gap-3 text-left hover:text-emerald-600">
+                      <div className="w-8 h-8 rounded-full bg-[var(--border)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] shrink-0">
                         {emp.name?.[0] ?? '?'}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold truncate text-gray-900 dark:text-white">{emp.name}</p>
-                        <p className="text-[10px] text-gray-500 truncate">{emp.departmentName || '—'}</p>
+                        <p className="text-sm font-bold truncate text-[var(--text)]">{emp.name}</p>
+                        <p className="text-[10px] text-[var(--text-muted)] truncate">{emp.departmentName || '—'}</p>
                       </div>
                     </button>
                     {days.map(d => {
@@ -484,7 +484,7 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
                         <div
                           key={d}
                           title={cell?.label ?? (holidayName || (!isWorking ? 'Jour non ouvrable' : ''))}
-                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-gray-100 dark:border-gray-800 ${isToday ? 'ring-2 ring-sky-500 ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-gray-300 dark:bg-gray-700' : ''}`}
+                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-[var(--border)] ${isToday ? 'ring-2 ring-emerald-500 ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-[var(--border)]' : ''}`}
                           style={cell ? { background: c!.hex } : undefined}
                         />
                       );
@@ -530,19 +530,19 @@ function JournalTab({ year, month }: { year: number; month: number }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-900/40 rounded-2xl p-4">
-        <p className="text-sm text-sky-800 dark:text-sky-200">{data.summary}</p>
+      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-4">
+        <p className="text-sm text-emerald-800 dark:text-emerald-200">{data.summary}</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 flex-wrap gap-2">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Journal — {MONTHS_FULL[month - 1]} {year}</p>
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+        <div className="p-4 flex items-center justify-between border-b border-[var(--border)] flex-wrap gap-2">
+          <p className="text-sm font-bold text-[var(--text)]">Journal — {MONTHS_FULL[month - 1]} {year}</p>
           <div className="flex gap-2">
-            <select value={familyFilter} onChange={e => setFamilyFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+            <select value={familyFilter} onChange={e => setFamilyFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Toutes catégories</option>
               {families.map(f => <option key={f} value={f}>{f}</option>)}
             </select>
-            <select value={paidFilter} onChange={e => setPaidFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+            <select value={paidFilter} onChange={e => setPaidFilter(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Payé et non payé</option>
               <option value="paid">Payé</option>
               <option value="unpaid">Non payé</option>
@@ -551,39 +551,39 @@ function JournalTab({ year, month }: { year: number; month: number }) {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>{['Employé', 'Motif', 'Catégorie', 'Période', 'Durée', 'Paie', 'Détail'].map(h => <th key={h} className="px-3 py-2 text-left text-[10px] font-bold text-gray-400 uppercase whitespace-nowrap">{h}</th>)}</tr>
+            <thead className="bg-[var(--surface-2)]">
+              <tr>{['Employé', 'Motif', 'Catégorie', 'Période', 'Durée', 'Paie', 'Détail'].map(h => <th key={h} className="px-3 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-[var(--border)]">
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-10 text-gray-400">Aucune absence pour ce filtre.</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-[var(--text-muted)]">Aucune absence pour ce filtre.</td></tr>
               ) : filtered.map((j: any, i: number) => (
-                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
+                <tr key={i} className="hover:bg-[var(--surface-2)]/40">
                   <td className="px-3 py-2.5">
-                    <p className="font-semibold text-gray-800 dark:text-gray-100">{j.employeeName}</p>
-                    {j.departmentName && <p className="text-[11px] text-gray-400">{j.departmentName}</p>}
+                    <p className="font-semibold text-[var(--text)]">{j.employeeName}</p>
+                    {j.departmentName && <p className="text-[11px] text-[var(--text-muted)]">{j.departmentName}</p>}
                   </td>
-                  <td className="px-3 py-2.5 text-gray-700 dark:text-gray-300">{j.label}</td>
+                  <td className="px-3 py-2.5 text-[var(--text-muted)]">{j.label}</td>
                   <td className="px-3 py-2.5">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{j.familyLabel}</span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-muted)]">{j.familyLabel}</span>
                   </td>
-                  <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap text-xs">
+                  <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap text-xs">
                     {new Date(j.startDate).toLocaleDateString('fr-FR')} → {new Date(j.endDate).toLocaleDateString('fr-FR')}
                   </td>
-                  <td className="px-3 py-2.5 font-bold text-gray-800 dark:text-gray-100">{j.days} j</td>
+                  <td className="px-3 py-2.5 font-bold text-[var(--text)]">{j.days} j</td>
                   <td className="px-3 py-2.5">
                     {j.family === 'CONGE_STATUTAIRE' && !j.trackable ? (
                       // ✅ Congé annuel/anticipé = droit acquis, toujours payé par définition —
                       // afficher un badge "Payé" ici serait trivial et sans intérêt. Seul le cas
                       // "congé payé travaillé" (CPT, visible dans la grille) a une info à donner.
-                      <span className="text-[11px] text-gray-400">Droit acquis</span>
+                      <span className="text-[11px] text-[var(--text-muted)]">Droit acquis</span>
                     ) : j.paid ? (
                       <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold"><FileCheck2 size={13} /> Payé</span>
                     ) : (
-                      <span className="flex items-center gap-1 text-rose-500 text-xs font-semibold"><FileX2 size={13} /> Non payé</span>
+                      <span className="flex items-center gap-1 text-red-500 text-xs font-semibold"><FileX2 size={13} /> Non payé</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-gray-400 text-xs max-w-[220px] truncate" title={j.reason ?? ''}>{j.reason ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-[var(--text-muted)] text-xs max-w-[220px] truncate" title={j.reason ?? ''}>{j.reason ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -663,13 +663,13 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-3">Comparer plusieurs années</p>
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
+        <p className="text-sm font-bold text-[var(--text)] mb-3">Comparer plusieurs années</p>
         <div className="flex flex-wrap gap-2">
           {candidateYears.map(y => {
             const active = selectedYears.includes(y);
             return (
-              <button key={y} onClick={() => toggleYear(y)} className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-all ${active ? 'text-white border-transparent' : 'text-gray-500 border-gray-200 dark:border-gray-700'}`} style={active ? { background: yearColor(y) } : {}}>
+              <button key={y} onClick={() => toggleYear(y)} className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-all ${active ? 'text-white border-transparent' : 'text-[var(--text-muted)] border-[var(--border)]'}`} style={active ? { background: yearColor(y) } : {}}>
                 {y}
               </button>
             );
@@ -678,32 +678,32 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
       </div>
 
       {sortedAsc.length < 2 ? (
-        <div className="text-center py-10 text-gray-400 text-sm">Sélectionne au moins 2 années pour comparer.</div>
+        <div className="text-center py-10 text-[var(--text-muted)] text-sm">Sélectionne au moins 2 années pour comparer.</div>
       ) : isLoading || !compareData ? <LoadingBlock /> : (
         <>
           <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${compareData.years.length}, minmax(0, 1fr))` }}>
             {compareData.years.map((y: any) => {
               const t = compareData.trend.find((d: any) => d.year === y.year);
               return (
-                <div key={y.year} className="bg-white dark:bg-gray-800 rounded-2xl border p-4" style={{ borderColor: `${yearColor(y.year)}55` }}>
+                <div key={y.year} className="bg-[var(--surface)] rounded-2xl border p-4" style={{ borderColor: `${yearColor(y.year)}55` }}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: yearColor(y.year) }}>{y.year}</span>
                     {t?.deltaPercent != null && (
-                      <span className={`text-[10px] font-bold ${t.deltaDays > 0 ? 'text-rose-500' : t.deltaDays < 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
+                      <span className={`text-[10px] font-bold ${t.deltaDays > 0 ? 'text-red-500' : t.deltaDays < 0 ? 'text-emerald-500' : 'text-[var(--text-muted)]'}`}>
                         {t.deltaDays === 0 ? '=' : `${t.deltaDays > 0 ? '▲' : '▼'} ${Math.abs(t.deltaPercent)}%`}
                       </span>
                     )}
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{y.totalDays} <span className="text-sm font-medium text-gray-400">jours</span></p>
-                  <p className="text-xs text-gray-400 mt-1">{y.employeeCount} employés · {y.avgDaysPerEmployee} j/employé</p>
-                  <p className="text-xs text-violet-500 mt-1">{y.trackableDays} j à surveiller</p>
+                  <p className="text-2xl font-bold text-[var(--text)]">{y.totalDays} <span className="text-sm font-medium text-[var(--text-muted)]">jours</span></p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{y.employeeCount} employés · {y.avgDaysPerEmployee} j/employé</p>
+                  <p className="text-xs text-amber-500 mt-1">{y.trackableDays} j à surveiller</p>
                 </div>
               );
             })}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Évolution mensuelle — comparaison</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution mensuelle — comparaison</p>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={monthlyComparison}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
@@ -716,8 +716,8 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Par département — comparaison</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Par département — comparaison</p>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={deptRows.map(r => ({ department: r.label, ...Object.fromEntries(sortedAsc.map(y => [String(y), r.values[y] ?? 0])) }))} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.15} vertical={false} />
@@ -728,13 +728,13 @@ function ComparatifTab({ anchorYear }: { anchorYear: number }) {
                 {sortedAsc.map(y => <Bar key={y} dataKey={String(y)} name={String(y)} fill={yearColor(y)} radius={[4, 4, 0, 0]} />)}
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+            <div className="mt-4 pt-3 border-t border-[var(--border)]">
               <CompareTable rows={deptRows} years={sortedDesc} label="Département" />
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Par catégorie de motif — comparaison précise</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Par catégorie de motif — comparaison précise</p>
             <CompareTable rows={familyRows} years={sortedDesc} label="Catégorie" />
           </div>
         </>
@@ -749,10 +749,10 @@ function CompareTable({ rows, years, label }: { rows: { label: string; values: R
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 dark:border-gray-700">
-            <th className="text-left px-2 py-2 text-[10px] font-bold text-gray-400 uppercase">{label}</th>
-            {years.map(y => <th key={y} className="text-right px-2 py-2 text-[10px] font-bold text-gray-400 uppercase">{y}</th>)}
-            {years.length > 1 && <th className="text-right px-2 py-2 text-[10px] font-bold text-gray-400 uppercase">Var. {oldest}→{newest}</th>}
+          <tr className="border-b border-[var(--border)]">
+            <th className="text-left px-2 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase">{label}</th>
+            {years.map(y => <th key={y} className="text-right px-2 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase">{y}</th>)}
+            {years.length > 1 && <th className="text-right px-2 py-2 text-[10px] font-bold text-[var(--text-muted)] uppercase">Var. {oldest}→{newest}</th>}
           </tr>
         </thead>
         <tbody>
@@ -761,11 +761,11 @@ function CompareTable({ rows, years, label }: { rows: { label: string; values: R
             const delta = newVal - oldVal;
             const pct = oldVal ? Math.round((delta / oldVal) * 1000) / 10 : (newVal > 0 ? 100 : 0);
             return (
-              <tr key={r.label} className="border-b border-gray-50 dark:border-gray-700/50">
-                <td className="px-2 py-2 font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">{r.label}</td>
-                {years.map(y => <td key={y} className="text-right px-2 py-2 text-gray-500">{r.values[y] ?? 0} j</td>)}
+              <tr key={r.label} className="border-b border-[var(--border)]">
+                <td className="px-2 py-2 font-medium text-[var(--text)] whitespace-nowrap">{r.label}</td>
+                {years.map(y => <td key={y} className="text-right px-2 py-2 text-[var(--text-muted)]">{r.values[y] ?? 0} j</td>)}
                 {years.length > 1 && (
-                  <td className={`text-right px-2 py-2 font-bold ${delta > 0 ? 'text-rose-500' : delta < 0 ? 'text-emerald-500' : 'text-gray-400'}`}>
+                  <td className={`text-right px-2 py-2 font-bold ${delta > 0 ? 'text-red-500' : delta < 0 ? 'text-emerald-500' : 'text-[var(--text-muted)]'}`}>
                     {delta === 0 ? '=' : `${delta > 0 ? '+' : ''}${pct}%`}
                   </td>
                 )}
@@ -799,15 +799,15 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
       {isLoading || !data ? <LoadingBlock /> : (
         <div className="space-y-5">
           {(data.recurrence.alertSickRecurrence || data.recurrence.alertSickDays || data.recurrence.alertTrackableDays) && (
-            <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl p-3 space-y-1">
-              {data.recurrence.alertSickRecurrence && <p className="text-xs text-rose-700 dark:text-rose-300 flex items-center gap-1.5"><Stethoscope size={13} /> {data.recurrence.sickEpisodesRolling90d} épisodes de maladie distincts sur 90 jours</p>}
-              {data.recurrence.alertSickDays && <p className="text-xs text-rose-700 dark:text-rose-300">{data.recurrence.sickDaysYear} jours de maladie sur l&apos;année</p>}
-              {data.recurrence.alertTrackableDays && <p className="text-xs text-rose-700 dark:text-rose-300">{data.recurrence.trackableDaysYear} jours d&apos;absence à surveiller sur l&apos;année</p>}
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 space-y-1">
+              {data.recurrence.alertSickRecurrence && <p className="text-xs text-red-700 dark:text-red-300 flex items-center gap-1.5"><Stethoscope size={13} /> {data.recurrence.sickEpisodesRolling90d} épisodes de maladie distincts sur 90 jours</p>}
+              {data.recurrence.alertSickDays && <p className="text-xs text-red-700 dark:text-red-300">{data.recurrence.sickDaysYear} jours de maladie sur l&apos;année</p>}
+              {data.recurrence.alertTrackableDays && <p className="text-xs text-red-700 dark:text-red-300">{data.recurrence.trackableDaysYear} jours d&apos;absence à surveiller sur l&apos;année</p>}
             </div>
           )}
 
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Répartition — {MONTHS_FULL[month - 1]}</p>
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide mb-2">Répartition — {MONTHS_FULL[month - 1]}</p>
             {data.pieByType.length === 0 ? <EmptyLine /> : (
               <div className="space-y-2">
                 {data.pieByType.map((t: any) => {
@@ -815,8 +815,8 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
                   return (
                     <div key={t.code} className="flex items-center gap-2 text-sm">
                       <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: c.hex }} />
-                      <span className="flex-1 text-gray-700 dark:text-gray-200">{t.label}</span>
-                      <span className="font-bold text-gray-800 dark:text-gray-100">{t.days} j</span>
+                      <span className="flex-1 text-[var(--text)]">{t.label}</span>
+                      <span className="font-bold text-[var(--text)]">{t.days} j</span>
                     </div>
                   );
                 })}
@@ -825,7 +825,7 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
           </div>
 
           <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Vue annuelle {year}</p>
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide mb-2">Vue annuelle {year}</p>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={data.yearOverview.map((m: any) => ({ mois: MONTHS_FR[m.month - 1], jours: m.totalDays }))}>
                 <XAxis dataKey="mois" fontSize={10} />
@@ -846,8 +846,8 @@ function EmployeeDetailSlideOver({ employeeId, year, month, onClose }: { employe
 // ============================================================================
 function DonutCard({ title, data, centerLabel, centerValue }: { title: string; data: { name: string; value: number; color: string; pct: number }[]; centerLabel: string; centerValue: number }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-      <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">{title}</p>
+    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+      <p className="text-sm font-bold text-[var(--text)] mb-4">{title}</p>
       {data.length === 0 ? <EmptyLine /> : (
         <div className="flex items-center gap-5">
           <div className="w-[150px] h-[150px] relative shrink-0">
@@ -860,16 +860,16 @@ function DonutCard({ title, data, centerLabel, centerValue }: { title: string; d
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-lg font-bold text-gray-900 dark:text-white">{centerValue}</span>
-              <span className="text-[9px] text-gray-400 text-center max-w-[60px]">{centerLabel}</span>
+              <span className="text-lg font-bold text-[var(--text)]">{centerValue}</span>
+              <span className="text-[9px] text-[var(--text-muted)] text-center max-w-[60px]">{centerLabel}</span>
             </div>
           </div>
           <div className="flex-1 min-w-0 space-y-1.5">
             {data.map((d, i) => (
               <div key={i} className="flex items-center gap-2 text-xs">
                 <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: d.color }} />
-                <span className="text-gray-500 dark:text-gray-400 flex-1 truncate">{d.name}</span>
-                <span className="font-bold text-gray-800 dark:text-gray-100">{d.pct}%</span>
+                <span className="text-[var(--text-muted)] flex-1 truncate">{d.name}</span>
+                <span className="font-bold text-[var(--text)]">{d.pct}%</span>
               </div>
             ))}
           </div>
@@ -881,7 +881,7 @@ function DonutCard({ title, data, centerLabel, centerValue }: { title: string; d
 
 function RankBadge({ i }: { i: number }) {
   return (
-    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${i === 0 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0 ${i === 0 ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
       {i + 1}
     </span>
   );
@@ -889,27 +889,27 @@ function RankBadge({ i }: { i: number }) {
 
 function KpiCard({ icon: Icon, label, value, sub, tone, small }: { icon: any; label: string; value: string; sub?: string; tone: 'sky' | 'rose' | 'amber' | 'violet'; small?: boolean }) {
   const cls: Record<string, string> = {
-    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300',
-    rose: 'bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-300',
+    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
+    rose: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300',
     amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    violet: 'bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-300',
+    violet: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
   };
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
-      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className={`${small ? 'text-base' : 'text-lg'} font-bold text-gray-900 dark:text-white truncate`}>{value}</p>
-      {sub && <p className="text-[11px] text-gray-400 mt-0.5">{sub}</p>}
+      <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
+      <p className={`${small ? 'text-base' : 'text-lg'} font-bold text-[var(--text)] truncate`}>{value}</p>
+      {sub && <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{sub}</p>}
     </div>
   );
 }
 
 function LoadingBlock() {
-  return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-sky-500" size={32} /></div>;
+  return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
 }
 function ErrorBlock() {
-  return <div className="text-center py-20 text-gray-400 text-sm">Impossible de charger ces données pour le moment.</div>;
+  return <div className="text-center py-20 text-[var(--text-muted)] text-sm">Impossible de charger ces données pour le moment.</div>;
 }
 function EmptyLine() {
-  return <p className="text-xs text-gray-400 py-2">Aucune donnée pour cette période.</p>;
+  return <p className="text-xs text-[var(--text-muted)] py-2">Aucune donnée pour cette période.</p>;
 }

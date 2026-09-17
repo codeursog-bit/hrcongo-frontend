@@ -249,7 +249,7 @@ export default function CompaniesPage() {
             {([
               { title: 'Candidats', links: [['Offres', '/jobs/portal'], ['Entreprises', '/entreprises'], ['Créer un profil', '/register']] },
               { title: 'Recruteurs', links: [['Publier une offre', '/recrutement/nouveau'], ['Solution SIRH', '/sirh'], ['Contact', '/contact']] },
-              { title: 'À propos', links: [['Qui sommes-nous', '/about'], ['CGU', '/cgu'], ['Confidentialité', '/privacy']] },
+              { title: 'À propos', links: [['Qui sommes-nous', '/qui-sommes-nous'], ['CGU', '/cgu'], ['Confidentialité', '/privacy']] },
             ] as { title: string; links: [string, string][] }[]).map(col => (
               <div key={col.title}>
                 <p className="font-bold text-slate-500 mb-3 text-xs uppercase tracking-wider">{col.title}</p>

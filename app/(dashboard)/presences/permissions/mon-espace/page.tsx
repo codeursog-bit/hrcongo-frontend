@@ -30,7 +30,7 @@ const STATUS_CONFIG: Record<Status, { label: string; badge: string; icon: any }>
   PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', icon: Clock },
   APPROVED:  { label: 'Autorisé',   badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusé',     badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', icon: XCircle },
-  CANCELLED: { label: 'Annulé',     badge: 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700', icon: Ban },
+  CANCELLED: { label: 'Annulé',     badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any }> = {
@@ -139,7 +139,7 @@ export default function MonEspacePermissionsPage() {
     });
   }, [tickets]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
@@ -148,17 +148,17 @@ export default function MonEspacePermissionsPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Mon espace</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mes tickets de permission</h1>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Mon espace</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Mes tickets de permission</h1>
         </div>
-        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/30">
+        <Link href={bp('/presences/permissions/nouveau')} className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-500/30">
           <Plus size={18} /> Nouveau ticket
         </Link>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Mes validations</button>
-        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>Suivi de mes permissions</button>
+      <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
+        <button onClick={() => setMySpaceTab('validations')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'validations' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Mes validations</button>
+        <button onClick={() => setMySpaceTab('suivi')} className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${mySpaceTab === 'suivi' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>Suivi de mes permissions</button>
       </div>
 
       {mySpaceTab === 'validations' && (
@@ -173,10 +173,10 @@ export default function MonEspacePermissionsPage() {
       )}
 
       {tickets.length === 0 ? (
-        <div className="text-center py-24 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-          <Clock size={32} className="text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Aucun ticket pour l&apos;instant</h3>
-          <p className="text-gray-400 text-sm">Toutes vos sorties (urgence ou mission) seront tracées ici.</p>
+        <div className="text-center py-24 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
+          <Clock size={32} className="text-[var(--text-muted)] mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-[var(--text)] mb-1">Aucun ticket pour l&apos;instant</h3>
+          <p className="text-[var(--text-muted)] text-sm">Toutes vos sorties (urgence ou mission) seront tracées ici.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -187,12 +187,12 @@ export default function MonEspacePermissionsPage() {
               const Icon = tCfg.icon;
               const active = t.id === selectedId;
               return (
-                <button key={t.id} onClick={() => setSelectedId(t.id)} className={`w-full text-left p-4 rounded-2xl border transition-all ${active ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/20 shadow-sm' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-200'}`}>
+                <button key={t.id} onClick={() => setSelectedId(t.id)} className={`w-full text-left p-4 rounded-2xl border transition-all ${active ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}>
                   <div className="flex items-center gap-2">
-                    <Icon size={14} className="text-gray-400" />
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{tCfg.label}</p>
+                    <Icon size={14} className="text-[var(--text-muted)]" />
+                    <p className="font-semibold text-sm text-[var(--text)]">{tCfg.label}</p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] mt-1">
                     <span className="font-mono">{new Date(t.departureTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                     <ArrowRight size={11} />
                     <span className="font-mono">{new Date(t.expectedReturnTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
@@ -204,24 +204,24 @@ export default function MonEspacePermissionsPage() {
 
             {tickets.length > PAGE_SIZE && (
               <div className="flex items-center justify-between pt-1">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-30">Précédent</button>
-                <span className="text-xs text-gray-400">Page {page} / {totalPages} · {tickets.length} ticket{tickets.length > 1 ? 's' : ''}</span>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-30">Suivant</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Précédent</button>
+                <span className="text-xs text-[var(--text-muted)]">Page {page} / {totalPages} · {tickets.length} ticket{tickets.length > 1 ? 's' : ''}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--text-muted)] disabled:opacity-30">Suivant</button>
               </div>
             )}
           </div>
 
           <div className="lg:col-span-8">
             {!selected ? (
-              <div className="h-full min-h-[300px] flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-gray-400 text-sm">
+              <div className="h-full min-h-[300px] flex items-center justify-center bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-[var(--text-muted)] text-sm">
                 Sélectionnez un ticket dans la liste
               </div>
             ) : (
-              <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4">
+              <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+                <div className="p-6 border-b border-[var(--border)] flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).label}</h2>
-                    <p className="text-sm text-gray-400">Créé le {new Date(selected.createdAt).toLocaleDateString('fr-FR')}</p>
+                    <h2 className="text-lg font-bold text-[var(--text)]">{(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).label}</h2>
+                    <p className="text-sm text-[var(--text-muted)]">Créé le {new Date(selected.createdAt).toLocaleDateString('fr-FR')}</p>
                   </div>
                   <span className={`text-xs font-semibold px-3 py-1.5 rounded-lg border shrink-0 ${(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).badge}`}>
                     {(STATUS_CONFIG[selected.status as Status] ?? STATUS_CONFIG.PENDING).label}
@@ -230,16 +230,16 @@ export default function MonEspacePermissionsPage() {
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm bg-gray-50 dark:bg-gray-700/50 px-3.5 py-2.5 rounded-xl">
-                      <Clock size={14} className="text-gray-400" />
+                    <div className="flex items-center gap-2 text-sm bg-[var(--surface-2)] px-3.5 py-2.5 rounded-xl">
+                      <Clock size={14} className="text-[var(--text-muted)]" />
                       <span className="font-mono text-xs">{new Date(selected.departureTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                      <ArrowRight size={12} className="text-gray-300" />
+                      <ArrowRight size={12} className="text-[var(--text-muted)]" />
                       <span className="font-mono text-xs">{new Date(selected.expectedReturnTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
 
                     <div className="text-sm">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p>
-                      <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3.5 rounded-xl">{selected.reason}</p>
+                      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
+                      <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{selected.reason}</p>
                     </div>
 
                     {selected.status === 'REJECTED' && selected.rejectionReason && (
@@ -248,28 +248,28 @@ export default function MonEspacePermissionsPage() {
 
                     <div className="flex gap-2 pt-1 flex-wrap">
                       {selected.status === 'PENDING' && (
-                        <button onClick={() => handleCancel(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
+                        <button onClick={() => handleCancel(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Annuler
                         </button>
                       )}
                       {selected.status === 'APPROVED' && !selected.actualReturnTime && (
-                        <button onClick={() => handleMarkReturn(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
+                        <button onClick={() => handleMarkReturn(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 bg-[var(--text)] text-[var(--bg)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />} Je suis de retour
                         </button>
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <button onClick={() => setTimeout(() => printTicket(TICKET_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                         <Printer size={16} /> Imprimer
                       </button>
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
+                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
                         {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
                       </button>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                       <Eye size={16} /> Aperçu du ticket
                     </button>
                   </div>
@@ -296,8 +296,8 @@ export default function MonEspacePermissionsPage() {
             <MyKpiCard icon={XCircle} label="Refusées" value={myRequestKpis.rejected} tone="sky" />
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Évolution de mes sorties (12 derniers mois)</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de mes sorties (12 derniers mois)</p>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -311,13 +311,13 @@ export default function MonEspacePermissionsPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Historique complet</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+            <div className="p-4 border-b border-[var(--border)]">
+              <p className="text-sm font-bold text-[var(--text)]">Historique complet</p>
             </div>
-            <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            <div className="divide-y divide-[var(--border)]">
               {tickets.length === 0 ? (
-                <p className="text-center py-12 text-gray-400 text-sm">Aucun ticket pour l&apos;instant.</p>
+                <p className="text-center py-12 text-[var(--text-muted)] text-sm">Aucun ticket pour l&apos;instant.</p>
               ) : tickets.map(t => {
                 const tCfg = TYPE_CONFIG[t.type] ?? TYPE_CONFIG.AUTRE;
                 const sCfg = STATUS_CONFIG[t.status as Status] ?? STATUS_CONFIG.PENDING;
@@ -325,12 +325,12 @@ export default function MonEspacePermissionsPage() {
                 return (
                   <div key={t.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Icon size={14} className="text-gray-400" />
+                      <Icon size={14} className="text-[var(--text-muted)]" />
                       <div>
-                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        <p className="text-sm font-semibold text-[var(--text)]">
                           {new Date(t.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {tCfg.label}
                         </p>
-                        {t.reason && <p className="text-xs text-gray-400 mt-0.5">{t.reason}</p>}
+                        {t.reason && <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.reason}</p>}
                       </div>
                     </div>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${sCfg.badge}`}>{sCfg.label}</span>
@@ -351,10 +351,10 @@ export default function MonEspacePermissionsPage() {
 
 function MyKpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-100 dark:border-gray-700',
+    slate: 'bg-[var(--surface)] text-[var(--text)] border-[var(--border)]',
     emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
     amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900',
-    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-100 dark:border-sky-900',
+    sky: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900',
   };
   return (
     <div className={`rounded-2xl border p-4 ${cls[tone]}`}>

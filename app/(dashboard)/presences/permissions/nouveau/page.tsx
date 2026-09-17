@@ -148,13 +148,13 @@ export default function NouveauTicketPage() {
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={40} />
         </motion.div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Ticket créé</h1>
-        <p className="text-gray-400 text-sm mb-8">Le ticket de permission a été enregistré{onBehalf ? '' : ' et transmis pour validation'}.</p>
+        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Ticket créé</h1>
+        <p className="text-[var(--text-muted)] text-sm mb-8">Le ticket de permission a été enregistré{onBehalf ? '' : ' et transmis pour validation'}.</p>
         <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp(onBehalf ? '/presences/permissions' : '/presences/permissions/mon-espace'))} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm">
+          <button onClick={() => router.push(bp(onBehalf ? '/presences/permissions' : '/presences/permissions/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">
             Voir les tickets
           </button>
-          <button onClick={() => { setIsDone(false); setReason(''); setDestination(''); }} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-sm text-gray-600 dark:text-gray-300">
+          <button onClick={() => { setIsDone(false); setReason(''); setDestination(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
             Nouveau ticket
           </button>
         </div>
@@ -168,12 +168,12 @@ export default function NouveauTicketPage() {
       <PermissionsSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/presences/permissions'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+        <button onClick={() => router.push(bp('/presences/permissions'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]">
           <ArrowLeft size={18} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nouveau ticket de permission</h1>
-          <p className="text-gray-400 text-sm">Urgence en cours de journée ou mission d&apos;entreprise à l&apos;extérieur</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Nouveau ticket de permission</h1>
+          <p className="text-[var(--text-muted)] text-sm">Urgence en cours de journée ou mission d&apos;entreprise à l&apos;extérieur</p>
         </div>
       </div>
 
@@ -181,33 +181,33 @@ export default function NouveauTicketPage() {
         <div className="space-y-5">
 
           {isApprover && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pour qui ?</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Pour qui ?</label>
                 <button
                   onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }}
-                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-sky-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
                 </button>
               </div>
               {!onBehalf ? (
-                <p className="text-sm text-gray-500">Pour moi-même</p>
+                <p className="text-sm text-[var(--text-muted)]">Pour moi-même</p>
               ) : (
                 <div className="space-y-2">
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {filteredEmployees.map(e => (
                       <button
                         key={e.id}
                         onClick={() => setSelectedEmployeeId(e.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 font-semibold' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center justify-between ${selectedEmployeeId === e.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-semibold' : 'hover:bg-[var(--surface-2)]'}`}
                       >
                         {e.firstName} {e.lastName}
-                        {e.department?.name && <span className="text-xs text-gray-400">{e.department.name}</span>}
+                        {e.department?.name && <span className="text-xs text-[var(--text-muted)]">{e.department.name}</span>}
                       </button>
                     ))}
                   </div>
@@ -216,20 +216,20 @@ export default function NouveauTicketPage() {
             </div>
           )}
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Type de permission</label>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type de permission</label>
             <div className="grid grid-cols-1 gap-2">
               {TYPE_OPTIONS.map(opt => {
                 const Icon = opt.icon;
                 const active = type === opt.value;
                 return (
-                  <button key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${active ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'}`}>
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-sky-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}>
+                  <button key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
                       <Icon size={18} />
                     </div>
                     <div>
-                      <p className="font-semibold text-sm text-gray-900 dark:text-white">{opt.label}</p>
-                      <p className="text-xs text-gray-400">{opt.hint}</p>
+                      <p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{opt.hint}</p>
                     </div>
                   </button>
                 );
@@ -237,46 +237,46 @@ export default function NouveauTicketPage() {
             </div>
 
             {type === 'MISSION' && (
-              <select value={missionType} onChange={e => setMissionType(e.target.value)} className="w-full mt-3 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+              <select value={missionType} onChange={e => setMissionType(e.target.value)} className="w-full mt-3 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                 {MISSION_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Heure de sortie</label>
-                <input type="datetime-local" value={departureTime} onChange={e => setDepartureTime(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Heure de sortie</label>
+                <input type="datetime-local" value={departureTime} onChange={e => setDepartureTime(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Retour prévu</label>
-                <input type="datetime-local" value={expectedReturnTime} onChange={e => setExpectedReturnTime(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Retour prévu</label>
+                <input type="datetime-local" value={expectedReturnTime} onChange={e => setExpectedReturnTime(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Destination (optionnel)</label>
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Destination (optionnel)</label>
               <div className="relative">
-                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input value={destination} onChange={e => setDestination(e.target.value)} placeholder="Ex : Hôpital, chez le client X…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                <input value={destination} onChange={e => setDestination(e.target.value)} placeholder="Ex : Hôpital, chez le client X…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Motif</label>
-              <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Détail de la sortie…" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm resize-none" />
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif</label>
+              <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} placeholder="Détail de la sortie…" className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
             </div>
           </div>
 
           {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
 
           <div className="flex gap-2">
-            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30 transition-all">
+            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all">
               {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               {onBehalf ? 'Créer le ticket' : 'Envoyer la demande'}
             </button>
-            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 shrink-0">
+            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-[var(--border)] text-[var(--text-muted)] font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] shrink-0">
               <Eye size={18} />
             </button>
           </div>

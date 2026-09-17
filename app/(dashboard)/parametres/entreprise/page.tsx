@@ -18,6 +18,7 @@ import { api } from '@/services/api';
 import { EchelonSuggestionsPanel } from '@/components/settings/EchelonSuggestionsPanel'; // 🆕
 import { ConventionPicker } from '@/components/conventions/ConventionPicker'; // 🆕
 import { getConventionCatalogEntry } from '@/lib/conventions/conventions-catalog'; // 🆕
+import GeofenceRadiusPreview, { computeMetersOffset } from '@/components/GeofenceRadiusPreview'; // 🆕
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,33 @@ export default function CompanySettingsPage() {
 
   const [activeTab,    setActiveTab]    = useState<TabId>('general');
   const [companyData,  setCompanyData]  = useState<CompanySettings>(DEFAULT_COMPANY);
+  // ✅ Mode "tester en marchant" — GPS actif seulement pendant que ce
+  // toggle est vrai, jamais en arrière-plan sur cette page.
+  const [walkTestActive, setWalkTestActive] = useState(false);
+  const [walkTestOffset, setWalkTestOffset] = useState<{ east: number; north: number } | null>(null);
+
+  useEffect(() => {
+    if (!walkTestActive) { setWalkTestOffset(null); return; }
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (!companyData.latitude || !companyData.longitude) return;
+        setWalkTestOffset(
+          computeMetersOffset(
+            companyData.latitude, companyData.longitude,
+            pos.coords.latitude, pos.coords.longitude,
+          ),
+        );
+      },
+      () => { /* silencieux : le badge "Localisation en cours..." suffit */ },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 },
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walkTestActive, companyData.latitude, companyData.longitude]);
+
   // 🆕 Convention telle que chargée depuis le serveur — sert à détecter un
   // VRAI changement au moment de sauvegarder, pour ne déclencher l'activation
   // (et donc la génération des règles + primes) que si l'utilisateur a
@@ -171,6 +199,35 @@ export default function CompanySettingsPage() {
   const [siteForm,      setSiteForm]      = useState({ name: '', latitude: 0, longitude: 0, radius: 100 });
   const [editingSiteId, setEditingSiteId] = useState<string | null>(null);
   const [siteError,     setSiteError]     = useState<string | null>(null);
+
+  // ✅ Même mécanisme que pour le site principal, mais pour le formulaire de
+  // site multi-sites (siteForm) — état et effet séparés pour ne pas
+  // interférer avec le test du site principal. Placé APRÈS la déclaration
+  // de siteForm (sinon erreur TS "used before its declaration").
+  const [siteWalkTestActive, setSiteWalkTestActive] = useState(false);
+  const [siteWalkTestOffset, setSiteWalkTestOffset] = useState<{ east: number; north: number } | null>(null);
+
+  useEffect(() => {
+    if (!siteWalkTestActive) { setSiteWalkTestOffset(null); return; }
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (!siteForm.latitude || !siteForm.longitude) return;
+        setSiteWalkTestOffset(
+          computeMetersOffset(
+            siteForm.latitude, siteForm.longitude,
+            pos.coords.latitude, pos.coords.longitude,
+          ),
+        );
+      },
+      () => { /* silencieux : le badge "Localisation en cours..." suffit */ },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 },
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteWalkTestActive, siteForm.latitude, siteForm.longitude]);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -405,10 +462,12 @@ setSites(s => [...s, created]);
       }
       setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 });
       setEditingSiteId(null);
+      setSiteWalkTestActive(false); // ✅ le formulaire est vidé, plus besoin de suivre le GPS
     } catch (e: any) { setSiteError(e.message ?? 'Erreur'); }
   };
 
   const handleEditSite = (site: CompanySite) => {
+    setSiteWalkTestActive(false); // ✅ on change de site : l'ancien test n'a plus de sens
     setEditingSiteId(site.id);
     setSiteForm({ name: site.name, latitude: site.latitude, longitude: site.longitude, radius: site.radius });
   };
@@ -1363,26 +1422,60 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
-                      <input type="number" step="0.000001" value={companyData.latitude}
-                        onChange={e => handleCompanyChange('latitude', parseFloat(e.target.value) || 0)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
+                        <input type="number" step="0.000001" value={companyData.latitude}
+                          onChange={e => handleCompanyChange('latitude', parseFloat(e.target.value) || 0)}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
+                        <input type="number" step="0.000001" value={companyData.longitude}
+                          onChange={e => handleCompanyChange('longitude', parseFloat(e.target.value) || 0)}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon autorisé (mètres)</label>
+                        <input type="number" value={companyData.allowedRadius}
+                          onChange={e => handleCompanyChange('allowedRadius', parseFloat(e.target.value) || 0)}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white" />
+                        <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                          <AlertTriangle size={12} className="text-orange-500 shrink-0" />
+                          Les employés ne pourront pointer que dans ce rayon.
+                        </p>
+                        {/* ✅ Incertitude GPS rendue explicite, comme demandé */}
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 flex items-center gap-1">
+                          <AlertTriangle size={12} className="shrink-0" />
+                          Le GPS d'un smartphone a une marge d'erreur d'environ ±10m (parfois plus en intérieur).
+                          Un rayon trop petit peut refuser des employés pourtant bien sur place.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
-                      <input type="number" step="0.000001" value={companyData.longitude}
-                        onChange={e => handleCompanyChange('longitude', parseFloat(e.target.value) || 0)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon autorisé (mètres)</label>
-                      <input type="number" value={companyData.allowedRadius}
-                        onChange={e => handleCompanyChange('allowedRadius', parseFloat(e.target.value) || 0)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white" />
-                      <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                        <AlertTriangle size={12} className="text-orange-500" />
-                        Les employés ne pourront pointer que dans ce rayon.
-                      </p>
+
+                    {/* ✅ Aperçu visuel interactif du cercle (mis à jour en direct) */}
+                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-750 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                      <GeofenceRadiusPreview
+                        radius={companyData.allowedRadius}
+                        siteName="Site principal"
+                        userOffset={walkTestOffset}
+                      />
+                      {/* ✅ Bouton "tester en marchant" : n'active le GPS en
+                          continu QUE pendant que ce mode est actif — pas de
+                          watchPosition qui tourne en permanence sur cette page. */}
+                      <button
+                        type="button"
+                        onClick={() => setWalkTestActive(v => !v)}
+                        className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-bold border transition-colors ${
+                          walkTestActive
+                            ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        {walkTestActive ? '⏹ Arrêter le test' : '🚶 Tester en marchant'}
+                      </button>
+                      {walkTestActive && !walkTestOffset && (
+                        <p className="text-[11px] text-gray-400 mt-1">Localisation en cours...</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1428,40 +1521,67 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
-                      <input
-                        type="number" step="0.000001"
-                        value={siteForm.latitude}
-                        onChange={e => setSiteForm(f => ({ ...f, latitude: parseFloat(e.target.value) || 0 }))}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
-                      />
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
+                        <input
+                          type="number" step="0.000001"
+                          value={siteForm.latitude}
+                          onChange={e => setSiteForm(f => ({ ...f, latitude: parseFloat(e.target.value) || 0 }))}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
+                        <input
+                          type="number" step="0.000001"
+                          value={siteForm.longitude}
+                          onChange={e => setSiteForm(f => ({ ...f, longitude: parseFloat(e.target.value) || 0 }))}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div className="mt-4">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon (mètres) — min 1m</label>
+                        <input
+                          type="number" min="1"
+                          value={siteForm.radius}
+                          onChange={e => setSiteForm(f => ({ ...f, radius: Math.max(1, parseInt(e.target.value) || 1) }))}
+                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">1m = entrée précise · 50m = bureau · 500m = chantier large</p>
+                      </div>
+                      <div className="mt-4">
+                        <button
+                          onClick={getSiteCurrentLocation}
+                          className="w-full p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-orange-100 transition-colors"
+                        >
+                          <MapPin size={16} /> Utiliser ma position GPS
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
-                      <input
-                        type="number" step="0.000001"
-                        value={siteForm.longitude}
-                        onChange={e => setSiteForm(f => ({ ...f, longitude: parseFloat(e.target.value) || 0 }))}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+
+                    {/* ✅ Même aperçu visuel + test en marchant que pour le
+                        site principal, branché ici sur le site en cours
+                        d'édition (siteForm) plutôt que companyData. */}
+                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-750 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                      <GeofenceRadiusPreview
+                        radius={siteForm.radius}
+                        siteName={siteForm.name || 'Ce site'}
+                        userOffset={siteWalkTestOffset}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon (mètres) — min 1m</label>
-                      <input
-                        type="number" min="1"
-                        value={siteForm.radius}
-                        onChange={e => setSiteForm(f => ({ ...f, radius: Math.max(1, parseInt(e.target.value) || 1) }))}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">1m = entrée précise · 50m = bureau · 500m = chantier large</p>
-                    </div>
-                    <div className="flex items-end">
                       <button
-                        onClick={getSiteCurrentLocation}
-                        className="w-full p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-orange-100 transition-colors"
+                        type="button"
+                        onClick={() => setSiteWalkTestActive(v => !v)}
+                        className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-bold border transition-colors ${
+                          siteWalkTestActive
+                            ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'
+                        }`}
                       >
-                        <MapPin size={16} /> Utiliser ma position GPS
+                        {siteWalkTestActive ? '⏹ Arrêter le test' : '🚶 Tester en marchant'}
                       </button>
+                      {siteWalkTestActive && !siteWalkTestOffset && (
+                        <p className="text-[11px] text-gray-400 mt-1">Localisation en cours...</p>
+                      )}
                     </div>
                   </div>
 
@@ -1474,7 +1594,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     </button>
                     {editingSiteId && (
                       <button
-                        onClick={() => { setEditingSiteId(null); setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 }); setSiteError(null); }}
+                        onClick={() => { setEditingSiteId(null); setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 }); setSiteError(null); setSiteWalkTestActive(false); }}
                         className="px-5 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
                       >
                         Annuler

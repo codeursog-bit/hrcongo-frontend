@@ -92,10 +92,11 @@ export default function PrivacyPage() {
             <Section id="collecte" title="1. Quelles données nous collectons">
               <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Visiteurs du site public</strong> — nom, email et message si vous utilisez notre formulaire de contact ; aucune donnée n'est collectée par simple navigation en dehors des cookies techniques décrits plus bas.</p>
               <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Comptes utilisateurs (administrateurs RH, gestionnaires, employés)</strong> — nom, email professionnel, mot de passe (stocké chiffré), rôle dans l'entreprise, numéro de téléphone.</p>
-              <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Données RH et paie des employés</strong>, saisies par nos clients (les entreprises) dans le cadre de leur gestion RH : identité, date de naissance, situation familiale, coordonnées, contrat de travail, salaire et éléments de rémunération, numéro CNSS, données fiscales (ITS, CAMU, TUS, TOL), congés, prêts et avances, historique de présence, évaluations de performance, formations suivies.</p>
+              <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Données RH et paie des employés</strong>, saisies par nos clients (les entreprises) dans le cadre de leur gestion RH : identité, date et lieu de naissance, nationalité, situation familiale (statut marital, nombre d'enfants), photo, coordonnées, adresse, numéro de pièce d'identité nationale, contrat de travail, salaire et éléments de rémunération, numéro CNSS, numéro fiscal (NIU), données fiscales (ITS, CAMU, TUS, TOL), coordonnées bancaires ou de mobile money pour le versement du salaire, congés, prêts et avances, historique de présence, évaluations de performance, formations suivies.</p>
+              <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Données de l'entreprise cliente</strong> — raison sociale, numéro RCCM, numéro CNSS employeur, numéro fiscal, adresse et localisation GPS de l'établissement (pour délimiter la zone de pointage autorisée des employés).</p>
               <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Données de géolocalisation</strong> — si votre entreprise active le pointage par géolocalisation, la position GPS est enregistrée au moment du pointage uniquement, pas en continu.</p>
-              <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Candidats au recrutement</strong> — CV, lettre de motivation, réponses aux tests d'évaluation, pour les entreprises utilisant notre module recrutement.</p>
-              <p><strong style={{ color: C.text }}>Affiliés</strong> — identifiant de paiement Mobile Money (MTN/Airtel/Orange) nécessaire au versement des commissions.</p>
+              <p style={{ marginBottom: 14 }}><strong style={{ color: C.text }}>Candidats au recrutement</strong> — nom, email, téléphone, CV et lettre de motivation, réponses aux tests d'évaluation, pour les entreprises utilisant notre module recrutement.</p>
+              <p><strong style={{ color: C.text }}>Affiliés</strong> — numéro de téléphone et identifiant de paiement Mobile Money (MTN/Airtel/Orange) nécessaire au versement des commissions.</p>
             </Section>
 
             <Section id="finalites" title="2. Pourquoi nous les collectons">
@@ -117,8 +118,8 @@ export default function PrivacyPage() {
             <Section id="partage" title="4. Avec qui elles sont partagées">
               <p style={{ marginBottom: 14 }}>Nous ne vendons aucune donnée. Elles sont partagées uniquement avec :</p>
               <ul style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <li>Notre hébergeur, pour le stockage technique des données de l'application</li>
-                <li>Yabetoo, notre prestataire de paiement, pour le traitement des paiements et le versement des commissions d'affiliation via Mobile Money</li>
+                <li>Hetzner, notre hébergeur (Allemagne), pour le stockage technique des données de l'application, sur un serveur que nous administrons directement</li>
+                <li>Moteki et Yabetoo, nos prestataires de paiement mobile money, pour le traitement du paiement de votre abonnement et le versement des commissions d'affiliation</li>
                 <li>Les administrations congolaises compétentes (CNSS, DGI) lorsque la loi l'exige, via les exports de déclaration générés par nos clients eux-mêmes</li>
               </ul>
             </Section>

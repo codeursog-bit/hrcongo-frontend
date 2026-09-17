@@ -54,10 +54,10 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
       <div className="overflow-y-auto max-h-[620px]">
         {/* Header mini */}
         <div className="bg-slate-950/90 border-b border-slate-800/60 px-4 py-2.5 flex items-center justify-between">
-          <span className="font-black text-[11px]">RH<span className="text-cyan-400">Konza</span></span>
+          <span className="font-black text-[11px]">RH<span className="text-emerald-400">Konza</span></span>
           <div className="flex gap-3 text-slate-500 text-[10px]">
             <span>Offres</span>
-            <span className="text-white font-semibold border-b border-cyan-400">Entreprises</span>
+            <span className="text-white font-semibold border-b border-emerald-400">Entreprises</span>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 className={`px-3 py-2 text-[10px] font-bold border-b-2 transition-all ${
-                  tab === t.id ? 'text-white border-cyan-400' : 'text-slate-500 border-transparent'
+                  tab === t.id ? 'text-white border-emerald-400' : 'text-slate-500 border-transparent'
                 }`}
               >
                 {t.label}
@@ -306,8 +306,8 @@ export default function CustomizeCareerPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="animate-spin text-cyan-500" size={40} />
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <Loader2 className="animate-spin text-emerald-500" size={40} />
       </div>
     );
   }
@@ -320,7 +320,7 @@ export default function CustomizeCareerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pb-20">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
 
         {/* ── HEADER ── */}
@@ -328,23 +328,23 @@ export default function CustomizeCareerPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="p-2.5 bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl transition-colors"
+              className="p-2.5 bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--text-muted)] rounded-xl transition-colors"
             >
-              <ArrowLeft size={18} className="text-slate-400" />
+              <ArrowLeft size={18} className="text-[var(--text-muted)]" />
             </button>
             <div>
               <div className="flex items-center gap-2.5 mb-1">
-                <Palette size={22} className="text-purple-400" />
-                <h1 className="text-2xl font-black text-white tracking-tight">Page Carrière</h1>
+                <Palette size={22} className="text-emerald-400" />
+                <h1 className="text-2xl font-black text-[var(--text)] tracking-tight">Page Carrière</h1>
               </div>
-              <p className="text-sm text-slate-500">Personnalisez votre vitrine pour les candidats</p>
+              <p className="text-sm text-[var(--text-muted)]">Personnalisez votre vitrine pour les candidats</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowPreview(v => !v)}
-              className="hidden sm:flex items-center gap-2 px-4 py-2.5 border border-slate-800 hover:border-slate-600 text-slate-400 hover:text-white rounded-xl text-sm transition-all"
+              className="hidden sm:flex items-center gap-2 px-4 py-2.5 border border-[var(--border)] hover:border-[var(--text-muted)] text-[var(--text-muted)] hover:text-[var(--text)] rounded-xl text-sm transition-all"
             >
               {showPreview ? <EyeOff size={15} /> : <Eye size={15} />}
               {showPreview ? 'Masquer' : 'Aperçu'}
@@ -352,7 +352,7 @@ export default function CustomizeCareerPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-xl text-sm transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-all"
             >
               {isSaving ? <Loader2 className="animate-spin" size={15} /> : saved ? <Check size={15} /> : <Save size={15} />}
               {isSaving ? 'Sauvegarde...' : saved ? 'Sauvegardé !' : 'Sauvegarder'}
@@ -381,56 +381,56 @@ export default function CustomizeCareerPage() {
           <div className="space-y-5">
 
             {/* BANNIÈRE */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-                <ImageIcon size={15} className="text-blue-400" /> Bannière
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
+                <ImageIcon size={15} className="text-emerald-400" /> Bannière
               </h3>
-              <p className="text-xs text-slate-500 mb-4">S'affiche en haut de votre page entreprise · 1920×450px recommandé</p>
+              <p className="text-xs text-[var(--text-muted)] mb-4">S'affiche en haut de votre page entreprise · 1920×450px recommandé</p>
 
               {bannerPreview ? (
                 <div className="relative group rounded-xl overflow-hidden">
                   <Image src={bannerPreview} alt="Banner" width={800} height={200} className="w-full h-36 object-cover" />
                   <button
                     onClick={() => { setBannerPreview(null); setBannerFile(null); }}
-                    className="absolute top-2 right-2 p-1.5 bg-slate-950/80 hover:bg-red-500 border border-slate-700 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
+                    className="absolute top-2 right-2 p-1.5 bg-black/60 hover:bg-red-500 border border-white/10 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
                   >
                     <X size={14} />
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-slate-700 hover:border-blue-500/50 rounded-xl cursor-pointer transition-colors">
+                <label className="flex flex-col items-center justify-center h-36 border-2 border-dashed border-[var(--border)] hover:border-emerald-500/50 rounded-xl cursor-pointer transition-colors">
                   <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'banner', 5)} className="hidden" />
-                  <Upload size={28} className="text-slate-600 mb-2" />
-                  <p className="text-sm text-slate-500">Uploader la bannière</p>
-                  <p className="text-xs text-slate-600 mt-0.5">PNG, JPG, WEBP · max 5MB</p>
+                  <Upload size={28} className="text-[var(--text-muted)] mb-2" />
+                  <p className="text-sm text-[var(--text-muted)]">Uploader la bannière</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">PNG, JPG, WEBP · max 5MB</p>
                 </label>
               )}
             </div>
 
             {/* LOGO */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-                <Building2 size={15} className="text-purple-400" /> Logo entreprise
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
+                <Building2 size={15} className="text-emerald-400" /> Logo entreprise
               </h3>
-              <p className="text-xs text-slate-500 mb-4">Apparaît sur votre profil et les cards d'offres</p>
+              <p className="text-xs text-[var(--text-muted)] mb-4">Apparaît sur votre profil et les cards d'offres</p>
 
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="w-20 h-20 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
                   {logoPreview ? (
                     <Image src={logoPreview} alt="Logo" width={80} height={80} className="object-contain w-full h-full" />
                   ) : (
-                    <Building2 size={28} className="text-slate-600" />
+                    <Building2 size={28} className="text-[var(--text-muted)]" />
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-xl text-sm cursor-pointer transition-colors">
+                  <label className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text)] rounded-xl text-sm cursor-pointer transition-colors">
                     <Upload size={14} /> Choisir un logo
                     <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'logo', 3)} className="hidden" />
                   </label>
                   {logoPreview && (
                     <button
                       onClick={() => { setLogoPreview(null); setLogoFile(null); }}
-                      className="flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-red-400 text-sm transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-[var(--text-muted)] hover:text-red-400 text-sm transition-colors"
                     >
                       <X size={14} /> Supprimer
                     </button>
@@ -440,11 +440,11 @@ export default function CustomizeCareerPage() {
             </div>
 
             {/* COULEURS */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-                <Palette size={15} className="text-pink-400" /> Couleurs de la marque
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
+                <Palette size={15} className="text-amber-400" /> Couleurs de la marque
               </h3>
-              <p className="text-xs text-slate-500 mb-5">Utilisées pour les accents, valeurs et liens sur votre page</p>
+              <p className="text-xs text-[var(--text-muted)] mb-5">Utilisées pour les accents, valeurs et liens sur votre page</p>
 
               <div className="space-y-4">
                 {([
@@ -455,33 +455,33 @@ export default function CustomizeCareerPage() {
                   <div key={key} className="flex items-center gap-4">
                     <input
                       type="color"
-                      className="w-12 h-10 rounded-xl cursor-pointer border border-slate-700 bg-transparent shrink-0"
+                      className="w-12 h-10 rounded-xl cursor-pointer border border-[var(--border)] bg-transparent shrink-0"
                       value={settings.careerPageColors?.[key] || '#06b6d4'}
                       onChange={e => setSettings(p => ({ ...p, careerPageColors: { ...p.careerPageColors!, [key]: e.target.value } }))}
                     />
                     <div className="flex-1">
-                      <p className="text-xs text-slate-400 mb-1">{label}</p>
+                      <p className="text-xs text-[var(--text-muted)] mb-1">{label}</p>
                       <input
                         type="text"
-                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-xs font-mono outline-none focus:border-slate-500"
+                        className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-[var(--text)] text-xs font-mono outline-none focus:border-emerald-500"
                         value={settings.careerPageColors?.[key] || '#06b6d4'}
                         onChange={e => setSettings(p => ({ ...p, careerPageColors: { ...p.careerPageColors!, [key]: e.target.value } }))}
                       />
                     </div>
-                    <div className="w-8 h-8 rounded-lg shrink-0 border border-slate-700" style={{ backgroundColor: settings.careerPageColors?.[key] || '#06b6d4' }} />
+                    <div className="w-8 h-8 rounded-lg shrink-0 border border-[var(--border)]" style={{ backgroundColor: settings.careerPageColors?.[key] || '#06b6d4' }} />
                   </div>
                 ))}
               </div>
             </div>
 
             {/* À PROPOS */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
                 <Building2 size={15} className="text-green-400" /> Description de l'entreprise
               </h3>
-              <p className="text-xs text-slate-500 mb-4">Visible dans l'onglet "À propos" de votre page</p>
+              <p className="text-xs text-[var(--text-muted)] mb-4">Visible dans l'onglet "À propos" de votre page</p>
               <textarea
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:border-slate-500 outline-none resize-none min-h-[120px]"
+                className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] focus:border-emerald-500 outline-none resize-none min-h-[120px]"
                 placeholder="Décrivez votre entreprise, votre mission, votre culture..."
                 value={settings.careerPageAbout || ''}
                 onChange={e => setSettings(p => ({ ...p, careerPageAbout: e.target.value }))}
@@ -489,24 +489,24 @@ export default function CustomizeCareerPage() {
             </div>
 
             {/* VALEURS */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
                 <Sparkles size={15} className="text-amber-400" /> Valeurs de l'entreprise
               </h3>
-              <p className="text-xs text-slate-500 mb-4">Affichées sous forme de cartes numérotées</p>
+              <p className="text-xs text-[var(--text-muted)] mb-4">Affichées sous forme de cartes numérotées</p>
 
               <div className="flex gap-2 mb-4">
                 <input
                   type="text"
                   placeholder="Ex: Innovation, Intégrité..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-slate-600 outline-none focus:border-slate-500"
+                  className="flex-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] outline-none focus:border-emerald-500"
                   value={newValue}
                   onChange={e => setNewValue(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAddValue()}
                 />
                 <button
                   onClick={handleAddValue}
-                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-bold transition-colors"
+                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold transition-colors"
                 >
                   <Plus size={16} />
                 </button>
@@ -525,16 +525,16 @@ export default function CustomizeCareerPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-600 text-center py-2">Aucune valeur ajoutée</p>
+                <p className="text-xs text-[var(--text-muted)] text-center py-2">Aucune valeur ajoutée</p>
               )}
             </div>
 
             {/* PHOTOS */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-                <ImageIcon size={15} className="text-rose-400" /> Galerie photos
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2">
+                <ImageIcon size={15} className="text-amber-400" /> Galerie photos
               </h3>
-              <p className="text-xs text-slate-500 mb-4">Jusqu'à 6 photos · Section "La vie chez nous"</p>
+              <p className="text-xs text-[var(--text-muted)] mb-4">Jusqu'à 6 photos · Section "La vie chez nous"</p>
 
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {settings.careerPagePhotos?.map((p, i) => (
@@ -542,7 +542,7 @@ export default function CustomizeCareerPage() {
                     <Image src={p} alt="" width={150} height={150} className="w-full h-full object-cover" />
                     <button
                       onClick={() => handleRemovePhoto(i)}
-                      className="absolute top-1.5 right-1.5 p-1 bg-slate-950/80 hover:bg-red-500 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
+                      className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-red-500 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-all"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -551,7 +551,7 @@ export default function CustomizeCareerPage() {
               </div>
 
               {(settings.careerPagePhotos?.length || 0) < 6 && (
-                <label className="flex items-center justify-center gap-2 h-14 border-2 border-dashed border-slate-700 hover:border-rose-500/50 rounded-xl cursor-pointer transition-colors text-slate-500 hover:text-rose-400 text-sm">
+                <label className="flex items-center justify-center gap-2 h-14 border-2 border-dashed border-[var(--border)] hover:border-amber-500/50 rounded-xl cursor-pointer transition-colors text-[var(--text-muted)] hover:text-amber-400 text-sm">
                   <Plus size={18} /> Ajouter une photo (max 3MB)
                   <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
                 </label>
@@ -562,7 +562,7 @@ export default function CustomizeCareerPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="w-full flex items-center justify-center gap-2 py-4 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold rounded-2xl text-sm transition-all shadow-lg shadow-cyan-500/20 sm:hidden"
+              className="w-full flex items-center justify-center gap-2 py-4 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white font-bold rounded-2xl text-sm transition-all shadow-lg shadow-emerald-500/20 sm:hidden"
             >
               {isSaving ? <><Loader2 className="animate-spin" size={16} />Sauvegarde...</> : saved ? <><Check size={16} />Sauvegardé !</> : <><Save size={16} />Sauvegarder</>}
             </button>
@@ -573,8 +573,8 @@ export default function CustomizeCareerPage() {
             <div className="hidden sm:block">
               <div className="sticky top-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <Eye size={14} className="text-slate-500" />
-                  <p className="text-xs text-slate-500 font-medium">Aperçu en temps réel · vue candidat</p>
+                  <Eye size={14} className="text-[var(--text-muted)]" />
+                  <p className="text-xs text-[var(--text-muted)] font-medium">Aperçu en temps réel · vue candidat</p>
                 </div>
                 <CompanyPreview
                   settings={previewSettings}

@@ -42,6 +42,18 @@ export const adminService = {
   getUsersOnlineNow:      () => adminFetch<any>('/admin/users/online'),
   getUsersRecentlyOnline: (hours?: number) => adminFetch<any>(`/admin/users/recently-online${hours ? `?hours=${hours}` : ''}`),
   getMostActiveUsers:     (period?: 'today' | 'week' | 'month') => adminFetch<any>(`/admin/users/most-active?period=${period ?? 'week'}`),
+  getPushStatus:          () => adminFetch<any>('/admin/users/push-status'),
+  // ── Portefeuilles multi-entreprises ─────────────────────────────────────
+  searchPortfolioUsers: (q?: string) => adminFetch<any>(`/admin/portfolio-users/search${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  getPortfolioUserDetail: (userId: string) => adminFetch<any>(`/admin/portfolio-users/${userId}`),
+  attachCompanyToUser: (userId: string, companyId: string) =>
+    adminFetch<any>(`/admin/portfolio-users/${userId}/attach-company`, 'POST', { companyId }),
+  detachCompanyFromUser: (userId: string, companyId: string) =>
+    adminFetch<any>(`/admin/portfolio-users/${userId}/companies/${companyId}`, 'DELETE'),
+  togglePortfolioFlag: (userId: string, enabled: boolean, maxCompanies?: number) =>
+    adminFetch<any>(`/admin/portfolio-users/${userId}/toggle-flag`, 'POST', { enabled, maxCompanies }),
+  createPortfolioUser: (data: { email: string; password: string; firstName: string; lastName: string; companyIds: string[]; maxCompanies?: number }) =>
+    adminFetch<any>('/admin/portfolio-users', 'POST', data),
   // ── Entreprises ──────────────────────────────────────────────────────────
   getCompanies: (filters?: { status?: string; plan?: string; search?: string; includeArchived?: boolean }) => {
     const p = new URLSearchParams();

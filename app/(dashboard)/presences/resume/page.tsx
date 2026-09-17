@@ -115,16 +115,16 @@ function getTypeLabel(det: DayDetail): string {
 function getTypeBadgeColor(type: string): string {
   switch (type) {
     case 'PRESENT':       return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
-    case 'REMOTE':        return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300';
+    case 'REMOTE':        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
     case 'LATE':          return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
-    case 'LEAVE':         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
-    case 'HOLIDAY':       return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300';
-    case 'OFF_DAY':       return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400';
-    case 'ABSENT_PAID':   return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300';
+    case 'LEAVE':         return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
+    case 'HOLIDAY':       return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
+    case 'OFF_DAY':       return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
+    case 'ABSENT_PAID':   return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
     case 'ABSENT_UNPAID':
     case 'ABSENT':        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
-    case 'FUTURE':         return 'bg-gray-50 text-gray-400 dark:bg-gray-800 dark:text-gray-600';
-    default:               return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
+    case 'FUTURE':         return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
+    default:               return 'bg-[var(--surface-2)] text-[var(--text-muted)]';
   }
 }
 
@@ -358,7 +358,7 @@ export default function AttendanceResumePage() {
   const StatusBadge = ({ status }: { status: string }) => {
     const config = {
       perfect: { color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2, label: 'OK' },
-      warning: { color: 'bg-orange-100 text-orange-700', icon: Clock, label: 'À vérifier' },
+      warning: { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'À vérifier' },
       critical: { color: 'bg-red-100 text-red-700', icon: AlertTriangle, label: 'Anomalie' },
     };
     const { color, icon: Icon, label } = config[status as keyof typeof config] || config.perfect;
@@ -380,50 +380,50 @@ export default function AttendanceResumePage() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-           <Link href={bp('/presences')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-              <ArrowRight className="rotate-180 text-gray-500" size={20} />
+           <Link href={bp('/presences')} className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors">
+              <ArrowRight className="rotate-180 text-[var(--text-muted)]" size={20} />
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{canManage ? 'Résumés de Présences' : 'Mon Résumé de Présence'}</h1>
+            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">{canManage ? 'Résumés de Présences' : 'Mon Résumé de Présence'}</h1>
           </div>
-          <p className="text-gray-500 dark:text-gray-400 ml-11">{canManage ? 'Consolidez et exportez les heures pour la paie.' : 'Retrouvez vos heures, retards et absences du mois.'}</p>
+          <p className="text-[var(--text-muted)] ml-11">{canManage ? 'Consolidez et exportez les heures pour la paie.' : 'Retrouvez vos heures, retards et absences du mois.'}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="flex flex-wrap items-center gap-3 bg-[var(--surface)] p-2 rounded-2xl shadow-sm border border-[var(--border)]">
           <div className="flex items-center gap-2 pl-2">
-            <Calendar size={18} className="text-gray-400 shrink-0" />
+            <Calendar size={18} className="text-[var(--text-muted)] shrink-0" />
 
             <div className="relative">
               <select
                 value={month}
                 onChange={e => handlePeriodChange(e.target.value, year)}
-                className="appearance-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-bold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 transition-shadow"
+                className="appearance-none bg-[var(--surface-2)] text-[var(--text)] font-bold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-[var(--border)] focus:ring-2 focus:ring-emerald-500 transition-shadow"
               >
                 {MONTHS.map(m => (
-                  <option key={m.value} value={m.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  <option key={m.value} value={m.value} className="bg-[var(--surface)] text-[var(--text)]">
                     {m.label}
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             </div>
 
             <div className="relative">
               <select
                 value={year}
                 onChange={e => handlePeriodChange(month, Number(e.target.value))}
-                className="appearance-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-bold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 transition-shadow"
+                className="appearance-none bg-[var(--surface-2)] text-[var(--text)] font-bold text-sm rounded-lg pl-3 pr-8 py-2.5 outline-none cursor-pointer border border-[var(--border)] focus:ring-2 focus:ring-emerald-500 transition-shadow"
               >
                 {YEARS.map(y => (
-                  <option key={y} value={y} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  <option key={y} value={y} className="bg-[var(--surface)] text-[var(--text)]">
                     {y}
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <ChevronDown size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             </div>
           </div>
 
-          <div className="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
+          <div className="h-8 w-px bg-[var(--border)]"></div>
 
           <button
             onClick={generateReport}
@@ -431,8 +431,8 @@ export default function AttendanceResumePage() {
             className={`
               px-6 py-2.5 rounded-xl font-bold text-white shadow-lg transition-all flex items-center gap-2
               ${isValidated
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:scale-105 active:scale-95'}
+                ? 'bg-[var(--text-muted)] cursor-not-allowed'
+                : 'bg-emerald-500 hover:bg-emerald-600 hover:scale-105 active:scale-95'}
             `}
           >
             {isGenerating ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
@@ -448,11 +448,11 @@ export default function AttendanceResumePage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-8 text-center border border-gray-100 dark:border-gray-700 shadow-sm"
+            className="bg-[var(--surface)] rounded-2xl p-8 text-center border border-[var(--border)] shadow-sm"
           >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Traitement des pointages en cours...</h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">Calcul des heures supplémentaires et vérification des anomalies.</p>
-            <div className="max-w-md mx-auto h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+            <h3 className="text-lg font-bold text-[var(--text)] mb-2">Traitement des pointages en cours...</h3>
+            <p className="text-[var(--text-muted)] mb-6">Calcul des heures supplémentaires et vérification des anomalies.</p>
+            <div className="max-w-md mx-auto h-3 bg-[var(--surface-2)] rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-emerald-500 rounded-full"
                 initial={{ width: 0 }}
@@ -473,45 +473,45 @@ export default function AttendanceResumePage() {
         >
           {/* OVERVIEW CARDS — LIGNE 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase mb-1">{canManage ? 'Employés Traités' : 'Jours Présents'}</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{canManage ? data.length : (totals?.daysPresent || 0)}</h3>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">{canManage ? 'Employés Traités' : 'Jours Présents'}</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{canManage ? data.length : (totals?.daysPresent || 0)}</h3>
               </div>
-              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl flex items-center justify-center">
                 <Users size={24} />
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase mb-1">Taux de Présence</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{fmt(tauxPresenceGlobal)}%</h3>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Taux de Présence</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{fmt(tauxPresenceGlobal)}%</h3>
               </div>
               <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-xl flex items-center justify-center">
                 <Percent size={24} />
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-orange-100 dark:border-orange-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-orange-600 uppercase mb-1">HS Normales</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {fmt(data.reduce((s, r) => s + (r.overtime10 || 0) + (r.overtime25 || 0), 0))} <span className="text-sm text-gray-400">h</span>
+                <p className="text-xs font-bold text-amber-600 uppercase mb-1">HS Normales</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">
+                  {fmt(data.reduce((s, r) => s + (r.overtime10 || 0) + (r.overtime25 || 0), 0))} <span className="text-sm text-[var(--text-muted)]">h</span>
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">+10% · +25%</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">+10% · +25%</p>
               </div>
-              <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
                 <Clock size={24} />
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-purple-100 dark:border-purple-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-purple-600 uppercase mb-1 flex items-center gap-1"><Moon size={11} /> HS Nuit</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {fmt(data.reduce((s, r) => s + (r.overtime50 || 0) + (r.overtime100 || 0), 0))} <span className="text-sm text-gray-400">h</span>
+                <p className="text-xs font-bold text-amber-600 uppercase mb-1 flex items-center gap-1"><Moon size={11} /> HS Nuit</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">
+                  {fmt(data.reduce((s, r) => s + (r.overtime50 || 0) + (r.overtime100 || 0), 0))} <span className="text-sm text-[var(--text-muted)]">h</span>
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">+50% · +100%</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">+50% · +100%</p>
               </div>
-              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
                 <Moon size={24} />
               </div>
             </div>
@@ -519,49 +519,49 @@ export default function AttendanceResumePage() {
 
           {/* OVERVIEW CARDS — LIGNE 2 : absences & congés */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-gray-500 uppercase mb-1">Retards</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{totals?.daysLate || 0}</h3>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Retards</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysLate || 0}</h3>
               </div>
               <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
                 <Clock size={24} />
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-orange-100 dark:border-orange-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-orange-600 uppercase mb-1">Absences Payées</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{totals?.daysAbsentPaid || 0} <span className="text-sm text-gray-400">j</span></h3>
+                <p className="text-xs font-bold text-amber-600 uppercase mb-1">Absences Payées</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysAbsentPaid || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
               </div>
-              <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-500 rounded-xl flex items-center justify-center">
                 <UserX size={24} />
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-red-100 dark:border-red-900/30 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-red-600 uppercase mb-1">Absences Non Payées</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{totals?.daysAbsentUnpaid || 0} <span className="text-sm text-gray-400">j</span></h3>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysAbsentUnpaid || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
               </div>
               <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl flex items-center justify-center">
                 <CalendarOff size={24} />
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 shadow-sm flex items-center justify-between">
+            <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-blue-600 uppercase mb-1">En Congé</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{totals?.daysOnLeave || 0} <span className="text-sm text-gray-400">j</span></h3>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">En Congé</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{totals?.daysOnLeave || 0} <span className="text-sm text-[var(--text-muted)]">j</span></h3>
               </div>
-              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl flex items-center justify-center">
                 <CalendarCheck size={24} />
               </div>
             </div>
           </div>
 
           {/* MAIN TABLE */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-750 text-gray-500 font-semibold uppercase text-xs">
+                <thead className="bg-[var(--surface-2)] text-[var(--text-muted)] font-semibold uppercase text-xs">
                   <tr>
                     <th className="px-6 py-3">Employé</th>
                     <th className="px-6 py-3 text-center">Jours Prés.</th>
@@ -570,8 +570,8 @@ export default function AttendanceResumePage() {
                     <th className="px-6 py-3 text-center">Congés</th>
                     <th className="px-6 py-3 text-right">Heures Norm.</th>
                     <th className="px-6 py-3 text-right text-amber-600">HS +10%</th>
-                    <th className="px-6 py-3 text-right text-orange-600">HS +25%</th>
-                    <th className="px-6 py-3 text-right text-purple-600">
+                    <th className="px-6 py-3 text-right text-amber-600">HS +25%</th>
+                    <th className="px-6 py-3 text-right text-amber-600">
                       <span className="flex items-center justify-end gap-1"><Moon size={11} /> +50%</span>
                     </th>
                     <th className="px-6 py-3 text-right text-red-600">
@@ -581,50 +581,50 @@ export default function AttendanceResumePage() {
                     <th className="px-6 py-3 w-10"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody className="divide-y divide-[var(--border)]">
                   {filteredData.map(row => (
                     <React.Fragment key={row.id}>
                       <tr
                         onClick={() => setExpandedRow(expandedRow === row.id ? null : row.id)}
-                        className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors ${expandedRow === row.id ? 'bg-sky-50/50 dark:bg-sky-900/10' : ''}`}
+                        className={`cursor-pointer hover:bg-[var(--surface-2)] transition-colors ${expandedRow === row.id ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : ''}`}
                       >
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <img src={row.avatar || `https://ui-avatars.com/api/?name=${row.name}&background=random`} className="w-8 h-8 rounded-full" alt="" />
                             <div>
-                              <p className="font-bold text-gray-900 dark:text-white">{row.name}</p>
-                              <p className="text-xs text-gray-500">{row.matricule}</p>
+                              <p className="font-bold text-[var(--text)]">{row.name}</p>
+                              <p className="text-xs text-[var(--text-muted)]">{row.matricule}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center font-medium">{row.daysPresent}</td>
-                        <td className={`px-6 py-4 text-center font-bold ${row.daysLate > 2 ? 'text-orange-500' : 'text-gray-400'}`}>{row.daysLate}</td>
-                        <td className="px-6 py-4 text-center font-medium text-gray-600 dark:text-gray-300">
+                        <td className={`px-6 py-4 text-center font-bold ${row.daysLate > 2 ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>{row.daysLate}</td>
+                        <td className="px-6 py-4 text-center font-medium text-[var(--text-muted)]">
                           {row.daysAbsentUnpaid + row.daysAbsentPaid}
                         </td>
-                        <td className="px-6 py-4 text-center font-medium text-gray-600 dark:text-gray-300">{row.daysOnLeave}</td>
-                        <td className="px-6 py-4 text-right font-mono text-gray-600 dark:text-gray-400">{row.normalHours}</td>
+                        <td className="px-6 py-4 text-center font-medium text-[var(--text-muted)]">{row.daysOnLeave}</td>
+                        <td className="px-6 py-4 text-right font-mono text-[var(--text-muted)]">{row.normalHours}</td>
                         <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
-                          {(row.overtime10 || 0) > 0 ? fmt(row.overtime10) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                          {(row.overtime10 || 0) > 0 ? fmt(row.overtime10) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-orange-600 dark:text-orange-400">
-                          {(row.overtime25 || 0) > 0 ? fmt(row.overtime25) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                        <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                          {(row.overtime25 || 0) > 0 ? fmt(row.overtime25) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-purple-600 dark:text-purple-400">
-                          {(row.overtime50 || 0) > 0 ? fmt(row.overtime50) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                        <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+                          {(row.overtime50 || 0) > 0 ? fmt(row.overtime50) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
                         <td className="px-6 py-4 text-right font-mono font-bold text-red-600 dark:text-red-400">
-                          {(row.overtime100 || 0) > 0 ? fmt(row.overtime100) : <span className="text-gray-300 dark:text-gray-600">—</span>}
+                          {(row.overtime100 || 0) > 0 ? fmt(row.overtime100) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
                         <td className="px-6 py-4 text-center"><StatusBadge status={row.status} /></td>
-                        <td className="px-6 py-4 text-gray-400">{expandedRow === row.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</td>
+                        <td className="px-6 py-4 text-[var(--text-muted)]">{expandedRow === row.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</td>
                       </tr>
 
                       {/* EXPANDED DETAILS */}
                       {expandedRow === row.id && (
-                        <tr className="bg-gray-50 dark:bg-gray-800/50">
+                        <tr className="bg-[var(--surface-2)]">
                           <td colSpan={11} className="p-0">
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="p-6 border-b border-gray-100 dark:border-gray-700">
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="p-6 border-b border-[var(--border)]">
                               {/* Badges HS */}
                               {((row.overtime10 || 0) + (row.overtime25 || 0) + (row.overtime50 || 0) + (row.overtime100 || 0)) > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-4">
@@ -634,12 +634,12 @@ export default function AttendanceResumePage() {
                                     </span>
                                   )}
                                   {(row.overtime25 || 0) > 0 && (
-                                    <span className="text-xs bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 px-2.5 py-1 rounded-full font-bold">
+                                    <span className="text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full font-bold">
                                       {fmt(row.overtime25)}h +25%
                                     </span>
                                   )}
                                   {(row.overtime50 || 0) > 0 && (
-                                    <span className="text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full font-bold">
+                                    <span className="text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full font-bold">
                                       🌙 {fmt(row.overtime50)}h +50%
                                     </span>
                                   )}
@@ -651,7 +651,7 @@ export default function AttendanceResumePage() {
                                 </div>
                               )}
                               <table className="w-full text-xs text-left">
-                                <thead className="text-gray-500 font-semibold border-b border-gray-200 dark:border-gray-600">
+                                <thead className="text-[var(--text-muted)] font-semibold border-b border-[var(--border)]">
                                   <tr>
                                     <th className="py-2">Date</th>
                                     <th className="py-2">Entrée</th>
@@ -660,7 +660,7 @@ export default function AttendanceResumePage() {
                                     <th className="py-2">Type</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody className="divide-y divide-[var(--border)]">
                                   {row.details.map((det, i) => (
                                     <tr key={i}>
                                       <td className="py-2 font-mono">{det.date}</td>
@@ -691,10 +691,10 @@ export default function AttendanceResumePage() {
           <div className={`grid grid-cols-1 ${canManage ? 'xl:grid-cols-2' : ''} gap-6`}>
             {/* Taux de présence / absence / congé par département — réservé aux managers/RH */}
             {canManage && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
               <div className="flex items-center gap-2 mb-4">
                 <BarChart3 size={18} className="text-emerald-500" />
-                <h3 className="font-bold text-gray-900 dark:text-white">Taux par Département</h3>
+                <h3 className="font-bold text-[var(--text)]">Taux par Département</h3>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={departmentStats}>
@@ -712,10 +712,10 @@ export default function AttendanceResumePage() {
             )}
 
             {/* Évolution quotidienne du taux de présence */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={18} className="text-emerald-500" />
-                <h3 className="font-bold text-gray-900 dark:text-white">{canManage ? 'Évolution Quotidienne du Taux de Présence' : 'Mon Évolution Quotidienne'}</h3>
+                <h3 className="font-bold text-[var(--text)]">{canManage ? 'Évolution Quotidienne du Taux de Présence' : 'Mon Évolution Quotidienne'}</h3>
               </div>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={dailyTrend}>
@@ -729,10 +729,10 @@ export default function AttendanceResumePage() {
             </div>
 
             {/* Répartition des motifs d'absence */}
-            <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 ${canManage ? 'xl:col-span-2' : ''}`}>
+            <div className={`bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 ${canManage ? 'xl:col-span-2' : ''}`}>
               <div className="flex items-center gap-2 mb-4">
                 <UserX size={18} className="text-red-500" />
-                <h3 className="font-bold text-gray-900 dark:text-white">Motifs d'Absence (Maladie · Conventionnelle · Exceptionnelle)</h3>
+                <h3 className="font-bold text-[var(--text)]">Motifs d'Absence (Maladie · Conventionnelle · Exceptionnelle)</h3>
               </div>
               {absenceReasons.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
@@ -745,18 +745,18 @@ export default function AttendanceResumePage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-gray-400 py-8 text-center">Aucune absence enregistrée sur cette période.</p>
+                <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucune absence enregistrée sur cette période.</p>
               )}
             </div>
           </div>
 
           {/* BOTTOM ACTIONS */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 sticky bottom-6 z-20">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-[var(--surface)] rounded-2xl shadow-lg border border-[var(--border)] sticky bottom-6 z-20">
             <div className="flex gap-3">
               <button
                 onClick={handleExport}
                 disabled={isExporting || !data || data.length === 0}
-                className="px-5 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-white font-bold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text)] font-bold rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 {isExporting ? <Loader2 className="animate-spin" size={18} /> : <FileSpreadsheet size={18} />}
                 {isExporting ? 'Export...' : 'Exporter en Excel'}
@@ -775,7 +775,7 @@ export default function AttendanceResumePage() {
                 </div>
               )}
 
-              <button onClick={handleSendToPayroll} disabled={!isValidated} className="flex-1 md:flex-none px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-xl hover:scale-105 transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              <button onClick={handleSendToPayroll} disabled={!isValidated} className="flex-1 md:flex-none px-8 py-3 bg-[var(--text)] text-[var(--bg)] font-bold rounded-xl hover:scale-105 transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 Envoyer à la Paie <ArrowRight size={18} />
               </button>
             </div>

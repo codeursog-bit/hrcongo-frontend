@@ -165,24 +165,24 @@ export default function LoansReportPage() {
     return Array.from(map.values()).sort((a, b) => b.montant - a.montant).slice(0, 20);
   }, [monthDebts, allDebts, top20Mode, year]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
       <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Rapport — Prêts, avances & retenues</h1>
-        <p className="text-sm text-gray-500">Vue d'ensemble mensuelle et annuelle des dettes des employés.</p>
+        <h1 className="text-xl font-bold text-[var(--text)]">Rapport — Prêts, avances & retenues</h1>
+        <p className="text-sm text-[var(--text-muted)]">Vue d'ensemble mensuelle et annuelle des dettes des employés.</p>
       </div>
 
       {/* ══════════════════ ONGLETS MOIS ══════════════════ */}
-      <div className="flex flex-wrap gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
+      <div className="flex flex-wrap gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit">
         {MONTHS_FR.map((m, i) => (
-          <button key={m} onClick={() => setMonth(i + 1)} className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${month === i + 1 ? 'bg-sky-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
+          <button key={m} onClick={() => setMonth(i + 1)} className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${month === i + 1 ? 'bg-emerald-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>
             {m}
           </button>
         ))}
-        <select value={year} onChange={e => setYear(Number(e.target.value))} className="ml-1 text-xs px-2 rounded-lg border-0 bg-white dark:bg-gray-700 font-bold text-gray-600 dark:text-gray-300">
+        <select value={year} onChange={e => setYear(Number(e.target.value))} className="ml-1 text-xs px-2 rounded-lg border-0 bg-[var(--surface)] font-bold text-[var(--text-muted)]">
           {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
@@ -190,17 +190,17 @@ export default function LoansReportPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ══════════════════ COLONNE GAUCHE : légende + tableau ══════════════════ */}
         <div className="lg:col-span-3 space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{MONTHS_FULL[month - 1]} {year}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{employeesConcerned}</p>
-            <p className="text-xs text-gray-400">employé(s) avec une dette ce mois</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">{MONTHS_FULL[month - 1]} {year}</p>
+            <p className="text-2xl font-bold text-[var(--text)]">{employeesConcerned}</p>
+            <p className="text-xs text-[var(--text-muted)]">employé(s) avec une dette ce mois</p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Légende</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
+            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Légende</p>
             <div className="space-y-2">
               {Object.entries(TYPE_LABEL).map(([type, label]) => (
-                <div key={type} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <div key={type} className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
                   <span className="w-3 h-3 rounded-sm shrink-0" style={{ background: TYPE_COLOR[type] }} />
                   {label}
                 </div>
@@ -208,27 +208,27 @@ export default function LoansReportPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-900">
+              <thead className="bg-[var(--surface-2)]">
                 <tr>
-                  <th className="px-3 py-2 text-left text-[10px] font-bold text-gray-400 uppercase">Type</th>
-                  <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-400 uppercase">Montant</th>
-                  <th className="px-3 py-2 text-right text-[10px] font-bold text-gray-400 uppercase">%</th>
+                  <th className="px-3 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase">Type</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase">Montant</th>
+                  <th className="px-3 py-2 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase">%</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-[var(--border)]">
                 {byTypeMonth.length === 0 ? (
-                  <tr><td colSpan={3} className="text-center py-6 text-gray-400 text-xs">Aucune dette ce mois-ci.</td></tr>
+                  <tr><td colSpan={3} className="text-center py-6 text-[var(--text-muted)] text-xs">Aucune dette ce mois-ci.</td></tr>
                 ) : byTypeMonth.map(t => (
                   <tr key={t.type}>
                     <td className="px-3 py-2 flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: TYPE_COLOR[t.type] }} />{t.label}</td>
-                    <td className="px-3 py-2 text-right font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{fmt(t.montant)}</td>
-                    <td className="px-3 py-2 text-right text-gray-500">{t.pct}%</td>
+                    <td className="px-3 py-2 text-right font-semibold text-[var(--text)] whitespace-nowrap">{fmt(t.montant)}</td>
+                    <td className="px-3 py-2 text-right text-[var(--text-muted)]">{t.pct}%</td>
                   </tr>
                 ))}
                 {byTypeMonth.length > 0 && (
-                  <tr className="bg-gray-50 dark:bg-gray-900 font-bold">
+                  <tr className="bg-[var(--surface-2)] font-bold">
                     <td className="px-3 py-2">Total</td>
                     <td className="px-3 py-2 text-right whitespace-nowrap">{fmt(monthTotal)}</td>
                     <td className="px-3 py-2 text-right">100%</td>
@@ -241,8 +241,8 @@ export default function LoansReportPage() {
 
         {/* ══════════════════ COLONNE DROITE : camemberts ══════════════════ */}
         <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition des dettes par type — {MONTHS_FULL[month - 1]}</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Répartition des dettes par type — {MONTHS_FULL[month - 1]}</p>
             {byTypeMonth.length === 0 ? <EmptyChart /> : (
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <ResponsiveContainer width="100%" height={220} className="sm:!w-1/2">
@@ -258,8 +258,8 @@ export default function LoansReportPage() {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par département — {MONTHS_FULL[month - 1]}</p>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Répartition par département — {MONTHS_FULL[month - 1]}</p>
             {byDeptMonth.length === 0 ? <EmptyChart /> : (
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <ResponsiveContainer width="100%" height={220} className="sm:!w-1/2">
@@ -280,8 +280,8 @@ export default function LoansReportPage() {
       {/* ══════════════════ VUE ANNUELLE — section pleine largeur, indépendante de la vue mensuelle ══════════════════ */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-base font-bold text-gray-900 dark:text-white">Vue annuelle — {year}</h2>
-          <p className="text-xs text-gray-500">Vision globale sur l'année, indépendamment du mois sélectionné ci-dessus.</p>
+          <h2 className="text-base font-bold text-[var(--text)]">Vue annuelle — {year}</h2>
+          <p className="text-xs text-[var(--text-muted)]">Vision globale sur l'année, indépendamment du mois sélectionné ci-dessus.</p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -292,8 +292,8 @@ export default function LoansReportPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Montants par mois et par type — {year}</p>
+          <div className="lg:col-span-8 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Montants par mois et par type — {year}</p>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={annualSeries}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -309,8 +309,8 @@ export default function LoansReportPage() {
           </div>
 
           {/* Répartition par type — année entière, en complément du graphe empilé */}
-          <div className="lg:col-span-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par type — {year}</p>
+          <div className="lg:col-span-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Répartition par type — {year}</p>
             {annualByType.length === 0 ? <EmptyChart /> : (
               <>
                 <ResponsiveContainer width="100%" height={160}>
@@ -330,10 +330,10 @@ export default function LoansReportPage() {
         </div>
 
         {/* ══════════════════ VUE ANNUELLE — PAR DÉPARTEMENT ══════════════════ */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Montants par mois — par département ({year})</p>
-            <select value={deptFilterAnnual} onChange={e => setDeptFilterAnnual(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+            <p className="text-sm font-bold text-[var(--text)]">Montants par mois — par département ({year})</p>
+            <select value={deptFilterAnnual} onChange={e => setDeptFilterAnnual(e.target.value)} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
               <option value="">Tous les départements</option>
               {departments.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
@@ -351,30 +351,30 @@ export default function LoansReportPage() {
       </div>
 
       {/* ══════════════════ TOP 20 ══════════════════ */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2"><Users2 size={16} /> Top 20 — employés avec le plus de dettes</p>
-          <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-lg">
-            <button onClick={() => setTop20Mode('mois')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'mois' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`}>{MONTHS_FULL[month - 1]}</button>
-            <button onClick={() => setTop20Mode('annee')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'annee' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`}>Annuel {year}</button>
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+        <div className="p-4 flex items-center justify-between border-b border-[var(--border)]">
+          <p className="text-sm font-bold text-[var(--text)] flex items-center gap-2"><Users2 size={16} /> Top 20 — employés avec le plus de dettes</p>
+          <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-lg">
+            <button onClick={() => setTop20Mode('mois')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'mois' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{MONTHS_FULL[month - 1]}</button>
+            <button onClick={() => setTop20Mode('annee')} className={`px-3 py-1 rounded-md text-xs font-semibold ${top20Mode === 'annee' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>Annuel {year}</button>
           </div>
         </div>
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-900">
+          <thead className="bg-[var(--surface-2)]">
             <tr>
-              <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase w-10">#</th>
-              <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase">Employé</th>
-              <th className="px-4 py-2 text-right text-[10px] font-bold text-gray-400 uppercase">Montant total</th>
+              <th className="px-4 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase w-10">#</th>
+              <th className="px-4 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase">Employé</th>
+              <th className="px-4 py-2 text-right text-[10px] font-bold text-[var(--text-muted)] uppercase">Montant total</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody className="divide-y divide-[var(--border)]">
             {top20.length === 0 ? (
-              <tr><td colSpan={3} className="text-center py-10 text-gray-400">Aucune donnée pour cette période.</td></tr>
+              <tr><td colSpan={3} className="text-center py-10 text-[var(--text-muted)]">Aucune donnée pour cette période.</td></tr>
             ) : top20.map((e, i) => (
-              <tr key={e.name + i} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
-                <td className="px-4 py-2 text-gray-400 font-semibold">{i + 1}</td>
-                <td className="px-4 py-2 font-semibold text-gray-800 dark:text-gray-100">{e.name}</td>
-                <td className="px-4 py-2 text-right font-bold text-gray-900 dark:text-white whitespace-nowrap">{fmt(e.montant)}</td>
+              <tr key={e.name + i} className="hover:bg-[var(--surface-2)]/40">
+                <td className="px-4 py-2 text-[var(--text-muted)] font-semibold">{i + 1}</td>
+                <td className="px-4 py-2 font-semibold text-[var(--text)]">{e.name}</td>
+                <td className="px-4 py-2 text-right font-bold text-[var(--text)] whitespace-nowrap">{fmt(e.montant)}</td>
               </tr>
             ))}
           </tbody>
@@ -385,22 +385,22 @@ export default function LoansReportPage() {
 }
 
 function EmptyChart() {
-  return <div className="h-[260px] flex items-center justify-center text-sm text-gray-400">Aucune donnée pour cette période.</div>;
+  return <div className="h-[260px] flex items-center justify-center text-sm text-[var(--text-muted)]">Aucune donnée pour cette période.</div>;
 }
 
 function AnnualKpiCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: string; value: string; sub?: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-gray-50 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
+    slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
     emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
     amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300',
+    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
   };
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
-      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>}
+      <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-lg font-bold text-[var(--text)] truncate">{value}</p>
+      {sub && <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{sub}</p>}
     </div>
   );
 }
@@ -416,8 +416,8 @@ function ChartLegendList({ items }: { items: { label: string; pct: number; monta
       {sorted.map((it, i) => (
         <div key={i} className="flex items-center gap-2 text-xs">
           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: it.color }} />
-          <span className="text-gray-600 dark:text-gray-300 truncate flex-1">{it.label}</span>
-          <span className="font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{it.pct}%</span>
+          <span className="text-[var(--text-muted)] truncate flex-1">{it.label}</span>
+          <span className="font-semibold text-[var(--text)] whitespace-nowrap">{it.pct}%</span>
         </div>
       ))}
     </div>

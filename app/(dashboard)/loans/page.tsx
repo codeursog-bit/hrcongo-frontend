@@ -39,18 +39,18 @@ const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; dot: string;
   PENDING:    { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300', dot: 'bg-amber-500', icon: Clock },
   PENDING_DG: { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300', dot: 'bg-amber-500', icon: Clock }, // legacy, plus produit
   ACTIVE:     { label: 'Actif',       cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300', dot: 'bg-emerald-500', icon: CheckCircle2 },
-  PAID:       { label: 'Soldé',       cls: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300', dot: 'bg-sky-500', icon: CheckCircle2 },
+  PAID:       { label: 'Soldé',       cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', dot: 'bg-[var(--text-muted)]', icon: CheckCircle2 },
   REJECTED:   { label: 'Refusé',      cls: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300', dot: 'bg-red-500', icon: XCircle },
-  CANCELLED:  { label: 'Annulé',      cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700/50 dark:text-gray-400', dot: 'bg-gray-400', icon: Ban },
+  CANCELLED:  { label: 'Annulé',      cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', dot: 'bg-[var(--text-muted)]', icon: Ban },
 };
 
 const ADVANCE_STATUS_CFG: Record<string, { label: string; cls: string; dot: string; icon: any }> = {
   PENDING:   { label: 'En attente', cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300', dot: 'bg-amber-500', icon: Clock },
   APPROVED:  { label: 'Approuvée',  cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300', dot: 'bg-emerald-500', icon: CheckCircle2 },
-  PAID:      { label: 'Remboursée (espèces)', cls: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300', dot: 'bg-sky-500', icon: CheckCircle2 },
-  DEDUCTED:  { label: 'Déduite',    cls: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300', dot: 'bg-sky-500', icon: CheckCircle2 },
+  PAID:      { label: 'Remboursée (espèces)', cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', dot: 'bg-[var(--text-muted)]', icon: CheckCircle2 },
+  DEDUCTED:  { label: 'Déduite',    cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', dot: 'bg-[var(--text-muted)]', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusée',    cls: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300', dot: 'bg-red-500', icon: XCircle },
-  CANCELLED: { label: 'Annulée',    cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700/50 dark:text-gray-400', dot: 'bg-gray-400', icon: Ban },
+  CANCELLED: { label: 'Annulée',    cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', dot: 'bg-[var(--text-muted)]', icon: Ban },
 };
 
 export default function LoansManagementPage() {
@@ -417,7 +417,7 @@ export default function LoansManagementPage() {
     finally { setIsExportingXlsx(false); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-24 space-y-6">
@@ -425,27 +425,27 @@ export default function LoansManagementPage() {
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Finances</p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Prêts, avances & retenues</h1>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Finances</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Prêts, avances & retenues</h1>
         </div>
-        <Link href={bp('/loans/nouveau')} className="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm flex items-center gap-2 shadow-lg shadow-sky-500/30 w-fit">
+        <Link href={bp('/loans/nouveau')} className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm flex items-center gap-2 w-fit">
           <Plus size={18} /> Nouvelle demande
         </Link>
       </div>
 
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit overflow-x-auto">
-        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${tab === 'overview' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+      <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit overflow-x-auto">
+        <button onClick={() => setTab('overview')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all whitespace-nowrap ${tab === 'overview' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <LayoutDashboard size={14} /> Vue d'ensemble
         </button>
-        <button onClick={() => setTab('loans')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'loans' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+        <button onClick={() => setTab('loans')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'loans' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Banknote size={14} /> Prêts
-          {loans.filter(l => ['PENDING', 'PENDING_DG'].includes(l.status)).length > 0 && <span className="bg-orange-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{loans.filter(l => ['PENDING', 'PENDING_DG'].includes(l.status)).length}</span>}
+          {loans.filter(l => ['PENDING', 'PENDING_DG'].includes(l.status)).length > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{loans.filter(l => ['PENDING', 'PENDING_DG'].includes(l.status)).length}</span>}
         </button>
-        <button onClick={() => setTab('advances')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'advances' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+        <button onClick={() => setTab('advances')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'advances' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Wallet size={14} /> Avances
-          {advances.filter(a => a.status === 'PENDING').length > 0 && <span className="bg-orange-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{advances.filter(a => a.status === 'PENDING').length}</span>}
+          {advances.filter(a => a.status === 'PENDING').length > 0 && <span className="bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{advances.filter(a => a.status === 'PENDING').length}</span>}
         </button>
-        <button onClick={() => setTab('deductions')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'deductions' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500'}`}>
+        <button onClick={() => setTab('deductions')} className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${tab === 'deductions' ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)]'}`}>
           <Receipt size={14} /> Retenues diverses
         </button>
       </div>
@@ -467,25 +467,25 @@ export default function LoansManagementPage() {
       {tab === 'loans' && (
         <div className="space-y-4">
           {/* Filtres — libellés explicites, compréhensibles sans avoir à deviner */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-[220px]">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Rechercher un employé</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Rechercher un employé</label>
                 <div className="relative">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input value={loanNameSearch} onChange={e => setLoanNameSearch(e.target.value)} placeholder="Nom de l'employé…" className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input value={loanNameSearch} onChange={e => setLoanNameSearch(e.target.value)} placeholder="Nom de l'employé…" className="w-full pl-9 pr-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Statut</label>
-                <select value={loanStatusFilter} onChange={e => setLoanStatusFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Statut</label>
+                <select value={loanStatusFilter} onChange={e => setLoanStatusFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                   <option value="">Tous les statuts</option>
                   {['PENDING', 'ACTIVE', 'PAID', 'REJECTED', 'CANCELLED'].map(s => <option key={s} value={s}>{LOAN_STATUS_CFG[s]?.label ?? s}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Type</label>
-                <select value={loanTypeFilter} onChange={e => setLoanTypeFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Type</label>
+                <select value={loanTypeFilter} onChange={e => setLoanTypeFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                   <option value="">Tous les types</option>
                   <option value="ARGENT">Prêt argent</option>
                   <option value="MARCHANDISE">Marchandise</option>
@@ -494,8 +494,8 @@ export default function LoansManagementPage() {
               </div>
               {loanDepartments.length > 0 && (
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Département</label>
-                  <select value={loanDeptFilter} onChange={e => setLoanDeptFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Département</label>
+                  <select value={loanDeptFilter} onChange={e => setLoanDeptFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                     <option value="">Tous les départements</option>
                     {loanDepartments.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -505,34 +505,34 @@ export default function LoansManagementPage() {
           </div>
 
           {/* Liste pleine largeur — un clic sur la ligne ouvre la fiche détaillée */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>{['Employé', 'Type', 'Montant', 'Mensualité', 'Solde restant', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">{h}</th>)}</tr>
+              <thead className="bg-[var(--surface-2)]">
+                <tr>{['Employé', 'Type', 'Montant', 'Mensualité', 'Solde restant', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase">{h}</th>)}</tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredLoans.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-14 text-gray-400 text-sm">Aucun prêt pour ce filtre.</td></tr>
+                  <tr><td colSpan={7} className="text-center py-14 text-[var(--text-muted)] text-sm">Aucun prêt pour ce filtre.</td></tr>
                 ) : filteredLoans.map(l => {
                   const cfg = LOAN_STATUS_CFG[l.status] ?? LOAN_STATUS_CFG.PENDING;
                   const Icon = cfg.icon;
                   const initials = `${l.employee?.firstName?.[0] ?? ''}${l.employee?.lastName?.[0] ?? ''}`;
                   return (
-                    <tr key={l.id} onClick={() => { setSelectedLoanId(l.id); setRejectMode(false); setRejectionReason(''); }} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                    <tr key={l.id} onClick={() => { setSelectedLoanId(l.id); setRejectMode(false); setRejectionReason(''); }} className="cursor-pointer hover:bg-[var(--surface-2)]/40 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(l.employee, l.employeeId); }} className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0 hover:ring-2 hover:ring-sky-400">
+                          <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(l.employee, l.employeeId); }} className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0 hover:ring-2 hover:ring-emerald-400">
                             {l.employee?.photoUrl ? <img src={l.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
                           </button>
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 dark:text-white truncate">{l.employee?.firstName} {l.employee?.lastName}</p>
-                            <p className="text-xs text-gray-400 truncate">{l.employee?.department?.name || '—'}</p>
+                            <p className="font-semibold text-[var(--text)] truncate">{l.employee?.firstName} {l.employee?.lastName}</p>
+                            <p className="text-xs text-[var(--text-muted)] truncate">{l.employee?.department?.name || '—'}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{l.type === 'ARGENT' ? 'Prêt argent' : l.type === 'MARCHANDISE' ? 'Marchandise' : 'Autre'}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{l.type === 'ARGENT' ? 'Prêt argent' : l.type === 'MARCHANDISE' ? 'Marchandise' : 'Autre'}</td>
                       <td className="px-4 py-3 font-semibold">{Number(l.amount).toLocaleString('fr-FR')} FCFA</td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{Number(l.monthlyRepayment).toLocaleString('fr-FR')} FCFA</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{Number(l.monthlyRepayment).toLocaleString('fr-FR')} FCFA</td>
                       <td className={`px-4 py-3 font-semibold ${Number(l.remainingBalance) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{Number(l.remainingBalance).toLocaleString('fr-FR')} FCFA</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.cls}`}><span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} /> {cfg.label}</span>
@@ -553,20 +553,20 @@ export default function LoansManagementPage() {
 
           {/* ══════════ MODAL — fiche détaillée d'un prêt ══════════ */}
           {selectedLoan && (
-            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md" onClick={() => setSelectedLoanId(null)}>
+            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setSelectedLoanId(null)}>
               <motion.div
                 onClick={e => e.stopPropagation()}
                 initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl ring-1 ring-black/5 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-[var(--surface)] rounded-2xl shadow-xl ring-1 ring-black/5 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               >
-                <div className="p-6 bg-gradient-to-br from-sky-50 to-white dark:from-gray-900 dark:to-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4 sticky top-0 z-10">
+                <div className="p-6 bg-[var(--surface-2)] border-b border-[var(--border)] flex items-start justify-between gap-4 sticky top-0 z-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-lg font-bold text-white overflow-hidden shrink-0 shadow-lg shadow-sky-500/30 ring-4 ring-white dark:ring-gray-800">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-lg font-bold text-white overflow-hidden shrink-0 ring-4 ring-[var(--surface)]">
                       {selectedLoan.employee?.photoUrl ? <img src={selectedLoan.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : `${selectedLoan.employee?.firstName?.[0] ?? ''}${selectedLoan.employee?.lastName?.[0] ?? ''}`}
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedLoan.employee?.firstName} {selectedLoan.employee?.lastName}</h2>
-                      <p className="text-sm text-gray-400">{selectedLoan.employee?.position}{selectedLoan.employee?.department ? ` · ${selectedLoan.employee.department.name}` : ''}</p>
+                      <h2 className="text-xl font-bold text-[var(--text)]">{selectedLoan.employee?.firstName} {selectedLoan.employee?.lastName}</h2>
+                      <p className="text-sm text-[var(--text-muted)]">{selectedLoan.employee?.position}{selectedLoan.employee?.department ? ` · ${selectedLoan.employee.department.name}` : ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -574,28 +574,28 @@ export default function LoansManagementPage() {
                       <span className={`w-1.5 h-1.5 rounded-full ${(LOAN_STATUS_CFG[selectedLoan.status] ?? LOAN_STATUS_CFG.PENDING).dot}`} />
                       {(LOAN_STATUS_CFG[selectedLoan.status] ?? LOAN_STATUS_CFG.PENDING).label}
                     </span>
-                    <button onClick={() => setSelectedLoanId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition-colors"><X size={18} /></button>
+                    <button onClick={() => setSelectedLoanId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"><X size={18} /></button>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailTile icon={Banknote} label="Montant" value={`${Number(selectedLoan.amount).toLocaleString('fr-FR')} FCFA`} tone="slate" />
-                    <DetailTile icon={Wallet} label="Mensualité" value={`${Number(selectedLoan.monthlyRepayment).toLocaleString('fr-FR')} FCFA`} tone="sky" />
+                    <DetailTile icon={Wallet} label="Mensualité" value={`${Number(selectedLoan.monthlyRepayment).toLocaleString('fr-FR')} FCFA`} tone="emerald" />
                     <DetailTile icon={PiggyBank} label="Solde restant" value={`${Number(selectedLoan.remainingBalance).toLocaleString('fr-FR')} FCFA`} tone={Number(selectedLoan.remainingBalance) === 0 ? 'emerald' : 'amber'} />
-                    <DetailTile icon={Receipt} label="Type" value={selectedLoan.type} tone="violet" />
+                    <DetailTile icon={Receipt} label="Type" value={selectedLoan.type} tone="amber" />
                   </div>
 
                   {/* Progression du remboursement — repère visuel rapide */}
                   {Number(selectedLoan.amount) > 0 && (
                     <div>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
+                      <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mb-1.5">
                         <span>Progression du remboursement</span>
-                        <span className="font-semibold text-gray-600 dark:text-gray-300">
+                        <span className="font-semibold text-[var(--text-muted)]">
                           {Math.round(((Number(selectedLoan.amount) - Number(selectedLoan.remainingBalance)) / Number(selectedLoan.amount)) * 100)}%
                         </span>
                       </div>
-                      <div className="h-2.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                      <div className="h-2.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
                           style={{ width: `${Math.min(100, Math.round(((Number(selectedLoan.amount) - Number(selectedLoan.remainingBalance)) / Number(selectedLoan.amount)) * 100))}%` }}
@@ -604,7 +604,7 @@ export default function LoansManagementPage() {
                     </div>
                   )}
 
-                  {selectedLoan.reason && <div className="text-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p><p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3 rounded-xl">{selectedLoan.reason}</p></div>}
+                  {selectedLoan.reason && <div className="text-sm"><p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p><p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3 rounded-xl">{selectedLoan.reason}</p></div>}
 
                   {selectedLoan.status === 'REJECTED' && selectedLoan.rejectionReason && (
                     <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl"><Info size={14} className="shrink-0 mt-0.5" /> {selectedLoan.rejectionReason}</div>
@@ -612,26 +612,26 @@ export default function LoansManagementPage() {
 
                   {/* Décision — PARALLÈLE : visible par DRH et DG en même temps, le premier présent tranche */}
                   {selectedLoan.status === 'PENDING' && DRH_ROLES.includes(userRole) && (
-                    <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <div className="space-y-2 pt-2 border-t border-[var(--border)]">
+                      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                         {DG_ROLES.includes(userRole) ? <Landmark size={12} /> : <ShieldCheck size={12} />} Décision
                       </p>
                       {!rejectMode ? (
                         <>
                           <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Remboursement</p>
+                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Remboursement</p>
                             <div className="grid grid-cols-2 gap-2">
                               <button
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(true)}
-                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300' : 'border-gray-200 dark:border-gray-600 text-gray-500'}`}
+                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 Sur la paie
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(false)}
-                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300' : 'border-gray-200 dark:border-gray-600 text-gray-500'}`}
+                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 En espèces
                               </button>
@@ -639,7 +639,7 @@ export default function LoansManagementPage() {
                           </div>
                           <div className="flex gap-2">
                             <button onClick={() => handleLoanDecision('OUI')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider (OUI)</button>
-                            <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
+                            <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
                           </div>
                         </>
                       ) : (
@@ -655,17 +655,17 @@ export default function LoansManagementPage() {
                   )}
 
                   {['ACTIVE', 'PAID'].includes(selectedLoan.status) && DRH_ROLES.includes(userRole) && (
-                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+                    <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-sm">
-                        {selectedLoan.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
-                        <span className="text-gray-600 dark:text-gray-300">
+                        {selectedLoan.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
+                        <span className="text-[var(--text-muted)]">
                           {selectedLoan.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
                         </span>
                       </div>
                       <button
                         onClick={() => setPrintAuthModal('loan')}
                         disabled={isTogglingPrintAuth}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                       >
                         {selectedLoan.printAuthorized ? 'Modifier' : 'Autoriser'}
                       </button>
@@ -674,24 +674,24 @@ export default function LoansManagementPage() {
 
                   <div className="flex gap-2 pt-2">
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedLoan.status === 'PENDING') && (
-                      <button onClick={() => handleDeleteLoan(selectedLoan.id)} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
+                      <button onClick={() => handleDeleteLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
                     )}
                     {['ACTIVE', 'PENDING_DG'].includes(selectedLoan.status) && DRH_ROLES.includes(userRole) && (
-                      <button onClick={() => handleCancelLoan(selectedLoan.id)} className="flex-1 py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
+                      <button onClick={() => handleCancelLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</button>
                     )}
                   </div>
 
                   <div className="flex gap-2">
                     {/* Impression 100% côté navigateur (aucune dépendance serveur) — marche pour Orca (rendu HTML fidèle) comme pour les autres (LoanRequestPrintable), puisque PRINT_ID contient déjà le bon rendu. */}
-                    <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
+                    <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</button>
                     {docData?.company?.documentTemplate === 'ORCA' ? (
-                      <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
+                      <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
                     ) : (
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
                     )}
                   </div>
 
-                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu de la fiche
                   </button>
 
@@ -713,26 +713,26 @@ export default function LoansManagementPage() {
       {/* ══════════════════ AVANCES ══════════════════ */}
       {tab === 'advances' && (
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-[220px]">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Rechercher un employé</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Rechercher un employé</label>
                 <div className="relative">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input value={advanceNameSearch} onChange={e => setAdvanceNameSearch(e.target.value)} placeholder="Nom de l'employé…" className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input value={advanceNameSearch} onChange={e => setAdvanceNameSearch(e.target.value)} placeholder="Nom de l'employé…" className="w-full pl-9 pr-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Statut</label>
-                <select value={advanceStatusFilter} onChange={e => setAdvanceStatusFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Statut</label>
+                <select value={advanceStatusFilter} onChange={e => setAdvanceStatusFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                   <option value="">Tous les statuts</option>
                   {['PENDING', 'APPROVED', 'DEDUCTED', 'PAID', 'REJECTED', 'CANCELLED'].map(s => <option key={s} value={s}>{ADVANCE_STATUS_CFG[s]?.label ?? s}</option>)}
                 </select>
               </div>
               {advanceDepartments.length > 0 && (
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Département</label>
-                  <select value={advanceDeptFilter} onChange={e => setAdvanceDeptFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Département</label>
+                  <select value={advanceDeptFilter} onChange={e => setAdvanceDeptFilter(e.target.value)} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                     <option value="">Tous les départements</option>
                     {advanceDepartments.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -741,15 +741,15 @@ export default function LoansManagementPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-900">
-                <tr>{['Employé', 'Montant', 'Déduction prévue', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">{h}</th>)}</tr>
+              <thead className="bg-[var(--surface-2)]">
+                <tr>{['Employé', 'Montant', 'Déduction prévue', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase">{h}</th>)}</tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-[var(--border)]">
                 {filteredAdvances.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-14 text-gray-400 text-sm">
-                    <Wallet size={22} className="mx-auto mb-2 text-gray-300" />
+                  <tr><td colSpan={5} className="text-center py-14 text-[var(--text-muted)] text-sm">
+                    <Wallet size={22} className="mx-auto mb-2 text-[var(--text-muted)]" />
                     Aucune avance pour ce filtre.
                   </td></tr>
                 ) : filteredAdvances.map(a => {
@@ -757,20 +757,20 @@ export default function LoansManagementPage() {
                   const Icon = cfg.icon;
                   const initials = `${a.employee?.firstName?.[0] ?? ''}${a.employee?.lastName?.[0] ?? ''}`;
                   return (
-                    <tr key={a.id} onClick={() => { setSelectedAdvanceId(a.id); setRejectMode(false); setRejectionReason(''); }} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                    <tr key={a.id} onClick={() => { setSelectedAdvanceId(a.id); setRejectMode(false); setRejectionReason(''); }} className="cursor-pointer hover:bg-[var(--surface-2)]/40 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(a.employee, a.employeeId); }} className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0 hover:ring-2 hover:ring-sky-400">
+                          <button onClick={(e) => { e.stopPropagation(); openEmployeeHistory(a.employee, a.employeeId); }} className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0 hover:ring-2 hover:ring-emerald-400">
                             {a.employee?.photoUrl ? <img src={a.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
                           </button>
                           <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 dark:text-white truncate">{a.employee?.firstName} {a.employee?.lastName}</p>
-                            <p className="text-xs text-gray-400 truncate">{a.employee?.department?.name || '—'}</p>
+                            <p className="font-semibold text-[var(--text)] truncate">{a.employee?.firstName} {a.employee?.lastName}</p>
+                            <p className="text-xs text-[var(--text-muted)] truncate">{a.employee?.department?.name || '—'}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 font-semibold">{Number(a.amount).toLocaleString('fr-FR')} FCFA</td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{MONTH_LABELS[a.deductMonth - 1]} {a.deductYear}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{MONTH_LABELS[a.deductMonth - 1]} {a.deductYear}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.cls}`}><span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} /> {cfg.label}</span>
                       </td>
@@ -790,20 +790,20 @@ export default function LoansManagementPage() {
 
           {/* ══════════ MODAL — fiche détaillée d'une avance ══════════ */}
           {selectedAdvance && (
-            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md" onClick={() => setSelectedAdvanceId(null)}>
+            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setSelectedAdvanceId(null)}>
               <motion.div
                 onClick={e => e.stopPropagation()}
                 initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', damping: 24, stiffness: 300 }}
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl ring-1 ring-black/5 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-[var(--surface)] rounded-2xl shadow-xl ring-1 ring-black/5 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               >
-                <div className="p-6 bg-gradient-to-br from-sky-50 to-white dark:from-gray-900 dark:to-gray-800 border-b border-gray-100 dark:border-gray-700 flex items-start justify-between gap-4 sticky top-0 z-10">
+                <div className="p-6 bg-[var(--surface-2)] border-b border-[var(--border)] flex items-start justify-between gap-4 sticky top-0 z-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-lg font-bold text-white overflow-hidden shrink-0 shadow-lg shadow-sky-500/30 ring-4 ring-white dark:ring-gray-800">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center text-lg font-bold text-white overflow-hidden shrink-0 ring-4 ring-[var(--surface)]">
                       {selectedAdvance.employee?.photoUrl ? <img src={selectedAdvance.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : `${selectedAdvance.employee?.firstName?.[0] ?? ''}${selectedAdvance.employee?.lastName?.[0] ?? ''}`}
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedAdvance.employee?.firstName} {selectedAdvance.employee?.lastName}</h2>
-                      <p className="text-sm text-gray-400">{selectedAdvance.employee?.position}{selectedAdvance.employee?.department ? ` · ${selectedAdvance.employee.department.name}` : ''}</p>
+                      <h2 className="text-xl font-bold text-[var(--text)]">{selectedAdvance.employee?.firstName} {selectedAdvance.employee?.lastName}</h2>
+                      <p className="text-sm text-[var(--text-muted)]">{selectedAdvance.employee?.position}{selectedAdvance.employee?.department ? ` · ${selectedAdvance.employee.department.name}` : ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -811,25 +811,25 @@ export default function LoansManagementPage() {
                       <span className={`w-1.5 h-1.5 rounded-full ${(ADVANCE_STATUS_CFG[selectedAdvance.status] ?? ADVANCE_STATUS_CFG.PENDING).dot}`} />
                       {(ADVANCE_STATUS_CFG[selectedAdvance.status] ?? ADVANCE_STATUS_CFG.PENDING).label}
                     </span>
-                    <button onClick={() => setSelectedAdvanceId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition-colors"><X size={18} /></button>
+                    <button onClick={() => setSelectedAdvanceId(null)} className="w-9 h-9 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"><X size={18} /></button>
                   </div>
                 </div>
 
                 <div className="p-6 space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailTile icon={Banknote} label="Montant" value={`${Number(selectedAdvance.amount).toLocaleString('fr-FR')} FCFA`} tone="slate" />
-                    <DetailTile icon={Wallet} label="Déduction prévue" value={`${MONTH_LABELS[selectedAdvance.deductMonth - 1]} ${selectedAdvance.deductYear}`} tone="sky" />
+                    <DetailTile icon={Wallet} label="Déduction prévue" value={`${MONTH_LABELS[selectedAdvance.deductMonth - 1]} ${selectedAdvance.deductYear}`} tone="emerald" />
                   </div>
 
                   {Number(selectedAdvance.amount) > 0 && ['APPROVED', 'PAID', 'DEDUCTED'].includes(selectedAdvance.status) && (
                     <div>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
+                      <div className="flex items-center justify-between text-xs text-[var(--text-muted)] mb-1.5">
                         <span>Progression du remboursement</span>
-                        <span className="font-semibold text-gray-600 dark:text-gray-300">
+                        <span className="font-semibold text-[var(--text-muted)]">
                           {Math.round(((Number(selectedAdvance.amount) - Number(selectedAdvance.remainingBalance ?? 0)) / Number(selectedAdvance.amount)) * 100)}%
                         </span>
                       </div>
-                      <div className="h-2.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                      <div className="h-2.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
                           style={{ width: `${Math.min(100, Math.round(((Number(selectedAdvance.amount) - Number(selectedAdvance.remainingBalance ?? 0)) / Number(selectedAdvance.amount)) * 100))}%` }}
@@ -838,26 +838,26 @@ export default function LoansManagementPage() {
                     </div>
                   )}
 
-                  {selectedAdvance.reason && <div className="text-sm"><p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Motif</p><p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/40 p-3 rounded-xl">{selectedAdvance.reason}</p></div>}
+                  {selectedAdvance.reason && <div className="text-sm"><p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p><p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3 rounded-xl">{selectedAdvance.reason}</p></div>}
 
                   {selectedAdvance.status === 'PENDING' && DRH_ROLES.includes(userRole) && (
-                    <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div className="space-y-2 pt-2 border-t border-[var(--border)]">
                       {!rejectMode ? (
                         <>
                           <div>
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Remboursement</p>
+                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Remboursement</p>
                             <div className="grid grid-cols-2 gap-2">
                               <button
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(true)}
-                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300' : 'border-gray-200 dark:border-gray-600 text-gray-500'}`}
+                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 Sur la paie
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setRecoverViaPayroll(false)}
-                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300' : 'border-gray-200 dark:border-gray-600 text-gray-500'}`}
+                                className={`px-3 py-2 rounded-xl border-2 text-xs font-bold transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                               >
                                 En espèces
                               </button>
@@ -865,7 +865,7 @@ export default function LoansManagementPage() {
                           </div>
                           <div className="flex gap-2">
                             <button onClick={() => handleAdvanceDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Approuver</button>
-                            <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
+                            <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
                           </div>
                         </>
                       ) : (
@@ -879,24 +879,24 @@ export default function LoansManagementPage() {
                       <button onClick={() => handleAdvanceCashRepayment(selectedAdvance.id, Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
                         <Wallet size={16} /> Confirmer un remboursement
                       </button>
-                      <button onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                      <button onClick={() => handleMarkAdvancePaidCash(selectedAdvance.id)} className="w-full py-2 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)]">
                         Solder tout en espèces d'un coup
                       </button>
                     </div>
                   )}
 
                   {['APPROVED', 'PAID', 'DEDUCTED'].includes(selectedAdvance.status) && DRH_ROLES.includes(userRole) && (
-                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3">
+                    <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 text-sm">
-                        {selectedAdvance.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-gray-400" />}
-                        <span className="text-gray-600 dark:text-gray-300">
+                        {selectedAdvance.printAuthorized ? <Unlock size={14} className="text-emerald-500" /> : <Lock size={14} className="text-[var(--text-muted)]" />}
+                        <span className="text-[var(--text-muted)]">
                           {selectedAdvance.printAuthorized ? "Impression autorisée pour l'employé" : 'Impression non autorisée'}
                         </span>
                       </div>
                       <button
                         onClick={() => setPrintAuthModal('advance')}
                         disabled={isTogglingPrintAuth}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-40"
                       >
                         {selectedAdvance.printAuthorized ? 'Modifier' : 'Autoriser'}
                       </button>
@@ -904,19 +904,19 @@ export default function LoansManagementPage() {
                   )}
 
                   {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedAdvance.status === 'PENDING') && (
-                    <button onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="w-full py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
+                    <button onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="w-full py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
                   )}
 
                   <div className="flex gap-2">
-                    <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700"><Printer size={16} /> Imprimer</button>
+                    <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</button>
                     {docData?.company?.documentTemplate === 'ORCA' ? (
-                      <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
+                      <button onClick={handleDownloadOrcaXlsx} disabled={isExportingXlsx} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingXlsx ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Fiche Excel</button>
                     ) : (
-                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
+                      <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">{isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF</button>
                     )}
                   </div>
 
-                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-gray-300 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu de la fiche
                   </button>
 
@@ -939,35 +939,35 @@ export default function LoansManagementPage() {
         <div className="space-y-4">
           {/* Synthèse globale — toujours en haut, quelle que soit la vue */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 flex items-center justify-center shrink-0"><Receipt size={18} /></div>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center shrink-0"><Receipt size={18} /></div>
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total retenues</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">{dedGlobalStats.total.toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Total retenues</p>
+                <p className="text-lg font-bold text-[var(--text)]">{dedGlobalStats.total.toLocaleString('fr-FR')} FCFA</p>
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-3">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center shrink-0"><Wallet size={18} /></div>
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Solde global restant</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">{dedGlobalStats.remaining.toLocaleString('fr-FR')} FCFA</p>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Solde global restant</p>
+                <p className="text-lg font-bold text-[var(--text)]">{dedGlobalStats.remaining.toLocaleString('fr-FR')} FCFA</p>
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-600 flex items-center justify-center shrink-0"><Users size={18} /></div>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center shrink-0"><Users size={18} /></div>
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Employés concernés</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">{dedGlobalStats.employeeCount}</p>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employés concernés</p>
+                <p className="text-lg font-bold text-[var(--text)]">{dedGlobalStats.employeeCount}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-600 flex items-center justify-center shrink-0"><Plus size={18} /></div>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[var(--border)] flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center shrink-0"><Plus size={18} /></div>
               <div>
-                <p className="font-bold text-sm text-gray-900 dark:text-white">Nouvelle retenue</p>
-                <p className="text-xs text-gray-400">Pharmacie, cantine, casse matériel, ou tout autre motif</p>
+                <p className="font-bold text-sm text-[var(--text)]">Nouvelle retenue</p>
+                <p className="text-xs text-[var(--text-muted)]">Pharmacie, cantine, casse matériel, ou tout autre motif</p>
               </div>
             </div>
 
@@ -975,32 +975,32 @@ export default function LoansManagementPage() {
               {/* Colonne gauche : qui / quoi / combien / quand */}
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Employé</label>
-                  <select value={newDeduction.employeeId} onChange={e => setNewDeduction({ ...newDeduction, employeeId: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Employé</label>
+                  <select value={newDeduction.employeeId} onChange={e => setNewDeduction({ ...newDeduction, employeeId: e.target.value })} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                     <option value="">Sélectionner un employé…</option>
                     {employeesList.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Libellé</label>
-                    <input value={newDeduction.label} onChange={e => setNewDeduction({ ...newDeduction, label: e.target.value })} placeholder="Ex : Pharmacie" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Libellé</label>
+                    <input value={newDeduction.label} onChange={e => setNewDeduction({ ...newDeduction, label: e.target.value })} placeholder="Ex : Pharmacie" className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Montant total</label>
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Montant total</label>
                     <div className="relative">
-                      <input type="number" value={newDeduction.amount} onChange={e => setNewDeduction({ ...newDeduction, amount: e.target.value })} placeholder="0" className="w-full pl-3 pr-14 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold pointer-events-none">FCFA</span>
+                      <input type="number" value={newDeduction.amount} onChange={e => setNewDeduction({ ...newDeduction, amount: e.target.value })} placeholder="0" className="w-full pl-3 pr-14 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] font-semibold pointer-events-none">FCFA</span>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><Calendar size={12} /> Période de référence</label>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><Calendar size={12} /> Période de référence</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <select value={newDeduction.month} onChange={e => setNewDeduction({ ...newDeduction, month: Number(e.target.value) })} className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                    <select value={newDeduction.month} onChange={e => setNewDeduction({ ...newDeduction, month: Number(e.target.value) })} className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                       {MONTH_LABELS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                     </select>
-                    <select value={newDeduction.year} onChange={e => setNewDeduction({ ...newDeduction, year: Number(e.target.value) })} className="px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                    <select value={newDeduction.year} onChange={e => setNewDeduction({ ...newDeduction, year: Number(e.target.value) })} className="px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                       {dedAvailableYears.map((y: any) => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
@@ -1008,21 +1008,21 @@ export default function LoansManagementPage() {
               </div>
 
               {/* Colonne droite : comment ça se règle */}
-              <div className="space-y-4 lg:border-l lg:border-gray-100 dark:lg:border-gray-700 lg:pl-6">
+              <div className="space-y-4 lg:border-l lg:border-[var(--border)] lg:pl-6">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Mode de prélèvement</label>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Mode de prélèvement</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setNewDeduction({ ...newDeduction, recoverViaPayroll: true })}
-                      className={`px-3 py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1.5 ${newDeduction.recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300' : 'border-gray-200 dark:border-gray-600 text-gray-500'}`}
+                      className={`px-3 py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1.5 ${newDeduction.recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                     >
                       <CreditCard size={18} /> Sur la paie
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewDeduction({ ...newDeduction, recoverViaPayroll: false })}
-                      className={`px-3 py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1.5 ${!newDeduction.recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300' : 'border-gray-200 dark:border-gray-600 text-gray-500'}`}
+                      className={`px-3 py-3 rounded-xl border-2 text-xs font-bold transition-all flex flex-col items-center gap-1.5 ${!newDeduction.recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
                     >
                       <Banknote size={18} /> En espèces
                     </button>
@@ -1031,30 +1031,30 @@ export default function LoansManagementPage() {
 
                 {newDeduction.recoverViaPayroll ? (
                   <div>
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Montant retiré par mois</label>
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Montant retiré par mois</label>
                     <div className="relative mb-2">
                       <input
                         type="number"
                         value={newDeduction.monthlyDeduction}
                         onChange={e => setNewDeduction({ ...newDeduction, monthlyDeduction: e.target.value })}
                         placeholder="Laisser vide = tout en une fois"
-                        className="w-full pl-3 pr-14 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm"
+                        className="w-full pl-3 pr-14 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold pointer-events-none">FCFA</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] font-semibold pointer-events-none">FCFA</span>
                     </div>
-                    <div className="flex items-start gap-2 text-xs text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-900/40 rounded-xl p-3">
+                    <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-3">
                       <Info size={14} className="shrink-0 mt-0.5" />
                       <span>Si renseigné, la paie ne retire que ce montant à chaque génération, jusqu'à ce que le solde soit épuisé — utile pour ne pas trop taper sur un petit salaire.</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/40 border border-gray-100 dark:border-gray-700 rounded-xl p-3">
+                  <div className="flex items-start gap-2 text-xs text-[var(--text-muted)] bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-3">
                     <Info size={14} className="shrink-0 mt-0.5" />
                     <span>Cette retenue ne sera jamais prélevée automatiquement sur la paie — vous l'enregistrerez manuellement au fur et à mesure des règlements en espèces.</span>
                   </div>
                 )}
 
-                <button onClick={handleAddDeduction} disabled={isAddingDeduction || !newDeduction.employeeId || !newDeduction.label || !newDeduction.amount} className="w-full py-3 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2">
+                <button onClick={handleAddDeduction} disabled={isAddingDeduction || !newDeduction.employeeId || !newDeduction.label || !newDeduction.amount} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2">
                   {isAddingDeduction ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Ajouter la retenue
                 </button>
               </div>
@@ -1063,33 +1063,33 @@ export default function LoansManagementPage() {
 
           {/* Filtres — recherche + vue, avec libellés clairs pour que ce soit
               compréhensible sans avoir à deviner ce que fait chaque contrôle. */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
             <div className="flex flex-wrap items-end gap-3">
               <div className="flex-1 min-w-[220px]">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Rechercher un employé</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Rechercher un employé</label>
                 <div className="relative">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input value={dedSearch} onChange={e => setDedSearch(e.target.value)} placeholder="Nom de l'employé…" className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                  <input value={dedSearch} onChange={e => setDedSearch(e.target.value)} placeholder="Nom de l'employé…" className="w-full pl-9 pr-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Vue</label>
-                <div className="flex rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <button onClick={() => setDedView('mensuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'mensuelle' ? 'bg-sky-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Mensuelle</button>
-                  <button onClick={() => setDedView('annuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'annuelle' ? 'bg-sky-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Annuelle</button>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Vue</label>
+                <div className="flex rounded-xl border border-[var(--border)] overflow-hidden">
+                  <button onClick={() => setDedView('mensuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'mensuelle' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</button>
+                  <button onClick={() => setDedView('annuelle')} className={`px-3 py-2 text-xs font-bold transition-colors ${dedView === 'annuelle' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</button>
                 </div>
               </div>
               {dedView === 'mensuelle' && (
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Mois</label>
-                  <select value={dedMonth} onChange={e => setDedMonth(Number(e.target.value))} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Mois</label>
+                  <select value={dedMonth} onChange={e => setDedMonth(Number(e.target.value))} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                     {MONTH_LABELS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                   </select>
                 </div>
               )}
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 block">Année</label>
-                <select value={dedYear} onChange={e => setDedYear(Number(e.target.value))} className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Année</label>
+                <select value={dedYear} onChange={e => setDedYear(Number(e.target.value))} className="px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                   {dedAvailableYears.map((y: any) => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
@@ -1097,51 +1097,51 @@ export default function LoansManagementPage() {
           </div>
 
           {dedView === 'mensuelle' ? (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900">
-                  <tr>{['Employé', 'Libellé', 'Solde restant', 'Mode', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase">{h}</th>)}</tr>
+                <thead className="bg-[var(--surface-2)]">
+                  <tr>{['Employé', 'Libellé', 'Solde restant', 'Mode', 'Statut', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase">{h}</th>)}</tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody className="divide-y divide-[var(--border)]">
                   {filteredDeductions.length === 0 ? (
-                    <tr><td colSpan={6} className="text-center py-14 text-gray-400 text-sm">
-                      <Receipt size={22} className="mx-auto mb-2 text-gray-300" />
+                    <tr><td colSpan={6} className="text-center py-14 text-[var(--text-muted)] text-sm">
+                      <Receipt size={22} className="mx-auto mb-2 text-[var(--text-muted)]" />
                       Aucune retenue créée en {MONTH_LABELS[dedMonth - 1]} {dedYear}.
                     </td></tr>
                   ) : filteredDeductions.map((d: any) => {
                     const pct = Number(d.amount) > 0 ? Math.round(((Number(d.amount) - Number(d.remainingBalance)) / Number(d.amount)) * 100) : 0;
                     const initials = `${d.employee?.firstName?.[0] ?? ''}${d.employee?.lastName?.[0] ?? ''}`;
                     return (
-                      <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+                      <tr key={d.id} className="hover:bg-[var(--surface-2)]/40 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0">
+                            <div className="w-9 h-9 rounded-xl bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0">
                               {d.employee?.photoUrl ? <img src={d.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
                             </div>
-                            <p className="font-semibold text-gray-900 dark:text-white truncate">{d.employee?.firstName} {d.employee?.lastName}</p>
+                            <p className="font-semibold text-[var(--text)] truncate">{d.employee?.firstName} {d.employee?.lastName}</p>
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-gray-700 dark:text-gray-200">{d.label}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-[var(--text)]">{d.label}</p>
+                          <p className="text-xs text-[var(--text-muted)]">
                             {Number(d.amount).toLocaleString('fr-FR')} FCFA total
                             {d.recoverViaPayroll && d.monthlyDeduction != null && ` · ${Number(d.monthlyDeduction).toLocaleString('fr-FR')} FCFA/mois`}
                           </p>
                         </td>
                         <td className="px-4 py-3 min-w-[140px]">
                           <p className={`font-semibold ${Number(d.remainingBalance) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{Number(d.remainingBalance).toLocaleString('fr-FR')} FCFA</p>
-                          <div className="h-1.5 w-24 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden mt-1">
+                          <div className="h-1.5 w-24 rounded-full bg-[var(--surface-2)] overflow-hidden mt-1">
                             <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full" style={{ width: `${Math.min(100, pct)}%` }} />
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${d.recoverViaPayroll ? 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-900/20 dark:text-sky-300' : 'bg-violet-50 text-violet-700 border-violet-100 dark:bg-violet-900/20 dark:text-violet-300'}`}>
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${d.recoverViaPayroll ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300' : 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300'}`}>
                             {d.recoverViaPayroll ? <CreditCard size={11} /> : <Banknote size={11} />} {d.recoverViaPayroll ? 'Sur la paie' : 'Espèces'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${d.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300' : d.status === 'CANCELLED' ? 'bg-gray-50 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400' : 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300'}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${d.status === 'PENDING' ? 'bg-amber-500' : d.status === 'CANCELLED' ? 'bg-gray-400' : 'bg-emerald-500'}`} />
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md border ${d.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300' : d.status === 'CANCELLED' ? 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]' : 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300'}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${d.status === 'PENDING' ? 'bg-amber-500' : d.status === 'CANCELLED' ? 'bg-[var(--text-muted)]' : 'bg-emerald-500'}`} />
                             {d.status === 'PENDING' ? 'En attente' : d.status === 'CANCELLED' ? 'Annulée' : 'Soldée'}
                           </span>
                         </td>
@@ -1153,7 +1153,7 @@ export default function LoansManagementPage() {
                                 value={dedCashAmounts[d.id] ?? ''}
                                 onChange={e => setDedCashAmounts(prev => ({ ...prev, [d.id]: e.target.value }))}
                                 placeholder="Montant"
-                                className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-xs"
+                                className="w-24 px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs"
                               />
                               <button onClick={() => handleCashRepaymentDeduction(d.id)} disabled={payingCashId === d.id || !dedCashAmounts[d.id]} className="text-emerald-600 hover:underline text-xs font-semibold disabled:opacity-40 disabled:no-underline whitespace-nowrap">
                                 {payingCashId === d.id ? 'En cours…' : 'Régler'}
@@ -1171,43 +1171,43 @@ export default function LoansManagementPage() {
               </table>
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-x-auto">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+                <thead className="bg-[var(--surface-2)]">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase sticky left-0 bg-gray-50 dark:bg-gray-900">Employé</th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase sticky left-0 bg-[var(--surface-2)]">Employé</th>
                     {MONTH_LABELS.map((m, i) => (
-                      <th key={m} className={`px-3 py-3 text-right text-xs font-bold uppercase ${i + 1 === new Date().getMonth() + 1 && dedYear === new Date().getFullYear() ? 'text-sky-600 bg-sky-50 dark:bg-sky-900/20 dark:text-sky-300' : 'text-gray-400'}`}>{m}</th>
+                      <th key={m} className={`px-3 py-3 text-right text-xs font-bold uppercase ${i + 1 === new Date().getMonth() + 1 && dedYear === new Date().getFullYear() ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-300' : 'text-[var(--text-muted)]'}`}>{m}</th>
                     ))}
-                    <th className="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase">Total {dedYear}</th>
+                    <th className="px-4 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase">Total {dedYear}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody className="divide-y divide-[var(--border)]">
                   {annualDeductions.length === 0 ? (
-                    <tr><td colSpan={14} className="text-center py-14 text-gray-400 text-sm">
-                      <Receipt size={22} className="mx-auto mb-2 text-gray-300" />
+                    <tr><td colSpan={14} className="text-center py-14 text-[var(--text-muted)] text-sm">
+                      <Receipt size={22} className="mx-auto mb-2 text-[var(--text-muted)]" />
                       Aucune retenue pour {dedYear}.
                     </td></tr>
                   ) : annualDeductions.map(row => {
                     const initials = `${row.employee?.firstName?.[0] ?? ''}${row.employee?.lastName?.[0] ?? ''}`;
                     const remaining = row.total - row.paid;
                     return (
-                      <tr key={row.employee?.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
-                        <td className="px-4 py-3 sticky left-0 bg-white dark:bg-gray-800">
+                      <tr key={row.employee?.id} className="hover:bg-[var(--surface-2)]/40 transition-colors">
+                        <td className="px-4 py-3 sticky left-0 bg-[var(--surface)]">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-500 overflow-hidden shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center text-[10px] font-bold text-[var(--text-muted)] overflow-hidden shrink-0">
                               {row.employee?.photoUrl ? <img src={row.employee.photoUrl} className="w-full h-full object-cover" alt="" /> : initials}
                             </div>
-                            <p className="font-semibold text-gray-900 dark:text-white whitespace-nowrap">{row.employee?.firstName} {row.employee?.lastName}</p>
+                            <p className="font-semibold text-[var(--text)] whitespace-nowrap">{row.employee?.firstName} {row.employee?.lastName}</p>
                           </div>
                         </td>
                         {row.perMonth.map((v, i) => (
-                          <td key={i} className={`px-3 py-3 text-right text-xs ${v > 0 ? 'text-gray-700 dark:text-gray-200 font-semibold bg-amber-50/50 dark:bg-amber-900/10' : 'text-gray-300 dark:text-gray-600'}`}>
+                          <td key={i} className={`px-3 py-3 text-right text-xs ${v > 0 ? 'text-[var(--text)] font-semibold bg-amber-50/50 dark:bg-amber-900/10' : 'text-[var(--text-muted)]'}`}>
                             {v > 0 ? v.toLocaleString('fr-FR') : '—'}
                           </td>
                         ))}
                         <td className="px-4 py-3 text-right">
-                          <p className="font-bold text-gray-900 dark:text-white">{row.total.toLocaleString('fr-FR')} FCFA</p>
+                          <p className="font-bold text-[var(--text)]">{row.total.toLocaleString('fr-FR')} FCFA</p>
                           {remaining > 0 ? (
                             <p className="text-xs text-amber-600 font-semibold">{remaining.toLocaleString('fr-FR')} restants</p>
                           ) : (
@@ -1262,13 +1262,11 @@ export default function LoansManagementPage() {
   );
 }
 
-function DetailTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'sky' | 'emerald' | 'amber' | 'violet' }) {
+function DetailTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'emerald' | 'amber' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200',
-    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300',
+    slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
     emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
     amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
-    violet: 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300',
   };
   return (
     <div className={`p-3 rounded-xl ${cls[tone]}`}>
@@ -1287,7 +1285,7 @@ function RejectForm({ reason, setReason, onConfirm, onCancel, isProcessing }: { 
         <button onClick={onConfirm} disabled={isProcessing || !reason.trim()} className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-40 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
           {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Confirmer le refus
         </button>
-        <button onClick={onCancel} className="px-4 py-2.5 border border-gray-200 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500">Annuler</button>
+        <button onClick={onCancel} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
       </div>
     </div>
   );

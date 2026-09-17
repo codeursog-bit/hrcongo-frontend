@@ -23,9 +23,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
 
   // Ces routes ont leur propre layout — ne JAMAIS intercepter
-  const isCabinetRoute = pathname?.startsWith('/cabinet/') ?? false;
-  const isPmeRoute     = pathname?.startsWith('/pme/')     ?? false;
-  const isSpecialRoute = isCabinetRoute || isPmeRoute;
+  const isCabinetRoute   = pathname?.startsWith('/cabinet/')     ?? false;
+  const isPmeRoute       = pathname?.startsWith('/pme/')         ?? false;
+  // 🆕 Espace admin multi-entreprises — sa propre sidebar (PortfolioSidebar),
+  // pas de redirection cabinet/pme à appliquer ici.
+  const isPortfolioRoute = pathname?.startsWith('/portefeuille/') ?? false;
+  const isSpecialRoute   = isCabinetRoute || isPmeRoute || isPortfolioRoute;
 
   useEffect(() => {
     // ✅ Attendre que useAuth ait fini (verify + éventuel refresh)
@@ -67,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }
 
-  // Routes /cabinet/ et /pme/ → pas de DashboardShell (layout propre)
+  // Routes /cabinet/, /pme/ et /portefeuille/ → pas de DashboardShell (layout propre)
   if (isSpecialRoute) return <>{children}</>;
 
   // Routes dashboard Konza normales

@@ -79,10 +79,10 @@ function formatDuration(days: number): string {
 function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-        <Icon size={13} className="text-gray-400 dark:text-gray-500" />
+      <div className="w-6 h-6 rounded-lg bg-[var(--surface-2)] flex items-center justify-center">
+        <Icon size={13} className="text-[var(--text-muted)]" />
       </div>
-      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)]">
         {label}
       </span>
     </div>
@@ -95,12 +95,12 @@ function Field({ label, required, hint, children }: {
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="flex items-center gap-1 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      <label className="flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
         {label}
         {required && <span className="text-red-400">*</span>}
       </label>
       {children}
-      {hint && <p className="text-[11px] text-gray-400 dark:text-gray-500">{hint}</p>}
+      {hint && <p className="text-[11px] text-[var(--text-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -109,7 +109,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 dark:focus:border-sky-500 transition-all ${className}`}
+      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all ${className}`}
     />
   );
 }
@@ -133,14 +133,14 @@ function ContractDurationPreview({ hireDate, endDate, contractType }: {
     <motion.div
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
+      className="mt-3 p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-3"
     >
       <div className="flex items-center justify-between text-xs">
-        <span className="text-gray-500 flex items-center gap-1.5"><Clock size={12} /> Durée totale</span>
-        <span className="font-bold text-gray-900 dark:text-white">{formatDuration(totalDays)}</span>
+        <span className="text-[var(--text-muted)] flex items-center gap-1.5"><Clock size={12} /> Durée totale</span>
+        <span className="font-bold text-[var(--text)]">{formatDuration(totalDays)}</span>
       </div>
       <div>
-        <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
@@ -148,7 +148,7 @@ function ContractDurationPreview({ hireDate, endDate, contractType }: {
             className={`h-full rounded-full ${barColor}`}
           />
         </div>
-        <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+        <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1">
           <span>{format(start, 'd MMM yyyy', { locale: fr })}</span>
           <span className={daysLeft <= 30 ? 'text-amber-500 font-bold' : ''}>
             {format(end, 'd MMM yyyy', { locale: fr })}
@@ -270,16 +270,16 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
 
         {/* Step title */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+          <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">
             Contrat & Rémunération
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-[var(--text-muted)] mt-1">
             Définissons les conditions d'emploi
           </p>
         </div>
 
         {/* ── BLOC 1 : Poste & Affectation ──────────────────────────────────── */}
-        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/50 space-y-4">
           <SectionLabel icon={Building2} label="Poste & Affectation" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -299,13 +299,13 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                     <AlertCircle size={12} /> Aucun département
                   </p>
                   <button type="button" onClick={() => setShowDeptModal(true)}
-                    className="w-full py-2 px-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5">
+                    className="w-full py-2 px-3 bg-[var(--text)] text-[var(--bg)] font-bold text-xs rounded-lg flex items-center justify-center gap-1.5">
                     <Plus size={13} /> Créer le premier
                   </button>
                 </div>
               ) : (
                 <button type="button" onClick={() => setShowDeptModal(true)}
-                  className="mt-1.5 text-xs text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1 hover:underline">
+                  className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 hover:underline">
                   <Plus size={12} /> Créer un département
                 </button>
               )}
@@ -324,17 +324,17 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
 
           {/* Convention collective */}
           {companyConvention && !isLoadingConvention && conventionCategories.length > 0 && (
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+            <div className="p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-3">
               <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-gray-500" />
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                <Sparkles size={14} className="text-[var(--text-muted)]" />
+                <span className="text-xs font-bold text-[var(--text-muted)]">
                   Grade conventionnel · {companyConvention}
                 </span>
               </div>
               <select
                 value={formData.professionalCategory || ''}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full px-3.5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+                className="w-full px-3.5 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
               >
                 <option value="">Sélectionner le grade…</option>
                 {conventionCategories.map((cat) => (
@@ -344,8 +344,8 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 ))}
               </select>
               {formData.professionalCategory && (
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                  <span className="font-mono bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300">{formData.professionalCategory}</span>
+                <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-1 mt-1">
+                  <span className="font-mono bg-[var(--surface-2)] px-1.5 py-0.5 rounded text-[var(--text-muted)]">{formData.professionalCategory}</span>
                   <span>enregistré comme grade de l’employé</span>
                 </p>
               )}
@@ -355,7 +355,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
           {/* Date d'embauche */}
           <Field label="Date d'embauche" required>
             <div className="relative">
-              <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
               <Input
                 type="date"
                 name="hireDate"
@@ -368,7 +368,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
         </div>
 
         {/* ── BLOC 2 : Type de contrat ──────────────────────────────────────── */}
-        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/50 space-y-4">
           <SectionLabel icon={Briefcase} label="Type de contrat" />
 
           {/* Contract type pills */}
@@ -385,8 +385,8 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                   onClick={() => handleContractTypeChange(type)}
                   className={`relative p-3 rounded-xl border text-center transition-all ${
                     isSelected
-                      ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg'
-                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? 'border-[var(--text)] bg-[var(--text)] text-[var(--bg)] shadow-lg'
+                      : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                   }`}
                 >
                   <ContractIcon size={16} className="mx-auto mb-1" />
@@ -405,7 +405,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="p-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700"
+                className="p-3.5 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]"
               >
                 <div className="grid grid-cols-3 gap-3 text-[11px]">
                   {[
@@ -414,13 +414,13 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                     { label: 'TUS',   value: contractMeta?.tus },
                   ].map(({ label, value }) => (
                     <div key={label}>
-                      <p className="font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
-                      <p className="font-semibold text-gray-700 dark:text-gray-300 text-[11px] leading-tight">{value}</p>
+                      <p className="font-black text-[var(--text-muted)] uppercase tracking-wider mb-0.5">{label}</p>
+                      <p className="font-semibold text-[var(--text-muted)] text-[11px] leading-tight">{value}</p>
                     </div>
                   ))}
                 </div>
                 {contractMeta?.alertes.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                  <div className="mt-2 pt-2 border-t border-[var(--border)] space-y-1">
                     {contractMeta.alertes.map((a, i) => (
                       <p key={i} className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                         <AlertCircle size={10} className="shrink-0" /> {a}
@@ -434,7 +434,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                   </p>
                 )}
                 {formData.contractType === 'INTERIM' && (
-                  <p className="text-[11px] text-gray-500 flex items-center gap-1.5 mt-1.5">
+                  <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5 mt-1.5">
                     <RefreshCw size={10} /> Aucun bulletin généré côté entreprise
                   </p>
                 )}
@@ -454,7 +454,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 className="space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                     <CalendarDays size={12} /> Date de fin <span className="text-red-400">*</span>
                   </label>
                   {/* Durée suggérée */}
@@ -462,7 +462,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                     <div className="flex gap-1.5 flex-wrap justify-end">
                       {suggestions.map((s) => (
                         <button key={s.months} type="button" onClick={() => applySuggestion(s.months)}
-                          className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[11px] font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                          className="px-2.5 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-lg text-[11px] font-bold hover:bg-[var(--border)] transition-colors">
                           +{s.label}
                         </button>
                       ))}
@@ -494,16 +494,16 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.22 }}
-                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-3"
+                className="p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Clock size={13} className="text-gray-400" />
-                    <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                      Période d'essai <span className="font-normal text-gray-400 lowercase">(optionnel)</span>
+                    <Clock size={13} className="text-[var(--text-muted)]" />
+                    <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                      Période d'essai <span className="font-normal text-[var(--text-muted)] lowercase">(optionnel)</span>
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full font-semibold">
+                  <span className="text-[10px] text-[var(--text-muted)] bg-[var(--border)] px-2 py-0.5 rounded-full font-semibold">
                     Max {maxTrialDays}j
                   </span>
                 </div>
@@ -520,8 +520,8 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       onClick={() => { onSelectChange('trialPeriodDays', String(days)); if (days === 0) onSelectChange('trialEndDate', ''); }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                         trialDays === days
-                          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white'
-                          : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400'
+                          ? 'bg-[var(--text)] text-[var(--bg)] border-[var(--text)]'
+                          : 'bg-[var(--surface)] border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                       }`}>
                       {label}
                     </button>
@@ -548,9 +548,9 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 )}
                 {trialDays > 0 && trialEndDate && formData.hireDate && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="flex items-center justify-between px-3 py-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-xs">
-                    <span className="text-gray-500">Fin de période d'essai</span>
-                    <span className="font-bold text-gray-900 dark:text-white">
+                    className="flex items-center justify-between px-3 py-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] text-xs">
+                    <span className="text-[var(--text-muted)]">Fin de période d'essai</span>
+                    <span className="font-bold text-[var(--text)]">
                       {format(trialEndDate, 'd MMMM yyyy', { locale: fr })}
                     </span>
                   </motion.div>
@@ -561,7 +561,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
         </div>
 
         {/* ── BLOC 3 : Rémunération ─────────────────────────────────────────── */}
-        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/50 space-y-4">
           <SectionLabel icon={DollarSign} label={isBncContract ? 'Prestation' : 'Rémunération'} />
 
           {/* Salaire */}
@@ -586,9 +586,9 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                   onSelectChange('baseSalary', val);
                 }}
                 placeholder="0"
-                className="w-full pl-3.5 pr-16 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+                className="w-full pl-3.5 pr-16 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 dark:text-gray-500">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                 FCFA
               </span>
             </div>
@@ -614,9 +614,9 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       onSelectChange('openingCumulativeGross', val);
                     }}
                     placeholder="Cumul brut, ex. 1000000"
-                    className="w-full pl-3.5 pr-16 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+                    className="w-full pl-3.5 pr-16 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 dark:text-gray-500">
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                     FCFA
                   </span>
                 </div>
@@ -631,9 +631,9 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       onSelectChange('openingCumulativeMonths', val);
                     }}
                     placeholder="Nb de mois, ex. 5"
-                    className="w-full pl-3.5 pr-14 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 transition-all"
+                    className="w-full pl-3.5 pr-14 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
                   />
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 dark:text-gray-500">
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                     mois
                   </span>
                 </div>
@@ -650,15 +650,15 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.22 }}
-                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 space-y-4"
+                className="p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-4"
               >
                 <div className="flex items-center gap-2">
-                  <UserCheck size={13} className="text-gray-500" />
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <UserCheck size={13} className="text-[var(--text-muted)]" />
+                  <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
                     Retenue BNC · Résidence fiscale
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
                   CGI Congo art. 47 ter & art. 44 — le taux dépend du statut de résidence.
                 </p>
 
@@ -675,12 +675,12 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       onClick={() => onSelectChange('isResident', value)}
                       className={`p-3 rounded-xl border text-center transition-all ${
                         active
-                          ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
-                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400'
+                          ? 'border-[var(--text)] bg-[var(--text)] text-[var(--bg)] shadow-md'
+                          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]'
                       }`}
                     >
                       <p className="text-[11px] font-bold">{label}</p>
-                      <p className={`text-base font-black mt-0.5 ${active ? '' : 'text-gray-400'}`}>{sub}</p>
+                      <p className={`text-base font-black mt-0.5 ${active ? '' : 'text-[var(--text-muted)]'}`}>{sub}</p>
                     </motion.button>
                   ))}
                 </div>
@@ -703,24 +703,24 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                     key={`bnc-${isResident}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2 text-xs"
+                    className="p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] space-y-2 text-xs"
                   >
-                    <p className="font-bold text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                    <p className="font-bold text-[var(--text-muted)] flex items-center gap-1.5">
                       <DollarSign size={11} /> Calcul BNC
                     </p>
-                    <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Montant HT</span>
-                      <span className="font-bold text-gray-900 dark:text-white">{montantHT.toLocaleString('fr-FR')} FCFA</span>
+                      <span className="font-bold text-[var(--text)]">{montantHT.toLocaleString('fr-FR')} FCFA</span>
                     </div>
-                    <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>BNC retenu ({bncTaux * 100}%)</span>
                       <span className="font-bold text-red-500">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
                     </div>
-                    <div className="flex justify-between border-t border-gray-100 dark:border-gray-700 pt-2">
-                      <span className="font-bold text-gray-700 dark:text-gray-300">Net versé</span>
+                    <div className="flex justify-between border-t border-[var(--border)] pt-2">
+                      <span className="font-bold text-[var(--text-muted)]">Net versé</span>
                       <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 pt-0.5">
+                    <p className="text-[10px] text-[var(--text-muted)] pt-0.5">
                       Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois.
                     </p>
                   </motion.div>
@@ -731,7 +731,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
         </div>
 
         {/* ── BLOC 4 : Mode de paiement ─────────────────────────────────────── */}
-        <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+        <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/50 space-y-4">
           <SectionLabel icon={Wallet} label="Mode de paiement" />
 
           <div className="grid grid-cols-3 gap-2">
@@ -749,8 +749,8 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                   onClick={() => onSelectChange('paymentMethod', value)}
                   className={`p-3.5 rounded-xl border text-center transition-all ${
                     isSelected
-                      ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
-                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500'
+                      ? 'border-[var(--text)] bg-[var(--text)] text-[var(--bg)] shadow-md'
+                      : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
                   }`}
                 >
                   <Icon size={18} className="mx-auto mb-1.5" />
@@ -822,10 +822,10 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             {formData.paymentMethod === 'CASH' && (
               <motion.div key="cash"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex items-center gap-2 px-3 py-2.5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700"
+                className="flex items-center gap-2 px-3 py-2.5 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]"
               >
-                <Check size={13} className="text-gray-400" />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <Check size={13} className="text-[var(--text-muted)]" />
+                <p className="text-xs text-[var(--text-muted)]">
                   Paiement en espèces — aucune information bancaire requise
                 </p>
               </motion.div>
@@ -850,17 +850,17 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.92, y: 16 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+              className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 max-w-md w-full shadow-xl relative"
             >
               <button type="button" onClick={() => setShowDeptModal(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                className="absolute top-4 right-4 p-2 text-[var(--text-muted)] hover:text-[var(--text)] rounded-xl hover:bg-[var(--surface-2)] transition-colors">
                 <X size={18} />
               </button>
               <div className="flex items-center gap-3 mb-7">
-                <div className="w-11 h-11 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center">
-                  <Network size={20} className="text-gray-500 dark:text-gray-400" />
+                <div className="w-11 h-11 bg-[var(--surface-2)] rounded-2xl flex items-center justify-center">
+                  <Network size={20} className="text-[var(--text-muted)]" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nouveau département</h2>
+                <h2 className="text-xl font-bold text-[var(--text)]">Nouveau département</h2>
               </div>
               <form onSubmit={handleCreateDepartment} className="space-y-5">
                 <Field label="Nom du département" required>
@@ -881,11 +881,11 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 </Field>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setShowDeptModal(false)}
-                    className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    className="flex-1 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] font-bold rounded-2xl text-sm hover:bg-[var(--border)] transition-colors">
                     Annuler
                   </button>
                   <button type="submit" disabled={isCreatingDept}
-                    className="flex-1 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold rounded-2xl text-sm flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors shadow-lg">
+                    className="flex-1 py-3 bg-[var(--text)] text-[var(--bg)] font-bold rounded-2xl text-sm flex items-center justify-center gap-2 disabled:opacity-50 opacity-90 hover:opacity-100 transition-colors shadow-lg">
                     {isCreatingDept ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                     Créer
                   </button>

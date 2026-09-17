@@ -39,10 +39,10 @@ const STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   PENDING_DG: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
   ACTIVE:     { label: 'Actif',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
   APPROVED:   { label: 'Approuvée',  cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  PAID:       { label: 'Soldé',      cls: 'bg-sky-50 text-sky-700 border-sky-100', icon: CheckCircle2 },
-  DEDUCTED:   { label: 'Déduite',    cls: 'bg-sky-50 text-sky-700 border-sky-100', icon: CheckCircle2 },
+  PAID:       { label: 'Soldé',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
+  DEDUCTED:   { label: 'Déduite',    cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
   REJECTED:   { label: 'Refusé',     cls: 'bg-red-50 text-red-700 border-red-100', icon: XCircle },
-  CANCELLED:  { label: 'Annulé',     cls: 'bg-gray-50 text-gray-500 border-gray-200', icon: Ban },
+  CANCELLED:  { label: 'Annulé',     cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 export default function EmployeeDebtDetailPage() {
@@ -178,7 +178,7 @@ export default function EmployeeDebtDetailPage() {
     finally { setBusyId(null); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 
@@ -186,17 +186,17 @@ export default function EmployeeDebtDetailPage() {
     <div className="max-w-[1200px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
 
-      <button onClick={() => router.push(bp('/loans/suivi-dettes'))} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 font-semibold">
+      <button onClick={() => router.push(bp('/loans/suivi-dettes'))} className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-semibold">
         <ArrowLeft size={16} /> Retour au suivi des dettes
       </button>
 
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-lg font-bold text-sky-600 overflow-hidden shrink-0">
+        <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-lg font-bold text-emerald-600 overflow-hidden shrink-0">
           {employee?.photoUrl ? <img src={employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{employee?.firstName} {employee?.lastName}</h1>
-          <p className="text-sm text-gray-500">{employee?.department?.name || '—'} · Matricule {employee?.employeeNumber || '—'}</p>
+          <h1 className="text-xl font-bold text-[var(--text)]">{employee?.firstName} {employee?.lastName}</h1>
+          <p className="text-sm text-[var(--text-muted)]">{employee?.department?.name || '—'} · Matricule {employee?.employeeNumber || '—'}</p>
         </div>
       </div>
 
@@ -209,8 +209,8 @@ export default function EmployeeDebtDetailPage() {
       </div>
 
       {/* ══════════════════ COURBE D'ÉVOLUTION ══════════════════ */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Évolution de la dette (12 derniers mois)</p>
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+        <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de la dette (12 derniers mois)</p>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={trendData}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -225,13 +225,13 @@ export default function EmployeeDebtDetailPage() {
       </div>
 
       {/* ══════════════════ PRÊTS & AVANCES — détail + remboursements ══════════════════ */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200">Prêts et avances — détail et remboursements</p>
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+        <div className="p-4 border-b border-[var(--border)]">
+          <p className="text-sm font-bold text-[var(--text)]">Prêts et avances — détail et remboursements</p>
         </div>
-        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+        <div className="divide-y divide-[var(--border)]">
           {history.length === 0 ? (
-            <p className="text-center py-12 text-gray-400 text-sm">Aucune dette pour cet employé.</p>
+            <p className="text-center py-12 text-[var(--text-muted)] text-sm">Aucune dette pour cet employé.</p>
           ) : history.map(r => {
             const cfg = STATUS_CFG[r.status] ?? STATUS_CFG.PENDING;
             const Icon = cfg.icon;
@@ -247,11 +247,11 @@ export default function EmployeeDebtDetailPage() {
               <div key={key} className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    <p className="text-sm font-semibold text-[var(--text)]">
                       {new Date(r.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {TYPE_LABEL[r.requestType] ?? r.requestType} · {fmt(Number(r.amount))}
-                      {r.kind === 'advance' && <span className="text-gray-400 font-normal"> · déduction {r.deductMonth}/{r.deductYear}</span>}
+                      {r.kind === 'advance' && <span className="text-[var(--text-muted)] font-normal"> · déduction {r.deductMonth}/{r.deductYear}</span>}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
                       {r.reason ? `${r.reason} · ` : ''}
                       {r.kind === 'loan' && r.decidedByRole ? `Validé par ${r.decidedByRole === 'DG' ? 'la Direction Générale' : 'le DRH'} · ` : ''}
                       Reste : {fmt(Number(r.remainingBalance ?? r.amount))}
@@ -266,17 +266,17 @@ export default function EmployeeDebtDetailPage() {
                       </button>
                     )}
                     {canEditThis && (
-                      <button onClick={() => setEditItem({ kind: r.kind, id: r.id, amount: Number(r.amount), monthlyRepayment: r.monthlyRepayment ? Number(r.monthlyRepayment) : undefined, deductMonth: r.deductMonth, deductYear: r.deductYear, reason: r.reason })} className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1">
+                      <button onClick={() => setEditItem({ kind: r.kind, id: r.id, amount: Number(r.amount), monthlyRepayment: r.monthlyRepayment ? Number(r.monthlyRepayment) : undefined, deductMonth: r.deductMonth, deductYear: r.deductYear, reason: r.reason })} className="px-2.5 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center gap-1">
                         <Pencil size={12} /> Modifier
                       </button>
                     )}
                     {canDeleteThis && (
-                      <button onClick={() => handleDeleteDebt(r.kind, r.id)} disabled={busyId === r.id} className="px-2.5 py-1.5 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-40 flex items-center gap-1">
+                      <button onClick={() => handleDeleteDebt(r.kind, r.id)} disabled={busyId === r.id} className="px-2.5 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-40 flex items-center gap-1">
                         {busyId === r.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />} Supprimer
                       </button>
                     )}
                     {hasLogHistory && (
-                      <button onClick={() => setExpanded(s => ({ ...s, [key]: !s[key] }))} className="px-2 py-1.5 text-xs font-semibold text-sky-600 hover:underline flex items-center gap-0.5">
+                      <button onClick={() => setExpanded(s => ({ ...s, [key]: !s[key] }))} className="px-2 py-1.5 text-xs font-semibold text-emerald-600 hover:underline flex items-center gap-0.5">
                         {logs.length} remb. {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                       </button>
                     )}
@@ -284,18 +284,18 @@ export default function EmployeeDebtDetailPage() {
                 </div>
 
                 {isOpen && (
-                  <div className="mt-3 ml-1 pl-3 border-l-2 border-gray-100 dark:border-gray-700 space-y-1.5">
+                  <div className="mt-3 ml-1 pl-3 border-l-2 border-[var(--border)] space-y-1.5">
                     {logs.length === 0 ? (
-                      <p className="text-xs text-gray-400 py-1">Aucun remboursement enregistré pour l&apos;instant.</p>
+                      <p className="text-xs text-[var(--text-muted)] py-1">Aucun remboursement enregistré pour l&apos;instant.</p>
                     ) : logs.map((log: any) => (
-                      <div key={log.id} className="flex items-center justify-between gap-2 text-sm bg-gray-50 dark:bg-gray-900 rounded-lg px-3 py-2">
+                      <div key={log.id} className="flex items-center justify-between gap-2 text-sm bg-[var(--surface-2)] rounded-lg px-3 py-2">
                         <div>
-                          <span className="font-semibold text-gray-800 dark:text-gray-100">{fmt(Number(log.amount))}</span>
-                          <span className="text-xs text-gray-400 ml-2">{MONTHS_FR[log.month - 1]} {log.year}</span>
-                          <span className="text-[10px] text-gray-400 ml-2">{log.method === 'PAYROLL' ? '· déduit sur paie' : '· espèces'}</span>
+                          <span className="font-semibold text-[var(--text)]">{fmt(Number(log.amount))}</span>
+                          <span className="text-xs text-[var(--text-muted)] ml-2">{MONTHS_FR[log.month - 1]} {log.year}</span>
+                          <span className="text-[10px] text-[var(--text-muted)] ml-2">{log.method === 'PAYROLL' ? '· déduit sur paie' : '· espèces'}</span>
                         </div>
                         {canManageRepayments && (
-                          <button onClick={() => handleDeleteLog(r.kind, r.id, log.id)} disabled={busyId === log.id} className="text-gray-400 hover:text-red-600 disabled:opacity-40 shrink-0" title="Supprimer ce remboursement">
+                          <button onClick={() => handleDeleteLog(r.kind, r.id, log.id)} disabled={busyId === log.id} className="text-[var(--text-muted)] hover:text-red-600 disabled:opacity-40 shrink-0" title="Supprimer ce remboursement">
                             {busyId === log.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                           </button>
                         )}
@@ -328,16 +328,16 @@ export default function EmployeeDebtDetailPage() {
 
 function KpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-gray-50 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
+    slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
     emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
     amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300',
+    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
   };
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
-      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{value}</p>
+      <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-lg font-bold text-[var(--text)] truncate">{value}</p>
     </div>
   );
 }

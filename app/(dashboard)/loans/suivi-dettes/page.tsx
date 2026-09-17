@@ -173,17 +173,17 @@ export default function SuiviDettesPage() {
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsExporting(false); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
       <FinanceSubNav userRole={userRole} />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Suivi des dettes</h1>
-          <p className="text-sm text-gray-500">Le solde restant est toujours à jour ; "accordé" et "remboursé" reflètent l'activité de la période affichée.</p>
+          <h1 className="text-xl font-bold text-[var(--text)]">Suivi des dettes</h1>
+          <p className="text-sm text-[var(--text-muted)]">Le solde restant est toujours à jour ; "accordé" et "remboursé" reflètent l'activité de la période affichée.</p>
         </div>
-        <button onClick={handleExport} disabled={isExporting} className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center gap-2 shrink-0">
+        <button onClick={handleExport} disabled={isExporting} className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center gap-2 shrink-0">
           {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} Exporter en Excel
         </button>
       </div>
@@ -199,23 +199,23 @@ export default function SuiviDettesPage() {
       {/* ══════════════════ FILTRES + KPI de la période ══════════════════ */}
       <div className="flex flex-wrap gap-2">
         <div className="relative">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
           <input
             type="text" value={nameFilter} onChange={e => setNameFilter(e.target.value)}
             placeholder="Rechercher un nom..."
-            className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs w-48"
+            className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs w-48"
           />
         </div>
-        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-xs">
-          <button onClick={() => { if (month === '') setMonth(now.getMonth() + 1); }} className={`px-3 py-1.5 font-bold transition-colors ${month !== '' ? 'bg-sky-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Mensuelle</button>
-          <button onClick={() => setMonth('')} className={`px-3 py-1.5 font-bold transition-colors ${month === '' ? 'bg-sky-500 text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>Annuelle</button>
+        <div className="flex rounded-lg border border-[var(--border)] overflow-hidden text-xs">
+          <button onClick={() => { if (month === '') setMonth(now.getMonth() + 1); }} className={`px-3 py-1.5 font-bold transition-colors ${month !== '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Mensuelle</button>
+          <button onClick={() => setMonth('')} className={`px-3 py-1.5 font-bold transition-colors ${month === '' ? 'bg-emerald-500 text-white' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'}`}>Annuelle</button>
         </div>
         {month !== '' && (
-          <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+          <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
             {MONTHS_FR.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
         )}
-        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
           {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
         <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
@@ -228,29 +228,29 @@ export default function SuiviDettesPage() {
       </div>
 
       {/* ══════════════════ LISTE PAR EMPLOYÉ ══════════════════ */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-900">
-              <tr>{['Employé', 'Département', 'Type(s)', `Accordé (${month !== '' ? MONTHS_FR[month - 1] : year})`, `Remboursé (${month !== '' ? MONTHS_FR[month - 1] : year})`, 'Solde restant (à ce jour)', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase whitespace-nowrap">{h}</th>)}</tr>
+            <thead className="bg-[var(--surface-2)]">
+              <tr>{['Employé', 'Département', 'Type(s)', `Accordé (${month !== '' ? MONTHS_FR[month - 1] : year})`, `Remboursé (${month !== '' ? MONTHS_FR[month - 1] : year})`, 'Solde restant (à ce jour)', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-[var(--border)]">
               {byEmployee.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-14 text-gray-400">Aucun employé avec un prêt ou une avance.</td></tr>
+                <tr><td colSpan={7} className="text-center py-14 text-[var(--text-muted)]">Aucun employé avec un prêt ou une avance.</td></tr>
               ) : byEmployee.map(e => (
-                <tr key={e.employeeId} className="hover:bg-gray-50 dark:hover:bg-gray-700/40">
+                <tr key={e.employeeId} className="hover:bg-[var(--surface-2)]/40">
                   <td className="px-4 py-3">
-                    <Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="font-semibold text-gray-800 dark:text-gray-100 hover:text-sky-600 hover:underline">
+                    <Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="font-semibold text-[var(--text)] hover:text-emerald-600 hover:underline">
                       {e.employee?.firstName} {e.employee?.lastName}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-gray-500">{e.employee?.department?.name || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{Array.from(e.types as Set<string>).map((t: string) => TYPE_LABEL[t] ?? t).join(', ') || '—'}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap">{e.givenInPeriod > 0 ? fmt(e.givenInPeriod) : '—'}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)]">{e.employee?.department?.name || '—'}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)]">{Array.from(e.types as Set<string>).map((t: string) => TYPE_LABEL[t] ?? t).join(', ') || '—'}</td>
+                  <td className="px-4 py-3 font-semibold text-[var(--text)] whitespace-nowrap">{e.givenInPeriod > 0 ? fmt(e.givenInPeriod) : '—'}</td>
                   <td className="px-4 py-3 text-emerald-600 whitespace-nowrap">{e.paidInPeriod > 0 ? fmt(e.paidInPeriod) : '—'}</td>
                   <td className="px-4 py-3 text-amber-600 font-semibold whitespace-nowrap">{fmt(e.totalRemaining)}</td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="text-sky-600 hover:underline text-xs font-semibold flex items-center gap-0.5 justify-end">
+                    <Link href={bp(`/loans/suivi-dettes/${e.employeeId}`)} className="text-emerald-600 hover:underline text-xs font-semibold flex items-center gap-0.5 justify-end">
                       Voir la fiche <ChevronRight size={12} />
                     </Link>
                   </td>
@@ -266,16 +266,16 @@ export default function SuiviDettesPage() {
 
 function KpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string; value: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-gray-50 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
+    slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
     emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
     amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300',
-    sky: 'bg-sky-50 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300',
+    sky: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300',
   };
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls[tone]}`}><Icon size={18} /></div>
-      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{value}</p>
+      <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-lg font-bold text-[var(--text)] truncate">{value}</p>
     </div>
   );
 }
@@ -283,8 +283,8 @@ function KpiCard({ icon: Icon, label, value, tone }: { icon: any; label: string;
 function FilterSelect({ icon: IconEl, value, onChange, placeholder, options }: { icon: any; value: string; onChange: (v: string) => void; placeholder: string; options: [string, string][] }) {
   return (
     <div className="relative">
-      <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs">
+      <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
         <option value="">{placeholder}</option>
         {options.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
       </select>

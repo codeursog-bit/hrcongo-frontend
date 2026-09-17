@@ -35,9 +35,9 @@ const PAYMENT_LABELS: Record<string, string> = {
 // ─── Summary row ──────────────────────────────────────────────────────────────
 function Row({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-gray-50 dark:border-gray-800 last:border-0">
-      <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 pt-0.5">{label}</span>
-      <span className={`text-sm font-bold text-gray-900 dark:text-white text-right ${mono ? 'font-mono text-xs' : ''}`}>
+    <div className="flex items-start justify-between gap-4 py-2.5 border-b border-[var(--border)] last:border-0">
+      <span className="text-xs text-[var(--text-muted)] flex-shrink-0 pt-0.5">{label}</span>
+      <span className={`text-sm font-bold text-[var(--text)] text-right ${mono ? 'font-mono text-xs' : ''}`}>
         {value}
       </span>
     </div>
@@ -52,13 +52,13 @@ function Card({ icon: Icon, title, children }: {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50"
+      className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)]"
     >
-      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100 dark:border-gray-700/50">
-        <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-          <Icon size={13} className="text-gray-400 dark:text-gray-500" />
+      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-[var(--border)]">
+        <div className="w-6 h-6 rounded-lg bg-[var(--surface-2)] flex items-center justify-center flex-shrink-0">
+          <Icon size={13} className="text-[var(--text-muted)]" />
         </div>
-        <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+        <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)]">
           {title}
         </span>
       </div>
@@ -92,37 +92,37 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
       >
         {/* Avatar */}
         <div className="relative mb-4">
-          <div className="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center overflow-hidden shadow-md">
+          <div className="w-20 h-20 rounded-2xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center overflow-hidden shadow-md">
             {imagePreview
               ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-              : <span className="text-2xl font-black text-gray-400 dark:text-gray-500">{initials || <User size={28} />}</span>
+              : <span className="text-2xl font-black text-[var(--text-muted)]">{initials || <User size={28} />}</span>
             }
           </div>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2, stiffness: 400, damping: 20 }}
-            className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-gray-900 dark:bg-white rounded-xl flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-900"
+            className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[var(--text)] rounded-xl flex items-center justify-center shadow-lg border-2 border-[var(--surface)]"
           >
-            <Check size={13} strokeWidth={3} className="text-white dark:text-gray-900" />
+            <Check size={13} strokeWidth={3} className="text-[var(--bg)]" />
           </motion.div>
         </div>
 
-        <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-1">
+        <h2 className="text-xl font-black text-[var(--text)] tracking-tight mb-1">
           {formData.firstName} {formData.lastName}
         </h2>
 
         <div className="flex flex-wrap justify-center gap-2 mt-1">
           {formData.position && (
-            <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-bold">
+            <span className="px-3 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-xs font-bold">
               {formData.position}
             </span>
           )}
-          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-bold">
+          <span className="px-3 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-xs font-bold">
             {formData.contractType}
           </span>
           {department && (
-            <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-xl text-xs font-bold flex items-center gap-1">
+            <span className="px-3 py-1 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-xs font-bold flex items-center gap-1">
               <Building2 size={11} /> {department.name}
             </span>
           )}
@@ -155,8 +155,8 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
           <div className="mt-2 space-y-1.5">
             <div className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold ${
               formData.isSubjectToIrpp
-                ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                : 'bg-gray-50 dark:bg-gray-800 text-gray-400'
+                ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
+                : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
             }`}>
               <span>IRPP / ITS</span>
               <span className="flex items-center gap-1">
@@ -167,8 +167,8 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
             </div>
             <div className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold ${
               formData.isSubjectToCnss
-                ? 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                : 'bg-gray-50 dark:bg-gray-800 text-gray-400'
+                ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
+                : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
             }`}>
               <span>CNSS (4%)</span>
               <span className="flex items-center gap-1">
@@ -178,7 +178,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
               </span>
             </div>
             {(!formData.isSubjectToIrpp || !formData.isSubjectToCnss) && formData.taxExemptionReason && (
-              <div className="px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1.5">
+              <div className="px-3 py-2 bg-[var(--surface-2)] rounded-xl text-xs text-[var(--text-muted)] flex items-start gap-1.5">
                 <AlertCircle size={11} className="flex-shrink-0 mt-0.5" />
                 <span>{formData.taxExemptionReason}</span>
               </div>
@@ -207,23 +207,23 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
                     : `${Math.floor(contractDuration / 30)} mois${contractDuration % 30 > 0 ? ` ${contractDuration % 30}j` : ''}`
                 } />
               )}
-              <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse flex-shrink-0" />
-                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Alertes expiration actives</span>
+              <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-[var(--surface-2)] rounded-xl">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                <span className="text-[11px] text-[var(--text-muted)] font-medium">Alertes expiration actives</span>
               </div>
             </>
           )}
 
           {formData.contractType === 'CDI' && (
-            <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl">
+            <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-[var(--surface-2)] rounded-xl">
               <Check size={11} className="text-emerald-500 flex-shrink-0" />
-              <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Durée indéterminée</span>
+              <span className="text-[11px] text-[var(--text-muted)] font-medium">Durée indéterminée</span>
             </div>
           )}
 
-          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-700">
-            <span className="text-xs text-gray-400">Salaire brut</span>
-            <span className="font-mono font-bold text-base text-gray-900 dark:text-white">
+          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-[var(--border)]">
+            <span className="text-xs text-[var(--text-muted)]">Salaire brut</span>
+            <span className="font-mono font-bold text-base text-[var(--text)]">
               {parseFloat(formData.baseSalary || '0').toLocaleString('fr-FR')} FCFA
             </span>
           </div>
@@ -249,7 +249,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
             </>
           )}
           {formData.paymentMethod === 'CASH' && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Paiement en espèces</p>
+            <p className="text-xs text-[var(--text-muted)] mt-2">Paiement en espèces</p>
           )}
         </Card>
 
@@ -260,32 +260,32 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50"
+        className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)]"
       >
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <ShieldCheck size={13} className="text-gray-400 dark:text-gray-500" />
+          <div className="w-6 h-6 rounded-lg bg-[var(--surface-2)] flex items-center justify-center">
+            <ShieldCheck size={13} className="text-[var(--text-muted)]" />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+          <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)]">
             Accès au système
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Email de connexion</p>
-            <p className="font-mono text-sm font-bold text-gray-900 dark:text-white break-all">{formData.email}</p>
+            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">Email de connexion</p>
+            <p className="font-mono text-sm font-bold text-[var(--text)] break-all">{formData.email}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Rôle initial</p>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">Employé</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Modifiable depuis la gestion des utilisateurs</p>
+            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">Rôle initial</p>
+            <p className="text-sm font-bold text-[var(--text)]">Employé</p>
+            <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Modifiable depuis la gestion des utilisateurs</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-          <Check size={13} className="text-gray-500 flex-shrink-0" />
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-2 px-4 py-3 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
+          <Check size={13} className="text-[var(--text-muted)] flex-shrink-0" />
+          <p className="text-xs text-[var(--text-muted)]">
             Un compte sera créé automatiquement. Le mot de passe provisoire s'affichera après confirmation.
           </p>
         </div>
@@ -298,11 +298,11 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
         transition={{ delay: 0.3 }}
         className="text-center py-4"
       >
-        <p className="text-sm text-gray-400 dark:text-gray-500">
+        <p className="text-sm text-[var(--text-muted)]">
           Vérifiez les informations ci-dessus, puis cliquez sur{' '}
-          <span className="font-bold text-gray-700 dark:text-gray-300">Créer l'employé</span> pour finaliser.
+          <span className="font-bold text-[var(--text-muted)]">Créer l'employé</span> pour finaliser.
         </p>
-        <div className="flex items-center justify-center gap-2 mt-2 text-xs text-gray-400">
+        <div className="flex items-center justify-center gap-2 mt-2 text-xs text-[var(--text-muted)]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           Création instantanée · accès généré automatiquement
         </div>

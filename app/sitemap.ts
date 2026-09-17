@@ -3,6 +3,16 @@
 // ✅ Pages statiques + articles blog (ISR)
 // ✅ Priorités et changefreq optimisés SEO
 // ============================================================================
+// 🐛 FIX (2026-09-16) :
+// 1. Ajout de /entreprises, /jobs, /jobs/portal, /docs — pages publiques
+//    confirmées indexables, absentes du sitemap jusqu'ici.
+// 2. `lastModified: new Date()` était posé sur CHAQUE page statique, à
+//    chaque build — donc Google recevait "modifié aujourd'hui" en
+//    permanence même pour des pages qui ne changent jamais (/contact,
+//    /qui-sommes-nous...). Google finit par considérer ce signal comme
+//    non fiable et l'ignore totalement. On ne le garde que là où c'est
+//    vrai : l'accueil, la liste du blog, et les articles (vrai updatedAt).
+// ============================================================================
 import type { MetadataRoute } from 'next';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://konza-rh.cg';
@@ -36,7 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${SITE_URL}/simulateur`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.95,
     },
@@ -47,58 +56,69 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/tarifs`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${SITE_URL}/qui-sommes-nous`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
       url: `${SITE_URL}/outils`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.85,
     },
     {
       url: `${SITE_URL}/outils/calcul-cnss-congo`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.85,
     },
     {
       url: `${SITE_URL}/outils/calcul-its-congo`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.85,
     },
     {
       url: `${SITE_URL}/outils/calcul-camu-congo`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${SITE_URL}/outils/calcul-heures-supplementaires-congo`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
       url: `${SITE_URL}/outils/calcul-tus-congo`,
-      lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/tarifs`,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/entreprises`,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/jobs/portal`,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+    {
+      url: `${SITE_URL}/jobs`,
+      changeFrequency: 'daily',
+      priority: 0.65,
+    },
+    {
+      url: `${SITE_URL}/docs`,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/contact`,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/qui-sommes-nous`,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
   ];
 

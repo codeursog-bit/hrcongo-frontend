@@ -177,6 +177,8 @@ export function useAttendanceOffline() {
         success: false,
         offline: isOffline,
         message: error.message || 'Erreur lors du pointage',
+        code: error.code, // ✅ ex: 'OUT_OF_GEOFENCE', 'LOCATION_REQUIRED'
+        data: error.data, // ✅ corps complet de la réponse (ex: distance, nearestSiteName)
       };
     } finally {
       setIsSubmitting(false);

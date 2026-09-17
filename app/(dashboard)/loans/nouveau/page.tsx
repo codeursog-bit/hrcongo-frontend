@@ -209,11 +209,11 @@ export default function NouvellePretAvancePage() {
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={40} />
         </motion.div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Demande envoyée</h1>
-        <p className="text-gray-400 text-sm mb-8">Votre demande a été transmise pour validation.</p>
+        <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Demande envoyée</h1>
+        <p className="text-[var(--text-muted)] text-sm mb-8">Votre demande a été transmise pour validation.</p>
         <div className="flex gap-3 justify-center">
-          <button onClick={() => router.push(bp('/loans/mon-espace'))} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm">Voir mes demandes</button>
-          <button onClick={() => { setIsDone(false); setAmount(''); setDurationMonthsInput(''); setReason(''); }} className="px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-sm text-gray-600 dark:text-gray-300">Nouvelle demande</button>
+          <button onClick={() => router.push(bp('/loans/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">Voir mes demandes</button>
+          <button onClick={() => { setIsDone(false); setAmount(''); setDurationMonthsInput(''); setReason(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">Nouvelle demande</button>
         </div>
       </div>
     );
@@ -224,32 +224,32 @@ export default function NouvellePretAvancePage() {
       <FinanceSubNav userRole={userRole} />
 
       <div className="flex items-center gap-3">
-        <button onClick={() => router.push(bp('/loans'))} className="p-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"><ArrowLeft size={18} /></button>
+        <button onClick={() => router.push(bp('/loans'))} className="p-2 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)]"><ArrowLeft size={18} /></button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Nouvelle demande</h1>
-          <p className="text-gray-400 text-sm">Prêt (argent / marchandise) ou avance sur salaire</p>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Nouvelle demande</h1>
+          <p className="text-[var(--text-muted)] text-sm">Prêt (argent / marchandise) ou avance sur salaire</p>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto space-y-5">
         <div className="space-y-5">
           {isFinance && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pour qui ?</label>
-                <button onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }} className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-sky-500' : 'bg-gray-200 dark:bg-gray-600'}`}>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Pour qui ?</label>
+                <button onClick={() => { setOnBehalf(!onBehalf); setSelectedEmployeeId(''); }} className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${onBehalf ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
                   <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${onBehalf ? 'left-5' : 'left-0.5'}`} />
                 </button>
               </div>
-              {!onBehalf ? <p className="text-sm text-gray-500">Pour moi-même</p> : (
+              {!onBehalf ? <p className="text-sm text-[var(--text-muted)]">Pour moi-même</p> : (
                 <div className="space-y-2">
                   <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input value={employeeSearch} onChange={e => setEmployeeSearch(e.target.value)} placeholder="Rechercher un employé…" className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
                   <div className="max-h-40 overflow-y-auto space-y-1">
                     {filteredEmployees.map(e => (
-                      <button key={e.id} onClick={() => setSelectedEmployeeId(e.id)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${selectedEmployeeId === e.id ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 font-semibold' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
+                      <button key={e.id} onClick={() => setSelectedEmployeeId(e.id)} className={`w-full text-left px-3 py-2 rounded-lg text-sm ${selectedEmployeeId === e.id ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 font-semibold' : 'hover:bg-[var(--surface-2)]'}`}>
                         {e.firstName} {e.lastName}
                       </button>
                     ))}
@@ -258,30 +258,30 @@ export default function NouvellePretAvancePage() {
               )}
 
               {onBehalf && selectedEmployeeId && (
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+                <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">
                     Comment sera-t-il remboursé ?
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setRecoverViaPayroll(true)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'}`}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--border)]'}`}
                     >
-                      <p className="font-semibold text-sm text-gray-900 dark:text-white">Déduit sur la paie</p>
-                      <p className="text-xs text-gray-400">La paie retire automatiquement chaque mois</p>
+                      <p className="font-semibold text-sm text-[var(--text)]">Déduit sur la paie</p>
+                      <p className="text-xs text-[var(--text-muted)]">La paie retire automatiquement chaque mois</p>
                     </button>
                     <button
                       type="button"
                       onClick={() => setRecoverViaPayroll(false)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${!recoverViaPayroll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'}`}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${!recoverViaPayroll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--border)]'}`}
                     >
-                      <p className="font-semibold text-sm text-gray-900 dark:text-white">En espèces</p>
-                      <p className="text-xs text-gray-400">La paie ne touche pas à ce prêt</p>
+                      <p className="font-semibold text-sm text-[var(--text)]">En espèces</p>
+                      <p className="text-xs text-[var(--text-muted)]">La paie ne touche pas à ce prêt</p>
                     </button>
                   </div>
                   {recoverViaPayroll && (
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-[var(--text-muted)] mt-2">
                       S'il reste un solde après la paie, un remboursement en espèces restera possible en complément.
                     </p>
                   )}
@@ -291,40 +291,40 @@ export default function NouvellePretAvancePage() {
           )}
 
           {hasKnownEmployee && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">
                 {onBehalf ? `Dette actuelle de ${targetEmployee?.firstName || 'cet employé'}` : 'Ma dette actuelle'}
               </label>
               {isLoadingDebt && onBehalf ? (
-                <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 size={14} className="animate-spin" /> Chargement…</div>
+                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]"><Loader2 size={14} className="animate-spin" /> Chargement…</div>
               ) : existingDebt > 0 ? (
-                <p className="text-lg font-bold text-amber-600">{existingDebt.toLocaleString('fr-FR')} FCFA <span className="text-xs font-normal text-gray-400">déjà dus (prêts/avances en cours)</span></p>
+                <p className="text-lg font-bold text-amber-600">{existingDebt.toLocaleString('fr-FR')} FCFA <span className="text-xs font-normal text-[var(--text-muted)]">déjà dus (prêts/avances en cours)</span></p>
               ) : (
                 <p className="text-sm text-emerald-600 font-semibold">Aucune dette en cours</p>
               )}
             </div>
           )}
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">Type de demande</label>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type de demande</label>
             <div className="grid grid-cols-1 gap-2">
               {TYPE_OPTIONS.map(opt => {
                 const Icon = opt.icon;
                 const active = type === opt.value;
                 return (
-                  <button key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${active ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200'}`}>
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-sky-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500'}`}><Icon size={18} /></div>
-                    <div><p className="font-semibold text-sm text-gray-900 dark:text-white">{opt.label}</p><p className="text-xs text-gray-400">{opt.hint}</p></div>
+                  <button key={opt.value} onClick={() => setType(opt.value)} className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${active ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--border)]'}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${active ? 'bg-emerald-500 text-white' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}><Icon size={18} /></div>
+                    <div><p className="font-semibold text-sm text-[var(--text)]">{opt.label}</p><p className="text-xs text-[var(--text-muted)]">{opt.hint}</p></div>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Montant demandé (FCFA)</label>
-              <input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Montant demandé (FCFA)</label>
+              <input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               {hasKnownEmployee && Number(amount) > 0 && existingDebt > 0 && (
                 <p className="text-xs text-amber-600 mt-1.5">
                   + {existingDebt.toLocaleString('fr-FR')} FCFA déjà dus = <strong>{projectedTotal.toLocaleString('fr-FR')} FCFA</strong> au total après cette demande
@@ -335,43 +335,43 @@ export default function NouvellePretAvancePage() {
             {!isAdvance ? (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Durée (en mois)</label>
-                  <input type="number" min="1" value={durationMonthsInput} onChange={e => setDurationMonthsInput(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Durée (en mois)</label>
+                  <input type="number" min="1" value={durationMonthsInput} onChange={e => setDurationMonthsInput(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Date de départ</label>
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
+                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
-                {monthlyRepayment && <p className="text-xs text-sky-600 dark:text-sky-400 col-span-2">Mensualité estimée : {monthlyRepayment.toLocaleString('fr-FR')} FCFA/mois (jusqu&apos;au {new Date(endDate).toLocaleDateString('fr-FR')})</p>}
+                {monthlyRepayment && <p className="text-xs text-emerald-600 dark:text-emerald-400 col-span-2">Mensualité estimée : {monthlyRepayment.toLocaleString('fr-FR')} FCFA/mois (jusqu&apos;au {new Date(endDate).toLocaleDateString('fr-FR')})</p>}
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Mois de déduction</label>
-                  <select value={deductMonth} onChange={e => setDeductMonth(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Mois de déduction</label>
+                  <select value={deductMonth} onChange={e => setDeductMonth(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                     {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Année</label>
-                  <input type="number" value={deductYear} onChange={e => setDeductYear(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Année</label>
+                  <input type="number" value={deductYear} onChange={e => setDeductYear(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Motif</label>
-              <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} className="w-full px-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm resize-none" />
+              <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif</label>
+              <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
             </div>
           </div>
 
           {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
 
           <div className="flex gap-2">
-            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-500/30">
+            <button onClick={handleSubmit} disabled={!canSubmit} className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30">
               {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />} Envoyer la demande
             </button>
-            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 shrink-0">
+            <button onClick={() => setShowPreviewModal(true)} className="px-4 py-3.5 border border-dashed border-[var(--border)] text-[var(--text-muted)] font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] shrink-0">
               <Eye size={18} />
             </button>
           </div>

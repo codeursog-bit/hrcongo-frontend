@@ -374,9 +374,9 @@ export default function ProgrammeCongesPage() {
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Congés</p>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Programme des départs</h1>
-          <p className="text-sm text-gray-400 mt-1">Qui part en congé, et quand — {monthLabel}</p>
+          <p className="text-xs font-bold tracking-[0.2em] text-[var(--text-muted)] uppercase mb-1">Congés</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Programme des départs</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Qui part en congé, et quand — {monthLabel}</p>
         </div>
         <div className="flex gap-2">
           {canPlan && (
@@ -387,23 +387,23 @@ export default function ProgrammeCongesPage() {
               <Plus size={15} /> Planifier un congé
             </button>
           )}
-          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+          <button onClick={() => setTimeout(() => printLeaveDocument(REPORT_ID, 'landscape'), 50)} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)]">
             <Printer size={16} /> Imprimer
           </button>
-          <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40">
+          <button onClick={handleDownloadPdf} disabled={isExportingPdf} className="px-4 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center gap-2 hover:bg-[var(--surface-2)] disabled:opacity-40">
             {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
           </button>
           <button
             onClick={handleExportCsv}
             disabled={!filteredRows.length}
-            className="flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-sm font-bold disabled:opacity-40"
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold disabled:opacity-40"
           >
             <Download size={15} /> CSV
           </button>
           {company?.documentTemplate === 'ORCA' && (
             <button
               onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/leaves/planning/document.xlsx?month=${month}&year=${year}`, '_blank')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 rounded-xl text-sm font-bold hover:bg-sky-100 dark:hover:bg-sky-900/40"
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-xl text-sm font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
               title="Télécharger le fichier Excel original rempli"
             >
               <FileDown size={15} /> Programme (.xlsx)
@@ -413,17 +413,17 @@ export default function ProgrammeCongesPage() {
       </div>
 
       {/* Filtres */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex flex-wrap items-center gap-2">
-        <Filter size={16} className="text-gray-400" />
-        <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 flex flex-wrap items-center gap-2">
+        <Filter size={16} className="text-[var(--text-muted)]" />
+        <select value={month} onChange={e => setMonth(Number(e.target.value))} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
             <option key={m} value={m}>{MONTHS[m - 1]}</option>
           ))}
         </select>
-        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5">
+        <select value={year} onChange={e => setYear(Number(e.target.value))} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           {Array.from({ length: 7 }, (_, i) => now.getFullYear() - 1 + i).map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="text-sm border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg px-2 py-1.5">
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-2 py-1.5">
           <option value="">Tous les types</option>
           <option value="ANNUAL">Annuel</option>
           <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
@@ -431,26 +431,26 @@ export default function ProgrammeCongesPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>
+        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>
       ) : (
         <>
           {/* Mini-dashboard — repris de /planning, sans aucun montant */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 flex items-center justify-center"><Users size={20} /></div>
-              <div><p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.count}</p><p className="text-xs text-gray-400">Employés concernés ce mois</p></div>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center"><Users size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{stats.count}</p><p className="text-xs text-[var(--text-muted)]">Employés concernés ce mois</p></div>
             </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 flex items-center justify-center"><Plane size={20} /></div>
-              <div><p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalDays}</p><p className="text-xs text-gray-400">Jours ouvrables cumulés</p></div>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center"><Plane size={20} /></div>
+              <div><p className="text-2xl font-bold text-[var(--text)]">{stats.totalDays}</p><p className="text-xs text-[var(--text-muted)]">Jours ouvrables cumulés</p></div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Jours de congé posés par mois — {year}</p>
+            <div className="lg:col-span-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+              <p className="text-sm font-bold text-[var(--text)] mb-4">Jours de congé posés par mois — {year}</p>
               {yearlyTrend.every(m => m.totalDays === 0) ? (
-                <p className="text-sm text-gray-400 py-8 text-center">Aucun congé posé sur {year}.</p>
+                <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucun congé posé sur {year}.</p>
               ) : (
                 <div className="flex items-end gap-1.5 h-40">
                   {yearlyTrend.map(m => {
@@ -462,11 +462,11 @@ export default function ProgrammeCongesPage() {
                         <div className="w-full flex items-end h-32 relative">
                           <div
                             title={`${m.totalDays}j — ${m.count} congé(s)`}
-                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-sky-500' : 'bg-sky-200 dark:bg-sky-800 group-hover:bg-sky-300 dark:group-hover:bg-sky-700'}`}
+                            className={`w-full rounded-t-md transition-all ${isCurrent ? 'bg-emerald-500' : 'bg-emerald-200 dark:bg-emerald-800 group-hover:bg-emerald-300 dark:group-hover:bg-emerald-700'}`}
                             style={{ height: `${Math.max(heightPct, m.totalDays > 0 ? 4 : 0)}%` }}
                           />
                         </div>
-                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-sky-600' : 'text-gray-400'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
+                        <span className={`text-[10px] font-semibold ${isCurrent ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>{MONTHS[m.month - 1].slice(0, 3)}</span>
                       </div>
                     );
                   })}
@@ -474,10 +474,10 @@ export default function ProgrammeCongesPage() {
               )}
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Répartition par département — {monthLabel}</p>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+              <p className="text-sm font-bold text-[var(--text)] mb-4">Répartition par département — {monthLabel}</p>
               {deptBreakdown.length === 0 ? (
-                <p className="text-sm text-gray-400 py-8 text-center">Aucun département ce mois-ci.</p>
+                <p className="text-sm text-[var(--text-muted)] py-8 text-center">Aucun département ce mois-ci.</p>
               ) : (
                 <div className="space-y-3">
                   {deptBreakdown.map(d => {
@@ -485,11 +485,11 @@ export default function ProgrammeCongesPage() {
                     return (
                       <div key={d.name}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="font-medium text-gray-600 dark:text-gray-300 truncate">{d.name}</span>
-                          <span className="text-gray-400 shrink-0 ml-2">{d.days}j</span>
+                          <span className="font-medium text-[var(--text-muted)] truncate">{d.name}</span>
+                          <span className="text-[var(--text-muted)] shrink-0 ml-2">{d.days}j</span>
                         </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-violet-400 dark:bg-violet-600 rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
+                        <div className="h-2 bg-[var(--surface-2)] rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-400 dark:bg-amber-600 rounded-full" style={{ width: `${(d.days / max) * 100}%` }} />
                         </div>
                       </div>
                     );
@@ -500,13 +500,13 @@ export default function ProgrammeCongesPage() {
           </div>
 
           {/* Tableau — qui part quand */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-x-auto">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-x-auto">
             {!filteredRows.length ? (
-              <div className="text-center py-16 text-gray-400 text-sm">Aucun départ sur cette période avec ces filtres.</div>
+              <div className="text-center py-16 text-[var(--text-muted)] text-sm">Aucun départ sur cette période avec ces filtres.</div>
             ) : (
               <table className="w-full text-sm min-w-[720px]">
                 <thead>
-                  <tr className="text-left text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+                  <tr className="text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">
                     <th className="px-4 py-3">Nom</th>
                     <th className="px-4 py-3">Département</th>
                     <th className="px-4 py-3">Type</th>
@@ -521,25 +521,25 @@ export default function ProgrammeCongesPage() {
                   {filteredRows.map(r => {
                     const Icon = TYPE_ICONS[r.type] || Umbrella;
                     return (
-                      <tr key={r.id} className="border-b border-gray-50 dark:border-gray-700/50">
-                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{r.employee.lastName} {r.employee.firstName}</td>
-                        <td className="px-4 py-3 text-gray-500">{r.employee.department?.name || '—'}</td>
+                      <tr key={r.id} className="border-b border-[var(--border)]">
+                        <td className="px-4 py-3 font-semibold text-[var(--text)]">{r.employee.lastName} {r.employee.firstName}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{r.employee.department?.name || '—'}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1.5">
-                            <Icon size={14} className="text-gray-400" />
+                            <Icon size={14} className="text-[var(--text-muted)]" />
                             {TYPE_LABELS[r.type] || r.type}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-500">{fmtDate(r.startDate)}</td>
-                        <td className="px-4 py-3 text-gray-500">{fmtDate(r.endDate)}</td>
-                        <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300">{formatDays(r.daysCount)}j</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{fmtDate(r.startDate)}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{fmtDate(r.endDate)}</td>
+                        <td className="px-4 py-3 font-semibold text-[var(--text-muted)]">{formatDays(r.daysCount)}j</td>
                         <td className="px-4 py-3">
                           {r.isTheoretical ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
                               <CalendarClock size={12} /> Prévu
                             </span>
                           ) : r.isManual ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-500" title="Planifié directement par le RH/Admin">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-500" title="Planifié directement par le RH/Admin">
                               <Plus size={12} /> Planifié RH
                             </span>
                           ) : (
@@ -555,14 +555,14 @@ export default function ProgrammeCongesPage() {
                                 <button
                                   onClick={() => openEditModal(r)}
                                   title="Modifier cette planification"
-                                  className="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                                 >
                                   <Pencil size={14} />
                                 </button>
                                 <button
                                   onClick={() => { setDeleteError(''); setDeletingRow(r); }}
                                   title="Supprimer cette planification"
-                                  className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -579,7 +579,7 @@ export default function ProgrammeCongesPage() {
           </div>
 
           {/* Impression — identique au modèle Excel, mode "departures" (sans montant) */}
-          <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl p-4 overflow-auto border border-gray-200 dark:border-gray-700">
+          <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto border border-[var(--border)]">
             <div className="scale-[0.75] origin-top-left" style={{ width: '133%' }}>
               <LeavePlanningPrintable id={REPORT_ID} company={company || {}} monthLabel={monthLabel} rows={printableRows as any} mode="departures" />
             </div>
@@ -589,14 +589,14 @@ export default function ProgrammeCongesPage() {
 
       {showManualModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editingRow ? 'Modifier la planification' : 'Planifier un congé'}</h2>
-              <button onClick={() => { setShowManualModal(false); setEditingRow(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+              <h2 className="text-lg font-bold text-[var(--text)]">{editingRow ? 'Modifier la planification' : 'Planifier un congé'}</h2>
+              <button onClick={() => { setShowManualModal(false); setEditingRow(null); }} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                 <X size={20} />
               </button>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--text-muted)]">
               {editingRow
                 ? "Modifie directement cette planification — les dates/le type sont ajustés sur la même ligne, sans jamais en créer une nouvelle."
                 : "Crée directement un congé validé pour l'employé — remplace tout calcul automatique pour cette période."}
@@ -604,16 +604,16 @@ export default function ProgrammeCongesPage() {
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Employé</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)]">Employé</label>
                 {editingRow ? (
-                  <p className="mt-1 w-full text-sm border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-lg px-3 py-2 text-gray-600 dark:text-gray-300">
+                  <p className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface-2)]/50 rounded-lg px-3 py-2 text-[var(--text-muted)]">
                     {editingRow.employee.lastName} {editingRow.employee.firstName}
                   </p>
                 ) : (
                   <select
                     value={manualForm.employeeId}
                     onChange={e => setManualForm(f => ({ ...f, employeeId: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   >
                     <option value="">— Sélectionner —</option>
                     {employees.map((e: any) => (
@@ -633,7 +633,7 @@ export default function ProgrammeCongesPage() {
                   <select
                     value={selectedCarryoverId}
                     onChange={e => setSelectedCarryoverId(e.target.value)}
-                    className="mt-1 w-full text-sm border border-amber-200 dark:border-amber-700 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-amber-200 dark:border-amber-700 bg-[var(--surface)] rounded-lg px-3 py-2"
                   >
                     <option value="">— Congé normal (aucun rattrapage) —</option>
                     {carryoverOptions.map((co: any) => (
@@ -652,11 +652,11 @@ export default function ProgrammeCongesPage() {
 
               {!selectedCarryoverId && (
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Type</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Type</label>
                   <select
                     value={manualForm.type}
                     onChange={e => setManualForm(f => ({ ...f, type: e.target.value as any }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   >
                     <option value="ANNUAL">Annuel</option>
                     <option value="ANNUAL_ANTICIPATED">Annuel anticipé</option>
@@ -666,52 +666,52 @@ export default function ProgrammeCongesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de départ</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de départ</label>
                   <input
                     type="date"
                     value={manualForm.startDate}
                     onChange={e => setManualForm(f => ({ ...f, startDate: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Date de retour</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de retour</label>
                   <input
                     type="date"
                     value={manualForm.endDate}
                     onChange={e => setManualForm(f => ({ ...f, endDate: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Note (optionnel)</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)]">Note (optionnel)</label>
                 <input
                   type="text"
                   value={manualForm.reason}
                   onChange={e => setManualForm(f => ({ ...f, reason: e.target.value }))}
                   placeholder="Ex : accord oral avec le chef de service"
-                  className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                  className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                 />
               </div>
 
               {!selectedCarryoverId && manualForm.type === 'ANNUAL' && (
-                <div className="space-y-2 pt-1 border-t border-gray-100 dark:border-gray-700">
+                <div className="space-y-2 pt-1 border-t border-[var(--border)]">
                   {manualBalance && (
-                    <p className="text-xs text-gray-400 pt-2">
+                    <p className="text-xs text-[var(--text-muted)] pt-2">
                       Droit du cycle : {Math.round(manualBalance.annualEntitled)}j
                       {manualBalance.seniorityDays > 0 && ` (dont ${Math.round(manualBalance.seniorityDays)}j ancienneté)`}
                     </p>
                   )}
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Jours d&apos;ancienneté reportés (optionnel)</label>
+                    <label className="text-xs font-semibold text-[var(--text-muted)]">Jours d&apos;ancienneté reportés (optionnel)</label>
                     <input
                       type="number" min="0" step="0.5"
                       value={manualForm.extraDaysGranted}
                       onChange={e => setManualForm(f => ({ ...f, extraDaysGranted: e.target.value }))}
                       placeholder="Ex : 4 — laisser vide si non applicable"
-                      className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                      className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                     />
                     {(manualBaseRemaining > 0 || manualSeniorityRemaining > 0) && (
                       <p className="text-xs text-amber-600 mt-1">
@@ -722,13 +722,13 @@ export default function ProgrammeCongesPage() {
                   </div>
                   {manualNeedsMotif && (
                     <div>
-                      <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Motif de report (pour la lettre) *</label>
+                      <label className="text-xs font-semibold text-[var(--text-muted)]">Motif de report (pour la lettre) *</label>
                       <input
                         type="text"
                         value={manualForm.resumptionNote}
                         onChange={e => setManualForm(f => ({ ...f, resumptionNote: e.target.value }))}
                         placeholder="Ex : seront récupérés après la période de forte activité du service..."
-                        className="mt-1 w-full text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-900 rounded-lg px-3 py-2"
+                        className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                       />
                     </div>
                   )}
@@ -739,7 +739,7 @@ export default function ProgrammeCongesPage() {
             {manualError && <div className="text-xs text-red-500">{manualError}</div>}
 
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => { setShowManualModal(false); setEditingRow(null); }} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <button onClick={() => { setShowManualModal(false); setEditingRow(null); }} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
               <button
@@ -756,19 +756,19 @@ export default function ProgrammeCongesPage() {
 
       {deletingRow && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 flex items-center justify-center shrink-0">
                 <AlertTriangle size={20} />
               </div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Supprimer cette planification ?</h2>
+              <h2 className="text-lg font-bold text-[var(--text)]">Supprimer cette planification ?</h2>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--text-muted)]">
               Le congé du {fmtDate(deletingRow.startDate)} au {fmtDate(deletingRow.endDate)} pour {deletingRow.employee.lastName} {deletingRow.employee.firstName} sera définitivement supprimé et son solde de congé restauré. Cette action est irréversible.
             </p>
             {deleteError && <div className="text-xs text-red-500">{deleteError}</div>}
             <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => { setDeletingRow(null); setDeleteError(''); }} className="px-4 py-2 text-sm font-semibold rounded-lg text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <button onClick={() => { setDeletingRow(null); setDeleteError(''); }} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
               <button

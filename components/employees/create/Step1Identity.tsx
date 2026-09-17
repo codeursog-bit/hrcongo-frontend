@@ -24,12 +24,12 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="flex items-center gap-1.5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      <label className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
         {label}
         {required && <span className="text-red-400 text-sm leading-none">*</span>}
       </label>
       {children}
-      {hint && <p className="text-[11px] text-gray-400 dark:text-gray-500">{hint}</p>}
+      {hint && <p className="text-[11px] text-[var(--text-muted)]">{hint}</p>}
     </div>
   );
 }
@@ -38,7 +38,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 dark:focus:border-sky-500 transition-all ${className}`}
+      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all ${className}`}
     />
   );
 }
@@ -47,10 +47,10 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
 function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <div className="w-6 h-6 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-        <Icon size={13} className="text-gray-400 dark:text-gray-500" />
+      <div className="w-6 h-6 rounded-lg bg-[var(--surface-2)] flex items-center justify-center">
+        <Icon size={13} className="text-[var(--text-muted)]" />
       </div>
-      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500">
+      <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[var(--text-muted)]">
         {label}
       </span>
     </div>
@@ -69,10 +69,10 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
       {/* Step title */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+        <h2 className="text-xl font-bold text-[var(--text)] tracking-tight">
           Identité & Coordonnées
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-[var(--text-muted)] mt-1">
           Commençons par les informations de base
         </p>
       </div>
@@ -87,7 +87,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       />
 
       {/* ── Section Identité civile ────────────────────────────────────────── */}
-      <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+      <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] space-y-4">
         <SectionLabel icon={User} label="Identité civile" />
 
         <div className="grid grid-cols-2 gap-4">
@@ -143,12 +143,12 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       </div>
 
       {/* ── Section Coordonnées ────────────────────────────────────────────── */}
-      <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+      <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] space-y-4">
         <SectionLabel icon={Phone} label="Coordonnées" />
 
         <Field label="Email" required>
           <div className="relative">
-            <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
             <Input
               type="email"
               name="email"
@@ -162,7 +162,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
 
         <Field label="Téléphone" required>
           <div className="relative">
-            <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
             <Input
               name="phone"
               value={formData.phone}
@@ -176,7 +176,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
         {/* ✅ AJOUT : téléphone secondaire — informatif, jamais utilisé pour se connecter */}
         <Field label="Téléphone secondaire" hint="Optionnel — non utilisé pour la connexion">
           <div className="relative">
-            <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
             <Input
               name="secondaryPhone"
               value={formData.secondaryPhone || ''}
@@ -190,7 +190,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <Field label="Adresse" required>
             <div className="relative">
-              <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <MapPin size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
               <Input
                 name="address"
                 value={formData.address}
@@ -212,7 +212,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
       </div>
 
       {/* ── Section Documents admin (optionnel) ───────────────────────────── */}
-      <div className="p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-gray-100 dark:border-gray-700/50 space-y-4">
+      <div className="p-5 bg-[var(--surface)] rounded-2xl border border-[var(--border)] space-y-4">
         <SectionLabel icon={FileText} label="Documents administratifs · optionnel" />
 
         <Field

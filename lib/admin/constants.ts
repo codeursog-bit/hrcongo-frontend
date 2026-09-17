@@ -3,12 +3,13 @@
 // ============================================================================
 import {
   LayoutDashboard, Building2, BarChart2, CreditCard, Bug,
-  Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio,
+  Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio, Layers,
 } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
   { path: '/admin',              label: 'Dashboard',     icon: LayoutDashboard },
   { path: '/admin/companies',    label: 'Entreprises',   icon: Building2       },
+  { path: '/admin/portefeuilles',label: 'Portefeuilles', icon: Layers          },
   { path: '/admin/subscriptions',label: 'Abonnements',   icon: Repeat          },
   { path: '/admin/user-activity',label: 'Activité Users',icon: Radio           },
   { path: '/admin/analytics',    label: 'Analytics',     icon: BarChart2       },

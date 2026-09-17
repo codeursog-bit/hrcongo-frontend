@@ -30,7 +30,7 @@ const STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   PENDING: { label: 'En attente', cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
   APPROVED: { label: 'Autorisé', cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
   REJECTED: { label: 'Refusé', cls: 'bg-red-50 text-red-700 border-red-100', icon: XCircle },
-  CANCELLED: { label: 'Annulé', cls: 'bg-gray-50 text-gray-500 border-gray-200', icon: Ban },
+  CANCELLED: { label: 'Annulé', cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 export default function PermissionsValidationsPage() {
@@ -121,7 +121,7 @@ export default function PermissionsValidationsPage() {
     status: selected.status, reviewedByName: selected.reviewedByUser?.email, reviewedAt: selected.reviewedAt, rejectionReason: selected.rejectionReason,
   } : null;
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
@@ -129,15 +129,15 @@ export default function PermissionsValidationsPage() {
       <PermissionsSubNav userRole={userRole} />
 
       <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Validations</h1>
-        <p className="text-sm text-gray-500">Tous les tickets de permission, à autoriser ou refuser.</p>
+        <h1 className="text-xl font-bold text-[var(--text)]">Validations</h1>
+        <p className="text-sm text-[var(--text-muted)]">Tous les tickets de permission, à autoriser ou refuser.</p>
       </div>
 
       {/* ══════════════════ KPI ══════════════════ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{kpis.total}</p>
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
+          <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">Total</p>
+          <p className="text-xl font-bold text-[var(--text)]">{kpis.total}</p>
         </div>
         <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-900 p-4">
           <p className="text-[11px] font-semibold text-amber-600 uppercase tracking-wide mb-1">En attente</p>
@@ -155,8 +155,8 @@ export default function PermissionsValidationsPage() {
 
       {/* ══════════════════ STATS ══════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Départements avec le plus de tickets</p>
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+          <p className="text-sm font-bold text-[var(--text)] mb-4">Départements avec le plus de tickets</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={byDept} layout="vertical" margin={{ left: 24 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
@@ -167,8 +167,8 @@ export default function PermissionsValidationsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-          <p className="text-sm font-bold text-gray-700 dark:text-gray-200 mb-4">Types de ticket les plus fréquents</p>
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+          <p className="text-sm font-bold text-[var(--text)] mb-4">Types de ticket les plus fréquents</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={byType} layout="vertical" margin={{ left: 24 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
@@ -188,9 +188,9 @@ export default function PermissionsValidationsPage() {
           <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
           {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
         </div>
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg shrink-0">
-          <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`} title="Vue grille"><LayoutGrid size={16} /></button>
-          <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-400'}`} title="Vue liste"><List size={16} /></button>
+        <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-lg shrink-0">
+          <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`} title="Vue grille"><LayoutGrid size={16} /></button>
+          <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-[var(--surface)] shadow-sm text-[var(--text)]' : 'text-[var(--text-muted)]'}`} title="Vue liste"><List size={16} /></button>
         </div>
       </div>
 
@@ -198,28 +198,28 @@ export default function PermissionsValidationsPage() {
       {viewMode === 'grid' && (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.length === 0 ? (
-          <div className="col-span-full text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-sm text-gray-400">Aucun ticket pour ce filtre.</div>
+          <div className="col-span-full text-center py-16 bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-sm text-[var(--text-muted)]">Aucun ticket pour ce filtre.</div>
         ) : filtered.map(t => {
           const cfg = STATUS_CFG[t.status] ?? STATUS_CFG.PENDING;
           const Icon = cfg.icon;
           const isPending = t.status === 'PENDING';
           return (
-            <button key={t.id} onClick={() => setSelected(t)} className="text-left bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 hover:shadow-md hover:border-sky-200 dark:hover:border-sky-800 transition-all">
+            <button key={t.id} onClick={() => setSelected(t)} className="text-left bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.employee?.firstName} {t.employee?.lastName}</p>
-                  <p className="text-xs text-gray-400">{t.employee?.department?.name || '—'}</p>
+                  <p className="font-semibold text-[var(--text)] text-sm">{t.employee?.firstName} {t.employee?.lastName}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t.employee?.department?.name || '—'}</p>
                 </div>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{TYPE_LABEL[t.type] ?? t.type} · {new Date(t.departureTime).toLocaleDateString('fr-FR')}</p>
+              <p className="text-xs text-[var(--text-muted)] mb-3">{TYPE_LABEL[t.type] ?? t.type} · {new Date(t.departureTime).toLocaleDateString('fr-FR')}</p>
               {isPending && APPROVER_ROLES.includes(userRole) ? (
                 <div className="flex gap-2">
                   <button onClick={(e) => quickDecide(t, 'APPROVED', e)} disabled={isProcessing} className="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1"><Check size={13} /> Autoriser</button>
-                  <button onClick={(e) => quickDecide(t, 'REJECTED', e)} className="flex-1 py-1.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
+                  <button onClick={(e) => quickDecide(t, 'REJECTED', e)} className="flex-1 py-1.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
                 </div>
               ) : (
-                <p className="text-[11px] text-gray-400">{new Date(t.createdAt).toLocaleDateString('fr-FR')}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">{new Date(t.createdAt).toLocaleDateString('fr-FR')}</p>
               )}
             </button>
           );
@@ -229,26 +229,26 @@ export default function PermissionsValidationsPage() {
 
       {/* ══════════════════ LISTE ══════════════════ */}
       {viewMode === 'list' && (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden divide-y divide-gray-100 dark:divide-gray-700">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden divide-y divide-[var(--border)]">
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-sm text-gray-400">Aucun ticket pour ce filtre.</div>
+          <div className="text-center py-16 text-sm text-[var(--text-muted)]">Aucun ticket pour ce filtre.</div>
         ) : filtered.map(t => {
           const cfg = STATUS_CFG[t.status] ?? STATUS_CFG.PENDING;
           const Icon = cfg.icon;
           const isPending = t.status === 'PENDING';
           return (
-            <button key={t.id} onClick={() => setSelected(t)} className="w-full text-left flex flex-col sm:flex-row sm:items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+            <button key={t.id} onClick={() => setSelected(t)} className="w-full text-left flex flex-col sm:flex-row sm:items-center gap-3 p-4 hover:bg-[var(--surface-2)]/40 transition-colors">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm">{t.employee?.firstName} {t.employee?.lastName}</p>
+                  <p className="font-semibold text-[var(--text)] text-sm">{t.employee?.firstName} {t.employee?.lastName}</p>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                 </div>
-                <p className="text-xs text-gray-400">{t.employee?.department?.name || '—'} · {TYPE_LABEL[t.type] ?? t.type} · {new Date(t.departureTime).toLocaleDateString('fr-FR')}</p>
+                <p className="text-xs text-[var(--text-muted)]">{t.employee?.department?.name || '—'} · {TYPE_LABEL[t.type] ?? t.type} · {new Date(t.departureTime).toLocaleDateString('fr-FR')}</p>
               </div>
               {isPending && APPROVER_ROLES.includes(userRole) && (
                 <div className="flex gap-2 shrink-0">
                   <button onClick={(e) => quickDecide(t, 'APPROVED', e)} disabled={isProcessing} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1"><Check size={13} /> Autoriser</button>
-                  <button onClick={(e) => quickDecide(t, 'REJECTED', e)} className="px-3 py-1.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
+                  <button onClick={(e) => quickDecide(t, 'REJECTED', e)} className="px-3 py-1.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-xs font-bold rounded-lg flex items-center justify-center gap-1"><X size={13} /> Refuser</button>
                 </div>
               )}
             </button>
@@ -260,10 +260,10 @@ export default function PermissionsValidationsPage() {
       {/* ══════════════════ MODAL DÉTAIL + DÉCISION ══════════════════ */}
       {selected && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setSelected(null); setRejectMode(false); setRejectionReason(''); }}>
-          <div onClick={e => e.stopPropagation()} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-5">
+          <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="font-bold text-gray-900 dark:text-white">{selected.employee?.firstName} {selected.employee?.lastName}</p>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <p className="font-bold text-[var(--text)]">{selected.employee?.firstName} {selected.employee?.lastName}</p>
+              <button onClick={() => setSelected(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20} /></button>
             </div>
 
             <div className="space-y-2 text-sm mb-4">
@@ -278,28 +278,28 @@ export default function PermissionsValidationsPage() {
             </div>
 
             {selected.status === 'PENDING' && APPROVER_ROLES.includes(userRole) && (
-              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-700 mb-3">
+              <div className="space-y-2 pt-3 border-t border-[var(--border)] mb-3">
                 {!rejectMode ? (
                   <div className="flex gap-2">
                     <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Autoriser</button>
-                    <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-600 hover:bg-red-50 hover:text-red-600 text-gray-600 dark:text-gray-300 text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
+                    <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus (obligatoire)" rows={2} className="w-full text-sm p-2 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-900" />
+                    <textarea value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Motif du refus (obligatoire)" rows={2} className="w-full text-sm p-2 rounded-lg border border-[var(--border)] bg-[var(--surface)]" />
                     <div className="flex gap-2">
                       <button onClick={() => handleDecision('REJECTED')} disabled={isProcessing} className="flex-1 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl">Confirmer le refus</button>
-                      <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="flex-1 py-2 border border-gray-200 dark:border-gray-600 text-sm font-semibold rounded-xl text-gray-500">Annuler</button>
+                      <button onClick={() => { setRejectMode(false); setRejectionReason(''); }} className="flex-1 py-2 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">Annuler</button>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            <button onClick={() => setShowPreviewModal(true)} className="w-full py-2 border border-dashed border-gray-300 dark:border-gray-600 text-xs font-semibold rounded-xl text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 mb-2">
+            <button onClick={() => setShowPreviewModal(true)} className="w-full py-2 border border-dashed border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] mb-2">
               <Eye size={14} /> Aperçu du ticket
             </button>
-            <button onClick={() => setTimeout(() => printTicket('perm-val-print-target'), 50)} className="w-full py-2 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-xl text-gray-600 dark:text-gray-300 flex items-center justify-center gap-1.5 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <button onClick={() => setTimeout(() => printTicket('perm-val-print-target'), 50)} className="w-full py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)]">
               <Printer size={13} /> Imprimer
             </button>
 
@@ -321,8 +321,8 @@ export default function PermissionsValidationsPage() {
 function FilterSelect({ icon: IconEl, value, onChange, placeholder, options }: { icon: any; value: string; onChange: (v: string) => void; placeholder: string; options: [string, string][] }) {
   return (
     <div className="relative">
-      <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-xs">
+      <IconEl size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+      <select value={value} onChange={e => onChange(e.target.value)} className="pl-7 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-xs">
         <option value="">{placeholder}</option>
         {options.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
       </select>
@@ -333,8 +333,8 @@ function FilterSelect({ icon: IconEl, value, onChange, placeholder, options }: {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-gray-400">{label}</span>
-      <span className="font-semibold text-gray-800 dark:text-gray-100 text-right">{value}</span>
+      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className="font-semibold text-[var(--text)] text-right">{value}</span>
     </div>
   );
 }

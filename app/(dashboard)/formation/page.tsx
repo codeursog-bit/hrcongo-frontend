@@ -734,8 +734,8 @@ export default function FormationPage() {
     ctx.fillStyle   = 'rgba(255,215,0,0.45)';
     ctx.font        = '9px monospace';
     ctx.textAlign   = 'center';
-    ctx.fillText('Document officiel généré par HRCongo | Académie Formation | Loi 45-75 Code du Travail — République du Congo', 561, 738);
-    ctx.fillText('Ce certificat est vérifiable en ligne sur hrcongo.com/verify/' + data.ref, 561, 754);
+    ctx.fillText('Document officiel généré par Konza RH | Académie Formation | Loi 45-75 Code du Travail — République du Congo', 561, 738);
+    ctx.fillText('Ce certificat est vérifiable en ligne sur konza-rh.cg/verify/' + data.ref, 561, 754);
 
     // ── Téléchargement ───────────────────────────────────────────────────────
     const link = document.createElement('a');

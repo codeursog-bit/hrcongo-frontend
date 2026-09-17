@@ -46,20 +46,20 @@ export function ModeSelectionModal({ isOpen, onClose }: ModeSelectionModalProps)
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", damping: 20 }}
-            className="bg-white dark:bg-gray-900 rounded-[32px] p-8 w-full max-w-4xl shadow-2xl relative m-4"
+            className="bg-[var(--surface)] rounded-2xl p-8 w-full max-w-4xl shadow-2xl relative m-4"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
-                  Créer une <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">Nouvelle Offre</span>
+                <h3 className="text-3xl font-black text-[var(--text)] mb-2">
+                  Créer une <span className="text-emerald-500">Nouvelle Offre</span>
                 </h3>
-                <p className="text-gray-500 dark:text-gray-400">Comment souhaitez-vous gérer cette campagne ?</p>
+                <p className="text-[var(--text-muted)]">Comment souhaitez-vous gérer cette campagne ?</p>
               </div>
               <button 
                 onClick={onClose} 
-                className="p-3 hover:bg-gray-100 dark:hover:bg-white/10 rounded-2xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all"
+                className="p-3 hover:bg-[var(--surface-2)] rounded-2xl text-[var(--text-muted)] hover:text-[var(--text)] transition-all"
               >
                 <X size={24}/>
               </button>
@@ -68,137 +68,137 @@ export function ModeSelectionModal({ isOpen, onClose }: ModeSelectionModalProps)
             {/* Deux Cartes Côte à Côte */}
             <div className="grid md:grid-cols-2 gap-6 items-stretch">
               
-              {/* 🤖 CARTE MODE IA */}
+              {/* CARTE MODE IA */}
               <Link 
                 href="/recrutement/ia/create"
-                className="group relative bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border-2 border-cyan-500/30 hover:border-cyan-500/60 rounded-3xl p-8 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-500/20 flex flex-col"
+                className="group relative bg-emerald-500/10 border-2 border-emerald-500/30 hover:border-emerald-500/60 rounded-2xl p-8 transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-500/20 flex flex-col"
               >
                 {/* Badge "Recommandé" */}
-                <div className="absolute -top-3 -right-3 px-4 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1.5 z-10">
+                <div className="absolute -top-3 -right-3 px-4 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1.5 z-10">
                   <Sparkles size={12} className="animate-pulse" />
                   NOUVELLE GÉNÉRATION
                 </div>
 
                 <div className="flex-1">
                   {/* Icône */}
-                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
                     <BrainCircuit size={32} className="text-white" />
                   </div>
 
                   {/* Titre */}
-                  <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-3">
+                  <h4 className="text-2xl font-black text-[var(--text)] mb-3">
                     Mode IA
                   </h4>
 
                   {/* Description courte et percutante */}
-                  <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                  <p className="text-[var(--text-muted)] mb-6 leading-relaxed">
                     L'intelligence artificielle analyse automatiquement chaque CV, génère un test personnalisé et recommande les meilleurs profils en quelques secondes.
                   </p>
 
                   {/* Features courtes */}
                   <ul className="space-y-3 mb-6">
-                    <li className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Check size={16} className="text-cyan-500 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                      <Check size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                       <span><strong>Analyse instantanée</strong> des CV avec scoring objectif</span>
                     </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Check size={16} className="text-cyan-500 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                      <Check size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                       <span><strong>Test technique auto-généré</strong> adapté au poste</span>
                     </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Check size={16} className="text-cyan-500 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                      <Check size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
                       <span><strong>Recommandation intelligente</strong> avec justification</span>
                     </li>
                   </ul>
 
                   {/* Bénéfice principal */}
-                  <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-3">
-                    <p className="text-xs font-bold text-cyan-600 dark:text-cyan-400 mb-1 flex items-center gap-1">
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1">
                       <Zap size={12} /> Gagnez 70% de votre temps
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-[var(--text-muted)]">
                       Traitez 100 candidatures en 2 minutes au lieu de 2 jours
                     </p>
                   </div>
                 </div>
 
                 {/* CTA */}
-                <div className="flex items-center justify-between pt-4 border-t border-cyan-500/20 mt-6">
-                  <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase">Idéal pour tout volume</span>
-                  <ChevronRight className="text-cyan-500 group-hover:translate-x-1 transition-transform" size={20} />
+                <div className="flex items-center justify-between pt-4 border-t border-emerald-500/20 mt-6">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase">Idéal pour tout volume</span>
+                  <ChevronRight className="text-emerald-500 group-hover:translate-x-1 transition-transform" size={20} />
                 </div>
               </Link>
 
-              {/* 👤 CARTE MODE MANUEL */}
+              {/* CARTE MODE MANUEL */}
               <Link 
                 href="/recrutement/manuel/create"
-                className="group relative bg-gradient-to-br from-gray-500/10 to-gray-600/10 border-2 border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 rounded-3xl p-8 transition-all hover:scale-[1.02] hover:shadow-2xl flex flex-col"
+                className="group relative bg-[var(--surface-2)] border-2 border-[var(--border)] hover:border-[var(--text-muted)] rounded-2xl p-8 transition-all hover:scale-[1.02] hover:shadow-2xl flex flex-col"
               >
                 <div className="flex-1">
                   {/* Icône */}
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-500 to-gray-700 rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 bg-[var(--text-muted)] rounded-2xl flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform">
                     <User size={32} className="text-white" />
                   </div>
 
                   {/* Titre */}
-                  <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-3">
+                  <h4 className="text-2xl font-black text-[var(--text)] mb-3">
                     Mode Manuel
                   </h4>
 
                   {/* Description courte et positive */}
-                  <p className="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                  <p className="text-[var(--text-muted)] mb-6 leading-relaxed">
                     Vous gardez le contrôle total sur chaque étape du processus : tri des CV, création des tests et décision finale selon votre intuition.
                   </p>
 
                   {/* Features courtes */}
                   <ul className="space-y-3 mb-6">
-                    <li className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Check size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                      <Check size={16} className="text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                       <span><strong>Évaluation personnalisée</strong> de chaque profil</span>
                     </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Check size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                      <Check size={16} className="text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                       <span><strong>Questions sur-mesure</strong> adaptées au contexte</span>
                     </li>
-                    <li className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Check size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                    <li className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                      <Check size={16} className="text-[var(--text-muted)] mt-0.5 flex-shrink-0" />
                       <span><strong>Détection du potentiel</strong> au-delà du CV</span>
                     </li>
                   </ul>
 
                   {/* Bénéfice principal */}
-                  <div className="bg-gradient-to-r from-gray-500/10 to-gray-600/10 border border-gray-300 dark:border-gray-700 rounded-xl p-3">
-                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1">
+                  <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3">
+                    <p className="text-xs font-bold text-[var(--text-muted)] mb-1 flex items-center gap-1">
                       <User size={12} /> Flexibilité totale
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-[var(--text-muted)]">
                       Parfait pour les postes stratégiques et profils atypiques
                     </p>
                   </div>
                 </div>
 
                 {/* CTA */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-300 dark:border-gray-700 mt-6">
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Approche classique</span>
-                  <ChevronRight className="text-gray-500 group-hover:translate-x-1 transition-transform" size={20} />
+                <div className="flex items-center justify-between pt-4 border-t border-[var(--border)] mt-6">
+                  <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Approche classique</span>
+                  <ChevronRight className="text-[var(--text-muted)] group-hover:translate-x-1 transition-transform" size={20} />
                 </div>
               </Link>
 
             </div>
 
             {/* Footer simplifié mais incitatif */}
-            <div className="mt-8 p-5 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 border-2 border-cyan-500/20 rounded-2xl">
+            <div className="mt-8 p-5 bg-emerald-500/10 border-2 border-emerald-500/20 rounded-2xl">
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Sparkles size={20} className="text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-gray-900 dark:text-white text-sm mb-1">
+                  <p className="font-bold text-[var(--text)] text-sm mb-1">
                     L'IA transforme votre recrutement
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                     Plus besoin de passer des heures à trier des CV. Laissez l'IA faire le travail fastidieux pendant que vous vous concentrez sur les meilleurs talents. 
-                    <span className="text-cyan-600 dark:text-cyan-400 font-semibold"> Essayez-la dès maintenant</span> et découvrez une nouvelle façon de recruter.
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold"> Essayez-la dès maintenant</span> et découvrez une nouvelle façon de recruter.
                   </p>
                 </div>
               </div>

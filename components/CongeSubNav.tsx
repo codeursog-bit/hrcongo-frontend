@@ -41,8 +41,7 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
     ...(canManage ? [{ href: '/conges/planning',   label: 'Suivi de congé', icon: Plane }] : []),
     ...(canManage ? [{ href: '/conges/calendrier', label: 'Calendrier',     icon: CalendarDays }] : []),
     ...(canManage ? [{ href: '/conges/soldes',     label: 'Soldes',         icon: Wallet }] : []),
-    ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins }] : []),
-    ...(canManage ? [{ href: '/conges/gestion',   label: 'gestion et retour anticipés', icon: Plane }] : []),
+    ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins }] : [])
     
   ];
 
@@ -68,10 +67,10 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
           muted ? 'px-3 py-1.5 text-[11px] font-semibold' : 'px-3.5 py-2 text-xs font-semibold'
         } ${
           active
-            ? 'bg-sky-500 text-white shadow-sm'
+            ? 'bg-emerald-500 text-white shadow-sm'
             : muted
-              ? 'bg-transparent border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              ? 'bg-transparent border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'
+              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
         }`}
       >
         <Icon size={muted ? 12 : 14} /> {l.label}

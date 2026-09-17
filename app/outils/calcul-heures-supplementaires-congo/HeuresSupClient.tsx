@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
 
-const WORK_DAYS  = 26;
-const HOURS_DAY  = 8;
+const HOURS_MONTH = 173; // Heure conventionnelle : 40h/semaine × 52 semaines ÷ 12 mois ≈ 173h/mois
 const fmt = (v: number) => Math.round(v).toLocaleString('fr-FR');
 const fmtDec = (v: number) => v.toFixed(0);
 
@@ -25,7 +24,7 @@ export default function HeuresSupClient() {
   const res = useMemo(() => {
     const s = Number(salary);
     if (!s || s < 1) return null;
-    const hourly = s / (WORK_DAYS * HOURS_DAY);
+    const hourly = s / HOURS_MONTH;
     return {
       hourly,
       h10:  Math.round(hourly * 1.10 * hours.h10),
@@ -126,9 +125,9 @@ export default function HeuresSupClient() {
           </p>
           <div className="rounded-xl p-4 font-mono text-sm bg-gray-900">
             <p className="text-gray-500 text-xs mb-1">// Formule</p>
-            <p className="text-indigo-400">Taux horaire = Salaire de base ÷ ({WORK_DAYS} jours × {HOURS_DAY}h)</p>
+            <p className="text-indigo-400">Taux horaire = Salaire de base ÷ Heure conventionnelle ({HOURS_MONTH}h/mois)</p>
             <p className="text-gray-500 text-xs mt-3 mb-1">// Exemple avec 400 000 FCFA</p>
-            <p className="text-emerald-400">Taux horaire = 400 000 ÷ 208 = <strong>1 923 FCFA/heure</strong></p>
+            <p className="text-emerald-400">Taux horaire = 400 000 ÷ {HOURS_MONTH} = <strong>2 312 FCFA/heure</strong></p>
           </div>
           <p className="text-xs text-gray-400 mt-3">
             Ensuite, chaque heure sup se calcule comme ça : <strong>taux horaire × majoration × nombre d'heures</strong>
@@ -146,7 +145,7 @@ export default function HeuresSupClient() {
                 className="w-full px-4 py-3 border-2 rounded-xl text-lg font-black font-mono outline-none focus:border-orange-400 transition-colors border-gray-600 bg-gray-700" />
               {Number(salary) > 0 && (
                 <p className="text-[11px] text-orange-500 mt-1.5">
-                  → Taux horaire : <strong>{fmt(Number(salary) / (WORK_DAYS * HOURS_DAY))} FCFA/h</strong>
+                  → Taux horaire : <strong>{fmt(Number(salary) / HOURS_MONTH)} FCFA/h</strong>
                 </p>
               )}
             </div>

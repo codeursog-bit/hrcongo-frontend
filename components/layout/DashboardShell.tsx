@@ -13,13 +13,10 @@ import { authService } from '@/lib/services/authService';
 
 interface DashboardShellProps {
   children: React.ReactNode;
-  // ✅ Props white-label optionnelles — uniquement fournies par PmeLayout
   brandName?:  string | null;
   brandLogo?:  string | null;
   brandColor?: string | null;
-  // Base path pour les liens de navigation (ex: '/pme/companyId')
   basePath?: string;
-  // Si true, skip la vérification d'auth (PmeLayout gère lui-même l'auth)
   skipAuthCheck?: boolean;
 }
 
@@ -38,7 +35,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   );
 
   useEffect(() => {
-    // Si le layout parent gère déjà l'auth (PmeLayout), on ne re-vérifie pas
     if (skipAuthCheck) {
       setIsAuthorized(true);
       return;
@@ -53,7 +49,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
       return;
     }
 
-    // Bloquer les SUPER_ADMIN (ils vont sur /admin)
     if (user.role === 'SUPER_ADMIN') {
       router.push('/admin');
       return;
@@ -62,11 +57,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
     setIsAuthorized(true);
   }, [router, skipAuthCheck]);
 
-  // Écran de chargement pendant la vérification
   if (isAuthorized === null) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-[#020617]">
-        <div className="text-slate-900 dark:text-slate-100">Vérification...</div>
+      <div className="h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div style={{ color: 'var(--text)' }}>Vérification...</div>
       </div>
     );
   }
@@ -74,11 +68,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   if (!isAuthorized) return null;
 
   return (
-    <div className="flex h-screen font-sans text-slate-900 dark:text-slate-100 overflow-hidden relative bg-gray-50 dark:bg-[#020617]">
+    <div className="flex h-screen font-sans overflow-hidden relative" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        // ✅ Transmis à Sidebar pour le white-label
         brandName={brandName}
         brandLogo={brandLogo}
         brandColor={brandColor}

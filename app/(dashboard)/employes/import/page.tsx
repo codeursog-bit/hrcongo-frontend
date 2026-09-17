@@ -61,7 +61,7 @@ const IMPORT_STEPS = [
 // ─── Stepper ─────────────────────────────────────────────────────────────────
 function ImportStepper({ currentStep }: { currentStep: number }) {
   return (
-    <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-gray-100 dark:border-gray-800">
+    <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-[var(--border)]">
       <div className="flex items-center gap-0 max-w-lg mx-auto">
         {IMPORT_STEPS.map((step, idx) => {
           const isActive    = step.num === currentStep;
@@ -76,37 +76,37 @@ function ImportStepper({ currentStep }: { currentStep: number }) {
                   transition={{ type: 'spring', stiffness: 400, damping: 22 }}
                   className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
                     isCompleted
-                      ? 'bg-gray-900 dark:bg-white shadow-md'
+                      ? 'bg-[var(--text)] shadow-md'
                       : isActive
-                      ? 'bg-gradient-to-br from-sky-500 to-cyan-500 shadow-lg shadow-sky-500/20'
-                      : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                      ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20'
+                      : 'bg-[var(--surface-2)] border border-[var(--border)]'
                   }`}
                 >
                   {isCompleted
-                    ? <Check size={16} strokeWidth={2.5} className="text-white dark:text-gray-900" />
-                    : <Icon size={16} className={isActive ? 'text-white' : 'text-gray-400 dark:text-gray-500'} />
+                    ? <Check size={16} strokeWidth={2.5} className="text-[var(--bg)]" />
+                    : <Icon size={16} className={isActive ? 'text-white' : 'text-[var(--text-muted)]'} />
                   }
                   {isActive && (
                     <motion.div
                       animate={{ scale: [1, 1.5, 1], opacity: [0.35, 0, 0.35] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 rounded-2xl bg-sky-400 -z-10"
+                      className="absolute inset-0 rounded-2xl bg-emerald-400 -z-10"
                     />
                   )}
                 </motion.div>
                 <span className={`text-[10px] font-bold uppercase tracking-wide hidden sm:block transition-colors ${
-                  isActive    ? 'text-gray-900 dark:text-white' :
-                  isCompleted ? 'text-gray-400 dark:text-gray-500' :
-                                'text-gray-300 dark:text-gray-600'
+                  isActive    ? 'text-[var(--text)]' :
+                  isCompleted ? 'text-[var(--text-muted)]' :
+                                'text-[var(--text-muted)]'
                 }`}>
                   {step.label}
                 </span>
               </div>
               {!isLast && (
                 <div className="flex-1 mx-2 h-px relative top-[-10px] sm:top-[-14px] overflow-hidden">
-                  <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                  <div className="absolute inset-0 bg-[var(--border)] rounded-full" />
                   <motion.div
-                    className="absolute inset-0 bg-gray-700 dark:bg-gray-400 rounded-full"
+                    className="absolute inset-0 bg-[var(--text)] rounded-full"
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: step.num < currentStep ? 1 : 0 }}
                     transition={{ duration: 0.5 }}
@@ -119,9 +119,9 @@ function ImportStepper({ currentStep }: { currentStep: number }) {
         })}
       </div>
       {/* Progress bar */}
-      <div className="mt-5 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden max-w-lg mx-auto">
+      <div className="mt-5 h-1 bg-[var(--surface-2)] rounded-full overflow-hidden max-w-lg mx-auto">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-sky-400 to-cyan-400"
+          className="h-full rounded-full bg-emerald-500"
           animate={{ width: `${((currentStep - 1) / (IMPORT_STEPS.length - 1)) * 100}%` }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
         />
@@ -134,13 +134,9 @@ function ImportStepper({ currentStep }: { currentStep: number }) {
 function PageBackground() {
   return (
     <div className="fixed inset-0 pointer-events-none -z-10">
-      <div className="absolute inset-0 bg-gray-50 dark:bg-[#0d1117]" />
-      <div
-        className="absolute inset-0 opacity-[0.025] dark:opacity-[0.04]"
-        style={{ backgroundImage: 'radial-gradient(circle, #64748b 1px, transparent 1px)', backgroundSize: '32px 32px' }}
-      />
-      <div className="absolute top-0 right-1/4 w-[450px] h-[350px] bg-sky-400/6 dark:bg-sky-500/8 rounded-full blur-[120px]" />
-      <div className="absolute bottom-0 left-1/4 w-[400px] h-[300px] bg-emerald-400/4 dark:bg-emerald-500/6 rounded-full blur-[100px]" />
+      <div className="absolute inset-0" style={{ background: 'var(--bg)' }} />
+      <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
+      <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
     </div>
   );
 }
@@ -248,22 +244,22 @@ export default function EmployeeImportPage() {
           <div>
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium transition-colors mb-2 group"
+              className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors mb-2 group"
             >
               <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
               Retour aux employés
             </button>
-            <p className="text-xs font-bold tracking-[0.18em] text-gray-400 uppercase mb-1">Ressources Humaines</p>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Import Excel</h1>
+            <p className="text-xs font-bold tracking-[0.18em] text-[var(--text-muted)] uppercase mb-1">Ressources Humaines</p>
+            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">Import Excel</h1>
           </div>
           {file && step > 1 && (
             <motion.div
               initial={{ opacity: 0, x: 12 }}
               animate={{ opacity: 1, x: 0 }}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 text-sm"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-sm"
             >
               <FileSpreadsheet size={15} className="text-emerald-500" />
-              <span className="font-medium text-gray-700 dark:text-gray-300 max-w-[180px] truncate">{file.name}</span>
+              <span className="font-medium text-[var(--text-muted)] max-w-[180px] truncate">{file.name}</span>
             </motion.div>
           )}
         </motion.div>
@@ -273,7 +269,7 @@ export default function EmployeeImportPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.07 }}
-          className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+          className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden"
         >
           {/* Stepper */}
           <ImportStepper currentStep={step} />
@@ -294,10 +290,10 @@ export default function EmployeeImportPage() {
                 {step === 1 && (
                   <div className="space-y-6 max-w-2xl mx-auto">
                     <div className="text-center">
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                      <h2 className="text-xl font-bold text-[var(--text)] mb-1">
                         Téléversez votre fichier Excel
                       </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm text-[var(--text-muted)]">
                         Formats acceptés : .xlsx, .xls · Max 5 Mo
                       </p>
                     </div>
@@ -309,8 +305,8 @@ export default function EmployeeImportPage() {
                       onDrop={handleDrop}
                       className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 ${
                         isDragging
-                          ? 'border-sky-400 bg-sky-50 dark:bg-sky-900/15 scale-[1.01]'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50/50 dark:bg-gray-800/30'
+                          ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/15 scale-[1.01]'
+                          : 'border-[var(--border)] hover:border-[var(--text-muted)] bg-[var(--surface-2)]'
                       }`}
                     >
                       <motion.div
@@ -318,15 +314,15 @@ export default function EmployeeImportPage() {
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                       >
                         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all ${
-                          isDragging ? 'bg-sky-100 dark:bg-sky-900/30' : 'bg-gray-100 dark:bg-gray-800'
+                          isDragging ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-[var(--surface-2)]'
                         }`}>
-                          <FileSpreadsheet className={isDragging ? 'text-sky-500' : 'text-gray-400 dark:text-gray-500'} size={32} />
+                          <FileSpreadsheet className={isDragging ? 'text-emerald-500' : 'text-[var(--text-muted)]'} size={32} />
                         </div>
-                        <p className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        <p className="text-base font-semibold text-[var(--text-muted)] mb-1">
                           {isDragging ? 'Relâchez le fichier ici' : 'Glissez-déposez votre fichier'}
                         </p>
-                        <p className="text-sm text-gray-400 mb-5">ou</p>
-                        <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm cursor-pointer hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors shadow-lg shadow-black/10">
+                        <p className="text-sm text-[var(--text-muted)] mb-5">ou</p>
+                        <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#FAFAFA] text-black rounded-xl font-bold text-sm cursor-pointer hover:bg-white transition-colors shadow-lg shadow-black/10">
                           <Upload size={15} />
                           Parcourir les fichiers
                           <input type="file" accept=".xlsx,.xls" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} className="hidden" />
@@ -337,22 +333,22 @@ export default function EmployeeImportPage() {
                     {/* Loading */}
                     {isLoading && (
                       <div className="flex items-center justify-center gap-3 py-4">
-                        <Loader2 className="animate-spin text-sky-500" size={20} />
-                        <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Analyse du fichier…</span>
+                        <Loader2 className="animate-spin text-emerald-500" size={20} />
+                        <span className="text-sm text-[var(--text-muted)] font-medium">Analyse du fichier…</span>
                       </div>
                     )}
 
                     {/* Template download */}
-                    <div className="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-                      <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-                        <Download className="text-gray-500 dark:text-gray-400" size={18} />
+                    <div className="flex items-center gap-4 p-5 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)]">
+                      <div className="w-10 h-10 bg-[var(--surface-2)] rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                        <Download className="text-[var(--text-muted)]" size={18} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-0.5">Pas encore de fichier ?</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Téléchargez notre modèle avec colonnes pré-configurées.</p>
+                        <p className="text-sm font-bold text-[var(--text)] mb-0.5">Pas encore de fichier ?</p>
+                        <p className="text-xs text-[var(--text-muted)]">Téléchargez notre modèle avec colonnes pré-configurées.</p>
                       </div>
                       <button onClick={downloadTemplate}
-                        className="flex-shrink-0 px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-xs border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors shadow-sm">
+                        className="flex-shrink-0 px-4 py-2 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl font-bold text-xs border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors shadow-sm">
                         Télécharger
                       </button>
                     </div>
@@ -364,10 +360,10 @@ export default function EmployeeImportPage() {
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                        <h2 className="text-xl font-bold text-[var(--text)] mb-1">
                           Correspondance des colonnes
                         </h2>
-                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                        <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
                           <span className="flex items-center gap-1.5"><FileSpreadsheet size={13} />{analysis.totalRows} ligne(s)</span>
                           <span className="flex items-center gap-1.5"><Zap size={13} />{analysis.detectedColumns.length} colonne(s)</span>
                         </div>
@@ -389,26 +385,26 @@ export default function EmployeeImportPage() {
                     )}
 
                     {/* Preview table */}
-                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-                      <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <div className="rounded-2xl border border-[var(--border)] overflow-hidden">
+                      <div className="px-5 py-3 bg-[var(--surface-2)] border-b border-[var(--border)]">
+                        <h3 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
                           <FileCheck size={13} /> Aperçu (3 premières lignes)
                         </h3>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="border-b border-gray-100 dark:border-gray-800">
+                            <tr className="border-b border-[var(--border)]">
                               {analysis.detectedColumns.map((col: string) => (
-                                <th key={col} className="text-left px-4 py-2.5 font-bold text-gray-600 dark:text-gray-400 whitespace-nowrap text-xs">{col}</th>
+                                <th key={col} className="text-left px-4 py-2.5 font-bold text-[var(--text-muted)] whitespace-nowrap text-xs">{col}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
                             {analysis.previewData.slice(0, 3).map((row: any, i: number) => (
-                              <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50 last:border-0">
+                              <tr key={i} className="border-b border-[var(--border)] last:border-0">
                                 {analysis.detectedColumns.map((col: string) => (
-                                  <td key={col} className="px-4 py-2.5 text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">{row[col] ?? '—'}</td>
+                                  <td key={col} className="px-4 py-2.5 text-[var(--text-muted)] whitespace-nowrap text-xs">{row[col] ?? '—'}</td>
                                 ))}
                               </tr>
                             ))}
@@ -419,7 +415,7 @@ export default function EmployeeImportPage() {
 
                     {/* Mapping rows */}
                     <div className="space-y-2">
-                      <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
+                      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">
                         Faites correspondre vos colonnes aux champs du système
                       </p>
                       {analysis.detectedColumns.map((excelCol: string) => {
@@ -428,25 +424,25 @@ export default function EmployeeImportPage() {
                         return (
                           <div key={excelCol} className={`flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
                             isMapped
-                              ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700'
-                              : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'
+                              ? 'bg-[var(--surface-2)] border-[var(--border)]'
+                              : 'bg-[var(--surface)] border-[var(--border)]'
                           }`}>
                             {/* Column name */}
                             <div className="w-36 flex-shrink-0">
-                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{excelCol}</p>
+                              <p className="text-sm font-medium text-[var(--text-muted)] truncate">{excelCol}</p>
                               {suggestion && (
-                                <p className="text-[10px] text-sky-500 flex items-center gap-1 mt-0.5">
+                                <p className="text-[10px] text-emerald-500 flex items-center gap-1 mt-0.5">
                                   <CheckCircle2 size={10} /> {suggestion.confidence}% confiance
                                 </p>
                               )}
                             </div>
                             {/* Arrow */}
-                            <ChevronRight size={14} className="text-gray-300 dark:text-gray-600 flex-shrink-0" />
+                            <ChevronRight size={14} className="text-[var(--text-muted)] flex-shrink-0" />
                             {/* Select */}
                             <select
                               value={mappings[excelCol] || ''}
                               onChange={e => handleMappingChange(excelCol, e.target.value)}
-                              className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400 outline-none transition-all"
+                              className="flex-1 px-3 py-2 text-sm border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 outline-none transition-all"
                             >
                               <option value="">— Ignorer cette colonne —</option>
                               {Object.entries(DB_FIELDS).map(([value, label]) => (
@@ -455,11 +451,11 @@ export default function EmployeeImportPage() {
                             </select>
                             {/* Status indicator */}
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              isMapped ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-gray-100 dark:bg-gray-800'
+                              isMapped ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-[var(--surface-2)]'
                             }`}>
                               {isMapped
                                 ? <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
-                                : <X size={12} className="text-gray-300 dark:text-gray-600" />
+                                : <X size={12} className="text-[var(--text-muted)]" />
                               }
                             </div>
                           </div>
@@ -470,11 +466,11 @@ export default function EmployeeImportPage() {
                     {/* Actions */}
                     <div className="flex justify-between pt-2">
                       <button onClick={() => setStep(1)}
-                        className="px-5 py-2.5 text-sm text-gray-500 dark:text-gray-400 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                        className="px-5 py-2.5 text-sm text-[var(--text-muted)] font-semibold hover:bg-[var(--surface-2)] rounded-xl transition-colors">
                         ← Retour
                       </button>
                       <button onClick={validateMappings} disabled={isLoading}
-                        className="flex items-center gap-2 px-7 py-2.5 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-sky-500/20 disabled:opacity-50 transition-all">
+                        className="flex items-center gap-2 px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm disabled:opacity-50 transition-colors">
                         {isLoading ? <><Loader2 className="animate-spin" size={16} />Validation…</> : <>Valider <ChevronRight size={16} /></>}
                       </button>
                     </div>
@@ -485,8 +481,8 @@ export default function EmployeeImportPage() {
                 {step === 3 && validation && (
                   <div className="space-y-6 max-w-2xl mx-auto">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Résultat de la validation</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <h2 className="text-xl font-bold text-[var(--text)] mb-1">Résultat de la validation</h2>
+                      <p className="text-sm text-[var(--text-muted)]">
                         {validation.isValid ? 'Toutes les données sont prêtes à être importées.' : 'Certaines lignes contiennent des erreurs.'}
                       </p>
                     </div>
@@ -502,15 +498,15 @@ export default function EmployeeImportPage() {
                       <div className={`p-5 border rounded-2xl ${
                         validation.invalidRows > 0
                           ? 'bg-red-50 dark:bg-red-900/15 border-red-100 dark:border-red-800/40'
-                          : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                          : 'bg-[var(--surface-2)] border-[var(--border)]'
                       }`}>
                         <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wide mb-2 ${
-                          validation.invalidRows > 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400'
+                          validation.invalidRows > 0 ? 'text-red-500 dark:text-red-400' : 'text-[var(--text-muted)]'
                         }`}>
                           <XCircle size={14} /> Lignes invalides
                         </div>
                         <div className={`text-4xl font-black ${
-                          validation.invalidRows > 0 ? 'text-red-600 dark:text-red-300' : 'text-gray-400'
+                          validation.invalidRows > 0 ? 'text-red-600 dark:text-red-300' : 'text-[var(--text-muted)]'
                         }`}>{validation.invalidRows}</div>
                       </div>
                     </div>
@@ -536,11 +532,11 @@ export default function EmployeeImportPage() {
                     {/* Actions */}
                     <div className="flex justify-between pt-2">
                       <button onClick={() => setStep(2)}
-                        className="px-5 py-2.5 text-sm text-gray-500 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors">
+                        className="px-5 py-2.5 text-sm text-[var(--text-muted)] font-semibold hover:bg-[var(--surface-2)] rounded-xl transition-colors">
                         ← Modifier le mapping
                       </button>
                       <button onClick={executeImport} disabled={!validation.isValid || isLoading}
-                        className="flex items-center gap-2 px-7 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                        className="flex items-center gap-2 px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                         {isLoading ? <><Loader2 className="animate-spin" size={16} />Import…</> : <>Lancer l'import <ChevronRight size={16} /></>}
                       </button>
                     </div>
@@ -555,7 +551,7 @@ export default function EmployeeImportPage() {
                       initial={{ scale: 0, rotate: -12 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                      className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto ${
+                      className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto ${
                         importResult.success
                           ? 'bg-emerald-100 dark:bg-emerald-900/30 shadow-lg shadow-emerald-500/15'
                           : 'bg-amber-100 dark:bg-amber-900/30 shadow-lg shadow-amber-500/15'
@@ -569,14 +565,14 @@ export default function EmployeeImportPage() {
 
                     {/* Text */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
-                      <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+                      <h2 className="text-2xl font-black text-[var(--text)] mb-2 tracking-tight">
                         {importResult.success ? 'Import réussi !' : 'Import partiel'}
                       </h2>
-                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--surface-2)] rounded-2xl text-sm font-bold text-[var(--text-muted)]">
                         <Users size={15} />
                         {importResult.imported} employé(s) importé(s)
                         {importResult.skipped > 0 && (
-                          <span className="text-gray-400 font-normal">· {importResult.skipped} ignoré(s)</span>
+                          <span className="text-[var(--text-muted)] font-normal">· {importResult.skipped} ignoré(s)</span>
                         )}
                       </div>
                     </motion.div>
@@ -602,11 +598,11 @@ export default function EmployeeImportPage() {
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}
                       className="flex gap-3 justify-center">
                       <button onClick={() => window.location.reload()}
-                        className="px-5 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        className="px-5 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl font-bold text-sm hover:bg-[var(--border)] transition-colors">
                         Nouvel import
                       </button>
                       <button onClick={() => router.push('/employes')}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-sky-500/20 hover:from-sky-600 hover:to-cyan-600 transition-all group">
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm transition-colors group">
                         Voir les employés
                         <ArrowLeft size={14} className="rotate-180 group-hover:translate-x-0.5 transition-transform" />
                       </button>
@@ -622,7 +618,7 @@ export default function EmployeeImportPage() {
         {/* Tip */}
         <motion.p
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-          className="text-center text-xs text-gray-400 mt-4"
+          className="text-center text-xs text-[var(--text-muted)] mt-4"
         >
           Les données importées peuvent être modifiées depuis la fiche de chaque employé
         </motion.p>

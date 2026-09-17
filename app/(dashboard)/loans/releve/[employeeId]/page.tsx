@@ -90,7 +90,7 @@ export default function ReleveEmployeeDetailPage() {
     return { totalMontant, totalRemb, solde: totalMontant - totalRemb };
   }, [mouvements]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-sky-500" size={40} /></div>;
+  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 
@@ -101,64 +101,64 @@ export default function ReleveEmployeeDetailPage() {
       </div>
 
       <div className="flex items-center justify-between print:hidden">
-        <button onClick={() => router.push(bp('/loans/releve'))} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 font-semibold">
+        <button onClick={() => router.push(bp('/loans/releve'))} className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-semibold">
           <ArrowLeft size={16} /> Retour au relevé
         </button>
         <div className="flex gap-2">
-          <button onClick={() => router.push(bp(`/loans/suivi-dettes/${employeeId}`))} className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-xs font-semibold rounded-lg text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+          <button onClick={() => router.push(bp(`/loans/suivi-dettes/${employeeId}`))} className="px-3 py-1.5 border border-[var(--border)] text-xs font-semibold rounded-lg text-[var(--text-muted)] flex items-center gap-1.5">
             <Pencil size={12} /> Modifier / gérer
           </button>
-          <button onClick={() => window.print()} className="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+          <button onClick={() => window.print()} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
             <Printer size={12} /> Imprimer
           </button>
         </div>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-base font-bold text-sky-600 overflow-hidden shrink-0 print:hidden">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-base font-bold text-emerald-600 overflow-hidden shrink-0 print:hidden">
           {employee?.photoUrl ? <img src={employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
         </div>
         <div>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Relevé de compte — {employee?.firstName} {employee?.lastName}</h1>
-          <p className="text-sm text-gray-500">{employee?.department?.name || '—'} · Matricule {employee?.employeeNumber || '—'}</p>
+          <h1 className="text-lg font-bold text-[var(--text)]">Relevé de compte — {employee?.firstName} {employee?.lastName}</h1>
+          <p className="text-sm text-[var(--text-muted)]">{employee?.department?.name || '—'} · Matricule {employee?.employeeNumber || '—'}</p>
         </div>
       </div>
 
       {/* ── Totaux, façon ligne 2 de la feuille Excel ── */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-3 text-center">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Total emprunté</p>
-          <p className="font-bold text-gray-800 dark:text-gray-100">{fmt(totals.totalMontant)}</p>
+        <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-3 text-center">
+          <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">Total emprunté</p>
+          <p className="font-bold text-[var(--text)]">{fmt(totals.totalMontant)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-3 text-center">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Total remboursé</p>
+        <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-3 text-center">
+          <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">Total remboursé</p>
           <p className="font-bold text-emerald-600">{fmt(totals.totalRemb)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-3 text-center">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1">Solde</p>
-          <p className={`font-bold ${totals.solde > 0 ? 'text-amber-600' : 'text-gray-400'}`}>{fmt(totals.solde)}</p>
+        <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] p-3 text-center">
+          <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">Solde</p>
+          <p className={`font-bold ${totals.solde > 0 ? 'text-amber-600' : 'text-[var(--text-muted)]'}`}>{fmt(totals.solde)}</p>
         </div>
       </div>
 
       {/* ── Relevé chronologique ── */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-[11px] font-semibold text-gray-400 uppercase border-b border-gray-100 dark:border-gray-700">
+            <tr className="text-left text-[11px] font-semibold text-[var(--text-muted)] uppercase border-b border-[var(--border)]">
               <th className="px-4 py-2.5">Date</th>
               <th className="px-4 py-2.5">Motif</th>
               <th className="px-4 py-2.5 text-right">Montant emprunté</th>
               <th className="px-4 py-2.5 text-right">Remboursement</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody className="divide-y divide-[var(--border)]">
             {mouvements.length === 0 ? (
-              <tr><td colSpan={4} className="text-center py-10 text-gray-400">Aucun mouvement pour cet employé.</td></tr>
+              <tr><td colSpan={4} className="text-center py-10 text-[var(--text-muted)]">Aucun mouvement pour cet employé.</td></tr>
             ) : mouvements.map((m, i) => (
               <tr key={i}>
-                <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">{fmtDate(m.date)}</td>
-                <td className="px-4 py-2.5 text-gray-700 dark:text-gray-200">{m.motif}</td>
-                <td className="px-4 py-2.5 text-right text-gray-700 dark:text-gray-200">{m.montant ? fmt(m.montant) : '—'}</td>
+                <td className="px-4 py-2.5 text-[var(--text-muted)] whitespace-nowrap">{fmtDate(m.date)}</td>
+                <td className="px-4 py-2.5 text-[var(--text)]">{m.motif}</td>
+                <td className="px-4 py-2.5 text-right text-[var(--text)]">{m.montant ? fmt(m.montant) : '—'}</td>
                 <td className="px-4 py-2.5 text-right text-emerald-600">{m.remboursement ? fmt(m.remboursement) : '—'}</td>
               </tr>
             ))}

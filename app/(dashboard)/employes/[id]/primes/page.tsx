@@ -78,19 +78,18 @@ const FiscalBadge = ({ b }: { b: Bonus }) => {
     b.isTaxable && !b.isCnss  ? 'TAXABLE_NO_CNSS' : 'TAXABLE_CNSS'
   );
   if (ft === 'NON_TAXABLE') return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)] border border-[var(--border)]">
       Indemnité
     </span>
   );
   if (ft === 'TAXABLE_NO_CNSS') return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
       ITS seul.
     </span>
   );
   return (
-    <span className="inline-flex gap-1">
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700">ITS</span>
-      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">CNSS</span>
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+      ITS + CNSS
     </span>
   );
 };
@@ -110,29 +109,29 @@ const BonusAmount = ({ bonus }: { bonus: Bonus }) => {
   if (bonus.quantityMode === 'FREE' && bonus.unitAmount) {
     return (
       <div className="text-right">
-        <p className="font-bold text-sm text-slate-900 dark:text-white font-mono">
+        <p className="font-bold text-sm text-[var(--text)] font-mono">
           {Number(bonus.unitAmount).toLocaleString('fr-FR')}
-          <span className="text-xs text-slate-400 ml-0.5">FCFA/unité</span>
+          <span className="text-xs text-[var(--text-muted)] ml-0.5">FCFA/unité</span>
         </p>
         {bonus.defaultQuantity != null && (
-          <p className="text-[10px] text-slate-400">défaut: ×{bonus.defaultQuantity}</p>
+          <p className="text-[10px] text-[var(--text-muted)]">défaut: ×{bonus.defaultQuantity}</p>
         )}
       </div>
     );
   }
   if (bonus.amount != null) return (
-    <p className="font-bold text-lg text-slate-900 dark:text-white font-mono">
-      +{Number(bonus.amount).toLocaleString()} <span className="text-xs text-slate-400">FCFA</span>
+    <p className="font-bold text-lg text-[var(--text)] font-mono">
+      +{Number(bonus.amount).toLocaleString()} <span className="text-xs text-[var(--text-muted)]">FCFA</span>
     </p>
   );
   if (bonus.percentage != null) return (
-    <p className="font-bold text-lg text-purple-600 dark:text-purple-400">
-      +{bonus.percentage}% <span className="text-xs text-slate-400">
+    <p className="font-bold text-lg text-amber-600 dark:text-amber-400">
+      +{bonus.percentage}% <span className="text-xs text-[var(--text-muted)]">
         {bonus.baseCalculation === 'GROSS_SALARY' ? 'du brut' : 'du base'}
       </span>
     </p>
   );
-  return <p className="text-xs text-slate-400 italic">Montant libre</p>;
+  return <p className="text-xs text-[var(--text-muted)] italic">Montant libre</p>;
 };
 
 // ── RÉCAP / SIMULATION SALAIRE ───────────────────────────────────────────────
@@ -423,7 +422,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-cyan-500" size={40} />
+      <Loader2 className="animate-spin text-amber-500" size={40} />
     </div>
   );
 
@@ -432,22 +431,22 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
     <motion.div key={bonus.id}
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
       className="glass-panel rounded-xl p-4 flex items-center gap-4">
-      <div className="w-10 h-10 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl flex items-center justify-center shrink-0">
-        <Gift size={18} className="text-cyan-500" />
+      <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
+        <Gift size={18} className="text-amber-500" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
-          <p className="font-bold text-slate-900 dark:text-white text-sm">{bonus.bonusType}</p>
+          <p className="font-bold text-[var(--text)] text-sm">{bonus.bonusType}</p>
           <FiscalBadge b={bonus} />
           <QuantityBadge mode={bonus.quantityMode} />
           {bonus.isProratized && (
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700">Prorata</span>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">Prorata</span>
           )}
           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
             bonus.frequency === 'MONTHLY'
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800'
               : bonus.frequency === 'ANNUAL'
-                ? 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-400 dark:border-cyan-800'
+                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
                 : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800'
           }`}>
             {bonus.frequency === 'MONTHLY'
@@ -457,11 +456,11 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 : `Ponctuelle · ${getMonthLabel(bonus.targetMonth)} ${bonus.targetYear ?? ''}`}
           </span>
         </div>
-        {bonus.description && <p className="text-xs text-slate-400">{bonus.description}</p>}
+        {bonus.description && <p className="text-xs text-[var(--text-muted)]">{bonus.description}</p>}
       </div>
       <BonusAmount bonus={bonus} />
       <button onClick={() => handleDelete(bonus.id, bonus.bonusType)} disabled={deletingId === bonus.id}
-        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all ml-1">
+        className="p-2 text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all ml-1">
         {deletingId === bonus.id ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />}
       </button>
     </motion.div>
@@ -472,8 +471,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       <div className={`w-7 h-7 ${color} rounded-lg flex items-center justify-center`}>
         <Icon size={14} className="text-white" />
       </div>
-      <h3 className="text-sm font-bold text-slate-900 dark:text-white">{label}</h3>
-      <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold">{count}</span>
+      <h3 className="text-sm font-bold text-[var(--text)]">{label}</h3>
+      <span className="text-xs text-[var(--text-muted)] bg-[var(--surface-2)] px-2 py-0.5 rounded-full font-bold">{count}</span>
     </div>
   );
 
@@ -483,38 +482,38 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-500 transition-colors">
+          className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-amber-500 transition-colors">
           <ArrowLeft size={16} /> Retour au profil
         </button>
         <button onClick={openModal}
-          className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-xl shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all">
+          className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-amber-500/20 flex items-center gap-2 transition-all">
           <Plus size={18} /> Attribuer une prime
         </button>
       </div>
 
       {/* Titre */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <Gift size={28} className="text-cyan-500" />
+        <h1 className="text-3xl font-bold text-[var(--text)] flex items-center gap-3">
+          <Gift size={28} className="text-amber-500" />
           Primes de {employee?.firstName} {employee?.lastName}
         </h1>
       </div>
 
       {/* Carte employé */}
       {employee && (
-        <div className="glass-panel rounded-2xl p-5 flex items-center gap-4 border border-cyan-200 dark:border-cyan-800 bg-cyan-50/30 dark:bg-cyan-900/10">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-sky-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shrink-0">
+        <div className="glass-panel rounded-2xl p-5 flex items-center gap-4 border border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10">
+          <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shrink-0">
             {employee.firstName[0]}{employee.lastName[0]}
           </div>
           <div className="flex-1">
-            <p className="font-bold text-slate-900 dark:text-white text-lg">{employee.firstName} {employee.lastName}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
+            <p className="font-bold text-[var(--text)] text-lg">{employee.firstName} {employee.lastName}</p>
+            <p className="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-0.5">
               <Building2 size={12} />
               {employee.department?.name || employee.departmentName || '—'}
               {employee.position && <><span className="opacity-40">•</span>{employee.position}</>}
             </p>
           </div>
-          <CheckCircle2 size={22} className="text-cyan-500 shrink-0" />
+          <CheckCircle2 size={22} className="text-amber-500 shrink-0" />
         </div>
       )}
 
@@ -525,14 +524,14 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
 
       {/* 🆕 Ancienneté — override personnel (prioritaire sur la config entreprise) */}
       {employee && (
-        <section className="glass-panel rounded-2xl p-6 border border-violet-200 dark:border-violet-800 bg-violet-50/30 dark:bg-violet-900/10">
+        <section className="glass-panel rounded-2xl p-6 border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-violet-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
               <TrendingUp size={16} className="text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Prime d'ancienneté — configuration</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Calculée et affichée automatiquement sur le bulletin. Par défaut, suit la config générale de l'entreprise.</p>
+              <h2 className="text-sm font-bold text-[var(--text)]">Prime d'ancienneté — configuration</h2>
+              <p className="text-xs text-[var(--text-muted)]">Calculée et affichée automatiquement sur le bulletin. Par défaut, suit la config générale de l'entreprise.</p>
             </div>
           </div>
 
@@ -546,17 +545,17 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
               <button key={opt.key} onClick={() => setSeniorityOvMode(opt.key)}
                 className={`text-left p-3 rounded-xl border-2 transition-all ${
                   seniorityOvMode === opt.key
-                    ? 'border-violet-500 bg-violet-100 dark:bg-violet-900/30'
-                    : 'border-slate-200 dark:border-slate-700 hover:border-violet-300'
+                    ? 'border-amber-500 bg-amber-100 dark:bg-amber-900/30'
+                    : 'border-[var(--border)] hover:border-amber-300'
                 }`}>
-                <p className="text-xs font-bold text-slate-900 dark:text-white">{opt.label}</p>
-                <p className="text-[10px] text-slate-400">{opt.desc}</p>
+                <p className="text-xs font-bold text-[var(--text)]">{opt.label}</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{opt.desc}</p>
               </button>
             ))}
           </div>
 
           {seniorityOvMode === 'INHERIT' && (
-            <p className="text-xs text-slate-400 italic">
+            <p className="text-xs text-[var(--text-muted)] italic">
               Cet employé suit la formule d'ancienneté générale configurée dans les Paramètres entreprise.
             </p>
           )}
@@ -571,28 +570,28 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
             <>
               <div className="grid grid-cols-4 gap-2 mb-3">
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Dès l'année</p>
+                  <p className="text-[10px] text-[var(--text-muted)] mb-1">Dès l'année</p>
                   <input type="number" min={0} value={seniorityStartYear}
                     onChange={e => setSeniorityStartYear(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                    className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Taux de départ %</p>
+                  <p className="text-[10px] text-[var(--text-muted)] mb-1">Taux de départ %</p>
                   <input type="number" step="0.1" value={seniorityStartRate}
                     onChange={e => setSeniorityStartRate(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                    className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-1">+ % / an suppl.</p>
+                  <p className="text-[10px] text-[var(--text-muted)] mb-1">+ % / an suppl.</p>
                   <input type="number" step="0.1" value={seniorityRatePerYr}
                     onChange={e => setSeniorityRatePerYr(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                    className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-1">Plafond % (optionnel)</p>
+                  <p className="text-[10px] text-[var(--text-muted)] mb-1">Plafond % (optionnel)</p>
                   <input type="number" step="0.1" value={seniorityCapPercent} placeholder="aucun"
                     onChange={e => setSeniorityCapPercent(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-violet-200 dark:border-violet-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-800 dark:text-gray-200" />
+                    className="w-full px-2 py-2 bg-[var(--surface-2)] border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-[var(--text)]" />
                 </div>
               </div>
 
@@ -611,7 +610,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 rate = Math.round(rate * 100) / 100;
                 const amount = Math.round((rate / 100) * Number(employee.baseSalary ?? 0));
                 return (
-                  <p className="text-[11px] text-violet-600 dark:text-violet-300 bg-violet-100/50 dark:bg-violet-900/20 rounded-lg px-3 py-2">
+                  <p className="text-[11px] text-amber-600 dark:text-amber-300 bg-amber-100/50 dark:bg-amber-900/20 rounded-lg px-3 py-2">
                     Aperçu aujourd'hui : <strong>{years} ans</strong> d'ancienneté → taux <strong>{rate}%</strong> →
                     {' '}<strong>{amount.toLocaleString('fr-FR')} FCFA/mois</strong>
                   </p>
@@ -621,7 +620,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           )}
 
           <button onClick={saveSeniorityOverride} disabled={savingSeniority}
-            className="mt-4 w-full py-2 bg-violet-500 hover:bg-violet-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            className="mt-4 w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
             {savingSeniority ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :
              senioritySaved  ? <><CheckCircle2 size={12}/>Sauvegardé ✓</> :
                                'Enregistrer'}
@@ -632,8 +631,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {/* Stats rapides */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total primes', val: manualBonuses.length, icon: Gift, color: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
-          { label: 'Automatiques', val: autoBonuses.length, icon: Zap, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+          { label: 'Total primes', val: manualBonuses.length, icon: Gift, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+          { label: 'Automatiques', val: autoBonuses.length, icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
           { label: 'À saisir/mois', val: freeBonuses.length, icon: Hash, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
         ].map(s => (
           <div key={s.label} className="glass-panel rounded-2xl p-5 flex items-center gap-4">
@@ -641,8 +640,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
               <s.icon size={22} className={s.color} />
             </div>
             <div>
-              <p className="text-xs text-slate-400 uppercase font-bold">{s.label}</p>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{s.val}</p>
+              <p className="text-xs text-[var(--text-muted)] uppercase font-bold">{s.label}</p>
+              <p className="text-2xl font-bold text-[var(--text)]">{s.val}</p>
             </div>
           </div>
         ))}
@@ -657,18 +656,18 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 <Hash size={16} className="text-white" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Quantités à saisir</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Primes à quantité variable — saisir avant de générer le bulletin</p>
+                <h2 className="text-sm font-bold text-[var(--text)]">Quantités à saisir</h2>
+                <p className="text-xs text-[var(--text-muted)]">Primes à quantité variable — saisir avant de générer le bulletin</p>
               </div>
             </div>
             {/* Sélecteur mois/année */}
             <div className="flex items-center gap-2">
               <select value={qtyMonth} onChange={e => setQtyMonth(Number(e.target.value))}
-                className="text-xs p-1.5 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-slate-900 dark:text-white font-medium">
+                className="text-xs p-1.5 bg-[var(--surface)] border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-[var(--text)] font-medium">
                 {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
               <select value={qtyYear} onChange={e => setQtyYear(Number(e.target.value))}
-                className="text-xs p-1.5 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-slate-900 dark:text-white font-medium">
+                className="text-xs p-1.5 bg-[var(--surface)] border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-[var(--text)] font-medium">
                 {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
@@ -683,11 +682,11 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
               const isSaved_  = savedQty[bonus.id];
 
               return (
-                <div key={bonus.id} className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-amber-100 dark:border-amber-900">
+                <div key={bonus.id} className="bg-[var(--surface)] rounded-xl p-4 border border-amber-100 dark:border-amber-900">
                   <div className="flex items-center gap-3 mb-3">
                     <div>
-                      <p className="font-bold text-sm text-slate-900 dark:text-white">{bonus.bonusType}</p>
-                      <p className="text-xs text-slate-400">{Number(bonus.unitAmount ?? 0).toLocaleString('fr-FR')} FCFA × quantité</p>
+                      <p className="font-bold text-sm text-[var(--text)]">{bonus.bonusType}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{Number(bonus.unitAmount ?? 0).toLocaleString('fr-FR')} FCFA × quantité</p>
                     </div>
                     {currentQty && (
                       <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
@@ -701,13 +700,13 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                         value={qtyVal}
                         onChange={e => setQtyValues(p => ({ ...p, [bonus.id]: e.target.value }))}
                         placeholder="0"
-                        className="w-24 p-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-lg outline-none font-bold font-mono text-lg text-center text-slate-900 dark:text-white" />
-                      <span className="text-slate-400 text-sm">×</span>
-                      <span className="font-mono text-sm text-slate-600 dark:text-slate-300">
+                        className="w-24 p-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-lg outline-none font-bold font-mono text-lg text-center text-[var(--text)]" />
+                      <span className="text-[var(--text-muted)] text-sm">×</span>
+                      <span className="font-mono text-sm text-[var(--text-muted)]">
                         {Number(bonus.unitAmount ?? 0).toLocaleString('fr-FR')} FCFA
                       </span>
-                      <span className="text-slate-400">=</span>
-                      <span className="font-bold font-mono text-cyan-600 dark:text-cyan-400">
+                      <span className="text-[var(--text-muted)]">=</span>
+                      <span className="font-bold font-mono text-amber-600 dark:text-amber-400">
                         {computed.toLocaleString('fr-FR')} FCFA
                       </span>
                     </div>
@@ -715,7 +714,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                       value={qtyNotes[bonus.id] ?? ''}
                       onChange={e => setQtyNotes(p => ({ ...p, [bonus.id]: e.target.value }))}
                       placeholder="Note (optionnel)"
-                      className="flex-1 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none text-xs text-slate-600 dark:text-slate-400" />
+                      className="flex-1 p-2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg outline-none text-xs text-[var(--text-muted)]" />
                     <button onClick={() => saveQuantity(bonus.id)} disabled={isSaving_}
                       className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${
                         isSaved_
@@ -742,12 +741,12 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {/* Primes groupées par catégorie fiscale */}
       {manualBonuses.length === 0 ? (
         <div className="glass-panel rounded-2xl p-10 text-center">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Gift size={28} className="text-slate-400" />
+          <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <Gift size={28} className="text-[var(--text-muted)]" />
           </div>
-          <p className="text-slate-500 dark:text-slate-400 font-medium mb-2">Aucune prime attribuée</p>
+          <p className="text-[var(--text-muted)] font-medium mb-2">Aucune prime attribuée</p>
           <button onClick={openModal}
-            className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-sky-500 text-white font-bold rounded-xl text-sm flex items-center gap-2 mx-auto mt-4">
+            className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm flex items-center gap-2 mx-auto mt-4 transition-colors">
             <Plus size={16} /> Attribuer une prime
           </button>
         </div>
@@ -766,7 +765,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           {/* Primes imposables ITS uniquement */}
           {groupTaxableNoCnss.length > 0 && (
             <section>
-              <SectionHeader icon={TrendingUp} label="Primes imposables — ITS seul" count={groupTaxableNoCnss.length} color="bg-blue-500" />
+              <SectionHeader icon={TrendingUp} label="Primes imposables — ITS seul" count={groupTaxableNoCnss.length} color="bg-amber-500" />
               <div className="space-y-2">
                 <AnimatePresence>{groupTaxableNoCnss.map(b => <BonusCard key={b.id} bonus={b} />)}</AnimatePresence>
               </div>
@@ -776,7 +775,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           {/* Primes imposables ITS + CNSS */}
           {groupTaxableCnss.length > 0 && (
             <section>
-              <SectionHeader icon={Hand} label="Primes imposables — ITS + CNSS" count={groupTaxableCnss.length} color="bg-violet-500" />
+              <SectionHeader icon={Hand} label="Primes imposables — ITS + CNSS" count={groupTaxableCnss.length} color="bg-amber-500" />
               <div className="space-y-2">
                 <AnimatePresence>{groupTaxableCnss.map(b => <BonusCard key={b.id} bonus={b} />)}</AnimatePresence>
               </div>
@@ -785,17 +784,17 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
 
           {/* Lien catalogue */}
           <button onClick={() => router.push(bp(`/parametres/primes?back=${encodeURIComponent(backUrl)}`))}
-            className="w-full flex items-center justify-between p-4 rounded-xl border border-dashed border-cyan-300 dark:border-cyan-700 bg-cyan-50/50 dark:bg-cyan-900/10 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all group">
+            className="w-full flex items-center justify-between p-4 rounded-xl border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all group">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl flex items-center justify-center">
-                <Settings2 size={16} className="text-cyan-500" />
+              <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+                <Settings2 size={16} className="text-amber-500" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-bold text-cyan-700 dark:text-cyan-300">Gérer le catalogue</p>
-                <p className="text-xs text-cyan-500 dark:text-cyan-400">Ajouter, modifier ou supprimer des types de primes</p>
+                <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Gérer le catalogue</p>
+                <p className="text-xs text-amber-500 dark:text-amber-400">Ajouter, modifier ou supprimer des types de primes</p>
               </div>
             </div>
-            <ChevronRight size={16} className="text-cyan-400 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight size={16} className="text-amber-400 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       )}
@@ -804,29 +803,29 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {autoBonuses.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <Zap size={16} className="text-purple-500" />
+            <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+              <Zap size={16} className="text-amber-500" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Primes automatiques</h2>
-            <span className="text-xs text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 px-2 py-0.5 rounded-full font-bold border border-purple-200 dark:border-purple-800">
+            <h2 className="text-lg font-bold text-[var(--text)]">Primes automatiques</h2>
+            <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-2 py-0.5 rounded-full font-bold border border-amber-200 dark:border-amber-800">
               Convention Collective
             </span>
           </div>
           <div className="space-y-2">
             {autoBonuses.map(bonus => (
-              <div key={bonus.id} className="glass-panel rounded-xl p-4 flex items-center gap-4 border-l-4 border-l-purple-500">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center shrink-0">
-                  <Zap size={18} className="text-purple-500" />
+              <div key={bonus.id} className="glass-panel rounded-xl p-4 flex items-center gap-4 border-l-4 border-l-amber-500">
+                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
+                  <Zap size={18} className="text-amber-500" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-sm text-slate-900 dark:text-white">{bonus.bonusType}</p>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800 flex items-center gap-1">
+                    <p className="font-bold text-sm text-[var(--text)]">{bonus.bonusType}</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
                       <Zap size={9} /> Auto
                     </span>
                     <FiscalBadge b={bonus} />
                   </div>
-                  {bonus.description && <p className="text-xs text-slate-400 mt-0.5">{bonus.description}</p>}
+                  {bonus.description && <p className="text-xs text-[var(--text-muted)] mt-0.5">{bonus.description}</p>}
                 </div>
                 <BonusAmount bonus={bonus} />
               </div>
@@ -843,26 +842,26 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
             onClick={() => setShowModal(false)}>
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative overflow-y-auto max-h-[90vh]">
+              className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 max-w-md w-full shadow-xl relative overflow-y-auto max-h-[90vh]">
 
-              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 p-2 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
                 <X size={20} />
               </button>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-500 rounded-full flex items-center justify-center">
                   <Gift size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Attribuer une prime</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">{employee?.firstName} {employee?.lastName}</p>
+                  <h2 className="text-xl font-bold text-[var(--text)]">Attribuer une prime</h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{employee?.firstName} {employee?.lastName}</p>
                 </div>
               </div>
 
               <div className="space-y-5">
                 {/* Catalogue */}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Choisir dans le catalogue</label>
+                  <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Choisir dans le catalogue</label>
                   {templates.length === 0 ? (
                     <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl text-center">
                       <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-2">Catalogue vide</p>
@@ -873,7 +872,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                     </div>
                   ) : (
                     <select value={selectedTemplate?.id || ''} onChange={e => handleTemplateChange(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none text-slate-900 dark:text-white font-medium">
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none text-[var(--text)] font-medium">
                       <option value="">— Sélectionner une prime —</option>
                       {templates.map(t => (
                         <option key={t.id} value={t.id}>
@@ -888,16 +887,16 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
 
                   {/* Aperçu template sélectionné */}
                   {selectedTemplate && (
-                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="mt-2 p-3 bg-[var(--surface-2)]/50 rounded-xl border border-[var(--border)]">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <FiscalBadge b={{ ...selectedTemplate, source: 'MANUAL', isRecurring: selectedTemplate.isRecurring, bonusType: selectedTemplate.name }} />
                         <QuantityBadge mode={selectedTemplate.quantityMode} />
                         {selectedTemplate.isProratized && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700">Prorata</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">Prorata</span>
                         )}
                       </div>
                       {selectedTemplate.description && (
-                        <p className="text-xs text-gray-400">{selectedTemplate.description}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{selectedTemplate.description}</p>
                       )}
                       {selectedTemplate.quantityMode === 'FREE' && (
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
@@ -905,7 +904,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                         </p>
                       )}
                       {selectedTemplate.quantityMode && selectedTemplate.quantityMode !== 'FREE' && (
-                        <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                           <Zap size={11} /> Calcul automatique depuis le pointage
                         </p>
                       )}
@@ -916,29 +915,29 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 {/* Montant custom si nécessaire */}
                 {selectedTemplate && !selectedTemplate.quantityMode && selectedTemplate.defaultAmount == null && selectedTemplate.defaultPercentage == null && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Montant (FCFA)</label>
+                    <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Montant (FCFA)</label>
                     <input type="number" min="0" value={customAmount} onChange={e => setCustomAmount(e.target.value)}
                       placeholder="Ex: 25 000"
-                      className="w-full p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-xl text-slate-900 dark:text-white" />
+                      className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-xl text-[var(--text)]" />
                   </div>
                 )}
 
                 {/* Ajustement optionnel si montant par défaut */}
                 {selectedTemplate && !selectedTemplate.quantityMode && selectedTemplate.defaultAmount != null && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      Ajuster le montant <span className="text-xs font-normal text-gray-400">(optionnel — défaut: {Number(selectedTemplate.defaultAmount).toLocaleString('fr-FR')} F)</span>
+                    <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
+                      Ajuster le montant <span className="text-xs font-normal text-[var(--text-muted)]">(optionnel — défaut: {Number(selectedTemplate.defaultAmount).toLocaleString('fr-FR')} F)</span>
                     </label>
                     <input type="number" min="0" value={customAmount} onChange={e => setCustomAmount(e.target.value)}
                       placeholder={String(selectedTemplate.defaultAmount)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl outline-none font-bold font-mono text-lg text-slate-900 dark:text-white" />
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none font-bold font-mono text-lg text-[var(--text)]" />
                   </div>
                 )}
 
                 {/* Fréquence */}
                 {selectedTemplate && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Fréquence</label>
+                    <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Fréquence</label>
                     <div className="grid grid-cols-3 gap-3">
                       {([
                         { val: 'MONTHLY',  label: 'Mensuelle',  sub: 'Chaque mois', color: 'emerald' },
@@ -951,9 +950,9 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                               ? btn.color === 'emerald'
                                 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
                                 : btn.color === 'cyan'
-                                  ? 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300'
+                                  ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
                                   : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
-                              : 'border-slate-200 dark:border-slate-700 text-slate-500'
+                              : 'border-[var(--border)] text-[var(--text-muted)]'
                           }`}>
                           <div className="font-bold text-sm">{btn.label}</div>
                           <div className="text-xs opacity-75 mt-0.5">{btn.sub}</div>
@@ -968,25 +967,25 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                   {selectedTemplate && frequencyChoice === 'ANNUAL' && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                      <label className="block text-sm font-bold text-cyan-700 dark:text-cyan-300 mb-2 flex items-center gap-1">
+                      <label className="block text-sm font-bold text-amber-700 dark:text-amber-300 mb-2 flex items-center gap-1">
                         <Calendar size={14} /> Mois de versement chaque année
                       </label>
-                      <div className="p-3 bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-200 dark:border-cyan-800 rounded-xl">
+                      <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
                         <select value={targetMonths[0] ?? now.getMonth() + 1}
                           onChange={e => setTargetMonths([Number(e.target.value)])}
-                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-cyan-200 dark:border-cyan-700 rounded-lg outline-none text-slate-900 dark:text-white font-medium text-sm">
+                          className="w-full p-2.5 bg-[var(--surface)] border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-[var(--text)] font-medium text-sm">
                           {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                         </select>
-                        <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-2">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
                           Se déclenchera automatiquement chaque année en {getMonthLabel(targetMonths[0] ?? now.getMonth() + 1)} — pas besoin de la recréer l'an prochain.
                         </p>
                       </div>
 
                       {/* Aperçu chiffré 13e mois — si % + prorata activé */}
                       {selectedTemplate.defaultPercentage != null && employee?.baseSalary != null && (
-                        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl">
-                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Aperçu</p>
-                          <p className="text-xs text-slate-600 dark:text-slate-300">
+                        <div className="mt-3 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
+                          <p className="text-xs font-bold text-[var(--text-muted)] mb-1">Aperçu</p>
+                          <p className="text-xs text-[var(--text-muted)]">
                             Sur un salaire de base de {Number(employee.baseSalary).toLocaleString('fr-FR')} FCFA :
                             {' '}année complète → <strong>{Math.round((selectedTemplate.defaultPercentage / 100) * Number(employee.baseSalary)).toLocaleString('fr-FR')} FCFA</strong>.
                             {selectedTemplate.isProratized && (
@@ -1012,7 +1011,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                       </label>
                       <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl space-y-3">
                         <select value={targetYear} onChange={e => setTargetYear(Number(e.target.value))}
-                          className="w-full p-2.5 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-slate-900 dark:text-white font-medium text-sm">
+                          className="w-full p-2.5 bg-[var(--surface)] border border-amber-200 dark:border-amber-700 rounded-lg outline-none text-[var(--text)] font-medium text-sm">
                           {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
                         <div className="grid grid-cols-3 gap-2">
@@ -1023,7 +1022,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                                 className={`p-2 rounded-lg border text-xs font-bold transition-all ${
                                   selected
                                     ? 'border-amber-500 bg-amber-500 text-white'
-                                    : 'border-amber-200 dark:border-amber-700 bg-white dark:bg-gray-800 text-slate-600 dark:text-slate-300'
+                                    : 'border-amber-200 dark:border-amber-700 bg-[var(--surface)] text-[var(--text-muted)]'
                                 }`}>
                                 {m.label}
                               </button>
@@ -1062,11 +1061,11 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setShowModal(false)}
-                    className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 transition-all">
+                    className="flex-1 py-4 bg-[var(--surface-2)] text-[var(--text-muted)] font-bold rounded-xl hover:bg-[var(--border)] transition-colors">
                     Annuler
                   </button>
                   <button onClick={handleAdd} disabled={isSaving || !selectedTemplate}
-                    className="flex-1 py-4 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50">
+                    className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50">
                     {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     Attribuer
                   </button>
