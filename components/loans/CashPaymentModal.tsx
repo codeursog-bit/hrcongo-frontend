@@ -37,18 +37,18 @@ export default function CashPaymentModal({ open, onClose, remaining, onConfirm }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
+      <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-xl max-w-sm w-full p-6">
         <div className="flex items-center justify-between mb-1">
-          <p className="font-bold text-gray-900 dark:text-white text-lg">Enregistrer un remboursement</p>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          <p className="font-bold text-[var(--text)] text-lg">Enregistrer un remboursement</p>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20} /></button>
         </div>
-        <p className="text-sm text-gray-500 mb-4">Reste dû : <span className="font-semibold text-amber-600">{fmt(remaining)}</span></p>
+        <p className="text-sm text-[var(--text-muted)] mb-4">Reste dû : <span className="font-semibold text-amber-600">{fmt(remaining)}</span></p>
         <input
           type="text" inputMode="numeric" autoFocus value={amount} onChange={e => setAmount(e.target.value)}
           placeholder="Montant remboursé (FCFA)"
-          className="w-full text-lg font-semibold p-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 mb-3"
+          className="w-full text-lg font-semibold p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] mb-3"
         />
-        <button onClick={() => setAmount(String(remaining))} className="text-xs font-semibold text-sky-600 hover:underline mb-4">
+        <button onClick={() => setAmount(String(remaining))} className="text-xs font-semibold text-emerald-600 hover:underline mb-4">
           Solder toute la dette ({fmt(remaining)})
         </button>
         <div className="flex gap-2">

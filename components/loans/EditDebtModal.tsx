@@ -74,64 +74,64 @@ export default function EditDebtModal({ open, item, onClose, onSave }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
+      <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-xl max-w-sm w-full p-6">
         <div className="flex items-center justify-between mb-4">
-          <p className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
+          <p className="font-bold text-[var(--text)] text-lg flex items-center gap-2">
             <Pencil size={16} /> Modifier {item.kind === 'loan' ? 'le prêt' : "l'avance"}
           </p>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20} /></button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Montant (FCFA)</label>
+            <label className="text-xs font-semibold text-[var(--text-muted)] mb-1 block">Montant (FCFA)</label>
             <input type="text" inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+              className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
           </div>
 
           {item.kind === 'loan' && (
             <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1 block">Remboursement mensuel (FCFA)</label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] mb-1 block">Remboursement mensuel (FCFA)</label>
               <input type="text" inputMode="numeric" value={monthlyRepayment} onChange={e => setMonthlyRepayment(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
             </div>
           )}
 
           {item.kind === 'advance' && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Mois de déduction</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] mb-1 block">Mois de déduction</label>
                 <select value={deductMonth} onChange={e => setDeductMonth(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm">
+                  className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
                   {MONTHS_FR.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Année</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] mb-1 block">Année</label>
                 <input type="number" value={deductYear} onChange={e => setDeductYear(Number(e.target.value))}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm" />
+                  className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
               </div>
             </div>
           )}
 
           <div>
-            <label className="text-xs font-semibold text-gray-500 mb-1 block">Motif</label>
+            <label className="text-xs font-semibold text-[var(--text-muted)] mb-1 block">Motif</label>
             <textarea value={reason} onChange={e => setReason(e.target.value)} rows={2}
-              className="w-full p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-sm resize-none" />
+              className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
           </div>
 
           {error && <p className="text-xs text-red-500">{error}</p>}
 
-          <p className="text-[11px] text-gray-400 leading-snug">
+          <p className="text-[11px] text-[var(--text-muted)] leading-snug">
             Si des remboursements ont déjà été enregistrés, seul le reste à rembourser est ajusté — l&apos;historique existant est conservé.
           </p>
         </div>
 
         <div className="flex gap-2 mt-5">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-sm font-semibold rounded-xl text-gray-600 dark:text-gray-300">
+          <button onClick={onClose} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)]">
             Annuler
           </button>
-          <button onClick={handleSave} disabled={isSaving} className="flex-1 py-2.5 bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
+          <button onClick={handleSave} disabled={isSaving} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Pencil size={16} />} Enregistrer
           </button>
         </div>

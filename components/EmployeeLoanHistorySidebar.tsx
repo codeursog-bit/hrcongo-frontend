@@ -25,10 +25,10 @@ const STATUS_BADGE: Record<string, { label: string; cls: string; icon: any }> = 
   PENDING_DG:   { label: 'En attente',   cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
   ACTIVE:       { label: 'Actif',        cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
   APPROVED:     { label: 'Approuvée',    cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
-  PAID:         { label: 'Soldé',        cls: 'bg-sky-50 text-sky-700 border-sky-100', icon: CheckCircle2 },
-  DEDUCTED:     { label: 'Déduite',      cls: 'bg-sky-50 text-sky-700 border-sky-100', icon: CheckCircle2 },
+  PAID:         { label: 'Soldé',        cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: CheckCircle2 },
+  DEDUCTED:     { label: 'Déduite',      cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: CheckCircle2 },
   REJECTED:     { label: 'Refusé',       cls: 'bg-red-50 text-red-700 border-red-100', icon: XCircle },
-  CANCELLED:    { label: 'Annulé',       cls: 'bg-gray-50 text-gray-500 border-gray-200', icon: Ban },
+  CANCELLED:    { label: 'Annulé',       cls: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: Ban },
 };
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -98,12 +98,12 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
     <>
       <SlideOver open={open} onClose={onClose} title={`${data.employee.firstName} ${data.employee.lastName}`} subtitle="Fiche prêts & avances" widthClass="max-w-lg">
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-14 h-14 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-base font-bold text-sky-600 overflow-hidden shrink-0">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-base font-bold text-emerald-600 overflow-hidden shrink-0">
             {data.employee.photoUrl ? <img src={data.employee.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
           </div>
           <div>
-            <p className="text-sm text-gray-500">Matricule</p>
-            <p className="font-semibold text-gray-900 dark:text-white">{data.employee.employeeNumber || '—'}</p>
+            <p className="text-sm text-[var(--text-muted)]">Matricule</p>
+            <p className="font-semibold text-[var(--text)]">{data.employee.employeeNumber || '—'}</p>
           </div>
         </div>
 
@@ -113,26 +113,26 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
             <KpiTile label="Montant dû (total)" value={fmt(kpis.totalDue)} tone="slate" />
             <KpiTile label="Déjà remboursé" value={fmt(kpis.totalPaid)} tone="emerald" />
             <KpiTile label="Reste à rembourser" value={fmt(kpis.totalRemaining)} tone="amber" />
-            <KpiTile label="Mensualité en cours" value={fmt(kpis.monthlyLoad)} tone="sky" />
+            <KpiTile label="Mensualité en cours" value={fmt(kpis.monthlyLoad)} tone="amber" />
           </div>
         )}
 
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Banknote size={13} /> Prêts ({data.loans.length})</p>
+        <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5"><Banknote size={13} /> Prêts ({data.loans.length})</p>
         <div className="space-y-2 mb-6">
-          {data.loans.length === 0 ? <p className="text-sm text-gray-400 py-2">Aucun prêt.</p> : data.loans.map(l => {
+          {data.loans.length === 0 ? <p className="text-sm text-[var(--text-muted)] py-2">Aucun prêt.</p> : data.loans.map(l => {
             const cfg = STATUS_BADGE[l.status] ?? STATUS_BADGE.PENDING;
             const Icon = cfg.icon;
             return (
-              <div key={l.id} className="p-3 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-sky-200 dark:hover:border-sky-800 transition-colors">
+              <div key={l.id} className="p-3 rounded-xl border border-[var(--border)] hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
                 <button onClick={() => setDetailItem({ kind: 'loan', item: l })} className="w-full text-left">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{Number(l.amount).toLocaleString('fr-FR')} FCFA <span className="text-xs text-gray-400 font-normal">({l.type})</span></p>
+                    <p className="text-sm font-semibold text-[var(--text)]">{Number(l.amount).toLocaleString('fr-FR')} FCFA <span className="text-xs text-[var(--text-muted)] font-normal">({l.type})</span></p>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                   </div>
-                  <p className="text-xs text-gray-400">{new Date(l.createdAt).toLocaleDateString('fr-FR')} · reste {Number(l.remainingBalance).toLocaleString('fr-FR')} FCFA</p>
+                  <p className="text-xs text-[var(--text-muted)]">{new Date(l.createdAt).toLocaleDateString('fr-FR')} · reste {Number(l.remainingBalance).toLocaleString('fr-FR')} FCFA</p>
                 </button>
                 {canManage && l.status === 'ACTIVE' && onCashRepayment && (
-                  <button onClick={() => onCashRepayment(l.id, Number(l.remainingBalance))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <button onClick={() => onCashRepayment(l.id, Number(l.remainingBalance))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                     💵 Enregistrer un remboursement en espèces
                   </button>
                 )}
@@ -141,22 +141,22 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
           })}
         </div>
 
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Wallet size={13} /> Avances ({data.advances.length})</p>
+        <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5"><Wallet size={13} /> Avances ({data.advances.length})</p>
         <div className="space-y-2">
-          {data.advances.length === 0 ? <p className="text-sm text-gray-400 py-2">Aucune avance.</p> : data.advances.map(a => {
+          {data.advances.length === 0 ? <p className="text-sm text-[var(--text-muted)] py-2">Aucune avance.</p> : data.advances.map(a => {
             const cfg = STATUS_BADGE[a.status] ?? STATUS_BADGE.PENDING;
             const Icon = cfg.icon;
             return (
-              <div key={a.id} className="p-3 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-sky-200 dark:hover:border-sky-800 transition-colors">
+              <div key={a.id} className="p-3 rounded-xl border border-[var(--border)] hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
                 <button onClick={() => setDetailItem({ kind: 'advance', item: a })} className="w-full text-left">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{Number(a.amount).toLocaleString('fr-FR')} FCFA</p>
+                    <p className="text-sm font-semibold text-[var(--text)]">{Number(a.amount).toLocaleString('fr-FR')} FCFA</p>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                   </div>
-                  <p className="text-xs text-gray-400">{new Date(a.createdAt).toLocaleDateString('fr-FR')} · déduction {a.deductMonth}/{a.deductYear}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{new Date(a.createdAt).toLocaleDateString('fr-FR')} · déduction {a.deductMonth}/{a.deductYear}</p>
                 </button>
                 {canManage && a.status === 'APPROVED' && onAdvanceCashRepayment && (
-                  <button onClick={() => onAdvanceCashRepayment(a.id, Number(a.remainingBalance ?? a.amount))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <button onClick={() => onAdvanceCashRepayment(a.id, Number(a.remainingBalance ?? a.amount))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                     💵 Enregistrer un remboursement en espèces
                   </button>
                 )}
@@ -169,10 +169,10 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
       {/* ══════════════════ MODAL DÉTAIL (au clic sur une ligne) ══════════════════ */}
       {detailItem && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setDetailItem(null)}>
-          <div onClick={e => e.stopPropagation()} className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-5 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
+          <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-xl max-w-sm w-full p-5 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <p className="font-bold text-gray-900 dark:text-white">{detailItem.kind === 'loan' ? 'Détail du prêt' : "Détail de l'avance"}</p>
-              <button onClick={() => setDetailItem(null)} className="text-gray-400 hover:text-gray-600"><CloseIcon size={18} /></button>
+              <p className="font-bold text-[var(--text)]">{detailItem.kind === 'loan' ? 'Détail du prêt' : "Détail de l'avance"}</p>
+              <button onClick={() => setDetailItem(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]"><CloseIcon size={18} /></button>
             </div>
             <div className="space-y-2.5 text-sm mb-4">
               <DetailRow label="Montant" value={fmt(Number(detailItem.item.amount))} />
@@ -186,22 +186,22 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
             </div>
 
             {/* ── Historique des remboursements — supprimable ── */}
-            <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Remboursements enregistrés</p>
+            <div className="pt-3 border-t border-[var(--border)]">
+              <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Remboursements enregistrés</p>
               {isLoadingLogs ? (
-                <div className="flex justify-center py-4"><Loader2 size={16} className="animate-spin text-gray-400" /></div>
+                <div className="flex justify-center py-4"><Loader2 size={16} className="animate-spin text-[var(--text-muted)]" /></div>
               ) : repaymentLogs.length === 0 ? (
-                <p className="text-xs text-gray-400 py-1">Aucun remboursement en espèces enregistré pour l&apos;instant.</p>
+                <p className="text-xs text-[var(--text-muted)] py-1">Aucun remboursement en espèces enregistré pour l&apos;instant.</p>
               ) : (
                 <div className="space-y-1.5">
                   {repaymentLogs.map(log => (
-                    <div key={log.id} className="flex items-center justify-between gap-2 text-sm bg-gray-50 dark:bg-gray-900 rounded-lg px-3 py-2">
+                    <div key={log.id} className="flex items-center justify-between gap-2 text-sm bg-[var(--surface-2)] rounded-lg px-3 py-2">
                       <div>
-                        <span className="font-semibold text-gray-800 dark:text-gray-100">{fmt(Number(log.amount))}</span>
-                        <span className="text-xs text-gray-400 ml-2">{MONTHS_FR[log.month - 1]} {log.year}</span>
+                        <span className="font-semibold text-[var(--text)]">{fmt(Number(log.amount))}</span>
+                        <span className="text-xs text-[var(--text-muted)] ml-2">{MONTHS_FR[log.month - 1]} {log.year}</span>
                       </div>
                       {canManage && (
-                        <button onClick={() => handleDeleteLog(log.id)} disabled={deletingLogId === log.id} className="text-gray-400 hover:text-red-600 disabled:opacity-40 shrink-0" title="Supprimer ce remboursement">
+                        <button onClick={() => handleDeleteLog(log.id)} disabled={deletingLogId === log.id} className="text-[var(--text-muted)] hover:text-red-600 disabled:opacity-40 shrink-0" title="Supprimer ce remboursement">
                           {deletingLogId === log.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                         </button>
                       )}
@@ -217,12 +217,11 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
   );
 }
 
-function KpiTile({ label, value, tone }: { label: string; value: string; tone: 'slate' | 'emerald' | 'amber' | 'sky' }) {
+function KpiTile({ label, value, tone }: { label: string; value: string; tone: 'slate' | 'emerald' | 'amber' }) {
   const cls: Record<string, string> = {
-    slate: 'bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200',
+    slate: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
     emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
     amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
-    sky: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300',
   };
   return (
     <div className={`rounded-xl p-3 ${cls[tone]}`}>
@@ -235,8 +234,8 @@ function KpiTile({ label, value, tone }: { label: string; value: string; tone: '
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-gray-400">{label}</span>
-      <span className="font-semibold text-gray-800 dark:text-gray-100 text-right">{value}</span>
+      <span className="text-[var(--text-muted)]">{label}</span>
+      <span className="font-semibold text-[var(--text)] text-right">{value}</span>
     </div>
   );
 }
