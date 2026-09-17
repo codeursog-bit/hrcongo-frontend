@@ -5,19 +5,18 @@
 // Même langage visuel que components/layout/Sidebar.tsx (Tailwind + CSS vars,
 // lucide-react, vert émeraude) — pas le thème navy du cabinet.
 
-import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useTheme } from '@/components/providers/ThemeProvider';
 import {
   LayoutDashboard, Building2, Users, Wallet, HandCoins,
-  Calendar, Users2, ClipboardList, LogOut, Hexagon, BarChart3, UserPlus, Moon, Sun,
+  Calendar, Users2, ClipboardList, LogOut, Hexagon, BarChart3, UserPlus,
+  type LucideIcon,
 } from 'lucide-react';
 
 interface NavEntry {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   path: string;
 }
 
@@ -42,7 +41,6 @@ interface PortfolioSidebarProps {
 export default function PortfolioSidebar({ userName, userEmail }: PortfolioSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
 
   const isActive = (path: string) => pathname === path || pathname?.startsWith(`${path}/`);
 
@@ -103,14 +101,6 @@ export default function PortfolioSidebar({ userName, userEmail }: PortfolioSideb
             <p className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{userName ?? 'Mon compte'}</p>
             <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{userEmail ?? ''}</p>
           </div>
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}
-            className="p-1.5 rounded-lg shrink-0 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
         </div>
         <button
           onClick={logout}
