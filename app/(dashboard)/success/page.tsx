@@ -186,18 +186,18 @@ function SuccessContent() {
   // ⏳ VÉRIFICATION EN COURS
   if (status === 'checking') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-6">
         <div className="text-center glass-panel p-10 rounded-2xl max-w-md w-full">
           <div className="relative mb-6">
-            <div className="w-20 h-20 mx-auto bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-              <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
+            <div className="w-20 h-20 mx-auto bg-emerald-500/10 rounded-full flex items-center justify-center">
+              <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
             </div>
-            <Sparkles className="w-6 h-6 text-yellow-400 absolute top-0 right-1/3 animate-bounce" />
+            <Sparkles className="w-6 h-6 text-amber-400 absolute top-0 right-1/3 animate-bounce" />
           </div>
-          <h2 className="text-xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold mb-2 text-emerald-500">
             Vérification en cours…
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-[var(--text-muted)] text-sm">
             On vérifie l'activation de votre abonnement
           </p>
         </div>
@@ -208,52 +208,52 @@ function SuccessContent() {
   // ✅ SUCCÈS
   if (status === 'success') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 p-6 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-6 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <Sparkles className="w-10 h-10 text-yellow-400 absolute top-10 left-10 animate-pulse" />
-          <Sparkles className="w-7 h-7 text-pink-400 absolute top-20 right-20 animate-bounce" />
-          <Sparkles className="w-9 h-9 text-purple-400 absolute bottom-20 left-1/4 animate-pulse" />
+          <Sparkles className="w-10 h-10 text-amber-400 absolute top-10 left-10 animate-pulse" />
+          <Sparkles className="w-7 h-7 text-emerald-400 absolute top-20 right-20 animate-bounce" />
+          <Sparkles className="w-9 h-9 text-amber-400 absolute bottom-20 left-1/4 animate-pulse" />
         </div>
 
         <div className="max-w-md w-full glass-panel p-8 rounded-2xl shadow-2xl relative z-10">
           <div className="text-center mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+            <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/30">
               <CheckCircle className="w-14 h-14 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold mb-2 text-emerald-500">
               Félicitations ! 🎉
             </h1>
-            <p className="text-slate-600 dark:text-slate-300 font-medium">
+            <p className="text-[var(--text)] font-medium">
               Votre abonnement est activé
             </p>
           </div>
 
           {subscription && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-5 mb-6 border border-purple-200 dark:border-purple-800">
+            <div className="bg-emerald-500/10 rounded-xl p-5 mb-6 border border-emerald-500/20">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                  <Crown className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                  <Crown className="w-5 h-5 text-emerald-500" />
                 </div>
-                <span className="font-bold text-slate-800 dark:text-white">Votre plan actuel</span>
+                <span className="font-bold text-[var(--text)]">Votre plan actuel</span>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg">
-                  <span className="text-sm text-slate-500">Plan</span>
-                  <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-lg">
+                  <span className="text-sm text-[var(--text-muted)]">Plan</span>
+                  <span className="font-bold text-lg text-emerald-500">
                     {PLAN_LABELS[subscription.plan] ?? subscription.plan}
                   </span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg">
-                  <span className="text-sm text-slate-500">Statut</span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-400 to-emerald-500 text-white">
+                <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-lg">
+                  <span className="text-sm text-[var(--text-muted)]">Statut</span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white">
                     <CheckCircle className="w-3.5 h-3.5" />
                     {subscription.status === 'TRIALING' ? 'Essai gratuit' : 'Actif'}
                   </span>
                 </div>
                 {subscription.currentPeriodEnd && (
-                  <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-lg">
-                    <span className="text-sm text-slate-500">Valide jusqu'au</span>
-                    <span className="font-semibold text-sm text-slate-800 dark:text-white">
+                  <div className="flex justify-between items-center p-3 bg-[var(--surface)] rounded-lg">
+                    <span className="text-sm text-[var(--text-muted)]">Valide jusqu'au</span>
+                    <span className="font-semibold text-sm text-[var(--text)]">
                       {new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-FR', {
                         day: 'numeric', month: 'long', year: 'numeric',
                       })}
@@ -262,8 +262,8 @@ function SuccessContent() {
                 )}
                 {/* FREE plan info si retour au gratuit */}
                 {subscription.plan === 'FREE' && (
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
+                  <div className="p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--border)]">
+                    <p className="text-xs text-[var(--text-muted)] text-center">
                       Vous êtes sur le plan gratuit. Vous pouvez upgrader à tout moment.
                     </p>
                   </div>
@@ -272,21 +272,21 @@ function SuccessContent() {
             </div>
           )}
 
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6 border border-blue-100 dark:border-blue-800">
-            <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
+          <div className="bg-emerald-500/10 rounded-lg p-4 mb-6 border border-emerald-500/20">
+            <p className="text-sm text-emerald-500 text-center">
               🚀 Vous avez accès à toutes les fonctionnalités de votre plan !
             </p>
           </div>
 
           <div className="space-y-3">
             <Link href="/dashboard" className="block">
-              <button className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 group">
+              <button className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2 group">
                 <span>Aller au tableau de bord</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link href="/parametres/subscription" className="block">
-              <button className="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3 px-6 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-300 transition-all">
+              <button className="w-full bg-[var(--surface)] text-[var(--text)] font-semibold py-3 px-6 rounded-xl border-2 border-[var(--border)] hover:border-emerald-500/40 transition-colors">
                 Gérer mon abonnement
               </button>
             </Link>
@@ -299,16 +299,16 @@ function SuccessContent() {
   // ❌ ÉCHEC
   if (status === 'failed') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-50 dark:from-slate-900 dark:to-slate-800 p-6">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-6">
         <div className="glass-panel p-8 rounded-2xl max-w-md w-full">
           <div className="text-center mb-6">
             <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <XCircle className="w-12 h-12 text-red-500" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-bold text-[var(--text)] mb-2">
               Paiement échoué
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-[var(--text-muted)] text-sm">
               Le paiement n'a pas pu être traité. Vérifiez votre solde ou réessayez.
             </p>
           </div>
@@ -320,13 +320,13 @@ function SuccessContent() {
           <div className="space-y-3">
             <button
               onClick={() => router.push('/pricing')}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2"
             >
               <Rocket className="w-4 h-4" />
               Réessayer le paiement
             </button>
             <Link href="/dashboard" className="block">
-              <button className="w-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all">
+              <button className="w-full bg-[var(--surface)] text-[var(--text-muted)] font-semibold py-3 px-6 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
                 Retour au tableau de bord
               </button>
             </Link>
@@ -338,25 +338,25 @@ function SuccessContent() {
 
   // ⏳ EN ATTENTE WEBHOOK (état principal après confirmation téléphone)
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-50 dark:from-slate-900 dark:to-slate-800 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] p-6">
       <div className="glass-panel p-8 rounded-2xl max-w-md w-full">
         <div className="text-center mb-6">
           <div className="relative inline-block mb-4">
             <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto">
               <Phone className="w-10 h-10 text-amber-500" />
             </div>
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
               <Zap className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-2xl font-bold text-[var(--text)] mb-2">
             En attente de confirmation
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-[var(--text-muted)] text-sm">
             {plan ? (
               <>
                 Paiement pour le plan{' '}
-                <span className="font-bold text-purple-600 dark:text-purple-400">
+                <span className="font-bold text-amber-500">
                   {PLAN_LABELS[plan] ?? plan}
                 </span>{' '}
                 en cours de traitement.
@@ -387,20 +387,20 @@ function SuccessContent() {
         </div>
 
         {/* Countdown */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 mb-4 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="bg-[var(--surface)] rounded-xl p-4 mb-4 border border-[var(--border)] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4 text-slate-400" style={{ animation: 'spin 3s linear infinite' }} />
-            <span className="text-sm text-slate-500 dark:text-slate-400">Vérification dans</span>
+            <RefreshCw className="w-4 h-4 text-[var(--text-muted)]" style={{ animation: 'spin 3s linear infinite' }} />
+            <span className="text-sm text-[var(--text-muted)]">Vérification dans</span>
           </div>
-          <span className="text-xl font-bold text-purple-600 dark:text-purple-400 font-mono tabular-nums">
+          <span className="text-xl font-bold text-emerald-500 font-mono tabular-nums">
             {countdown}s
           </span>
         </div>
 
         {/* Tentatives */}
         {attempts > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-4 text-center border border-blue-100 dark:border-blue-800">
-            <p className="text-xs text-blue-600 dark:text-blue-400">
+          <div className="bg-emerald-500/10 rounded-lg p-3 mb-4 text-center border border-emerald-500/20">
+            <p className="text-xs text-emerald-500">
               Vérification n°{attempts + 1} — Pas encore activé, on continue…
             </p>
           </div>
@@ -410,7 +410,7 @@ function SuccessContent() {
           <button
             onClick={handleManualCheck}
             disabled={isChecking}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {isChecking
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Vérification…</>
@@ -419,12 +419,12 @@ function SuccessContent() {
           </button>
 
           <Link href="/parametres/subscription" className="block">
-            <button className="w-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all text-sm">
+            <button className="w-full bg-[var(--surface)] text-[var(--text-muted)] font-semibold py-3 px-6 rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors text-sm">
               Voir mon abonnement
             </button>
           </Link>
 
-          <p className="text-[11px] text-center text-slate-400">
+          <p className="text-[11px] text-center text-[var(--text-muted)]">
             Si l'activation tarde, contactez le support.
           </p>
         </div>
@@ -436,8 +436,8 @@ function SuccessContent() {
 export default function SuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900 dark:to-slate-800">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
+        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
       </div>
     }>
       <SuccessContent />

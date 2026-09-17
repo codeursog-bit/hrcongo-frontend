@@ -52,12 +52,12 @@ const CONTRACT_TYPE_ICON: Record<string, React.ElementType> = {
 };
 
 const CONTRACT_META: Record<string, { label: string; color: string; badge: string }> = {
-  CDI:         { label: 'CDI',         color: 'blue',   badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
+  CDI:         { label: 'CDI',         color: 'emerald', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
   CDD:         { label: 'CDD',         color: 'amber',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
-  STAGE:       { label: 'Stage',       color: 'purple', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400' },
-  CONSULTANT:  { label: 'Consultant',  color: 'teal',   badge: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' },
-  PRESTATAIRE: { label: 'Prestataire', color: 'slate',  badge: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
-  INTERIM:     { label: 'Intérim',     color: 'orange', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' },
+  STAGE:       { label: 'Stage',       color: 'emerald', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
+  CONSULTANT:  { label: 'Consultant',  color: 'amber',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+  PRESTATAIRE: { label: 'Prestataire', color: 'emerald', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' },
+  INTERIM:     { label: 'Intérim',     color: 'amber',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
 };
 
 const TEMP_CONTRACTS = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
@@ -80,7 +80,7 @@ type Tab = 'actifs' | 'expirant' | 'essais' | 'bnc' | 'termines';
 function ContractBadge({ type }: { type: string }) {
   const m = CONTRACT_META[type];
   const Icon = CONTRACT_TYPE_ICON[type];
-  if (!m) return <span className="text-xs font-semibold text-slate-500">{type}</span>;
+  if (!m) return <span className="text-xs font-semibold text-[var(--text-muted)]">{type}</span>;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${m.badge}`}>
       {Icon && <Icon className="w-3 h-3" />} {m.label}
@@ -89,11 +89,10 @@ function ContractBadge({ type }: { type: string }) {
 }
 
 function UrgencyBadge({ days, status }: { days: number; status: string }) {
-  if (status === 'EXPIRED') return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">Expiré</span>;
+  if (status === 'EXPIRED') return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--text-muted)]">Expiré</span>;
   if (days <= 3)  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 flex items-center gap-1"><XCircle className="w-3 h-3" /> J-{days}</span>;
-  if (days <= 7)  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> J-{days}</span>;
   if (days <= 14) return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 flex items-center gap-1"><Clock className="w-3 h-3" /> J-{days}</span>;
-  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">J-{days}</span>;
+  return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[var(--surface-2)] text-[var(--text-muted)]">J-{days}</span>;
 }
 
 // ─── Modal renouvellement ─────────────────────────────────────────────────────
@@ -121,31 +120,31 @@ function RenewModal({ emp, onClose, onDone }: { emp: ContractEmployee; onClose: 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 w-full max-w-md shadow-2xl p-6 space-y-5">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] w-full max-w-md shadow-2xl p-6 space-y-5">
         <div>
-          <h3 className="font-bold text-slate-900 dark:text-white text-lg">{emp.firstName} {emp.lastName}</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{emp.position} · <ContractBadge type={emp.contractType} /></p>
+          <h3 className="font-bold text-[var(--text)] text-lg">{emp.firstName} {emp.lastName}</h3>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">{emp.position} · <ContractBadge type={emp.contractType} /></p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <button onClick={() => setAction('RENEW')}
-            className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${action === 'RENEW' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
-            <RotateCcw className={`w-5 h-5 ${action === 'RENEW' ? 'text-blue-600' : 'text-slate-400'}`} />
-            <span className={`text-sm font-semibold ${action === 'RENEW' ? 'text-blue-700 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>Renouveler</span>
+            className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${action === 'RENEW' ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/40' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+            <RotateCcw className={`w-5 h-5 ${action === 'RENEW' ? 'text-amber-600' : 'text-[var(--text-muted)]'}`} />
+            <span className={`text-sm font-semibold ${action === 'RENEW' ? 'text-amber-700 dark:text-amber-400' : 'text-[var(--text-muted)]'}`}>Renouveler</span>
           </button>
           {canConvert && (
             <button onClick={() => setAction('CONVERT')}
-              className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${action === 'CONVERT' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
-              <TrendingUp className={`w-5 h-5 ${action === 'CONVERT' ? 'text-emerald-600' : 'text-slate-400'}`} />
-              <span className={`text-sm font-semibold ${action === 'CONVERT' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>Convertir CDI</span>
+              className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${action === 'CONVERT' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+              <TrendingUp className={`w-5 h-5 ${action === 'CONVERT' ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`} />
+              <span className={`text-sm font-semibold ${action === 'CONVERT' ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text-muted)]'}`}>Convertir CDI</span>
             </button>
           )}
         </div>
         {action === 'RENEW' && (
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Nouvelle date de fin *</label>
+            <label className="block text-sm font-semibold text-[var(--text)] mb-1.5">Nouvelle date de fin *</label>
             <input type="date" value={endDate} min={new Date().toISOString().split('T')[0]}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40" />
+              className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
           </div>
         )}
         {action === 'CONVERT' && (
@@ -156,9 +155,9 @@ function RenewModal({ emp, onClose, onDone }: { emp: ContractEmployee; onClose: 
         )}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Annuler</button>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">Annuler</button>
           <button onClick={save} disabled={saving}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50 ${action === 'CONVERT' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'}`}>
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50 ${action === 'CONVERT' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/30'}`}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : action === 'CONVERT' ? <TrendingUp className="w-4 h-4" /> : <RotateCcw className="w-4 h-4" />}
             {action === 'CONVERT' ? 'Convertir en CDI' : 'Renouveler'}
           </button>
@@ -191,14 +190,14 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
   const isConfirm = mode === 'CONFIRM';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 w-full max-w-md shadow-2xl p-6 space-y-5">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] w-full max-w-md shadow-2xl p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className={`p-3 rounded-xl ${isConfirm ? 'bg-emerald-100 dark:bg-emerald-900/40' : 'bg-red-100 dark:bg-red-900/40'}`}>
             {isConfirm ? <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <UserX className="w-5 h-5 text-red-600 dark:text-red-400" />}
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white">{isConfirm ? "Confirmer l'essai" : "Rompre l'essai"}</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{emp.firstName} {emp.lastName} · {emp.contractType}</p>
+            <h3 className="font-bold text-[var(--text)]">{isConfirm ? "Confirmer l'essai" : "Rompre l'essai"}</h3>
+            <p className="text-sm text-[var(--text-muted)]">{emp.firstName} {emp.lastName} · {emp.contractType}</p>
           </div>
         </div>
         {isConfirm ? (
@@ -213,16 +212,16 @@ function TrialModal({ emp, mode, onClose, onDone }: { emp: TrialEmployee; mode: 
               <p className="mt-1">Aucun préavis ni indemnité de licenciement. L'employé sera marqué Terminé.</p>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Motif de rupture *</label>
+              <label className="block text-sm font-semibold text-[var(--text)] mb-1.5">Motif de rupture *</label>
               <textarea rows={3} value={reason} onChange={e => setReason(e.target.value)}
                 placeholder="Ex: Compétences insuffisantes, manque d'adéquation au poste…"
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500/40 resize-none" />
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-red-500/40 resize-none" />
             </div>
           </div>
         )}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Annuler</button>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">Annuler</button>
           <button onClick={save} disabled={saving}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50 ${isConfirm ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/30' : 'bg-red-600 hover:bg-red-700 shadow-red-500/30'}`}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : isConfirm ? <Check className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
@@ -308,7 +307,7 @@ export default function ContratsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 max-w-6xl mx-auto space-y-5">
+    <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6 max-w-6xl mx-auto space-y-5">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-4">
@@ -316,16 +315,16 @@ export default function ContratsPage() {
           {/* Bouton retour */}
           <button
             onClick={() => router.back()}
-            className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/30">
+          <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg">
             <FileText className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Gestion des Contrats</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{actifs.length} actifs · {expirant.length} expirant · {trials.length} en essai · {bncList.length} BNC</p>
+            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">Gestion des Contrats</h1>
+            <p className="text-sm text-[var(--text-muted)]">{actifs.length} actifs · {expirant.length} expirant · {trials.length} en essai · {bncList.length} BNC</p>
           </div>
         </div>
 
@@ -333,7 +332,7 @@ export default function ContratsPage() {
           {/* 🆕 Générer un contrat */}
           <button
             onClick={() => router.push(bp('/contrats/generer'))}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white text-sm font-semibold rounded-xl shadow-md shadow-indigo-500/30 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] text-white text-sm font-semibold rounded-xl shadow-md transition-all"
           >
             <FileSignature className="w-4 h-4" />
             Générer un contrat
@@ -348,7 +347,7 @@ export default function ContratsPage() {
           </button>
           <button
             onClick={() => { loadEmployees(); if (tab === 'essais') loadTrials(); }}
-            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 transition-colors"
+            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -389,23 +388,23 @@ export default function ContratsPage() {
           const count = employees.filter(e => e.contractType === ct && e.status === 'ACTIVE').length;
           return (
             <button key={ct} onClick={() => setTypeFilter(typeFilter === ct ? 'ALL' : ct)}
-              className={`p-3 rounded-xl border text-center transition-all ${typeFilter === ct ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300'}`}>
-              {Icon && <div className="flex justify-center mb-0.5"><Icon className={`w-4 h-4 ${typeFilter === ct ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} /></div>}
-              <div className="font-bold text-slate-900 dark:text-white text-lg leading-none">{count}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{m.label}</div>
+              className={`p-3 rounded-xl border text-center transition-all ${typeFilter === ct ? 'border-[var(--brand)] bg-[var(--brand-soft)] shadow-sm' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--text-muted)]'}`}>
+              {Icon && <div className="flex justify-center mb-0.5"><Icon className={`w-4 h-4 ${typeFilter === ct ? 'text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} /></div>}
+              <div className="font-bold text-[var(--text)] text-lg leading-none">{count}</div>
+              <div className="text-xs text-[var(--text-muted)] mt-0.5">{m.label}</div>
             </button>
           );
         })}
       </div>
 
       {/* Onglets */}
-      <div className="flex gap-1 p-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-x-auto">
+      <div className="flex gap-1 p-1 bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-x-auto">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${tab === t.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>
+            className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${tab === t.id ? 'bg-[var(--brand)] text-white shadow-md' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
             <t.icon className="w-3.5 h-3.5" />
             {t.label}
-            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${tab === t.id ? 'bg-white/20 text-white' : t.alert ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>{t.count}</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${tab === t.id ? 'bg-white/20 text-white' : t.alert ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>{t.count}</span>
             {t.alert && tab !== t.id && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
           </button>
         ))}
@@ -414,36 +413,36 @@ export default function ContratsPage() {
       {/* Recherche */}
       {tab !== 'essais' && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher nom, matricule, poste…"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40" />
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] placeholder-[var(--text-muted)] text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
         </div>
       )}
 
       {/* ═══ ONGLET ESSAIS ══════════════════════════════════════════════════ */}
       {tab === 'essais' && (
         <div className="space-y-3">
-          {trialsLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /></div>}
+          {trialsLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>}
           {!trialsLoading && trials.length === 0 && (
-            <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-sm">
-              <Shield className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+            <div className="text-center py-16 text-[var(--text-muted)] text-sm">
+              <Shield className="w-10 h-10 text-[var(--text-muted)] opacity-60 mx-auto mb-3" />
               Aucune période d'essai en cours
             </div>
           )}
           {trials.map(emp => (
-            <div key={emp.id} className={`bg-white dark:bg-slate-900 rounded-2xl border overflow-hidden shadow-sm ${emp.trialStatus === 'EXPIRED' ? 'border-amber-300 dark:border-amber-700' : emp.daysLeft <= 7 ? 'border-red-300 dark:border-red-700' : 'border-slate-200 dark:border-slate-700/60'}`}>
+            <div key={emp.id} className={`bg-[var(--surface)] rounded-2xl border overflow-hidden shadow-sm ${emp.trialStatus === 'EXPIRED' ? 'border-amber-300 dark:border-amber-700' : emp.daysLeft <= 7 ? 'border-red-300 dark:border-red-700' : 'border-[var(--border)]'}`}>
               <div className="flex items-center gap-4 p-4">
-                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${emp.trialStatus === 'EXPIRED' ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' : 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'}`}>
+                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${emp.trialStatus === 'EXPIRED' ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>
                   {emp.firstName[0]}{emp.lastName[0]}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
+                    <p className="font-semibold text-[var(--text)] text-sm">{emp.firstName} {emp.lastName}</p>
                     <ContractBadge type={emp.contractType} />
                     <UrgencyBadge days={emp.daysLeft} status={emp.trialStatus} />
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{emp.position} · {emp.department?.name} · Mat. {emp.employeeNumber}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Embauché {fmtDate(emp.hireDate)} · Fin essai : {fmtDate(emp.trialEndDate)} ({emp.trialPeriodDays}j)</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{emp.position} · {emp.department?.name} · Mat. {emp.employeeNumber}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Embauché {fmtDate(emp.hireDate)} · Fin essai : {fmtDate(emp.trialEndDate)} ({emp.trialPeriodDays}j)</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button onClick={() => setTrialModal({ emp, mode: 'CONFIRM' })}
@@ -458,17 +457,17 @@ export default function ContratsPage() {
               </div>
               {emp.trialStatus === 'IN_PROGRESS' && (
                 <div className="px-4 pb-3">
-                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
                     <span>Début</span>
                     <span className={emp.daysLeft <= 7 ? 'text-red-500 font-semibold' : ''}>{emp.daysLeft > 0 ? `${emp.daysLeft}j restants` : 'Terminé'}</span>
                     <span>Fin essai</span>
                   </div>
-                  <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[var(--surface-2)] rounded-full overflow-hidden">
                     {(() => {
                       const total = emp.trialPeriodDays;
                       const elapsed = total - emp.daysLeft;
                       const pct = Math.min(100, Math.round((elapsed / total) * 100));
-                      return <div className={`h-full rounded-full transition-all ${pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-indigo-500'}`} style={{ width: `${pct}%` }} />;
+                      return <div className={`h-full rounded-full transition-all ${pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />;
                     })()}
                   </div>
                 </div>
@@ -481,7 +480,7 @@ export default function ContratsPage() {
       {/* ═══ ONGLET BNC ═════════════════════════════════════════════════════ */}
       {tab === 'bnc' && (
         <div className="space-y-4">
-          <div className="p-4 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-2xl text-xs text-teal-700 dark:text-teal-400 space-y-1">
+          <div className="p-4 bg-[var(--accent-2-soft)] border border-amber-200 dark:border-amber-800 rounded-2xl text-xs text-amber-700 dark:text-amber-400 space-y-1">
             <p className="font-bold flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> Régime BNC — Obligation légale Congo (CGI art. 47 ter &amp; 44)</p>
             <p>• Résident/Congolais → <strong>BNC 10%</strong> retenu à la source sur montant HT</p>
             <p>• Étranger non domicilié → <strong>BNC 20%</strong> retenu à la source sur montant HT</p>
@@ -489,14 +488,14 @@ export default function ContratsPage() {
             <p>• Amende <strong>100%</strong> si retenue non effectuée (LF 2025)</p>
           </div>
           {currentList.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400 text-sm">Aucun consultant ou prestataire actif</div>
+            <div className="text-center py-12 text-[var(--text-muted)] text-sm">Aucun consultant ou prestataire actif</div>
           ) : (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                  <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
                     {['Nom', 'Type', 'Poste', 'Résidence', 'Taux BNC', 'Montant HT/mois', 'BNC mensuel'].map(h => (
-                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -505,18 +504,18 @@ export default function ContratsPage() {
                     const bncTaux = emp.isResident !== false ? 0.10 : 0.20;
                     const bncMontant = Math.round(emp.baseSalary * bncTaux);
                     return (
-                      <tr key={emp.id} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{emp.firstName} {emp.lastName}</td>
+                      <tr key={emp.id} className="border-b border-[var(--border)] hover:bg-[var(--surface-2)]/30 transition-colors">
+                        <td className="px-4 py-3 font-medium text-[var(--text)]">{emp.firstName} {emp.lastName}</td>
                         <td className="px-4 py-3"><ContractBadge type={emp.contractType} /></td>
-                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{emp.position}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{emp.position}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${emp.isResident !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${emp.isResident !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'}`}>
                             {emp.isResident !== false ? 'Résident' : 'Étranger'}
                             {emp.nationality ? ` (${emp.nationality})` : ''}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-bold text-teal-600 dark:text-teal-400">{bncTaux * 100}%</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{fmt(emp.baseSalary)}</td>
+                        <td className="px-4 py-3 font-bold text-amber-600 dark:text-amber-400">{bncTaux * 100}%</td>
+                        <td className="px-4 py-3 font-semibold text-[var(--text)]">{fmt(emp.baseSalary)}</td>
                         <td className="px-4 py-3 font-bold text-red-600 dark:text-red-400">{fmt(bncMontant)}</td>
                       </tr>
                     );
@@ -538,9 +537,9 @@ export default function ContratsPage() {
       {/* ═══ LISTES ACTIFS / EXPIRANT / TERMINES ═══════════════════════════ */}
       {tab !== 'essais' && tab !== 'bnc' && (
         <>
-          {loading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /></div>}
+          {loading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>}
           {!loading && currentList.length === 0 && (
-            <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-sm">Aucun contrat trouvé</div>
+            <div className="text-center py-16 text-[var(--text-muted)] text-sm">Aucun contrat trouvé</div>
           )}
           <div className="space-y-3">
             {currentList.map(emp => {
@@ -552,30 +551,30 @@ export default function ContratsPage() {
               const pct = total && elapsed ? Math.min(100, Math.round((elapsed / total) * 100)) : null;
 
               return (
-                <div key={emp.id} className={`bg-white dark:bg-slate-900 rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all ${endDays !== null && endDays <= 7 ? 'border-red-300 dark:border-red-700' : endDays !== null && endDays <= 30 ? 'border-amber-300 dark:border-amber-700' : 'border-slate-200 dark:border-slate-700/60'}`}>
+                <div key={emp.id} className={`bg-[var(--surface)] rounded-2xl border overflow-hidden shadow-sm hover:shadow-md transition-all ${endDays !== null && endDays <= 7 ? 'border-red-300 dark:border-red-700' : endDays !== null && endDays <= 30 ? 'border-amber-300 dark:border-amber-700' : 'border-[var(--border)]'}`}>
                   <div className="flex items-center gap-4 p-4">
-                    <div className="w-11 h-11 rounded-full bg-indigo-100 dark:bg-indigo-950/40 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 text-sm shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-[var(--brand-soft)] flex items-center justify-center font-bold text-[var(--brand)] text-sm shrink-0">
                       {emp.firstName[0]}{emp.lastName[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-slate-900 dark:text-white text-sm">{emp.firstName} {emp.lastName}</p>
+                        <p className="font-semibold text-[var(--text)] text-sm">{emp.firstName} {emp.lastName}</p>
                         <ContractBadge type={emp.contractType} />
                         {endDays !== null && endDays <= 60 && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${endDays <= 7 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : endDays <= 30 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${endDays <= 7 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'}`}>
                             {endDays <= 7 ? <XCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                             J-{endDays}
                           </span>
                         )}
                         {hasActiveTrial && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${emp.trialStatus === 'EXPIRED' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${emp.trialStatus === 'EXPIRED' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'}`}>
                             {emp.trialStatus === 'EXPIRED' ? <AlertTriangle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                             {emp.trialStatus === 'EXPIRED' ? 'Essai expiré' : 'En essai'}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{emp.position} · {emp.department?.name} · Mat. {emp.employeeNumber}</p>
-                      <div className="flex items-center gap-3 mt-1 flex-wrap text-xs text-slate-400">
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{emp.position} · {emp.department?.name} · Mat. {emp.employeeNumber}</p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap text-xs text-[var(--text-muted)]">
                         <span>Embauché {fmtDate(emp.hireDate)}</span>
                         <span>Ancienneté : {seniority(emp.hireDate)}</span>
                         {emp.contractEndDate && <span className={endDays !== null && endDays <= 30 ? 'text-amber-500 font-semibold' : ''}>Fin : {fmtDate(emp.contractEndDate)}</span>}
@@ -585,13 +584,13 @@ export default function ContratsPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       {canRenew && (
                         <button onClick={() => setRenewModal(emp)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm transition-colors">
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-sm transition-colors">
                           <RotateCcw className="w-3 h-3" />
                           {emp.contractType === 'CDD' ? 'Renouveler / CDI' : 'Renouveler'}
                         </button>
                       )}
                       <a href={bp(`/contrats/employe/${emp.id}`)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
                         <ChevronRight className="w-4 h-4" />
                       </a>
                     </div>
@@ -599,13 +598,13 @@ export default function ContratsPage() {
 
                   {pct !== null && emp.status === 'ACTIVE' && (
                     <div className="px-4 pb-3">
-                      <div className="flex justify-between text-[11px] text-slate-400 mb-1">
+                      <div className="flex justify-between text-[11px] text-[var(--text-muted)] mb-1">
                         <span>Début</span>
                         <span className={pct >= 80 ? 'text-amber-500 font-semibold' : ''}>{pct}% écoulé</span>
                         <span>Fin</span>
                       </div>
-                      <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-indigo-500'}`} style={{ width: `${pct}%` }} />
+                      <div className="h-1.5 bg-[var(--surface-2)] rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${pct >= 90 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   )}
@@ -617,11 +616,11 @@ export default function ContratsPage() {
       )}
 
       {/* Info légale — emojis remplacés par des puces texte simples */}
-      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
-        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+      <div className="p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
+        <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5" /> Code du Travail Congo — Rappels clés
         </p>
-        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1.5 text-xs text-[var(--text-muted)]">
           <p>• <strong>CDI</strong> : Essai max 3 mois cadres / 1 mois autres. Préavis 8j à 3 mois.</p>
           <p>• <strong>CDD</strong> : Max 2 ans renouvellement inclus. Requalification CDI au-delà.</p>
           <p>• <strong>Stage</strong> : Max 6 mois. Convention tripartite obligatoire. CNSS AT 2,25%.</p>

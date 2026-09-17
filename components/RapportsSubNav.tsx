@@ -38,8 +38,9 @@ const PRIMARY = [
 
 const MORE = [
   { href: '/rapports/recap-personnel',     label: 'Récap. Personnel',    Icon: ReceiptText },
-   { href: '/rapports/das-declaration',     label: 'Das-declaration',     Icon: FileSpreadsheet },
+  { href: '/rapports/das-declaration',     label: 'DAS annuelle',        Icon: FileSpreadsheet },
   { href: '/rapports/recap-bulletins-annuel',     label: 'Récap Bulletin Annuel',     Icon: BookOpen },
+  { href: '/rapports/its-bnc',             label: 'ITS / BNC par mois',  Icon: DollarSign },
   { href: '/rapports/employes',            label: 'Employés',            Icon: UserCircle },
   { href: '/rapports/indicateurs',         label: 'Indicateurs RH',      Icon: BarChart3 },
   { href: '/rapports/analyse-conges',      label: 'Congés',               Icon: UmbrellaOff },

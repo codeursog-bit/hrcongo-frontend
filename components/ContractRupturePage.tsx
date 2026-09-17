@@ -75,12 +75,12 @@ const fmtD = (d?: string) => d
   ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
   : '—';
 
-const inp = "w-full bg-slate-800/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 transition-all";
+const inp = "w-full bg-slate-800/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all";
 
 // ─── Composants UI ───────────────────────────────────────────────────────────
 
 function Sp() {
-  return <div className="w-4 h-4 rounded-full border-2 border-cyan-500/30 border-t-cyan-500 animate-spin flex-shrink-0" />;
+  return <div className="w-4 h-4 rounded-full border-2 border-emerald-500/30 border-t-emerald-500 animate-spin flex-shrink-0" />;
 }
 
 function Bdg({ c, v = 'd' }: { c: React.ReactNode; v?: 'd' | 's' | 'w' | 'r' | 'i' }) {
@@ -89,7 +89,7 @@ function Bdg({ c, v = 'd' }: { c: React.ReactNode; v?: 'd' | 's' | 'w' | 'r' | '
     s: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     w: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     r: 'bg-red-500/10 text-red-400 border-red-500/20',
-    i: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    i: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   }[v];
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${m}`}>{c}</span>;
 }
@@ -120,7 +120,7 @@ function Chk({ checked, onChange, label }: { checked: boolean; onChange: () => v
       <div
         onClick={onChange}
         className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
-          checked ? 'bg-gradient-to-br from-cyan-500 to-blue-600 border-cyan-500' : 'bg-slate-800 border-slate-600'
+          checked ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-800 border-slate-600'
         }`}
       >
         {checked && (
@@ -140,15 +140,15 @@ function Stp({ s }: { s: 1 | 2 | 3 }) {
     <div className="flex items-center gap-1.5">
       {steps.map((x, i) => (
         <div key={x.n} className="flex items-center gap-1.5">
-          {i > 0 && <div className={`w-6 h-px ${s > i ? 'bg-cyan-500' : 'bg-slate-700'}`} />}
+          {i > 0 && <div className={`w-6 h-px ${s > i ? 'bg-emerald-500' : 'bg-slate-700'}`} />}
           <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-            s > x.n ? 'bg-cyan-500 text-slate-900'
-              : s === x.n ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30'
+            s > x.n ? 'bg-emerald-500 text-slate-900'
+              : s === x.n ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
               : 'bg-slate-800 text-slate-600 border border-slate-700'
           }`}>
             {s > x.n ? '✓' : x.n}
           </div>
-          <span className={`text-xs font-medium hidden sm:block ${s === x.n ? 'text-cyan-400' : 'text-slate-600'}`}>
+          <span className={`text-xs font-medium hidden sm:block ${s === x.n ? 'text-emerald-400' : 'text-slate-600'}`}>
             {x.l}
           </span>
         </div>
@@ -159,7 +159,7 @@ function Stp({ s }: { s: 1 | 2 | 3 }) {
 
 function AlerteBadge({ niveau }: { niveau: 'INFO' | 'ATTENTION' | 'CRITIQUE' }) {
   const m = {
-    INFO:      'bg-blue-500/10 border-blue-500/20 text-blue-400',
+    INFO:      'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
     ATTENTION: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
     CRITIQUE:  'bg-red-500/10 border-red-500/20 text-red-400',
   }[niveau];
@@ -185,7 +185,7 @@ function RuptureTypeSelector({ value, onChange }: { value: string; onChange: (v:
                   onClick={() => onChange(r.v)}
                   className={`p-2.5 rounded-xl text-left text-xs font-semibold border transition-all ${
                     value === r.v
-                      ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-300'
+                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
                       : 'bg-slate-800/40 border-white/5 text-slate-400 hover:border-white/15 hover:text-slate-200'
                   }`}
                 >
@@ -522,12 +522,12 @@ export default function ContractRupturePage() {
 
       {/* ── Alerte PSE ── */}
       {pse && (
-        <div className="fixed top-4 right-4 z-40 w-80 bg-purple-950/95 border border-purple-500/40 rounded-2xl p-4 shadow-2xl backdrop-blur-xl">
+        <div className="fixed top-4 right-4 z-40 w-80 bg-red-950/95 border border-red-500/40 rounded-2xl p-4 shadow-2xl backdrop-blur-xl">
           <div className="flex gap-3">
             <div className="flex-1">
-              <p className="text-sm font-bold text-purple-300 mb-1">PSE Requis — Art. 39 CT Congo</p>
+              <p className="text-sm font-bold text-red-300 mb-1">PSE Requis — Art. 39 CT Congo</p>
               <p className="text-xs text-slate-400 leading-relaxed">Seuil de 5 licenciements économiques sur 30 jours atteint.</p>
-              <Link href="/pse" className="inline-block mt-2 text-xs font-bold text-purple-400 hover:text-purple-300 underline">
+              <Link href="/pse" className="inline-block mt-2 text-xs font-bold text-red-400 hover:text-red-300 underline">
                 Ouvrir une procédure PSE
               </Link>
             </div>
@@ -539,7 +539,7 @@ export default function ContractRupturePage() {
       {/* ── Header ── */}
       <div className="sticky top-0 z-30 bg-[#020617]/90 backdrop-blur-xl border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 shrink-0">
             <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
@@ -566,7 +566,7 @@ export default function ContractRupturePage() {
             {(['nouveau', 'historique'] as const).map(t => (
               <button key={t} onClick={() => setTab(t)}
                 className={`px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all ${
-                  tab === t ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white' : 'text-slate-500 hover:text-slate-200'
+                  tab === t ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-slate-200'
                 }`}
               >
                 {t === 'nouveau' ? 'Nouvelle' : 'Historique'}
@@ -603,7 +603,7 @@ export default function ContractRupturePage() {
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-cyan-400">{fmt(r.totalNet ?? r.netAPayer ?? 0)} FCFA</p>
+                        <p className="text-sm font-bold text-emerald-400">{fmt(r.totalNet ?? r.netAPayer ?? 0)} FCFA</p>
                         <Bdg c={r.status ?? 'CONFIRME'} v={r.status === 'CONFIRME' ? 's' : 'd'} />
                       </div>
                     </div>
@@ -640,7 +640,7 @@ export default function ContractRupturePage() {
                           <button key={e.id} onClick={() => setEmp(e)}
                             className={`w-full p-3 rounded-xl text-left border transition-all ${
                               isSel
-                                ? 'bg-cyan-500/10 border-cyan-500/40'
+                                ? 'bg-emerald-500/10 border-emerald-500/40'
                                 : 'bg-slate-800/40 border-white/5 hover:border-white/15 hover:bg-slate-800/60'
                             }`}
                           >
@@ -653,7 +653,7 @@ export default function ContractRupturePage() {
                               <Bdg c={e.contractType} v="i" />
                             </div>
                             {isSel && form.dateRupture && (
-                              <div className="mt-2 pt-2 border-t border-cyan-500/20 text-xs text-cyan-400 font-medium">
+                              <div className="mt-2 pt-2 border-t border-emerald-500/20 text-xs text-emerald-400 font-medium">
                                 {ancAns} ans {ancM} mois
                                 {ancMois < 18 && <span className="text-amber-400 ml-2">— inf. à 18 mois</span>}
                                 {e.professionalCategory && <span className="text-slate-500 ml-2">· {e.professionalCategory}</span>}
@@ -777,7 +777,7 @@ export default function ContractRupturePage() {
                               autresSommesLabel: '', autresSommesMontant: 0,
                             }));
                           }}
-                          className="px-3 py-2 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-xl text-xs font-bold hover:bg-cyan-500/30 transition-all"
+                          className="px-3 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-all"
                         >
                           +
                         </button>
@@ -790,7 +790,7 @@ export default function ContractRupturePage() {
                         <div key={i} className="flex items-center justify-between p-2 bg-slate-800/40 rounded-lg text-xs">
                           <span className="text-slate-300">{a.libelle}</span>
                           <div className="flex items-center gap-2">
-                            <span className="text-cyan-400 font-bold">{fmt(a.montant)} FCFA</span>
+                            <span className="text-emerald-400 font-bold">{fmt(a.montant)} FCFA</span>
                             <button onClick={() => setForm(f => ({ ...f, autresSommes: f.autresSommes.filter((_, j) => j !== i) }))}
                               className="text-slate-600 hover:text-red-400 transition-colors">×</button>
                           </div>
@@ -821,7 +821,7 @@ export default function ContractRupturePage() {
                 disabled={!emp || !form.motif || calcLoad}
                 className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
                   emp && form.motif && !calcLoad
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-xl shadow-cyan-500/20'
+                    ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-500/20'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
               >
@@ -843,7 +843,7 @@ export default function ContractRupturePage() {
             </button>
 
             {/* Bandeau employé */}
-            <div className="bg-gradient-to-r from-slate-900 to-slate-900/60 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   <Bdg c={ri?.l} v="i" />
@@ -858,7 +858,7 @@ export default function ContractRupturePage() {
               </div>
               <div className="sm:text-right shrink-0">
                 <p className="text-xs text-slate-500 mb-0.5">Ancienneté</p>
-                <p className="text-2xl font-black text-cyan-400">
+                <p className="text-2xl font-black text-emerald-400">
                   {calc.anciennete.annees} ans {calc.anciennete.mois} mois
                 </p>
                 <p className="text-xs text-slate-600">
@@ -874,7 +874,7 @@ export default function ContractRupturePage() {
                   <div key={i} className={`p-3 rounded-xl text-xs border flex items-start gap-2 ${
                     a.niveau === 'CRITIQUE' ? 'bg-red-500/10 border-red-500/20 text-red-400'
                     : a.niveau === 'ATTENTION' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                    : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                   }`}>
                     <AlerteBadge niveau={a.niveau} />
                     <div className="flex-1">
@@ -914,13 +914,13 @@ export default function ContractRupturePage() {
                         <p className="text-xs text-red-400 mt-0.5">ITS −{fmt(calc.fiscalite.its)} FCFA</p>
                       )}
                       {calc.fiscalite.cnss > 0 && (
-                        <p className="text-xs text-orange-400">CNSS −{fmt(calc.fiscalite.cnss)} FCFA</p>
+                        <p className="text-xs text-amber-400">CNSS −{fmt(calc.fiscalite.cnss)} FCFA</p>
                       )}
                     </div>
-                    <div className="p-3 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/20 rounded-xl">
-                      <p className="text-xs text-cyan-500 uppercase tracking-wider font-bold mb-1">Total NET</p>
-                      <p className="text-xl font-black text-cyan-400">
-                        {fmt(calc.totaux.netAPayer)} <span className="text-xs text-cyan-700">FCFA</span>
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                      <p className="text-xs text-emerald-500 uppercase tracking-wider font-bold mb-1">Total NET</p>
+                      <p className="text-xl font-black text-emerald-400">
+                        {fmt(calc.totaux.netAPayer)} <span className="text-xs text-emerald-700">FCFA</span>
                       </p>
                     </div>
                   </div>
@@ -936,11 +936,11 @@ export default function ContractRupturePage() {
                 <Crd t="Répartition" ch={
                   <>
                     {[
-                      { l: 'Licenciement / Retraite', v: indemPrinc?.montant ?? 0, c: 'bg-cyan-500' },
-                      { l: 'Congés',                   v: composante?.indemConges.montant ?? 0,       c: 'bg-blue-500' },
-                      { l: 'Gratification',            v: composante?.gratifProrata.montant ?? 0,     c: 'bg-emerald-500' },
-                      { l: 'Préavis',                  v: composante?.indemPreavis.montant ?? 0,      c: 'bg-amber-500' },
-                      { l: 'Dernier salaire',          v: composante?.dernierSalairePro.montant ?? 0, c: 'bg-purple-500' },
+                      { l: 'Licenciement / Retraite', v: indemPrinc?.montant ?? 0, c: 'bg-emerald-500' },
+                      { l: 'Congés',                   v: composante?.indemConges.montant ?? 0,       c: 'bg-amber-500' },
+                      { l: 'Gratification',            v: composante?.gratifProrata.montant ?? 0,     c: 'bg-emerald-400' },
+                      { l: 'Préavis',                  v: composante?.indemPreavis.montant ?? 0,      c: 'bg-amber-400' },
+                      { l: 'Dernier salaire',          v: composante?.dernierSalairePro.montant ?? 0, c: 'bg-emerald-600' },
                     ].filter(r => r.v > 0).map(r => (
                       <div key={r.l} className="mb-3 last:mb-0">
                         <div className="flex justify-between text-xs mb-1">
@@ -978,7 +978,7 @@ export default function ContractRupturePage() {
                     <div className="space-y-2">
                       {calc.checklist.slice(0, 5).map(item => (
                         <div key={item.id} className="flex items-start gap-2 text-xs">
-                          <span className={item.obligatoire ? 'text-cyan-400' : 'text-slate-600'}>
+                          <span className={item.obligatoire ? 'text-emerald-400' : 'text-slate-600'}>
                             {item.obligatoire ? '●' : '○'}
                           </span>
                           <div>
@@ -994,12 +994,12 @@ export default function ContractRupturePage() {
                   } />
                 )}
 
-                <Link href="/pse" className="flex items-center justify-between p-4 bg-slate-900/60 border border-white/10 hover:border-purple-500/30 rounded-xl transition-all group">
+                <Link href="/pse" className="flex items-center justify-between p-4 bg-slate-900/60 border border-white/10 hover:border-red-500/30 rounded-xl transition-all group">
                   <div>
-                    <p className="text-xs font-bold text-slate-400 group-hover:text-purple-300">Plan de Sauvegarde de l&apos;Emploi</p>
+                    <p className="text-xs font-bold text-slate-400 group-hover:text-red-300">Plan de Sauvegarde de l&apos;Emploi</p>
                     <p className="text-xs text-slate-600">Art. 39 CT Congo · PSE</p>
                   </div>
-                  <svg className="w-4 h-4 text-slate-700 group-hover:text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-700 group-hover:text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 18l6-6-6-6" />
                   </svg>
                 </Link>
@@ -1017,7 +1017,7 @@ export default function ContractRupturePage() {
                   ]).map(d => (
                     <button key={d.k} onClick={() => rid && loadDoc(d.k)} disabled={!rid}
                       className={`p-4 rounded-xl text-left border transition-all ${
-                        activeDoc === d.k ? 'bg-cyan-500/10 border-cyan-500/40'
+                        activeDoc === d.k ? 'bg-emerald-500/10 border-emerald-500/40'
                           : rid ? 'bg-slate-800/40 border-white/5 hover:border-white/15'
                           : 'bg-slate-800/20 border-white/5 opacity-40 cursor-not-allowed'
                       }`}
@@ -1036,7 +1036,7 @@ export default function ContractRupturePage() {
                       </span>
                       <div className="flex gap-2">
                         <button onClick={() => iframeRef.current?.contentWindow?.print()}
-                          className="text-xs font-semibold text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded-lg">
+                          className="text-xs font-semibold text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
                           Imprimer
                         </button>
                         <button onClick={() => { setActiveDoc(null); setDocHtml(null); }}
@@ -1064,7 +1064,7 @@ export default function ContractRupturePage() {
                 disabled={confirmLoad}
                 className={`px-6 py-3.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${
                   !confirmLoad
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/20'
+                    ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-500/20'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
               >
@@ -1080,7 +1080,7 @@ export default function ContractRupturePage() {
         {/* ── ÉTAPE 3 ── */}
         {tab === 'nouveau' && step === 3 && calc && (
           <div className="max-w-xl mx-auto text-center py-12 px-4">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-emerald-500/30">
+            <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-emerald-500/30">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path d="M20 6L9 17l-5-5" />
               </svg>
@@ -1092,9 +1092,9 @@ export default function ContractRupturePage() {
             </p>
             <div className="grid grid-cols-2 gap-2 mb-6 text-left">
               {[
-                { l: 'Total NET',   v: `${fmt(calc.totaux.netAPayer)} FCFA`,        c: 'text-cyan-400'   },
-                { l: 'Ancienneté', v: `${calc.anciennete.annees} ans ${calc.anciennete.mois} mois`, c: 'text-blue-400' },
-                { l: 'Convention', v: calc.conventionCode,                          c: 'text-indigo-400' },
+                { l: 'Total NET',   v: `${fmt(calc.totaux.netAPayer)} FCFA`,        c: 'text-emerald-400'   },
+                { l: 'Ancienneté', v: `${calc.anciennete.annees} ans ${calc.anciennete.mois} mois`, c: 'text-slate-300' },
+                { l: 'Convention', v: calc.conventionCode,                          c: 'text-slate-300' },
                 { l: 'Motif',      v: ri?.l ?? '—',                                c: 'text-slate-300'  },
               ].map(({ l, v, c }) => (
                 <div key={l} className="bg-slate-800/60 border border-white/10 rounded-xl p-3">
@@ -1116,7 +1116,7 @@ export default function ContractRupturePage() {
                 <div className="flex justify-between items-center px-4 py-2 bg-slate-800/60 border-b border-white/10">
                   <span className="text-xs font-bold text-slate-400">Document</span>
                   <button onClick={() => iframeRef.current?.contentWindow?.print()}
-                    className="text-xs font-semibold text-cyan-400 border border-cyan-500/30 px-2.5 py-1 rounded-lg">
+                    className="text-xs font-semibold text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-lg">
                     Imprimer
                   </button>
                 </div>

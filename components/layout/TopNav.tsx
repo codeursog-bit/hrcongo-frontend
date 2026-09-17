@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Bell, Menu, ChevronRight, ChevronDown, Moon, Sun, CheckCircle2, Clock, AlertTriangle, Info, X, LogOut, User, Mail } from 'lucide-react';
+import { Search, Bell, Menu, ChevronRight, ChevronDown, Moon, Sun, CheckCircle2, Clock, AlertTriangle, Info, X, LogOut, User, Mail, Layers } from 'lucide-react';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -289,6 +289,17 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                   </div>
 
                   <div className="space-y-1">
+                    {/* 🆕 Visible uniquement pour un compte multi-entreprises */}
+                    {user?.manageMultipleCompanies && (
+                      <button
+                        onClick={() => { router.push('/portefeuille/dashboard'); setShowProfileMenu(false); }}
+                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-3 text-emerald-600 dark:text-emerald-400 font-bold"
+                      >
+                        <Layers size={16} />
+                        Mon portefeuille
+                      </button>
+                    )}
+
                     {/* ✅ Route mise à jour : /mon-profil */}
                     <button
                       onClick={() => { router.push('/mon-profil'); setShowProfileMenu(false); }}

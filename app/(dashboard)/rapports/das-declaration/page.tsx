@@ -39,6 +39,9 @@ interface DasEmployeeLine {
   taxeDeptAnnuel: number;
   indemniteTransport: number;
   indemnitePanier: number;
+  // ✅ Vient de la configuration des primes (BonusTemplate.isNature) —
+  // 0 si rien n'est configuré comme tel chez cette entreprise.
+  avantageNature: number;
 }
 
 interface DasRecap {
@@ -46,7 +49,7 @@ interface DasRecap {
   year: number;
   deadlineLabel: string;
   employees: DasEmployeeLine[];
-  totals: { effectif: number; salaireBrut: number; irppRetenu: number };
+  totals: { effectif: number; salaireBrut: number; irppRetenu: number; avantageNature: number };
 }
 
 const fmt = (n: number) =>
@@ -330,7 +333,7 @@ export default function DasDeclarationPage() {
           </div>
 
           {/* ── Indicateurs ─────────────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 print:hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
             <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
               <div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Effectif déclaré</p>
@@ -357,6 +360,18 @@ export default function DasDeclarationPage() {
                 </p>
               </div>
               <CheckCircle2 className="w-5 h-5 text-violet-500" />
+            </div>
+            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Avantages en nature</p>
+                <p className={`text-lg font-bold ${recap.totals.avantageNature > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                  {fmt(recap.totals.avantageNature)} F
+                </p>
+                {recap.totals.avantageNature === 0 && (
+                  <p className="text-[11px] text-slate-400 mt-0.5">Aucune prime configurée « en nature »</p>
+                )}
+              </div>
+              <Building2 className="w-5 h-5 text-amber-500" />
             </div>
           </div>
 
@@ -386,6 +401,7 @@ export default function DasDeclarationPage() {
                     <th className="px-4 py-3 font-semibold text-right">Brut taxable</th>
                     <th className="px-4 py-3 font-semibold text-right">Base imposable</th>
                     <th className="px-4 py-3 font-semibold text-right">IRPP retenu</th>
+                    <th className="px-4 py-3 font-semibold text-right">Avantage nature</th>
                     <th className="px-4 py-3 font-semibold text-right">Transport</th>
                     <th className="px-4 py-3 font-semibold text-right">Panier</th>
                     <th className="px-4 py-3 font-semibold text-right">TOL</th>
@@ -440,6 +456,9 @@ export default function DasDeclarationPage() {
                         {fmt(e.irppRetenu)}
                       </td>
                       <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                        {e.avantageNature > 0 ? fmt(e.avantageNature) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
                         {e.indemniteTransport > 0 ? fmt(e.indemniteTransport) : '—'}
                       </td>
                       <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
@@ -455,7 +474,7 @@ export default function DasDeclarationPage() {
                   ))}
                   {recap.employees.length === 0 && (
                     <tr>
-                      <td colSpan={24} className="px-4 py-10 text-center text-slate-400">
+                      <td colSpan={25} className="px-4 py-10 text-center text-slate-400">
                         Aucune paie validée pour {recap.year}
                       </td>
                     </tr>

@@ -201,16 +201,16 @@ function AnimatedNumber({ value, className = '' }: { value: number; className?: 
 function Field({ label, required, children, hint }: { label: string; required?: boolean; children: React.ReactNode; hint?: string }) {
   return (
     <label className="block">
-      <span className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-        {label}{required && <span className="text-rose-400">*</span>}
+      <span className="flex items-center gap-1 text-xs font-semibold text-[var(--text-muted)] mb-1.5">
+        {label}{required && <span className="text-red-400">*</span>}
       </span>
       {children}
-      {hint && <span className="block text-[11px] text-slate-400 mt-1">{hint}</span>}
+      {hint && <span className="block text-[11px] text-[var(--text-muted)] mt-1">{hint}</span>}
     </label>
   );
 }
 
-const inputCls = "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition-all";
+const inputCls = "w-full px-3.5 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 transition-all";
 const selectCls = inputCls + " appearance-none pr-8";
 const textareaCls = inputCls + " resize-y min-h-[90px]";
 
@@ -238,7 +238,7 @@ function LineItemEditor({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{title}</span>
+        <span className="text-xs font-semibold text-[var(--text-muted)]">{title}</span>
         <button type="button" onClick={add}
           className={`flex items-center gap-1 text-xs font-bold ${colorClass} hover:opacity-70 transition-opacity`}>
           <Plus className="w-3.5 h-3.5" /> Ajouter
@@ -265,7 +265,7 @@ function LineItemEditor({
               placeholder="Montant"
               className={inputCls + " w-32"} />
             <button type="button" onClick={() => remove(i)}
-              className="px-2.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors">
+              className="px-2.5 rounded-xl text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
               <X className="w-4 h-4" />
             </button>
           </motion.div>
@@ -459,30 +459,30 @@ function GenerateContractInner() {
       <div className="max-w-lg mx-auto py-16 px-4">
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 24 }}
-          className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-xl p-8 text-center">
+          className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-xl p-8 text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 260 }}
-            className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25 mb-5">
+            className="w-16 h-16 mx-auto rounded-2xl bg-[var(--brand)] flex items-center justify-center shadow-lg mb-5">
             <PartyPopper className="w-8 h-8 text-white" />
           </motion.div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white mb-1">Contrat généré !</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <h2 className="text-xl font-black text-[var(--text)] mb-1">Contrat généré !</h2>
+          <p className="text-sm text-[var(--text-muted)] mb-6">
             Le document de {form.prenom} {form.nom} est prêt.
           </p>
           <div className="flex flex-col gap-2.5">
             <button onClick={() => openPdf(result.id)} disabled={openingPdf}
-              className="w-full py-3 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:opacity-60 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all">
+              className="w-full py-3 bg-[var(--brand)] hover:bg-[var(--brand-strong)] disabled:opacity-60 text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all">
               {openingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />} Prévisualiser (PDF)
             </button>
             <button onClick={() => downloadDocx(result.id)} disabled={downloadingDocx}
-              className="w-full py-3 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60 transition-colors">
+              className="w-full py-3 bg-[var(--surface-2)] text-[var(--text)] font-bold rounded-2xl border border-[var(--border)] flex items-center justify-center gap-2 hover:bg-[var(--border)] disabled:opacity-60 transition-colors">
               {downloadingDocx ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Télécharger (Word)
             </button>
             <button onClick={() => router.push(bp(`/contrats/employe/${form.employeeId}`))}
-              className="w-full py-2.5 text-sm text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+              className="w-full py-2.5 text-sm text-[var(--brand)] font-semibold hover:underline">
               Voir la fiche contrat de l'employé
             </button>
             <button onClick={() => { setResult(null); setForm(EMPTY_FORM); setStep(1); setGenerating(false); }}
-              className="w-full py-2.5 text-sm text-slate-400 font-semibold flex items-center justify-center gap-1.5 hover:text-slate-600 dark:hover:text-slate-300">
+              className="w-full py-2.5 text-sm text-[var(--text-muted)] font-semibold flex items-center justify-center gap-1.5 hover:text-[var(--text)]">
               <RefreshCcw className="w-3.5 h-3.5" /> Générer un autre contrat
             </button>
           </div>
@@ -501,10 +501,10 @@ function GenerateContractInner() {
     return (
       <div className="max-w-md mx-auto py-24 px-4 text-center">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
-          className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/20">
+          className="w-14 h-14 mx-auto rounded-2xl bg-[var(--brand)] flex items-center justify-center mb-6 shadow-lg">
           <FileSignature className="w-7 h-7 text-white" />
         </motion.div>
-        <h2 className="font-black text-lg text-slate-900 dark:text-white mb-6">Génération du contrat…</h2>
+        <h2 className="font-black text-lg text-[var(--text)] mb-6">Génération du contrat…</h2>
         <div className="space-y-3 text-left">
           {checklist.map((label, i) => (
             <div key={i} className="flex items-center gap-3">
@@ -513,11 +513,11 @@ function GenerateContractInner() {
                   <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                 </motion.div>
               ) : i === genPhase ? (
-                <Loader2 className="w-5 h-5 text-indigo-500 animate-spin shrink-0" />
+                <Loader2 className="w-5 h-5 text-[var(--brand)] animate-spin shrink-0" />
               ) : (
-                <div className="w-5 h-5 rounded-full border-2 border-slate-200 dark:border-slate-700 shrink-0" />
+                <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] shrink-0" />
               )}
-              <span className={`text-sm ${i <= genPhase ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-400'}`}>{label}</span>
+              <span className={`text-sm ${i <= genPhase ? 'text-[var(--text)] font-medium' : 'text-[var(--text-muted)]'}`}>{label}</span>
             </div>
           ))}
         </div>
@@ -529,38 +529,38 @@ function GenerateContractInner() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* ── En-tête + fil d'ariane ───────────────────────────────────────── */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
-          <button onClick={() => router.push(bp('/contrats'))} className="hover:text-slate-600 dark:hover:text-slate-300 flex items-center gap-1">
+        <div className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-2">
+          <button onClick={() => router.push(bp('/contrats'))} className="hover:text-[var(--text)] flex items-center gap-1">
             <ArrowLeft className="w-3.5 h-3.5" /> Contrats
           </button>
           <span>/</span>
-          <span className="text-slate-600 dark:text-slate-300 font-medium">Générer un contrat</span>
+          <span className="text-[var(--text)] font-medium">Générer un contrat</span>
         </div>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-[var(--brand)] flex items-center justify-center shadow-lg">
             <FileSignature className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-900 dark:text-white">Nouveau contrat</h1>
-            <p className="text-xs text-slate-400">Étape {step} sur 3 — {STEP_LABELS[step - 1]}</p>
+            <h1 className="text-lg font-black text-[var(--text)]">Nouveau contrat</h1>
+            <p className="text-xs text-[var(--text-muted)]">Étape {step} sur 3 — {STEP_LABELS[step - 1]}</p>
           </div>
         </div>
-        <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-          <motion.div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+        <div className="h-1.5 bg-[var(--surface-2)] rounded-full overflow-hidden">
+          <motion.div className="h-full bg-[var(--brand)] rounded-full"
             animate={{ width: `${(step / 3) * 100}%` }} transition={{ duration: 0.4, ease: 'easeOut' }} />
         </div>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_360px] gap-6">
         {/* ── Colonne formulaire ─────────────────────────────────────────── */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-6 sm:p-8">
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-6 sm:p-8">
           <AnimatePresence mode="wait">
             {/* ═══ ÉTAPE 1 : Employé & type ═══════════════════════════════ */}
             {step === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white mb-1">Quel type de contrat ?</h2>
-                  <p className="text-xs text-slate-400 mb-3">Choisissez le modèle de document à générer.</p>
+                  <h2 className="font-bold text-[var(--text)] mb-1">Quel type de contrat ?</h2>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">Choisissez le modèle de document à générer.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     {(contractTypes.length ? contractTypes : Object.entries(KIND_META).map(([key, m]) => ({ key, label: m.label, kind: key as ContractKind })))
                       .map(t => {
@@ -569,10 +569,10 @@ function GenerateContractInner() {
                         const active = form.kind === t.kind;
                         return (
                           <button key={t.key} type="button" onClick={() => set('kind', t.kind)}
-                            className={`text-left p-3.5 rounded-2xl border-2 transition-all ${active ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/30' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`}>
-                            <Icon className={`w-4 h-4 mb-2 ${active ? 'text-indigo-500' : 'text-slate-400'}`} />
-                            <p className={`text-sm font-bold ${active ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-300'}`}>{t.label}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">{meta?.hint}</p>
+                            className={`text-left p-3.5 rounded-2xl border-2 transition-all ${active ? 'border-[var(--brand)] bg-[var(--brand-soft)]' : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+                            <Icon className={`w-4 h-4 mb-2 ${active ? 'text-[var(--brand)]' : 'text-[var(--text-muted)]'}`} />
+                            <p className={`text-sm font-bold ${active ? 'text-[var(--brand)]' : 'text-[var(--text)]'}`}>{t.label}</p>
+                            <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{meta?.hint}</p>
                           </button>
                         );
                       })}
@@ -580,31 +580,31 @@ function GenerateContractInner() {
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white mb-1">Pré-remplir depuis un employé</h2>
-                  <p className="text-xs text-slate-400 mb-3">Toutes les infos connues seront reprises automatiquement — vous pourrez les ajuster.</p>
+                  <h2 className="font-bold text-[var(--text)] mb-1">Pré-remplir depuis un employé</h2>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">Toutes les infos connues seront reprises automatiquement — vous pourrez les ajuster.</p>
                   <div className="relative">
                     <input value={form.employeeId ? form.employeeLabel : employeeSearch}
                       onChange={e => { setEmployeeSearch(e.target.value); if (form.employeeId) set('employeeId', ''); }}
                       placeholder="Rechercher un employé par nom ou matricule…"
                       className={inputCls} />
-                    {loadingPrefill && <Loader2 className="w-4 h-4 animate-spin text-indigo-500 absolute right-3 top-1/2 -translate-y-1/2" />}
+                    {loadingPrefill && <Loader2 className="w-4 h-4 animate-spin text-[var(--brand)] absolute right-3 top-1/2 -translate-y-1/2" />}
                   </div>
                   {employeeSearch && !form.employeeId && (
-                    <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800">
+                    <div className="mt-2 max-h-56 overflow-y-auto rounded-xl border border-[var(--border)] divide-y divide-[var(--border)]">
                       {filteredEmployees.slice(0, 8).map(emp => (
                         <button key={emp.id} type="button"
                           onClick={() => { applyPrefill(emp.id, `${emp.firstName} ${emp.lastName}`); setEmployeeSearch(''); }}
-                          className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[11px] font-bold shrink-0">
+                          className="w-full text-left px-3.5 py-2.5 hover:bg-[var(--surface-2)] flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center text-[11px] font-bold shrink-0">
                             {emp.firstName[0]}{emp.lastName[0]}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{emp.firstName} {emp.lastName}</p>
-                            <p className="text-[11px] text-slate-400 truncate">{emp.position} · {emp.employeeNumber}</p>
+                            <p className="text-sm font-semibold text-[var(--text)] truncate">{emp.firstName} {emp.lastName}</p>
+                            <p className="text-[11px] text-[var(--text-muted)] truncate">{emp.position} · {emp.employeeNumber}</p>
                           </div>
                         </button>
                       ))}
-                      {filteredEmployees.length === 0 && <p className="px-3.5 py-3 text-xs text-slate-400">Aucun employé trouvé</p>}
+                      {filteredEmployees.length === 0 && <p className="px-3.5 py-3 text-xs text-[var(--text-muted)]">Aucun employé trouvé</p>}
                     </div>
                   )}
                 </div>
@@ -618,7 +618,7 @@ function GenerateContractInner() {
                             <option value="INDETERMINEE">{isTravail ? 'Indéterminée (CDI)' : 'Durée indéterminée'}</option>
                             <option value="DETERMINEE">{isTravail ? 'Déterminée (CDD)' : 'Durée déterminée'}</option>
                           </select>
-                          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
                         </div>
                       </Field>
                       <Field label="Date de début" required>
@@ -644,7 +644,7 @@ function GenerateContractInner() {
                           <select value={form.civilite} onChange={e => set('civilite', e.target.value)} className={selectCls}>
                             <option>Monsieur</option><option>Madame</option><option>Mademoiselle</option>
                           </select>
-                          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                          <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
                         </div>
                       </Field>
                       <Field label="Nom" required><input value={form.nom} onChange={e => set('nom', e.target.value)} className={inputCls} /></Field>
@@ -662,7 +662,7 @@ function GenerateContractInner() {
                               <option value="célibataire">Célibataire</option><option value="marié(e)">Marié(e)</option>
                               <option value="divorcé(e)">Divorcé(e)</option><option value="veuf(ve)">Veuf(ve)</option>
                             </select>
-                            <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
                           </div>
                         </Field>
                         <Field label="Enfants à charge"><input type="number" min={0} value={form.nombreEnfants} onChange={e => set('nombreEnfants', Number(e.target.value))} className={inputCls} /></Field>
@@ -677,7 +677,7 @@ function GenerateContractInner() {
                               <option value="célibataire">Célibataire</option><option value="marié(e)">Marié(e)</option>
                               <option value="divorcé(e)">Divorcé(e)</option><option value="veuf(ve)">Veuf(ve)</option>
                             </select>
-                            <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
                           </div>
                         </Field>
                         <Field label="Téléphone"><input value={form.telephoneEmploye} onChange={e => set('telephoneEmploye', e.target.value)} className={inputCls} /></Field>
@@ -707,8 +707,8 @@ function GenerateContractInner() {
             {step === 2 && isTravail && (
               <motion.div key="step2-travail" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white mb-1">Rémunération</h2>
-                  <p className="text-xs text-slate-400">Le brut, l'ITS et le net se recalculent automatiquement à droite.</p>
+                  <h2 className="font-bold text-[var(--text)] mb-1">Rémunération</h2>
+                  <p className="text-xs text-[var(--text-muted)]">Le brut, l'ITS et le net se recalculent automatiquement à droite.</p>
                 </div>
 
                 <div className="grid sm:grid-cols-3 gap-3">
@@ -726,11 +726,11 @@ function GenerateContractInner() {
                 <LineItemEditor
                   title="Primes (augmentent le salaire brut)"
                   items={form.primes} onChange={items => set('primes', items)}
-                  colorClass="text-indigo-600 dark:text-indigo-400"
+                  colorClass="text-emerald-600 dark:text-emerald-400"
                   noticeText="Cette prime sera ajoutée au salaire brut, avant le calcul de la CNSS et de l'ITS."
                 />
 
-                <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="grid sm:grid-cols-2 gap-3 pt-2 border-t border-[var(--border)]">
                   <Field label="Transport" hint="Entre dans le calcul du brut">
                     <input type="number" value={form.transport || ''} onChange={e => set('transport', Number(e.target.value))} className={inputCls} />
                   </Field>
@@ -742,7 +742,7 @@ function GenerateContractInner() {
                 <LineItemEditor
                   title="Indemnités (versées directement au net)"
                   items={form.indemnites} onChange={items => set('indemnites', items)}
-                  colorClass="text-teal-600 dark:text-teal-400"
+                  colorClass="text-amber-600 dark:text-amber-400"
                   noticeText="Cette indemnité n'entre pas dans le salaire brut — elle s'ajoute directement au net à payer."
                 />
               </motion.div>
@@ -751,8 +751,8 @@ function GenerateContractInner() {
             {step === 2 && isStage && (
               <motion.div key="step2-stage" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white mb-1">Gratification de stage</h2>
-                  <p className="text-xs text-slate-400">Un stage n'est pas soumis à la CNSS ni à l'ITS — juste un montant forfaitaire.</p>
+                  <h2 className="font-bold text-[var(--text)] mb-1">Gratification de stage</h2>
+                  <p className="text-xs text-[var(--text-muted)]">Un stage n'est pas soumis à la CNSS ni à l'ITS — juste un montant forfaitaire.</p>
                 </div>
 
                 <Field label="Montant forfaitaire mensuel" required hint="Versé chaque fin de mois ou par période convenue">
@@ -769,12 +769,12 @@ function GenerateContractInner() {
                         <option value="1">Renouvelable si nécessaire</option>
                         <option value="0">Non renouvelable</option>
                       </select>
-                      <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
                     </div>
                   </Field>
                 </div>
 
-                <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-[11px] text-sky-700 dark:text-sky-400">
+                <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-[var(--accent-2-soft)] border border-amber-200 dark:border-amber-800 text-[11px] text-amber-700 dark:text-amber-400">
                   <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                   La résiliation d'une convention de stage ne donne droit à aucune indemnité — c'est déjà prévu dans le document.
                 </div>
@@ -784,8 +784,8 @@ function GenerateContractInner() {
             {step === 2 && isPrestationLike && (
               <motion.div key="step2-prestation" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white mb-1">Prestation</h2>
-                  <p className="text-xs text-slate-400">Émoluments hors code du travail — la cotisation BNC est à la charge du prestataire.</p>
+                  <h2 className="font-bold text-[var(--text)] mb-1">Prestation</h2>
+                  <p className="text-xs text-[var(--text-muted)]">Émoluments hors code du travail — la cotisation BNC est à la charge du prestataire.</p>
                 </div>
 
                 <Field label="Tâches à accomplir" hint="Une par ligne — reprises telles quelles dans le document">
@@ -806,7 +806,7 @@ function GenerateContractInner() {
                   <Field label="Taux de cotisation BNC" hint="Bénéfice Non Commercial — à la charge du prestataire">
                     <div className="relative">
                       <input type="number" value={form.tauxBnc} onChange={e => set('tauxBnc', Number(e.target.value))} className={inputCls + " pr-8"} />
-                      <Percent className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Percent className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                     </div>
                   </Field>
                 </div>
@@ -817,8 +817,8 @@ function GenerateContractInner() {
             {step === 3 && (
               <motion.div key="step3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-6">
                 <div>
-                  <h2 className="font-bold text-slate-900 dark:text-white mb-1">Société & signature</h2>
-                  <p className="text-xs text-slate-400">Pré-rempli depuis les paramètres de l'entreprise — modifiable si besoin.</p>
+                  <h2 className="font-bold text-[var(--text)] mb-1">Société & signature</h2>
+                  <p className="text-xs text-[var(--text-muted)]">Pré-rempli depuis les paramètres de l'entreprise — modifiable si besoin.</p>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -837,7 +837,7 @@ function GenerateContractInner() {
                 </div>
 
                 {(!form.representantNom || !form.representantFonction) && (
-                  <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-[11px] text-sky-700 dark:text-sky-400">
+                  <div className="flex items-start gap-2 px-3.5 py-2.5 rounded-xl bg-[var(--accent-2-soft)] border border-amber-200 dark:border-amber-800 text-[11px] text-amber-700 dark:text-amber-400">
                     <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                     Astuce : renseignez le représentant légal une fois dans Paramètres → Entreprise pour qu'il se pré-remplisse à chaque contrat.
                   </div>
@@ -847,20 +847,20 @@ function GenerateContractInner() {
           </AnimatePresence>
 
           {/* ── Navigation ────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between mt-8 pt-5 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between mt-8 pt-5 border-t border-[var(--border)]">
             <button type="button" onClick={goBack} disabled={step === 1}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-slate-500 dark:text-slate-400 disabled:opacity-0 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+              className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-[var(--text-muted)] disabled:opacity-0 hover:text-[var(--text)] transition-colors">
               <ArrowLeft className="w-4 h-4" /> Retour
             </button>
             {step < 3 ? (
               <button type="button" onClick={goNext}
                 disabled={step === 1 ? !canNextStep1 : !canNextStep2}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all">
+                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl shadow-lg transition-all">
                 Continuer <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
               <button type="button" onClick={handleGenerate} disabled={!canGenerate}
-                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all">
+                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:bg-[var(--brand-strong)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl shadow-lg transition-all">
                 <Sparkles className="w-4 h-4" /> Générer le contrat
               </button>
             )}
@@ -869,7 +869,7 @@ function GenerateContractInner() {
 
         {/* ── Colonne aperçu (sticky) ────────────────────────────────────── */}
         <div className="lg:sticky lg:top-6 h-fit space-y-4">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 rounded-3xl p-5 text-white shadow-xl">
+          <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl p-5 text-white shadow-xl">
             <div className="flex items-center gap-2 mb-4">
               <User className="w-4 h-4 text-white/50" />
               <span className="text-[11px] font-bold uppercase tracking-widest text-white/50">Aperçu</span>
@@ -884,10 +884,10 @@ function GenerateContractInner() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-5">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-5">
             <div className="flex items-center gap-2 mb-4">
-              <Wallet className="w-4 h-4 text-slate-400" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <Wallet className="w-4 h-4 text-[var(--text-muted)]" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
                 {isTravail ? 'Rémunération' : isStage ? 'Gratification' : 'Émoluments'}
               </span>
             </div>
@@ -898,7 +898,7 @@ function GenerateContractInner() {
                 {form.sursalaire > 0 && <Row label="Sursalaire" value={form.sursalaire} />}
                 {(serverBreakdown?.primesTotal ?? 0) > 0 && <Row label="Primes" value={serverBreakdown!.primesTotal} highlight="indigo" />}
                 {form.transport > 0 && <Row label="Transport" value={form.transport} />}
-                <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                <div className="h-px bg-[var(--surface-2)] my-2" />
                 {serverBreakdown ? (
                   <>
                     <Row label="TOTAL BRUT" value={serverBreakdown.totalGross} bold />
@@ -907,14 +907,14 @@ function GenerateContractInner() {
                     <Row label="TOL" value={-serverBreakdown.tol} muted />
                     {form.indemniteTransport > 0 && <Row label="Indemnité transport" value={form.indemniteTransport} highlight="teal" />}
                     {serverBreakdown.indemnitesTotal > 0 && <Row label="Indemnités" value={serverBreakdown.indemnitesTotal} highlight="teal" />}
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                    <div className="h-px bg-[var(--surface-2)] my-2" />
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Net à payer</span>
+                      <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Net à payer</span>
                       <AnimatedNumber value={serverBreakdown.net} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
                     </div>
                   </>
                 ) : (
-                  <p className="text-[11px] text-slate-400 flex items-center gap-1.5 py-2">
+                  <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5 py-2">
                     {breakdownLoading ? (
                       <><Loader2 className="w-3 h-3 animate-spin" /> Calcul du brut/CNSS/ITS/net en cours…</>
                     ) : (
@@ -928,10 +928,10 @@ function GenerateContractInner() {
             {isStage && (
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Montant mensuel</span>
+                  <span className="text-xs font-bold text-[var(--text-muted)] uppercase">Montant mensuel</span>
                   <AnimatedNumber value={localBreakdown.net} className="text-lg font-black text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <p className="text-[11px] text-slate-400 flex items-center gap-1.5 pt-1">
+                <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5 pt-1">
                   <Info className="w-3 h-3" /> Aucune retenue — montant forfaitaire net.
                 </p>
               </div>
@@ -943,8 +943,8 @@ function GenerateContractInner() {
                 {localBreakdown.bnc > 0 && (
                   <Row label={`Cotisation BNC (${form.tauxBnc || 10}%, à charge prestataire)`} value={localBreakdown.bnc} muted />
                 )}
-                <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
-                <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                <div className="h-px bg-[var(--surface-2)] my-2" />
+                <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-1.5">
                   <Clock className="w-3 h-3" /> {form.horaires ? form.horaires.split('\n')[0] : 'Horaires non renseignés'}
                 </p>
               </div>
@@ -952,15 +952,15 @@ function GenerateContractInner() {
           </div>
 
           {form.nomEntreprise && (
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700/60 shadow-sm p-5">
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Building2 className="w-4 h-4 text-slate-400" />
-                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                <Building2 className="w-4 h-4 text-[var(--text-muted)]" />
+                <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
                   {isPrestationLike ? "Maître d'ouvrage" : 'Employeur'}
                 </span>
               </div>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{form.nomEntreprise}</p>
-              {form.representantNom && <p className="text-xs text-slate-400 mt-0.5">Représenté par {form.representantNom}{form.representantFonction ? `, ${form.representantFonction}` : ''}</p>}
+              <p className="text-sm font-semibold text-[var(--text)]">{form.nomEntreprise}</p>
+              {form.representantNom && <p className="text-xs text-[var(--text-muted)] mt-0.5">Représenté par {form.representantNom}{form.representantFonction ? `, ${form.representantFonction}` : ''}</p>}
             </div>
           )}
         </div>
@@ -970,18 +970,18 @@ function GenerateContractInner() {
 }
 
 function Row({ label, value, bold, muted, highlight }: { label: string; value: number; bold?: boolean; muted?: boolean; highlight?: 'indigo' | 'teal' }) {
-  const color = muted ? 'text-rose-400' : highlight === 'indigo' ? 'text-indigo-500' : highlight === 'teal' ? 'text-teal-500' : 'text-slate-700 dark:text-slate-300';
+  const color = muted ? 'text-[var(--text-muted)]' : highlight === 'indigo' ? 'text-emerald-600 dark:text-emerald-400' : highlight === 'teal' ? 'text-amber-600 dark:text-amber-400' : 'text-[var(--text)]';
   return (
     <div className="flex items-center justify-between">
-      <span className={`text-xs ${bold ? 'font-bold text-slate-600 dark:text-slate-300' : 'text-slate-400'}`}>{label}</span>
-      <AnimatedNumber value={value} className={`text-xs tabular-nums ${bold ? 'font-black text-slate-900 dark:text-white text-sm' : `font-semibold ${color}`}`} />
+      <span className={`text-xs ${bold ? 'font-bold text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>{label}</span>
+      <AnimatedNumber value={value} className={`text-xs tabular-nums ${bold ? 'font-black text-[var(--text)] text-sm' : `font-semibold ${color}`}`} />
     </div>
   );
 }
 
 export default function GenerateContractPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="w-6 h-6 text-indigo-500 animate-spin" /></div>}>
+    <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>}>
       <GenerateContractInner />
     </Suspense>
   );

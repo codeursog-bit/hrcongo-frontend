@@ -6,11 +6,17 @@ export function getRedirectUrl(user: {
   companyId?:       string | null;
   cabinetId?:       string | null;
   managedByCabinet?: boolean;
+  manageMultipleCompanies?: boolean;
 }): string {
-  const { role, companyId, cabinetId, managedByCabinet } = user;
+  const { role, companyId, cabinetId, managedByCabinet, manageMultipleCompanies } = user;
 
   // Super admin → panel admin
   if (role === 'SUPER_ADMIN') return '/admin';
+
+  // 🆕 Admin multi-entreprises → son portefeuille, pas le dashboard normal
+  // (avant les autres checks : même s'il a un companyId actif, c'est le
+  // portefeuille qui prime pour ce type de compte)
+  if (manageMultipleCompanies) return '/portefeuille/dashboard';
 
   // Cabinet → dashboard cabinet
   if (role === 'CABINET_ADMIN' || role === 'CABINET_GESTIONNAIRE') {

@@ -1,389 +1,653 @@
 'use client';
 
-// ============================================================================
-// 💎 PAGE PRICING - MODAL MOBILE MONEY (nouveau flow)
-// ============================================================================
-// Fichier: app/(dashboard)/pricing/page.tsx
-
-import { useState, useEffect, Suspense } from 'react';
-import { useSubscription, usePlans } from '@/hooks/useSubscription';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
-import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
-import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
-import { api } from '@/services/api';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
-  Check, Zap, Gift, Sparkles, AlertTriangle,
-  Rocket, Building2, Star, X, Phone, ChevronDown, Loader2, Crown,
+  ArrowLeft, Loader2, Mail, Phone, MapPin, Calendar, Briefcase, Building2,
+  Users, Heart, Flag, CreditCard, BadgeCheck, Hash,
+  Shirt,
+  Palmtree, CheckCircle2, Fingerprint, XCircle, KeyRound, Eye, EyeOff,
+  AlertCircle, Lock, Pencil, Save, X, Camera, Loader,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { api } from '@/services/api';
+import { PushToggleButton } from '@/components/PushNotificationBanner';
+import { StatCard } from '@/components/ui/StatCard';
+import { useImageUpload } from '@/hooks/useImageUpload';
+import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
+import { FancySelect } from '@/components/ui/FancySelect';
 
 // ============================================================================
-// 📝 TYPES
+// Types
 // ============================================================================
-const PLAN_LABELS: Record<string, string> = {
-  FREE: 'Gratuit', BASIC: 'Basic', PRO: 'Pro', ENTERPRISE: 'Enterprise',
+
+interface Department { id: string; name: string; color?: string; }
+
+interface EmployeeProfile {
+  id: string;
+  employeeNumber: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city?: string;
+  photoUrl?: string;
+  position: string;
+  contractType: string;
+  hireDate: string;
+  dateOfBirth: string;
+  placeOfBirth: string;
+  gender: string;
+  maritalStatus: string;
+  numberOfChildren: number;
+  nationalIdNumber?: string;
+  cnssNumber?: string;
+  nationality?: string;
+  department: Department;
+  status: string;
+  bloodType?: string;
+  pathology?: string;
+  fatherName?: string;
+  motherName?: string;
+  educationLevel?: string;
+  emergencyContactName?: string;
+  emergencyContactRelation?: string;
+  emergencyContactPhone?: string;
+  hasDrivingLicense?: boolean;
+  drivingLicenseNumber?: string;
+  foreignLanguages?: string;
+  uniformSize?: string;
+  shoeSize?: string;
+  // 🆕 Auto-service
+  selfServiceEnabled?: boolean;
+  selfServiceEnabledAt?: string | null;
+}
+
+interface AuthUser {
+  id: string; firstName: string; lastName: string; email: string; role: string; companyId: string;
+}
+
+// Champs que l'employé peut modifier lui-même quand l'auto-service est activé —
+// doit rester en miroir strict de SelfServiceUpdateEmployeeDto côté backend.
+interface EditableFields {
+  phone: string; email: string; address: string; city: string; nationality: string;
+  gender: string; maritalStatus: string; numberOfChildren: number;
+  bloodType: string; pathology: string; fatherName: string; motherName: string; educationLevel: string;
+  emergencyContactName: string; emergencyContactRelation: string; emergencyContactPhone: string;
+  hasDrivingLicense: boolean; drivingLicenseNumber: string;
+  foreignLanguages: string; uniformSize: string; shoeSize: string;
+  photoUrl: string;
+}
+
+const EMPTY_FORM: EditableFields = {
+  phone: '', email: '', address: '', city: '', nationality: '',
+  gender: 'MALE', maritalStatus: 'SINGLE', numberOfChildren: 0,
+  bloodType: '', pathology: '', fatherName: '', motherName: '', educationLevel: '',
+  emergencyContactName: '', emergencyContactRelation: '', emergencyContactPhone: '',
+  hasDrivingLicense: false, drivingLicenseNumber: '',
+  foreignLanguages: '', uniformSize: '', shoeSize: '',
+  photoUrl: '',
 };
 
+function formStateFromEmployee(e: EmployeeProfile): EditableFields {
+  return {
+    phone: e.phone || '', email: e.email || '', address: e.address || '', city: e.city || '',
+    nationality: e.nationality || '', gender: e.gender || 'MALE',
+    maritalStatus: e.maritalStatus || 'SINGLE', numberOfChildren: e.numberOfChildren ?? 0,
+    bloodType: e.bloodType || '', pathology: e.pathology || '', fatherName: e.fatherName || '',
+    motherName: e.motherName || '', educationLevel: e.educationLevel || '',
+    emergencyContactName: e.emergencyContactName || '', emergencyContactRelation: e.emergencyContactRelation || '',
+    emergencyContactPhone: e.emergencyContactPhone || '',
+    hasDrivingLicense: !!e.hasDrivingLicense, drivingLicenseNumber: e.drivingLicenseNumber || '',
+    foreignLanguages: e.foreignLanguages || '', uniformSize: e.uniformSize || '', shoeSize: e.shoeSize || '',
+    photoUrl: e.photoUrl || '',
+  };
+}
+
 // ============================================================================
-// 🎯 COMPOSANT PRICING
+// Helpers
 // ============================================================================
-function PricingContent() {
-  const searchParams  = useSearchParams();
-  const canceled      = searchParams.get('canceled');
-  const { subscription } = useSubscription();
-  const { plans, isLoading } = usePlans();
 
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
-  const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
+const ROLE_META: Record<string, { label: string; color: string }> = {
+  SUPER_ADMIN: { label: 'Super Admin',    color: 'bg-amber-500' },
+  ADMIN:       { label: 'Administrateur', color: 'bg-amber-500' },
+  HR_MANAGER:  { label: 'Responsable RH', color: 'bg-emerald-500' },
+  MANAGER:     { label: 'Manager',        color: 'bg-amber-500' },
+  EMPLOYEE:    { label: 'Employé',        color: 'bg-emerald-500' },
+};
+const CONTRACT_LABELS: Record<string, string> = {
+  CDI: 'CDI', CDD: 'CDD', STAGE: 'Stagiaire', INTERIM: 'Intérimaire', CONSULTANT: 'Consultant', PRESTATAIRE: 'Prestataire',
+};
+const GENDER_LABELS: Record<string, string> = { MALE: 'Masculin', FEMALE: 'Féminin' };
+const GENDER_OPTIONS = [{ value: 'MALE', label: 'Masculin' }, { value: 'FEMALE', label: 'Féminin' }];
+const MARITAL_OPTIONS = [
+  { value: 'SINGLE', label: 'Célibataire' }, { value: 'MARRIED', label: 'Marié(e)' },
+  { value: 'DIVORCED', label: 'Divorcé(e)' }, { value: 'WIDOWED', label: 'Veuf/Veuve' },
+];
+const UNIFORM_OPTIONS = ['S', 'M', 'L', 'XL', 'XXL'].map(s => ({ value: s, label: s }));
 
-  // 🔀 Bascule automatique de prestataire — voir GET /subscriptions/payment-provider.
-  const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
-  const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
+const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
 
-  useEffect(() => {
-    api.get<{ provider: 'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
-      .then((r) => setActiveProvider(r.provider))
-      .catch(() => setActiveProvider('NONE')); // repli prudent si l'appel échoue — jamais planter
-  }, []);
+const seniority = (hireDate?: string) => {
+  if (!hireDate) return '—';
+  const diff = Date.now() - new Date(hireDate).getTime();
+  const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+  const months = Math.floor((diff % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24 * 30));
+  if (years === 0) return `${months} mois`;
+  return `${years} an${years > 1 ? 's' : ''}${months > 0 ? ` ${months} mois` : ''}`;
+};
 
-  // Moteki et Chariow initient ET déclenchent le paiement en un seul appel
-  // (fait par leur modal respectif — checkoutTarget sert aux deux, le
-  // rendu choisit le bon composant selon activeProvider). YabetooPay a
-  // besoin d'un PaymentIntent créé d'abord via /subscriptions/upgrade
-  // (flux original en 2 étapes, inchangé) avant d'ouvrir son propre modal.
-  // NONE = aucun prestataire configuré côté serveur, on ne tente rien.
-  const handleUpgrade = async (plan: 'BASIC' | 'PRO' | 'ENTERPRISE') => {
-    const planData = plans?.[plan];
-    const amount = billingPeriod === 'yearly' ? planData?.priceYearly : planData?.priceMonthly;
-    if (!amount) {
-      toast.error("Impossible de déterminer le tarif de ce plan, réessayez.");
-      return;
-    }
+const calculateAge = (dob?: string): number | null => {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const hadBirthday = today.getMonth() > birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!hadBirthday) age--;
+  return age;
+};
 
-    if (activeProvider === 'NONE') {
-      toast.error('Le paiement en ligne est momentanément indisponible. Contactez le support.');
-      return;
-    }
+const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } };
+const itemVariants = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
-    if (activeProvider === 'YABETOOPAY') {
-      setUpgradingPlan(plan);
-      try {
-        const data = await api.post<PaymentIntent>('/subscriptions/upgrade', { plan, billingPeriod });
-        setPaymentIntent(data);
-      } catch (error: any) {
-        toast.error(error.message || "Erreur lors de l'initialisation du paiement");
-      } finally {
-        setUpgradingPlan(null);
+// ============================================================================
+// Petits composants de champ
+// ============================================================================
+
+function Field({
+  icon: Icon, label, value, editing, children,
+}: { icon: React.ElementType; label: string; value?: React.ReactNode; editing?: boolean; children?: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3 py-3">
+      <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center shrink-0 mt-0.5">
+        <Icon size={15} className="text-[var(--text-muted)]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{label}</p>
+        {editing ? children : <p className="text-sm font-semibold text-[var(--text)] truncate">{value ?? '—'}</p>}
+      </div>
+    </div>
+  );
+}
+
+const inputCls = "w-full px-3 py-2 text-sm rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500";
+
+// 🆕 Champ compact sans icône, pour les sections denses en grille
+function MiniField({
+  label, value, editing, children,
+}: { label: string; value?: React.ReactNode; editing?: boolean; children?: React.ReactNode }) {
+  return (
+    <div className="py-2">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)] mb-1">{label}</p>
+      {editing ? children : <p className="text-sm font-semibold text-[var(--text)] truncate">{value ?? '—'}</p>}
+    </div>
+  );
+}
+
+function Section({ title, children, dense }: { title: string; children: React.ReactNode; dense?: boolean }) {
+  return (
+    <motion.div variants={itemVariants} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+      <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--surface-2)]">
+        <h3 className="text-[11px] font-black uppercase tracking-widest text-[var(--text-muted)]">{title}</h3>
+      </div>
+      <div className={dense ? "px-5 py-4 grid grid-cols-1 sm:grid-cols-3 gap-x-6" : "px-5 py-1 divide-y divide-[var(--border)]"}>{children}</div>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// Page
+// ============================================================================
+
+export default function MonProfilPage() {
+  const router = useRouter();
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [employee, setEmployee] = useState<EmployeeProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasEmployee, setHasEmployee] = useState(true);
+
+  const [leaveBalanceData, setLeaveBalanceData] = useState<any>(null);
+  const [attendanceSummary, setAttendanceSummary] = useState<any>(null);
+
+  // ── Édition (auto-service) ────────────────────────────────────────────────
+  const [isEditing, setIsEditing] = useState(false);
+  const [form, setForm] = useState<EditableFields>(EMPTY_FORM);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const imageUpload = useImageUpload();
+
+  // ── Mot de passe ──────────────────────────────────────────────────────────
+  const [showPwdModal, setShowPwdModal] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState(false);
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNext, setShowNext] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+
+  const ROLES_WITH_EMPLOYEE_PROFILE = ['EMPLOYEE', 'HR_MANAGER', 'MANAGER'];
+
+  useEffect(() => { loadProfile(); }, []);
+
+  const loadProfile = async () => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (!stored) { router.push('/auth/login'); return; }
+      const u: AuthUser = JSON.parse(stored);
+      setAuthUser(u);
+
+      if (ROLES_WITH_EMPLOYEE_PROFILE.includes(u.role)) {
+        try {
+          const emp = await api.get<EmployeeProfile>('/employees/me');
+          setEmployee(emp);
+          setForm(formStateFromEmployee(emp));
+
+          try {
+            const balance = await api.get<any>('/leaves/me/balance');
+            setLeaveBalanceData(balance);
+          } catch { /* silencieux */ }
+
+          try {
+            const now = new Date();
+            const summary = await api.get<any>(`/attendance/summary/${emp.id}/${now.getMonth() + 1}/${now.getFullYear()}`);
+            setAttendanceSummary(summary);
+          } catch { /* silencieux */ }
+        } catch {
+          setHasEmployee(false);
+        }
+      } else {
+        setHasEmployee(false);
       }
-      return;
+    } catch (e) {
+      console.error('Erreur chargement profil', e);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    setCheckoutTarget({ plan, billingPeriod, amount });
+  const startEditing = () => {
+    if (employee) setForm(formStateFromEmployee(employee));
+    setSaveError('');
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    if (employee) setForm(formStateFromEmployee(employee));
+    imageUpload.clearImage?.();
+    setSaveError('');
+    setIsEditing(false);
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    setSaveError('');
+    try {
+      const payload = { ...form, photoUrl: imageUpload.uploadedUrl || form.photoUrl || undefined };
+      const updated = await api.patch<EmployeeProfile>('/employees/me', payload);
+      setEmployee(updated);
+      setForm(formStateFromEmployee(updated));
+      setIsEditing(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      setSaveError(err?.message || 'Erreur lors de l\'enregistrement. Réessayez.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    setPwdError('');
+    if (!pwdForm.current) { setPwdError('Entrez votre mot de passe actuel.'); return; }
+    if (pwdForm.next.length < 8) { setPwdError('Le nouveau mot de passe doit faire au moins 8 caractères.'); return; }
+    if (!/[A-Z]/.test(pwdForm.next)) { setPwdError('Au moins une majuscule requise.'); return; }
+    if (!/[0-9]/.test(pwdForm.next)) { setPwdError('Au moins un chiffre requis.'); return; }
+    if (pwdForm.next !== pwdForm.confirm) { setPwdError('Les mots de passe ne correspondent pas.'); return; }
+
+    setPwdLoading(true);
+    try {
+      await api.post('/auth/change-password', { currentPassword: pwdForm.current, newPassword: pwdForm.next });
+      setPwdSuccess(true);
+    } catch (err: any) {
+      setPwdError(err?.response?.data?.message || err?.message || 'Erreur lors du changement de mot de passe.');
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
+  const closePwdModal = () => {
+    setShowPwdModal(false);
+    setPwdSuccess(false);
+    setPwdForm({ current: '', next: '', confirm: '' });
+    setPwdError('');
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+        <Loader2 className="animate-spin text-emerald-500" size={40} />
       </div>
     );
   }
+  if (!authUser) return null;
 
-  const planOrder   = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
-  const sortedPlans = Object.entries(plans || {})
-    .sort(([a], [b]) => planOrder.indexOf(a) - planOrder.indexOf(b));
+  const roleInfo = ROLE_META[authUser.role] ?? ROLE_META.EMPLOYEE;
+  const fullName = employee ? `${employee.firstName} ${employee.lastName}` : `${authUser.firstName} ${authUser.lastName}`;
+  const canEdit = !!employee?.selfServiceEnabled;
+  const avatarSrc = imageUpload.preview || form.photoUrl || employee?.photoUrl
+    || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=10B981&color=fff&size=256`;
 
-  const getPlanIcon = (planKey: string) => {
-    switch (planKey) {
-      case 'FREE':       return <Star      className="w-5 h-5 text-[var(--text-muted)]" />;
-      case 'BASIC':      return <Rocket    className="w-5 h-5 text-amber-500" />;
-      case 'PRO':        return <Zap       className="w-5 h-5 text-emerald-500" />;
-      case 'ENTERPRISE': return <Building2 className="w-5 h-5 text-amber-500" />;
-      default:           return <Star      className="w-5 h-5 text-[var(--text-muted)]" />;
-    }
+  const stats = {
+    leaveBalance: leaveBalanceData ? Math.round(Number(leaveBalanceData.annualRemaining ?? 0) * 10) / 10 : 0,
+    leaveTaken: leaveBalanceData ? Math.round(Number(leaveBalanceData.annualTaken ?? 0) * 10) / 10 : 0,
+    presencesThisMonth: attendanceSummary ? Number(attendanceSummary.daysPresent ?? 0) : 0,
+    absencesThisMonth: attendanceSummary ? Number(attendanceSummary.daysAbsentPaid ?? 0) + Number(attendanceSummary.daysAbsentUnpaid ?? 0) : 0,
   };
+
+  const pwdChecks = [/[A-Z]/.test(pwdForm.next), /[a-z]/.test(pwdForm.next), /[0-9]/.test(pwdForm.next), pwdForm.next.length >= 8];
+  const pwdStrength = pwdChecks.filter(Boolean).length;
+  const pwdStrengthColor = pwdStrength === 4 ? 'bg-emerald-500 w-full' : pwdStrength >= 2 ? 'bg-yellow-500 w-2/3' : 'bg-red-500 w-1/3';
+  const pwdStrengthLabel = pwdStrength === 4 ? '✓ Excellent' : pwdStrength >= 2 ? 'Moyen' : 'Faible';
+
+  const set = <K extends keyof EditableFields>(key: K, value: EditableFields[K]) => setForm(f => ({ ...f, [key]: value }));
 
   return (
     <div className="min-h-screen pb-20">
-      {/* Fond Aurora */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
-      </div>
+      <PushToggleButton />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+      <motion.div initial="hidden" animate="visible" variants={containerVariants} className="max-w-6xl mx-auto px-4 py-8 space-y-5">
 
-        {/* Alerte annulation */}
-        {canceled && (
-          <div className="mb-8 bg-amber-500/10 border-l-4 border-amber-500 p-6 rounded-lg flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-lg font-semibold text-amber-500 mb-1">Paiement annulé</h3>
-              <p className="text-sm text-amber-500/90">
-                Aucune somme n'a été prélevée. Vous pouvez réessayer ci-dessous.
-              </p>
-            </div>
-          </div>
-        )}
+        <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+          <ArrowLeft size={16} /> Retour
+        </button>
 
-        {/* Plan FREE actuel si retour au gratuit */}
-        {subscription?.plan === 'FREE' && (
-          <div className="mb-8 bg-[var(--surface-2)] border border-[var(--border)] p-5 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[var(--surface)] flex items-center justify-center shrink-0">
-              <Star className="w-5 h-5 text-[var(--text-muted)]" />
-            </div>
-            <div>
-              <p className="font-semibold text-[var(--text)] text-sm">
-                Vous êtes sur le plan <span className="font-bold">Gratuit</span>
-              </p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Choisissez un plan ci-dessous pour débloquer toutes les fonctionnalités.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full mb-6">
-            <Gift className="w-5 h-5 text-emerald-500" />
-            <span className="text-sm font-semibold glow-text">30 jours d'essai PRO gratuit !</span>
-          </div>
-          <h1 className="text-5xl font-bold mb-4 text-[var(--text)]">
-            Choisissez votre plan
-          </h1>
-          <p className="text-lg text-[var(--text-muted)] max-w-2xl mx-auto">
-            Paiement Mobile Money direct — MTN, Airtel, Orange. Activation immédiate.
-          </p>
+        <div>
+          <h1 className="text-2xl font-black text-[var(--text)]">Mon Profil</h1>
+          <p className="text-sm text-[var(--text-muted)]">Toutes vos informations personnelles et professionnelles.</p>
         </div>
 
-        {/* Toggle Mensuel / Annuel */}
-        <div className="flex justify-center mb-12">
-          <div className="glass-card p-1.5 rounded-full inline-flex">
-            {(['monthly', 'yearly'] as const).map(period => (
-              <button
-                key={period}
-                onClick={() => setBillingPeriod(period)}
-                className={`
-                  px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 relative
-                  ${billingPeriod === period
-                    ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'}
-                `}
-              >
-                {period === 'monthly' ? 'Mensuel' : 'Annuel'}
-                {period === 'yearly' && (
-                  <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
-                    -17%
-                  </span>
+        {/* ══ EN-TÊTE + STATS (côte à côte sur desktop) ══ */}
+        <div className="flex flex-col lg:flex-row gap-5">
+          <motion.div variants={itemVariants} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 lg:w-[380px] shrink-0">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="relative shrink-0">
+                <img src={avatarSrc} alt={fullName} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-[var(--border)]" />
+                {isEditing && (
+                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-emerald-600 transition-colors">
+                    {imageUpload.uploading ? <Loader size={13} className="text-white animate-spin" /> : <Camera size={13} className="text-white" />}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && imageUpload.handleFileSelect(e.target.files[0])} />
+                  </label>
                 )}
-              </button>
-            ))}
-          </div>
+              </div>
+
+              <div>
+                <h1 className="text-xl font-black text-[var(--text)]">{fullName}</h1>
+                <p className="text-sm text-[var(--text-muted)]">
+                  {employee?.position ?? roleInfo.label}
+                  {employee?.department && <span className="text-emerald-500"> · {employee.department.name}</span>}
+                </p>
+              </div>
+
+              {employee && (
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-1">
+                  <Hash size={10} /> ID Employé : {employee.employeeNumber}
+                </p>
+              )}
+
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Employé actif
+              </span>
+            </div>
+          </motion.div>
+
+          {/* ══ STATS ══ */}
+          {hasEmployee && (
+            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <motion.div variants={itemVariants}><StatCard label="Ancienneté" value={employee?.hireDate ? seniority(employee.hireDate) : '—'} trend="vs dernier" isPositive icon={Calendar} color="emerald" /></motion.div>
+              <motion.div variants={itemVariants}><StatCard label="Congés restants" value={`${stats.leaveBalance} jours dispo.`} trend="vs dernier" isPositive icon={Palmtree} color="amber" /></motion.div>
+              <motion.div variants={itemVariants}><StatCard label="Présences" value={`${stats.presencesThisMonth} ce mois-ci`} trend="vs dernier" isPositive icon={Fingerprint} color="emerald" /></motion.div>
+              <motion.div variants={itemVariants}><StatCard label="Absences" value={`${stats.absencesThisMonth} ce mois-ci`} trend="vs dernier" isPositive={stats.absencesThisMonth === 0} icon={XCircle} color="red" /></motion.div>
+            </div>
+          )}
         </div>
 
-        {/* Cartes */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {sortedPlans.map(([planKey, plan]: [string, any]) => {
-            const isCurrentPlan = subscription?.plan === planKey;
-            const isPro         = planKey === 'PRO';
-            const isFree        = planKey === 'FREE';
-            const isUpgrading   = upgradingPlan === planKey;
-            const monthlyPrice  = billingPeriod === 'yearly'
-              ? Math.round(plan.priceYearly / 12)
-              : plan.priceMonthly;
-            const totalPrice    = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;
+        {saveError && (
+          <motion.div variants={itemVariants} className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-500">
+            <AlertCircle size={14} /> {saveError}
+          </motion.div>
+        )}
+        {saveSuccess && (
+          <motion.div variants={itemVariants} className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-500">
+            <CheckCircle2 size={14} /> Profil mis à jour avec succès.
+          </motion.div>
+        )}
 
-            return (
-              <div
-                key={planKey}
-                className={`
-                  relative glass-panel rounded-2xl p-6 transition-all duration-300 hover:scale-105
-                  ${isPro ? 'border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/20' : ''}
-                  ${isCurrentPlan ? 'ring-2 ring-emerald-500' : ''}
-                `}
-              >
-                {isPro && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-emerald-500 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap">
-                    <Sparkles className="w-4 h-4" /> Populaire
-                  </div>
-                )}
-                {isCurrentPlan && (
-                  <div className="absolute -top-4 right-4 px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full whitespace-nowrap">
-                    ✓ Plan actuel
-                  </div>
-                )}
+        {/* ══ DEUX COLONNES DE SECTIONS ══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
 
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    {getPlanIcon(planKey)}
-                    <h3 className="text-xl font-bold">{plan.name}</h3>
-                  </div>
-                  <p className="text-sm text-[var(--text-muted)]">{plan.description}</p>
-                </div>
+          {/* Colonne gauche */}
+          <div className="space-y-5">
+            <Section title="Coordonnées">
+              <Field icon={Phone} label="Téléphone" value={employee?.phone} editing={isEditing}>
+                <input className={inputCls} value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+242 06 000 00 00" />
+              </Field>
+              <Field icon={Mail} label="Email" value={employee?.email} editing={isEditing}>
+                <input className={inputCls} type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+              </Field>
+              <Field icon={MapPin} label="Adresse" value={employee?.address} editing={isEditing}>
+                <input className={inputCls} value={form.address} onChange={e => set('address', e.target.value)} />
+              </Field>
+              <Field icon={MapPin} label="Ville" value={employee?.city} editing={isEditing}>
+                <input className={inputCls} value={form.city} onChange={e => set('city', e.target.value)} />
+              </Field>
+            </Section>
 
-                <div className="mb-6">
-                  {isFree ? (
-                    <div className="text-4xl font-bold">Gratuit</div>
-                  ) : (
-                    <>
-                      <div className="text-4xl font-bold mb-1">
-                        {monthlyPrice.toLocaleString()} <span className="text-lg">FCFA</span>
-                      </div>
-                      <div className="text-sm text-[var(--text-muted)]">
-                        {billingPeriod === 'yearly' ? (
-                          <>
-                            {totalPrice.toLocaleString()} FCFA / an
-                            <span className="ml-2 text-emerald-500 font-semibold">
-                              -{((plan.priceMonthly * 12) - plan.priceYearly).toLocaleString()} FCFA
-                            </span>
-                          </>
-                        ) : '/ mois'}
-                      </div>
-                    </>
-                  )}
-                </div>
+            <Section title="Identité & Famille" dense>
+              <MiniField label="Date de naissance" value={fmtDate(employee?.dateOfBirth)} />
+              <MiniField label="Âge" value={employee?.dateOfBirth ? `${calculateAge(employee.dateOfBirth)} ans` : undefined} />
+              <MiniField label="Lieu de naissance" value={employee?.placeOfBirth} />
+              <MiniField label="Genre" value={employee?.gender ? GENDER_LABELS[employee.gender] : undefined} editing={isEditing}>
+                <FancySelect label="" value={form.gender} onChange={(v) => set('gender', v)} icon={Users} options={GENDER_OPTIONS} />
+              </MiniField>
+              <MiniField label="Situation familiale" value={employee?.maritalStatus ? MARITAL_OPTIONS.find(o => o.value === employee.maritalStatus)?.label : undefined} editing={isEditing}>
+                <FancySelect label="" value={form.maritalStatus} onChange={(v) => set('maritalStatus', v)} icon={Heart} options={MARITAL_OPTIONS} />
+              </MiniField>
+              <MiniField label="Nombre d'enfants" value={employee?.numberOfChildren} editing={isEditing}>
+                <input className={inputCls} type="number" min={0} value={form.numberOfChildren} onChange={e => set('numberOfChildren', parseInt(e.target.value) || 0)} />
+              </MiniField>
+              <MiniField label="Nationalité" value={employee?.nationality} editing={isEditing}>
+                <FancySelect label="" value={form.nationality} onChange={(v) => set('nationality', v)} icon={Flag} placeholder="Sélectionner…" options={NATIONALITY_OPTIONS} />
+              </MiniField>
+              <MiniField label="Nom du père" value={employee?.fatherName} editing={isEditing}>
+                <input className={inputCls} value={form.fatherName} onChange={e => set('fatherName', e.target.value)} />
+              </MiniField>
+              <MiniField label="Nom de la mère" value={employee?.motherName} editing={isEditing}>
+                <input className={inputCls} value={form.motherName} onChange={e => set('motherName', e.target.value)} />
+              </MiniField>
+            </Section>
 
-                <button
-                  onClick={() => !isFree && !isCurrentPlan && handleUpgrade(planKey as 'BASIC' | 'PRO' | 'ENTERPRISE')}
-                  disabled={isFree || isCurrentPlan || isUpgrading}
-                  className={`
-                    w-full py-3 px-6 rounded-lg font-bold text-sm mb-6
-                    transition-all duration-300 flex items-center justify-center gap-2
-                    ${isFree
-                      ? 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed'
-                      : isCurrentPlan
-                        ? 'bg-emerald-500 text-white cursor-not-allowed opacity-80'
-                        : isUpgrading
-                          ? 'bg-emerald-400 text-white cursor-not-allowed'
-                          : isPro
-                            ? 'bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105'
-                            : 'bg-amber-500 text-white hover:bg-amber-600 hover:scale-105'
-                    }
-                  `}
-                >
-                  {isFree ? (
-                    <><Star className="w-4 h-4" /> Plan gratuit</>
-                  ) : isCurrentPlan ? (
-                    <><Check className="w-4 h-4" /> Plan actuel</>
-                  ) : isUpgrading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Préparation…</>
-                  ) : (
-                    <><Rocket className="w-4 h-4" /> Choisir ce plan</>
-                  )}
-                </button>
-
+            <Section title="Santé & Divers" dense>
+              <MiniField label="Groupe sanguin" value={employee?.bloodType} editing={isEditing}>
+                <input className={inputCls} value={form.bloodType} onChange={e => set('bloodType', e.target.value)} placeholder="A+, O-…" />
+              </MiniField>
+              <MiniField label="Pathologie" value={employee?.pathology || 'Aucune renseignée'} editing={isEditing}>
+                <input className={inputCls} value={form.pathology} onChange={e => set('pathology', e.target.value)} placeholder="Laisser vide si aucune" />
+              </MiniField>
+              <MiniField label="Niveau d'études" value={employee?.educationLevel} editing={isEditing}>
+                <input className={inputCls} value={form.educationLevel} onChange={e => set('educationLevel', e.target.value)} />
+              </MiniField>
+              <MiniField label="Langue étrangère" value={employee?.foreignLanguages} editing={isEditing}>
+                <input className={inputCls} value={form.foreignLanguages} onChange={e => set('foreignLanguages', e.target.value)} />
+              </MiniField>
+              <MiniField label="Permis de conduire" value={employee?.hasDrivingLicense ? `Oui${employee?.drivingLicenseNumber ? ` — ${employee.drivingLicenseNumber}` : ''}` : (employee ? 'Non' : undefined)} editing={isEditing}>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[var(--text-muted)] mb-2">Inclus :</p>
-                  <div className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                    <span>
-                      {plan.limits.maxEmployees === -1 ? 'Employés illimités' : `${plan.limits.maxEmployees} employés max`}
-                    </span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.hasDrivingLicense} onChange={e => set('hasDrivingLicense', e.target.checked)} className="w-4 h-4 rounded border-[var(--border)] text-emerald-500 accent-emerald-500" />
+                    <span className="text-sm text-[var(--text)]">J'ai le permis</span>
+                  </label>
+                  {form.hasDrivingLicense && <input className={inputCls} value={form.drivingLicenseNumber} onChange={e => set('drivingLicenseNumber', e.target.value)} placeholder="N° du permis" />}
+                </div>
+              </MiniField>
+              <MiniField label="Taille de la tenue" value={employee?.uniformSize} editing={isEditing}>
+                <FancySelect label="" value={form.uniformSize} onChange={(v) => set('uniformSize', v)} icon={Shirt} placeholder="—" options={UNIFORM_OPTIONS} />
+              </MiniField>
+              <MiniField label="Pointure" value={employee?.shoeSize} editing={isEditing}>
+                <input className={inputCls} value={form.shoeSize} onChange={e => set('shoeSize', e.target.value)} placeholder="42" />
+              </MiniField>
+            </Section>
+          </div>
+
+          {/* Colonne droite */}
+          <div className="space-y-5">
+            {hasEmployee && (
+              <Section title="Informations professionnelles (gérées par les RH)">
+                <Field icon={Briefcase} label="Poste" value={employee?.position} />
+                <Field icon={Building2} label="Département" value={employee?.department?.name} />
+                <Field icon={BadgeCheck} label="Type de contrat" value={employee?.contractType ? CONTRACT_LABELS[employee.contractType] ?? employee.contractType : undefined} />
+                <Field icon={Calendar} label="Date d'embauche" value={fmtDate(employee?.hireDate)} />
+                <Field icon={CreditCard} label="N° CNI" value={employee?.nationalIdNumber} />
+                <Field icon={BadgeCheck} label="N° CNSS" value={employee?.cnssNumber} />
+              </Section>
+            )}
+
+            <Section title="Personne à contacter en cas d'urgence">
+              <Field icon={Users} label="Nom" value={employee?.emergencyContactName} editing={isEditing}>
+                <input className={inputCls} value={form.emergencyContactName} onChange={e => set('emergencyContactName', e.target.value)} />
+              </Field>
+              <Field icon={Heart} label="Lien de parenté" value={employee?.emergencyContactRelation} editing={isEditing}>
+                <input className={inputCls} value={form.emergencyContactRelation} onChange={e => set('emergencyContactRelation', e.target.value)} />
+              </Field>
+              <Field icon={Phone} label="Téléphone" value={employee?.emergencyContactPhone} editing={isEditing}>
+                <input className={inputCls} value={form.emergencyContactPhone} onChange={e => set('emergencyContactPhone', e.target.value)} />
+              </Field>
+            </Section>
+
+            {/* ══ SÉCURITÉ (mot de passe + déclencheur d'édition) ══ */}
+            <Section title="Sécurité du compte">
+              <div className="flex items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center shrink-0">
+                    <KeyRound size={15} className="text-[var(--text-muted)]" />
                   </div>
-                  <div className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                    <span>
-                      {plan.limits.maxUsers === -1 ? 'Utilisateurs illimités' : `${plan.limits.maxUsers} utilisateur${plan.limits.maxUsers > 1 ? 's' : ''}`}
-                    </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">Mot de passe</p>
+                    <p className="text-sm font-semibold text-[var(--text)] tracking-widest">••••••••••••••</p>
                   </div>
-                  <div className="border-t border-[var(--border)] pt-2 mt-2 space-y-2">
-                    {plan.limits.hasEmployeeImportExcel && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span>Import Excel</span>
-                      </div>
-                    )}
-                    {plan.limits.hasLeaveManagement && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span>Gestion congés</span>
-                      </div>
-                    )}
-                    {plan.limits.hasAttendanceGPS && (
-                      <div className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span>Pointage GPS</span>
-                      </div>
-                    )}
+                </div>
+                <button onClick={() => setShowPwdModal(true)} className="shrink-0 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold transition-colors flex items-center gap-1.5">
+                  <Lock size={13} /> Modifier le mot de passe
+                </button>
+              </div>
+
+              <div className="py-3">
+                {!isEditing ? (
+                  <button
+                    onClick={canEdit ? startEditing : undefined}
+                    disabled={!canEdit}
+                    title={canEdit ? undefined : "Votre RH doit d'abord vous autoriser à modifier votre profil"}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                      canEdit
+                        ? 'bg-[var(--surface-2)] text-[var(--text)] border border-[var(--border)] hover:border-emerald-500/40'
+                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <Pencil size={13} /> Modifier mes informations
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button onClick={cancelEditing} disabled={isSaving} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[var(--border)] text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50">
+                      <X size={13} /> Annuler
+                    </button>
+                    <button onClick={handleSaveProfile} disabled={isSaving || imageUpload.uploading} className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50">
+                      {isSaving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} Enregistrer
+                    </button>
                   </div>
+                )}
+                {!canEdit && (
+                  <p className="text-[11px] text-[var(--text-muted)] text-center mt-2">Autorisation RH requise pour modifier votre profil.</p>
+                )}
+              </div>
+            </Section>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── MODALE MOT DE PASSE ── */}
+      {showPwdModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                <KeyRound size={18} className="text-emerald-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[var(--text)]">Changer le mot de passe</h3>
+                <p className="text-xs text-[var(--text-muted)]">Votre session reste active après le changement</p>
+              </div>
+            </div>
+
+            {pwdSuccess ? (
+              <div className="text-center py-4">
+                <CheckCircle2 size={40} className="text-emerald-500 mx-auto mb-3" />
+                <p className="font-bold text-[var(--text)] mb-1">Mot de passe modifié !</p>
+                <p className="text-xs text-[var(--text-muted)] mb-5">Votre mot de passe a été mis à jour avec succès.</p>
+                <button onClick={closePwdModal} className="px-6 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-bold text-sm hover:bg-emerald-500/20 transition-colors">
+                  Fermer
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Mot de passe actuel</label>
+                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] focus-within:border-emerald-500 transition-colors">
+                    <Lock size={14} className="text-[var(--text-muted)]" />
+                    <input type={showCurrent ? 'text' : 'password'} value={pwdForm.current} onChange={e => setPwdForm(f => ({ ...f, current: e.target.value }))} placeholder="Votre mot de passe actuel" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
+                    <button type="button" onClick={() => setShowCurrent(v => !v)} className="text-[var(--text-muted)] hover:text-[var(--text)]"> {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Nouveau mot de passe</label>
+                  <div className="flex items-center gap-2 px-3.5 py-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] focus-within:border-emerald-500 transition-colors">
+                    <Lock size={14} className="text-[var(--text-muted)]" />
+                    <input type={showNext ? 'text' : 'password'} value={pwdForm.next} onChange={e => setPwdForm(f => ({ ...f, next: e.target.value }))} placeholder="Min. 8 car., 1 majuscule, 1 chiffre" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
+                    <button type="button" onClick={() => setShowNext(v => !v)} className="text-[var(--text-muted)] hover:text-[var(--text)]">{showNext ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  </div>
+                  {pwdForm.next && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <div className="flex-1 h-1 bg-[var(--surface-2)] rounded-full overflow-hidden"><div className={`h-full rounded-full transition-all ${pwdStrengthColor}`} /></div>
+                      <span className="text-[11px] text-[var(--text-muted)]">{pwdStrengthLabel}</span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Confirmer le nouveau mot de passe</label>
+                  <div className={`flex items-center gap-2 px-3.5 py-3 rounded-xl border bg-[var(--surface-2)] focus-within:border-emerald-500 transition-colors ${pwdForm.confirm && pwdForm.confirm !== pwdForm.next ? 'border-red-500' : 'border-[var(--border)]'}`}>
+                    <Lock size={14} className="text-[var(--text-muted)]" />
+                    <input type={showConfirmPwd ? 'text' : 'password'} value={pwdForm.confirm} onChange={e => setPwdForm(f => ({ ...f, confirm: e.target.value }))} placeholder="Répétez le nouveau mot de passe" className="flex-1 bg-transparent text-[var(--text)] text-sm outline-none" />
+                    <button type="button" onClick={() => setShowConfirmPwd(v => !v)} className="text-[var(--text-muted)] hover:text-[var(--text)]">{showConfirmPwd ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+                  </div>
+                </div>
+                {pwdError && (
+                  <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30">
+                    <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-red-500">{pwdError}</p>
+                  </div>
+                )}
+                <div className="flex gap-3 pt-2">
+                  <button onClick={closePwdModal} className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-sm text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors font-medium">Annuler</button>
+                  <button onClick={handlePasswordChange} disabled={pwdLoading || !pwdForm.current || !pwdForm.next || !pwdForm.confirm} className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold transition-colors flex items-center justify-center gap-2">
+                    {pwdLoading ? <><Loader2 size={14} className="animate-spin" /> Modification…</> : 'Modifier'}
+                  </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* FAQ */}
-        <div className="mt-20 glass-panel p-8 rounded-2xl">
-          <h2 className="text-2xl font-bold mb-6 text-center">Questions fréquentes</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-bold mb-2 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-emerald-500" /> Comment fonctionne l'essai gratuit ?
-              </h3>
-              <p className="text-sm text-[var(--text-muted)]">
-                30 jours d'essai PRO gratuit à l'inscription. Aucune carte bancaire requise.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-bold mb-2 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-amber-500" /> Moyens de paiement ?
-              </h3>
-              <p className="text-sm text-[var(--text-muted)]">
-                Mobile Money direct depuis l'app : MTN, Airtel, Orange via Moteki.
-              </p>
-            </div>
+            )}
           </div>
         </div>
-      </div>
-
-      {/* Modal paiement — Moteki */}
-      {checkoutTarget && activeProvider === 'MOTEKI' && (
-        <MotekiCheckoutModal
-          plan={checkoutTarget.plan}
-          billingPeriod={checkoutTarget.billingPeriod}
-          amount={checkoutTarget.amount}
-          planLabel={PLAN_LABELS[checkoutTarget.plan] ?? checkoutTarget.plan}
-          onClose={() => setCheckoutTarget(null)}
-          onError={(msg) => toast.error(msg)}
-        />
-      )}
-
-      {/* Modal paiement — Chariow (redondance de Moteki) */}
-      {checkoutTarget && activeProvider === 'CHARIOW' && (
-        <ChariowCheckoutModal
-          plan={checkoutTarget.plan}
-          billingPeriod={checkoutTarget.billingPeriod}
-          amount={checkoutTarget.amount}
-          planLabel={PLAN_LABELS[checkoutTarget.plan] ?? checkoutTarget.plan}
-          onClose={() => setCheckoutTarget(null)}
-          onError={(msg) => toast.error(msg)}
-        />
-      )}
-
-      {/* Modal paiement — YabetooPay (filet de secours, code original intact) */}
-      {paymentIntent && (
-        <YabetooCheckoutModal
-          intent={paymentIntent}
-          planLabel={PLAN_LABELS[paymentIntent.plan] ?? paymentIntent.plan}
-          onClose={() => setPaymentIntent(null)}
-          onSuccess={() => {
-            toast.success('Paiement envoyé ! Votre abonnement sera activé après confirmation.');
-          }}
-          onError={(msg) => toast.error(msg)}
-        />
       )}
     </div>
-  );
-}
-
-export default function PricingPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
-      </div>
-    }>
-      <PricingContent />
-    </Suspense>
   );
 }

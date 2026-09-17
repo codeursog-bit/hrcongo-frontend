@@ -44,18 +44,17 @@ interface ContractAlert {
 }
 
 function getUrgencyStyle(daysLeft: number) {
-  if (daysLeft <= 0)  return { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-700',    dot: 'bg-red-500',    label: 'Expiré' };
-  if (daysLeft <= 7)  return { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-700',    dot: 'bg-red-500',    label: `${daysLeft}j restants` };
-  if (daysLeft <= 14) return { bar: 'bg-orange-500', badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500', label: `${daysLeft}j restants` };
-  if (daysLeft <= 30) return { bar: 'bg-yellow-500', badge: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500', label: `${daysLeft}j restants` };
-  return               { bar: 'bg-blue-500',    badge: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-400',   label: `${daysLeft}j restants` };
+  if (daysLeft <= 0)  return { bar: 'bg-red-500',   badge: 'bg-red-100 text-red-700',     dot: 'bg-red-500',   label: 'Expiré' };
+  if (daysLeft <= 7)  return { bar: 'bg-red-500',   badge: 'bg-red-100 text-red-700',     dot: 'bg-red-500',   label: `${daysLeft}j restants` };
+  if (daysLeft <= 30) return { bar: 'bg-amber-500', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500', label: `${daysLeft}j restants` };
+  return               { bar: 'bg-[var(--text-muted)]', badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]', dot: 'bg-[var(--text-muted)]', label: `${daysLeft}j restants` };
 }
 
 const CONTRACT_COLORS: Record<string, string> = {
-  CDD:        'bg-blue-100 text-blue-700',
-  STAGE:      'bg-purple-100 text-purple-700',
-  INTERIM:    'bg-pink-100 text-pink-700',
-  CONSULTANT: 'bg-cyan-100 text-cyan-700',
+  CDD:        'bg-amber-100 text-amber-700',
+  STAGE:      'bg-emerald-100 text-emerald-700',
+  INTERIM:    'bg-amber-100 text-amber-700',
+  CONSULTANT: 'bg-amber-100 text-amber-700',
 };
 
 // ─── COMPOSANT PRINCIPAL ─────────────────────────────────────────────────────
@@ -148,23 +147,23 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
             animate={{ opacity: 1, y: 0,  scale: 1 }}
             exit={{ opacity: 0,  y: 12, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-            className="w-[360px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="w-[360px] bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden"
             style={{ boxShadow: '0 20px 60px -12px rgba(0,0,0,0.25)' }}
           >
             {/* Barre colorée urgence maximale */}
             <div className={`h-1 w-full ${topUrgency.bar}`} />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
-                  <AlertTriangle size={15} className="text-gray-600 dark:text-gray-300" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--surface-2)]">
+                  <AlertTriangle size={15} className="text-[var(--text-muted)]" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white leading-none">
+                  <p className="text-sm font-bold text-[var(--text)] leading-none">
                     Contrats expirants
                   </p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
                     {alerts.length} alerte{alerts.length > 1 ? 's' : ''} non lue{alerts.length > 1 ? 's' : ''}
                     {criticalCount > 0 && (
                       <span className="ml-1 text-red-500 font-semibold">· {criticalCount} critique{criticalCount > 1 ? 's' : ''}</span>
@@ -174,18 +173,18 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
               </div>
               <div className="flex items-center gap-1">
                 <button onClick={markAllRead}
-                  className="rounded-lg px-2 py-1 text-[11px] font-semibold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 transition-colors">
+                  className="rounded-lg px-2 py-1 text-[11px] font-semibold text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors">
                   Tout lu
                 </button>
                 <button onClick={() => { setIsOpen(false); setDismissed(true); }}
-                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  className="rounded-lg p-1.5 text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   <X size={14} />
                 </button>
               </div>
             </div>
 
             {/* Liste alertes (max 4 dans le toast) */}
-            <div className="max-h-[360px] overflow-y-auto divide-y divide-gray-50 dark:divide-gray-800">
+            <div className="max-h-[360px] overflow-y-auto divide-y divide-[var(--border)]">
               {alerts.slice(0, 4).map((alert) => {
                 const daysLeft = alert.metadata?.daysLeft ?? 0;
                 const u        = getUrgencyStyle(daysLeft);
@@ -194,7 +193,7 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
                   : '—';
 
                 return (
-                  <div key={alert.id} className="group px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                  <div key={alert.id} className="group px-4 py-3 hover:bg-[var(--surface-2)] transition-colors">
                     <div className="flex items-start gap-3">
                       {/* Dot urgence */}
                       <div className="mt-1.5 flex-shrink-0">
@@ -208,18 +207,18 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
                             {u.label}
                           </span>
                           {alert.metadata?.contractType && (
-                            <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${CONTRACT_COLORS[alert.metadata.contractType] ?? 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${CONTRACT_COLORS[alert.metadata.contractType] ?? 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
                               {alert.metadata.contractType}
                             </span>
                           )}
                         </div>
 
                         {/* Nom employé extrait du titre */}
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        <p className="text-sm font-semibold text-[var(--text)] truncate">
                           {alert.title.replace(/^[🔴🟠🟡⚠️]\s*(CDD|Stage|Intérim|Consultant|Contrat).*?—\s*/, '')}
                         </p>
 
-                        <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
                           <Clock size={10} /> Expire le {endDate}
                         </p>
                       </div>
@@ -228,7 +227,7 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
                       <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => goToEmployee(alert)}
-                          className="rounded-lg p-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-200 transition-colors"
+                          className="rounded-lg p-1.5 bg-[var(--text)] text-[var(--bg)] hover:opacity-80 transition-colors"
                           title="Voir l'employé"
                         >
                           <ChevronRight size={12} />
@@ -236,7 +235,7 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
                         <button
                           onClick={() => markRead(alert.id)}
                           disabled={markingId === alert.id}
-                          className="rounded-lg p-1.5 border border-gray-200 dark:border-gray-700 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          className="rounded-lg p-1.5 border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors"
                           title="Marquer lu"
                         >
                           <CheckCircle2 size={12} />
@@ -250,8 +249,8 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
 
             {/* Footer si plus de 4 */}
             {alerts.length > 4 && (
-              <div className="px-4 py-2.5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-                <p className="text-xs text-gray-400 text-center">
+              <div className="px-4 py-2.5 border-t border-[var(--border)] bg-[var(--surface-2)]">
+                <p className="text-xs text-[var(--text-muted)] text-center">
                   + {alerts.length - 4} autre{alerts.length - 4 > 1 ? 's' : ''} alerte{alerts.length - 4 > 1 ? 's' : ''}
                 </p>
               </div>
@@ -265,7 +264,7 @@ export function ContractExpiryToast({ userRole }: { userRole: string }) {
         onClick={() => { setIsOpen((o) => !o); setDismissed(false); }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="relative flex items-center gap-2.5 rounded-2xl bg-gray-900 dark:bg-white px-4 py-3 text-white dark:text-gray-900 shadow-2xl transition-all"
+        className="relative flex items-center gap-2.5 rounded-2xl bg-[var(--text)] px-4 py-3 text-[var(--bg)] shadow-2xl transition-all"
         style={{ boxShadow: '0 8px 32px -8px rgba(0,0,0,0.35)' }}
       >
         {/* Icône + badge */}
