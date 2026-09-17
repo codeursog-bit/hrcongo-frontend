@@ -884,9 +884,9 @@ export default function DocsPage() {
       {/* Hero */}
       <div className="mb-10 pb-8 border-b border-white/[0.06]">
         <p className="text-[10px] font-mono text-[#10B981] uppercase tracking-[0.12em] mb-3">Tutoriels vidéo</p>
-        <h1 className="text-[1.9rem] font-semibold tracking-tight leading-tight mb-2 bg-gradient-to-br from-white to-[#8B8F98] bg-clip-text text-transparent">
+        <div className="text-[1.9rem] font-semibold tracking-tight leading-tight mb-2 bg-gradient-to-br from-white to-[#8B8F98] bg-clip-text text-transparent">
           Apprenez Konza RH<br />en vidéo
-        </h1>
+        </div>
         <p className="text-[13.5px] text-[#8B8F98] max-w-md leading-relaxed">
           Courtes vidéos de démonstration pour chaque module. Cliquez sur une vidéo pour la lire directement ici, sans quitter la page.
         </p>

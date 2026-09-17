@@ -70,7 +70,7 @@ export function Footer() {
             <FooterColumn
               title="Légal & Support"
               items={[
-                { label: 'FAQ', href: '/faq' },
+                { label: 'FAQ', href: '/docs' },
                 { label: 'CGU', href: '#' },
                 { label: 'Confidentialité', href: '#' },
                 { label: 'Cookies', href: '#' },
