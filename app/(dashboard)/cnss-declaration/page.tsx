@@ -6,7 +6,7 @@ import {
   ChevronDown, RefreshCw, Shield, Users, Banknote,
   AlertCircle, Calendar, FileText, Building2,
   XCircle, Loader2, Eye, EyeOff, Receipt,
-  ChevronRight, Info, CheckCircle2,
+  ChevronRight, Info, CheckCircle2, Hash, Globe,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -111,18 +111,18 @@ function StatCard({ label, value, sub, icon:Icon, color, alert }: {
   icon:React.ElementType; color:string; alert?:boolean;
 }) {
   return (
-    <div className={`relative rounded-2xl p-5 border bg-white dark:bg-slate-900 transition-all ${
+    <div className={`relative rounded-2xl p-5 border bg-[var(--surface)] transition-all ${
       alert
         ? 'border-red-300 dark:border-red-700 shadow-md shadow-red-100 dark:shadow-red-950/30'
-        : 'border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow-md'
+        : 'border-[var(--border)] shadow-sm hover:shadow-md'
     }`}>
       {alert && <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-red-500 animate-pulse"/>}
       <div className="flex items-start gap-3">
         <div className={`p-2.5 rounded-xl ${color}`}><Icon className="w-5 h-5 text-white"/></div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide mb-1">{label}</p>
-          <p className={`text-lg font-bold truncate ${alert?'text-red-600 dark:text-red-400':'text-slate-900 dark:text-white'}`}>{value}</p>
-          {sub && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{sub}</p>}
+          <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide mb-1">{label}</p>
+          <p className={`text-lg font-bold truncate ${alert?'text-red-600 dark:text-red-400':'text-[var(--text)]'}`}>{value}</p>
+          {sub && <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{sub}</p>}
         </div>
       </div>
     </div>
@@ -134,7 +134,7 @@ function Badge({ status }:{ status: HistoryItem['status'] }) {
     'DÉCLARÉ':   'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
     'EN RETARD': 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',
     'À DÉCLARER':'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
-    'À VENIR':   'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+    'À VENIR':   'bg-[var(--surface-2)] text-[var(--text-muted)]',
   };
   return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${s[status]}`}>{status}</span>;
 }
@@ -239,38 +239,38 @@ export default function CnssDeclarationPage() {
   const affil    = recap?.company?.cnssAffiliationNumber || recap?.company?.cnssNumber || '—';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--surface-2)] p-4 md:p-6">
 
       {/* ── HEADER ──────────────────────────────────────────────────── */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+            <div className="p-2.5 bg-emerald-600 rounded-xl shadow-lg shadow-emerald-500/30">
               <Shield className="w-6 h-6 text-white"/>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Déclaration CNSS</h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">DNMS & Déclaration Globale — Congo Brazzaville</p>
+              <h1 className="text-2xl font-bold text-[var(--text)]">Déclaration CNSS</h1>
+              <p className="text-sm text-[var(--text-muted)]">DNMS & Déclaration Globale — Congo Brazzaville</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
               <select value={month} onChange={e=>setMonth(Number(e.target.value))}
-                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                 {MONTHS.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
+              <ChevronDown className="absolute right-2 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
             </div>
             <div className="relative">
               <select value={year} onChange={e=>setYear(Number(e.target.value))}
-                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
                 {[2023,2024,2025,2026].map(y=><option key={y} value={y}>{y}</option>)}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
+              <ChevronDown className="absolute right-2 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
             </div>
             <button onClick={loadRecap}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-              <RefreshCw className={`w-4 h-4 text-slate-500 ${loading?'animate-spin':''}`}/>
+              className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors">
+              <RefreshCw className={`w-4 h-4 text-gray-500 ${loading?'animate-spin':''}`}/>
             </button>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function CnssDeclarationPage() {
       </div>
 
       {/* ── ONGLETS ─────────────────────────────────────────────────── */}
-      <div className="flex gap-1 mb-6 p-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 w-fit">
+      <div className="flex gap-1 mb-6 p-1 bg-[var(--surface)] rounded-2xl border border-[var(--border)] w-fit">
         {([
           {id:'dnms',       label:'DNMS',                icon:FileText},
           {id:'dgc',        label:'Déclaration Globale', icon:Receipt},
@@ -312,8 +312,8 @@ export default function CnssDeclarationPage() {
           <button key={t.id} onClick={()=>setTab(t.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
               tab===t.id
-                ?'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                :'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ?'bg-emerald-600 text-white shadow-md shadow-emerald-500/30'
+                :'text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}>
             <t.icon className="w-4 h-4"/>{t.label}
           </button>
@@ -325,7 +325,7 @@ export default function CnssDeclarationPage() {
       ════════════════════════════════════════════════════════════════ */}
       {tab==='dnms' && (
         <div className="space-y-6">
-          {loading && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-blue-500 animate-spin"/></div>}
+          {loading && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin"/></div>}
           {error && !loading && (
             <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
               <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>
@@ -337,74 +337,74 @@ export default function CnssDeclarationPage() {
             {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard label="Effectif déclaré" value={`${recap.totals.effectif} salariés`}
-                sub={`${MONTHS[month-1]} ${year}`} icon={Users} color="bg-blue-600"/>
+                sub={`${MONTHS[month-1]} ${year}`} icon={Users} color="bg-emerald-600"/>
               <StatCard label="Masse salariale" value={fmt(recap.totals.masseSalariale)}
-                sub="Brut global déplafonné" icon={Banknote} color="bg-indigo-600"/>
+                sub="Brut global déplafonné" icon={Banknote} color="bg-emerald-600"/>
               <StatCard label="À verser → CNSS" value={fmt(recap.totals.totalAVerserCnss)}
                 sub="Cotisations + TUS-CNSS" icon={Shield} color="bg-emerald-600" alert={isLate}/>
               <StatCard label="À verser → DGI" value={fmt(recap.totals.totalAVerserDgi)}
-                sub="TUS part Trésor (2,025%)" icon={Building2} color="bg-violet-600"/>
+                sub="TUS part Trésor (2,025%)" icon={Building2} color="bg-amber-600"/>
             </div>
 
             {/* Détail cotisations + Versements */}
             <div className="grid md:grid-cols-2 gap-4">
 
               {/* Détail par branche */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-[var(--border)]">
                   <button onClick={()=>setShowDetail(!showDetail)}
                     className="flex items-center justify-between w-full">
-                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
+                    <h3 className="font-semibold text-[var(--text)] text-sm">
                       Détail des cotisations
                     </h3>
-                    {showDetail?<EyeOff className="w-4 h-4 text-slate-400"/>:<Eye className="w-4 h-4 text-slate-400"/>}
+                    {showDetail?<EyeOff className="w-4 h-4 text-gray-400"/>:<Eye className="w-4 h-4 text-gray-400"/>}
                   </button>
                 </div>
                 {showDetail && (
                   <div className="p-4 space-y-1 text-sm">
                     {/* Part salariale */}
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-1 pb-2">Part salariale</p>
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-800">
-                      <span className="text-slate-600 dark:text-slate-400">Pension 4% (plaf. 1 200 000 FCFA)</span>
-                      <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{fmts(recap.totals.cnssSalarial)}</span>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider pt-1 pb-2">Part salariale</p>
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Pension 4% (plaf. 1 200 000 FCFA)</span>
+                      <span className="font-semibold text-[var(--text)] tabular-nums">{fmts(recap.totals.cnssSalarial)}</span>
                     </div>
                     {/* Part patronale */}
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-3 pb-2">Part patronale</p>
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-800">
-                      <span className="text-slate-600 dark:text-slate-400">Pension 8% (plaf. 1 200 000 FCFA)</span>
-                      <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{fmts(recap.totals.cnssEmployerPension)}</span>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider pt-3 pb-2">Part patronale</p>
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Pension 8% (plaf. 1 200 000 FCFA)</span>
+                      <span className="font-semibold text-[var(--text)] tabular-nums">{fmts(recap.totals.cnssEmployerPension)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-800">
-                      <span className="text-slate-600 dark:text-slate-400">Prest. Familiales 10,03% (plaf. 600 000 FCFA)</span>
-                      <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{fmts(recap.totals.cnssEmployerFamily)}</span>
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Prest. Familiales 10,03% (plaf. 600 000 FCFA)</span>
+                      <span className="font-semibold text-[var(--text)] tabular-nums">{fmts(recap.totals.cnssEmployerFamily)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-100 dark:border-slate-800">
-                      <span className="text-slate-600 dark:text-slate-400">Accidents Travail 2,25% (plaf. 600 000 FCFA)</span>
-                      <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{fmts(recap.totals.cnssEmployerAccident)}</span>
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Accidents Travail 2,25% (plaf. 600 000 FCFA)</span>
+                      <span className="font-semibold text-[var(--text)] tabular-nums">{fmts(recap.totals.cnssEmployerAccident)}</span>
                     </div>
                     {/* Total cotisations */}
-                    <div className="flex justify-between items-center py-2 font-bold border-b-2 border-blue-200 dark:border-blue-800">
-                      <span className="text-slate-800 dark:text-slate-200">Total cotisations globales (24,28%)</span>
-                      <span className="text-blue-600 dark:text-blue-400 tabular-nums">{fmt(recap.totals.totalCotisations)}</span>
+                    <div className="flex justify-between items-center py-2 font-bold border-b-2 border-emerald-200 dark:border-emerald-800">
+                      <span className="text-gray-800 dark:text-gray-200">Total cotisations globales (24,28%)</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 tabular-nums">{fmt(recap.totals.totalCotisations)}</span>
                     </div>
                     {/* TUS */}
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider pt-3 pb-2">TUS — 7,5% patronal (sans plafond)</p>
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-50 dark:border-slate-800">
-                      <span className="text-slate-600 dark:text-slate-400">Part versée à la CNSS (5,475%)</span>
-                      <span className="font-semibold text-violet-700 dark:text-violet-400 tabular-nums">{fmts(recap.totals.tusCnss)}</span>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider pt-3 pb-2">TUS — 7,5% patronal (sans plafond)</p>
+                    <div className="flex justify-between items-center py-1.5 border-b border-[var(--border)]">
+                      <span className="text-[var(--text-muted)]">Part versée à la CNSS (5,475%)</span>
+                      <span className="font-semibold text-amber-700 dark:text-amber-400 tabular-nums">{fmts(recap.totals.tusCnss)}</span>
                     </div>
                     <div className="flex justify-between items-center py-1.5">
-                      <span className="text-slate-600 dark:text-slate-400">Part versée à la DGI/Trésor (2,025%)</span>
-                      <span className="font-semibold text-violet-700 dark:text-violet-400 tabular-nums">{fmts(recap.totals.tusDgi)}</span>
+                      <span className="text-[var(--text-muted)]">Part versée à la DGI/Trésor (2,025%)</span>
+                      <span className="font-semibold text-amber-700 dark:text-amber-400 tabular-nums">{fmts(recap.totals.tusDgi)}</span>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Versements */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-[var(--border)]">
+                  <h3 className="font-semibold text-[var(--text)] text-sm flex items-center gap-2">
                     <Banknote className="w-4 h-4 text-emerald-500"/>Récapitulatif versements
                   </h3>
                 </div>
@@ -424,19 +424,19 @@ export default function CnssDeclarationPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-800/50">
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
                     <div>
-                      <p className="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide">→ CNSS</p>
-                      <p className="text-xs text-blue-600 dark:text-blue-500">Cotisations (24,28%) + TUS (5,475%)</p>
+                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">→ CNSS</p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-500">Cotisations (24,28%) + TUS (5,475%)</p>
                     </div>
-                    <p className="text-lg font-bold text-blue-700 dark:text-blue-400 tabular-nums">{fmt(recap.totals.totalAVerserCnss)}</p>
+                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">{fmt(recap.totals.totalAVerserCnss)}</p>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-violet-50 dark:bg-violet-950/30 rounded-xl border border-violet-100 dark:border-violet-800/50">
+                  <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-100 dark:border-amber-800/50">
                     <div>
-                      <p className="text-xs font-bold text-violet-700 dark:text-violet-400 uppercase tracking-wide">→ DGI / Trésor</p>
-                      <p className="text-xs text-violet-600 dark:text-violet-500">TUS part Trésor (2,025%)</p>
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">→ DGI / Trésor</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-500">TUS part Trésor (2,025%)</p>
                     </div>
-                    <p className="text-lg font-bold text-violet-700 dark:text-violet-400 tabular-nums">{fmt(recap.totals.totalAVerserDgi)}</p>
+                    <p className="text-lg font-bold text-amber-700 dark:text-amber-400 tabular-nums">{fmt(recap.totals.totalAVerserDgi)}</p>
                   </div>
                   {isLate && (
                     <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-200 dark:border-red-800">
@@ -454,12 +454,12 @@ export default function CnssDeclarationPage() {
             {/* Boutons export — chaque déclaration officielle dans son propre fichier */}
             <div className="flex flex-wrap gap-3">
               <button onClick={()=>doExport('dnms',setDnmsLoad)} disabled={dnmsLoad||recap.employees.length===0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all">
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-emerald-500/30 transition-all">
                 {dnmsLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
                 Exporter DNMS (modèle officiel)
               </button>
               <button onClick={()=>doExport('tus',setTusLoad)} disabled={tusLoad||recap.employees.length===0}
-                className="flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-violet-500/30 transition-all">
+                className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-amber-500/30 transition-all">
                 {tusLoad?<Loader2 className="w-4 h-4 animate-spin"/>:<FileSpreadsheet className="w-4 h-4"/>}
                 Exporter TUS (modèle officiel)
               </button>
@@ -482,26 +482,26 @@ export default function CnssDeclarationPage() {
                 </button>
               )}
               <a href="https://edeclaration.cnss.cg" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-sm font-semibold rounded-xl shadow-sm transition-all">
+                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl shadow-sm transition-all">
                 <ChevronRight className="w-4 h-4"/>Portail e-Déclaration CNSS
               </a>
             </div>
             <button onClick={()=>doExport('excel',setXlsxLoad)} disabled={xlsxLoad||recap.employees.length===0}
-              className="flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-xs font-medium rounded-lg transition-all">
+              className="flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-[var(--surface-2)] disabled:opacity-50 border border-dashed border-gray-300 dark:border-gray-700 text-[var(--text-muted)] text-xs font-medium rounded-lg transition-all">
               {xlsxLoad?<Loader2 className="w-3.5 h-3.5 animate-spin"/>:<FileSpreadsheet className="w-3.5 h-3.5"/>}
               Récap interne (3 feuilles, non officiel — usage archive uniquement)
             </button>
 
             {/* Tableau nominatif — tous les champs séparés */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                <h3 className="font-semibold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-                  <Users className="w-4 h-4 text-blue-500"/>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-[var(--border)] flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                <h3 className="font-semibold text-[var(--text)] text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4 text-emerald-500"/>
                   Liste nominative — {filtered.length} travailleur(s)
                 </h3>
                 <div className="flex gap-2 items-center">
                   <input type="text" placeholder="Rechercher…" value={search} onChange={e=>setSearch(e.target.value)}
-                    className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 w-44"/>
+                    className="text-sm px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 w-44"/>
                   {recap.missingCnssCount>0 && (
                     <button onClick={()=>setMissingOnly(!missingOnly)}
                       className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
@@ -515,96 +515,96 @@ export default function CnssDeclarationPage() {
 
               {recap.employees.length===0 ? (
                 <div className="text-center py-16">
-                  <FileText className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-3"/>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">Aucun bulletin validé pour {MONTHS[month-1]} {year}</p>
-                  <p className="text-xs text-slate-400 mt-1">Générez et validez les bulletins de ce mois avant la déclaration.</p>
+                  <FileText className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3"/>
+                  <p className="text-sm text-[var(--text-muted)]">Aucun bulletin validé pour {MONTHS[month-1]} {year}</p>
+                  <p className="text-xs text-gray-400 mt-1">Générez et validez les bulletins de ce mois avant la déclaration.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                      <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
                         {/* Identité */}
-                        <th className="px-3 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Matricule</th>
-                        <th className="px-3 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">N° CNSS</th>
-                        <th className="px-3 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Noms</th>
-                        <th className="px-3 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Post noms</th>
-                        <th className="px-3 py-3 text-left font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Prénoms</th>
-                        <th className="px-3 py-3 text-center font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Matricule</th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">N° CNSS</th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Noms</th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Post noms</th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Prénoms</th>
+                        <th className="px-3 py-3 text-center font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
                         {/* Salaires */}
-                        <th className="px-3 py-3 text-right font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Brut global</th>
-                        <th className="px-3 py-3 text-right font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Sal. soumis</th>
+                        <th className="px-3 py-3 text-right font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Brut global</th>
+                        <th className="px-3 py-3 text-right font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Sal. soumis</th>
                         {/* Cotisations séparées */}
-                        <th className="px-3 py-3 text-right font-semibold text-blue-500 uppercase tracking-wider whitespace-nowrap">Sal. 4%</th>
+                        <th className="px-3 py-3 text-right font-semibold text-red-500 uppercase tracking-wider whitespace-nowrap">Sal. 4%</th>
                         <th className="px-3 py-3 text-right font-semibold text-emerald-600 uppercase tracking-wider whitespace-nowrap">Pat. Pen. 8%</th>
                         <th className="px-3 py-3 text-right font-semibold text-emerald-600 uppercase tracking-wider whitespace-nowrap">Pat. Fam. 10,03%</th>
                         <th className="px-3 py-3 text-right font-semibold text-emerald-600 uppercase tracking-wider whitespace-nowrap">Pat. AT 2,25%</th>
-                        <th className="px-3 py-3 text-right font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider whitespace-nowrap bg-slate-100 dark:bg-slate-800">Total Cotis.</th>
+                        <th className="px-3 py-3 text-right font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap bg-[var(--surface-2)]">Total Cotis.</th>
                         {/* TUS séparés */}
-                        <th className="px-3 py-3 text-right font-semibold text-violet-500 uppercase tracking-wider whitespace-nowrap">TUS CNSS 5,475%</th>
-                        <th className="px-3 py-3 text-right font-semibold text-violet-500 uppercase tracking-wider whitespace-nowrap">TUS DGI 2,025%</th>
-                        <th className="px-3 py-3 text-right font-semibold text-violet-700 dark:text-violet-300 uppercase tracking-wider whitespace-nowrap bg-violet-50 dark:bg-violet-950/30">Total TUS 7,5%</th>
+                        <th className="px-3 py-3 text-right font-semibold text-amber-500 uppercase tracking-wider whitespace-nowrap">TUS CNSS 5,475%</th>
+                        <th className="px-3 py-3 text-right font-semibold text-amber-500 uppercase tracking-wider whitespace-nowrap">TUS DGI 2,025%</th>
+                        <th className="px-3 py-3 text-right font-semibold text-amber-700 dark:text-amber-300 uppercase tracking-wider whitespace-nowrap bg-amber-50 dark:bg-amber-950/30">Total TUS 7,5%</th>
                         {/* Jours */}
-                        <th className="px-3 py-3 text-center font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Jours</th>
+                        <th className="px-3 py-3 text-center font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Jours</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filtered.map((emp, idx) => (
                         <tr key={emp.employeeId}
-                          className={`border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${emp.missingCnss?'bg-amber-50/50 dark:bg-amber-950/10':''}`}>
-                          <td className="px-3 py-2.5 font-mono text-slate-600 dark:text-slate-400">{emp.matricule}</td>
+                          className={`border-b border-[var(--border)]/50 hover:bg-[var(--surface-2)]/30 transition-colors ${emp.missingCnss?'bg-amber-50/50 dark:bg-amber-950/10':''}`}>
+                          <td className="px-3 py-2.5 font-mono text-[var(--text-muted)]">{emp.matricule}</td>
                           <td className="px-3 py-2.5">
                             {emp.cnssNumber
-                              ? <span className="font-mono text-slate-700 dark:text-slate-300">{emp.cnssNumber}</span>
+                              ? <span className="font-mono text-[var(--text)]">{emp.cnssNumber}</span>
                               : <span className="flex items-center gap-1 text-amber-600 font-semibold"><AlertCircle className="w-3 h-3"/>Manquant</span>}
                           </td>
-                          <td className="px-3 py-2.5 font-medium text-slate-900 dark:text-white whitespace-nowrap">{emp.nomFamille}</td>
-                          <td className="px-3 py-2.5 text-slate-500 dark:text-slate-400">{emp.postNom||'—'}</td>
-                          <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300">{emp.prenom}</td>
+                          <td className="px-3 py-2.5 font-medium text-[var(--text)] whitespace-nowrap">{emp.nomFamille}</td>
+                          <td className="px-3 py-2.5 text-[var(--text-muted)]">{emp.postNom||'—'}</td>
+                          <td className="px-3 py-2.5 text-[var(--text)]">{emp.prenom}</td>
                           <td className="px-3 py-2.5 text-center">
                             <span className={`px-1.5 py-0.5 rounded-full font-semibold ${
                               emp.typeWorker===2
-                                ?'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                                :'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                ?'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                :'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                             }`}>
                               {emp.typeWorker===2?'Stag.':'Trav.'}
                             </span>
                           </td>
                           {/* Salaires */}
-                          <td className="px-3 py-2.5 text-right font-semibold text-slate-900 dark:text-white tabular-nums whitespace-nowrap">{fmts(emp.brutGlobal)}</td>
-                          <td className="px-3 py-2.5 text-right text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">{fmts(emp.salaireSOumisCotisation)}</td>
+                          <td className="px-3 py-2.5 text-right font-semibold text-[var(--text)] tabular-nums whitespace-nowrap">{fmts(emp.brutGlobal)}</td>
+                          <td className="px-3 py-2.5 text-right text-[var(--text-muted)] tabular-nums whitespace-nowrap">{fmts(emp.salaireSOumisCotisation)}</td>
                           {/* Cotisations séparées */}
-                          <td className="px-3 py-2.5 text-right text-blue-600 dark:text-blue-400 font-semibold tabular-nums whitespace-nowrap">{fmts(emp.cnssSalarial)}</td>
+                          <td className="px-3 py-2.5 text-right text-red-600 dark:text-red-400 font-semibold tabular-nums whitespace-nowrap">{fmts(emp.cnssSalarial)}</td>
                           <td className="px-3 py-2.5 text-right text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">{fmts(emp.cnssEmployerPension)}</td>
                           <td className="px-3 py-2.5 text-right text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">{fmts(emp.cnssEmployerFamily)}</td>
                           <td className="px-3 py-2.5 text-right text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">{fmts(emp.cnssEmployerAccident)}</td>
-                          <td className="px-3 py-2.5 text-right font-bold text-slate-900 dark:text-white tabular-nums whitespace-nowrap bg-slate-50 dark:bg-slate-800/40">{fmts(emp.cotisationDeclaree)}</td>
+                          <td className="px-3 py-2.5 text-right font-bold text-[var(--text)] tabular-nums whitespace-nowrap bg-[var(--surface-2)]">{fmts(emp.cotisationDeclaree)}</td>
                           {/* TUS séparés */}
-                          <td className="px-3 py-2.5 text-right text-violet-600 dark:text-violet-400 tabular-nums whitespace-nowrap">{fmts(emp.tusCnssAmount)}</td>
-                          <td className="px-3 py-2.5 text-right text-violet-600 dark:text-violet-400 tabular-nums whitespace-nowrap">{fmts(emp.tusDgiAmount)}</td>
-                          <td className="px-3 py-2.5 text-right font-bold text-violet-700 dark:text-violet-300 tabular-nums whitespace-nowrap bg-violet-50 dark:bg-violet-950/20">{fmts(emp.tusTotal)}</td>
-                          <td className="px-3 py-2.5 text-center text-slate-600 dark:text-slate-400">{emp.nbrJoursTravailles}</td>
+                          <td className="px-3 py-2.5 text-right text-amber-600 dark:text-amber-400 tabular-nums whitespace-nowrap">{fmts(emp.tusCnssAmount)}</td>
+                          <td className="px-3 py-2.5 text-right text-amber-600 dark:text-amber-400 tabular-nums whitespace-nowrap">{fmts(emp.tusDgiAmount)}</td>
+                          <td className="px-3 py-2.5 text-right font-bold text-amber-700 dark:text-amber-300 tabular-nums whitespace-nowrap bg-amber-50 dark:bg-amber-950/20">{fmts(emp.tusTotal)}</td>
+                          <td className="px-3 py-2.5 text-center text-[var(--text-muted)]">{emp.nbrJoursTravailles}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr className="bg-slate-900 dark:bg-slate-950 border-t-2 border-slate-700">
+                      <tr className="bg-gray-900 dark:bg-black border-t-2 border-gray-700">
                         <td colSpan={6} className="px-3 py-3 font-bold text-white text-xs uppercase tracking-wider">
                           TOTAL — {recap.totals.effectif} travailleur(s)
                         </td>
                         <td className="px-3 py-3 text-right font-bold text-white tabular-nums whitespace-nowrap">{fmts(recap.totals.masseSalariale)}</td>
-                        <td className="px-3 py-3 text-right font-bold text-slate-300 tabular-nums whitespace-nowrap">
+                        <td className="px-3 py-3 text-right font-bold text-gray-300 tabular-nums whitespace-nowrap">
                           {fmts(recap.employees.reduce((s,e)=>s+e.salaireSOumisCotisation,0))}
                         </td>
-                        <td className="px-3 py-3 text-right font-bold text-blue-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.cnssSalarial)}</td>
+                        <td className="px-3 py-3 text-right font-bold text-red-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.cnssSalarial)}</td>
                         <td className="px-3 py-3 text-right font-bold text-emerald-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.cnssEmployerPension)}</td>
                         <td className="px-3 py-3 text-right font-bold text-emerald-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.cnssEmployerFamily)}</td>
                         <td className="px-3 py-3 text-right font-bold text-emerald-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.cnssEmployerAccident)}</td>
                         <td className="px-3 py-3 text-right font-bold text-white tabular-nums whitespace-nowrap">{fmts(recap.totals.totalCotisations)}</td>
-                        <td className="px-3 py-3 text-right font-bold text-violet-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.tusCnss)}</td>
-                        <td className="px-3 py-3 text-right font-bold text-violet-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.tusDgi)}</td>
-                        <td className="px-3 py-3 text-right font-bold text-violet-200 tabular-nums whitespace-nowrap">{fmts(recap.totals.tusTotal)}</td>
-                        <td className="px-3 py-3 text-center font-bold text-slate-300">{recap.totals.totalJours}</td>
+                        <td className="px-3 py-3 text-right font-bold text-amber-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.tusCnss)}</td>
+                        <td className="px-3 py-3 text-right font-bold text-amber-300 tabular-nums whitespace-nowrap">{fmts(recap.totals.tusDgi)}</td>
+                        <td className="px-3 py-3 text-right font-bold text-amber-200 tabular-nums whitespace-nowrap">{fmts(recap.totals.tusTotal)}</td>
+                        <td className="px-3 py-3 text-center font-bold text-gray-300">{recap.totals.totalJours}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -620,50 +620,50 @@ export default function CnssDeclarationPage() {
       ════════════════════════════════════════════════════════════════ */}
       {tab==='dgc' && (
         <div className="max-w-2xl">
-          {!recap && <p className="text-sm text-slate-500">Sélectionnez un mois pour charger les données.</p>}
+          {!recap && <p className="text-sm text-gray-500">Sélectionnez un mois pour charger les données.</p>}
           {recap && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
-              <div className="p-4 bg-blue-700 text-white">
-                <p className="text-xs font-bold uppercase tracking-widest text-blue-300">CNSS Congo — Direction du Recouvrement</p>
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+              <div className="p-4 bg-emerald-700 text-white">
+                <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">CNSS Congo — Direction du Recouvrement</p>
                 <h3 className="font-bold text-lg mt-0.5">DÉCLARATION GLOBALE DE COTISATION</h3>
-                <p className="text-xs text-blue-200">Service Cotisants</p>
+                <p className="text-xs text-emerald-200">Service Cotisants</p>
               </div>
               <div className="p-5 space-y-4 text-sm">
                 {/* Identification */}
-                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl">
+                <div className="grid grid-cols-2 gap-3 p-3 bg-[var(--surface-2)] rounded-xl">
                   <div>
-                    <p className="text-xs text-slate-500 font-semibold uppercase">Raison Sociale</p>
-                    <p className="font-semibold text-slate-900 dark:text-white">{recap.company?.legalName||'—'}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase">Raison Sociale</p>
+                    <p className="font-semibold text-[var(--text)]">{recap.company?.legalName||'—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-semibold uppercase">N° Affiliation CNSS</p>
-                    <p className="font-semibold font-mono text-slate-900 dark:text-white">{affil}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase">N° Affiliation CNSS</p>
+                    <p className="font-semibold font-mono text-[var(--text)]">{affil}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-semibold uppercase">Période</p>
-                    <p className="font-semibold text-slate-900 dark:text-white">{mm} / {year}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase">Période</p>
+                    <p className="font-semibold text-[var(--text)]">{mm} / {year}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 font-semibold uppercase">Effectif</p>
-                    <p className="font-semibold text-slate-900 dark:text-white">{recap.totals.effectif} salarié(s)</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase">Effectif</p>
+                    <p className="font-semibold text-[var(--text)]">{recap.totals.effectif} salarié(s)</p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                <div className="flex justify-between items-center p-3 bg-[var(--surface-2)] rounded-xl">
                   <span className="font-semibold">Salaire Brut déplafonné</span>
-                  <span className="font-bold text-blue-700 dark:text-blue-400">{fmt(recap.totals.masseSalariale)}</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">{fmt(recap.totals.masseSalariale)}</span>
                 </div>
 
                 {/* ST1 — TUS */}
-                <div className="border border-violet-200 dark:border-violet-800 rounded-xl overflow-hidden">
-                  <div className="p-3 bg-violet-50 dark:bg-violet-950/30 text-violet-800 dark:text-violet-300 font-semibold text-xs uppercase tracking-wider">
+                <div className="border border-amber-200 dark:border-amber-800 rounded-xl overflow-hidden">
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 font-semibold text-xs uppercase tracking-wider">
                     Sous-Total (1) — TUS (Taxe Unique sur Salaires — 7,5%)
                   </div>
                   <div className="p-3 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">TUS 7,5% × brut déplafonné</span>
+                      <span className="text-[var(--text-muted)]">TUS 7,5% × brut déplafonné</span>
                       <span className="font-medium tabular-nums">{fmt(recap.totals.tusTotal)}</span>
                     </div>
-                    <div className="ml-4 space-y-1 text-xs text-slate-400">
+                    <div className="ml-4 space-y-1 text-xs text-gray-400">
                       <div className="flex justify-between">
                         <span>↳ Part CNSS (5,475%)</span>
                         <span className="tabular-nums">{fmts(recap.totals.tusCnss)} FCFA</span>
@@ -673,11 +673,11 @@ export default function CnssDeclarationPage() {
                         <span className="tabular-nums">{fmts(recap.totals.tusDgi)} FCFA</span>
                       </div>
                     </div>
-                    <div className="flex justify-between text-xs text-slate-400">
+                    <div className="flex justify-between text-xs text-gray-400">
                       <span>Majoration retard ({recap.totals.monthsLate} mois × 10%)</span>
                       <span className="tabular-nums">{fmts(recap.totals.tusMajoration)} FCFA</span>
                     </div>
-                    <div className="flex justify-between font-bold text-violet-700 dark:text-violet-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex justify-between font-bold text-amber-700 dark:text-amber-400 pt-1 border-t border-[var(--border)]">
                       <span>SOUS-TOTAL (1)</span>
                       <span className="tabular-nums">{fmt(recap.totals.dgcSousTot1)}</span>
                     </div>
@@ -692,12 +692,12 @@ export default function CnssDeclarationPage() {
                   <div className="p-3 space-y-2">
                     <div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-400">
+                        <span className="text-[var(--text-muted)]">
                           Assurance Pensions — {fmts(recap.totals.dgcPensionBase)} F × 12%
                         </span>
                         <span className="font-medium tabular-nums">{fmt(recap.totals.dgcCotisationPension)}</span>
                       </div>
-                      <div className="ml-4 space-y-0.5 text-xs text-slate-400 mt-1">
+                      <div className="ml-4 space-y-0.5 text-xs text-gray-400 mt-1">
                         <div className="flex justify-between">
                           <span>↳ Salarié 4%</span>
                           <span className="tabular-nums">{fmts(recap.totals.cnssSalarial)} FCFA</span>
@@ -710,12 +710,12 @@ export default function CnssDeclarationPage() {
                     </div>
                     <div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600 dark:text-slate-400">
+                        <span className="text-[var(--text-muted)]">
                           AT & Prest. Familiales — {fmts(recap.totals.dgcAtPfBase)} F × 12,28%
                         </span>
                         <span className="font-medium tabular-nums">{fmt(recap.totals.dgcCotisationAtPf)}</span>
                       </div>
-                      <div className="ml-4 space-y-0.5 text-xs text-slate-400 mt-1">
+                      <div className="ml-4 space-y-0.5 text-xs text-gray-400 mt-1">
                         <div className="flex justify-between">
                           <span>↳ Prest. Familiales 10,03%</span>
                           <span className="tabular-nums">{fmts(recap.totals.cnssEmployerFamily)} FCFA</span>
@@ -726,13 +726,13 @@ export default function CnssDeclarationPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-between text-xs text-slate-400">
+                    <div className="flex justify-between text-xs text-gray-400">
                       <span>Majoration retard ({recap.totals.monthsLate} mois × 10%)</span>
                       <span className="tabular-nums">{fmts(recap.totals.latePenalty)} FCFA</span>
                     </div>
-                    <div className="flex justify-between text-xs text-slate-400"><span>Pénalité</span><span>—</span></div>
-                    <div className="flex justify-between text-xs text-slate-400"><span>Déduction sur avis de crédit</span><span>—</span></div>
-                    <div className="flex justify-between font-bold text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex justify-between text-xs text-gray-400"><span>Pénalité</span><span>—</span></div>
+                    <div className="flex justify-between text-xs text-gray-400"><span>Déduction sur avis de crédit</span><span>—</span></div>
+                    <div className="flex justify-between font-bold text-emerald-700 dark:text-emerald-400 pt-1 border-t border-[var(--border)]">
                       <span>SOUS-TOTAL (2)</span>
                       <span className="tabular-nums">{fmt(recap.totals.dgcSousTot2)}</span>
                     </div>
@@ -740,7 +740,7 @@ export default function CnssDeclarationPage() {
                 </div>
 
                 {/* TOTAL */}
-                <div className="flex justify-between items-center p-4 bg-slate-900 dark:bg-slate-950 rounded-xl text-white">
+                <div className="flex justify-between items-center p-4 bg-gray-900 dark:bg-black rounded-xl text-white">
                   <span className="font-bold text-base uppercase tracking-wide">TOTAL À PAYER (1 + 2)</span>
                   <span className="text-2xl font-bold text-emerald-400 tabular-nums">{fmt(recap.totals.dgcTotalAPayer)}</span>
                 </div>
@@ -751,7 +751,7 @@ export default function CnssDeclarationPage() {
                   Télécharger la Déclaration Globale (.docx officiel)
                 </button>
 
-                <p className="text-xs text-slate-400 italic text-center">
+                <p className="text-xs text-gray-400 italic text-center">
                   NB : Joindre la liste nominative ou télédéclarer sur edeclaration.cnss.cg
                 </p>
               </div>
@@ -766,8 +766,8 @@ export default function CnssDeclarationPage() {
       {tab==='historique' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-slate-900 dark:text-white">Suivi déclarations {year}</h2>
-            {histLoad && <Loader2 className="w-4 h-4 text-blue-500 animate-spin"/>}
+            <h2 className="font-semibold text-[var(--text)]">Suivi déclarations {year}</h2>
+            {histLoad && <Loader2 className="w-4 h-4 text-emerald-500 animate-spin"/>}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {MONTHS.map((label, idx) => {
@@ -778,34 +778,36 @@ export default function CnssDeclarationPage() {
                 'DÉCLARÉ':   'border-emerald-300 dark:border-emerald-700',
                 'EN RETARD': 'border-red-300 dark:border-red-700',
                 'À DÉCLARER':'border-amber-300 dark:border-amber-700',
-                'À VENIR':   'border-slate-200 dark:border-slate-700',
+                'À VENIR':   'border-[var(--border)]',
               };
               const bgs: Record<string,string> = {
                 'DÉCLARÉ':   'bg-emerald-50 dark:bg-emerald-950/30',
                 'EN RETARD': 'bg-red-50 dark:bg-red-950/30',
                 'À DÉCLARER':'bg-amber-50 dark:bg-amber-950/30',
-                'À VENIR':   'bg-white dark:bg-slate-900',
+                'À VENIR':   'bg-[var(--surface)]',
               };
               return (
                 <button key={idx} onClick={()=>{setMonth(idx+1);setTab('dnms');}}
-                  className={`p-3 rounded-xl border transition-all text-left hover:shadow-md ${borders[status]} ${bgs[status]} ${isCurr?'ring-2 ring-blue-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-950':''}`}>
-                  <p className="font-semibold text-slate-900 dark:text-white text-sm">{label}</p>
+                  className={`p-3 rounded-xl border transition-all text-left hover:shadow-md ${borders[status]} ${bgs[status]} ${isCurr?'ring-2 ring-emerald-500 ring-offset-2 ring-offset-[var(--bg)]':''}`}>
+                  <p className="font-semibold text-[var(--text)] text-sm">{label}</p>
                   <Badge status={status}/>
-                  {item && item.payrollCount>0 && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{item.payrollCount} bulletins</p>}
+                  {item && item.payrollCount>0 && <p className="text-xs text-[var(--text-muted)] mt-1">{item.payrollCount} bulletins</p>}
                 </button>
               );
             })}
           </div>
           <div className="flex flex-wrap gap-3 pt-1">
-            {[{l:'Déclaré',c:'bg-emerald-500'},{l:'En retard',c:'bg-red-500'},{l:'À déclarer',c:'bg-amber-500'},{l:'À venir',c:'bg-slate-400'}].map(x=>(
-              <div key={x.l} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            {[{l:'Déclaré',c:'bg-emerald-500'},{l:'En retard',c:'bg-red-500'},{l:'À déclarer',c:'bg-amber-500'},{l:'À venir',c:'bg-gray-400'}].map(x=>(
+              <div key={x.l} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
                 <div className={`w-2.5 h-2.5 rounded-full ${x.c}`}/>{x.l}
               </div>
             ))}
           </div>
-          <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl">
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">📅 Rappel CNSS Congo</p>
-            <p className="text-xs text-blue-600 dark:text-blue-500">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5"/>Rappel CNSS Congo
+            </p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-500">
               Déclaration et paiement <strong>avant le 15 du mois suivant</strong>.
               Tout retard entraîne une <strong>majoration de 10% par mois</strong> (Loi 004/86 du 25/02/1986).
               Télédéclaration sur <strong>edeclaration.cnss.cg</strong>.
@@ -819,16 +821,16 @@ export default function CnssDeclarationPage() {
       ════════════════════════════════════════════════════════════════ */}
       {tab==='taux' && (
         <div className="space-y-5 max-w-3xl">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
-            <div className="p-4 bg-blue-600 text-white">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+            <div className="p-4 bg-emerald-600 text-white">
               <h3 className="font-bold text-base">Taux de cotisations CNSS — Congo Brazzaville</h3>
-              <p className="text-xs text-blue-200 mt-1">Source : cnss.cg — En vigueur</p>
+              <p className="text-xs text-emerald-200 mt-1">Source : cnss.cg — En vigueur</p>
             </div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                <tr className="bg-[var(--surface-2)] border-b border-[var(--border)]">
                   {['Branche','Part salarié','Part employeur','Total','Plafond/mois'].map(h=>(
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -838,29 +840,29 @@ export default function CnssDeclarationPage() {
                   {b:'Prestations Familiales',          sal:'—',  pat:'10,03%',tot:'10,03%', p:'600 000 FCFA'},
                   {b:'Accidents du Travail & Maladies', sal:'—',  pat:'2,25%', tot:'2,25%',  p:'600 000 FCFA'},
                 ].map((r,i)=>(
-                  <tr key={i} className={`border-b border-slate-50 dark:border-slate-800 ${i%2===0?'bg-white dark:bg-slate-900':'bg-slate-50/50 dark:bg-slate-800/20'}`}>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{r.b}</td>
-                    <td className="px-4 py-3 font-bold text-blue-600 dark:text-blue-400 text-center">{r.sal}</td>
+                  <tr key={i} className={`border-b border-[var(--border)] ${i%2===0?'bg-[var(--surface)]':'bg-[var(--surface-2)]/50'}`}>
+                    <td className="px-4 py-3 text-[var(--text)]">{r.b}</td>
+                    <td className="px-4 py-3 font-bold text-red-600 dark:text-red-400 text-center">{r.sal}</td>
                     <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400 text-center">{r.pat}</td>
-                    <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-300 text-center">{r.tot}</td>
-                    <td className="px-4 py-3 text-slate-500 font-mono text-xs">{r.p}</td>
+                    <td className="px-4 py-3 font-bold text-[var(--text)] text-center">{r.tot}</td>
+                    <td className="px-4 py-3 text-gray-500 font-mono text-xs">{r.p}</td>
                   </tr>
                 ))}
-                <tr className="bg-slate-900 dark:bg-slate-950 border-t-2 border-slate-700">
+                <tr className="bg-gray-900 dark:bg-black border-t-2 border-gray-700">
                   <td className="px-4 py-3 font-bold text-white">TOTAL CNSS</td>
-                  <td className="px-4 py-3 font-bold text-blue-300 text-center">4%</td>
+                  <td className="px-4 py-3 font-bold text-red-300 text-center">4%</td>
                   <td className="px-4 py-3 font-bold text-emerald-300 text-center">20,28%</td>
                   <td className="px-4 py-3 font-bold text-white text-center">24,28%</td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">—</td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">—</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm">
-            <div className="p-4 bg-violet-600 text-white">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+            <div className="p-4 bg-amber-600 text-white">
               <h3 className="font-bold text-base">TUS — Taxe Unique sur les Salaires (7,5%)</h3>
-              <p className="text-xs text-violet-200 mt-1">100% patronal — Sans plafond — Base = brut global déplafonné</p>
+              <p className="text-xs text-amber-200 mt-1">100% patronal — Sans plafond — Base = brut global déplafonné</p>
             </div>
             <table className="w-full text-sm">
               <tbody>
@@ -868,39 +870,39 @@ export default function CnssDeclarationPage() {
                   {d:'Part versée à la CNSS',       t:'5,475%', i:'Versée avec les cotisations mensuelles'},
                   {d:'Part versée à la DGI/Trésor', t:'2,025%', i:'Versée séparément à la Direction Générale des Impôts'},
                 ].map((r,i)=>(
-                  <tr key={i} className={`border-b border-slate-50 dark:border-slate-800 ${i%2===0?'bg-white dark:bg-slate-900':'bg-slate-50/50 dark:bg-slate-800/20'}`}>
-                    <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{r.d}</td>
-                    <td className="px-4 py-3 font-bold text-violet-600 dark:text-violet-400 text-center">{r.t}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{r.i}</td>
+                  <tr key={i} className={`border-b border-[var(--border)] ${i%2===0?'bg-[var(--surface)]':'bg-[var(--surface-2)]/50'}`}>
+                    <td className="px-4 py-3 font-semibold text-[var(--text)]">{r.d}</td>
+                    <td className="px-4 py-3 font-bold text-amber-600 dark:text-amber-400 text-center">{r.t}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{r.i}</td>
                   </tr>
                 ))}
-                <tr className="bg-slate-900 dark:bg-slate-950 border-t-2 border-slate-700">
+                <tr className="bg-gray-900 dark:bg-black border-t-2 border-gray-700">
                   <td className="px-4 py-3 font-bold text-white">TOTAL TUS</td>
-                  <td className="px-4 py-3 font-bold text-violet-300 text-center">7,5%</td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">Base = brut global déplafonné</td>
+                  <td className="px-4 py-3 font-bold text-amber-300 text-center">7,5%</td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">Base = brut global déplafonné</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl">
-            <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
+          <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-2">
               <Info className="w-4 h-4"/>Règles essentielles
             </p>
             <div className="space-y-2">
               {[
-                {e:'📅',t:'Délai',d:'Déclaration et paiement avant le 15 du mois suivant.'},
-                {e:'⚠️',t:'Retard',d:'Majoration 10%/mois sur cotisations et TUS (Loi 004/86 du 25/02/1986).'},
-                {e:'💰',t:'Plafond',d:'Pension : min(brut, 1 200 000 FCFA). AT/PF : min(brut, 600 000 FCFA). TUS : sans plafond.'},
-                {e:'📋',t:'Post nom',d:'Ex: "MBEMBA NKOSI Jean-Pierre" → Noms=MBEMBA, Post noms=NKOSI, Prénoms=Jean-Pierre.'},
-                {e:'🔢',t:'N° CNSS',d:'Obligatoire pour chaque travailleur dans la DNMS. Stagiaires = Type 2.'},
-                {e:'🌐',t:'e-déclaration',d:'edeclaration.cnss.cg — le CSV exporté est compatible.'},
+                {icon:Calendar,     t:'Délai',d:'Déclaration et paiement avant le 15 du mois suivant.'},
+                {icon:AlertTriangle,t:'Retard',d:'Majoration 10%/mois sur cotisations et TUS (Loi 004/86 du 25/02/1986).'},
+                {icon:Banknote,     t:'Plafond',d:'Pension : min(brut, 1 200 000 FCFA). AT/PF : min(brut, 600 000 FCFA). TUS : sans plafond.'},
+                {icon:FileText,     t:'Post nom',d:'Ex: "MBEMBA NKOSI Jean-Pierre" → Noms=MBEMBA, Post noms=NKOSI, Prénoms=Jean-Pierre.'},
+                {icon:Hash,         t:'N° CNSS',d:'Obligatoire pour chaque travailleur dans la DNMS. Stagiaires = Type 2.'},
+                {icon:Globe,        t:'e-déclaration',d:'edeclaration.cnss.cg — le CSV exporté est compatible.'},
               ].map((r,i)=>(
-                <div key={i} className="flex gap-3 p-2.5 bg-white dark:bg-slate-800/40 rounded-xl">
-                  <span>{r.e}</span>
+                <div key={i} className="flex gap-3 p-2.5 bg-[var(--surface-2)] rounded-xl">
+                  <r.icon className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"/>
                   <div>
-                    <span className="text-xs font-bold text-slate-800 dark:text-white">{r.t} </span>
-                    <span className="text-xs text-slate-600 dark:text-slate-400">{r.d}</span>
+                    <span className="text-xs font-bold text-[var(--text)]">{r.t} </span>
+                    <span className="text-xs text-[var(--text-muted)]">{r.d}</span>
                   </div>
                 </div>
               ))}

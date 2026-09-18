@@ -6,8 +6,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
-  Hexagon, Layers, Building2, Users, BarChart3, ArrowRight, Loader2,
+  Layers, Building2, Users, BarChart3, ArrowRight, Loader2,
   Lock, Mail, User as UserIcon, Eye, EyeOff, CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import { api } from '@/services/api';
@@ -66,11 +67,15 @@ export default function InscriptionPortefeuillePage() {
       {/* ── Panneau de gauche — présentation ── */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-800 p-12 flex-col justify-between">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-        <div className="relative flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
-            <Hexagon size={18} className="text-white" />
-          </div>
-          <span className="text-white font-bold text-sm tracking-wide">KonzaRH</span>
+        <div className="relative">
+          <Image
+            src="/logos/konza_logo_h_white.png"
+            alt="Konza RH Logo"
+            width={507}
+            height={240}
+            priority
+            style={{ width: '140px', height: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
         <div className="relative">
@@ -105,11 +110,25 @@ export default function InscriptionPortefeuillePage() {
       {/* ── Panneau de droite — formulaire ── */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center">
-              <Hexagon size={18} className="text-white" />
-            </div>
-            <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>KonzaRH</span>
+          <div className="lg:hidden mb-8">
+            <Image
+              src="/logos/konza_logo_h_color.png"
+              alt="Konza RH Logo"
+              width={507}
+              height={240}
+              priority
+              className="block dark:hidden"
+              style={{ width: '140px', height: 'auto', objectFit: 'contain' }}
+            />
+            <Image
+              src="/logos/konza_logo_h_white.png"
+              alt="Konza RH Logo"
+              width={507}
+              height={240}
+              priority
+              className="hidden dark:block"
+              style={{ width: '140px', height: 'auto', objectFit: 'contain' }}
+            />
           </div>
 
           <h2 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>Créer mon portefeuille</h2>

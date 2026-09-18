@@ -7,10 +7,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Building2, Users, Wallet, HandCoins,
-  Calendar, Users2, ClipboardList, LogOut, Hexagon, BarChart3, UserPlus,
+  Calendar, Users2, ClipboardList, LogOut, BarChart3, UserPlus,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -56,15 +57,27 @@ export default function PortfolioSidebar({ userName, userEmail }: PortfolioSideb
     >
       {/* Logo */}
       <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
-            <Hexagon size={18} className="text-white" />
-          </div>
-          <div>
-            <p className="font-bold text-sm leading-none" style={{ color: 'var(--text)' }}>KonzaRH</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Mon portefeuille</p>
-          </div>
-        </div>
+        <Link href="/portefeuille/dashboard" className="inline-flex flex-col items-start group">
+          <Image
+            src="/logos/konza_logo_h_color.png"
+            alt="Konza RH Logo"
+            width={507}
+            height={240}
+            priority
+            className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80"
+            style={{ width: '140px', height: 'auto', objectFit: 'contain' }}
+          />
+          <Image
+            src="/logos/konza_logo_h_white.png"
+            alt="Konza RH Logo"
+            width={507}
+            height={240}
+            priority
+            className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80"
+            style={{ width: '140px', height: 'auto', objectFit: 'contain' }}
+          />
+          <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>Mon portefeuille</p>
+        </Link>
       </div>
 
       {/* Navigation */}
