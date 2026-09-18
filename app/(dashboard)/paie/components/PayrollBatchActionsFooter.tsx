@@ -35,15 +35,15 @@ export function PayrollBatchActionsFooter({
         className="sticky bottom-6 z-50 mt-6"
       >
         {/* ✅ Le conteneur respecte maintenant la largeur du contenu principal */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-6 bg-[var(--surface)] rounded-2xl shadow-lg border border-[var(--border)]">
           
           {/* Gauche : Info sélection */}
           <div className="flex items-center gap-3">
             <div className="text-sm">
-              <span className="font-bold text-gray-900 dark:text-white text-lg">
+              <span className="font-bold text-[var(--text)] text-lg">
                 {selectedCount} bulletin{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}
               </span>
-              <p className="text-gray-500 dark:text-gray-400 text-xs">
+              <p className="text-[var(--text-muted)] text-xs">
                 Choisissez une action à appliquer en masse
               </p>
             </div>
@@ -52,8 +52,8 @@ export function PayrollBatchActionsFooter({
           {/* Droite : Boutons */}
           <div className="flex items-center gap-4 w-full md:w-auto">
             {isLoading ? (
-              <div className="flex-1 md:flex-none px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold rounded-xl flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+              <div className="flex-1 md:flex-none px-6 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] font-bold rounded-xl flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-[var(--border)] border-t-transparent rounded-full animate-spin" />
                 Traitement...
               </div>
             ) : (
@@ -63,7 +63,7 @@ export function PayrollBatchActionsFooter({
                   <button
                     onClick={onPrintAll}
                     disabled={isPrinting}
-                    className="flex-1 md:flex-none px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 md:flex-none px-6 py-3 bg-[var(--surface-2)] hover:opacity-80 text-[var(--text)] font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isPrinting ? <Loader2 size={18} className="animate-spin" /> : <Printer size={18} />}
                     <span className="hidden sm:inline">{isPrinting ? 'Préparation…' : 'Imprimer'}</span>
@@ -79,10 +79,10 @@ export function PayrollBatchActionsFooter({
                   <span className="hidden sm:inline">Valider</span>
                 </button>
 
-                {/* ✅ Bouton Payer (bleu) */}
+                {/* ✅ Bouton Payer (ambre) */}
                 <button 
                   onClick={onPay}
-                  className="flex-1 md:flex-none px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
+                  className="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                 >
                   <DollarSign size={18} />
                   <span className="hidden sm:inline">Payer</span>
@@ -100,7 +100,7 @@ export function PayrollBatchActionsFooter({
                 {/* Bouton Fermer */}
                 <button 
                   onClick={onClear}
-                  className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition-colors"
+                  className="p-3 bg-[var(--surface-2)] hover:opacity-80 text-[var(--text-muted)] rounded-xl transition-colors"
                   title="Désélectionner tout"
                 >
                   <X size={18} />

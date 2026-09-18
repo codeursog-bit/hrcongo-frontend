@@ -833,11 +833,11 @@ export default function FormationPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {!isRH && (
             <button
               onClick={() => setShowRequestModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-700/60 hover:bg-slate-700 text-white border border-white/10 rounded-xl text-sm font-bold transition-all"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 w-full sm:w-auto bg-slate-700/60 hover:bg-slate-700 text-white border border-white/10 rounded-xl text-sm font-bold transition-colors"
             >
               <Send size={14} /> Demander une formation
             </button>
@@ -845,7 +845,7 @@ export default function FormationPage() {
           {isRH && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-500/20 hover:scale-105 transition-colors"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-500/20 hover:scale-105 transition-colors"
             >
               <Plus size={16} /> Nouveau cours
             </button>
@@ -854,7 +854,7 @@ export default function FormationPage() {
       </div>
 
       {/* NAV TABS */}
-      <div className="flex items-center gap-1 bg-slate-800/60 p-1.5 rounded-2xl border border-white/5 w-fit overflow-x-auto">
+      <div className="flex items-center gap-1 bg-slate-800/60 p-1.5 rounded-2xl border border-white/5 max-w-full overflow-x-auto">
         {navItems.map(item => (
           <button
             key={item.id}
@@ -1424,14 +1424,14 @@ export default function FormationPage() {
         {showCourseModal && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 md:pl-[300px]"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl p-2 sm:p-4 md:pl-[300px]"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-slate-900 w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-hidden"
+              className="bg-slate-900 w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] rounded-2xl shadow-2xl border border-white/10 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden"
             >
               {/* Left — Player */}
-              <div className="flex-1 bg-black relative min-h-[220px] md:min-h-0 flex items-center justify-center">
+              <div className="flex-1 bg-black relative aspect-video md:aspect-auto md:min-h-0 flex items-center justify-center shrink-0">
                 {/* Close */}
                 <button onClick={() => setShowCourseModal(null)} className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-white/20 text-white rounded-full backdrop-blur-md z-10">
                   <X size={18}/>
@@ -1440,18 +1440,18 @@ export default function FormationPage() {
                 {/* Non inscrit / Planifié */}
                 {(!showCourseModal.status || showCourseModal.status === 'NOT_STARTED' || showCourseModal.status === 'PLANNED') && (
                   <div
-                    className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-cover bg-center"
+                    className="absolute inset-0 flex flex-col items-center justify-center text-center p-5 sm:p-8 bg-cover bg-center overflow-y-auto"
                     style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.65), rgba(0,0,0,0.97)), url(${showCourseModal.thumbnailUrl})` }}
                   >
                     <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}>
                       <FormatBadge format={showCourseModal.format}/>
-                      <h2 className="text-3xl font-black text-white mt-4 mb-3 leading-tight">{showCourseModal.title}</h2>
+                      <h2 className="text-xl sm:text-3xl font-black text-white mt-4 mb-3 leading-tight">{showCourseModal.title}</h2>
                       <p className="text-slate-300 max-w-md mx-auto mb-8 text-sm">{showCourseModal.description}</p>
                       {showCourseModal.status !== 'PLANNED' ? (
                         <button
                           onClick={() => handleJoin(showCourseModal)}
                           disabled={isJoining}
-                          className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-[0_0_40px_rgba(16,185,129,0.3)]"
+                          className="px-6 sm:px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-full hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-[0_0_40px_rgba(16,185,129,0.3)] text-sm sm:text-base"
                         >
                           {isJoining ? <Loader2 className="animate-spin" size={16}/> : <Play fill="black" size={16}/>}
                           S'inscrire à cette formation
@@ -1472,8 +1472,8 @@ export default function FormationPage() {
 
                 {/* En cours / Terminé — Présentiel */}
                 {(showCourseModal.status === 'IN_PROGRESS' || showCourseModal.status === 'COMPLETED') && showCourseModal.format === 'IN_PERSON' && (
-                  <div className="flex items-center justify-center w-full h-full p-8">
-                    <div className="bg-slate-800 text-white rounded-2xl p-7 max-w-sm w-full shadow-2xl relative overflow-hidden border border-white/10">
+                  <div className="flex items-center justify-center w-full h-full p-4 sm:p-8">
+                    <div className="bg-slate-800 text-white rounded-2xl p-5 sm:p-7 max-w-sm w-full shadow-2xl relative overflow-hidden border border-white/10">
                       <div className="absolute top-0 left-0 w-full h-1.5 bg-amber-500"/>
                       <div className="flex items-center justify-between mb-5">
                         <div>
@@ -1665,7 +1665,7 @@ export default function FormationPage() {
                   </div>
                 ))}
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Format</label>
                     <select value={newCourse.format} onChange={e => setNewCourse({ ...newCourse, format: e.target.value as CourseFormat })}
@@ -1683,7 +1683,7 @@ export default function FormationPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Organisme</label>
                     <input value={newCourse.providerName} onChange={e => setNewCourse({ ...newCourse, providerName: e.target.value })}
@@ -1700,7 +1700,7 @@ export default function FormationPage() {
                 </div>
 
                 {newCourse.format !== 'ONLINE' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Lieu</label>
                       <input value={newCourse.location} onChange={e => setNewCourse({ ...newCourse, location: e.target.value })}
@@ -1765,7 +1765,7 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10"
+              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -1821,7 +1821,7 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-white/10"
+              className="bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -1867,7 +1867,7 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10"
+              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>
@@ -1954,7 +1954,7 @@ export default function FormationPage() {
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95 }}
-              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10"
+              className="bg-slate-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-white/10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <div>

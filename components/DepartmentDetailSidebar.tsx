@@ -47,11 +47,11 @@ export default function DepartmentDetailSidebar({
       widthClass="max-w-lg"
     >
       {detail.description && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">{detail.description}</p>
+        <p className="text-sm text-[var(--text-muted)] mb-5">{detail.description}</p>
       )}
 
       {/* Taux de présence de la semaine */}
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-sky-600 text-white mb-5">
+      <div className="p-4 rounded-2xl bg-emerald-500 text-white mb-5">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold opacity-80 uppercase tracking-wider">Taux de présence — semaine</p>
@@ -65,18 +65,18 @@ export default function DepartmentDetailSidebar({
       <div className="grid grid-cols-3 gap-2 mb-5">
         {[
           { label: 'Présents', value: detail.weekStats.present, icon: CheckCircle2, color: 'text-emerald-500' },
-          { label: 'Retards', value: detail.weekStats.late, icon: Clock, color: 'text-orange-500' },
+          { label: 'Retards', value: detail.weekStats.late, icon: Clock, color: 'text-amber-500' },
           { label: 'Absents', value: detail.weekStats.absent, icon: XCircle, color: 'text-red-500' },
-          { label: 'Télétravail', value: detail.weekStats.remote, icon: Home, color: 'text-violet-500' },
-          { label: 'Congés', value: detail.weekStats.leave, icon: CalendarClock, color: 'text-sky-500' },
-          { label: 'Pointages', value: detail.weekStats.total, icon: Users, color: 'text-gray-500' },
+          { label: 'Télétravail', value: detail.weekStats.remote, icon: Home, color: 'text-emerald-400' },
+          { label: 'Congés', value: detail.weekStats.leave, icon: CalendarClock, color: 'text-[var(--text-muted)]' },
+          { label: 'Pointages', value: detail.weekStats.total, icon: Users, color: 'text-[var(--text-muted)]' },
         ].map(s => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="p-3 rounded-xl border border-gray-100 dark:border-gray-700 text-center">
+            <div key={s.label} className="p-3 rounded-xl border border-[var(--border)] text-center">
               <Icon size={16} className={`mx-auto mb-1 ${s.color}`} />
-              <p className="text-lg font-bold text-gray-900 dark:text-white leading-none">{s.value}</p>
-              <p className="text-[10px] text-gray-400 mt-1">{s.label}</p>
+              <p className="text-lg font-bold text-[var(--text)] leading-none">{s.value}</p>
+              <p className="text-[10px] text-[var(--text-muted)] mt-1">{s.label}</p>
             </div>
           );
         })}
@@ -85,41 +85,41 @@ export default function DepartmentDetailSidebar({
       {/* Masse salariale */}
       {(detail.totalGross != null || detail.avgSalary != null) && (
         <div className="space-y-2 mb-5">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5"><Wallet size={13} /> Masse salariale</p>
+          <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5"><Wallet size={13} /> Masse salariale</p>
           <div className="grid grid-cols-2 gap-2">
-            <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40">
-              <p className="text-[11px] text-gray-400">Brut total</p>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{fmtMoney(detail.totalGross)}</p>
+            <div className="p-3 rounded-xl bg-[var(--surface-2)]">
+              <p className="text-[11px] text-[var(--text-muted)]">Brut total</p>
+              <p className="text-sm font-bold text-[var(--text)]">{fmtMoney(detail.totalGross)}</p>
             </div>
-            <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40">
-              <p className="text-[11px] text-gray-400">Net total</p>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{fmtMoney(detail.totalNet)}</p>
+            <div className="p-3 rounded-xl bg-[var(--surface-2)]">
+              <p className="text-[11px] text-[var(--text-muted)]">Net total</p>
+              <p className="text-sm font-bold text-[var(--text)]">{fmtMoney(detail.totalNet)}</p>
             </div>
-            <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 col-span-2">
-              <p className="text-[11px] text-gray-400">Salaire moyen</p>
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{fmtMoney(detail.avgSalary)}</p>
+            <div className="p-3 rounded-xl bg-[var(--surface-2)] col-span-2">
+              <p className="text-[11px] text-[var(--text-muted)]">Salaire moyen</p>
+              <p className="text-sm font-bold text-[var(--text)]">{fmtMoney(detail.avgSalary)}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Liste des employés */}
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Employés du département</p>
+      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Employés du département</p>
       <div className="space-y-2">
         {detail.employees.map((e, i) => {
           const initials = e.name.split(' ').map(p => p[0]).slice(0, 2).join('');
           return (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-              <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 overflow-hidden shrink-0">
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)]">
+              <div className="w-9 h-9 rounded-lg bg-[var(--surface-2)] flex items-center justify-center text-xs font-bold text-[var(--text-muted)] overflow-hidden shrink-0">
                 {e.photoUrl ? <img src={e.photoUrl} className="w-full h-full object-cover" alt={initials} /> : initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{e.name}</p>
-                <p className="text-[11px] text-gray-400 truncate">{e.position}</p>
+                <p className="text-sm font-semibold text-[var(--text)] truncate">{e.name}</p>
+                <p className="text-[11px] text-[var(--text-muted)] truncate">{e.position}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-xs font-bold text-gray-700 dark:text-gray-200">{e.totalHours.toFixed(1)}h</p>
-                <p className="text-[10px] text-gray-400">{e.present}P · {e.late}R · {e.absent}A</p>
+                <p className="text-xs font-bold text-[var(--text-muted)]">{e.totalHours.toFixed(1)}h</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{e.present}P · {e.late}R · {e.absent}A</p>
               </div>
             </div>
           );

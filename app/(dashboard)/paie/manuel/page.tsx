@@ -209,10 +209,10 @@ const SimpleRow = ({ row, onChangeLabel, onChangeAmount, onRemove, placeholder =
 }) => (
   <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-4 }} className="group flex items-center gap-2">
     <input type="text" value={row.label} onChange={e => onChangeLabel(e.target.value)} placeholder={placeholder}
-      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
     <div className="relative w-32 shrink-0">
       <input type="number" value={row.amount || ''} onChange={e => onChangeAmount(e.target.value===''?'':Number(e.target.value))} placeholder={amountPlaceholder}
-        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
+        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30" />
       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">F</span>
     </div>
     <button onClick={onRemove} className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all shrink-0"><Trash2 size={13} /></button>
@@ -246,7 +246,7 @@ const InputRow = ({
         value={row.base}
         onChange={e => onChangeBase(e.target.value === '' ? '' : Number(e.target.value))}
         placeholder="Base"
-        className="w-full pl-2 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-right text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
+        className="w-full pl-2 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-right text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
       />
       <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-400 pointer-events-none">F</span>
     </div>
@@ -256,7 +256,7 @@ const InputRow = ({
       step="0.01"
       onChange={e => onChangeRate(e.target.value === '' ? '' : Number(e.target.value))}
       placeholder="Taux"
-      className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
+      className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
     />
     <div className={`px-2 py-2 rounded-xl text-sm font-black font-mono text-right tabular-nums border transition-colors ${
       row.amount > 0
@@ -328,7 +328,7 @@ const LabelInput = ({
         onChange={e => handleChange(e.target.value)}
         onFocus={() => query.length >= 1 && setOpen(true)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600"
       />
       <AnimatePresence>
         {open && filtered.length > 0 && (
@@ -338,7 +338,7 @@ const LabelInput = ({
           >
             {filtered.map(s => (
               <button key={s} onMouseDown={() => handleSelect(s)}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0">
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0">
                 {/* Highlight la partie matchée */}
                 {(() => {
                   const idx = s.toLowerCase().indexOf(query.toLowerCase());
@@ -346,7 +346,7 @@ const LabelInput = ({
                   return (
                     <>
                       {s.slice(0, idx)}
-                      <span className="font-bold text-sky-600 dark:text-sky-400">{s.slice(idx, idx + query.length)}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{s.slice(idx, idx + query.length)}</span>
                       {s.slice(idx + query.length)}
                     </>
                   );
@@ -884,7 +884,7 @@ export default function ManuelPayrollPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Saisie manuelle de paie</h1>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 uppercase tracking-wide">Manuel</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase tracking-wide">Manuel</span>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">CNSS, ITS et TUS calculés automatiquement selon la nature de chaque élément</p>
         </div>
@@ -902,14 +902,14 @@ export default function ManuelPayrollPage() {
               <div>
                 <SLabel>Mois</SLabel>
                 <select value={month} onChange={e => setMonth(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30">
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
                   {MONTHS.map(m => <option key={m}>{m}</option>)}
                 </select>
               </div>
               <div>
                 <SLabel>Année</SLabel>
                 <select value={year} onChange={e => setYear(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30">
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
                   {[2023,2024,2025,2026,2027].map(y => <option key={y}>{y}</option>)}
                 </select>
               </div>
@@ -923,9 +923,9 @@ export default function ManuelPayrollPage() {
 
               {selectedEmp ? (
                 <div>
-                  <div className="flex items-start justify-between p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl mb-4">
+                  <div className="flex items-start justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-sky-200 dark:bg-sky-800 flex items-center justify-center text-sky-700 dark:text-sky-300 font-black text-sm shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-emerald-200 dark:bg-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-black text-sm shrink-0">
                         {selectedEmp.firstName[0]}{selectedEmp.lastName[0]}
                       </div>
                       <div>
@@ -934,7 +934,7 @@ export default function ManuelPayrollPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {loadingDetail && <Loader2 size={14} className="animate-spin text-sky-500" />}
+                      {loadingDetail && <Loader2 size={14} className="animate-spin text-emerald-500" />}
                       <button onClick={() => { setSelectedEmp(null); setEmpSearch(''); setSim(null); }}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
                         <X size={14} />
@@ -975,7 +975,7 @@ export default function ManuelPayrollPage() {
                     onChange={e => { setEmpSearch(e.target.value); setShowDrop(true); }}
                     onFocus={() => setShowDrop(true)}
                     placeholder="Rechercher par nom, prénom ou matricule…"
-                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30 text-gray-800 dark:text-gray-200 placeholder:text-gray-400" />
+                    className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 text-gray-800 dark:text-gray-200 placeholder:text-gray-400" />
                   <AnimatePresence>
                     {showDrop && filtered.length > 0 && (
                       <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -983,7 +983,7 @@ export default function ManuelPayrollPage() {
                         {filtered.map((e, i) => (
                           <button key={e.id}
                             onClick={() => { setSelectedEmp(e); setEmpSearch(''); setShowDrop(false); }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-sky-50 dark:hover:bg-sky-900/20 text-left transition-colors ${i > 0 ? 'border-t border-gray-50 dark:border-gray-700/50' : ''}`}>
+                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-left transition-colors ${i > 0 ? 'border-t border-gray-50 dark:border-gray-700/50' : ''}`}>
                             <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-[11px] font-black text-gray-600 dark:text-gray-300 shrink-0">
                               {e.firstName[0]}{e.lastName[0]}
                             </div>
@@ -1028,12 +1028,12 @@ export default function ManuelPayrollPage() {
             {/* ✅ Toggle "Utiliser données précédentes" */}
             {selectedEmp && empDetail && (
               <div className="mx-5 mb-4 mt-3">
-                <div className="flex items-center justify-between px-4 py-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl">
+                <div className="flex items-center justify-between px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                   <div className="flex items-center gap-2.5">
-                    <History size={15} className="text-sky-500 shrink-0" />
+                    <History size={15} className="text-emerald-500 shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-sky-700 dark:text-sky-300">Utiliser les données du mois précédent</p>
-                      <p className="text-[10px] text-sky-500 dark:text-sky-400">
+                      <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Utiliser les données du mois précédent</p>
+                      <p className="text-[10px] text-emerald-500 dark:text-emerald-400">
                         {(() => {
                           const idx = MONTHS.findIndex(m => m === month);
                           const prevIdx = idx === 0 ? 11 : idx - 1;
@@ -1051,7 +1051,7 @@ export default function ManuelPayrollPage() {
                       </button>
                     )}
                     {loadingPrev
-                      ? <Loader2 size={16} className="animate-spin text-sky-500" />
+                      ? <Loader2 size={16} className="animate-spin text-emerald-500" />
                       : (
                         <button
                           onClick={() => {
@@ -1060,7 +1060,7 @@ export default function ManuelPayrollPage() {
                             if (next) loadPrevData();
                             else clearPrevData();
                           }}
-                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${usePrevData ? 'bg-sky-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${usePrevData ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
                           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${usePrevData ? 'translate-x-5' : ''}`} />
                         </button>
                       )
@@ -1068,7 +1068,7 @@ export default function ManuelPayrollPage() {
                   </div>
                 </div>
                 {prevDataLoaded && (
-                  <p className="text-[10px] text-sky-600 dark:text-sky-400 mt-1.5 px-1 flex items-center gap-1">
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1.5 px-1 flex items-center gap-1">
                     <CheckCircle2 size={9} /> Données chargées — modifiez librement avant de confirmer
                   </p>
                 )}
@@ -1081,9 +1081,9 @@ export default function ManuelPayrollPage() {
                 <div className="flex items-center gap-3">
                   <input type="number" min={0} max={26} value={workedDays}
                     onChange={e => setWorkedDays(e.target.value === '' ? '' : Math.min(26, Math.max(0, Number(e.target.value))))}
-                    className="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
+                    className="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
                   <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-sky-400 rounded-full transition-all"
+                    <div className="h-full bg-emerald-400 rounded-full transition-all"
                       style={{ width: `${Math.min(100,(n(workedDays)/26)*100)}%` }} />
                   </div>
                   <span className="text-xs text-gray-400 tabular-nums w-8 text-right">{Math.round((n(workedDays)/26)*100)}%</span>
@@ -1098,9 +1098,9 @@ export default function ManuelPayrollPage() {
             <div className="grid grid-cols-4 gap-3">
               {([
                 { label:'+10%',  v:ot10,  set:setOt10,  col:'text-amber-500',  ring:'focus:ring-amber-400/30' },
-                { label:'+25%',  v:ot25,  set:setOt25,  col:'text-orange-500', ring:'focus:ring-orange-400/30' },
-                { label:'+50%',  v:ot50,  set:setOt50,  col:'text-rose-500',   ring:'focus:ring-rose-400/30' },
-                { label:'+100%', v:ot100, set:setOt100, col:'text-red-500',    ring:'focus:ring-red-400/30' },
+                { label:'+25%',  v:ot25,  set:setOt25,  col:'text-amber-500', ring:'focus:ring-amber-400/30' },
+                { label:'+50%',  v:ot50,  set:setOt50,  col:'text-amber-500',   ring:'focus:ring-amber-400/30' },
+                { label:'+100%', v:ot100, set:setOt100, col:'text-amber-500',    ring:'focus:ring-amber-400/30' },
               ] as const).map(({ label, v, set, col, ring }) => (
                 <div key={label} className="text-center">
                   <label className={`block text-xs font-bold mb-1.5 ${col}`}>{label}</label>
@@ -1118,11 +1118,11 @@ export default function ManuelPayrollPage() {
           {/* ── Primes ── */}
           <Card className="overflow-visible">
             <SectionHeader
-              icon={<span className="text-violet-600 dark:text-violet-400 text-xs font-black">%</span>}
+              icon={<span className="text-amber-600 dark:text-amber-400 text-xs font-black">%</span>}
               title="Primes"
               subtitle="Soumises à CNSS et ITS — viennent avant le brut"
               total={totalPrimes}
-              color="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 text-violet-600"
+              color="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-600"
             />
             <div className="px-5 py-4 space-y-2">
               <div className="grid grid-cols-[1fr_100px_70px_90px_28px] gap-2 px-1 mb-1">
@@ -1146,7 +1146,7 @@ export default function ManuelPayrollPage() {
               </AnimatePresence>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <button onClick={() => setPrimes(p => [...p, newRow()])}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 hover:bg-violet-100 dark:hover:bg-violet-900/30 rounded-lg transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors">
                   <Plus size={11} /> Ajouter une prime
                 </button>
                 <div className="relative">
@@ -1160,7 +1160,7 @@ export default function ManuelPayrollPage() {
                         className="absolute z-[999] left-0 top-full mt-1.5 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-3 space-y-1.5">
                         <input type="text" value={primeSuggSearch} onChange={e => setPrimeSuggSearch(e.target.value)}
                           placeholder="Rechercher une prime…"
-                          className="w-full px-3 py-1.5 mb-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-violet-400/30 text-gray-700 dark:text-gray-300" />
+                          className="w-full px-3 py-1.5 mb-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-gray-700 dark:text-gray-300" />
                         <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
                           {(dbPrimeSugg.length > 0
                             ? dbPrimeSugg.map(t => ({ name: t.name, amount: t.defaultAmount ? String(Number(t.defaultAmount)) : '' }))
@@ -1172,7 +1172,7 @@ export default function ManuelPayrollPage() {
                               <button key={name}
                                 onClick={() => { addSuggestion(setPrimes, primes, name, amount as any); }}
                                 disabled={added}
-                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${added ? 'opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400' : 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800 hover:bg-violet-100'}`}>
+                                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${added ? 'opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-400' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 hover:bg-amber-100'}`}>
                                 {added ? <Check size={9}/> : <Plus size={9}/>} {name}
                               </button>
                             );
@@ -1318,20 +1318,20 @@ export default function ManuelPayrollPage() {
           {/* ── Prêts ── */}
           <Card className="overflow-hidden">
             <SectionHeader
-              icon={<CreditCard size={14} className="text-orange-600 dark:text-orange-400" />}
+              icon={<CreditCard size={14} className="text-amber-600 dark:text-amber-400" />}
               title="Prêts"
               subtitle="Remboursements mensuels à déduire du net"
               total={[...empLoans.map(l => Number(l.monthlyRepayment)), ...loans.map(r => n(r.amount))].reduce((s,v)=>s+v,0)}
-              color="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
+              color="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800"
             />
             <div className="px-5 py-4 space-y-2">
               {empLoans.map(loan => (
-                <div key={loan.id} className="flex items-center justify-between px-3 py-2.5 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/40 rounded-xl">
+                <div key={loan.id} className="flex items-center justify-between px-3 py-2.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl">
                   <div>
                     <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Prêt{loan.reason ? ` — ${loan.reason}` : ''}</p>
                     <p className="text-[11px] text-gray-400">Solde restant : {fmt(Number(loan.remainingBalance))} F</p>
                   </div>
-                  <span className="text-sm font-mono font-black text-orange-600 dark:text-orange-400">−{fmt(Number(loan.monthlyRepayment))} F</span>
+                  <span className="text-sm font-mono font-black text-amber-600 dark:text-amber-400">−{fmt(Number(loan.monthlyRepayment))} F</span>
                 </div>
               ))}
               <AnimatePresence initial={false}>
@@ -1345,7 +1345,7 @@ export default function ManuelPayrollPage() {
                 ))}
               </AnimatePresence>
               <button onClick={() => setLoans(p => [...p, newRow()])}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-lg transition-colors mt-1">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter un prêt manuellement
               </button>
             </div>
@@ -1390,11 +1390,11 @@ export default function ManuelPayrollPage() {
           {/* ════ SECTION RETENUES LIBRES ════ */}
           <Card className="overflow-hidden">
             <SectionHeader
-              icon={<span className="text-rose-600 dark:text-rose-400 text-xs font-black">−</span>}
+              icon={<span className="text-red-600 dark:text-red-400 text-xs font-black">−</span>}
               title="Autres retenues"
               subtitle="Retenues sans pré-enregistrement — déduites du net"
               total={totalRetenues}
-              color="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800"
+              color="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
             />
             <div className="px-5 py-4 space-y-2">
               <AnimatePresence initial={false}>
@@ -1404,12 +1404,12 @@ export default function ManuelPayrollPage() {
                     <input type="text" value={r.label}
                       onChange={e => setRetenues(prev => prev.map(x => x.localId === r.localId ? { ...x, label: e.target.value } : x))}
                       placeholder="Ex : Remboursement, Trop-perçu, Cotisation…"
-                      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
+                      className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400/30 placeholder:text-gray-300 dark:placeholder:text-gray-600" />
                     <div className="relative w-32 shrink-0">
                       <input type="number" value={r.amount || ''}
                         onChange={e => setRetenues(prev => prev.map(x => x.localId === r.localId ? { ...x, amount: e.target.value === '' ? '' : Number(e.target.value) } : x))}
                         placeholder="Montant"
-                        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-rose-400/30" />
+                        className="w-full pl-3 pr-5 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-right text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400/30" />
                       <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">F</span>
                     </div>
                     <button onClick={() => setRetenues(prev => prev.filter(x => x.localId !== r.localId))}
@@ -1420,7 +1420,7 @@ export default function ManuelPayrollPage() {
                 ))}
               </AnimatePresence>
               <button onClick={() => setRetenues(prev => [...prev, { localId: uid(), label: '', amount: '' }])}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition-colors mt-1">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors mt-1">
                 <Plus size={11} /> Ajouter une retenue
               </button>
             </div>
@@ -1428,18 +1428,18 @@ export default function ManuelPayrollPage() {
 
           {/* ════ SUGGESTIONS PARAFIFI ════ */}
           {isParafifi && empDetail && (
-            <Card className="overflow-visible border-2 border-dashed border-indigo-200 dark:border-indigo-800">
+            <Card className="overflow-visible border-2 border-dashed border-amber-200 dark:border-amber-800">
               <div className="px-5 py-4">
-                <p className="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mb-3">
+                <p className="text-[11px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider mb-3">
                   🏢 Éléments spéciaux — Parafifi
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {/* Prime ancienneté */}
                   <button onClick={addAnciennete}
                     disabled={!empDetail.hireDate || getSeniorityYears(empDetail.hireDate) === 0 || primes.some(p => p.label === "Prime d'ancienneté")}
-                    className="flex flex-col items-start px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Prime d'ancienneté</span>
-                    <span className="text-[10px] text-indigo-500 mt-0.5">
+                    className="flex flex-col items-start px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Prime d'ancienneté</span>
+                    <span className="text-[10px] text-amber-500 mt-0.5">
                       {empDetail.hireDate
                         ? `${getSeniorityYears(empDetail.hireDate)} ans → taux ${(getSeniorityRate(empDetail.hireDate) * 100).toFixed(0)}% → ${Math.round(Number(empDetail.baseSalary) * getSeniorityRate(empDetail.hireDate)).toLocaleString('fr-FR')} F`
                         : 'Date embauche manquante'}
@@ -1448,23 +1448,23 @@ export default function ManuelPayrollPage() {
                   {/* Gratification */}
                   <button onClick={addGratification}
                     disabled={primes.some(p => p.label === 'Gratification')}
-                    className="flex flex-col items-start px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Gratification</span>
-                    <span className="text-[10px] text-indigo-500 mt-0.5">
+                    className="flex flex-col items-start px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Gratification</span>
+                    <span className="text-[10px] text-amber-500 mt-0.5">
                       Salaire base ÷ 2 = {Math.round(Number(empDetail.baseSalary) / 2).toLocaleString('fr-FR')} F
                     </span>
                   </button>
                   {/* Congés payés */}
                   <button onClick={addCongesPaies}
                     disabled={primes.some(p => p.label === 'Indemnité de congés payés')}
-                    className="flex flex-col items-start px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                    <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">Congés payés</span>
-                    <span className="text-[10px] text-indigo-500 mt-0.5">
+                    className="flex flex-col items-start px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Congés payés</span>
+                    <span className="text-[10px] text-amber-500 mt-0.5">
                       Salaire base ÷ 2 = {Math.round(Number(empDetail.baseSalary) / 2).toLocaleString('fr-FR')} F
                     </span>
                   </button>
                 </div>
-                <p className="text-[10px] text-indigo-400 mt-3">Ces éléments sont soumis à CNSS et ITS — ajoutés dans la section Primes.</p>
+                <p className="text-[10px] text-amber-400 mt-3">Ces éléments sont soumis à CNSS et ITS — ajoutés dans la section Primes.</p>
               </div>
             </Card>
           )}
@@ -1507,24 +1507,24 @@ export default function ManuelPayrollPage() {
                     <input type="number" step="0.01" value={carryOverTauxPat}
                       onChange={e => setCarryOverTauxPat(e.target.value===''?'':Number(e.target.value))}
                       placeholder="20.28"
-                      className="w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-orange-200 dark:border-orange-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-orange-400/30 text-gray-800 dark:text-gray-200" />
+                      className="w-full pl-2 pr-6 py-2 bg-gray-50 dark:bg-gray-900/50 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-mono text-right focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-gray-800 dark:text-gray-200" />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-gray-400">%</span>
                   </div>
                 </div>
               </div>
               {n(carryOverBrut) > 0 && (
                 <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-                  <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg py-1.5 px-1">
-                    <p className="text-[8px] text-sky-500">Net imposable</p>
-                    <p className="text-[10px] font-bold text-sky-700 dark:text-sky-300">{carryOverNetImp.toLocaleString('fr-FR')}</p>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-emerald-500">Net imposable</p>
+                    <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">{carryOverNetImp.toLocaleString('fr-FR')}</p>
                   </div>
-                  <div className="bg-rose-50 dark:bg-rose-900/20 rounded-lg py-1.5 px-1">
-                    <p className="text-[8px] text-rose-500">CNSS sal. (4%)</p>
-                    <p className="text-[10px] font-bold text-rose-700 dark:text-rose-300">{carryOverChargesSal.toLocaleString('fr-FR')}</p>
+                  <div className="bg-red-50 dark:bg-red-900/20 rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-red-500">CNSS sal. (4%)</p>
+                    <p className="text-[10px] font-bold text-red-700 dark:text-red-300">{carryOverChargesSal.toLocaleString('fr-FR')}</p>
                   </div>
-                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg py-1.5 px-1">
-                    <p className="text-[8px] text-orange-500">Charges pat.</p>
-                    <p className="text-[10px] font-bold text-orange-700 dark:text-orange-300">{carryOverChargesPat.toLocaleString('fr-FR')}</p>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg py-1.5 px-1">
+                    <p className="text-[8px] text-amber-500">Charges pat.</p>
+                    <p className="text-[10px] font-bold text-amber-700 dark:text-amber-300">{carryOverChargesPat.toLocaleString('fr-FR')}</p>
                   </div>
                 </div>
               )}
@@ -1557,7 +1557,7 @@ export default function ManuelPayrollPage() {
                     <input type="number" value={val}
                       onChange={e => (set as any)(e.target.value===''?'':Number(e.target.value))}
                       placeholder="0"
-                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400/30" />
+                      className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/30" />
                   </div>
                 ))}
               </div>
@@ -1584,9 +1584,9 @@ export default function ManuelPayrollPage() {
           )}
 
           {!selectedEmp && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl">
-              <AlertCircle size={14} className="text-sky-500 shrink-0" />
-              <p className="text-sm text-sky-700 dark:text-sky-300">Sélectionnez un employé pour commencer la saisie.</p>
+            <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+              <AlertCircle size={14} className="text-emerald-500 shrink-0" />
+              <p className="text-sm text-emerald-700 dark:text-emerald-300">Sélectionnez un employé pour commencer la saisie.</p>
             </div>
           )}
         </div>
@@ -1598,7 +1598,7 @@ export default function ManuelPayrollPage() {
               <motion.div key="sim" initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
 
-                <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-slate-800 text-white px-5 py-4">
+                <div className="bg-gray-900 dark:bg-black text-white px-5 py-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Aperçu bulletin</p>
@@ -1606,8 +1606,8 @@ export default function ManuelPayrollPage() {
                     </div>
                     {simLoading && (
                       <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full">
-                        <Loader2 size={10} className="animate-spin text-sky-400" />
-                        <span className="text-[10px] text-sky-300 font-semibold">Recalcul…</span>
+                        <Loader2 size={10} className="animate-spin text-emerald-400" />
+                        <span className="text-[10px] text-emerald-300 font-semibold">Recalcul…</span>
                       </div>
                     )}
                   </div>
@@ -1615,7 +1615,7 @@ export default function ManuelPayrollPage() {
                     <span className="capitalize">{month} {year}</span>
                     <span>·</span>
                     <span>{sim.daysToPay}/{sim.workDays} jours</span>
-                    {sim.absenceDeduction > 0 && <><span>·</span><span className="text-orange-400">−{fmt(sim.absenceDeduction)} F abs.</span></>}
+                    {sim.absenceDeduction > 0 && <><span>·</span><span className="text-amber-400">−{fmt(sim.absenceDeduction)} F abs.</span></>}
                     {hasOt && <><span>·</span><span className="text-amber-400">HS</span></>}
                   </div>
                 </div>
@@ -1625,7 +1625,7 @@ export default function ManuelPayrollPage() {
                   <BLine label="Salaire de base ajusté" value={`+${fmt(sim.adjustedBaseSalary)} F`} cls="text-gray-800 dark:text-gray-100" />
                   {sim.overtime.amount10  > 0 && <BLine label={`HS +${sim.settings.overtimeRate10}% (${sim.overtime.hours10}h)`}   value={`+${fmt(sim.overtime.amount10)} F`}  cls="text-amber-500" sm />}
                   {sim.overtime.amount25  > 0 && <BLine label={`HS +${sim.settings.overtimeRate25}% (${sim.overtime.hours25}h)`}   value={`+${fmt(sim.overtime.amount25)} F`}  cls="text-amber-500" sm />}
-                  {sim.overtime.amount50  > 0 && <BLine label={`HS +${sim.settings.overtimeRate50}% (${sim.overtime.hours50}h)`}   value={`+${fmt(sim.overtime.amount50)} F`}  cls="text-rose-500"  sm />}
+                  {sim.overtime.amount50  > 0 && <BLine label={`HS +${sim.settings.overtimeRate50}% (${sim.overtime.hours50}h)`}   value={`+${fmt(sim.overtime.amount50)} F`}  cls="text-amber-500"  sm />}
                   {sim.overtime.amount100 > 0 && <BLine label={`HS +${sim.settings.overtimeRate100}% (${sim.overtime.hours100}h)`} value={`+${fmt(sim.overtime.amount100)} F`} cls="text-red-500"   sm />}
                   {sim.bonuses?.map((b, i) => <BLine key={i} label={b.bonusType} value={`+${fmt(b.amount)} F`} cls="text-emerald-600 dark:text-emerald-400" sm />)}
 
@@ -1655,24 +1655,24 @@ export default function ManuelPayrollPage() {
                     </div>
                   </div>
 
-                  <div className="mt-3 border border-orange-200 dark:border-orange-800/40 rounded-xl overflow-hidden">
+                  <div className="mt-3 border border-amber-200 dark:border-amber-800/40 rounded-xl overflow-hidden">
                     <button onClick={() => setShowEmpCost(v => !v)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100/50 transition-colors">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-orange-700 dark:text-orange-400">
+                      className="w-full flex items-center justify-between px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100/50 transition-colors">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400">
                         <Building2 size={12} /> Coût employeur
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-orange-600 dark:text-orange-400">+{fmt(sim.totalEmployerCost)} F</span>
-                        {showEmpCost ? <ChevronUp size={12} className="text-orange-400"/> : <ChevronDown size={12} className="text-orange-400"/>}
+                        <span className="font-mono font-black text-sm text-amber-600 dark:text-amber-400">+{fmt(sim.totalEmployerCost)} F</span>
+                        {showEmpCost ? <ChevronUp size={12} className="text-amber-400"/> : <ChevronDown size={12} className="text-amber-400"/>}
                       </div>
                     </button>
                     <AnimatePresence>
                       {showEmpCost && (
                         <motion.div initial={{ height:0 }} animate={{ height:'auto' }} exit={{ height:0 }} className="overflow-hidden">
-                          <div className="px-4 py-3 bg-white dark:bg-gray-800/50 space-y-0.5">
-                            <BLine label="CNSS Pensions (8%)"    value={`+${fmt(sim.cnssEmployerPension)} F`}  cls="text-orange-500" sm />
-                            <BLine label="CNSS Famille (10,03%)" value={`+${fmt(sim.cnssEmployerFamily)} F`}   cls="text-orange-500" sm />
-                            <BLine label="CNSS Accident (2,25%)" value={`+${fmt(sim.cnssEmployerAccident)} F`} cls="text-orange-500" sm />
+                          <div className="px-4 py-3 bg-[var(--surface)] space-y-0.5">
+                            <BLine label="CNSS Pensions (8%)"    value={`+${fmt(sim.cnssEmployerPension)} F`}  cls="text-amber-500" sm />
+                            <BLine label="CNSS Famille (10,03%)" value={`+${fmt(sim.cnssEmployerFamily)} F`}   cls="text-amber-500" sm />
+                            <BLine label="CNSS Accident (2,25%)" value={`+${fmt(sim.cnssEmployerAccident)} F`} cls="text-amber-500" sm />
                             <BLine label="TUS DGI (2,025%)"      value={`+${fmt(sim.tusDgiAmount)} F`}         cls="text-amber-500"  sm />
                             <BLine label="TUS CNSS (5,475%)"     value={`+${fmt(sim.tusCnssAmount)} F`}        cls="text-amber-500"  sm />
                           </div>
@@ -1684,7 +1684,7 @@ export default function ManuelPayrollPage() {
 
                 <div className="px-5 pb-5">
                   <button onClick={submit} disabled={submitting || simLoading}
-                    className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 text-sm">
+                    className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 text-sm">
                     {submitting ? <><Loader2 size={15} className="animate-spin"/>Enregistrement…</> : <><CheckCircle2 size={15}/>Confirmer & créer le bulletin</>}
                   </button>
                 </div>
@@ -1693,7 +1693,7 @@ export default function ManuelPayrollPage() {
               <motion.div key="empty" initial={{ opacity:0 }} animate={{ opacity:1 }}
                 className="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center p-8">
                 {simLoading
-                  ? <><Loader2 size={32} className="animate-spin mb-3 text-sky-500"/><p className="text-sm font-medium text-gray-600 dark:text-gray-300">Calcul en cours…</p></>
+                  ? <><Loader2 size={32} className="animate-spin mb-3 text-emerald-500"/><p className="text-sm font-medium text-gray-600 dark:text-gray-300">Calcul en cours…</p></>
                   : simError
                   ? <><AlertCircle size={32} className="mb-3 text-red-400"/><p className="text-sm font-medium text-red-500 max-w-[200px]">{simError}</p></>
                   : <><Calculator size={36} className="mb-3 text-gray-300 dark:text-gray-600"/><p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{!selectedEmp?'Sélectionnez un employé':!empDetail?'Chargement…':'Le bulletin se calcule automatiquement'}</p><p className="text-xs text-gray-400 mt-1">Mis à jour en temps réel</p></>
@@ -1717,7 +1717,7 @@ export default function ManuelPayrollPage() {
               <p className="text-gray-400 text-sm mb-7">La fiche de paie a été enregistrée avec succès.</p>
               <div className="flex gap-3">
                 <button onClick={resetPage} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm">Nouveau</button>
-                {createdId && <button onClick={() => router.push(`/paie/${createdId}`)} className="flex-1 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600 transition-colors text-sm">Voir bulletin</button>}
+                {createdId && <button onClick={() => router.push(`/paie/${createdId}`)} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors text-sm">Voir bulletin</button>}
                 <button onClick={() => router.push('/paie')} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors text-sm">Liste paie</button>
               </div>
             </motion.div>

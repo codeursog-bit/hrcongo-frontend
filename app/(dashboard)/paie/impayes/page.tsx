@@ -93,7 +93,7 @@ const fmt  = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n))
 const fmtN = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n));
 
 const ALERT_STYLES: Record<AlertLevel, { bg: string; border: string; text: string; badge: string; dot: string; icon: React.ElementType }> = {
-  INFO:     { bg: 'bg-sky-50 dark:bg-sky-950/30',     border: 'border-sky-200 dark:border-sky-800',     text: 'text-sky-700 dark:text-sky-400',     badge: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',     dot: 'bg-sky-400',    icon: AlertCircle  },
+  INFO:     { bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-400', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400', dot: 'bg-emerald-400', icon: AlertCircle  },
   WARNING:  { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-400', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400', dot: 'bg-amber-400', icon: AlertTriangle },
   CRITIQUE: { bg: 'bg-red-50 dark:bg-red-950/30',     border: 'border-red-200 dark:border-red-800',     text: 'text-red-700 dark:text-red-400',     badge: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',     dot: 'bg-red-500',   icon: ShieldAlert  },
 };
@@ -104,7 +104,7 @@ function MontantBadge({ montant, isApproximate, className = '' }: { montant: num
     <span className={`inline-flex items-center gap-1 font-bold ${className}`}>
       {isApproximate
         ? <span className="flex items-center gap-1">
-            <span className="text-slate-400 text-xs font-normal">≈</span>
+            <span className="text-gray-400 text-xs font-normal">≈</span>
             {fmtN(montant)} FCFA
             <span title="Montant approximatif basé sur le salaire de base. Le bulletin n'a pas encore été généré."
               className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-amber-200 dark:bg-amber-800 text-amber-700 dark:text-amber-300 cursor-help text-[9px] font-bold leading-none">?</span>
@@ -118,9 +118,9 @@ function MontantBadge({ montant, isApproximate, className = '' }: { montant: num
 // Badge statut bulletin
 function BulletinStatusBadge({ status }: { status: 'NONE' | 'DRAFT' | 'VALIDATED' }) {
   const styles = {
-    NONE:      'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
-    DRAFT:     'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400',
-    VALIDATED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400',
+    NONE:      'bg-[var(--surface-2)] text-[var(--text-muted)]',
+    DRAFT:     'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+    VALIDATED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
   };
   const labels = { NONE: 'Pas de bulletin', DRAFT: 'Brouillon', VALIDATED: 'Validé' };
   return (
@@ -133,12 +133,12 @@ function BulletinStatusBadge({ status }: { status: 'NONE' | 'DRAFT' | 'VALIDATED
 // Badge phase employé
 function PhaseBadge({ phase }: { phase: Phase }) {
   if (phase === 'NO_BULLETIN') return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
       <FileX className="w-3 h-3" /> Paie non lancée
     </span>
   );
   if (phase === 'UNPAID_BULLETIN') return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
       <CreditCard className="w-3 h-3" /> Bulletin non payé
     </span>
   );
@@ -224,13 +224,13 @@ export default function UnpaidSalaryPage() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        <p className="text-sm text-slate-500">Analyse des salaires en cours…</p>
+        <p className="text-sm text-gray-500">Analyse des salaires en cours…</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 max-w-5xl mx-auto space-y-5">
+    <div className="min-h-screen bg-[var(--surface-2)] p-4 md:p-6 max-w-5xl mx-auto space-y-5">
 
       {/* ── HEADER ── */}
       <div className="flex items-start justify-between gap-4">
@@ -239,12 +239,12 @@ export default function UnpaidSalaryPage() {
             <Banknote className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Suivi Salaires Impayés</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Détection automatique basée sur la date de paiement prévue</p>
+            <h1 className="text-xl font-bold text-[var(--text)]">Suivi Salaires Impayés</h1>
+            <p className="text-xs text-[var(--text-muted)]">Détection automatique basée sur la date de paiement prévue</p>
           </div>
         </div>
         <button onClick={loadDashboard} disabled={loading}
-          className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 transition-colors disabled:opacity-50">
+          className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-gray-500 hover:bg-gray-50 transition-colors disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
@@ -263,14 +263,14 @@ export default function UnpaidSalaryPage() {
 
       {/* ── PHASE 1&2 — Alerte préventive ── */}
       {hasUpcoming && data?.upcomingDue && (
-        <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl">
-          <Bell className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
+          <Bell className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold text-sm text-blue-800 dark:text-blue-300">
+            <p className="font-bold text-sm text-emerald-800 dark:text-emerald-300">
               {data.upcomingDue.daysUntilDue === 0 ? `💰 Paiement des salaires prévu aujourd'hui`
                 : `📅 Dans ${data.upcomingDue.daysUntilDue} jour(s) — date de paiement des salaires`}
             </p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
               <strong>{data.upcomingDue.count} employé(s)</strong> pour{' '}
               <strong>{MONTHS_FR[data.upcomingDue.month - 1]} {data.upcomingDue.year}</strong> à payer.{' '}
               Total estimé : <strong>{fmt(data.upcomingDue.totalEstimate)}</strong>.
@@ -299,7 +299,7 @@ export default function UnpaidSalaryPage() {
             value={String(data.noBulletinEmployees.length + data.mixedEmployees.length)}
             sub="Aucun bulletin généré"
             icon={FileX}
-            color={data.noBulletinEmployees.length > 0 ? 'bg-violet-600' : 'bg-slate-400'}
+            color={data.noBulletinEmployees.length > 0 ? 'bg-amber-600' : 'bg-gray-400'}
             onClick={() => setPhaseFilter(phaseFilter === 'NO_BULLETIN' ? 'ALL' : 'NO_BULLETIN')}
             active={phaseFilter === 'NO_BULLETIN'}
           />
@@ -308,7 +308,7 @@ export default function UnpaidSalaryPage() {
             value={String(data.unpaidBulletinEmployees.length + data.mixedEmployees.length)}
             sub="Généré mais non payé"
             icon={CreditCard}
-            color={data.unpaidBulletinEmployees.length > 0 ? 'bg-orange-500' : 'bg-slate-400'}
+            color={data.unpaidBulletinEmployees.length > 0 ? 'bg-amber-500' : 'bg-gray-400'}
             onClick={() => setPhaseFilter(phaseFilter === 'UNPAID_BULLETIN' ? 'ALL' : 'UNPAID_BULLETIN')}
             active={phaseFilter === 'UNPAID_BULLETIN'}
           />
@@ -317,14 +317,14 @@ export default function UnpaidSalaryPage() {
             value={`${data.maxMonthsLate} mois`}
             sub={data.maxMonthsLate >= 3 ? '⚠️ Risque légal' : data.maxMonthsLate >= 2 ? 'À surveiller' : 'Acceptable'}
             icon={Clock}
-            color={data.maxMonthsLate >= 3 ? 'bg-red-600' : data.maxMonthsLate >= 2 ? 'bg-amber-500' : 'bg-sky-500'}
+            color={data.maxMonthsLate >= 3 ? 'bg-red-600' : data.maxMonthsLate >= 2 ? 'bg-amber-500' : 'bg-emerald-500'}
           />
           <StatCard
             label="Total estimé dû"
             value={fmt(data.totalDu)}
             sub={data.hasApproximateData ? `≈ dont ${fmt(data.totalApproximate)} approx.` : 'Montants exacts'}
             icon={TrendingDown}
-            color="bg-slate-700"
+            color="bg-gray-700"
           />
         </div>
       )}
@@ -365,19 +365,19 @@ export default function UnpaidSalaryPage() {
 
       {/* ── FILTRES ── */}
       {hasRetards && (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-4 space-y-3">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Filtres</p>
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 space-y-3">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Filtres</p>
 
           {/* Filtre alerte */}
           <div>
-            <p className="text-xs text-slate-500 mb-1.5">Niveau d'alerte</p>
+            <p className="text-xs text-gray-500 mb-1.5">Niveau d'alerte</p>
             <div className="flex gap-1.5 flex-wrap">
               {(['ALL', 'CRITIQUE', 'WARNING', 'INFO'] as const).map(f => (
                 <button key={f} onClick={() => setAlertFilter(f)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     alertFilter === f
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                      : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                      ? 'bg-[var(--text)] text-[var(--bg)]'
+                      : 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]'
                   }`}>
                   {f === 'ALL' ? `Tous (${data?.employees.length ?? 0})`
                     : <span className="flex items-center gap-1.5">
@@ -391,7 +391,7 @@ export default function UnpaidSalaryPage() {
 
           {/* Filtre phase */}
           <div>
-            <p className="text-xs text-slate-500 mb-1.5">Situation</p>
+            <p className="text-xs text-gray-500 mb-1.5">Situation</p>
             <div className="flex gap-1.5 flex-wrap">
               {([
                 ['ALL',              'Toutes situations',    null],
@@ -403,8 +403,8 @@ export default function UnpaidSalaryPage() {
                   <button key={f} onClick={() => setPhaseFilter(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       phaseFilter === f
-                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                        : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                        ? 'bg-[var(--text)] text-[var(--bg)]'
+                        : 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]'
                     }`}>
                     {label}{count !== null ? ` (${count})` : ''}
                   </button>
@@ -416,13 +416,13 @@ export default function UnpaidSalaryPage() {
           {/* Filtre par mois */}
           {availableMonths.length > 1 && (
             <div>
-              <p className="text-xs text-slate-500 mb-1.5">Mois concerné</p>
+              <p className="text-xs text-gray-500 mb-1.5">Mois concerné</p>
               <div className="flex gap-1.5 flex-wrap">
                 <button onClick={() => setMonthFilter('ALL')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     monthFilter === 'ALL'
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                      : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                      ? 'bg-[var(--text)] text-[var(--bg)]'
+                      : 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]'
                   }`}>
                   Tous les mois
                 </button>
@@ -436,8 +436,8 @@ export default function UnpaidSalaryPage() {
                     <button key={key} onClick={() => setMonthFilter(monthFilter === key ? 'ALL' : key)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                         monthFilter === key
-                          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'
-                          : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                          ? 'bg-[var(--text)] text-[var(--bg)]'
+                          : 'bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)]'
                       }`}>
                       {label} ({count})
                     </button>
@@ -451,7 +451,7 @@ export default function UnpaidSalaryPage() {
 
       {/* ── RÉSUMÉ DU FILTRE ── */}
       {hasRetards && (alertFilter !== 'ALL' || phaseFilter !== 'ALL' || monthFilter !== 'ALL') && (
-        <p className="text-xs text-slate-400 -mt-2 px-1">
+        <p className="text-xs text-gray-400 -mt-2 px-1">
           {filtered.length} employé(s) affiché(s) sur {data?.employees.length ?? 0}
           {monthFilter !== 'ALL' && (() => {
             const [m, y] = monthFilter.split('-').map(Number);
@@ -464,7 +464,7 @@ export default function UnpaidSalaryPage() {
       {hasRetards && (
         <div className="space-y-3">
           {filtered.length === 0 && (
-            <div className="text-center py-10 text-slate-400">
+            <div className="text-center py-10 text-gray-400">
               <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
               <p className="text-sm">Aucun employé dans cette catégorie.</p>
             </div>
@@ -491,17 +491,17 @@ export default function UnpaidSalaryPage() {
                   {/* Infos principales */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm">{emp.nom}</span>
+                      <span className="font-bold text-[var(--text)] text-sm">{emp.nom}</span>
                       <PhaseBadge phase={emp.phase} />
                     </div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-xs text-slate-500">{emp.poste}</span>
+                      <span className="text-xs text-gray-500">{emp.poste}</span>
                       {emp.department && (
-                        <span className="inline-flex items-center gap-1 text-xs text-slate-400">
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-400">
                           <Building2 className="w-3 h-3" />{emp.department}
                         </span>
                       )}
-                      <span className="text-xs text-slate-400">#{emp.matricule}</span>
+                      <span className="text-xs text-gray-400">#{emp.matricule}</span>
                     </div>
                     {emp.maxDaysOverdue > 0 && (
                       <p className={`text-xs font-medium mt-0.5 ${s.text}`}>
@@ -513,31 +513,31 @@ export default function UnpaidSalaryPage() {
                   {/* Métriques droite */}
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right hidden sm:block">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Mois</p>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Mois</p>
                       <p className={`font-bold text-xl leading-tight ${s.text}`}>{emp.monthsLate}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wide">Total dû</p>
-                      <p className="font-bold text-slate-900 dark:text-white text-sm">
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Total dû</p>
+                      <p className="font-bold text-[var(--text)] text-sm">
                         {emp.hasApproximate && <span className="text-amber-500 mr-0.5 text-xs">≈</span>}
                         {fmtN(emp.totalDu)}
-                        <span className="text-xs font-normal text-slate-400 ml-0.5">FCFA</span>
+                        <span className="text-xs font-normal text-gray-400 ml-0.5">FCFA</span>
                       </p>
                       {emp.hasApproximate && (
                         <p className="text-[10px] text-amber-500">approximatif</p>
                       )}
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </div>
                 </button>
 
                 {/* ── Détail déplié ── */}
                 {isOpen && (
-                  <div className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                  <div className="bg-[var(--surface)] border-t border-[var(--border)]">
 
                     {/* Pills mois */}
                     <div className="p-4 pb-0">
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                         Détail par mois
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -545,11 +545,11 @@ export default function UnpaidSalaryPage() {
                           <div key={`${m.month}-${m.year}`}
                             className={`flex items-center justify-between p-3 rounded-xl border text-sm ${
                               m.phase === 'NO_BULLETIN'
-                                ? 'bg-violet-50 border-violet-200 dark:bg-violet-950/30 dark:border-violet-800'
-                                : 'bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800/50'
+                                ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800'
+                                : 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/50'
                             }`}>
                             <div>
-                              <p className="font-semibold text-slate-800 dark:text-white text-xs">
+                              <p className="font-semibold text-[var(--text)] text-xs">
                                 {MONTHS_FR[m.month - 1]} {m.year}
                               </p>
                               <div className="flex items-center gap-1 mt-0.5">
@@ -563,7 +563,7 @@ export default function UnpaidSalaryPage() {
                               <MontantBadge
                                 montant={m.montant}
                                 isApproximate={m.isApproximate}
-                                className={`text-xs ${m.phase === 'NO_BULLETIN' ? 'text-violet-700 dark:text-violet-300' : 'text-orange-700 dark:text-orange-300'}`}
+                                className={`text-xs ${m.phase === 'NO_BULLETIN' ? 'text-amber-700 dark:text-amber-300' : 'text-amber-700 dark:text-amber-300'}`}
                               />
                             </div>
                           </div>
@@ -574,7 +574,7 @@ export default function UnpaidSalaryPage() {
                     {/* Message action selon phase */}
                     <div className="px-4 pt-3">
                       {emp.phase === 'NO_BULLETIN' && (
-                        <div className="flex items-center gap-2 p-3 bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 rounded-xl text-xs text-violet-700 dark:text-violet-300">
+                        <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-700 dark:text-amber-300">
                           <FileX className="w-4 h-4 shrink-0" />
                           <span>Aucun bulletin généré pour ces périodes. Les montants sont basés sur le salaire de base.</span>
                           <ArrowRight className="w-3 h-3 shrink-0 ml-auto" />
@@ -582,7 +582,7 @@ export default function UnpaidSalaryPage() {
                         </div>
                       )}
                       {emp.phase === 'UNPAID_BULLETIN' && (
-                        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/50 rounded-xl text-xs text-orange-700 dark:text-orange-300">
+                        <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-xl text-xs text-amber-700 dark:text-amber-300">
                           <CreditCard className="w-4 h-4 shrink-0" />
                           <span>Bulletins générés mais paiement non effectué. Marquez comme payé après virement.</span>
                           <ArrowRight className="w-3 h-3 shrink-0 ml-auto" />
@@ -600,9 +600,9 @@ export default function UnpaidSalaryPage() {
                     {/* Timeline bulletins (phase 4 uniquement) */}
                     {(emp.phase === 'UNPAID_BULLETIN' || emp.phase === 'MIXED') && (
                       <div className="px-4 pt-3">
-                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Historique des paiements</p>
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Historique des paiements</p>
                         {tlLoading === emp.employeeId && (
-                          <div className="flex justify-center py-3"><Loader2 className="w-5 h-5 text-slate-400 animate-spin" /></div>
+                          <div className="flex justify-center py-3"><Loader2 className="w-5 h-5 text-gray-400 animate-spin" /></div>
                         )}
                         {tlErr && (
                           <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
@@ -618,20 +618,20 @@ export default function UnpaidSalaryPage() {
                                 <div key={t.id} className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs ${
                                   isLate ? 'bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900' :
                                   !isPaid ? 'bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50' :
-                                  'bg-slate-50 dark:bg-slate-800/40'
+                                  'bg-[var(--surface-2)]/40'
                                 }`}>
                                   <div className="flex items-center gap-2">
                                     {isPaid ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                      : isLate ? <XCircle className="w-3.5 h-3.5 text-red-500" />
                                               : <Clock className="w-3.5 h-3.5 text-amber-500" />}
-                                    <span className="font-medium text-slate-700 dark:text-slate-300">{t.mois}</span>
+                                    <span className="font-medium text-[var(--text)]">{t.mois}</span>
                                     <BulletinStatusBadge status={t.bulletinStatus as any} />
                                     {isLate && t.daysOverdue > 0 && <span className="text-red-500 font-bold">· {t.daysOverdue}j</span>}
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-semibold text-slate-900 dark:text-white">{fmtN(t.netSalary)} FCFA</span>
+                                    <span className="font-semibold text-[var(--text)]">{fmtN(t.netSalary)} FCFA</span>
                                     {isPaid && t.paidAt && (
-                                      <span className="text-slate-400 hidden sm:inline">
+                                      <span className="text-gray-400 hidden sm:inline">
                                         Payé le {new Date(t.paidAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                       </span>
                                     )}
@@ -655,7 +655,7 @@ export default function UnpaidSalaryPage() {
                     <div className={`m-4 flex items-center justify-between p-3 ${s.bg} rounded-xl border ${s.border}`}>
                       <div>
                         <p className={`font-semibold text-sm ${s.text}`}>{emp.nom.split(' ')[0]} — récapitulatif</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-gray-400">
                           {emp.monthsLate} mois · depuis {MONTHS_FR[emp.oldestUnpaid.month - 1]} {emp.oldestUnpaid.year}
                           {emp.hasApproximate && ' · dont montants approximatifs'}
                         </p>
@@ -679,15 +679,15 @@ export default function UnpaidSalaryPage() {
       )}
 
       {/* ── RAPPEL LÉGAL ── */}
-      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+      <div className="p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <Calendar className="w-3.5 h-3.5" /> Rappel légal — Code du Travail Congo
         </p>
-        <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400">
-          <p><strong className="text-slate-700 dark:text-slate-300">Art. 95 CT</strong> — Salaires payés à intervalles réguliers et à date fixe convenue.</p>
-          <p><strong className="text-slate-700 dark:text-slate-300">3+ mois impayés</strong> — L'employé peut saisir l'Inspecteur du Travail.</p>
-          <p><strong className="text-slate-700 dark:text-slate-300">Sanctions</strong> — Amende + dommages-intérêts en cas de retard injustifié.</p>
-          <p><strong className="text-slate-700 dark:text-slate-300">Conseil</strong> — En cas de difficulté, documenter un accord de paiement échelonné.</p>
+        <div className="space-y-1 text-xs text-[var(--text-muted)]">
+          <p><strong className="text-[var(--text)]">Art. 95 CT</strong> — Salaires payés à intervalles réguliers et à date fixe convenue.</p>
+          <p><strong className="text-[var(--text)]">3+ mois impayés</strong> — L'employé peut saisir l'Inspecteur du Travail.</p>
+          <p><strong className="text-[var(--text)]">Sanctions</strong> — Amende + dommages-intérêts en cas de retard injustifié.</p>
+          <p><strong className="text-[var(--text)]">Conseil</strong> — En cas de difficulté, documenter un accord de paiement échelonné.</p>
         </div>
       </div>
 
@@ -707,15 +707,15 @@ function StatCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-white dark:bg-slate-900 rounded-2xl border p-4 shadow-sm transition-all ${
+      className={`bg-[var(--surface)] rounded-2xl border p-4 shadow-sm transition-all ${
         onClick ? 'cursor-pointer hover:shadow-md' : ''
-      } ${active ? 'border-slate-900 dark:border-white ring-1 ring-slate-900 dark:ring-white' : 'border-slate-200 dark:border-slate-700/60'}`}>
+      } ${active ? 'border-[var(--text)] ring-1 ring-[var(--text)]' : 'border-[var(--border)]'}`}>
       <div className="flex items-start gap-3">
         <div className={`p-2 rounded-lg shrink-0 ${color}`}><Icon className="w-4 h-4 text-white" /></div>
         <div className="min-w-0">
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-tight">{label}</p>
-          <p className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 truncate">{value}</p>
-          <p className="text-xs text-slate-400 mt-0.5 truncate">{sub}</p>
+          <p className="text-xs text-[var(--text-muted)] font-medium leading-tight">{label}</p>
+          <p className="font-bold text-[var(--text)] text-sm mt-0.5 truncate">{value}</p>
+          <p className="text-xs text-gray-400 mt-0.5 truncate">{sub}</p>
         </div>
       </div>
     </div>

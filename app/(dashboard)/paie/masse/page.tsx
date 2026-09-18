@@ -183,7 +183,7 @@ export default function BatchPayrollPage() {
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-sky-500" size={32} />
+      <Loader2 className="animate-spin text-emerald-500" size={32} />
     </div>
   );
 
@@ -197,16 +197,16 @@ export default function BatchPayrollPage() {
 
       <div className="flex items-center gap-4 mb-8">
         <button onClick={() => router.back()}
-          className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
+          className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Génération Paie en Masse</h1>
+          <h1 className="text-2xl font-bold text-[var(--text)]">Génération Paie en Masse</h1>
           <p className="text-sm text-gray-500">Traitement automatisé des bulletins mensuels.</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col min-h-[500px]">
+      <div className="bg-[var(--surface)] rounded-3xl shadow-xl border border-[var(--border)] overflow-hidden flex flex-col min-h-[500px]">
         <StepHeader currentStep={currentStep} />
 
         <div className="flex-1 p-8 md:p-12 relative">
@@ -228,9 +228,9 @@ export default function BatchPayrollPage() {
           )}
         </div>
 
-        <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-between items-center">
+        <div className="p-6 border-t border-[var(--border)] bg-[var(--surface-2)] flex justify-between items-center">
           <button disabled={currentStep === 1 || isProcessing} onClick={() => setCurrentStep(c => c - 1)}
-            className="px-6 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-white dark:hover:bg-gray-800">
+            className="px-6 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-[var(--surface)]">
             Précédent
           </button>
           {currentStep < 3 && (

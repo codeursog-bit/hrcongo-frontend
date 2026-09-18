@@ -6,6 +6,12 @@
 //    identifiant logique (colorKey) — pour rester libre de toute décision
 //    visuelle. Ce fichier est l'unique endroit à modifier pour retoucher la
 //    palette du module.
+//
+// ✅ Palette resserrée à émeraude (positif/présence) + ambre (secondaire/
+//    attention) + neutre (fermé/non applicable) + rouge (négatif/injustifié),
+//    cohérent avec le reste de l'app. Les clés (colorKey) elles-mêmes ne
+//    changent pas — seules les couleurs qu'elles pointent ont bougé, donc
+//    rien à modifier côté backend.
 // ============================================================================
 
 export interface ColorDef {
@@ -18,20 +24,20 @@ export interface ColorDef {
 export const COLOR_MAP: Record<string, ColorDef> = {
   success:       { hex: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
   'success-light': { hex: '#34d399', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-500 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
-  teal:          { hex: '#14b8a6', bg: 'bg-teal-50 dark:bg-teal-900/20', text: 'text-teal-600 dark:text-teal-300', border: 'border-teal-200 dark:border-teal-800' },
-  neutral:       { hex: '#6b7280', bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-500 dark:text-gray-300', border: 'border-gray-200 dark:border-gray-700' },
-  purple:        { hex: '#8b5cf6', bg: 'bg-violet-50 dark:bg-violet-900/20', text: 'text-violet-600 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
-  pink:          { hex: '#ec4899', bg: 'bg-pink-50 dark:bg-pink-900/20', text: 'text-pink-600 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800' },
-  indigo:        { hex: '#6366f1', bg: 'bg-indigo-50 dark:bg-indigo-900/20', text: 'text-indigo-600 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-800' },
-  violet:        { hex: '#a78bfa', bg: 'bg-violet-50 dark:bg-violet-900/20', text: 'text-violet-500 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
+  teal:          { hex: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
+  neutral:       { hex: '#6b7280', bg: 'bg-[var(--surface-2)]', text: 'text-[var(--text-muted)]', border: 'border-[var(--border)]' },
+  purple:        { hex: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+  pink:          { hex: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+  indigo:        { hex: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
+  violet:        { hex: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-500 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
   amber:         { hex: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
-  'slate-dark':  { hex: '#334155', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-300', border: 'border-slate-300 dark:border-slate-700' },
-  sky:           { hex: '#0ea5e9', bg: 'bg-sky-50 dark:bg-sky-900/20', text: 'text-sky-600 dark:text-sky-300', border: 'border-sky-200 dark:border-sky-800' },
-  orange:        { hex: '#f97316', bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
-  rose:          { hex: '#f43f5e', bg: 'bg-rose-50 dark:bg-rose-900/20', text: 'text-rose-600 dark:text-rose-300', border: 'border-rose-200 dark:border-rose-800' },
-  holiday:       { hex: '#94a3b8', bg: 'bg-slate-50 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-300', border: 'border-slate-200 dark:border-slate-700' },
-  presence:      { hex: '#22c55e', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
-  remote:        { hex: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
+  'slate-dark':  { hex: '#334155', bg: 'bg-[var(--surface-2)]', text: 'text-[var(--text-muted)]', border: 'border-[var(--border)]' },
+  sky:           { hex: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
+  orange:        { hex: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
+  rose:          { hex: '#ef4444', bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-300', border: 'border-red-200 dark:border-red-800' },
+  holiday:       { hex: '#94a3b8', bg: 'bg-[var(--surface-2)]', text: 'text-[var(--text-muted)]', border: 'border-[var(--border)]' },
+  presence:      { hex: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
+  remote:        { hex: '#10b981', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800' },
   late:          { hex: '#f59e0b', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800' },
 };
 

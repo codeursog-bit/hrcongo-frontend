@@ -45,30 +45,24 @@ export default function ProcessingStep({
             <svg className="w-full h-full transform -rotate-90">
               <circle cx="96" cy="96" r="88" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-100 dark:text-gray-700" />
               <circle 
-                cx="96" cy="96" r="88" stroke="url(#gradient)" strokeWidth="12" fill="transparent" 
+                cx="96" cy="96" r="88" stroke="#10B981" strokeWidth="12" fill="transparent" 
                 strokeDasharray={552} strokeDashoffset={552 - (552 * progress) / 100} 
-                className="transition-all duration-500 ease-out drop-shadow-[0_0_8px_rgba(14,165,233,0.5)]"
+                className="transition-all duration-500 ease-out drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                 strokeLinecap="round"
               />
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0EA5E9" />
-                  <stop offset="100%" stopColor="#10B981" />
-                </linearGradient>
-              </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <Zap className="text-sky-500 mb-2 animate-pulse" size={32} />
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{progress}%</span>
+              <Zap className="text-emerald-500 mb-2 animate-pulse" size={32} />
+              <span className="text-4xl font-bold text-[var(--text)]">{progress}%</span>
             </div>
           </div>
 
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500/10 to-emerald-500/10 border border-sky-500/20 rounded-full px-6 py-3 mb-4">
-              <Activity className="text-sky-500 animate-pulse" size={18} />
-              <span className="font-bold text-gray-900 dark:text-white">Traitement en cours...</span>
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-6 py-3 mb-4">
+              <Activity className="text-emerald-500 animate-pulse" size={18} />
+              <span className="font-bold text-[var(--text)]">Traitement en cours...</span>
             </div>
-            <p className="text-lg font-bold text-sky-600 dark:text-sky-400 animate-pulse">{currentEmployee}</p>
+            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 animate-pulse">{currentEmployee}</p>
           </div>
           
           <div className="w-full bg-gray-900 dark:bg-black rounded-2xl p-4 h-64 overflow-y-auto border border-gray-700 font-mono text-xs space-y-1 shadow-inner">
@@ -94,9 +88,9 @@ export default function ProcessingStep({
               <p className="text-2xl font-bold text-emerald-600">{results.success}</p>
               <p className="text-xs text-gray-500">Créés</p>
             </div>
-            <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 text-center">
-              <AlertTriangle className="mx-auto text-orange-500 mb-2" size={20} />
-              <p className="text-2xl font-bold text-orange-600">{results.skipped}</p>
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+              <AlertTriangle className="mx-auto text-amber-500 mb-2" size={20} />
+              <p className="text-2xl font-bold text-amber-600">{results.skipped}</p>
               <p className="text-xs text-gray-500">Ignorés</p>
             </div>
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
@@ -111,7 +105,7 @@ export default function ProcessingStep({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={onShowSummary}
-              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-sky-500 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all"
+              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all"
             >
               Voir le résumé complet
             </motion.button>
@@ -119,16 +113,16 @@ export default function ProcessingStep({
         </div>
       ) : (
         <div className="text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-sky-500 to-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-sky-500/30">
+          <div className="w-24 h-24 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30">
             <Play size={40} className="ml-1"/>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Prêt à lancer ?</h2>
+          <h2 className="text-3xl font-bold text-[var(--text)] mb-4">Prêt à lancer ?</h2>
           <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto">
-            Génération de <strong className="text-gray-900 dark:text-white">{selectedCount} bulletins</strong> pour <strong className="text-gray-900 dark:text-white">{estimatedCost.toLocaleString()} FCFA</strong>.
+            Génération de <strong className="text-[var(--text)]">{selectedCount} bulletins</strong> pour <strong className="text-[var(--text)]">{estimatedCost.toLocaleString()} FCFA</strong>.
           </p>
           <button 
             onClick={onStart} 
-            className="px-10 py-4 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all text-lg flex items-center justify-center gap-3 mx-auto"
+            className="px-10 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:scale-105 transition-all text-lg flex items-center justify-center gap-3 mx-auto"
           >
             <Zap size={24} /> Lancer le Traitement
           </button>

@@ -42,7 +42,7 @@ export default function DeductionsSection({
     <motion.section 
       initial={{ opacity: 0, y: 20 }} 
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/10 dark:to-pink-900/10 rounded-2xl border border-red-200 dark:border-red-800 p-6"
+      className="bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-200 dark:border-red-800 p-6"
     >
       <h3 className="text-lg font-bold text-red-900 dark:text-red-200 mb-4 flex items-center gap-2">
         <DollarSign size={20} /> Déductions Programmées
@@ -61,11 +61,11 @@ export default function DeductionsSection({
           
           <div className="space-y-3">
             {loans.map((loan) => (
-              <div key={loan.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+              <div key={loan.id} className="flex items-center justify-between bg-[var(--surface)] p-3 rounded-lg border border-red-100 dark:border-red-900/30">
                 <div className="flex items-center gap-3">
                   <CreditCard size={16} className="text-red-500" />
                   <div>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white">Prêt #{loan.id.substring(0, 8)}</p>
+                    <p className="text-sm font-bold text-[var(--text)]">Prêt #{loan.id.substring(0, 8)}</p>
                     <p className="text-xs text-gray-500">
                       Solde restant : {formatNumber(loan.remainingBalance)} FCFA
                     </p>
@@ -79,11 +79,11 @@ export default function DeductionsSection({
             ))}
             
             {advances.map((adv) => (
-              <div key={adv.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
+              <div key={adv.id} className="flex items-center justify-between bg-[var(--surface)] p-3 rounded-lg border border-red-100 dark:border-red-900/30">
                 <div className="flex items-center gap-3">
                   <Wallet size={16} className="text-red-500" />
                   <div>
-                    <p className="text-sm font-bold text-gray-900 dark:text-white">Avance #{adv.id.substring(0, 8)}</p>
+                    <p className="text-sm font-bold text-[var(--text)]">Avance #{adv.id.substring(0, 8)}</p>
                     <p className="text-xs text-gray-500">
                       Accordée le {new Date(adv.createdAt).toLocaleDateString('fr-FR')}
                     </p>

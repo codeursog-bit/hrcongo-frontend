@@ -279,19 +279,10 @@ export default function AttendanceCheckInPage() {
   // ✅ Depuis quand on est "mal" positionné (hors zone / signal faible) —
   // sert à décider quand afficher le petit bouton d'actualisation manuelle
   const [badSince, setBadSince] = useState<number | null>(null);
-  // ✅ Panneau "Où suis-je ?" — se replie tout seul dès qu'on entre dans la
-  // zone (feedback positif immédiat, pas besoin de fermer soi-même).
+  // ✅ Panneau "Ma position" — même comportement que "Tester en marchant"
+  // côté paramètres entreprise : un utilitaire que l'employé ouvre/ferme
+  // lui-même à tout moment, jamais fermé automatiquement à sa place.
   const [showRadar, setShowRadar] = useState(false);
-  useEffect(() => {
-    if (geoState.allowed && showRadar) setShowRadar(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoState.allowed]);
-  useEffect(() => {
-    const allowedRadius = companySettings?.allowedRadius || 100;
-    const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
-    if (showRadar && overshoot > RADAR_MAX_OVERSHOOT_METERS) setShowRadar(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoState.distance, showRadar]);
 
   // ✅ Message encourageant, mis à jour par palier de ~8m plutôt qu'à
   // chaque relevé GPS (sinon ça clignoterait avec le bruit naturel du GPS).
@@ -778,20 +769,12 @@ export default function AttendanceCheckInPage() {
                 const allowedRadius = companySettings?.allowedRadius || 100;
                 const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
                 const isTooFar = overshoot > RADAR_MAX_OVERSHOOT_METERS;
+                // ✅ Disponible en permanence tant que le GPS fonctionne —
+                // même logique que "Tester en marchant" côté paramètres
+                // entreprise : l'employé peut vérifier sa position à tout
+                // moment, pas seulement quand il est hors zone.
                 const showRadarButton =
-                  status === 'idle' && !geoState.allowed && !geoState.error && !isTooFar;
-
-                // Trop loin : message sobre, pas de radar/ton motivant
-                if (status === 'idle' && !geoState.allowed && !geoState.error && isTooFar) {
-                  return (
-                    <div className="mb-6 -mt-2 text-center">
-                      <p className="text-xs text-slate-400">
-                        Vous semblez loin de la zone autorisée (~{Math.round(geoState.distance ?? 0)}m).
-                        Si vous pensez être au bon endroit, contactez votre RH — sinon, le pointage manuel reste disponible.
-                      </p>
-                    </div>
-                  );
-                }
+                  (status === 'idle' || status === 'working') && !geoState.error;
 
                 if (!showRadarButton && !showRadar) return null;
 
@@ -804,13 +787,14 @@ export default function AttendanceCheckInPage() {
                           onClick={() => setShowRadar(true)}
                           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition-colors"
                         >
-                          <MapPin size={14} /> Où suis-je par rapport à la zone ?
+                          <MapPin size={14} /> Ma position par rapport à la zone
                         </button>
                       </div>
                     ) : (
                       <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700">
                         <GeofenceRadiusPreview
                           radius={allowedRadius}
+                          showReliabilityMessage={false}
                           userOffset={
                             geoState.latitude && geoState.longitude && companySettings?.latitude && companySettings?.longitude
                               ? computeMetersOffset(
@@ -822,9 +806,16 @@ export default function AttendanceCheckInPage() {
                         />
                         {/* ✅ Message encourageant — purement motivant, sans
                             aucun rôle dans la décision d'autorisation */}
-                        {motivMsg && (
+                        {!geoState.allowed && !isTooFar && motivMsg && (
                           <p className="mt-3 text-center text-sm font-medium text-emerald-300 animate-pulse">
                             {motivMsg}
+                          </p>
+                        )}
+                        {/* Trop loin : message sobre, à la place du ton motivant */}
+                        {!geoState.allowed && isTooFar && (
+                          <p className="mt-3 text-center text-xs text-slate-400">
+                            Vous semblez loin de la zone autorisée (~{Math.round(geoState.distance ?? 0)}m).
+                            Si vous pensez être au bon endroit, contactez votre RH — sinon, le pointage manuel reste disponible.
                           </p>
                         )}
                         <button

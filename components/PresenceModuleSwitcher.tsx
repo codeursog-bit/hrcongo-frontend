@@ -45,8 +45,8 @@ export default function PresenceModuleSwitcher() {
             href={bp(m.href)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all shrink-0 border ${
               active
-                ? 'bg-sky-500 border-sky-500 text-white'
-                : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                ? 'bg-emerald-500 border-emerald-500 text-white'
+                : 'bg-transparent border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
             <Icon size={12} /> {m.label}

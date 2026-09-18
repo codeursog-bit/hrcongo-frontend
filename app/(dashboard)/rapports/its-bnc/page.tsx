@@ -1,259 +1,412 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Loader2, RefreshCw, Info, Building2,
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { 
+  ArrowLeft, Calendar, Download, Printer, DollarSign, Wallet, 
+  Shield, TrendingUp, TrendingDown, Users, Building2, Loader2,
+  ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle,
+
+  ClipboardList, LayoutDashboard,UsersRound,
+  UmbrellaOff,BookOpen,UserCircle,BarChart3
 } from 'lucide-react';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  BarChart, Bar, PieChart, Pie, Cell, Legend
+} from 'recharts';
 import { api } from '@/services/api';
+ import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
+import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 
-// ─── TYPES (miroir de FiscalBreakdown côté backend) ─────────────────────────
-interface FiscalMonthlyAmount {
-  month: number;
-  its: number;
-  bnc10: number;
-  bnc20: number;
-}
-interface FiscalEmployeeRow {
-  employeeId: string;
-  employeeName: string;
-  matricule: string | null;
-  departmentId: string | null;
-  departmentName: string;
-  contractType: string;
-  category: 'ITS' | 'BNC_10' | 'BNC_20' | 'EXONERE' | 'AGENCE';
-  monthly: FiscalMonthlyAmount[];
-  annualIts: number;
-  annualBnc10: number;
-  annualBnc20: number;
-}
-interface FiscalDepartmentRow {
-  departmentId: string | null;
-  departmentName: string;
-  monthly: FiscalMonthlyAmount[];
-  annualIts: number;
-  annualBnc10: number;
-  annualBnc20: number;
-}
-interface FiscalBreakdown {
-  year: number;
-  employees: FiscalEmployeeRow[];
-  byDepartment: FiscalDepartmentRow[];
-  totals: {
-    monthly: FiscalMonthlyAmount[];
-    annualIts: number;
-    annualBnc10: number;
-    annualBnc20: number;
+
+const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
+
+export default function PayrollAnalyticsPage() {
+  const router = useRouter();
+  const { bp } = useBasePath();
+  const [data, setData] = useState<any>(null);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [comparison, setComparison] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const now = new Date();
+  // ✅ Même limite que Rapport Complet : /reports/payroll et
+  // /reports/departments n'ont pas encore de paramètre de période côté
+  // backend — seul /reports/comparison en profite pour l'instant.
+  const [period, setPeriod] = useState<PeriodValue>({
+    mode: 'MOIS',
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+  });
+  const currentMonth = period.month;
+  const currentYear = period.year;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [payrollRes, deptRes, compRes] = await Promise.all([
+          api.get('/reports/payroll'),
+          api.get('/reports/departments'),
+          api.get(`/reports/comparison?month=${currentMonth}&year=${currentYear}`)
+        ]) as [any, any, any];
+        
+        setData(payrollRes);
+        setDepartments(Array.isArray(deptRes) ? deptRes : []);
+        setComparison(compRes);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [currentMonth, currentYear]);
+
+  const formatCurrency = (val: number) => {
+    if (!val) return '0 FCFA';
+    return val.toLocaleString('fr-FR') + ' FCFA';
   };
-}
 
-type ViewMode = 'ITS' | 'BNC_10' | 'BNC_20';
-
-const MOIS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-
-const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n || 0));
-
-const CATEGORY_LABEL: Record<string, string> = {
-  ITS: 'ITS (barème progressif)',
-  BNC_10: 'BNC 10% — prestataire résident',
-  BNC_20: 'BNC 20% — prestataire non-résident',
-  EXONERE: 'Exonéré (stage)',
-  AGENCE: 'Géré par l\u2019agence (intérim)',
-};
-
-function amountFor(row: { monthly: FiscalMonthlyAmount[] }, view: ViewMode, month: number) {
-  const slot = row.monthly[month - 1];
-  if (!slot) return 0;
-  if (view === 'ITS') return slot.its;
-  if (view === 'BNC_10') return slot.bnc10;
-  return slot.bnc20;
-}
-function annualFor(row: { annualIts: number; annualBnc10: number; annualBnc20: number }, view: ViewMode) {
-  if (view === 'ITS') return row.annualIts;
-  if (view === 'BNC_10') return row.annualBnc10;
-  return row.annualBnc20;
-}
-
-export default function ItsBncPage() {
-  const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState<number>(currentYear);
-  const [view, setView] = useState<ViewMode>('ITS');
-  const [data, setData] = useState<FiscalBreakdown | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.get<FiscalBreakdown>(`/reports/fiscal-breakdown?year=${year}`);
-      setData(res);
-    } catch (e: any) {
-      setError(e?.message ?? 'Erreur de chargement');
-    } finally {
-      setLoading(false);
-    }
-  }, [year]);
-
-  useEffect(() => { load(); }, [load]);
-
-  // Seuls les salariés qui ont au moins une ligne pertinente pour la vue
-  // active sont affichés — on ne montre jamais un BNC 20% dans la vue ITS,
-  // et inversement, pour ne jamais laisser croire à un mélange.
-  const relevantCategory: Record<ViewMode, FiscalEmployeeRow['category']> = {
-    ITS: 'ITS',
-    BNC_10: 'BNC_10',
-    BNC_20: 'BNC_20',
+  const formatPercent = (val: number) => {
+    const sign = val > 0 ? '+' : '';
+    return `${sign}${val.toFixed(1)}%`;
   };
-  const employeesForView = (data?.employees ?? []).filter(
-    (e) => e.category === relevantCategory[view],
-  );
 
-  // Regroupement par département, uniquement parmi les salariés pertinents
-  const byDept = new Map<string, FiscalEmployeeRow[]>();
-  for (const e of employeesForView) {
-    const key = e.departmentId ?? '__none__';
-    const list = byDept.get(key) ?? [];
-    list.push(e);
-    byDept.set(key, list);
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin text-sky-500" size={48} />
+      </div>
+    );
   }
 
-  const totalAnnual = data ? annualFor(data.totals as any, view) : 0;
+  const variations = comparison?.variations || {};
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
-      <RapportsSubNav active="/rapports/its-bnc" />
-
-      <div className="flex items-center justify-between mt-6 mb-4 flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Répartition ITS / BNC</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Par salarié, par mois et par département — les trois impôts ne sont jamais additionnés entre eux.
-          </p>
+    <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
+      
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.push(bp('/rapports'))} 
+            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft size={20} className="text-gray-500" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Analyse Détaillée de Paie
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400">
+              Rapports financiers et décomposition des coûts salariaux
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="border rounded-lg px-3 py-2 text-sm"
-          >
-            {Array.from({ length: 6 }, (_, i) => currentYear - i).map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <button
-            onClick={load}
-            className="flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
-          >
-            <RefreshCw className="w-4 h-4" /> Actualiser
+
+        <div className="flex items-center gap-3">
+          <PeriodSelector value={period} onChange={setPeriod} modes={['MOIS']} />
+          <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+            <Download size={18} />
+            Exporter
+          </button>
+          <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+            <Printer size={18} />
+            Imprimer
           </button>
         </div>
       </div>
 
-      {/* Bandeau de contrôle — comparer avant tout export */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 flex items-start gap-3">
-        <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-        <p className="text-sm text-blue-800">
-          Comparez ce total annuel avec la somme des déclarations mensuelles déjà reversées à la DGI
-          avant de déposer le DAS ou d\u2019exporter le Bulletin Annuel. Un écart n\u2019est pas forcément une
-          erreur, mais il doit être expliqué.
-        </p>
+      <RapportsSubNav active="/rapports/analyse-paie" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {data?.summary?.map((metric: any, i: number) => {
+          const icons = [Wallet, Shield, DollarSign, TrendingUp];
+          const colors = [
+            'from-sky-500 to-blue-600',
+            'from-orange-500 to-red-600',
+            'from-emerald-500 to-teal-600',
+            'from-purple-500 to-indigo-600'
+          ];
+          const Icon = icons[i % icons.length];
+
+          return (
+            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
+              
+              <div className="relative z-10">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
+                  <Icon size={24} />
+                </div>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                  {metric.label}
+                </p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  {metric.value}
+                </h3>
+                <p className="text-xs text-gray-500 mt-2">
+                  {metric.currency} {metric.sub && `· ${metric.sub}`}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Sélecteur de vue — jamais deux impôts dans le même tableau */}
-      <div className="flex gap-2 mb-4">
-        {(['ITS', 'BNC_10', 'BNC_20'] as ViewMode[]).map((v) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            className={`px-4 py-2 text-sm rounded-lg border ${
-              view === v ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            {CATEGORY_LABEL[v]}
-          </button>
-        ))}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        
+        <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Évolution Masse Salariale
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Tendance sur 6 mois (en millions FCFA)
+              </p>
+            </div>
+          </div>
+          
+          <div className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data?.trend || []}>
+                <defs>
+                  <linearGradient id="colorBrut" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="month" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: '#94a3b8', fontSize: 12 }} 
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    color: '#fff', 
+                    borderRadius: '12px', 
+                    border: 'none' 
+                  }} 
+                />
+                <Legend iconType="circle" />
+                <Area 
+                  type="monotone" 
+                  name="Salaire Brut" 
+                  dataKey="brut" 
+                  stroke="#0EA5E9" 
+                  strokeWidth={3} 
+                  fillOpacity={1} 
+                  fill="url(#colorBrut)" 
+                />
+                <Area 
+                  type="monotone" 
+                  name="Salaire Net" 
+                  dataKey="net" 
+                  stroke="#10B981" 
+                  strokeWidth={3} 
+                  fillOpacity={1} 
+                  fill="url(#colorNet)" 
+                />
+                <Area 
+                  type="monotone" 
+                  name="Charges" 
+                  dataKey="charges" 
+                  stroke="#F59E0B" 
+                  strokeWidth={2} 
+                  strokeDasharray="5 5"
+                  fillOpacity={0} 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
+          <h3 className="text-lg font-bold mb-4">Comparaison vs Mois Précédent</h3>
+          
+          <div className="space-y-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-sky-100 text-xs uppercase font-bold mb-1">Masse Brute</p>
+              <p className="text-2xl font-bold">{formatCurrency(comparison?.current?.gross)}</p>
+              <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.grossPercent > 0 ? 'text-emerald-200' : 'text-red-200'}`}>
+                {variations.grossPercent > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                {formatPercent(variations.grossPercent)}
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-sky-100 text-xs uppercase font-bold mb-1">Salaire Net</p>
+              <p className="text-2xl font-bold">{formatCurrency(comparison?.current?.net)}</p>
+              <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.netPercent > 0 ? 'text-emerald-200' : 'text-red-200'}`}>
+                {variations.netPercent > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                {formatPercent(variations.netPercent)}
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-sky-100 text-xs uppercase font-bold mb-1">Coût Employeur</p>
+              <p className="text-2xl font-bold">{formatCurrency(comparison?.current?.cost)}</p>
+              <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.costPercent > 0 ? 'text-red-200' : 'text-emerald-200'}`}>
+                {variations.costPercent > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+                {formatPercent(variations.costPercent)}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <div className="flex items-start gap-2">
+              {variations.grossPercent > 5 ? (
+                <AlertCircle size={16} className="text-amber-300 mt-0.5 flex-shrink-0" />
+              ) : (
+                <CheckCircle size={16} className="text-emerald-300 mt-0.5 flex-shrink-0" />
+              )}
+              <p className="text-xs text-sky-50 leading-relaxed">
+                {variations.grossPercent > 5 
+                  ? "Hausse importante détectée. Vérifiez les heures supplémentaires et nouvelles embauches."
+                  : "Évolution dans la normale. Pas d'alerte particulière."
+                }
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" /> Chargement...
-        </div>
-      ) : error ? (
-        <div className="text-red-600 text-sm py-8">{error}</div>
-      ) : employeesForView.length === 0 ? (
-        <div className="text-gray-400 text-sm py-12 text-center border rounded-xl">
-          Aucun salarié dans la catégorie « {CATEGORY_LABEL[view]} » pour {year}.
-        </div>
-      ) : (
-        <>
-          <div className="text-sm text-gray-600 mb-3">
-            Total annuel {CATEGORY_LABEL[view]} : <span className="font-semibold text-gray-900">{fmt(totalAnnual)} FCFA</span>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Building2 size={20} className="text-sky-500" />
+              Répartition par Département
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Masse salariale et charges détaillées
+            </p>
           </div>
+        </div>
 
-          <div className="overflow-x-auto border rounded-xl">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left px-3 py-2 font-medium text-gray-600 sticky left-0 bg-gray-50">Salarié</th>
-                  {MOIS.map((m) => (
-                    <th key={m} className="text-right px-2 py-2 font-medium text-gray-500 whitespace-nowrap">{m}</th>
-                  ))}
-                  <th className="text-right px-3 py-2 font-semibold text-gray-700">Total {year}</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
+              <tr>
+                <th className="px-4 py-3 text-left">Département</th>
+                <th className="px-4 py-3 text-right">Effectif</th>
+                <th className="px-4 py-3 text-right">Salaire Brut</th>
+                <th className="px-4 py-3 text-right">Salaire Net</th>
+                <th className="px-4 py-3 text-right">CNSS Employeur</th>
+                <th className="px-4 py-3 text-right">ITS</th>
+                <th className="px-4 py-3 text-right">Coût Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {departments?.map((dept: any, idx: number) => (
+                <tr key={dept.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
+                        style={{ backgroundColor: dept.color || COLORS[idx % COLORS.length] }}
+                      >
+                        {dept.name[0]}
+                      </div>
+                      <span className="font-medium text-gray-900 dark:text-white">{dept.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">
+                    {dept.headcount}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-gray-900 dark:text-white">
+                    {formatCurrency(dept.totalGross)}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-emerald-600">
+                    {formatCurrency(dept.totalNet)}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-orange-600">
+                    {formatCurrency(dept.totalCNSS)}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-purple-600">
+                    {formatCurrency(dept.totalItsReel ?? dept.totalITS)}
+                    {(dept.totalBnc10 > 0 || dept.totalBnc20 > 0) && (
+                      <div className="text-[11px] font-normal text-gray-400 mt-0.5">
+                        + BNC {formatCurrency((dept.totalBnc10 || 0) + (dept.totalBnc20 || 0))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-sky-600">
+                    {formatCurrency(dept.totalEmployerCost)}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {Array.from(byDept.entries()).map(([deptKey, rows]) => {
-                  const deptName = rows[0]?.departmentName ?? 'Sans département';
-                  const deptTotal = rows.reduce((s, r) => s + annualFor(r, view), 0);
-                  return (
-                    <React.Fragment key={deptKey}>
-                      <tr className="bg-gray-100">
-                        <td colSpan={14} className="px-3 py-1.5 text-xs font-semibold text-gray-500 flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5" /> {deptName}
-                          <span className="ml-2 text-gray-400 font-normal">
-                            ({fmt(deptTotal)} FCFA sur l\u2019année)
-                          </span>
-                        </td>
-                      </tr>
-                      {rows.map((r) => (
-                        <tr key={r.employeeId} className="border-b last:border-0 hover:bg-gray-50">
-                          <td className="px-3 py-2 sticky left-0 bg-white">
-                            <div className="font-medium text-gray-900">{r.employeeName}</div>
-                            {r.matricule && <div className="text-xs text-gray-400">{r.matricule}</div>}
-                          </td>
-                          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
-                            const amount = amountFor(r, view, m);
-                            return (
-                              <td key={m} className="text-right px-2 py-2 text-gray-700">
-                                {amount > 0 ? fmt(amount) : <span className="text-gray-300">—</span>}
-                              </td>
-                            );
-                          })}
-                          <td className="text-right px-3 py-2 font-semibold text-gray-900">
-                            {fmt(annualFor(r, view))}
-                          </td>
-                        </tr>
-                      ))}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="bg-gray-900 text-white">
-                  <td className="px-3 py-2 font-semibold sticky left-0 bg-gray-900">TOTAL {CATEGORY_LABEL[view]}</td>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                    <td key={m} className="text-right px-2 py-2 font-medium">
-                      {fmt(amountFor({ monthly: data!.totals.monthly } as any, view, m))}
-                    </td>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            Répartition Masse Salariale
+          </h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={departments?.map(d => ({ name: d.name, value: d.totalGross }))}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={(entry) => `${entry.name}: ${(entry.value / 1000000).toFixed(1)}M`}
+                >
+                  {departments?.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
-                  <td className="text-right px-3 py-2 font-bold">{fmt(totalAnnual)}</td>
-                </tr>
-              </tfoot>
-            </table>
+                </Pie>
+                <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            Charges Patronales par Département
+          </h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={departments || []}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                <Legend />
+                <Bar dataKey="totalCNSS" name="CNSS" fill="#F59E0B" />
+                <Bar dataKey="totalItsReel" name="ITS" fill="#8B5CF6" />
+                <Bar dataKey="totalBnc10" name="BNC 10%" fill="#FBBF24" stackId="bnc" />
+                <Bar dataKey="totalBnc20" name="BNC 20%" fill="#EA580C" stackId="bnc" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ ÉVOLUTION PLURIANNUELLE (en bas de page) ══════════════════════ */}
+      <YearlyEvolutionPanel />
     </div>
   );
 }

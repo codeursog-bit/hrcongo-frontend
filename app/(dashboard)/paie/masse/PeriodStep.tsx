@@ -24,7 +24,7 @@ export default function PeriodStep({ month, year, workDays, onMonthChange, onYea
       className="max-w-lg mx-auto space-y-8"
     >
       <div className="text-center mb-8">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Période de Paie</h2>
+        <h2 className="text-xl font-bold text-[var(--text)]">Période de Paie</h2>
         <p className="text-gray-500 text-sm mt-1">Sélectionnez le mois de référence.</p>
       </div>
       
@@ -34,7 +34,7 @@ export default function PeriodStep({ month, year, workDays, onMonthChange, onYea
           <select 
             value={month} 
             onChange={e => onMonthChange(e.target.value)} 
-            className="w-full p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-2xl font-bold text-lg focus:ring-2 focus:ring-sky-500/20 outline-none"
+            className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl font-bold text-lg focus:ring-2 focus:ring-emerald-500/20 outline-none"
           >
             {MONTHS.map(m => <option key={m}>{m}</option>)}
           </select>
@@ -44,7 +44,7 @@ export default function PeriodStep({ month, year, workDays, onMonthChange, onYea
           <select 
             value={year} 
             onChange={e => onYearChange(Number(e.target.value))} 
-            className="w-full p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-2xl font-bold text-lg focus:ring-2 focus:ring-sky-500/20 outline-none"
+            className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl font-bold text-lg focus:ring-2 focus:ring-emerald-500/20 outline-none"
           >
             <option>2024</option>
             <option>2025</option>
@@ -57,7 +57,7 @@ export default function PeriodStep({ month, year, workDays, onMonthChange, onYea
             type="number" 
             value={workDays} 
             onChange={e => onWorkDaysChange(Number(e.target.value))} 
-            className="w-full p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-2xl font-bold text-lg focus:ring-2 focus:ring-sky-500/20 outline-none"
+            className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl font-bold text-lg focus:ring-2 focus:ring-emerald-500/20 outline-none"
           />
         </div>
       </div>

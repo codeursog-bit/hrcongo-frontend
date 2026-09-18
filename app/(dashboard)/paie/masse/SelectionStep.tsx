@@ -34,20 +34,20 @@ export default function SelectionStep({ employees, selectedIds, onSelectionChang
         {/* Liste employés */}
         <div className="lg:col-span-2 flex flex-col min-h-0">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-gray-900 dark:text-white">
+            <h3 className="font-bold text-[var(--text)]">
               Employés ({selectedIds.length}/{employees.length})
             </h3>
             <button
               onClick={() => onSelectionChange(
                 selectedIds.length === employees.length ? [] : employees.map(e => e.id)
               )}
-              className="text-sm font-bold text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/20 px-3 py-1 rounded-lg"
+              className="text-sm font-bold text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-3 py-1 rounded-lg"
             >
               {selectedIds.length === employees.length ? 'Tout désélectionner' : 'Tout sélectionner'}
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 p-2 space-y-1 max-h-[400px]">
+          <div className="flex-1 overflow-y-auto border border-[var(--border)] rounded-2xl bg-[var(--surface-2)]/50 p-2 space-y-1 max-h-[400px]">
             {employees.map(emp => (
               <div
                 key={emp.id}
@@ -58,18 +58,18 @@ export default function SelectionStep({ employees, selectedIds, onSelectionChang
                 )}
                 className={`p-3 rounded-xl flex items-center justify-between cursor-pointer border transition-all ${
                   selectedIds.includes(emp.id)
-                    ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800'
-                    : 'bg-white dark:bg-gray-800 border-transparent hover:border-gray-200'
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+                    : 'bg-[var(--surface)] border-transparent hover:border-[var(--border)]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                    selectedIds.includes(emp.id) ? 'bg-sky-500 border-sky-500' : 'border-gray-300'
+                    selectedIds.includes(emp.id) ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300'
                   }`}>
                     {selectedIds.includes(emp.id) && <Check size={12} className="text-white" />}
                   </div>
                   <div>
-                    <p className="font-bold text-sm text-gray-900 dark:text-white">
+                    <p className="font-bold text-sm text-[var(--text)]">
                       {emp.firstName} {emp.lastName}
                     </p>
                     {emp.position && <p className="text-xs text-gray-400">{emp.position}</p>}
@@ -85,11 +85,11 @@ export default function SelectionStep({ employees, selectedIds, onSelectionChang
 
         {/* Estimation — données du back */}
         <div className="lg:col-span-1">
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-black rounded-3xl p-6 text-white shadow-xl sticky top-0">
+          <div className="bg-gray-900 dark:bg-black rounded-3xl p-6 text-white shadow-xl sticky top-0">
             <div className="flex items-center gap-2 mb-6 opacity-80">
               <Wallet size={20} />
               <span className="text-sm font-bold uppercase tracking-wider">Estimation</span>
-              {isLoadingEstimation && <Loader2 size={14} className="animate-spin ml-auto text-sky-400" />}
+              {isLoadingEstimation && <Loader2 size={14} className="animate-spin ml-auto text-emerald-400" />}
             </div>
 
             <div className={`space-y-4 mb-8 transition-opacity ${isLoadingEstimation ? 'opacity-40' : 'opacity-100'}`}>

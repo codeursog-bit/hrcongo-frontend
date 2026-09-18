@@ -145,7 +145,7 @@ const navItems: NavItem[] = [
   },
   {
     id: 'mes_conges',
-    label: 'Mes Demandes',
+    label: 'Mes congés',
     icon: FolderHeart,
     path: '/conges/mon-espace',
     allowedRoles: ['EMPLOYEE'],

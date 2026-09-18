@@ -25,6 +25,12 @@ interface GeofenceRadiusPreviewProps {
   // positif). Calculée par l'appelant (pas ce composant) via
   // computeMetersOffset() ci-dessous, à partir de deux couples lat/lon.
   userOffset?: { east: number; north: number } | null;
+  // ✅ Message d'analyse de fiabilité du rayon (ex: "Remontez à au moins
+  // 20m") — utile à l'admin qui configure le rayon, mais inutile (et
+  // déroutant, car il n'a pas la main dessus) pour l'employé qui consulte
+  // juste sa position. Par défaut affiché (usage admin), à désactiver
+  // explicitement côté écran employé.
+  showReliabilityMessage?: boolean;
 }
 
 // ✅ Convertit un delta lat/lon en mètres est/nord depuis un point central,
@@ -61,6 +67,7 @@ export default function GeofenceRadiusPreview({
   gpsUncertainty = 10,
   siteName,
   userOffset,
+  showReliabilityMessage = true,
 }: GeofenceRadiusPreviewProps) {
   const safeRadius = Math.max(1, radius || 1);
 
@@ -132,7 +139,7 @@ export default function GeofenceRadiusPreview({
     inside: boolean; clamped: boolean;
   } | null = null;
 
-  if (userOffset && Number.isFinite(userOffset.east) && Number.isFinite(userOffset.north)) {
+  if (userOffset) {
     const distance = Math.sqrt(userOffset.east ** 2 + userOffset.north ** 2);
     const direction = compassLabel(userOffset.east, userOffset.north);
     const inside = distance <= safeRadius;
@@ -267,11 +274,11 @@ export default function GeofenceRadiusPreview({
         <p className={`mt-2 text-xs font-medium text-center ${userPoint.inside ? 'text-emerald-600 dark:text-emerald-400' : 'text-violet-600 dark:text-violet-400'}`}>
           {userPoint.inside
             ? `✅ Vous êtes dans la zone (à ${Math.round(userPoint.distance)}m du centre).`
-            : `Vous êtes à ${Math.round(userPoint.distance)}m au ${(userPoint.direction || '').toLowerCase()} du centre — avancez vers le ${(OPPOSITE[userPoint.direction] || '').toLowerCase()}.`}
+            : `Vous êtes à ${Math.round(userPoint.distance)}m au ${userPoint.direction.toLowerCase()} du centre — avancez vers le ${OPPOSITE[userPoint.direction].toLowerCase()}.`}
         </p>
       )}
 
-      {reliability.message && (
+      {showReliabilityMessage && reliability.message && (
         <p
           className="mt-2 text-[11px] text-center max-w-[260px]"
           style={{ color: reliability.color }}

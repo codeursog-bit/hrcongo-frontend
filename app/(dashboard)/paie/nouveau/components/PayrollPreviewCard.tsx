@@ -47,27 +47,26 @@ export default function PayrollPreviewCard({
     <AnimatePresence mode="wait">
       {calculation ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden sticky top-6">
+          className="bg-[var(--surface)] rounded-2xl shadow-xl border border-[var(--border)] overflow-hidden sticky top-6">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-gray-900 to-slate-800 text-white p-6 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 80% 20%, #0ea5e9 0%, transparent 60%)'}}/>
+          <div className="bg-gray-900 text-white p-6 relative overflow-hidden">
             <h3 className="font-bold text-lg relative z-10">Aperçu du Bulletin</h3>
             <p className="text-gray-400 text-sm relative z-10 capitalize">{month} {year}</p>
           </div>
           
           <div className="p-6 space-y-3">
             {/* Salaire base */}
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-              <span className="text-gray-600 dark:text-gray-400 text-sm">Salaire de base</span>
-              <span className="font-mono font-bold text-gray-900 dark:text-white">{fmt(calculation.baseSalary)} F</span>
+            <div className="flex justify-between items-center py-2 border-b border-[var(--border)]">
+              <span className="text-[var(--text-muted)] text-sm">Salaire de base</span>
+              <span className="font-mono font-bold text-[var(--text)]">{fmt(calculation.baseSalary)} F</span>
             </div>
 
             {/* ✅ 4 lignes HS distinctes */}
             {(calculation.overtimeAmount10 ?? 0) > 0 && (
               <div className="flex justify-between items-center py-1.5">
                 <div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">HS +10%</span>
+                  <span className="text-[var(--text-muted)] text-sm">HS +10%</span>
                   <p className="text-xs text-amber-600">{overtime10}h · 5 premières heures</p>
                 </div>
                 <span className="font-mono font-bold text-amber-600">+{fmt(calculation.overtimeAmount10)} F</span>
@@ -76,27 +75,27 @@ export default function PayrollPreviewCard({
             {(calculation.overtimeAmount25 ?? 0) > 0 && (
               <div className="flex justify-between items-center py-1.5">
                 <div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">HS +25%</span>
-                  <p className="text-xs text-orange-600">{overtime25}h · heures suivantes</p>
+                  <span className="text-[var(--text-muted)] text-sm">HS +25%</span>
+                  <p className="text-xs text-amber-600">{overtime25}h · heures suivantes</p>
                 </div>
-                <span className="font-mono font-bold text-orange-600">+{fmt(calculation.overtimeAmount25)} F</span>
+                <span className="font-mono font-bold text-amber-600">+{fmt(calculation.overtimeAmount25)} F</span>
               </div>
             )}
             {(calculation.overtimeAmount50 ?? 0) > 0 && (
               <div className="flex justify-between items-center py-1.5">
                 <div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-1">
-                    HS +50% <Moon size={11} className="text-purple-500" />
+                  <span className="text-[var(--text-muted)] text-sm flex items-center gap-1">
+                    HS +50% <Moon size={11} className="text-amber-500" />
                   </span>
-                  <p className="text-xs text-purple-600">{overtime50}h · nuit repos/férié</p>
+                  <p className="text-xs text-amber-600">{overtime50}h · nuit repos/férié</p>
                 </div>
-                <span className="font-mono font-bold text-purple-600">+{fmt(calculation.overtimeAmount50)} F</span>
+                <span className="font-mono font-bold text-amber-600">+{fmt(calculation.overtimeAmount50)} F</span>
               </div>
             )}
             {(calculation.overtimeAmount100 ?? 0) > 0 && (
               <div className="flex justify-between items-center py-1.5">
                 <div>
-                  <span className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-1">
+                  <span className="text-[var(--text-muted)] text-sm flex items-center gap-1">
                     HS +100% <Moon size={11} className="text-red-500" />
                   </span>
                   <p className="text-xs text-red-600">{overtime100}h · nuit dimanche/férié</p>
@@ -105,7 +104,7 @@ export default function PayrollPreviewCard({
               </div>
             )}
             {calculation.overtimeTotal > 0 && (
-              <div className="flex justify-between items-center text-xs text-gray-500 pl-2 border-b border-gray-100 dark:border-gray-700 pb-2">
+              <div className="flex justify-between items-center text-xs text-[var(--text-muted)] pl-2 border-b border-[var(--border)] pb-2">
                 <span>Sous-total heures sup.</span>
                 <span className="font-mono font-bold text-emerald-600">+{fmt(calculation.overtimeTotal)} F</span>
               </div>
@@ -113,12 +112,12 @@ export default function PayrollPreviewCard({
 
             {/* Primes */}
             {calculation.bonusesTotal > 0 && (
-              <div className="py-2 border-b border-gray-100 dark:border-gray-700">
+              <div className="py-2 border-b border-[var(--border)]">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-gray-600 dark:text-gray-400 text-sm flex items-center gap-1">
-                    <Gift size={13} className="text-cyan-500" /> Primes
+                  <span className="text-[var(--text-muted)] text-sm flex items-center gap-1">
+                    <Gift size={13} className="text-emerald-500" /> Primes
                   </span>
-                  <span className="font-mono font-bold text-cyan-600">+{fmt(calculation.bonusesTotal)} F</span>
+                  <span className="font-mono font-bold text-emerald-600">+{fmt(calculation.bonusesTotal)} F</span>
                 </div>
                 {calculation.bonuses.map((b: any) => (
                   <div key={b.id} className="flex justify-between text-xs text-gray-400 pl-4">
@@ -130,9 +129,9 @@ export default function PayrollPreviewCard({
             )}
 
             {/* Brut */}
-            <div className="flex justify-between items-center py-2 bg-gray-50 dark:bg-gray-900/50 px-3 rounded-lg">
-              <span className="font-bold text-gray-800 dark:text-gray-200 text-sm">Salaire Brut</span>
-              <span className="font-mono font-bold text-gray-900 dark:text-white">{fmt(calculation.grossSalary)} F</span>
+            <div className="flex justify-between items-center py-2 bg-[var(--surface-2)] px-3 rounded-lg">
+              <span className="font-bold text-[var(--text)] text-sm">Salaire Brut</span>
+              <span className="font-mono font-bold text-[var(--text)]">{fmt(calculation.grossSalary)} F</span>
             </div>
 
             {/* Déductions */}
@@ -169,26 +168,26 @@ export default function PayrollPreviewCard({
             </div>
 
             {/* Net */}
-            <div className="pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+            <div className="pt-4 border-t-2 border-dashed border-[var(--border)]">
               <div className="flex justify-between items-end">
                 <span className="text-xs font-bold text-gray-500 uppercase">Net à Payer</span>
-                <span className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                <span className="text-3xl font-extrabold text-[var(--text)] tracking-tight">
                   {fmt(calculation.netSalary)} <span className="text-sm text-gray-400 font-normal">FCFA</span>
                 </span>
               </div>
             </div>
           </div>
           
-          <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
+          <div className="p-4 bg-[var(--surface-2)] border-t border-[var(--border)]">
             <button onClick={onSubmit}
-              className="w-full py-3 bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-600 hover:to-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02]">
               <CheckCircle2 size={18} /> Confirmer & Enregistrer
             </button>
           </div>
         </motion.div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-8 text-center">
+          className="bg-[var(--surface-2)] border-2 border-dashed border-[var(--border)] rounded-2xl min-h-[300px] flex flex-col items-center justify-center text-gray-400 p-8 text-center">
           <Calculator size={48} className="mb-4 opacity-20" />
           <p className="text-sm">Sélectionnez un employé et lancez le calcul.</p>
         </motion.div>
@@ -196,4 +195,3 @@ export default function PayrollPreviewCard({
     </AnimatePresence>
   );
 }
-

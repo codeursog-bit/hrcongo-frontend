@@ -18,6 +18,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
+import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 const COLORS = {
   primary: '#0EA5E9',
   success: '#10B981',
@@ -33,8 +34,20 @@ export default function CompleteHRReport() {
   const router = useRouter();
   const { bp } = useBasePath();
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
+
+  // ✅ Sélecteur de période — seul le mode "Mensuel" est branché sur les
+  // données ici, car /reports/comparison et /reports/overtime n'acceptent
+  // qu'un mois+année. /reports/payroll, /reports/departments,
+  // /reports/top-employees et /reports/leaves n'ont pas encore de
+  // paramètre de période côté backend — changer le sélecteur ne les
+  // affecte pas tant qu'ils ne sont pas étendus.
+  const [period, setPeriod] = useState<PeriodValue>({
+    mode: 'MOIS',
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+  });
+  const currentMonth = period.month;
+  const currentYear = period.year;
 
   const [isLoading, setIsLoading] = useState(true);
   const [payrollData, setPayrollData] = useState<any>(null);
@@ -70,7 +83,7 @@ export default function CompleteHRReport() {
     };
 
     fetchAllData();
-  }, []);
+  }, [currentMonth, currentYear]);
 
   const formatCurrency = (val: number) => {
     if (!val) return '0 FCFA';
@@ -120,12 +133,13 @@ export default function CompleteHRReport() {
               Rapport RH Complet
             </h1>
             <p className="text-gray-500 dark:text-gray-400">
-              Période : {now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              Période : {new Date(currentYear, currentMonth - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          <PeriodSelector value={period} onChange={setPeriod} modes={['MOIS']} />
           <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
             <Download size={18} />
             Exporter PDF
@@ -269,7 +283,15 @@ export default function CompleteHRReport() {
 
                   <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
                     <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">ITS Collecté</p>
-                    <p className="text-lg font-bold text-purple-600">{formatCurrency(dept.totalITS)}</p>
+                    <p className="text-lg font-bold text-purple-600">{formatCurrency(dept.totalItsReel ?? dept.totalITS)}</p>
+                    {(dept.totalBnc10 > 0 || dept.totalBnc20 > 0) && (
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        + BNC : {formatCurrency((dept.totalBnc10 || 0) + (dept.totalBnc20 || 0))}
+                        {dept.totalBnc10 > 0 && ` (${formatCurrency(dept.totalBnc10)} à 10%)`}
+                        {dept.totalBnc20 > 0 && ` (${formatCurrency(dept.totalBnc20)} à 20%)`}
+                        {' — prestataires, jamais additionné à l\u2019ITS'}
+                      </p>
+                    )}
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
