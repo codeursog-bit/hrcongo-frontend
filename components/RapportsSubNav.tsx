@@ -46,7 +46,8 @@ const MORE = [
   { href: '/rapports/analyse-conges',      label: 'Congés',               Icon: UmbrellaOff },
   { href: '/rapports/observatoire-conges', label: 'Observatoire congés',  Icon: UmbrellaOff },
   { href: '/rapports/absences',            label: 'Absences',             Icon: CalendarDays },
-  { href: '/rapports/comptabilite',        label: 'Comptabilité',         Icon: BookOpen },
+  { href: '/rapports/analyse-paie',        label: 'analyse-paie',         Icon: BookOpen },
+  
 ];
 
 export default function RapportsSubNav({ active }: { active: string }) {

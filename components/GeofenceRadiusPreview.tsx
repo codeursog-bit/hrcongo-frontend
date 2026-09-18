@@ -139,7 +139,7 @@ export default function GeofenceRadiusPreview({
     inside: boolean; clamped: boolean;
   } | null = null;
 
-  if (userOffset) {
+  if (userOffset && Number.isFinite(userOffset.east) && Number.isFinite(userOffset.north)) {
     const distance = Math.sqrt(userOffset.east ** 2 + userOffset.north ** 2);
     const direction = compassLabel(userOffset.east, userOffset.north);
     const inside = distance <= safeRadius;
@@ -274,7 +274,7 @@ export default function GeofenceRadiusPreview({
         <p className={`mt-2 text-xs font-medium text-center ${userPoint.inside ? 'text-emerald-600 dark:text-emerald-400' : 'text-violet-600 dark:text-violet-400'}`}>
           {userPoint.inside
             ? `✅ Vous êtes dans la zone (à ${Math.round(userPoint.distance)}m du centre).`
-            : `Vous êtes à ${Math.round(userPoint.distance)}m au ${userPoint.direction.toLowerCase()} du centre — avancez vers le ${OPPOSITE[userPoint.direction].toLowerCase()}.`}
+            : `Vous êtes à ${Math.round(userPoint.distance)}m au ${(userPoint.direction || '').toLowerCase()} du centre — avancez vers le ${(OPPOSITE[userPoint.direction] || '').toLowerCase()}.`}
         </p>
       )}
 

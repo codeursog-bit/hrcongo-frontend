@@ -18,6 +18,7 @@ import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
+import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
@@ -31,8 +32,16 @@ export default function PayrollAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const now = new Date();
-  const currentMonth = now.getMonth() + 1;
-  const currentYear = now.getFullYear();
+  // ✅ Même limite que Rapport Complet : /reports/payroll et
+  // /reports/departments n'ont pas encore de paramètre de période côté
+  // backend — seul /reports/comparison en profite pour l'instant.
+  const [period, setPeriod] = useState<PeriodValue>({
+    mode: 'MOIS',
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+  });
+  const currentMonth = period.month;
+  const currentYear = period.year;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +62,7 @@ export default function PayrollAnalyticsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [currentMonth, currentYear]);
 
   const formatCurrency = (val: number) => {
     if (!val) return '0 FCFA';
@@ -97,6 +106,7 @@ export default function PayrollAnalyticsPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <PeriodSelector value={period} onChange={setPeriod} modes={['MOIS']} />
           <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
             <Download size={18} />
             Exporter
@@ -327,7 +337,12 @@ export default function PayrollAnalyticsPage() {
                     {formatCurrency(dept.totalCNSS)}
                   </td>
                   <td className="px-4 py-4 text-right font-bold text-purple-600">
-                    {formatCurrency(dept.totalITS)}
+                    {formatCurrency(dept.totalItsReel ?? dept.totalITS)}
+                    {(dept.totalBnc10 > 0 || dept.totalBnc20 > 0) && (
+                      <div className="text-[11px] font-normal text-gray-400 mt-0.5">
+                        + BNC {formatCurrency((dept.totalBnc10 || 0) + (dept.totalBnc20 || 0))}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-right font-bold text-sky-600">
                     {formatCurrency(dept.totalEmployerCost)}
@@ -381,7 +396,9 @@ export default function PayrollAnalyticsPage() {
                 <Tooltip formatter={(value: any) => formatCurrency(value)} />
                 <Legend />
                 <Bar dataKey="totalCNSS" name="CNSS" fill="#F59E0B" />
-                <Bar dataKey="totalITS" name="ITS" fill="#8B5CF6" />
+                <Bar dataKey="totalItsReel" name="ITS" fill="#8B5CF6" />
+                <Bar dataKey="totalBnc10" name="BNC 10%" fill="#FBBF24" stackId="bnc" />
+                <Bar dataKey="totalBnc20" name="BNC 20%" fill="#EA580C" stackId="bnc" />
               </BarChart>
             </ResponsiveContainer>
           </div>

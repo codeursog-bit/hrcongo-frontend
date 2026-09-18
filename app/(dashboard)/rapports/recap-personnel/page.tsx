@@ -27,6 +27,10 @@ interface RecapRow {
   salBrut: number;
   cnss: number;
   irpp: number;
+  // ✅ Précise si "irpp" est un vrai ITS ou une retenue BNC (10%/20%,
+  // prestataires) — jamais additionner sans regarder ce label, voir le
+  // badge affiché à côté du montant.
+  fiscalCategory: 'ITS' | 'BNC_10' | 'BNC_20' | 'EXONERE' | 'AGENCE' | 'MIXTE';
   reste1: number;
   indemnites: Record<string, number>;
   sousTotal: number;
@@ -70,6 +74,27 @@ function fmt(val: number | undefined | null) {
   const n = Number(val ?? 0);
   if (!n) return '—';
   return n.toLocaleString('fr-FR');
+}
+
+// ✅ Badge affiché à côté de tout montant "irpp" — pour ne jamais laisser
+// croire qu'un ITS et une retenue BNC (10%/20%) sont la même chose. Voir
+// classifyFiscalCategory côté backend (payroll-recap.service.ts).
+const FISCAL_BADGE: Record<RecapRow['fiscalCategory'], { label: string; className: string }> = {
+  ITS: { label: 'ITS', className: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  BNC_10: { label: 'BNC 10%', className: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+  BNC_20: { label: 'BNC 20%', className: 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  EXONERE: { label: 'Exonéré', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+  AGENCE: { label: 'Agence', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+  MIXTE: { label: 'Mixte', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+};
+
+function FiscalBadge({ category }: { category: RecapRow['fiscalCategory'] }) {
+  const b = FISCAL_BADGE[category] ?? FISCAL_BADGE.MIXTE;
+  return (
+    <span className={`ml-1.5 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium align-middle ${b.className}`}>
+      {b.label}
+    </span>
+  );
 }
 
 // Couleurs de ligne selon le statut du mois — bleu pour congé (comme dans
@@ -394,7 +419,10 @@ export default function RecapPersonnelPage() {
                           <>
                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.salBrut)}</td>
                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.cnss)}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.irpp)}</td>
+                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                              {fmt(r.irpp)}
+                              <FiscalBadge category={r.fiscalCategory} />
+                            </td>
                             <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.reste1)}</td>
                             {indemniteColumns.map((c) => (
                               <td key={c.key} className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400">
@@ -420,7 +448,10 @@ export default function RecapPersonnelPage() {
                       <td className="px-4 py-3 sticky left-0 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white">TOTAL</td>
                       <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.salBrut)}</td>
                       <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.cnss)}</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.irpp)}</td>
+                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white whitespace-nowrap">
+                        {fmt(totals.irpp)}
+                        <FiscalBadge category="MIXTE" />
+                      </td>
                       <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.reste1)}</td>
                       {indemniteColumns.map((c) => (
                         <td key={c.key} className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400">
