@@ -435,7 +435,10 @@ export default function AttendanceCheckInPage() {
       navigator.geolocation.getCurrentPosition(
         handlePositionSuccess,
         () => { /* silencieux : watchPosition/erreur initiale restent la source d'erreur affichée */ },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+        // ✅ maximumAge: 0 — on interdit explicitement au navigateur de
+        // recycler une position déjà en cache : chaque sondage force une
+        // vraie relecture du capteur GPS.
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
       );
     }, 4000);
 
