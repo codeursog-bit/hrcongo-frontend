@@ -1,207 +1,3 @@
-// 'use client';
-
-// import React, { useState, useEffect } from 'react';
-// import Link from 'next/link';
-// import { useRouter } from 'next/navigation';
-// import { 
-//   ArrowLeft, Loader2, User, Briefcase, CheckCircle2, XCircle, 
-//   Clock, AlertTriangle, Eye, FileText, LucideIcon
-// } from 'lucide-react';
-// import { motion } from 'framer-motion';
-// import { api } from '@/services/api';
-
-// type ManualColumnId = 'APPLIED' | 'SCREENING' | 'INTERVIEW' | 'OFFER' | 'HIRED' | 'REJECTED';
-
-// interface JobOffer {
-//   id: string;
-//   title: string;
-//   processingMode: 'MANUAL';
-// }
-
-// interface Candidate {
-//   id: string;
-//   firstName: string;
-//   lastName: string;
-//   email: string;
-//   status: ManualColumnId;
-//   jobOffer?: JobOffer;
-//   createdAt: string;
-// }
-
-// interface JobOfferWithCount extends JobOffer {
-//   _count: { candidates: number };
-// }
-
-// interface ColumnConfig {
-//   id: ManualColumnId;
-//   title: string;
-//   color: string;
-//   icon: LucideIcon;
-// }
-
-// const MANUAL_COLUMNS: ColumnConfig[] = [
-//   { id: 'APPLIED', title: 'Nouvelles', color: 'border-blue-500 bg-blue-500/5', icon: User },
-//   { id: 'SCREENING', title: 'Qualifiés', color: 'border-purple-500 bg-purple-500/5', icon: CheckCircle2 },
-//   { id: 'INTERVIEW', title: 'Entretiens', color: 'border-orange-500 bg-orange-500/5', icon: Briefcase },
-//   { id: 'OFFER', title: 'Offre', color: 'border-cyan-500 bg-cyan-500/5', icon: FileText },
-//   { id: 'HIRED', title: 'Embauché', color: 'border-emerald-500 bg-emerald-500/5', icon: CheckCircle2 },
-//   { id: 'REJECTED', title: 'Refusé', color: 'border-red-500 bg-red-500/5', icon: XCircle },
-// ];
-
-// export default function KanbanManualPage() {
-//   const router = useRouter();
-//   const [candidates, setCandidates] = useState<Candidate[]>([]);
-//   const [jobs, setJobs] = useState<JobOfferWithCount[]>([]);
-//   const [selectedJob, setSelectedJob] = useState<string | null>(null);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     fetchData();
-//   }, []);
-
-//   const fetchData = async () => {
-//     try {
-//       const [candidatesData, jobsData] = await Promise.all([
-//         api.get<Candidate[]>('/recruitment/candidates'),
-//         api.get<JobOfferWithCount[]>('/recruitment/jobs')
-//       ]);
-      
-//       // Filtrer uniquement les candidats manuels
-//       const manualCandidates = candidatesData.filter(c => 
-//         c.jobOffer?.processingMode === 'MANUAL'
-//       );
-      
-//       setCandidates(manualCandidates);
-      
-//       // Filtrer uniquement les jobs manuels
-//       const manualJobs = jobsData.filter(j => j.processingMode === 'MANUAL');
-//       setJobs(manualJobs);
-      
-//       if (manualJobs.length > 0 && !selectedJob) {
-//         setSelectedJob(manualJobs[0].id);
-//       }
-//     } catch (e) {
-//       console.error(e);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   const filteredCandidates = selectedJob 
-//     ? candidates.filter(c => c.jobOffer?.id === selectedJob)
-//     : candidates;
-
-//   const getManualColumnData = (colId: ManualColumnId) => 
-//     filteredCandidates.filter(c => c.status === colId);
-
-//   if (isLoading) {
-//     return (
-//       <div className="flex justify-center items-center min-h-screen">
-//         <Loader2 className="animate-spin text-blue-500" size={40}/>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="h-[calc(100vh-100px)] flex flex-col">
-      
-//       {/* HEADER */}
-//       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 px-4 md:px-0">
-//         <div className="flex items-center gap-4">
-//           <Link href="/recrutement" className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-//             <ArrowLeft size={20}/>
-//           </Link>
-//           <div>
-//             <div className="flex items-center gap-3 mb-1">
-//               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Pipeline Recrutement Manuel</h1>
-//             </div>
-//             <p className="text-sm text-gray-500">
-//               Gestion classique des candidatures
-//             </p>
-//           </div>
-//         </div>
-
-//         {/* Sélecteur d'offre */}
-//         <select
-//           value={selectedJob || ''}
-//           onChange={(e) => setSelectedJob(e.target.value)}
-//           className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 outline-none"
-//         >
-//           <option value="">Toutes les offres</option>
-//           {jobs.map(job => (
-//             <option key={job.id} value={job.id}>
-//               {job.title} ({job._count.candidates})
-//             </option>
-//           ))}
-//         </select>
-//       </div>
-
-//       {/* KANBAN BOARD */}
-//       <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
-//         <div className="flex gap-6 h-full px-4 md:px-0 min-w-[1600px]">
-          
-//           {MANUAL_COLUMNS.map((col) => {
-//             const colData = getManualColumnData(col.id);
-//             const Icon = col.icon;
-            
-//             return (
-//               <div key={col.id} className="flex-1 flex flex-col min-w-[280px]">
-//                 <div className={`flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-t-xl border-t-4 ${col.color} border-x border-b shadow-sm mb-3`}>
-//                   <div className="flex items-center gap-2">
-//                     <Icon size={18} className="text-gray-600 dark:text-gray-400"/>
-//                     <h3 className="font-bold text-gray-900 dark:text-white">{col.title}</h3>
-//                   </div>
-//                   <span className="bg-gray-100 dark:bg-gray-700 text-xs px-2 py-0.5 rounded-full font-bold">
-//                     {colData.length}
-//                   </span>
-//                 </div>
-                
-//                 <div className="flex-1 bg-gray-100/50 dark:bg-gray-900/50 rounded-xl p-2 overflow-y-auto space-y-3">
-//                   {colData.map((c) => (
-//                     <motion.div 
-//                       key={c.id} 
-//                       layoutId={c.id}
-//                       onClick={() => router.push(`/recrutement/manuel/candidats/${c.id}`)}
-//                       className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-500/50 transition-all"
-//                     >
-//                       <div className="flex items-center gap-3 mb-2">
-//                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-xs text-white">
-//                           {c.firstName[0]}{c.lastName[0]}
-//                         </div>
-//                         <div className="flex-1 min-w-0">
-//                           <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">
-//                             {c.firstName} {c.lastName}
-//                           </h4>
-//                           <p className="text-xs text-gray-500 truncate">{c.jobOffer?.title}</p>
-//                         </div>
-//                       </div>
-//                       <div className="flex justify-between items-center mt-3">
-//                         <div className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded">
-//                           {new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-//                         </div>
-//                         <Eye size={14} className="text-gray-400"/>
-//                       </div>
-//                     </motion.div>
-//                   ))}
-                  
-//                   {colData.length === 0 && (
-//                     <div className="h-full flex items-center justify-center">
-//                       <p className="text-gray-400 text-sm italic">Aucun candidat</p>
-//                     </div>
-//                   )}
-//                 </div>
-//               </div>
-//             );
-//           })}
-
-//         </div>
-//       </div>
-
-//     </div>
-//   );
-// }
-
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -258,18 +54,18 @@ const MANUAL_COLUMNS: {
   {
     id: 'APPLIED',
     title: 'Nouvelles candidatures',
-    borderTop: 'border-t-blue-500',
-    headerBg: 'bg-blue-50 dark:bg-blue-500/5',
-    countBg: 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400',
+    borderTop: 'border-t-emerald-500',
+    headerBg: 'bg-emerald-50 dark:bg-emerald-500/5',
+    countBg: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
     icon: User,
     emptyMsg: 'Aucune nouvelle candidature',
   },
   {
     id: 'INTERVIEW',
     title: 'En entretien',
-    borderTop: 'border-t-purple-500',
-    headerBg: 'bg-purple-50 dark:bg-purple-500/5',
-    countBg: 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400',
+    borderTop: 'border-t-amber-500',
+    headerBg: 'bg-amber-50 dark:bg-amber-500/5',
+    countBg: 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400',
     icon: Briefcase,
     emptyMsg: 'Aucun entretien planifié',
   },
@@ -350,8 +146,8 @@ function KanbanManualContent() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 className="animate-spin text-blue-500 mx-auto" size={40} />
-          <p className="text-slate-500 mt-3 text-sm">Chargement du pipeline...</p>
+          <Loader2 className="animate-spin text-emerald-500 mx-auto" size={40} />
+          <p className="text-[var(--text-muted)] mt-3 text-sm">Chargement du pipeline...</p>
         </div>
       </div>
     );
@@ -361,14 +157,14 @@ function KanbanManualContent() {
   if (candidates.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-        <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20">
-          <User size={32} className="text-blue-400" />
+        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 border border-emerald-500/20">
+          <User size={32} className="text-emerald-400" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Aucune candidature manuelle</h2>
-        <p className="text-gray-500 mb-6 text-sm">Publiez des offres en mode Manuel pour recevoir des candidatures ici.</p>
+        <h2 className="text-xl font-bold text-[var(--text)] mb-2">Aucune candidature manuelle</h2>
+        <p className="text-[var(--text-muted)] mb-6 text-sm">Publiez des offres en mode Manuel pour recevoir des candidatures ici.</p>
         <Link
           href="/recrutement"
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold flex items-center gap-2 text-sm"
+          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold flex items-center gap-2 text-sm"
         >
           <ArrowLeft size={16} /> Retour
         </Link>
@@ -384,13 +180,13 @@ function KanbanManualContent() {
         <div className="flex items-center gap-3">
           <Link
             href="/recrutement"
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Pipeline Manuel</h1>
-            <p className="text-xs text-gray-500">
+            <h1 className="text-xl font-bold text-[var(--text)]">Pipeline Manuel</h1>
+            <p className="text-xs text-[var(--text-muted)]">
               {selectedJobId
                 ? `${filteredCandidates.length} candidat(s) sur cette offre`
                 : `${filteredCandidates.length} candidat(s) — toutes les offres`}
@@ -405,12 +201,12 @@ function KanbanManualContent() {
             value={selectedJobId}
             onChange={setSelectedJobId}
             totalCount={candidates.length}
-            theme="light"
+            
           />
 
           <Link
             href="/recrutement/entretiens"
-            className="px-3 py-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
+            className="px-3 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors"
           >
             <Calendar size={14} /> Entretiens
           </Link>
@@ -431,11 +227,11 @@ function KanbanManualContent() {
                 <div className={`
                   flex items-center justify-between px-4 py-3 mb-2
                   ${col.headerBg} rounded-t-2xl border-t-[3px] ${col.borderTop}
-                  border-x border-b border-gray-200 dark:border-gray-700/50
+                  border-x border-b border-[var(--border)]/50
                 `}>
                   <div className="flex items-center gap-2">
-                    <Icon size={15} className="text-gray-500 dark:text-gray-400 shrink-0" />
-                    <h3 className="font-bold text-sm text-gray-900 dark:text-white leading-tight">{col.title}</h3>
+                    <Icon size={15} className="text-[var(--text-muted)] shrink-0" />
+                    <h3 className="font-bold text-sm text-[var(--text)] leading-tight">{col.title}</h3>
                   </div>
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${col.countBg}`}>
                     {colData.length}
@@ -443,7 +239,7 @@ function KanbanManualContent() {
                 </div>
 
                 {/* Cartes */}
-                <div className="flex-1 bg-gray-50/80 dark:bg-gray-900/40 rounded-b-2xl px-2 pt-2 pb-3 overflow-y-auto space-y-2 border border-t-0 border-gray-200 dark:border-gray-700/50">
+                <div className="flex-1 bg-[var(--surface-2)] rounded-b-2xl px-2 pt-2 pb-3 overflow-y-auto space-y-2 border border-t-0 border-[var(--border)]/50">
                   <AnimatePresence mode="popLayout">
                     {colData.length === 0 ? (
                       <motion.div
@@ -451,10 +247,10 @@ function KanbanManualContent() {
                         animate={{ opacity: 1 }}
                         className="flex flex-col items-center justify-center h-28 text-center py-6"
                       >
-                        <Icon size={22} className="text-gray-200 dark:text-gray-700 mb-2" />
-                        <p className="text-xs text-gray-400 dark:text-gray-600 italic">{col.emptyMsg}</p>
+                        <Icon size={22} className="text-[var(--border)] mb-2" />
+                        <p className="text-xs text-[var(--text-muted)] italic">{col.emptyMsg}</p>
                         {selectedJobId && (
-                          <p className="text-[10px] text-gray-300 dark:text-gray-700 mt-1">pour cette offre</p>
+                          <p className="text-[10px] text-[var(--text-muted)]/50 mt-1">pour cette offre</p>
                         )}
                       </motion.div>
                     ) : (
@@ -466,24 +262,24 @@ function KanbanManualContent() {
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           onClick={() => router.push(`/recrutement/manuel/candidats/${c.id}`)}
-                          className="bg-white dark:bg-gray-800 px-3 py-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-400/60 dark:hover:border-blue-500/40 transition-all group"
+                          className="bg-[var(--surface)] px-3 py-3 rounded-xl border border-[var(--border)] shadow-sm cursor-pointer hover:shadow-md hover:border-emerald-400/60 dark:hover:border-emerald-500/40 transition-all group"
                         >
                           <div className="flex items-center gap-2.5 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-xs text-white shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center font-bold text-xs text-white shrink-0">
                               {c.firstName[0]}{c.lastName[0]}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              <h4 className="font-bold text-sm text-[var(--text)] truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                                 {c.firstName} {c.lastName}
                               </h4>
-                              <p className="text-[11px] text-gray-400 truncate">{c.jobOffer?.title}</p>
+                              <p className="text-[11px] text-[var(--text-muted)] truncate">{c.jobOffer?.title}</p>
                             </div>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-md">
+                            <span className="text-[10px] text-[var(--text-muted)] bg-[var(--surface-2)] px-2 py-0.5 rounded-md">
                               {new Date(c.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                             </span>
-                            <Eye size={13} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+                            <Eye size={13} className="text-[var(--text-muted)] group-hover:text-emerald-500 transition-colors" />
                           </div>
                         </motion.div>
                       ))

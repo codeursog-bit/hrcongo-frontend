@@ -122,7 +122,7 @@ export default function CreateIAJobPage() {
     
     // Vérification selon le mode choisi
     if (!useAIQuestions && formData.quiz.length === 0) {
-      alert("⚠️ Ajoutez au moins une question ou activez la génération IA");
+      alert("Ajoutez au moins une question ou activez la génération IA");
       return;
     }
 
@@ -220,12 +220,12 @@ export default function CreateIAJobPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--bg)] relative overflow-hidden">
       
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
       <div className="max-w-5xl mx-auto pb-20 pt-8 px-4 relative z-10">
@@ -241,30 +241,30 @@ export default function CreateIAJobPage() {
               <motion.div 
                 initial={{ scale: 0.9, y: 20 }} 
                 animate={{ scale: 1, y: 0 }}
-                className="bg-gradient-to-br from-slate-900 to-slate-800 border border-cyan-500/30 rounded-3xl p-10 max-w-lg w-full shadow-2xl relative overflow-hidden"
+                className="bg-[var(--surface)] border border-emerald-500/30 rounded-2xl p-10 max-w-lg w-full shadow-2xl relative overflow-hidden"
               >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-[100px] -mr-20 -mt-20"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] -ml-20 -mb-20"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px] -mr-20 -mt-20"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-600/20 rounded-full blur-[100px] -ml-20 -mb-20"></div>
 
                 <div className="text-center mb-8 relative z-10">
-                  <div className="w-24 h-24 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-cyan-500/50">
-                    <BrainCircuit size={48} className="text-white" />
+                  <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/50">
+                    <BrainCircuit size={48} className="text-[var(--text)]" />
                   </div>
-                  <h2 className="text-4xl font-black text-white mb-3 tracking-tight">Offre IA Activée !</h2>
-                  <p className="text-slate-400">Le recrutement intelligent est opérationnel.</p>
+                  <h2 className="text-4xl font-black text-[var(--text)] mb-3 tracking-tight">Offre IA Activée !</h2>
+                  <p className="text-[var(--text-muted)]">Le recrutement intelligent est opérationnel.</p>
                 </div>
 
-                <div className="bg-black/40 p-5 rounded-2xl border border-cyan-500/30 mb-8 relative z-10">
-                  <p className="text-xs font-bold text-cyan-400 uppercase mb-3 tracking-wider">Lien Public IA</p>
-                  <div className="flex items-center gap-3 bg-slate-950/60 p-4 rounded-xl border border-white/5">
-                    <Globe className="text-cyan-400 shrink-0" size={20} />
-                    <p className="text-cyan-300 font-mono text-sm truncate flex-1">
+                <div className="bg-black/40 p-5 rounded-2xl border border-emerald-500/30 mb-8 relative z-10">
+                  <p className="text-xs font-bold text-emerald-400 uppercase mb-3 tracking-wider">Lien Public IA</p>
+                  <div className="flex items-center gap-3 bg-[var(--bg)]/60 p-4 rounded-xl border border-white/5">
+                    <Globe className="text-emerald-400 shrink-0" size={20} />
+                    <p className="text-emerald-300 font-mono text-sm truncate flex-1">
                       {`${window.location.origin}/jobs/${createdJob.id}`}
                     </p>
                   </div>
                   <button 
                     onClick={handleCopyLink}
-                    className="w-full mt-4 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
+                    className="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
                     {isCopied ? <Check size={16}/> : <Copy size={16}/>}
                     {isCopied ? 'Lien Copié !' : 'Copier le Lien'}
@@ -274,13 +274,13 @@ export default function CreateIAJobPage() {
                 <div className="flex gap-3">
                   <button 
                     onClick={() => router.push('/recrutement/ia/candidats')} 
-                    className="flex-1 py-4 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl shadow-xl transition-all"
+                    className="flex-1 py-4 bg-[#FAFAFA] hover:bg-white text-black font-bold rounded-xl shadow-xl transition-all"
                   >
                     Voir les Candidats IA
                   </button>
                   <button 
                     onClick={() => router.push('/recrutement')} 
-                    className="px-4 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold"
+                    className="px-4 py-4 bg-white/10 hover:bg-white/20 text-[var(--text)] rounded-xl font-bold"
                   >
                     <Eye size={20} />
                   </button>
@@ -296,14 +296,14 @@ export default function CreateIAJobPage() {
             onClick={() => router.back()} 
             className="p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors backdrop-blur-sm"
           >
-            <ArrowLeft size={20} className="text-white" />
+            <ArrowLeft size={20} className="text-[var(--text)]" />
           </button>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <BrainCircuit className="text-cyan-400" size={32}/>
-              <h1 className="text-3xl font-black text-white tracking-tight">Créer une Offre IA</h1>
+              <BrainCircuit className="text-emerald-400" size={32}/>
+              <h1 className="text-3xl font-black text-[var(--text)] tracking-tight">Créer une Offre IA</h1>
             </div>
-            <p className="text-slate-400">Recrutement intelligent avec sélection automatique</p>
+            <p className="text-[var(--text-muted)]">Recrutement intelligent avec sélection automatique</p>
           </div>
         </div>
 
@@ -311,9 +311,9 @@ export default function CreateIAJobPage() {
         <form onSubmit={handleSubmit} className="space-y-8">
           
           {/* IMAGE UPLOAD */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-              <ImageIcon className="text-purple-400"/>
+          <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl">
+            <h3 className="text-xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
+              <ImageIcon className="text-emerald-400"/>
               Image de l'offre (Optionnel)
             </h3>
             
@@ -332,20 +332,20 @@ export default function CreateIAJobPage() {
                     setImagePreview(null);
                     setImageFile(null);
                   }}
-                  className="absolute top-4 right-4 p-3 bg-red-500/80 hover:bg-red-600 rounded-xl text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-4 right-4 p-3 bg-red-500/80 hover:bg-red-600 rounded-xl text-[var(--text)] opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X size={20} />
                 </button>
               </div>
             ) : (
-              <label className="block w-full h-64 border-2 border-dashed border-white/20 hover:border-cyan-500/50 rounded-2xl cursor-pointer transition-colors">
+              <label className="block w-full h-64 border-2 border-dashed border-white/20 hover:border-emerald-500/50 rounded-2xl cursor-pointer transition-colors">
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageChange}
                   className="hidden"
                 />
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 hover:text-cyan-400 transition-colors">
+                <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)] hover:text-emerald-400 transition-colors">
                   <Upload size={48} className="mb-4" />
                   <p className="font-bold text-lg">Cliquez pour uploader une image</p>
                   <p className="text-sm mt-2">JPG, PNG, WEBP (max 2MB)</p>
@@ -355,20 +355,20 @@ export default function CreateIAJobPage() {
           </div>
 
           {/* CARD: Info de base */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-              <Zap className="text-yellow-400"/>
+          <div className="bg-[var(--surface)] backdrop-blur-xl border border-[var(--border)] rounded-2xl p-8 shadow-2xl">
+            <h3 className="text-xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
+              <Zap className="text-amber-400"/>
               Informations Générales
             </h3>
             
             <div className="space-y-5">
               <div>
-                <label className="text-sm font-bold text-slate-300 mb-2 block">Intitulé du Poste *</label>
+                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Intitulé du Poste *</label>
                 <input 
                   type="text" 
                   required 
                   placeholder="ex: Développeur Full-Stack Senior" 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all" 
                   value={formData.title} 
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
                 />
@@ -376,42 +376,42 @@ export default function CreateIAJobPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-bold text-slate-300 mb-2 block flex items-center gap-2">
+                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
                     <Building2 size={16}/> Département *
                   </label>
                   <select 
                     required
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.departmentId} 
                     onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
                   >
-                    <option value="" className="bg-slate-900">Choisir...</option>
-                    {departments.map(d => <option key={d.id} value={d.id} className="bg-slate-900">{d.name}</option>)}
+                    <option value="" className="bg-[var(--surface)]">Choisir...</option>
+                    {departments.map(d => <option key={d.id} value={d.id} className="bg-[var(--surface)]">{d.name}</option>)}
                   </select>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-bold text-slate-300 mb-2 block flex items-center gap-2">
+                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
                     <MapPin size={16}/> Lieu
                   </label>
                   <input 
                     type="text" 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.location} 
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
                   />
                 </div>
                 
                 <div>
-                  <label className="text-sm font-bold text-slate-300 mb-2 block">Contrat</label>
+                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Contrat</label>
                   <select 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.contractType} 
                     onChange={(e) => setFormData({ ...formData, contractType: e.target.value })}
                   >
-                    <option value="CDI" className="bg-slate-900">CDI</option>
-                    <option value="CDD" className="bg-slate-900">CDD</option>
-                    <option value="STAGE" className="bg-slate-900">Stage</option>
+                    <option value="CDI" className="bg-[var(--surface)]">CDI</option>
+                    <option value="CDD" className="bg-[var(--surface)]">CDD</option>
+                    <option value="STAGE" className="bg-[var(--surface)]">Stage</option>
                   </select>
                 </div>
               </div>
@@ -419,63 +419,63 @@ export default function CreateIAJobPage() {
               {/* SALARY */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-bold text-slate-300 mb-2 block flex items-center gap-2">
+                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
                     <DollarSign size={16}/> Salaire Min
                   </label>
                   <input 
                     type="number" 
                     placeholder="Ex: 500000"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.salaryMin} 
                     onChange={(e) => setFormData({ ...formData, salaryMin: e.target.value })} 
                   />
                 </div>
                 
                 <div>
-                  <label className="text-sm font-bold text-slate-300 mb-2 block flex items-center gap-2">
+                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
                     <DollarSign size={16}/> Salaire Max
                   </label>
                   <input 
                     type="number" 
                     placeholder="Ex: 800000"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.salaryMax} 
                     onChange={(e) => setFormData({ ...formData, salaryMax: e.target.value })} 
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-slate-300 mb-2 block">Devise</label>
+                  <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Devise</label>
                   <select 
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.salaryCurrency} 
                     onChange={(e) => setFormData({ ...formData, salaryCurrency: e.target.value })}
                   >
-                    <option value="XAF" className="bg-slate-900">XAF</option>
-                    <option value="EUR" className="bg-slate-900">EUR</option>
-                    <option value="USD" className="bg-slate-900">USD</option>
+                    <option value="XAF" className="bg-[var(--surface)]">XAF</option>
+                    <option value="EUR" className="bg-[var(--surface)]">EUR</option>
+                    <option value="USD" className="bg-[var(--surface)]">USD</option>
                   </select>
                 </div>
               </div>
 
               {/* EXPIRATION */}
               <div>
-                <label className="text-sm font-bold text-slate-300 mb-2 block flex items-center gap-2">
+                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block flex items-center gap-2">
                   <Calendar size={16}/> Date d'expiration (Optionnel)
                 </label>
                 <input 
                   type="date" 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                   value={formData.expirationDate} 
                   onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })} 
                 />
               </div>
               
               <div>
-                <label className="text-sm font-bold text-slate-300 mb-2 block">Description *</label>
+                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Description *</label>
                 <textarea 
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 min-h-[140px] text-white placeholder:text-slate-600 focus:ring-2 focus:ring-cyan-500/50 outline-none resize-none" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 min-h-[140px] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/50 outline-none resize-none" 
                   value={formData.description} 
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
                   placeholder="Décrivez le poste et les missions..."
@@ -483,9 +483,9 @@ export default function CreateIAJobPage() {
               </div>
               
               <div>
-                <label className="text-sm font-bold text-slate-300 mb-2 block">Prérequis</label>
+                <label className="text-sm font-bold text-[var(--text-muted)] mb-2 block">Prérequis</label>
                 <textarea 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 min-h-[100px] text-white placeholder:text-slate-600 focus:ring-2 focus:ring-cyan-500/50 outline-none resize-none" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 min-h-[100px] text-[var(--text)] placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-emerald-500/50 outline-none resize-none" 
                   value={formData.requirements} 
                   onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} 
                   placeholder="Compétences et qualifications requises..."
@@ -493,12 +493,12 @@ export default function CreateIAJobPage() {
               </div>
 
               {/* PORTAL TOGGLE */}
-              <div className="flex items-center justify-between p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <Globe className="text-cyan-400" size={20} />
+                  <Globe className="text-emerald-400" size={20} />
                   <div>
-                    <p className="font-bold text-cyan-400 text-sm">Publier sur le Portail</p>
-                    <p className="text-xs text-slate-400">Visible par tous les visiteurs</p>
+                    <p className="font-bold text-emerald-400 text-sm">Publier sur le Portail</p>
+                    <p className="text-xs text-[var(--text-muted)]">Visible par tous les visiteurs</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -508,17 +508,17 @@ export default function CreateIAJobPage() {
                     checked={formData.showOnPortal}
                     onChange={(e) => setFormData({ ...formData, showOnPortal: e.target.checked })}
                   />
-                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
               </div>
 
               {/* ✨ BOUTON BOOSTER */}
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <Zap className="text-yellow-400" size={20} />
+                  <Zap className="text-amber-400" size={20} />
                   <div>
-                    <p className="font-bold text-yellow-400 text-sm">Booster l'Offre (Premium)</p>
-                    <p className="text-xs text-slate-400">Met l'offre en tête du portail (30 jours)</p>
+                    <p className="font-bold text-amber-400 text-sm">Booster l'Offre (Premium)</p>
+                    <p className="text-xs text-[var(--text-muted)]">Met l'offre en tête du portail (30 jours)</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -528,17 +528,17 @@ export default function CreateIAJobPage() {
                     checked={formData.isPremium}
                     onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })}
                   />
-                  <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-yellow-500 peer-checked:to-orange-500"></div>
+                  <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
               </div>
 
               {/* ⏱ DURÉE DU TEST */}
-              <div className="flex items-center justify-between p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <Clock className="text-purple-400 shrink-0" size={20} />
+                  <Clock className="text-emerald-400 shrink-0" size={20} />
                   <div>
-                    <p className="font-bold text-purple-300 text-sm">Durée du test (minutes)</p>
-                    <p className="text-xs text-slate-400">Temps accordé aux candidats pour répondre</p>
+                    <p className="font-bold text-emerald-300 text-sm">Durée du test (minutes)</p>
+                    <p className="text-xs text-[var(--text-muted)]">Temps accordé aux candidats pour répondre</p>
                   </div>
                 </div>
                 <input
@@ -547,7 +547,7 @@ export default function CreateIAJobPage() {
                   max={180}
                   value={formData.testDurationMinutes}
                   onChange={e => setFormData({ ...formData, testDurationMinutes: Math.max(1, parseInt(e.target.value) || 10) })}
-                  className="w-20 text-center bg-black/40 border border-purple-500/40 rounded-xl px-3 py-2 text-white font-bold text-lg focus:ring-2 focus:ring-purple-500/50 outline-none"
+                  className="w-20 text-center bg-black/40 border border-emerald-500/40 rounded-xl px-3 py-2 text-[var(--text)] font-bold text-lg focus:ring-2 focus:ring-emerald-500/50 outline-none"
                 />
               </div>
 
@@ -557,7 +557,7 @@ export default function CreateIAJobPage() {
                   <FileText className="text-amber-400 shrink-0" size={20} />
                   <div>
                     <p className="font-bold text-amber-300 text-sm">Document supplémentaire (Optionnel)</p>
-                    <p className="text-xs text-slate-400">En plus du CV, exiger un autre document au candidat</p>
+                    <p className="text-xs text-[var(--text-muted)]">En plus du CV, exiger un autre document au candidat</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -577,7 +577,7 @@ export default function CreateIAJobPage() {
                       className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
                         formData.additionalDocumentType === opt.value
                           ? 'bg-amber-500/30 border-amber-400 text-amber-300'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:border-amber-500/40'
+                          : 'bg-white/5 border-white/10 text-[var(--text-muted)] hover:border-amber-500/40'
                       }`}
                     >
                       {opt.label}
@@ -590,7 +590,7 @@ export default function CreateIAJobPage() {
                     placeholder="Ex : Lettre de référence, Casier judiciaire..."
                     value={formData.additionalDocumentLabel}
                     onChange={e => setFormData({ ...formData, additionalDocumentLabel: e.target.value })}
-                    className="w-full bg-black/30 border border-amber-500/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-slate-600 focus:ring-2 focus:ring-amber-500/40 outline-none"
+                    className="w-full bg-black/30 border border-amber-500/30 rounded-xl px-4 py-3 text-[var(--text)] text-sm placeholder:text-[var(--text-muted)] focus:ring-2 focus:ring-amber-500/40 outline-none"
                   />
                 )}
               </div>
@@ -598,17 +598,17 @@ export default function CreateIAJobPage() {
           </div>
 
           {/* CARD: Critères IA */}
-          <div className="bg-gradient-to-br from-cyan-950/50 to-blue-950/50 backdrop-blur-xl border border-cyan-500/30 rounded-3xl p-8 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-              <Sparkles className="text-cyan-400"/>
+          <div className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8 shadow-2xl">
+            <h3 className="text-xl font-bold text-[var(--text)] mb-6 flex items-center gap-3">
+              <Sparkles className="text-emerald-400"/>
               Critères de Sélection IA
             </h3>
 
             <div className="space-y-6">
               {/* Skills */}
               <div>
-                <label className="text-sm font-bold text-cyan-300 mb-3 block">Compétences Clés (pour analyse CV)</label>
-                <div className="bg-black/30 border border-cyan-500/20 rounded-xl p-4 flex flex-wrap gap-2 min-h-[60px]">
+                <label className="text-sm font-bold text-emerald-300 mb-3 block">Compétences Clés (pour analyse CV)</label>
+                <div className="bg-black/30 border border-emerald-500/20 rounded-xl p-4 flex flex-wrap gap-2 min-h-[60px]">
                   <AnimatePresence>
                     {formData.requiredSkills.map(skill => (
                       <motion.span 
@@ -616,16 +616,16 @@ export default function CreateIAJobPage() {
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
-                        className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-cyan-500/30 transition-colors"
+                        className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-emerald-500/30 transition-colors"
                       >
                         {skill}
-                        <X size={14} className="cursor-pointer hover:text-white" onClick={() => removeSkill(skill)} />
+                        <X size={14} className="cursor-pointer hover:text-[var(--text)]" onClick={() => removeSkill(skill)} />
                       </motion.span>
                     ))}
                   </AnimatePresence>
                   <input 
                     type="text"
-                    className="bg-transparent border-none outline-none text-sm p-2 text-white flex-1 min-w-[150px] placeholder:text-slate-600"
+                    className="bg-transparent border-none outline-none text-sm p-2 text-[var(--text)] flex-1 min-w-[150px] placeholder:text-[var(--text-muted)]"
                     placeholder="Tapez + Entrée..."
                     value={newSkill}
                     onChange={(e) => setNewSkill(e.target.value)}
@@ -638,30 +638,30 @@ export default function CreateIAJobPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="flex justify-between mb-3">
-                    <label className="text-sm font-bold text-cyan-300">Expérience Minimale</label>
-                    <span className="text-cyan-400 font-bold text-lg">{formData.minExperience} ans</span>
+                    <label className="text-sm font-bold text-emerald-300">Expérience Minimale</label>
+                    <span className="text-emerald-400 font-bold text-lg">{formData.minExperience} ans</span>
                   </div>
                   <input 
                     type="range" 
                     min="0" 
                     max="15" 
                     step="1"
-                    className="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    className="w-full h-3 bg-[var(--surface-2)] rounded-lg appearance-none cursor-pointer accent-emerald-500"
                     value={formData.minExperience}
                     onChange={(e) => setFormData({ ...formData, minExperience: parseInt(e.target.value) })}
                   />
                 </div>
                 
                 <div>
-                  <label className="text-sm font-bold text-cyan-300 mb-3 block flex items-center gap-2">
+                  <label className="text-sm font-bold text-emerald-300 mb-3 block flex items-center gap-2">
                     <GraduationCap size={16}/> Niveau d'Études
                   </label>
                   <select 
-                    className="w-full bg-black/30 border border-cyan-500/20 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none" 
+                    className="w-full bg-black/30 border border-emerald-500/20 rounded-xl px-4 py-3 text-[var(--text)] focus:ring-2 focus:ring-emerald-500/50 outline-none" 
                     value={formData.educationLevel} 
                     onChange={(e) => setFormData({ ...formData, educationLevel: e.target.value as EducationLevel })}
                   >
-                    {Object.values(EducationLevel).map(lvl => <option key={lvl} value={lvl} className="bg-slate-900">{lvl}</option>)}
+                    {Object.values(EducationLevel).map(lvl => <option key={lvl} value={lvl} className="bg-[var(--surface)]">{lvl}</option>)}
                   </select>
                 </div>
               </div>
@@ -669,16 +669,16 @@ export default function CreateIAJobPage() {
           </div>
 
           {/* CARD: MODE QUESTIONS */}
-          <div className="bg-gradient-to-br from-purple-950/50 to-pink-950/50 backdrop-blur-xl border border-purple-500/30 rounded-3xl p-8 shadow-2xl">
+          <div className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                <Target className="text-purple-400"/>
+              <h3 className="text-xl font-bold text-[var(--text)] flex items-center gap-3">
+                <Target className="text-emerald-400"/>
                 Questions d'Évaluation
               </h3>
               
               {/* TOGGLE IA/MANUEL */}
-              <div className="flex items-center gap-4 bg-black/40 px-5 py-3 rounded-xl border border-purple-500/20">
-                <span className="text-sm font-bold text-purple-300">Génération IA</span>
+              <div className="flex items-center gap-4 bg-black/40 px-5 py-3 rounded-xl border border-emerald-500/20">
+                <span className="text-sm font-bold text-emerald-300">Génération IA</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -686,21 +686,21 @@ export default function CreateIAJobPage() {
                     checked={useAIQuestions}
                     onChange={(e) => setUseAIQuestions(e.target.checked)}
                   />
-                  <div className="w-14 h-7 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+                  <div className="w-14 h-7 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
               </div>
             </div>
 
             {useAIQuestions ? (
-              <div className="bg-black/30 border border-purple-500/20 rounded-2xl p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/50">
-                  <Sparkles size={36} className="text-white" />
+              <div className="bg-black/30 border border-emerald-500/20 rounded-2xl p-8 text-center">
+                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-500/50">
+                  <Sparkles size={36} className="text-[var(--text)]" />
                 </div>
-                <h4 className="text-xl font-bold text-white mb-3">Génération Automatique Activée</h4>
-                <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-                  L'IA générera automatiquement <span className="text-purple-400 font-bold">10 questions pertinentes</span> basées sur les compétences requises et la description du poste.
+                <h4 className="text-xl font-bold text-[var(--text)] mb-3">Génération Automatique Activée</h4>
+                <p className="text-[var(--text-muted)] max-w-md mx-auto leading-relaxed">
+                  L'IA générera automatiquement <span className="text-emerald-400 font-bold">10 questions pertinentes</span> basées sur les compétences requises et la description du poste.
                 </p>
-                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-purple-300">
+                <div className="mt-6 flex items-center justify-center gap-2 text-sm text-emerald-300">
                   <BrainCircuit size={16} />
                   <span>Powered by Mistral AI</span>
                 </div>
@@ -708,12 +708,12 @@ export default function CreateIAJobPage() {
             ) : (
               <>
                 <div className="flex justify-between items-center mb-6">
-                  <p className="text-sm text-slate-400">Créez manuellement vos questions ({formData.quiz.length}/10)</p>
+                  <p className="text-sm text-[var(--text-muted)]">Créez manuellement vos questions ({formData.quiz.length}/10)</p>
                   <button 
                     type="button" 
                     onClick={addQuestion} 
                     disabled={formData.quiz.length >= 10}
-                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg"
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg"
                   >
                     <Plus size={16} /> Ajouter
                   </button>
@@ -724,20 +724,20 @@ export default function CreateIAJobPage() {
                     <Reorder.Item 
                       key={q.id} 
                       value={q} 
-                      className="bg-black/30 border border-purple-500/20 rounded-2xl p-6 hover:border-purple-500/40 transition-colors"
+                      className="bg-black/30 border border-emerald-500/20 rounded-2xl p-6 hover:border-emerald-500/40 transition-colors"
                     >
                       <div className="flex gap-4">
-                        <div className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-purple-400 transition-colors">
+                        <div className="cursor-grab active:cursor-grabbing text-[var(--text-muted)] hover:text-emerald-400 transition-colors">
                           <GripVertical size={24}/>
                         </div>
                         
                         <div className="flex-1 space-y-4">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-black text-purple-400/70 uppercase tracking-widest">Question {idx + 1}</span>
+                            <span className="text-xs font-black text-emerald-400/70 uppercase tracking-widest">Question {idx + 1}</span>
                             <button 
                               type="button" 
                               onClick={() => removeQuestion(q.id)} 
-                              className="text-slate-600 hover:text-red-400 transition-colors"
+                              className="text-[var(--text-muted)] hover:text-red-400 transition-colors"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -746,7 +746,7 @@ export default function CreateIAJobPage() {
                           <input 
                             type="text" 
                             placeholder="Entrez la question..." 
-                            className="w-full bg-transparent border-b border-purple-500/20 py-3 text-white outline-none focus:border-purple-500/50 transition-colors placeholder:text-slate-600"
+                            className="w-full bg-transparent border-b border-emerald-500/20 py-3 text-[var(--text)] outline-none focus:border-emerald-500/50 transition-colors placeholder:text-[var(--text-muted)]"
                             value={q.text} 
                             onChange={(e) => updateQuestion(q.id, { text: e.target.value })}
                           />
@@ -757,14 +757,14 @@ export default function CreateIAJobPage() {
                                 <button 
                                   type="button"
                                   onClick={() => updateQuestion(q.id, { correctAnswer: optIdx })}
-                                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${q.correctAnswer === optIdx ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/50 scale-110' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+                                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${q.correctAnswer === optIdx ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/50 scale-110' : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'}`}
                                 >
                                   {String.fromCharCode(65 + optIdx)}
                                 </button>
                                 <input 
                                   type="text" 
                                   placeholder={`Option ${String.fromCharCode(65 + optIdx)}`}
-                                  className="flex-1 bg-slate-950/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/30 transition-colors placeholder:text-slate-600"
+                                  className="flex-1 bg-[var(--bg)]/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-[var(--text)] outline-none focus:border-emerald-500/30 transition-colors placeholder:text-[var(--text-muted)]"
                                   value={opt} 
                                   onChange={(e) => {
                                     const nextOpts = [...q.options];
@@ -777,12 +777,12 @@ export default function CreateIAJobPage() {
                           </div>
 
                           <div className="flex items-center gap-4 pt-2">
-                            <span className="text-xs text-slate-500">Points :</span>
+                            <span className="text-xs text-[var(--text-muted)]">Points :</span>
                             <input 
                               type="number" 
                               min="1" 
                               max="10"
-                              className="w-20 bg-slate-950/50 border border-white/5 rounded-lg px-3 py-2 text-sm text-white text-center"
+                              className="w-20 bg-[var(--bg)]/50 border border-white/5 rounded-lg px-3 py-2 text-sm text-[var(--text)] text-center"
                               value={q.points}
                               onChange={(e) => updateQuestion(q.id, { points: parseInt(e.target.value) || 1 })}
                             />
@@ -794,9 +794,9 @@ export default function CreateIAJobPage() {
                 </Reorder.Group>
                 
                 {formData.quiz.length === 0 && (
-                  <div className="py-16 border-2 border-dashed border-purple-500/20 rounded-3xl text-center">
-                    <Target size={48} className="mx-auto text-purple-500/30 mb-4"/>
-                    <p className="text-slate-500 italic">Aucune question. Ajoutez-en pour activer le test manuel.</p>
+                  <div className="py-16 border-2 border-dashed border-emerald-500/20 rounded-2xl text-center">
+                    <Target size={48} className="mx-auto text-emerald-500/30 mb-4"/>
+                    <p className="text-[var(--text-muted)] italic">Aucune question. Ajoutez-en pour activer le test manuel.</p>
                   </div>
                 )}
               </>
@@ -807,7 +807,7 @@ export default function CreateIAJobPage() {
           <button 
             type="submit" 
             disabled={isSubmitting || (!useAIQuestions && formData.quiz.length === 0)} 
-            className="w-full bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:via-blue-500 hover:to-purple-500 text-white font-bold py-6 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xl shadow-cyan-500/20 text-lg"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-6 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xl shadow-emerald-500/20 text-lg"
           >
             {isSubmitting ? (
               <Loader2 className="animate-spin" size={24}/>
