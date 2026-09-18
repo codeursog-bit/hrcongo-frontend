@@ -5,6 +5,7 @@
 // Même langage visuel que components/layout/Sidebar.tsx (Tailwind + CSS vars,
 // lucide-react, vert émeraude) — pas le thème navy du cabinet.
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
