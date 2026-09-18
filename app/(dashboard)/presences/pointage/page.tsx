@@ -115,7 +115,7 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'PENDING_EMPLOYEE') {
     return (
-      <div className="bg-amber-500/10 border border-amber-500/40 rounded-3xl p-6 space-y-5">
+      <div className="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-6 space-y-5">
         <div className="flex items-start gap-3">
           <div className="p-2.5 bg-amber-500/20 rounded-xl flex-shrink-0">
             <HelpCircle size={20} className="text-amber-400" />
@@ -129,19 +129,19 @@ function OvertimeWorkflowCard({
           </div>
         </div>
         {attendance.checkIn && (
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-800/60 rounded-2xl">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface)]/60 rounded-2xl">
             <Timer size={14} className="text-amber-400 animate-pulse" />
-            <span className="text-xs text-slate-400">Temps total depuis l'entrée :</span>
+            <span className="text-xs text-[var(--text-muted)]">Temps total depuis l'entrée :</span>
             <span className="font-mono font-bold text-amber-300 text-sm ml-auto">{elapsed}</span>
           </div>
         )}
-        <p className="text-xs text-slate-400 text-center">Que souhaitez-vous faire ?</p>
+        <p className="text-xs text-[var(--text-muted)] text-center">Que souhaitez-vous faire ?</p>
         <div className="grid grid-cols-2 gap-3">
           <button onClick={onResolveForgotten} disabled={resolving}
-            className="flex flex-col items-center gap-2 p-4 bg-slate-700/60 hover:bg-slate-700 border border-slate-600 rounded-2xl transition-all active:scale-95 disabled:opacity-50">
-            {resolving ? <Loader2 size={24} className="animate-spin text-slate-300" /> : <span className="text-2xl">😅</span>}
-            <span className="text-xs font-bold text-slate-200 text-center leading-tight">J'avais oublié de pointer la sortie</span>
-            <span className="text-[10px] text-slate-500 text-center">→ Journée clôturée à l'heure officielle</span>
+            className="flex flex-col items-center gap-2 p-4 bg-[var(--surface-2)]/60 hover:bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl transition-all active:scale-95 disabled:opacity-50">
+            {resolving ? <Loader2 size={24} className="animate-spin text-[var(--text-muted)]" /> : <span className="text-2xl">😅</span>}
+            <span className="text-xs font-bold text-[var(--text-muted)] text-center leading-tight">J'avais oublié de pointer la sortie</span>
+            <span className="text-[10px] text-[var(--text-muted)] text-center">→ Journée clôturée à l'heure officielle</span>
           </button>
           <button onClick={onDeclareOvertime} disabled={resolving}
             className="flex flex-col items-center gap-2 p-4 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/40 rounded-2xl transition-all active:scale-95 disabled:opacity-50">
@@ -156,7 +156,7 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'PENDING_APPROVAL') {
     return (
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-6 space-y-4">
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 space-y-4">
         <div className="flex items-start gap-3">
           <div className="p-2.5 bg-amber-500/20 rounded-xl flex-shrink-0">
             <Clock size={20} className="text-amber-400 animate-pulse" />
@@ -168,12 +168,12 @@ function OvertimeWorkflowCard({
             </p>
           </div>
         </div>
-        <div className="px-4 py-3 bg-slate-800/60 rounded-2xl text-xs text-slate-400 flex items-center gap-2">
+        <div className="px-4 py-3 bg-[var(--surface)]/60 rounded-2xl text-xs text-[var(--text-muted)] flex items-center gap-2">
           <Info size={13} className="text-amber-400 flex-shrink-0" />
           Votre responsable recevra une notification. Les heures ne seront comptées qu'après sa validation.
         </div>
         {attendance.overtimeRequestedAt && (
-          <p className="text-center text-[10px] text-slate-600">
+          <p className="text-center text-[10px] text-[var(--text-muted)]">
             Demande envoyée le {new Date(attendance.overtimeRequestedAt).toLocaleString('fr-FR', {
               day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
             })}
@@ -185,7 +185,7 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'APPROVED') {
     return (
-      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-5 flex items-center gap-3">
+      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 flex items-center gap-3">
         <CheckCircle size={22} className="text-emerald-400 flex-shrink-0" />
         <div>
           <p className="font-bold text-emerald-300 text-sm">Heures supplémentaires validées ✅</p>
@@ -199,7 +199,7 @@ function OvertimeWorkflowCard({
 
   if (attendance.overtimeStatus === 'REJECTED') {
     return (
-      <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-5 flex items-center gap-3">
+      <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-5 flex items-center gap-3">
         <XCircle size={22} className="text-red-400 flex-shrink-0" />
         <div>
           <p className="font-bold text-red-300 text-sm">Heures supplémentaires non validées</p>
@@ -283,18 +283,55 @@ export default function AttendanceCheckInPage() {
   // côté paramètres entreprise : un utilitaire que l'employé ouvre/ferme
   // lui-même à tout moment, jamais fermé automatiquement à sa place.
   const [showRadar, setShowRadar] = useState(false);
+  // ✅ Position dédiée au radar — même pattern que walkTestOffset côté
+  // paramètres entreprise : un watchPosition à part, actif UNIQUEMENT
+  // pendant que le panneau est ouvert, jamais en arrière-plan sur cette
+  // page. On ne réutilise pas geoState.latitude/longitude ici : ce dernier
+  // est mis à jour par le watchPosition "global" de la page (utile pour le
+  // badge et l'autorisation de pointer), mais dont la cadence réelle sur le
+  // terrain peut être plus lente/irrégulière que ce qu'on veut pour un
+  // radar censé bouger visiblement pendant que l'employé marche.
+  const [radarOffset, setRadarOffset] = useState<{ east: number; north: number } | null>(null);
+  useEffect(() => {
+    if (!showRadar) { setRadarOffset(null); return; }
+    if (!navigator.geolocation) return;
+    if (!companySettings?.latitude || !companySettings?.longitude) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setRadarOffset(
+          computeMetersOffset(
+            companySettings.latitude, companySettings.longitude,
+            pos.coords.latitude, pos.coords.longitude,
+          ),
+        );
+      },
+      () => { /* silencieux : le badge principal reste la source d'erreur affichée */ },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 },
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showRadar, companySettings?.latitude, companySettings?.longitude]);
 
   // ✅ Message encourageant, mis à jour par palier de ~8m plutôt qu'à
   // chaque relevé GPS (sinon ça clignoterait avec le bruit naturel du GPS).
+  // Basé sur radarOffset (position live du radar) quand disponible, pour
+  // rester cohérent avec ce que l'employé voit bouger à l'écran — avec
+  // geoState.distance en repli tant que le premier relevé du radar n'est
+  // pas encore arrivé.
   const [motivMsg, setMotivMsg] = useState<string | null>(null);
   const motivBucketRef = useRef<number | null>(null);
+  const radarDistance = radarOffset
+    ? Math.sqrt(radarOffset.east ** 2 + radarOffset.north ** 2)
+    : geoState.distance;
   useEffect(() => {
     if (!showRadar || geoState.allowed || status !== 'idle') {
       motivBucketRef.current = null;
       return;
     }
     const allowedRadius = companySettings?.allowedRadius || 100;
-    const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
+    const overshoot = Math.max(0, (radarDistance ?? 0) - allowedRadius);
     const bucket = Math.floor(overshoot / 8);
     if (bucket !== motivBucketRef.current) {
       motivBucketRef.current = bucket;
@@ -303,7 +340,7 @@ export default function AttendanceCheckInPage() {
       setMotivMsg(pick(Math.round(overshoot)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRadar, geoState.distance, geoState.allowed, status]);
+  }, [showRadar, radarDistance, geoState.allowed, status]);
 
   // ── Rôle utilisateur (pour PresenceSubNav) ──────────────────────────────────
   useEffect(() => {
@@ -607,11 +644,11 @@ export default function AttendanceCheckInPage() {
 
   // ── Badge GPS ─────────────────────────────────────────────────────────────
   const getGpsBadge = () => {
-    if (geoState.loading)         return { color: 'bg-gray-800 text-gray-400',                              icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
+    if (geoState.loading)         return { color: 'bg-[var(--surface)] text-[var(--text-muted)]',                              icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
     if (geoState.error)           return { color: 'bg-red-900/50 text-red-200 border-red-800',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
     if (isOffline)                return { color: 'bg-amber-900/50 text-amber-200 border-amber-800',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
     if (geoState.allowed)         return { color: 'bg-emerald-900/50 text-emerald-300 border-emerald-800', icon: <MapPin size={12} />, text: `Zone OK (${geoState.distance}m)` };
-    if (geoState.isMockedSuspect) return { color: 'bg-yellow-900/50 text-yellow-200 border-yellow-700',    icon: <Wifi size={12} />,   text: `Signal Faible (${geoState.accuracy}m)` };
+    if (geoState.isMockedSuspect) return { color: 'bg-amber-900/50 text-amber-200 border-amber-700',    icon: <Wifi size={12} />,   text: `Signal Faible (${geoState.accuracy}m)` };
     return                               { color: 'bg-red-900/50 text-red-200 border-red-800',              icon: <Ban size={12} />,    text: `Hors Zone (${geoState.distance}m)` };
   };
 
@@ -624,7 +661,7 @@ export default function AttendanceCheckInPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen pb-20 relative overflow-hidden flex flex-col items-center bg-slate-900 text-white">
+    <div className="min-h-screen pb-20 relative overflow-hidden flex flex-col items-center bg-[var(--bg)] text-[var(--text)]">
 
       {/* Toast earlyArrival / slightLate */}
       {activeToast && (
@@ -640,13 +677,13 @@ export default function AttendanceCheckInPage() {
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-emerald-500/20 rounded-full animate-[ping_3s_linear_infinite]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-emerald-500/30 rounded-full" />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)]/50 to-[var(--bg)]" />
       </div>
 
       {/* Bouton retour */}
       <div className="absolute top-4 left-4 z-20">
-        <button onClick={() => router.back()} className="p-2 bg-white/10 backdrop-blur-md rounded-full hover:bg-white/20 transition-colors">
-          <ArrowLeft size={24} className="text-white" />
+        <button onClick={() => router.back()} className="p-2 bg-[var(--surface-2)] backdrop-blur-md rounded-full hover:bg-[var(--border)] transition-colors">
+          <ArrowLeft size={24} className="text-[var(--text)]" />
         </button>
       </div>
 
@@ -659,10 +696,10 @@ export default function AttendanceCheckInPage() {
         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6 border backdrop-blur-md transition-colors duration-500 ${badge.color}`}>
           {badge.icon}{badge.text}
         </div>
-        <h1 className="text-6xl md:text-8xl font-bold tracking-tight font-mono tabular-nums text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400">
+        <h1 className="text-6xl md:text-8xl font-bold tracking-tight font-mono tabular-nums text-[var(--text)]">
           {currentTime ? currentTime.toLocaleTimeString('fr-FR') : '--:--:--'}
         </h1>
-        <p className="text-slate-400 mt-2 text-lg capitalize">
+        <p className="text-[var(--text-muted)] mt-2 text-lg capitalize">
           {currentTime?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
         {employeeName && <p className="text-emerald-400 font-bold mt-2">Bonjour, {employeeName}</p>}
@@ -672,7 +709,7 @@ export default function AttendanceCheckInPage() {
       <div className="w-full max-w-md px-4 relative z-10 space-y-4">
 
         {/* ── Carte pointage principale ──────────────────────────────────── */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10 text-center relative overflow-hidden">
+        <div className="bg-[var(--surface)] backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-[var(--border)] text-center relative overflow-hidden">
           {showConfetti && (
             <div className="absolute inset-0 pointer-events-none">
               <div className="w-full h-full bg-emerald-500/10 animate-pulse" />
@@ -699,9 +736,9 @@ export default function AttendanceCheckInPage() {
           )}
 
           {!geoState.loading && !geoState.error && !geoState.allowed && geoState.isMockedSuspect && status === 'idle' && (
-            <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-left">
-              <div className="flex items-center gap-2 text-yellow-400 font-bold mb-1"><Wifi size={18} /> Signal Faible</div>
-              <p className="text-xs text-yellow-200">
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
+              <div className="flex items-center gap-2 text-amber-400 font-bold mb-1"><Wifi size={18} /> Signal Faible</div>
+              <p className="text-xs text-amber-200">
                 Position imprécise ({geoState.accuracy}m). Le serveur tranchera au moment du pointage.
               </p>
             </div>
@@ -739,8 +776,8 @@ export default function AttendanceCheckInPage() {
                     ? 'bg-emerald-500/20 text-emerald-300'
                     : geoState.allowed || isOffline
                     ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
-                    : geoState.isMockedSuspect ? 'bg-yellow-500/20 text-yellow-400'
-                    : 'bg-slate-700/50 text-slate-500'
+                    : geoState.isMockedSuspect ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-[var(--surface-2)]/50 text-[var(--text-muted)]'
                 }`}
               >
                 {/* Anneau de scan qui pulse vers l'extérieur */}
@@ -767,7 +804,7 @@ export default function AttendanceCheckInPage() {
                   effort !" à quelqu'un à 800m du bureau. */}
               {(() => {
                 const allowedRadius = companySettings?.allowedRadius || 100;
-                const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
+                const overshoot = Math.max(0, (radarDistance ?? 0) - allowedRadius);
                 const isTooFar = overshoot > RADAR_MAX_OVERSHOOT_METERS;
                 // ✅ Disponible en permanence tant que le GPS fonctionne —
                 // même logique que "Tester en marchant" côté paramètres
@@ -791,18 +828,11 @@ export default function AttendanceCheckInPage() {
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-slate-800/60 rounded-2xl p-4 border border-slate-700">
+                      <div className="bg-[var(--surface)]/60 rounded-2xl p-4 border border-[var(--border)]">
                         <GeofenceRadiusPreview
                           radius={allowedRadius}
                           showReliabilityMessage={false}
-                          userOffset={
-                            geoState.latitude && geoState.longitude && companySettings?.latitude && companySettings?.longitude
-                              ? computeMetersOffset(
-                                  companySettings.latitude, companySettings.longitude,
-                                  geoState.latitude, geoState.longitude,
-                                )
-                              : null
-                          }
+                          userOffset={radarOffset}
                         />
                         {/* ✅ Message encourageant — purement motivant, sans
                             aucun rôle dans la décision d'autorisation */}
@@ -813,15 +843,15 @@ export default function AttendanceCheckInPage() {
                         )}
                         {/* Trop loin : message sobre, à la place du ton motivant */}
                         {!geoState.allowed && isTooFar && (
-                          <p className="mt-3 text-center text-xs text-slate-400">
-                            Vous semblez loin de la zone autorisée (~{Math.round(geoState.distance ?? 0)}m).
+                          <p className="mt-3 text-center text-xs text-[var(--text-muted)]">
+                            Vous semblez loin de la zone autorisée (~{Math.round(radarDistance ?? 0)}m).
                             Si vous pensez être au bon endroit, contactez votre RH — sinon, le pointage manuel reste disponible.
                           </p>
                         )}
                         <button
                           type="button"
                           onClick={() => setShowRadar(false)}
-                          className="mt-2 w-full text-center text-[11px] text-slate-400 hover:text-slate-300"
+                          className="mt-2 w-full text-center text-[11px] text-[var(--text-muted)] hover:text-[var(--text-muted)]"
                         >
                           Fermer
                         </button>
@@ -837,14 +867,14 @@ export default function AttendanceCheckInPage() {
                   d'abord, ~12s), pour ne pas encombrer l'écran inutilement. */}
               {badSince && currentTime && (currentTime.getTime() - badSince > 12000) && status === 'idle' && (
                 <div className="mb-6 -mt-4 text-center">
-                  <p className="text-xs text-slate-400 mb-2">
+                  <p className="text-xs text-[var(--text-muted)] mb-2">
                     {geoState.allowed ? '' : `Vous semblez hors zone ou un peu loin (${geoState.distance}m).`}
                   </p>
                   <button
                     type="button"
                     onClick={handleManualRefresh}
                     disabled={geoState.loading}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700/60 text-slate-300 hover:bg-slate-700 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--surface-2)]/60 text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50"
                   >
                     {geoState.loading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
                     Actualiser ma position
@@ -871,8 +901,8 @@ export default function AttendanceCheckInPage() {
               <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-400 animate-pulse border border-emerald-500/30">
                 <Clock size={32} />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-white">Au travail</h2>
-              <p className="text-slate-400 mb-8 text-sm">
+              <h2 className="text-2xl font-bold mb-2 text-[var(--text)]">Au travail</h2>
+              <p className="text-[var(--text-muted)] mb-8 text-sm">
                 Débuté à{' '}
                 {todayAttendance?.checkIn
                   ? new Date(todayAttendance.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -893,10 +923,10 @@ export default function AttendanceCheckInPage() {
               <div className="w-20 h-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-amber-400 border border-amber-500/30">
                 <CheckCircle2 size={32} />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-white">À demain !</h2>
-              <p className="text-slate-400 mb-8 text-sm">Votre journée est enregistrée.</p>
+              <h2 className="text-2xl font-bold mb-2 text-[var(--text)]">À demain !</h2>
+              <p className="text-[var(--text-muted)] mb-8 text-sm">Votre journée est enregistrée.</p>
               <button onClick={() => router.push(bp('/presences'))}
-                className="w-full py-3 bg-slate-700 text-white font-bold rounded-xl hover:bg-slate-600 transition-colors">
+                className="w-full py-3 bg-[var(--surface-2)] text-[var(--text)] font-bold rounded-xl hover:bg-[var(--border)] transition-colors">
                 Fermer
               </button>
             </>
@@ -906,7 +936,7 @@ export default function AttendanceCheckInPage() {
             <div className="py-8 text-center">
               <AlertTriangle size={32} className="text-red-400 mx-auto mb-3" />
               <p className="text-red-300 font-bold">Impossible de charger votre profil</p>
-              <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-slate-700 rounded-xl text-sm text-white">
+              <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-[var(--surface-2)] rounded-xl text-sm text-[var(--text)]">
                 Réessayer
               </button>
             </div>
@@ -924,8 +954,8 @@ export default function AttendanceCheckInPage() {
         )}
 
         {/* ── Historique semaine ─────────────────────────────────────────── */}
-        <div className="bg-slate-800/30 backdrop-blur-md rounded-3xl p-6 border border-white/5 shadow-lg">
-          <h3 className="text-xs font-bold uppercase text-slate-500 mb-4 flex items-center gap-2 tracking-widest">
+        <div className="bg-[var(--surface)] backdrop-blur-md rounded-2xl p-6 border border-[var(--border)] shadow-lg">
+          <h3 className="text-xs font-bold uppercase text-[var(--text-muted)] mb-4 flex items-center gap-2 tracking-widest">
             <History size={12} /> Cette semaine
           </h3>
           {history.length > 0 ? (
@@ -935,12 +965,12 @@ export default function AttendanceCheckInPage() {
                 const isToday = new Date().toDateString() === date.toDateString();
                 const hasOT   = record.overtime10 > 0 || record.overtime25 > 0 || record.overtime50 > 0;
                 return (
-                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/5'}`}>
+                  <div key={i} className={`flex justify-between items-center p-3 rounded-xl border ${isToday ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-[var(--surface-2)] border-[var(--border)]'}`}>
                     <div>
-                      <p className="font-bold text-slate-200 text-sm capitalize">
+                      <p className="font-bold text-[var(--text-muted)] text-sm capitalize">
                         {date.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}
                       </p>
-                      <div className="flex gap-3 text-xs text-slate-400 mt-1">
+                      <div className="flex gap-3 text-xs text-[var(--text-muted)] mt-1">
                         <span className="flex items-center gap-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           {record.checkIn ? new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
@@ -956,7 +986,7 @@ export default function AttendanceCheckInPage() {
                         <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">RETARD</span>
                       )}
                       {record.notes === 'SUSPICIOUS_LOCATION' && (
-                        <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 font-bold">SUSPECT</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">SUSPECT</span>
                       )}
                       {hasOT && (
                         <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
@@ -972,7 +1002,7 @@ export default function AttendanceCheckInPage() {
               })}
             </div>
           ) : (
-            <p className="text-center text-slate-600 text-xs py-4">Historique vide.</p>
+            <p className="text-center text-[var(--text-muted)] text-xs py-4">Historique vide.</p>
           )}
         </div>
 

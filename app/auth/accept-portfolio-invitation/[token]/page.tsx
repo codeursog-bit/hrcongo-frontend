@@ -4,8 +4,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
-  Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, ArrowRight, Building2, Hexagon,
+  Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, ArrowRight, Building2,
 } from 'lucide-react';
 import { api } from '@/services/api';
 
@@ -110,10 +111,24 @@ export default function AcceptPortfolioInvitationPage() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--bg)' }}>
       <div className="max-w-md w-full">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center mb-3">
-            <Hexagon size={22} className="text-white" />
-          </div>
-          <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>KonzaRH</p>
+          <Image
+            src="/logos/konza_logo_h_color.png"
+            alt="Konza RH Logo"
+            width={507}
+            height={240}
+            priority
+            className="block dark:hidden"
+            style={{ width: '150px', height: 'auto', objectFit: 'contain' }}
+          />
+          <Image
+            src="/logos/konza_logo_h_white.png"
+            alt="Konza RH Logo"
+            width={507}
+            height={240}
+            priority
+            className="hidden dark:block"
+            style={{ width: '150px', height: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
