@@ -82,9 +82,9 @@ interface PayrollSettings {
 // ─── CNSS PATRONALE : 3 BRANCHES ─────────────────────────────────────────────
 
 const CNSS_BRANCHES = [
-  { key: 'pension',  label: 'Retraite & Pension',      rate: 8,    plafond: '1 200 000 FCFA', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/10',  border: 'border-purple-200 dark:border-purple-800' },
-  { key: 'famille',  label: 'Prestations familiales',   rate: 10,   plafond: '600 000 FCFA',   color: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-50 dark:bg-blue-900/10',      border: 'border-blue-200 dark:border-blue-800'   },
-  { key: 'accident', label: 'Accidents du travail',     rate: 2.25, plafond: '600 000 FCFA',   color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/10', border: 'border-orange-200 dark:border-orange-800' },
+  { key: 'pension',  label: 'Retraite & Pension',      rate: 8,    plafond: '1 200 000 FCFA', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/10',  border: 'border-emerald-200 dark:border-emerald-800' },
+  { key: 'famille',  label: 'Prestations familiales',   rate: 10,   plafond: '600 000 FCFA',   color: 'text-amber-600 dark:text-amber-400',   bg: 'bg-amber-50 dark:bg-amber-900/10',      border: 'border-amber-200 dark:border-amber-800'   },
+  { key: 'accident', label: 'Accidents du travail',     rate: 2.25, plafond: '600 000 FCFA',   color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/10', border: 'border-emerald-200 dark:border-emerald-800' },
 ];
 const CNSS_EMPLOYER_TOTAL = 8 + 10 + 2.25;
 
@@ -579,8 +579,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       onClick={() => setActiveTab(id)}
       className={`px-4 py-3 rounded-xl font-bold text-sm flex items-center gap-2 transition-all whitespace-nowrap ${
         activeTab === id
-          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg'
-          : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+          ? 'bg-[var(--text)] text-[var(--bg)] shadow-lg'
+          : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
       }`}
     >
       <Icon size={18} /> {label}
@@ -591,7 +591,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="animate-spin text-sky-500" size={48} />
+        <Loader2 className="animate-spin text-emerald-500" size={48} />
       </div>
     );
   }
@@ -606,14 +606,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 mt-6">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()}
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-            <ArrowLeft size={20} className="text-gray-500" />
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
+            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">
               Paramètres Entreprise
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <p className="text-[var(--text-muted)] text-sm">
               Configuration complète : identité, fiscalité et politiques RH.
             </p>
           </div>
@@ -638,13 +638,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             onClick={() => setActiveTab(tab.id)}
             className={`flex flex-col items-center gap-1 px-5 py-3 rounded-2xl font-bold text-sm transition-all min-w-[110px] ${
               activeTab === tab.id
-                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg scale-[1.03]'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:scale-[1.01]'
+                ? 'bg-[var(--text)] text-[var(--bg)] shadow-lg scale-[1.03]'
+                : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)] hover:scale-[1.01]'
             }`}
           >
             <tab.icon size={20} />
             <span className="font-black">{tab.label}</span>
-            <span className={`text-[10px] font-normal ${activeTab === tab.id ? 'opacity-70' : 'text-gray-400'}`}>
+            <span className={`text-[10px] font-normal ${activeTab === tab.id ? 'opacity-70' : 'text-[var(--text-muted)]'}`}>
               {tab.desc}
             </span>
           </button>
@@ -664,8 +664,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs transition-all whitespace-nowrap ${
               activeTab === tab.id
-                ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 shadow-md'
-                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                ? 'bg-[var(--text)] text-[var(--bg)] shadow-md'
+                : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
             }`}
           >
             <tab.icon size={14} />
@@ -683,9 +683,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             ══════════════════════════════════════════════ */}
             {activeTab === 'general' && (
               <motion.div key="general" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <Briefcase size={20} className="text-sky-500" /> Identification
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Briefcase size={20} className="text-emerald-500" /> Identification
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
@@ -696,59 +696,59 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       { field: 'taxNumber',  label: 'N° Fiscal (NIU)', mono: true  },
                     ].map(({ field, label, mono }) => (
                       <div key={field}>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{label}</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">{label}</label>
                         <input
                           type="text"
                           value={(companyData as any)[field]}
                           onChange={e => handleCompanyChange(field as any, e.target.value)}
-                          className={`w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white ${mono ? 'font-mono' : ''}`}
+                          className={`w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] ${mono ? 'font-mono' : ''}`}
                         />
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
                     <Landmark size={20} className="text-emerald-500" /> Banque Principale
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Banque</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Banque</label>
                       <select value={companyData.bankName} onChange={e => handleCompanyChange('bankName', e.target.value)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white">
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]">
                         <option value="">Sélectionner...</option>
                         <option>BGFI Bank</option><option>Ecobank</option>
                         <option>LCB</option><option>UBA</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Numéro de Compte</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Numéro de Compte</label>
                       <input value={companyData.bankAccount} onChange={e => handleCompanyChange('bankAccount', e.target.value)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">RIB / IBAN</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">RIB / IBAN</label>
                       <input value={companyData.bankRib} onChange={e => handleCompanyChange('bankRib', e.target.value)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                     </div>
                   </div>
                 </div>
 
                               {/* ── Logo entreprise ── */}
-<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-    <ImageIcon size={20} className="text-sky-500" /> Logo entreprise
+<div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+    <ImageIcon size={20} className="text-emerald-500" /> Logo entreprise
   </h3>
-  <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+  <p className="text-xs text-[var(--text-muted)] mb-5">
     Ce logo s'affichera sur vos bulletins de paie. Format JPG, PNG, WEBP ou SVG — max 2 MB.
   </p>
   <div className="flex items-start gap-6">
     {/* Preview */}
-    <div className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-750">
+    <div className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-[var(--border)] overflow-hidden flex items-center justify-center bg-[var(--surface-2)]">
       {logoPreview
         ? <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-1" />
-        : <ImageIcon size={32} className="text-gray-300" />
+        : <ImageIcon size={32} className="text-[var(--text-muted)]" />
       }
     </div>
     {/* Actions */}
@@ -756,7 +756,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
       {!logoFile ? (
         <div className="flex flex-wrap gap-2">
           <button onClick={() => logoInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-xl text-sm font-bold hover:bg-sky-100 transition-colors">
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors">
             <Upload size={15} /> Choisir un logo
           </button>
           {currentLogo && (
@@ -769,7 +769,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs text-gray-500">Fichier sélectionné : <strong>{logoFile.name}</strong></p>
+          <p className="text-xs text-[var(--text-muted)]">Fichier sélectionné : <strong>{logoFile.name}</strong></p>
           <div className="flex gap-2">
             <button onClick={handleLogoUpload} disabled={logoUploading}
               className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors">
@@ -777,13 +777,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               {logoUploading ? 'Upload...' : 'Enregistrer'}
             </button>
             <button onClick={cancelLogoSelection}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold hover:bg-[var(--surface-2)] transition-colors">
               <X size={15} /> Annuler
             </button>
           </div>
         </div>
       )}
-      <p className="text-xs text-gray-400">Recommandé : fond transparent (PNG/SVG), dimensions min. 200×200 px</p>
+      <p className="text-xs text-[var(--text-muted)]">Recommandé : fond transparent (PNG/SVG), dimensions min. 200×200 px</p>
     </div>
   </div>
   <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml"
@@ -791,25 +791,25 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 </div>
 
               {/* ── Cachet & signature ── */}
-<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-    <ImageIcon size={20} className="text-sky-500" /> Cachet &amp; signature
+<div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+    <ImageIcon size={20} className="text-emerald-500" /> Cachet &amp; signature
   </h3>
-  <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+  <p className="text-xs text-[var(--text-muted)] mb-5">
     S'affiche automatiquement sur les documents imprimables (congé, absence, prêt...) une fois la demande validée par le RH. Format JPG, PNG ou WEBP — max 2 MB.
   </p>
   <div className="flex items-start gap-6">
-    <div className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-750">
+    <div className="w-24 h-24 flex-shrink-0 rounded-xl border-2 border-dashed border-[var(--border)] overflow-hidden flex items-center justify-center bg-[var(--surface-2)]">
       {cachetPreview
         ? <img src={cachetPreview} alt="Cachet" className="w-full h-full object-contain p-1" />
-        : <ImageIcon size={32} className="text-gray-300" />
+        : <ImageIcon size={32} className="text-[var(--text-muted)]" />
       }
     </div>
     <div className="flex-1 space-y-3">
       {!cachetFile ? (
         <div className="flex flex-wrap gap-2">
           <button onClick={() => cachetInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 rounded-xl text-sm font-bold hover:bg-sky-100 transition-colors">
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors">
             <Upload size={15} /> Choisir un cachet
           </button>
           {currentCachet && (
@@ -822,7 +822,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-xs text-gray-500">Fichier sélectionné : <strong>{cachetFile.name}</strong></p>
+          <p className="text-xs text-[var(--text-muted)]">Fichier sélectionné : <strong>{cachetFile.name}</strong></p>
           <div className="flex gap-2">
             <button onClick={handleCachetUpload} disabled={cachetUploading}
               className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors">
@@ -830,13 +830,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               {cachetUploading ? 'Upload...' : 'Enregistrer'}
             </button>
             <button onClick={cancelCachetSelection}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl text-sm font-bold hover:bg-[var(--surface-2)] transition-colors">
               <X size={15} /> Annuler
             </button>
           </div>
         </div>
       )}
-      <p className="text-xs text-gray-400">Recommandé : fond transparent (PNG), cachet + signature scannés ensemble</p>
+      <p className="text-xs text-[var(--text-muted)]">Recommandé : fond transparent (PNG), cachet + signature scannés ensemble</p>
     </div>
   </div>
   <input ref={cachetInputRef} type="file" accept="image/jpeg,image/png,image/webp"
@@ -844,17 +844,17 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 </div>
 
               {/* ── Modèle de document ── */}
-<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-    <FileText size={20} className="text-sky-500" /> Modèle de document
+<div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-emerald-500" /> Modèle de document
   </h3>
-  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+  <p className="text-xs text-[var(--text-muted)] mb-4">
     Mise en page utilisée pour les documents imprimables (congé, absence, prêt, avance...).
   </p>
   <select
     value={companyData.documentTemplate}
     onChange={(e) => setCompanyData({ ...companyData, documentTemplate: e.target.value })}
-    className="w-full md:w-72 p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+    className="w-full md:w-72 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
   >
     <option value="DEFAULT">Modèle par défaut</option>
     <option value="ORCA">Modèle 1</option>
@@ -862,11 +862,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 </div>
 
               {/* ── Pied de page légal des documents ── */}
-<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-    <FileText size={20} className="text-sky-500" /> Pied de page des documents
+<div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-emerald-500" /> Pied de page des documents
   </h3>
-  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+  <p className="text-xs text-[var(--text-muted)] mb-4">
     Texte affiché en bas des documents imprimables (congé, absence, prêt...). Laissez vide pour une composition automatique à partir de la raison sociale, du RCCM, du NIU, de l'adresse et du téléphone ci-dessus.
   </p>
   <textarea
@@ -874,53 +874,53 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
     onChange={(e) => setCompanyData({ ...companyData, documentFooterText: e.target.value })}
     rows={4}
     placeholder={"Ex. : ORCA DECO CONGO S.A\nSociété Anonyme à Responsabilité Limitée (SARL) au capital de 100 000 000 CFA\nRCCM CG/PNR/14 B 197 · NIU : M2014 110000707066 · Tél : +242 22 294 16 42\nSiège social : Avenue Marien Ngouabi, Pointe-Noire"}
-    className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white resize-y"
+    className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] resize-y"
   />
 </div>
 
               {/* 🆕 ── Générateur de contrats : représentant légal & lieu de signature ── */}
-<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-    <FileText size={20} className="text-indigo-500" /> Générateur de contrats
+<div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+    <FileText size={20} className="text-emerald-500" /> Générateur de contrats
   </h3>
-  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+  <p className="text-xs text-[var(--text-muted)] mb-4">
     Ces informations sont pré-remplies automatiquement à chaque génération de contrat (CDI/CDD, prestation de services, stage).
   </p>
   <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
     <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Forme juridique</label>
+      <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Forme juridique</label>
       <input
         value={companyData.legalForm || ''}
         onChange={(e) => setCompanyData({ ...companyData, legalForm: e.target.value })}
         placeholder="Ex. : Société Anonyme à Responsabilité Limitée (SARL)"
-        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+        className="w-full p-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
       />
     </div>
     <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Nom du représentant</label>
+      <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Nom du représentant</label>
       <input
         value={companyData.contractRepresentativeName || ''}
         onChange={(e) => setCompanyData({ ...companyData, contractRepresentativeName: e.target.value })}
         placeholder="Ex. : Monsieur HUSSEIN Ayman"
-        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+        className="w-full p-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
       />
     </div>
     <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Fonction du représentant</label>
+      <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Fonction du représentant</label>
       <input
         value={companyData.contractRepresentativeRole || ''}
         onChange={(e) => setCompanyData({ ...companyData, contractRepresentativeRole: e.target.value })}
         placeholder="Ex. : Directeur Gérant"
-        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+        className="w-full p-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
       />
     </div>
     <div>
-      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Ville de signature</label>
+      <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">Ville de signature</label>
       <input
         value={companyData.contractSignatureCity || ''}
         onChange={(e) => setCompanyData({ ...companyData, contractSignatureCity: e.target.value })}
         placeholder="Ex. : Pointe-Noire"
-        className="w-full p-2.5 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white"
+        className="w-full p-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
       />
     </div>
   </div>
@@ -935,23 +935,23 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               <motion.div key="fiscal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
                 {/* CNSS PATRONALE */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <ShieldCheck size={20} className="text-purple-500" /> CNSS Patronale
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-emerald-500" /> CNSS Patronale
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                  <p className="text-xs text-[var(--text-muted)] mb-5">
                     La CNSS patronale est composée de <strong>3 branches distinctes</strong> avec des plafonds différents, conformément au Décret 2009-392.
                   </p>
 
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 transition-all group mb-4">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 transition-all group mb-4">
                     <input type="checkbox" checked={companyData.appliesCnssEmployer}
                       onChange={e => handleCompanyChange('appliesCnssEmployer', e.target.checked)}
-                      className="w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 mt-0.5" />
+                      className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white block mb-1">
+                      <span className="text-sm font-bold text-[var(--text)] block mb-1">
                         L'entreprise est assujettie à la CNSS patronale
                       </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-[var(--text-muted)]">
                         Décochez si votre structure n'est pas encore immatriculée à la CNSS.
                       </p>
                     </div>
@@ -966,20 +966,20 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                               className={`flex items-center justify-between p-4 rounded-xl border ${branch.bg} ${branch.border}`}>
                               <div>
                                 <p className={`font-bold text-sm ${branch.color}`}>{branch.label}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Plafond : {branch.plafond}</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-0.5">Plafond : {branch.plafond}</p>
                               </div>
                               <span className={`text-2xl font-black font-mono ${branch.color}`}>{branch.rate}%</span>
                             </div>
                           ))}
                         </div>
-                        <div className="flex items-center justify-between p-4 bg-gray-900 dark:bg-black rounded-xl">
+                        <div className="flex items-center justify-between p-4 bg-[var(--surface-2)] dark:bg-black rounded-xl">
                           <div>
                             <p className="text-white font-bold text-sm">Total CNSS patronale</p>
-                            <p className="text-gray-400 text-xs mt-0.5">Taux combiné (bases plafonnées respectives)</p>
+                            <p className="text-[var(--text-muted)] text-xs mt-0.5">Taux combiné (bases plafonnées respectives)</p>
                           </div>
                           <span className="text-2xl font-black font-mono text-white">{CNSS_EMPLOYER_TOTAL}%</span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-3 flex items-center gap-1.5">
+                        <p className="text-xs text-[var(--text-muted)] mt-3 flex items-center gap-1.5">
                           <AlertCircle size={12} className="text-amber-400 shrink-0" />
                           Ces taux sont <strong>fixés par la loi congolaise</strong> et ne sont pas modifiables.
                         </p>
@@ -989,50 +989,50 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 {/* PARAMÈTRES PAR DÉFAUT — NOUVEAUX EMPLOYÉS */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                    <ShieldCheck size={20} className="text-indigo-500" /> Paramètres par défaut — Nouveaux employés
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-emerald-500" /> Paramètres par défaut — Nouveaux employés
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+                  <p className="text-xs text-[var(--text-muted)] mb-5">
                     Ces valeurs seront pré-remplies à la création d'un nouvel employé.
                   </p>
 
-                  <div className="p-4 bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800 rounded-xl mb-5">
-                    <p className="text-sm font-bold text-violet-900 dark:text-violet-100 mb-1 flex items-center gap-2">
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl mb-5">
+                    <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100 mb-1 flex items-center gap-2">
                       <AlertCircle size={15} className="shrink-0" /> Réforme fiscale 2026 — ITS (ex-IRPP)
                     </p>
-                    <p className="text-xs text-violet-700 dark:text-violet-300 leading-relaxed">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
                       Depuis le 1er janvier 2026, l'IRPP est remplacé par l'<strong>ITS</strong>. L'abattement passe de <strong>30% plafonné</strong> à <strong>20% sans plafond</strong>. Quotient familial supprimé — 1 part unique. Le système bascule automatiquement selon l'année du bulletin.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-300 transition-all">
+                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-emerald-300 transition-all">
                       <input type="checkbox" checked={companyData.defaultAppliesIrpp}
                         onChange={e => handleCompanyChange('defaultAppliesIrpp', e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                        className="w-5 h-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500" />
                       <div>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white block mb-0.5">Par défaut, soumis à l'ITS</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Barème 1% / 10% / 25% / 40%</p>
+                        <span className="text-sm font-bold text-[var(--text)] block mb-0.5">Par défaut, soumis à l'ITS</span>
+                        <p className="text-xs text-[var(--text-muted)]">Barème 1% / 10% / 25% / 40%</p>
                       </div>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-indigo-300 transition-all">
+                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-emerald-300 transition-all">
                       <input type="checkbox" checked={companyData.defaultAppliesCnss}
                         onChange={e => handleCompanyChange('defaultAppliesCnss', e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                        className="w-5 h-5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500" />
                       <div>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white block mb-0.5">Par défaut, soumis à la CNSS</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">4% salarié · plafond 1 200 000 F</p>
+                        <span className="text-sm font-bold text-[var(--text)] block mb-0.5">Par défaut, soumis à la CNSS</span>
+                        <p className="text-xs text-[var(--text-muted)]">4% salarié · plafond 1 200 000 F</p>
                       </div>
                     </label>
                   </div>
 
                   {/* Mode calcul ITS */}
-                  <div className="mt-6 p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-                    <h4 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2 text-sm">
-                      <ShieldCheck size={16} className="text-indigo-500" /> Mode de calcul ITS / IRPP
+                  <div className="mt-6 p-5 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
+                    <h4 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2 text-sm">
+                      <ShieldCheck size={16} className="text-emerald-500" /> Mode de calcul ITS / IRPP
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    <p className="text-xs text-[var(--text-muted)] mb-4">
                       Choisissez comment l'impôt sur salaires est calculé pour tous les bulletins.
                     </p>
                     <div className="grid grid-cols-1 gap-3">
@@ -1044,7 +1044,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         <label key={opt.value} className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-all ${
                           payrollData.fiscalMode === opt.value
                             ? `border-${opt.color}-500 bg-${opt.color}-50 dark:bg-${opt.color}-900/20`
-                            : `border-gray-200 dark:border-gray-700 hover:border-${opt.color}-300`
+                            : `border-[var(--border)] hover:border-${opt.color}-300`
                         }`}>
                           <input type="radio" name="fiscalMode" value={opt.value}
                             checked={payrollData.fiscalMode === opt.value}
@@ -1052,14 +1052,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             className={`mt-1 text-${opt.color}-600`} />
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-sm font-bold text-gray-900 dark:text-white">{opt.label}</span>
+                              <span className="text-sm font-bold text-[var(--text)]">{opt.label}</span>
                               {opt.badge && (
                                 <span className={`text-xs bg-${opt.color}-100 dark:bg-${opt.color}-900/40 text-${opt.color}-700 dark:text-${opt.color}-300 px-2 py-0.5 rounded-full font-medium`}>
                                   {opt.badge}
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{opt.desc}</p>
+                            <p className="text-xs text-[var(--text-muted)]">{opt.desc}</p>
                           </div>
                         </label>
                       ))}
@@ -1067,38 +1067,38 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       {/* Forfait */}
                       <label className={`flex items-start gap-4 cursor-pointer p-4 rounded-xl border-2 transition-all ${
                         payrollData.fiscalMode === 'FORFAIT'
-                          ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-rose-300'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'border-[var(--border)] hover:border-emerald-300'
                       }`}>
                         <input type="radio" name="fiscalMode" value="FORFAIT"
                           checked={payrollData.fiscalMode === 'FORFAIT'}
                           onChange={() => handlePayrollChange('fiscalMode', 'FORFAIT')}
-                          className="mt-1 text-rose-600" />
+                          className="mt-1 text-emerald-600" />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-sm font-bold text-gray-900 dark:text-white">Taux forfaitaire</span>
-                            <span className="text-xs bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full font-medium">Pratique terrain</span>
+                            <span className="text-sm font-bold text-[var(--text)]">Taux forfaitaire</span>
+                            <span className="text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full font-medium">Pratique terrain</span>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                          <p className="text-xs text-[var(--text-muted)] mb-3">
                             ITS = brut fiscal × taux fixe. Non conforme CGI mais compatible anciens bulletins.
                           </p>
                           {payrollData.fiscalMode === 'FORFAIT' && (
                             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
-                              <label className="text-xs font-bold text-gray-700 dark:text-gray-300 whitespace-nowrap">Taux ITS :</label>
+                              <label className="text-xs font-bold text-[var(--text)] whitespace-nowrap">Taux ITS :</label>
                               <div className="flex items-center gap-2">
                                 <input type="number" min="1" max="40" step="0.5"
                                   value={Math.round(payrollData.forfaitItsRate * 100)}
                                   onChange={e => handlePayrollChange('forfaitItsRate', parseFloat(e.target.value) / 100 || 0.08)}
-                                  className="w-20 text-center border border-rose-300 dark:border-rose-700 rounded-lg px-2 py-1.5 text-sm font-bold bg-white dark:bg-gray-900 text-rose-700 focus:ring-2 focus:ring-rose-500" />
-                                <span className="text-sm font-bold text-rose-600">%</span>
+                                  className="w-20 text-center border border-emerald-300 dark:border-emerald-700 rounded-lg px-2 py-1.5 text-sm font-bold bg-[var(--surface)] text-emerald-700 focus:ring-2 focus:ring-emerald-500" />
+                                <span className="text-sm font-bold text-emerald-600">%</span>
                                 <div className="flex gap-2 ml-2">
                                   {[6, 8, 10].map(pct => (
                                     <button key={pct} type="button"
                                       onClick={() => handlePayrollChange('forfaitItsRate', pct / 100)}
                                       className={`text-xs px-2 py-1 rounded-lg font-bold border transition-all ${
                                         Math.round(payrollData.forfaitItsRate * 100) === pct
-                                          ? 'bg-rose-500 text-white border-rose-500'
-                                          : 'border-rose-300 text-rose-600 hover:bg-rose-50'
+                                          ? 'bg-emerald-600 text-white border-emerald-600'
+                                          : 'border-emerald-300 text-emerald-600 hover:bg-emerald-50'
                                       }`}>{pct}%</button>
                                   ))}
                                 </div>
@@ -1118,12 +1118,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             ══════════════════════════════════════════════ */}
             {activeTab === 'convention' && (
               <motion.div key="convention" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8">
                   <div className="mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
-                      <BookOpen size={20} className="text-purple-500" /> Convention Collective
+                    <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-1">
+                      <BookOpen size={20} className="text-emerald-500" /> Convention Collective
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[var(--text-muted)]">
                       La convention collective détermine les catégories professionnelles et salaires minimums appliqués à vos employés.
                     </p>
                   </div>
@@ -1137,13 +1137,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   <AnimatePresence>
                     {companyData.collectiveAgreement && getConventionCatalogEntry(companyData.collectiveAgreement) && (
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-700 rounded-xl flex items-start gap-3">
-                        <Award size={18} className="text-purple-500 mt-0.5 shrink-0" />
+                        className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-700 rounded-xl flex items-start gap-3">
+                        <Award size={18} className="text-emerald-500 mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-sm font-bold text-purple-900 dark:text-purple-100">
+                          <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">
                             Convention {getConventionCatalogEntry(companyData.collectiveAgreement)?.label} active
                           </p>
-                          <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
                             Les nouveaux employés bénéficieront automatiquement des catégories et salaires minimums de cette convention.
                           </p>
                         </div>
@@ -1162,25 +1162,25 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 {/* 🆕 JOURS DE CONGÉ SUPPLÉMENTAIRES D'ANCIENNETÉ */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8">
                   <div className="mb-5">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
-                      <Award size={20} className="text-purple-500" /> Congé supplémentaire d'ancienneté
+                    <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-1">
+                      <Award size={20} className="text-emerald-500" /> Congé supplémentaire d'ancienneté
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[var(--text-muted)]">
                       Certaines conventions accordent des jours de congé additionnels selon l'ancienneté de l'employé, en plus des 26 jours de base. Certaines entreprises choisissent de ne pas les appliquer.
                     </p>
                   </div>
 
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 transition-all group">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 transition-all group">
                     <input type="checkbox" checked={companyData.appliesSeniorityLeaveBonus}
                       onChange={e => handleCompanyChange('appliesSeniorityLeaveBonus', e.target.checked)}
-                      className="w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 mt-0.5" />
+                      className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white block mb-1">
+                      <span className="text-sm font-bold text-[var(--text)] block mb-1">
                         Accorder les jours de congé supplémentaires d'ancienneté
                       </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-[var(--text-muted)]">
                         Coché : les employés éligibles reçoivent 26j + leurs jours d'ancienneté (selon la convention sélectionnée), et le bulletin de paie affiche une ligne "Congé supplémentaire" séparée. Décoché : tous les employés n'acquièrent que les 26 jours de base, quelle que soit leur ancienneté.
                       </p>
                     </div>
@@ -1188,12 +1188,12 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 {/* 🆕 RAPPELS DE CHANGEMENT D'ÉCHELON */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-8">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8">
                   <div className="mb-5">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-1">
-                      <Award size={20} className="text-purple-500" /> Rappels de changement d'échelon
+                    <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2 mb-1">
+                      <Award size={20} className="text-emerald-500" /> Rappels de changement d'échelon
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[var(--text-muted)]">
                       Certaines conventions font progresser l'échelon d'un employé selon son ancienneté.
                       Rien ne change automatiquement : si vous activez cette option, Konza RH vous
                       signale simplement (par notification, étalée dans le mois) qu'un employé a
@@ -1201,15 +1201,15 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     </p>
                   </div>
 
-                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 transition-all group">
+                  <label className="flex items-start gap-4 cursor-pointer p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 transition-all group">
                     <input type="checkbox" checked={!!companyData.echelonReminderEnabled}
                       onChange={e => handleCompanyChange('echelonReminderEnabled', e.target.checked)}
-                      className="w-5 h-5 rounded border-purple-300 text-purple-600 focus:ring-purple-500 mt-0.5" />
+                      className="w-5 h-5 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 mt-0.5" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white block mb-1">
+                      <span className="text-sm font-bold text-[var(--text)] block mb-1">
                         Activer les rappels de changement d'échelon
                       </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-[var(--text-muted)]">
                         Décoché (défaut) : aucun rappel, l'échelon reste tel que saisi sur la fiche
                         employé. Coché : vous recevez une notification par employé concerné, jamais
                         toutes le même jour — et vous gardez toujours la décision finale.
@@ -1244,18 +1244,18 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 {/* Aperçu calendrier */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
                     <Calendar size={20} className="text-emerald-500" /> Aperçu du cycle de paie
                   </h3>
 
                   {/* Timeline visuelle */}
                   <div className="relative flex items-center justify-between gap-2 mb-8 px-2">
                     {/* Ligne de connexion */}
-                    <div className="absolute left-0 right-0 top-6 h-0.5 bg-gradient-to-r from-blue-200 via-emerald-200 to-emerald-400 dark:from-blue-800 dark:via-emerald-800 dark:to-emerald-600 z-0" />
+                    <div className="absolute left-0 right-0 top-6 h-0.5 bg-emerald-200 dark:bg-emerald-700 z-0" />
 
                     {[
-                      { day: '1er', label: 'Début du mois', sub: 'Mois de travail', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300', icon: '📅' },
+                      { day: '1er', label: 'Début du mois', sub: 'Mois de travail', color: 'bg-[var(--surface-2)] text-[var(--text-muted)]', icon: '📅' },
                       { day: `${companyData.payrollCloseDay}`, label: 'Clôture bulletins', sub: 'Mois courant', color: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300', icon: '📋' },
                       { day: `${companyData.payrollPaymentDay}`, label: 'Date de paiement', sub: 'Mois suivant', color: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300', icon: '💰' },
                     ].map((step, i) => (
@@ -1265,8 +1265,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         </div>
                         <div className="text-center">
                           <p className={`text-xs font-black ${step.color.split(' ')[2]}`}>Jour {step.day}</p>
-                          <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{step.label}</p>
-                          <p className="text-xs text-gray-400">{step.sub}</p>
+                          <p className="text-xs font-bold text-[var(--text)]">{step.label}</p>
+                          <p className="text-xs text-[var(--text-muted)]">{step.sub}</p>
                         </div>
                       </div>
                     ))}
@@ -1286,11 +1286,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 {/* Formulaire */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
                     <Banknote size={20} className="text-emerald-500" /> Jours de référence
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">
+                  <p className="text-xs text-[var(--text-muted)] mb-6">
                     Ces valeurs sont stockées sur votre entreprise et utilisées automatiquement pour calculer les retards de paie.
                   </p>
 
@@ -1298,7 +1298,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                     {/* Jour de clôture */}
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider">
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1 tracking-wider">
                         Jour de clôture des bulletins
                       </label>
                       <div className="relative">
@@ -1308,11 +1308,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                           max="31"
                           value={companyData.payrollCloseDay}
                           onChange={e => handleCompanyChange('payrollCloseDay', Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
-                          className="w-full p-3 pr-16 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-2xl font-black text-amber-600 dark:text-amber-400 text-center focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                          className="w-full p-3 pr-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-2xl font-black text-amber-600 dark:text-amber-400 text-center focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 uppercase">du mois</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)] uppercase">du mois</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-[var(--text-muted)] mt-2">
                         Jour jusqu'auquel les pointages et absences sont comptabilisés dans les bulletins du mois.
                       </p>
                       {/* Sélecteurs rapides */}
@@ -1323,7 +1323,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
                               companyData.payrollCloseDay === d
                                 ? 'bg-amber-500 text-white border-amber-500'
-                                : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-amber-300 hover:text-amber-600'
+                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-amber-300 hover:text-amber-600'
                             }`}
                           >
                             {d}
@@ -1334,7 +1334,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                     {/* Jour de paiement */}
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1 tracking-wider">
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1 tracking-wider">
                         Jour de paiement des salaires
                       </label>
                       <div className="relative">
@@ -1344,11 +1344,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                           max="31"
                           value={companyData.payrollPaymentDay}
                           onChange={e => handleCompanyChange('payrollPaymentDay', Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
-                          className="w-full p-3 pr-16 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-2xl font-black text-emerald-600 dark:text-emerald-400 text-center focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                          className="w-full p-3 pr-16 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-2xl font-black text-emerald-600 dark:text-emerald-400 text-center focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
                         />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 uppercase">du M+1</span>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)] uppercase">du M+1</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-[var(--text-muted)] mt-2">
                         Jour du mois <strong>suivant</strong> auquel les salaires doivent être versés. Tout retard au-delà déclenche une alerte.
                       </p>
                       {/* Sélecteurs rapides */}
@@ -1359,7 +1359,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             className={`text-xs px-3 py-1.5 rounded-lg font-bold border transition-all ${
                               companyData.payrollPaymentDay === d
                                 ? 'bg-emerald-500 text-white border-emerald-500'
-                                : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
+                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300 hover:text-emerald-600'
                             }`}
                           >
                             {d}
@@ -1386,11 +1386,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   )}
 
                   {/* Note légale Code du Travail */}
-                  <div className="mt-5 p-4 bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-xl">
-                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                  <div className="mt-5 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
+                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
                       📋 Art. 95 Code du Travail Congo
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                       Les salaires doivent être payés à <strong>intervalles réguliers</strong> et à <strong>date fixe convenue</strong>. Un retard de 3 mois ou plus permet à l'employé de saisir l'Inspection du Travail.
                     </p>
                   </div>
@@ -1403,48 +1403,48 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             ══════════════════════════════════════════════ */}
             {activeTab === 'location' && (
               <motion.div key="location" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-800 p-4 rounded-2xl flex gap-3 items-start">
-                  <Smartphone className="text-orange-500 shrink-0 mt-1" size={20} />
-                  <p className="text-xs text-orange-600 dark:text-orange-400">
+                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800 p-4 rounded-2xl flex gap-3 items-start">
+                  <Smartphone className="text-amber-500 shrink-0 mt-1" size={20} />
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
                     Pour la précision GPS optimale, effectuez cette manipulation <strong>depuis un smartphone au bureau</strong>.
                   </p>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Navigation size={20} className="text-red-500" /> Géolocalisation du Site
+                    <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
+                      <Navigation size={20} className="text-emerald-500" /> Géolocalisation du Site
                     </h3>
                     <button onClick={getCurrentLocation}
-                      className="text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-lg border border-red-100 dark:border-red-800 hover:bg-red-100 font-bold flex items-center gap-1">
+                      className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 font-bold flex items-center gap-1">
                       <MapPin size={12} /> Ma position
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Latitude</label>
                         <input type="number" step="0.000001" value={companyData.latitude}
                           onChange={e => handleCompanyChange('latitude', parseFloat(e.target.value) || 0)}
-                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Longitude</label>
                         <input type="number" step="0.000001" value={companyData.longitude}
                           onChange={e => handleCompanyChange('longitude', parseFloat(e.target.value) || 0)}
-                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white" />
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]" />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon autorisé (mètres)</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Rayon autorisé (mètres)</label>
                         <input type="number" value={companyData.allowedRadius}
                           onChange={e => handleCompanyChange('allowedRadius', parseFloat(e.target.value) || 0)}
-                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white" />
-                        <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                          <AlertTriangle size={12} className="text-orange-500 shrink-0" />
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)]" />
+                        <p className="text-xs text-[var(--text-muted)] mt-2 flex items-center gap-1">
+                          <AlertTriangle size={12} className="text-amber-500 shrink-0" />
                           Les employés ne pourront pointer que dans ce rayon.
                         </p>
                         {/* ✅ Incertitude GPS rendue explicite, comme demandé */}
-                        <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 flex items-center gap-1">
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                           <AlertTriangle size={12} className="shrink-0" />
                           Le GPS d'un smartphone a une marge d'erreur d'environ ±10m (parfois plus en intérieur).
                           Un rayon trop petit peut refuser des employés pourtant bien sur place.
@@ -1453,7 +1453,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     </div>
 
                     {/* ✅ Aperçu visuel interactif du cercle (mis à jour en direct) */}
-                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-750 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                    <div className="flex flex-col items-center justify-center bg-[var(--surface-2)] rounded-2xl p-4 border border-[var(--border)]">
                       <GeofenceRadiusPreview
                         radius={companyData.allowedRadius}
                         siteName="Site principal"
@@ -1467,14 +1467,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         onClick={() => setWalkTestActive(v => !v)}
                         className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-bold border transition-colors ${
                           walkTestActive
-                            ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                         }`}
                       >
                         {walkTestActive ? '⏹ Arrêter le test' : '🚶 Tester en marchant'}
                       </button>
                       {walkTestActive && !walkTestOffset && (
-                        <p className="text-[11px] text-gray-400 mt-1">Localisation en cours...</p>
+                        <p className="text-[11px] text-[var(--text-muted)] mt-1">Localisation en cours...</p>
                       )}
                     </div>
                   </div>
@@ -1489,17 +1489,17 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
               <motion.div key="sites" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
                 {/* Info */}
-                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 p-4 rounded-2xl flex gap-3 items-start">
-                  <Navigation className="text-blue-500 shrink-0 mt-1" size={20} />
-                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 p-4 rounded-2xl flex gap-3 items-start">
+                  <Navigation className="text-emerald-500 shrink-0 mt-1" size={20} />
+                  <p className="text-xs text-emerald-700 dark:text-emerald-300">
                     Ajoutez tous vos sites (bureaux, chantiers, entrepôts…). Un employé pourra pointer dès qu'il est dans le rayon de <strong>l'un</strong> des sites actifs. Pas besoin de lui assigner un site spécifique.
                   </p>
                 </div>
 
                 {/* Formulaire ajout / modification */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <MapPin size={18} className="text-indigo-500" />
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
+                    <MapPin size={18} className="text-emerald-500" />
                     {editingSiteId ? 'Modifier le site' : 'Ajouter un site'}
                   </h3>
 
@@ -1511,48 +1511,48 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nom du site *</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Nom du site *</label>
                       <input
                         type="text"
                         placeholder="Ex: Siège Brazzaville, Chantier Pointe-Noire…"
                         value={siteForm.name}
                         onChange={e => setSiteForm(f => ({ ...f, name: e.target.value }))}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white"
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]"
                       />
                     </div>
                     <div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Latitude</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Latitude</label>
                         <input
                           type="number" step="0.000001"
                           value={siteForm.latitude}
                           onChange={e => setSiteForm(f => ({ ...f, latitude: parseFloat(e.target.value) || 0 }))}
-                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]"
                         />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Longitude</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Longitude</label>
                         <input
                           type="number" step="0.000001"
                           value={siteForm.longitude}
                           onChange={e => setSiteForm(f => ({ ...f, longitude: parseFloat(e.target.value) || 0 }))}
-                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-mono text-gray-900 dark:text-white"
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono text-[var(--text)]"
                         />
                       </div>
                       <div className="mt-4">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Rayon (mètres) — min 1m</label>
+                        <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Rayon (mètres) — min 1m</label>
                         <input
                           type="number" min="1"
                           value={siteForm.radius}
                           onChange={e => setSiteForm(f => ({ ...f, radius: Math.max(1, parseInt(e.target.value) || 1) }))}
-                          className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-gray-900 dark:text-white"
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)]"
                         />
-                        <p className="text-xs text-gray-400 mt-1">1m = entrée précise · 50m = bureau · 500m = chantier large</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">1m = entrée précise · 50m = bureau · 500m = chantier large</p>
                       </div>
                       <div className="mt-4">
                         <button
                           onClick={getSiteCurrentLocation}
-                          className="w-full p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-orange-100 transition-colors"
+                          className="w-full p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors"
                         >
                           <MapPin size={16} /> Utiliser ma position GPS
                         </button>
@@ -1562,7 +1562,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     {/* ✅ Même aperçu visuel + test en marchant que pour le
                         site principal, branché ici sur le site en cours
                         d'édition (siteForm) plutôt que companyData. */}
-                    <div className="flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-750 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+                    <div className="flex flex-col items-center justify-center bg-[var(--surface-2)] rounded-2xl p-4 border border-[var(--border)]">
                       <GeofenceRadiusPreview
                         radius={siteForm.radius}
                         siteName={siteForm.name || 'Ce site'}
@@ -1573,14 +1573,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                         onClick={() => setSiteWalkTestActive(v => !v)}
                         className={`mt-3 text-xs px-3 py-1.5 rounded-lg font-bold border transition-colors ${
                           siteWalkTestActive
-                            ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800'
-                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                         }`}
                       >
                         {siteWalkTestActive ? '⏹ Arrêter le test' : '🚶 Tester en marchant'}
                       </button>
                       {siteWalkTestActive && !siteWalkTestOffset && (
-                        <p className="text-[11px] text-gray-400 mt-1">Localisation en cours...</p>
+                        <p className="text-[11px] text-[var(--text-muted)] mt-1">Localisation en cours...</p>
                       )}
                     </div>
                   </div>
@@ -1588,14 +1588,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   <div className="flex gap-3 mt-5">
                     <button
                       onClick={handleSaveSite}
-                      className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+                      className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
                     >
                       <Check size={16} /> {editingSiteId ? 'Enregistrer les modifications' : 'Ajouter ce site'}
                     </button>
                     {editingSiteId && (
                       <button
                         onClick={() => { setEditingSiteId(null); setSiteForm({ name: '', latitude: 0, longitude: 0, radius: 100 }); setSiteError(null); setSiteWalkTestActive(false); }}
-                        className="px-5 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                        className="px-5 py-3 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl font-semibold text-sm hover:bg-[var(--surface-2)] transition-colors"
                       >
                         Annuler
                       </button>
@@ -1604,15 +1604,15 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 </div>
 
                 {/* Liste des sites */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Navigation size={18} className="text-green-500" />
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
+                    <Navigation size={18} className="text-emerald-500" />
                     Sites configurés
-                    <span className="ml-auto text-xs font-normal text-gray-400">{sites.filter(s => s.isActive).length} actif(s) sur {sites.length}</span>
+                    <span className="ml-auto text-xs font-normal text-[var(--text-muted)]">{sites.filter(s => s.isActive).length} actif(s) sur {sites.length}</span>
                   </h3>
 
                   {sites.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400">
+                    <div className="text-center py-10 text-[var(--text-muted)]">
                       <Navigation size={32} className="mx-auto mb-3 opacity-30" />
                       <p className="text-sm">Aucun site configuré.</p>
                       <p className="text-xs mt-1">Ajoutez votre premier site ci-dessus.</p>
@@ -1624,14 +1624,14 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                           key={site.id}
                           className={`flex items-center gap-4 p-4 rounded-xl border transition-all ${
                             site.isActive
-                              ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10'
-                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 opacity-60'
+                              ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10'
+                              : 'border-[var(--border)] bg-[var(--surface-2)] opacity-60'
                           }`}
                         >
-                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${site.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${site.isActive ? 'bg-emerald-500' : 'bg-[var(--text-muted)]'}`} />
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{site.name}</p>
-                            <p className="text-xs text-gray-400 font-mono mt-0.5">
+                            <p className="font-semibold text-sm text-[var(--text)] truncate">{site.name}</p>
+                            <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
                               {Number(site.latitude).toFixed(6)}, {Number(site.longitude).toFixed(6)} · rayon {site.radius}m
                             </p>
                           </div>
@@ -1642,8 +1642,8 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                               title={site.isActive ? 'Désactiver' : 'Activer'}
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                 site.isActive
-                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200'
-                                  : 'bg-gray-200 dark:bg-gray-700 text-gray-500 hover:bg-gray-300'
+                                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200'
+                                  : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
                               }`}
                             >
                               {site.isActive ? 'Actif' : 'Inactif'}
@@ -1651,7 +1651,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                             {/* Modifier */}
                             <button
                               onClick={() => handleEditSite(site)}
-                              className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-colors"
+                              className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors"
                               title="Modifier"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1679,44 +1679,44 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             {activeTab === 'attendance' && (
               <motion.div key="attendance" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <Clock size={20} className="text-blue-500" /> Horaires de Travail
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Clock size={20} className="text-emerald-500" /> Horaires de Travail
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Heure de début</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Heure de début</label>
                       <select value={payrollData.officialStartHour}
                         onChange={e => handlePayrollChange('officialStartHour', parseInt(e.target.value))}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-lg font-semibold text-gray-900 dark:text-white">
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]">
                         {Array.from({ length: 15 }, (_, i) => i + 6).map(h => (
                           <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tolérance (minutes)</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Tolérance (minutes)</label>
                       <input type="number" min="0" max="120" step="5" value={payrollData.lateToleranceMinutes}
                         onChange={e => handlePayrollChange('lateToleranceMinutes', parseInt(e.target.value) || 0)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-lg font-semibold text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]" />
                     </div>
                   </div>
-                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-800">
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">Aperçu de la règle</p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border-2 border-emerald-200 dark:border-emerald-800">
+                    <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Aperçu de la règle</p>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
                       En retard après <strong>{calculateLateTime()}</strong>
                       {' · '}Pointage à {calculateNextMinute()} → retard
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Users size={20} className="text-purple-500" /> Jours de Travail
+                    <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
+                      <Users size={20} className="text-amber-500" /> Jours de Travail
                     </h3>
                     <button onClick={() => setPayrollData(p => ({ ...p, workDays: [1, 2, 3, 4, 5, 6, 7] }))}
-                      className="text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-3 py-1.5 rounded-lg border border-purple-100 dark:border-purple-800 hover:bg-purple-100 font-bold">
+                      className="text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-800 hover:bg-amber-100 font-bold">
                       Tout sélectionner
                     </button>
                   </div>
@@ -1725,34 +1725,34 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       <button key={day.value} onClick={() => toggleWorkDay(day.value)}
                         className={`p-3 rounded-xl font-bold text-sm transition-all border-2 ${
                           payrollData.workDays.includes(day.value)
-                            ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20'
-                            : 'bg-gray-50 dark:bg-gray-750 text-gray-400 border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                            ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20'
+                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:border-amber-300'
                         }`}
                       >{day.label}</button>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
                     <Calendar size={20} className="text-emerald-500" /> Temps de Travail Mensuel
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Jours ouvrés / mois</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Jours ouvrés / mois</label>
                       <input type="number" min="20" max="31" value={payrollData.workDaysPerMonth}
                         onChange={e => handlePayrollChange('workDaysPerMonth', parseInt(e.target.value) || 26)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-lg font-semibold text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Heures normales / jour</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Heures normales / jour</label>
                       <input type="number" min="6" max="12" step="0.5" value={payrollData.workHoursPerDay}
                         onChange={e => handlePayrollChange('workHoursPerDay', parseFloat(e.target.value) || 8)}
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-lg font-semibold text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]" />
                     </div>
                   </div>
-                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <div className="mt-4 p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
+                    <p className="text-sm text-[var(--text-muted)]">
                       Heures mensuelles :{' '}
                       <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                         {(payrollData.workDaysPerMonth * payrollData.workHoursPerDay).toFixed(1)}
@@ -1768,42 +1768,42 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             ══════════════════════════════════════════════ */}
             {activeTab === 'contact' && (
               <motion.div key="contact" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <MapPin size={20} className="text-indigo-500" /> Adresse Postale
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <MapPin size={20} className="text-emerald-500" /> Adresse Postale
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Adresse Complète</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Adresse Complète</label>
                       <input value={companyData.address} onChange={e => handleCompanyChange('address', e.target.value)}
                         placeholder="123 Avenue de la République"
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Ville</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Ville</label>
                       <input value={companyData.city} onChange={e => handleCompanyChange('city', e.target.value)}
                         placeholder="Pointe-Noire"
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <Phone size={20} className="text-green-500" /> Contacts
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+                    <Phone size={20} className="text-emerald-500" /> Contacts
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Téléphone</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Téléphone</label>
                       <input value={companyData.phone} onChange={e => handleCompanyChange('phone', e.target.value)}
                         placeholder="+242 06 123 45 67"
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Email</label>
                       <input type="email" value={companyData.email} onChange={e => handleCompanyChange('email', e.target.value)}
                         placeholder="contact@entreprise.cg"
-                        className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white" />
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)]" />
                     </div>
                   </div>
                 </div>
@@ -1817,9 +1817,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             SIDEBAR ACTIONS
         ══════════════════════════════════════════════ */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sticky top-6">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-              <History size={20} className="text-gray-400" /> Actions
+          <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 sticky top-6">
+            <h3 className="font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+              <History size={20} className="text-[var(--text-muted)]" /> Actions
             </h3>
             <button onClick={() => setShowConfirm(true)}
               className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2">
@@ -1832,18 +1832,18 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                 <Banknote size={12} /> Calendrier de paie
               </p>
               <div className="space-y-1">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   Clôture : <strong className="text-amber-600 dark:text-amber-400">jour {companyData.payrollCloseDay}</strong>
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   Paiement : <strong className="text-emerald-600 dark:text-emerald-400">jour {companyData.payrollPaymentDay} (M+1)</strong>
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/30 rounded-xl">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <strong className="text-gray-700 dark:text-gray-300">Important :</strong> Ces paramètres affectent toute l'entreprise. Les modifications prennent effet immédiatement.
+            <div className="mt-4 p-4 bg-[var(--surface-2)] rounded-xl">
+              <p className="text-xs text-[var(--text-muted)]">
+                <strong className="text-[var(--text)]">Important :</strong> Ces paramètres affectent toute l'entreprise. Les modifications prennent effet immédiatement.
               </p>
             </div>
           </div>
@@ -1860,19 +1860,19 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
             onClick={() => setShowConfirm(false)}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+              className="bg-[var(--surface)] rounded-2xl p-6 max-w-md w-full shadow-2xl">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 text-sky-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center">
                   <Lock size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Confirmer les changements</h3>
-                  <p className="text-sm text-gray-500">Ces modifications impacteront toute l'entreprise.</p>
+                  <h3 className="text-xl font-bold text-[var(--text)]">Confirmer les changements</h3>
+                  <p className="text-sm text-[var(--text-muted)]">Ces modifications impacteront toute l'entreprise.</p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   Annuler
                 </button>
                 <button onClick={handleSave} disabled={isSaving}

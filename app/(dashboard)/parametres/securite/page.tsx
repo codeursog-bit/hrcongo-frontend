@@ -46,31 +46,31 @@ const SEV_ROW: Record<string, string> = {
 const SEV_BADGE: Record<string, string> = {
   CRITICAL: 'bg-red-500/10 text-red-400 border-red-500/25 border',
   WARN:     'bg-amber-500/10 text-amber-400 border-amber-500/25 border',
-  INFO:     'bg-sky-500/10 text-sky-400 border-sky-500/20 border',
+  INFO:     'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 border',
 };
 const SEV_ICON_COLOR: Record<string, string> = {
   CRITICAL: 'text-red-400 bg-red-500/10',
   WARN:     'text-amber-400 bg-amber-500/10',
-  INFO:     'text-sky-400 bg-sky-500/10',
+  INFO:     'text-emerald-400 bg-emerald-500/10',
 };
 const ENTITY_BADGE: Record<string, string> = {
-  AUTH:'text-violet-400 bg-violet-500/10', EMPLOYEE:'text-cyan-400 bg-cyan-500/10',
-  PAYROLL:'text-emerald-400 bg-emerald-500/10', EXPORT:'text-orange-400 bg-orange-500/10',
-  LEAVE:'text-teal-400 bg-teal-500/10', LOAN:'text-rose-400 bg-rose-500/10',
-  CONTRACT:'text-red-400 bg-red-500/10', USER:'text-blue-400 bg-blue-500/10',
-  COMPANY:'text-indigo-400 bg-indigo-500/10', CABINET:'text-purple-400 bg-purple-500/10',
-  SETTINGS:'text-yellow-400 bg-yellow-500/10', SUBSCRIPTION:'text-pink-400 bg-pink-500/10',
-  DOCUMENT:'text-slate-400 bg-slate-500/10', ATTENDANCE:'text-lime-400 bg-lime-500/10',
-  ASSET:'text-amber-400 bg-amber-500/10', RECRUITMENT:'text-sky-400 bg-sky-500/10',
-  TRAINING:'text-green-400 bg-green-500/10', BONUS:'text-fuchsia-400 bg-fuchsia-500/10',
-  CNSS:'text-red-300 bg-red-500/10', ONBOARDING:'text-teal-400 bg-teal-500/10',
+  AUTH:'text-emerald-400 bg-emerald-500/10', EMPLOYEE:'text-amber-400 bg-amber-500/10',
+  PAYROLL:'text-emerald-400 bg-emerald-500/10', EXPORT:'text-amber-400 bg-amber-500/10',
+  LEAVE:'text-emerald-400 bg-emerald-500/10', LOAN:'text-amber-400 bg-amber-500/10',
+  CONTRACT:'text-amber-400 bg-amber-500/10', USER:'text-emerald-400 bg-emerald-500/10',
+  COMPANY:'text-amber-400 bg-amber-500/10', CABINET:'text-emerald-400 bg-emerald-500/10',
+  SETTINGS:'text-amber-400 bg-amber-500/10', SUBSCRIPTION:'text-emerald-400 bg-emerald-500/10',
+  DOCUMENT:'text-slate-400 bg-slate-500/10', ATTENDANCE:'text-amber-400 bg-amber-500/10',
+  ASSET:'text-amber-400 bg-amber-500/10', RECRUITMENT:'text-emerald-400 bg-emerald-500/10',
+  TRAINING:'text-emerald-400 bg-emerald-500/10', BONUS:'text-amber-400 bg-amber-500/10',
+  CNSS:'text-amber-400 bg-amber-500/10', ONBOARDING:'text-emerald-400 bg-emerald-500/10',
 };
 const ROLE_BADGE: Record<string, string> = {
-  ADMIN:'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
+  ADMIN:'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   HR_MANAGER:'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
   MANAGER:'bg-amber-500/15 text-amber-400 border-amber-500/30',
   EMPLOYEE:'bg-slate-500/15 text-slate-400 border-slate-500/30',
-  CABINET_ADMIN:'bg-purple-500/15 text-purple-400 border-purple-500/30',
+  CABINET_ADMIN:'bg-amber-500/15 text-amber-400 border-amber-500/30',
   SUPER_ADMIN:'bg-red-500/15 text-red-400 border-red-500/30',
 };
 const ACTION_ICON: Record<string, React.ElementType> = {
@@ -195,8 +195,8 @@ export default function SecuritePage() {
           <ChevronLeft size={18} className="text-slate-400"/>
         </button>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/20 flex items-center justify-center">
-            <Shield size={20} className="text-violet-400"/>
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center">
+            <Shield size={20} className="text-emerald-400"/>
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Sécurité du compte</h1>
@@ -237,7 +237,7 @@ export default function SecuritePage() {
             </div>
             {!loadingMe && !twoFaOn && step==='idle' && (
               <button onClick={setup} disabled={busy}
-                className="shrink-0 px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-colors disabled:opacity-50">
+                className="shrink-0 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold text-sm flex items-center gap-2 transition-colors disabled:opacity-50">
                 {busy ? <Loader2 size={13} className="animate-spin"/> : <ShieldCheck size={13}/>}
                 Activer
               </button>
@@ -280,15 +280,15 @@ export default function SecuritePage() {
                   </div>
                 )}
                 <button onClick={()=>setShowMan(v=>!v)}
-                  className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1.5 transition-colors">
+                  className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors">
                   {showMan ? <EyeOff size={12}/> : <Eye size={12}/>}
                   {showMan ? 'Masquer la clé manuelle' : 'Entrer la clé manuellement'}
                 </button>
                 {showMan && (
                   <div className="mt-2 bg-white/[0.02] border border-white/[0.07] rounded-xl p-3 flex items-center gap-3">
-                    <code className="font-mono text-[11px] text-sky-300 break-all flex-1 leading-relaxed">{manKey}</code>
+                    <code className="font-mono text-[11px] text-emerald-300 break-all flex-1 leading-relaxed">{manKey}</code>
                     <button onClick={()=>{navigator.clipboard.writeText(manKey);setCopMan(true);setTimeout(()=>setCopMan(false),2000);}}
-                      className="p-2 rounded-lg bg-sky-500/15 text-sky-400 hover:bg-sky-500/25 transition-colors shrink-0">
+                      className="p-2 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition-colors shrink-0">
                       {copMan?<CheckCircle2 size={13}/>:<Copy size={13}/>}
                     </button>
                   </div>
@@ -303,9 +303,9 @@ export default function SecuritePage() {
                   <input type="text" inputMode="numeric" maxLength={6}
                     value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}
                     placeholder="000 000"
-                    className="flex-1 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.03] text-center text-3xl font-mono font-black tracking-[0.5em] text-white placeholder:text-white/[0.12] outline-none focus:border-sky-500/40 transition-colors"/>
+                    className="flex-1 px-4 py-3 rounded-xl border border-white/10 bg-white/[0.03] text-center text-3xl font-mono font-black tracking-[0.5em] text-white placeholder:text-white/[0.12] outline-none focus:border-emerald-500/40 transition-colors"/>
                   <button onClick={activate} disabled={busy||code.length<6}
-                    className="px-5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl font-bold text-sm disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0">
+                    className="px-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold text-sm disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0">
                     {busy?<Loader2 size={13} className="animate-spin"/>:<ShieldCheck size={13}/>}
                     Valider
                   </button>
@@ -401,7 +401,7 @@ export default function SecuritePage() {
           {stats && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { I:Activity,      l:'Événements (7j)', v:stats.total7d.toLocaleString('fr-FR'), c:'text-sky-400', sub:stats.period },
+                { I:Activity,      l:'Événements (7j)', v:stats.total7d.toLocaleString('fr-FR'), c:'text-emerald-400', sub:stats.period },
                 { I:AlertTriangle, l:'Critiques (7j)',  v:stats.critical.toLocaleString('fr-FR'), c:'text-red-400',
                   sub:stats.critical>0?'Vérification recommandée':'Aucun incident critique' },
                 { I:Zap,           l:'Action fréquente', v:stats.byAction[0]?.action.replace(/_/g,' ')??'—', c:'text-amber-400',
@@ -433,7 +433,7 @@ export default function SecuritePage() {
                       <span className="text-[10px] font-mono text-slate-700 w-3 text-right">{i+1}</span>
                       <span className="text-xs text-slate-500 w-48 truncate">{a.action.replace(/_/g,' ')}</span>
                       <div className="flex-1 bg-white/[0.03] rounded-full h-1.5">
-                        <div className="h-full rounded-full bg-gradient-to-r from-sky-500/70 to-blue-600/70 transition-all duration-700"
+                        <div className="h-full rounded-full bg-emerald-500/70 transition-all duration-700"
                           style={{width:`${pct}%`}}/>
                       </div>
                       <span className="text-[11px] font-bold text-slate-500 w-8 text-right tabular-nums">{a.count}</span>
@@ -453,7 +453,7 @@ export default function SecuritePage() {
                   <span className="text-slate-600 font-normal text-xs ml-1.5">événements</span>
                 </p>
                 {fltCount>0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-400 text-[10px] font-bold border border-sky-500/20">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
                     {fltCount} filtre{fltCount>1?'s':''}
                   </span>
                 )}
@@ -461,7 +461,7 @@ export default function SecuritePage() {
               <div className="flex gap-2">
                 <button onClick={()=>setShowFlt(v=>!v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors
-                    ${showFlt?'bg-sky-500/15 border-sky-500/30 text-sky-400':'border-white/[0.08] text-slate-500 hover:text-slate-300 hover:border-white/15'}`}>
+                    ${showFlt?'bg-emerald-500/15 border-emerald-500/30 text-emerald-400':'border-white/[0.08] text-slate-500 hover:text-slate-300 hover:border-white/15'}`}>
                   <Filter size={11}/> Filtres
                 </button>
                 <button onClick={()=>{setPage(1);loadLogs();loadStats();}} disabled={loading}
@@ -485,7 +485,7 @@ export default function SecuritePage() {
                     <div className="relative">
                       <input type={f.type??'text'} value={(flt as any)[f.k]} placeholder={f.ph}
                         onChange={e=>{setFlt(p=>({...p,[f.k]:e.target.value}));setPage(1);}}
-                        className="w-full px-3 py-2 pr-7 rounded-lg border border-white/[0.07] bg-white/[0.02] text-xs text-white placeholder:text-slate-700 outline-none focus:border-sky-500/40 transition-colors"/>
+                        className="w-full px-3 py-2 pr-7 rounded-lg border border-white/[0.07] bg-white/[0.02] text-xs text-white placeholder:text-slate-700 outline-none focus:border-emerald-500/40 transition-colors"/>
                       {(flt as any)[f.k] && (
                         <button onClick={()=>setFlt(p=>({...p,[f.k]:''}))}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-700 hover:text-slate-500">
@@ -503,7 +503,7 @@ export default function SecuritePage() {
           <div className="bg-[#0f1623] rounded-2xl border border-white/[0.07] overflow-hidden">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 size={26} className="animate-spin text-sky-500"/>
+                <Loader2 size={26} className="animate-spin text-emerald-500"/>
                 <p className="text-xs text-slate-700">Chargement des événements…</p>
               </div>
             ) : logs.length===0 ? (
@@ -512,7 +512,7 @@ export default function SecuritePage() {
                 <p className="text-sm">Aucun événement pour ces critères</p>
                 {fltCount>0 && (
                   <button onClick={()=>setFlt({action:'',entity:'',severity:'',from:'',to:''})}
-                    className="mt-2 text-xs text-sky-500 hover:text-sky-400">
+                    className="mt-2 text-xs text-emerald-500 hover:text-emerald-400">
                     Effacer les filtres
                   </button>
                 )}
@@ -585,7 +585,7 @@ export default function SecuritePage() {
                           <div className="bg-[#0b1020] border-t border-white/[0.05] px-5 py-5 space-y-4">
                             <div className="flex items-center justify-between">
                               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Info size={12} className="text-sky-400"/> Détail complet
+                                <Info size={12} className="text-emerald-400"/> Détail complet
                               </p>
                               <button onClick={()=>setDetail(null)}
                                 className="text-[11px] text-slate-700 hover:text-slate-500">fermer ×</button>
@@ -613,8 +613,8 @@ export default function SecuritePage() {
                             {/* Utilisateur */}
                             {log.user && (
                               <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3 flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-500/20 to-blue-600/20 border border-sky-500/15 flex items-center justify-center shrink-0">
-                                  <span className="text-xs font-black text-sky-400">{log.user.firstName[0]}{log.user.lastName[0]}</span>
+                                <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/15 flex items-center justify-center shrink-0">
+                                  <span className="text-xs font-black text-emerald-400">{log.user.firstName[0]}{log.user.lastName[0]}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-white">{log.user.firstName} {log.user.lastName}</p>

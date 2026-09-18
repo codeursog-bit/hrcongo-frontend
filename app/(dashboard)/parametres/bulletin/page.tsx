@@ -144,12 +144,12 @@ function SortableBlock({ block, onToggle, onRename, primary }: {
       transform: CSS.Transform.toString(transform), transition,
       display:'flex', alignItems:'center', gap:10,
       padding:'10px 12px', borderRadius:10, marginBottom:6,
-      border: block.visible ? '1.5px solid #e2e8f0' : '1.5px dashed #e2e8f0',
-      background: isDragging ? '#eff6ff' : block.visible ? '#fff' : '#f9fafb',
+      border: block.visible ? '1.5px solid var(--border)' : '1.5px dashed var(--border)',
+      background: isDragging ? '#ecfdf5' : block.visible ? 'var(--surface)' : 'var(--surface-2)',
       opacity: isDragging ? 0.7 : 1,
     }}>
       <div {...attributes} {...listeners} style={{ cursor:'grab', display:'flex', flexDirection:'column', gap:3, padding:'2px 3px', flexShrink:0 }}>
-        {[0,1,2].map(i => <div key={i} style={{ width:13, height:2, borderRadius:1, background:'#cbd5e1' }} />)}
+        {[0,1,2].map(i => <div key={i} style={{ width:13, height:2, borderRadius:1, background:'var(--border)' }} />)}
       </div>
       <span style={{ fontSize:15, flexShrink:0 }}>{meta.emoji}</span>
       <div style={{ flex:1, minWidth:0 }}>
@@ -157,20 +157,20 @@ function SortableBlock({ block, onToggle, onRename, primary }: {
           ? <input autoFocus value={draft} onChange={e=>setDraft(e.target.value)} onBlur={commit} onKeyDown={e=>e.key==='Enter'&&commit()}
               style={{ width:'100%', padding:'2px 6px', borderRadius:5, border:`1.5px solid ${primary}`, fontSize:12, fontWeight:600, outline:'none', boxSizing:'border-box' as const }} />
           : <div onClick={()=>setEditing(true)} title="Cliquer pour renommer"
-              style={{ fontSize:12, fontWeight:600, color: block.visible ? '#0f172a' : '#94a3b8', cursor:'text', padding:'2px 0' }}>
+              style={{ fontSize:12, fontWeight:600, color: block.visible ? 'var(--text)' : 'var(--text-muted)', cursor:'text', padding:'2px 0' }}>
               {block.label}
             </div>
         }
-        <div style={{ fontSize:10, color:'#94a3b8', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+        <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
           {meta.desc}
-          {meta.appOnly  && <span style={{ marginLeft:5, fontSize:9, background:'#f0f9ff', color:'#0284c7', padding:'1px 4px', borderRadius:4, fontWeight:700 }}>app seul</span>}
-          {meta.required && <span style={{ marginLeft:5, fontSize:9, background:'#f0fdf4', color:'#16a34a', padding:'1px 4px', borderRadius:4, fontWeight:700 }}>obligatoire</span>}
+          {meta.appOnly  && <span style={{ marginLeft:5, fontSize:9, background:'#fffbeb', color:'#b45309', padding:'1px 4px', borderRadius:4, fontWeight:700 }}>app seul</span>}
+          {meta.required && <span style={{ marginLeft:5, fontSize:9, background:'#f0fdf4', color:'#059669', padding:'1px 4px', borderRadius:4, fontWeight:700 }}>obligatoire</span>}
         </div>
       </div>
       <button onClick={() => !meta.required && onToggle(block.id)}
         title={meta.required ? 'Bloc obligatoire' : block.visible ? 'Masquer' : 'Afficher'}
         style={{ width:38, height:21, borderRadius:11, border:'none', cursor: meta.required ? 'not-allowed' : 'pointer',
-          background: block.visible ? primary : '#e2e8f0', transition:'background .2s', position:'relative', flexShrink:0, opacity: meta.required ? 0.45 : 1 }}>
+          background: block.visible ? primary : 'var(--border)', transition:'background .2s', position:'relative', flexShrink:0, opacity: meta.required ? 0.45 : 1 }}>
         <div style={{ position:'absolute', top:2, width:17, height:17, borderRadius:'50%', background:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,.2)', transition:'left .2s', left: block.visible ? 18 : 2 }} />
       </button>
     </div>
@@ -180,21 +180,21 @@ function SortableBlock({ block, onToggle, onRename, primary }: {
 // ─── Micro-composants UI ─────────────────────────────────────────────────────
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.08em', color:'#94a3b8', marginBottom:8 }}>{children}</div>;
+  return <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.08em', color:'var(--text-muted)', marginBottom:8 }}>{children}</div>;
 }
 
 function Sub({ children }: { children: React.ReactNode }) {
-  return <p style={{ fontSize:11, color:'#64748b', lineHeight:1.6, margin:'0 0 12px' }}>{children}</p>;
+  return <p style={{ fontSize:11, color:'var(--text-muted)', lineHeight:1.6, margin:'0 0 12px' }}>{children}</p>;
 }
 
 function ToggleRow({ label, sub, val, onChange, primary }: { label:string; sub:string; val:boolean; onChange:()=>void; primary:string }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:10, border:'1.5px solid #e2e8f0', marginBottom:8, background:'#fff' }}>
+    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:10, border:'1.5px solid var(--border)', marginBottom:8, background:'var(--surface)' }}>
       <div style={{ flex:1 }}>
-        <div style={{ fontSize:12, fontWeight:600, color:'#0f172a' }}>{label}</div>
-        <div style={{ fontSize:10, color:'#94a3b8', marginTop:1 }}>{sub}</div>
+        <div style={{ fontSize:12, fontWeight:600, color:'var(--text)' }}>{label}</div>
+        <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>{sub}</div>
       </div>
-      <button onClick={onChange} style={{ width:38, height:21, borderRadius:11, border:'none', cursor:'pointer', flexShrink:0, position:'relative', background: val ? primary : '#e2e8f0', transition:'background .2s' }}>
+      <button onClick={onChange} style={{ width:38, height:21, borderRadius:11, border:'none', cursor:'pointer', flexShrink:0, position:'relative', background: val ? primary : 'var(--border)', transition:'background .2s' }}>
         <div style={{ position:'absolute', top:2, width:17, height:17, borderRadius:'50%', background:'#fff', boxShadow:'0 1px 3px rgba(0,0,0,.2)', transition:'left .2s', left: val ? 18 : 2 }} />
       </button>
     </div>
@@ -205,11 +205,11 @@ function Pill({ label, sub, active, onClick, primary }: { label:string; sub?:str
   return (
     <button onClick={onClick} style={{
       padding:'8px 6px', borderRadius:8, cursor:'pointer', textAlign:'center' as const, width:'100%',
-      border: active ? `2px solid ${primary}` : '1.5px solid #e2e8f0',
-      background: active ? `${primary}0d` : '#fff', transition:'all .15s',
+      border: active ? `2px solid ${primary}` : '1.5px solid var(--border)',
+      background: active ? `${primary}0d` : 'var(--surface)', transition:'all .15s',
     }}>
-      <div style={{ fontSize:11, fontWeight:700, color:'#0f172a' }}>{label}</div>
-      {sub && <div style={{ fontSize:9, color:'#94a3b8' }}>{sub}</div>}
+      <div style={{ fontSize:11, fontWeight:700, color:'var(--text)' }}>{label}</div>
+      {sub && <div style={{ fontSize:9, color:'var(--text-muted)' }}>{sub}</div>}
     </button>
   );
 }
@@ -337,8 +337,8 @@ export default function BulletinDesignerPage() {
   // ─── Loading ────────────────────────────────────────────────────────────────
   if (loading) return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'80vh', gap:14, fontFamily:'Inter,sans-serif' }}>
-      <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid #e2e8f0', borderTopColor:'#0EA5E9', animation:'spin .8s linear infinite' }} />
-      <div style={{ color:'#64748b', fontSize:14 }}>Chargement de votre bulletin…</div>
+      <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid var(--border)', borderTopColor:'#10B981', animation:'spin .8s linear infinite' }} />
+      <div style={{ color:'var(--text-muted)', fontSize:14 }}>Chargement de votre bulletin…</div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
@@ -352,15 +352,15 @@ export default function BulletinDesignerPage() {
       <div style={{ display:'flex', flexDirection:'column', height:'calc(100vh - 80px)', fontFamily:'"Inter","Helvetica Neue",Arial,sans-serif', overflow:'hidden' }}>
 
         {/* Barre du haut */}
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', background:'#fff', borderBottom:'1.5px solid #e2e8f0', flexShrink:0 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', background:'var(--surface)', borderBottom:'1.5px solid var(--border)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button onClick={() => setAppMode('template')}
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:8, border:'1.5px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#64748b' }}>
+              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--surface)', cursor:'pointer', fontSize:12, fontWeight:600, color:'var(--text-muted)' }}>
               ← Mode Templates
             </button>
-            <div style={{ width:1, height:20, background:'#e2e8f0' }} />
-            <span style={{ fontSize:14, fontWeight:700, color:'#0f172a' }}>🎨 Éditeur personnalisé</span>
-            <span style={{ fontSize:11, color:'#94a3b8' }}>— construisez votre bulletin de A à Z</span>
+            <div style={{ width:1, height:20, background:'var(--border)' }} />
+            <span style={{ fontSize:14, fontWeight:700, color:'var(--text)' }}>🎨 Éditeur personnalisé</span>
+            <span style={{ fontSize:11, color:'var(--text-muted)' }}>— construisez votre bulletin de A à Z</span>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             {!canSave && canvas.blocks.length > 0 && (
@@ -370,7 +370,7 @@ export default function BulletinDesignerPage() {
             )}
             <button onClick={save} disabled={saving || !canSave}
               style={{ padding:'9px 18px', borderRadius:9, border:'none', cursor: (saving || !canSave) ? 'not-allowed' : 'pointer',
-                background: canSave ? canvas.primaryColor : '#e2e8f0', color: canSave ? '#fff' : '#94a3b8',
+                background: canSave ? canvas.primaryColor : 'var(--border)', color: canSave ? '#fff' : 'var(--text-muted)',
                 fontSize:13, fontWeight:700, opacity: saving ? 0.7 : 1, boxShadow: canSave ? `0 3px 10px ${canvas.primaryColor}44` : 'none' }}>
               {saving ? '⏳ Enregistrement…' : '✅ Enregistrer'}
             </button>
@@ -417,18 +417,18 @@ export default function BulletinDesignerPage() {
             setAppMode('canvas');
           }
         }}
-        style={{ padding:'14px', borderRadius:10, cursor:'pointer', marginBottom:12, border:'2px dashed #e2e8f0', background:'#f9fafb', transition:'all .15s', display:'flex', alignItems:'center', gap:12 }}
+        style={{ padding:'14px', borderRadius:10, cursor:'pointer', marginBottom:12, border:'2px dashed var(--border)', background:'var(--surface-2)', transition:'all .15s', display:'flex', alignItems:'center', gap:12 }}
         onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = p; (e.currentTarget as HTMLDivElement).style.background = `${p}08`; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0'; (e.currentTarget as HTMLDivElement).style.background = '#f9fafb'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLDivElement).style.background = 'var(--surface-2)'; }}
       >
         <div style={{ width:40, height:40, borderRadius:10, border:`2px dashed ${p}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, color: p }}>+</div>
         <div>
-          <div style={{ fontSize:13, fontWeight:700, color:'#0f172a', marginBottom:2 }}>✨ Créer mon propre bulletin</div>
-          <div style={{ fontSize:11, color:'#64748b' }}>Partir d'un canvas vide — glisser-déposer vos blocs, choisir quoi afficher</div>
+          <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>✨ Créer mon propre bulletin</div>
+          <div style={{ fontSize:11, color:'var(--text-muted)' }}>Partir d'un canvas vide — glisser-déposer vos blocs, choisir quoi afficher</div>
         </div>
       </div>
 
-      <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.06em', color:'#94a3b8', margin:'0 0 8px' }}>
+      <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.06em', color:'var(--text-muted)', margin:'0 0 8px' }}>
         Ou choisir un modèle prêt
       </div>
 
@@ -437,12 +437,12 @@ export default function BulletinDesignerPage() {
         return (
           <div key={tpl.templateId} onClick={() => applyTemplate(tpl.templateId)}
             style={{ padding:'12px 14px', borderRadius:10, cursor:'pointer', marginBottom:8,
-              border: active ? `2px solid ${p}` : '1.5px solid #e2e8f0',
-              background: active ? `${p}0d` : '#fff', transition:'all .15s' }}>
+              border: active ? `2px solid ${p}` : '1.5px solid var(--border)',
+              background: active ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
               <div>
-                <div style={{ fontSize:13, fontWeight:700, color:'#0f172a', marginBottom:3 }}>{tpl.name}</div>
-                <div style={{ fontSize:10.5, color:'#64748b' }}>
+                <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:3 }}>{tpl.name}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>
                   {tpl.style.layout==='2col'?'2 colonnes':'1 colonne'} · {tpl.style.density==='compact'?'Dense':tpl.style.density==='airy'?'Aéré':'Normal'} · {tpl.style.headerStyle==='dark'?'En-tête sombre':tpl.style.headerStyle==='gradient'?'Coloré':tpl.style.headerStyle==='line'?'Sobre':'Minimaliste'}
                 </div>
               </div>
@@ -453,9 +453,9 @@ export default function BulletinDesignerPage() {
               )}
             </div>
             <div style={{ marginTop:8, display:'flex', gap:3, height:5 }}>
-              <div style={{ flex:2, borderRadius:2, background: active ? tpl.style.primaryColor : '#cbd5e1' }} />
-              <div style={{ flex:3, borderRadius:2, background:'#e5e7eb' }} />
-              <div style={{ flex:1, borderRadius:2, background: active ? tpl.style.secondaryColor : '#e5e7eb' }} />
+              <div style={{ flex:2, borderRadius:2, background: active ? tpl.style.primaryColor : 'var(--border)' }} />
+              <div style={{ flex:3, borderRadius:2, background:'var(--border)' }} />
+              <div style={{ flex:1, borderRadius:2, background: active ? tpl.style.secondaryColor : 'var(--border)' }} />
             </div>
           </div>
         );
@@ -473,13 +473,13 @@ export default function BulletinDesignerPage() {
             return (
               <button key={pr.name} onClick={()=>{ setStyle('primaryColor',pr.p); setStyle('secondaryColor',pr.s); }}
                 style={{ padding:'8px 10px', borderRadius:8, cursor:'pointer', textAlign:'left' as const,
-                  border: active ? `2px solid ${pr.p}` : '1.5px solid #e2e8f0',
-                  background: active ? `${pr.p}12` : '#fff', transition:'all .15s' }}>
+                  border: active ? `2px solid ${pr.p}` : '1.5px solid var(--border)',
+                  background: active ? `${pr.p}12` : 'var(--surface)', transition:'all .15s' }}>
                 <div style={{ display:'flex', gap:4, marginBottom:4 }}>
                   <div style={{ width:16, height:16, borderRadius:4, background:pr.p }} />
                   <div style={{ width:16, height:16, borderRadius:4, background:pr.s }} />
                 </div>
-                <div style={{ fontSize:11, fontWeight:600, color:'#374151' }}>{pr.name}</div>
+                <div style={{ fontSize:11, fontWeight:600, color:'var(--text)' }}>{pr.name}</div>
               </button>
             );
           })}
@@ -490,13 +490,13 @@ export default function BulletinDesignerPage() {
         <Label>Couleurs personnalisées</Label>
         {([['Couleur principale','primaryColor'],['Couleur complémentaire','secondaryColor']] as const).map(([lbl,k]) => (
           <div key={k} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
-            <div style={{ position:'relative', width:40, height:40, borderRadius:8, background:cfg.style[k], border:'1.5px solid #e2e8f0', overflow:'hidden', flexShrink:0, boxShadow:`0 2px 6px ${cfg.style[k]}66` }}>
+            <div style={{ position:'relative', width:40, height:40, borderRadius:8, background:cfg.style[k], border:'1.5px solid var(--border)', overflow:'hidden', flexShrink:0, boxShadow:`0 2px 6px ${cfg.style[k]}66` }}>
               <input type="color" value={cfg.style[k]} onChange={e=>setStyle(k,e.target.value)} style={{ position:'absolute', inset:-4, width:'180%', height:'180%', opacity:0, cursor:'pointer' }} />
             </div>
             <div>
-              <div style={{ fontSize:12, fontWeight:600, color:'#0f172a' }}>{lbl}</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'var(--text)' }}>{lbl}</div>
               <input type="text" value={cfg.style[k]} onChange={e=>{ if(/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) setStyle(k,e.target.value); }}
-                style={{ fontSize:11, fontFamily:'monospace', padding:'3px 8px', borderRadius:6, border:'1px solid #e2e8f0', color:'#374151', width:88, marginTop:2, outline:'none' }} />
+                style={{ fontSize:11, fontFamily:'monospace', padding:'3px 8px', borderRadius:6, border:'1px solid var(--border)', color:'var(--text)', width:88, marginTop:2, outline:'none' }} />
             </div>
           </div>
         ))}
@@ -535,10 +535,10 @@ export default function BulletinDesignerPage() {
           {([0,4,8,16] as BorderRadius[]).map(v=>(
             <button key={v} onClick={()=>setStyle('borderRadius',v)} style={{
               padding:'8px 4px', borderRadius:v, cursor:'pointer', width:'100%',
-              border: cfg.style.borderRadius===v ? `2px solid ${p}` : '1.5px solid #e2e8f0',
-              background: cfg.style.borderRadius===v ? `${p}0d` : '#fff', transition:'all .15s' }}>
-              <div style={{ width:24, height:14, borderRadius:v, background: cfg.style.borderRadius===v ? p : '#e5e7eb', margin:'0 auto 4px' }} />
-              <div style={{ fontSize:9, color:'#64748b' }}>{v===0?'Carré':v===4?'Léger':v===8?'Arrondi':'Pilule'}</div>
+              border: cfg.style.borderRadius===v ? `2px solid ${p}` : '1.5px solid var(--border)',
+              background: cfg.style.borderRadius===v ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
+              <div style={{ width:24, height:14, borderRadius:v, background: cfg.style.borderRadius===v ? p : 'var(--border)', margin:'0 auto 4px' }} />
+              <div style={{ fontSize:9, color:'var(--text-muted)' }}>{v===0?'Carré':v===4?'Léger':v===8?'Arrondi':'Pilule'}</div>
             </button>
           ))}
         </div>
@@ -558,18 +558,18 @@ export default function BulletinDesignerPage() {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
           {([['1col','1 colonne'],['2col','2 colonnes']] as const).map(([v,l])=>(
             <button key={v} onClick={()=>setStyle('layout',v)} style={{ padding:'10px', borderRadius:8, cursor:'pointer',
-              border: cfg.style.layout===v ? `2px solid ${p}` : '1.5px solid #e2e8f0',
-              background: cfg.style.layout===v ? `${p}0d` : '#fff', transition:'all .15s' }}>
+              border: cfg.style.layout===v ? `2px solid ${p}` : '1.5px solid var(--border)',
+              background: cfg.style.layout===v ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
               <div style={{ display:'flex', gap:3, height:18, marginBottom:5 }}>
                 {v==='1col'
-                  ? <div style={{ flex:1, borderRadius:3, background: cfg.style.layout===v ? p : '#e5e7eb' }} />
+                  ? <div style={{ flex:1, borderRadius:3, background: cfg.style.layout===v ? p : 'var(--border)' }} />
                   : <>
-                      <div style={{ flex:1, borderRadius:3, background: cfg.style.layout===v ? p : '#e5e7eb' }} />
-                      <div style={{ flex:1, borderRadius:3, background: cfg.style.layout===v ? `${p}88` : '#e5e7eb' }} />
+                      <div style={{ flex:1, borderRadius:3, background: cfg.style.layout===v ? p : 'var(--border)' }} />
+                      <div style={{ flex:1, borderRadius:3, background: cfg.style.layout===v ? `${p}88` : 'var(--border)' }} />
                     </>
                 }
               </div>
-              <div style={{ fontSize:12, fontWeight:700, color:'#0f172a' }}>{l}</div>
+              <div style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>{l}</div>
             </button>
           ))}
         </div>
@@ -605,7 +605,7 @@ export default function BulletinDesignerPage() {
         — ce document remplace entièrement le bulletin de paie pour ces profils.
       </Sub>
 
-      <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.06em', color:'#94a3b8', margin:'0 0 8px' }}>
+      <div style={{ fontSize:10.5, fontWeight:700, textTransform:'uppercase' as const, letterSpacing:'.06em', color:'var(--text-muted)', margin:'0 0 8px' }}>
         Choisir le modèle de facture
       </div>
 
@@ -614,12 +614,12 @@ export default function BulletinDesignerPage() {
         return (
           <div key={m.id} onClick={() => setCfg(prev => ({ ...prev, factureTemplateId: m.id }))}
             style={{ padding:'12px 14px', borderRadius:10, cursor:'pointer', marginBottom:8,
-              border: active ? `2px solid ${p}` : '1.5px solid #e2e8f0',
-              background: active ? `${p}0d` : '#fff', transition:'all .15s' }}>
+              border: active ? `2px solid ${p}` : '1.5px solid var(--border)',
+              background: active ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
               <div>
-                <div style={{ fontSize:13, fontWeight:700, color:'#0f172a', marginBottom:3 }}>{m.name}</div>
-                <div style={{ fontSize:10.5, color:'#64748b' }}>{m.desc}</div>
+                <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:3 }}>{m.name}</div>
+                <div style={{ fontSize:10.5, color:'var(--text-muted)' }}>{m.desc}</div>
               </div>
               {active && (
                 <div style={{ width:20, height:20, borderRadius:'50%', background:p, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -664,31 +664,31 @@ export default function BulletinDesignerPage() {
         <textarea value={cfg.style.footerMessage} onChange={e=>setStyle('footerMessage',e.target.value)}
           placeholder="Ex : Merci pour votre engagement ce mois-ci !"
           rows={4}
-          style={{ width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid #e2e8f0', fontSize:12, color:'#0f172a', resize:'vertical' as const, fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
+          style={{ width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid var(--border)', fontSize:12, color:'var(--text)', resize:'vertical' as const, fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
           onFocus={e=>e.target.style.borderColor=p}
-          onBlur={e=>e.target.style.borderColor='#e2e8f0'}
+          onBlur={e=>e.target.style.borderColor='var(--border)'}
         />
       </div>
     </div>
   );
 
   return (
-    <div style={{ display:'grid', gridTemplateColumns: showPreview ? '360px 1fr' : '460px', height:'calc(100vh - 80px)', overflow:'hidden', fontFamily:'"Inter","Helvetica Neue",Arial,sans-serif', background:'#f8fafc' }}>
+    <div style={{ display:'grid', gridTemplateColumns: showPreview ? '360px 1fr' : '460px', height:'calc(100vh - 80px)', overflow:'hidden', fontFamily:'"Inter","Helvetica Neue",Arial,sans-serif', background:'var(--bg)' }}>
 
       {/* ══ PANNEAU GAUCHE ══ */}
-      <div style={{ background:'#fff', borderRight:'1.5px solid #e2e8f0', display:'flex', flexDirection:'column', overflow:'hidden' }}>
-        <div style={{ padding:'16px 16px 0', borderBottom:'1px solid #f1f5f9', flexShrink:0 }}>
-          <h1 style={{ fontSize:16, fontWeight:800, color:'#0f172a', margin:'0 0 2px' }}>
+      <div style={{ background:'var(--surface)', borderRight:'1.5px solid var(--border)', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <div style={{ padding:'16px 16px 0', borderBottom:'1px solid var(--surface-2)', flexShrink:0 }}>
+          <h1 style={{ fontSize:16, fontWeight:800, color:'var(--text)', margin:'0 0 2px' }}>
             {previewKind==='facture' ? '🧾 Facture prestataire' : 'Mon bulletin de paie'}
           </h1>
-          <p style={{ fontSize:11, color:'#64748b', margin:'0 0 12px' }}>La preview se met à jour en temps réel</p>
+          <p style={{ fontSize:11, color:'var(--text-muted)', margin:'0 0 12px' }}>La preview se met à jour en temps réel</p>
           {previewKind==='bulletin' && (
             <div style={{ display:'flex', gap:5, flexWrap:'wrap' as const, marginBottom:12 }}>
               {TABS.map(t=>(
                 <button key={t.id} onClick={()=>setTab(t.id as TemplateTab)}
                   style={{ padding:'7px 12px', borderRadius:7, fontSize:11, fontWeight:600, cursor:'pointer', transition:'all .15s',
-                    background: tab===t.id ? p : 'transparent', color: tab===t.id ? '#fff' : '#64748b',
-                    border: tab===t.id ? 'none' : '1.5px solid #e2e8f0' }}>
+                    background: tab===t.id ? p : 'transparent', color: tab===t.id ? '#fff' : 'var(--text-muted)',
+                    border: tab===t.id ? 'none' : '1.5px solid var(--border)' }}>
                   {t.label}
                 </button>
               ))}
@@ -709,50 +709,50 @@ export default function BulletinDesignerPage() {
           )}
         </div>
 
-        <div style={{ padding:'14px 16px', borderTop:'1.5px solid #e2e8f0', display:'flex', gap:8, flexShrink:0 }}>
+        <div style={{ padding:'14px 16px', borderTop:'1.5px solid var(--border)', display:'flex', gap:8, flexShrink:0 }}>
           <button onClick={save} disabled={saving}
             style={{ flex:1, padding:'12px', borderRadius:10, border:'none', cursor: saving?'wait':'pointer',
               background:p, color:'#fff', fontSize:13, fontWeight:700, opacity: saving?0.7:1, boxShadow:`0 3px 10px ${p}44` }}>
             {saving ? '⏳ Enregistrement…' : '✅ Enregistrer'}
           </button>
           <button onClick={()=>{ if(confirm(`Revenir au gabarit "${cfg.name}" d'origine ?`)) setCfg(getBaseTemplate(cfg.templateId)); }}
-            title="Réinitialiser" style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background:'#fff', border:'1.5px solid #e2e8f0', color:'#64748b' }}>↺</button>
+            title="Réinitialiser" style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background:'var(--surface)', border:'1.5px solid var(--border)', color:'var(--text-muted)' }}>↺</button>
           <button onClick={()=>setShowPreview(v=>!v)} title={showPreview?'Masquer preview':'Afficher preview'}
-            style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background: showPreview?'#f0f9ff':'#fff', border:`1.5px solid ${showPreview?p:'#e2e8f0'}`, color: showPreview?p:'#64748b' }}>👁</button>
+            style={{ padding:'12px 13px', borderRadius:10, cursor:'pointer', fontSize:13, background: showPreview?'#ecfdf5':'var(--surface)', border:`1.5px solid ${showPreview?p:'var(--border)'}`, color: showPreview?p:'var(--text-muted)' }}>👁</button>
         </div>
       </div>
 
       {/* ══ PREVIEW LIVE ══ */}
       {showPreview && (
         <div style={{ display:'flex', flexDirection:'column', overflow:'hidden' }}>
-          <div style={{ padding:'10px 16px', background:'#fff', borderBottom:'1.5px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+          <div style={{ padding:'10px 16px', background:'var(--surface)', borderBottom:'1.5px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:7, height:7, borderRadius:'50%', background:'#10B981', boxShadow:'0 0 0 3px #d1fae5' }} />
-              <span style={{ fontSize:12, fontWeight:600, color:'#0f172a' }}>Preview live</span>
-              <span style={{ fontSize:11, color:'#94a3b8' }}>— exactement ce que verront vos employés</span>
+              <span style={{ fontSize:12, fontWeight:600, color:'var(--text)' }}>Preview live</span>
+              <span style={{ fontSize:11, color:'var(--text-muted)' }}>— exactement ce que verront vos employés</span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ display:'flex', gap:3, background:'#f1f5f9', borderRadius:8, padding:3 }}>
+              <div style={{ display:'flex', gap:3, background:'var(--surface-2)', borderRadius:8, padding:3 }}>
                 <button onClick={()=>setPreviewKind('bulletin')}
                   style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
-                    background: previewKind==='bulletin' ? '#fff' : 'transparent', color: previewKind==='bulletin' ? '#0f172a' : '#64748b',
+                    background: previewKind==='bulletin' ? 'var(--surface)' : 'transparent', color: previewKind==='bulletin' ? 'var(--text)' : 'var(--text-muted)',
                     boxShadow: previewKind==='bulletin' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
                   👤 Salarié
                 </button>
                 <button onClick={()=>setPreviewKind('facture')}
                   style={{ padding:'5px 10px', borderRadius:6, border:'none', cursor:'pointer', fontSize:11, fontWeight:600,
-                    background: previewKind==='facture' ? '#fff' : 'transparent', color: previewKind==='facture' ? '#0f172a' : '#64748b',
+                    background: previewKind==='facture' ? 'var(--surface)' : 'transparent', color: previewKind==='facture' ? 'var(--text)' : 'var(--text-muted)',
                     boxShadow: previewKind==='facture' ? '0 1px 3px rgba(0,0,0,.12)' : 'none' }}>
                   🧾 Prestataire
                 </button>
               </div>
               <button onClick={()=>window.print()}
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1.5px solid #e2e8f0', background:'#fff', cursor:'pointer', fontSize:12, fontWeight:600, color:'#374151' }}>
+                style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--surface)', cursor:'pointer', fontSize:12, fontWeight:600, color:'var(--text)' }}>
                 🖨️ Imprimer / PDF
               </button>
             </div>
           </div>
-          <div style={{ flex:1, overflowY:'auto', padding:'20px', background:'#f1f5f9', display:'flex', justifyContent:'center' }}>
+          <div style={{ flex:1, overflowY:'auto', padding:'20px', background:'var(--surface-2)', display:'flex', justifyContent:'center' }}>
             <div style={{ width:794, background:'#fff', borderRadius:10, boxShadow:'0 4px 20px rgba(0,0,0,.1)', overflow:'hidden' }}>
               {previewKind === 'facture' ? (
                 cfg.factureTemplateId === 'detaillee' ? (

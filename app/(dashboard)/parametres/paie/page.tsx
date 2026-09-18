@@ -122,19 +122,19 @@ function SavedBanner({ onDismiss }: { onDismiss: () => void }) {
 // ─── Composant : Raccourcis vers autres pages ─────────────────────────────────
 function QuickLinks({ router }: { router: any }) {
   const links = [
-    { icon: <Calendar size={16} />,    label: 'Plannings & Shifts',    href: '/presences/shifts',      color: 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800' },
-    { icon: <Gift size={16} />,        label: 'Primes',                href: '/parametres/primes',     color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
+    { icon: <Calendar size={16} />,    label: 'Plannings & Shifts',    href: '/presences/shifts',      color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+    { icon: <Gift size={16} />,        label: 'Primes',                href: '/parametres/primes',     color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
     { icon: <Users size={16} />,       label: 'Congés',                href: '/conges',                color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
     { icon: <Percent size={16} />,     label: 'Taxes entreprise',      href: '/parametres/taxes',      color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
-    { icon: <ClipboardList size={16} />,label: 'Déclaration CNSS',     href: '/cnss-declaration',      color: 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
-    { icon: <FileText size={16} />,    label: 'Contrats',              href: '/contrats',              color: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
-    { icon: <Banknote size={16} />,    label: 'Bulletins de paie',     href: '/paie',                  color: 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800' },
-    { icon: <Landmark size={16} />,    label: 'Conventions collectives',href: '/parametres/entreprise', color: 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700' },
+    { icon: <ClipboardList size={16} />,label: 'Déclaration CNSS',     href: '/cnss-declaration',      color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+    { icon: <FileText size={16} />,    label: 'Contrats',              href: '/contrats',              color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
+    { icon: <Banknote size={16} />,    label: 'Bulletins de paie',     href: '/paie',                  color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
+    { icon: <Landmark size={16} />,    label: 'Conventions collectives',href: '/parametres/entreprise', color: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]' },
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-      <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+      <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">
         Accès rapide
       </p>
       <div className="grid grid-cols-2 gap-2">
@@ -312,7 +312,7 @@ const handleSave = async () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-sky-500" size={40} />
+        <Loader2 className="animate-spin text-emerald-500" size={40} />
       </div>
     );
   }
@@ -328,19 +328,19 @@ const handleSave = async () => {
       <div className="flex items-center gap-4 mb-6 mt-6">
         <button
           onClick={() => router.back()}
-          className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
         >
-          <ArrowLeft size={20} className="text-gray-500" />
+          <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white">Paramètres de Paie</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-black text-[var(--text)]">Paramètres de Paie</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-0.5">
             CNSS · Heures sup · Nuit · ITS · Calendrier
           </p>
         </div>
         <button
           onClick={() => setShowConfirm(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all"
         >
           <Save size={16} /> Enregistrer
         </button>
@@ -354,8 +354,8 @@ const handleSave = async () => {
             onClick={() => setActiveTab(tab.id)}
             className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex-shrink-0 ${
               activeTab === tab.id
-                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-lg'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                ? 'bg-[var(--text)] text-[var(--bg)] shadow-lg'
+                : 'bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)] hover:bg-[var(--surface-2)]'
             }`}
           >
             <tab.icon size={15} />
@@ -363,7 +363,7 @@ const handleSave = async () => {
             {tab.badge && (
               <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-black ${
                 tab.badge === 'OFF'
-                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                  ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                   : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
               }`}>
                 {tab.badge}
@@ -381,10 +381,10 @@ const handleSave = async () => {
           {activeTab === 'cnss' && (
             <div className="space-y-5">
               {/* Part salariale */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Shield size={18} className="text-blue-500" /> CNSS Salariale
+                  <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
+                    <Shield size={18} className="text-emerald-500" /> CNSS Salariale
                   </h3>
                   <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 font-bold">
                     Taux légaux — lecture seule
@@ -392,36 +392,36 @@ const handleSave = async () => {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Taux salarié (%)</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Taux salarié (%)</label>
                     <div className="relative">
                       <input type="number" readOnly disabled
                         value={settings.cnssSalarialRate}
-                        className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] cursor-not-allowed"
                       />
-                      <span className="absolute right-3 top-3 text-[10px] text-gray-400">% — fixe</span>
+                      <span className="absolute right-3 top-3 text-[10px] text-[var(--text-muted)]">% — fixe</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Décret Congo — non modifiable</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Décret Congo — non modifiable</p>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Taux patronal (%)</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Taux patronal (%)</label>
                     <div className="relative">
                       <input type="number" readOnly disabled
                         value={settings.cnssEmployerRate}
-                        className="w-full p-3 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] cursor-not-allowed"
                       />
-                      <span className="absolute right-3 top-3 text-[10px] text-gray-400">% — fixe</span>
+                      <span className="absolute right-3 top-3 text-[10px] text-[var(--text-muted)]">% — fixe</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Décret n°99-284 — 3 branches incluses</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">Décret n°99-284 — 3 branches incluses</p>
                   </div>
                 </div>
               </div>
 
               {/* Plafonds */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  <Shield size={18} className="text-purple-500" /> Plafonds de cotisation
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="font-bold text-[var(--text)] mb-2 flex items-center gap-2">
+                  <Shield size={18} className="text-emerald-500" /> Plafonds de cotisation
                 </h3>
-                <p className="text-xs text-gray-500 mb-5">
+                <p className="text-xs text-[var(--text-muted)] mb-5">
                   Conformes au Décret n°99-284 du Congo
                 </p>
                 <div className="grid grid-cols-2 gap-4">
@@ -430,16 +430,16 @@ const handleSave = async () => {
                     { key: 'cnssSocialCeiling',  label: 'Plafond Famille & Accidents', sub: '12.28% patronal — branches famille + AT' },
                   ].map(({ key, label, sub }) => (
                     <div key={key}>
-                      <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">{label}</label>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">{label}</label>
                       <div className="relative">
                         <input type="number"
                           value={(settings as any)[key]}
                           onChange={e => set(key as any, +e.target.value)}
-                          className="w-full p-3 pr-14 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-mono font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400"
+                          className="w-full p-3 pr-14 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-mono font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
                         />
-                        <span className="absolute right-3 top-3 text-xs text-gray-400 font-bold">XAF</span>
+                        <span className="absolute right-3 top-3 text-xs text-[var(--text-muted)] font-bold">XAF</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">{sub}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">{sub}</p>
                     </div>
                   ))}
                 </div>
@@ -447,9 +447,9 @@ const handleSave = async () => {
                 {/* Détail 3 branches */}
                 <div className="mt-5 grid grid-cols-3 gap-3">
                   {[
-                    { label: 'Retraite',         rate: '8%',     ceiling: 'Plafond 1', color: 'bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400' },
-                    { label: 'Prestations fam.', rate: '10.03%', ceiling: 'Plafond 2', color: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400' },
-                    { label: 'Accidents',        rate: '2.25%',  ceiling: 'Plafond 2', color: 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-400' },
+                    { label: 'Retraite',         rate: '8%',     ceiling: 'Plafond 1', color: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' },
+                    { label: 'Prestations fam.', rate: '10.03%', ceiling: 'Plafond 2', color: 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400' },
+                    { label: 'Accidents',        rate: '2.25%',  ceiling: 'Plafond 2', color: 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' },
                   ].map((b) => (
                     <div key={b.label} className={`p-3 border rounded-xl ${b.color}`}>
                       <p className="text-xs font-bold mb-0.5">{b.label}</p>
@@ -461,8 +461,8 @@ const handleSave = async () => {
               </div>
 
               {/* Arrondi */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                <label className="block text-sm font-bold text-[var(--text)] mb-3">
                   Règle d'arrondi CNSS
                 </label>
                 <div className="flex gap-2">
@@ -470,8 +470,8 @@ const handleSave = async () => {
                     <button key={v} onClick={() => set('cnssRounding', v)}
                       className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${
                         settings.cnssRounding === v
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300'
-                          : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                          : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'
                       }`}>
                       {v === 'UP' ? '↑ Supérieur' : v === 'DOWN' ? '↓ Inférieur' : '≈ Nearest'}
                     </button>
@@ -485,15 +485,15 @@ const handleSave = async () => {
           {activeTab === 'overtime' && (
             <div className="space-y-5">
               {/* Toggle principal */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
                       <Zap size={18} className="text-amber-500" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 dark:text-white">Heures supplémentaires</p>
-                      <p className="text-xs text-gray-500">Décret 78-360 — Congo</p>
+                      <p className="font-bold text-[var(--text)]">Heures supplémentaires</p>
+                      <p className="text-xs text-[var(--text-muted)]">Décret 78-360 — Congo</p>
                     </div>
                   </div>
                   <button
@@ -501,7 +501,7 @@ const handleSave = async () => {
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
                       settings.overtimeEnabled
                         ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700'
+                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                     }`}
                   >
                     {settings.overtimeEnabled ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -520,36 +520,36 @@ const handleSave = async () => {
                   )}
 
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-3">Taux de majoration</p>
+                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">Taux de majoration</p>
                     <div className="grid grid-cols-2 gap-3">
                       {[
                         { key: 'overtimeRate10'  as const, label: '5 premières HS/semaine',     color: 'emerald', desc: '(+10% légal Congo)' },
-                        { key: 'overtimeRate25'  as const, label: 'HS suivantes — jour',        color: 'sky',     desc: '(+25% légal Congo)' },
+                        { key: 'overtimeRate25'  as const, label: 'HS suivantes — jour',        color: 'emerald',     desc: '(+25% légal Congo)' },
                         { key: 'overtimeRate50'  as const, label: 'Nuit / Repos / Férié',      color: 'amber',   desc: '(+50% légal Congo)' },
-                        { key: 'overtimeRate100' as const, label: 'Nuit Dimanche / Férié',     color: 'red',     desc: '(+100% légal Congo)' },
+                        { key: 'overtimeRate100' as const, label: 'Nuit Dimanche / Férié',     color: 'amber',     desc: '(+100% légal Congo)' },
                       ].map((item) => (
                         <div key={item.key} className={`p-4 bg-${item.color}-50 dark:bg-${item.color}-900/10 border border-${item.color}-200 dark:border-${item.color}-800 rounded-xl`}>
-                          <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 leading-tight">
+                          <label className="block text-xs font-bold text-[var(--text-muted)] mb-2 leading-tight">
                             {item.label}
                           </label>
                           <div className="flex items-center gap-2">
-                            <span className="text-gray-400 text-sm font-bold">+</span>
+                            <span className="text-[var(--text-muted)] text-sm font-bold">+</span>
                             <input type="number" min={0} max={200} step={5}
                               value={settings[item.key] as number}
                               onChange={e => set(item.key, +e.target.value)}
-                              className="flex-1 px-2 py-1.5 bg-white dark:bg-gray-800 border border-transparent focus:border-sky-400 rounded-lg text-sm font-black text-center text-gray-900 dark:text-white"
+                              className="flex-1 px-2 py-1.5 bg-[var(--surface)] border border-transparent focus:border-emerald-400 rounded-lg text-sm font-black text-center text-[var(--text)]"
                             />
-                            <span className="text-gray-400 text-sm">%</span>
+                            <span className="text-[var(--text-muted)] text-sm">%</span>
                           </div>
-                          <p className="text-[10px] text-gray-400 mt-1 text-center">{item.desc}</p>
+                          <p className="text-[10px] text-[var(--text-muted)] mt-1 text-center">{item.desc}</p>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="p-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 rounded-xl flex items-start gap-2">
-                    <Info size={14} className="text-sky-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-sky-700 dark:text-sky-400">
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex items-start gap-2">
+                    <Info size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
                       Les taux sont ceux du <strong>Décret n°78-360</strong>. Modifiez-les uniquement si votre convention collective prévoit des taux différents.
                       La validation patron des heures sup passe par la page <strong>Présences → Corrections</strong>.
                     </p>
@@ -562,23 +562,23 @@ const handleSave = async () => {
           {/* ════ ONGLET TRAVAIL DE NUIT ════ */}
           {activeTab === 'nightshift' && (
             <div className="space-y-5">
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-sky-50 dark:bg-sky-900/20 rounded-xl">
-                      <Moon size={18} className="text-sky-500" />
+                    <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                      <Moon size={18} className="text-emerald-500" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 dark:text-white">Prime de travail de nuit</p>
-                      <p className="text-xs text-gray-500">Pour shifts de nuit contractuels</p>
+                      <p className="font-bold text-[var(--text)]">Prime de travail de nuit</p>
+                      <p className="text-xs text-[var(--text-muted)]">Pour shifts de nuit contractuels</p>
                     </div>
                   </div>
                   <button
                     onClick={() => set('nightShiftEnabled', !settings.nightShiftEnabled)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
                       settings.nightShiftEnabled
-                        ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700'
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
                     }`}
                   >
                     {settings.nightShiftEnabled ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -587,9 +587,9 @@ const handleSave = async () => {
                 </div>
 
                 <div className={`p-6 space-y-5 transition-opacity ${!settings.nightShiftEnabled ? 'opacity-40 pointer-events-none' : ''}`}>
-                  <div className="!opacity-100 p-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 rounded-xl flex items-start gap-2">
-                    <Info size={14} className="text-sky-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-sky-700 dark:text-sky-400">
+                  <div className="!opacity-100 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl flex items-start gap-2">
+                    <Info size={14} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
                       La prime de nuit s'applique aux heures travaillées pendant la plage définie ci-dessous.
                       Elle est <strong>distincte des heures sup</strong> — un infirmier en shift de nuit contractuel bénéficie de la prime, pas des heures sup.
                     </p>
@@ -597,15 +597,15 @@ const handleSave = async () => {
 
                   {/* Plage horaire */}
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-3">Plage horaire nocturne</p>
+                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">Plage horaire nocturne</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
-                          <Moon size={12} className="text-sky-400" /> Début de nuit
+                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
+                          <Moon size={12} className="text-emerald-400" /> Début de nuit
                         </label>
                         <select value={settings.nightShiftStartHour}
                           onChange={e => set('nightShiftStartHour', +e.target.value)}
-                          className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm font-bold text-gray-900 dark:text-white focus:border-sky-500"
+                          className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-bold text-[var(--text)] focus:border-emerald-500"
                         >
                           {Array.from({ length: 24 }, (_, i) => (
                             <option key={i} value={i}>{String(i).padStart(2, '0')}h00</option>
@@ -613,12 +613,12 @@ const handleSave = async () => {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
                           <Sun size={12} className="text-amber-400" /> Fin de nuit
                         </label>
                         <select value={settings.nightShiftEndHour}
                           onChange={e => set('nightShiftEndHour', +e.target.value)}
-                          className="w-full px-3 py-2.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm font-bold text-gray-900 dark:text-white focus:border-sky-500"
+                          className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-bold text-[var(--text)] focus:border-emerald-500"
                         >
                           {Array.from({ length: 24 }, (_, i) => (
                             <option key={i} value={i}>{String(i).padStart(2, '0')}h00</option>
@@ -626,7 +626,7 @@ const handleSave = async () => {
                         </select>
                       </div>
                     </div>
-                    <div className="mt-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs font-mono text-gray-500 text-center">
+                    <div className="mt-2 px-3 py-2 bg-[var(--surface-2)] rounded-xl text-xs font-mono text-[var(--text-muted)] text-center">
                       🌙 {String(settings.nightShiftStartHour).padStart(2, '0')}h00 → {String(settings.nightShiftEndHour).padStart(2, '0')}h00
                       {settings.nightShiftStartHour > settings.nightShiftEndHour
                         ? ' (traverse minuit)'
@@ -636,15 +636,15 @@ const handleSave = async () => {
 
                   {/* Taux prime */}
                   <div>
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-3">Taux de la prime (%)</p>
+                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-3">Taux de la prime (%)</p>
                     <div className="flex items-center gap-4">
                       <input type="range" min={0} max={100} step={5}
                         value={settings.nightShiftPremiumRate}
                         onChange={e => set('nightShiftPremiumRate', +e.target.value)}
-                        className="flex-1 accent-sky-500"
+                        className="flex-1 accent-emerald-500"
                       />
-                      <div className="w-20 text-center px-3 py-2 bg-sky-50 dark:bg-sky-900/20 border-2 border-sky-200 dark:border-sky-800 rounded-xl">
-                        <span className="font-black text-sky-600 dark:text-sky-400 text-lg">+{settings.nightShiftPremiumRate}%</span>
+                      <div className="w-20 text-center px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-xl">
+                        <span className="font-black text-emerald-600 dark:text-emerald-400 text-lg">+{settings.nightShiftPremiumRate}%</span>
                       </div>
                     </div>
                     <div className="flex gap-2 mt-3">
@@ -652,8 +652,8 @@ const handleSave = async () => {
                         <button key={v} onClick={() => set('nightShiftPremiumRate', v)}
                           className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
                             settings.nightShiftPremiumRate === v
-                              ? 'bg-sky-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
                           }`}>
                           +{v}%
                         </button>
@@ -664,19 +664,19 @@ const handleSave = async () => {
               </div>
 
               {/* Lien vers shifts */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 flex items-center justify-between gap-3">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
-                    <Calendar size={16} className="text-indigo-500" />
+                  <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                    <Calendar size={16} className="text-emerald-500" />
                   </div>
                   <div>
-                    <p className="font-bold text-sm text-gray-900 dark:text-white">Plannings & Shifts</p>
-                    <p className="text-xs text-gray-500">Assigner les shifts de nuit par employé</p>
+                    <p className="font-bold text-sm text-[var(--text)]">Plannings & Shifts</p>
+                    <p className="text-xs text-[var(--text-muted)]">Assigner les shifts de nuit par employé</p>
                   </div>
                 </div>
                 <button
                   onClick={() => router.push(bp('/presences/shifts'))}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold hover:-translate-y-0.5 transition-all"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-bold hover:-translate-y-0.5 transition-all"
                 >
                   Gérer <ChevronRight size={13} />
                 </button>
@@ -688,10 +688,10 @@ const handleSave = async () => {
           {activeTab === 'its' && (
             <div className="space-y-5">
               {/* Mode fiscal */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Calculator size={18} className="text-orange-500" /> Mode fiscal
+                  <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
+                    <Calculator size={18} className="text-emerald-500" /> Mode fiscal
                   </h3>
                   <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-full px-2 py-0.5 font-bold">
                     Barème légal — lecture seule
@@ -707,44 +707,44 @@ const handleSave = async () => {
                     <div key={v}
                       className={`flex flex-col items-start px-4 py-3 rounded-xl border-2 text-left ${
                         settings.fiscalMode === v
-                          ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20'
-                          : 'border-gray-200 dark:border-gray-700'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'border-[var(--border)]'
                       }`}>
-                      <p className={`font-bold text-sm ${settings.fiscalMode === v ? 'text-sky-700 dark:text-sky-300' : 'text-gray-800 dark:text-white'}`}>
+                      <p className={`font-bold text-sm ${settings.fiscalMode === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text)]'}`}>
                         {label}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{desc}</p>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 mt-3 italic">Le mode fiscal est défini par votre configuration légale Congo. Contactez le support pour toute modification.</p>
+                <p className="text-xs text-[var(--text-muted)] mt-3 italic">Le mode fiscal est défini par votre configuration légale Congo. Contactez le support pour toute modification.</p>
               </div>
 
               {/* Barème ITS */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-                  <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Percent size={16} className="text-orange-500" /> Barème ITS 2026 — Congo
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border)]">
+                  <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
+                    <Percent size={16} className="text-emerald-500" /> Barème ITS 2026 — Congo
                   </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Tranches annuelles de l'Impôt sur le Traitement et les Salaires</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">Tranches annuelles de l'Impôt sur le Traitement et les Salaires</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-800">
+                    <thead className="bg-[var(--surface-2)]">
                       <tr>
-                        <th className="px-5 py-3 text-left text-xs font-bold text-gray-500 uppercase">Tranche (XAF/an)</th>
-                        <th className="px-5 py-3 text-right text-xs font-bold text-gray-500 uppercase">Taux</th>
+                        <th className="px-5 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Tranche (XAF/an)</th>
+                        <th className="px-5 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase">Taux</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody className="divide-y divide-[var(--border)]">
                       {DEFAULT_ITS_BRACKETS.map((b, i) => (
-                        <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                          <td className="px-5 py-3 font-mono text-gray-700 dark:text-gray-300">
+                        <tr key={i} className="hover:bg-[var(--surface-2)]/50">
+                          <td className="px-5 py-3 font-mono text-[var(--text)]">
                             {b.min.toLocaleString('fr-FR')} → {b.max ? b.max.toLocaleString('fr-FR') : '∞'}
                           </td>
                           <td className="px-5 py-3 text-right">
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-black ${
-                              b.rate === 0 ? 'bg-gray-100 dark:bg-gray-800 text-gray-500'
+                              b.rate === 0 ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                               : b.rate <= 0.1 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                               : b.rate <= 0.25 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
@@ -765,41 +765,41 @@ const handleSave = async () => {
           {activeTab === 'calendar' && (
             <div className="space-y-5">
               {/* Temps de travail */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
-                  <Clock size={18} className="text-sky-500" /> Temps de travail
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="font-bold text-[var(--text)] mb-5 flex items-center gap-2">
+                  <Clock size={18} className="text-emerald-500" /> Temps de travail
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Jours ouvrables / mois</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Jours ouvrables / mois</label>
                     <input type="number" min={1} max={31}
                       value={settings.workDaysPerMonth}
                       onChange={e => set('workDaysPerMonth', +e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Heures / jour</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heures / jour</label>
                     <input type="number" min={1} max={24} step={0.5}
                       value={settings.workHoursPerDay}
                       onChange={e => set('workHoursPerDay', +e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-400"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Pointage */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="font-bold text-[var(--text)] mb-5 flex items-center gap-2">
                   <Clock size={18} className="text-emerald-500" /> Paramètres de pointage
                 </h3>
                 <div className="grid grid-cols-2 gap-4 mb-5">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Heure de début officielle</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heure de début officielle</label>
                     <select value={settings.officialStartHour}
                       onChange={e => set('officialStartHour', +e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20"
                     >
                       {Array.from({ length: 24 }, (_, i) => (
                         <option key={i} value={i}>{String(i).padStart(2, '0')}h00</option>
@@ -807,11 +807,11 @@ const handleSave = async () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Tolérance retard (min)</label>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Tolérance retard (min)</label>
                     <input type="number" min={0} max={120}
                       value={settings.lateToleranceMinutes}
                       onChange={e => set('lateToleranceMinutes', +e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500/20"
+                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
@@ -825,14 +825,14 @@ const handleSave = async () => {
 
                 {/* Jours travaillés */}
                 <div className="mt-5">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Jours travaillés</label>
+                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-2">Jours travaillés</label>
                   <div className="flex gap-2">
                     {DAYS.map(({ v, l }) => (
                       <button key={v} onClick={() => toggleWorkDay(v)}
                         className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
                           settings.workDays.includes(v)
-                            ? 'bg-sky-500 text-white shadow-sm'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-emerald-500 text-white shadow-sm'
+                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
                         }`}>
                         {l}
                       </button>
@@ -848,11 +848,11 @@ const handleSave = async () => {
             <div className="space-y-5">
 
               {/* Méthode de calcul de l'indemnité */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
                   <Calculator size={18} className="text-emerald-500" /> Méthode de calcul de l'indemnité
                 </h3>
-                <p className="text-xs text-gray-500 mb-4">Les deux méthodes sont légales au Congo. L'entreprise choisit celle qu'elle applique dans son règlement intérieur.</p>
+                <p className="text-xs text-[var(--text-muted)] mb-4">Les deux méthodes sont légales au Congo. L'entreprise choisit celle qu'elle applique dans son règlement intérieur.</p>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     {
@@ -870,10 +870,10 @@ const handleSave = async () => {
                       className={`text-left p-4 rounded-xl border-2 transition-all ${
                         leaveMethod === v
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                          : 'border-[var(--border)] hover:border-emerald-300'
                       }`}>
-                      <p className={`font-bold text-sm mb-1 ${leaveMethod === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-white'}`}>{label}</p>
-                      <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+                      <p className={`font-bold text-sm mb-1 ${leaveMethod === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text)]'}`}>{label}</p>
+                      <p className="text-xs text-[var(--text-muted)] leading-relaxed">{desc}</p>
                     </button>
                   ))}
                 </div>
@@ -882,11 +882,11 @@ const handleSave = async () => {
               {/* 🆕 Mode de cycle de congé (JANUARY/JUNE existent aussi
                   légalement, mais dans les faits c'est ROLLING ou l'ancre
                   d'embauche qui sont utilisées — voir conversation produit) */}
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <h3 className="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+                <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
                   <CalendarClock size={18} className="text-emerald-500" /> Mode de cycle de départ en congé
                 </h3>
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-[var(--text-muted)] mb-4">
                   Le règlement intérieur doit préciser ce mode. Change uniquement QUAND le prochain départ est dû — le solde (26j + ancienneté) reste identique dans les deux cas.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -906,10 +906,10 @@ const handleSave = async () => {
                       className={`text-left p-4 rounded-xl border-2 transition-all ${
                         leaveCycleMode === v
                           ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                          : 'border-[var(--border)] hover:border-emerald-300'
                       }`}>
-                      <p className={`font-bold text-sm mb-1 ${leaveCycleMode === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-white'}`}>{label}</p>
-                      <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+                      <p className={`font-bold text-sm mb-1 ${leaveCycleMode === v ? 'text-emerald-700 dark:text-emerald-300' : 'text-[var(--text)]'}`}>{label}</p>
+                      <p className="text-xs text-[var(--text-muted)] leading-relaxed">{desc}</p>
                     </button>
                   ))}
                 </div>
@@ -943,50 +943,50 @@ const handleSave = async () => {
         <div className="space-y-5">
 
           {/* Actions */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 sticky top-6">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sticky top-6">
             <button
               onClick={() => setShowConfirm(true)}
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all"
             >
               <Save size={18} /> Enregistrer
             </button>
-            <p className="text-xs text-gray-400 text-center mt-3">
+            <p className="text-xs text-[var(--text-muted)] text-center mt-3">
               Modifications appliquées immédiatement à toute l'entreprise
             </p>
           </div>
 
           {/* Simulateur ITS (uniquement sur l'onglet ITS) */}
           {activeTab === 'its' && (
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 text-white shadow-xl">
+            <div className="bg-gray-900 rounded-2xl p-5 text-white shadow-xl">
               <div className="flex items-center gap-2 mb-5 pb-4 border-b border-gray-700">
-                <Calculator size={18} className="text-sky-400" />
+                <Calculator size={18} className="text-emerald-400" />
                 <h3 className="font-bold">Simulateur ITS / IRPP</h3>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs text-gray-400 uppercase font-bold">Revenu imposable annuel</label>
+                  <label className="text-xs text-[var(--text-muted)] uppercase font-bold">Revenu imposable annuel</label>
                   <div className="relative mt-1.5">
                     <input type="number"
                       value={simIncome}
                       onChange={e => setSimIncome(+e.target.value)}
-                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white font-mono font-bold focus:border-sky-500"
+                      className="w-full p-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white font-mono font-bold focus:border-emerald-500"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-gray-400">XAF</span>
+                    <span className="absolute right-3 top-2.5 text-xs text-[var(--text-muted)]">XAF</span>
                   </div>
                 </div>
                 <button onClick={calculateITS}
-                  className="w-full py-2.5 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold text-sm transition-colors">
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold text-sm transition-colors">
                   Calculer
                 </button>
                 {simResult && (
                   <div className="space-y-2 pt-4 border-t border-gray-700">
                     {simResult.breakdown.map((b: any, i: number) => (
-                      <div key={i} className="flex justify-between text-xs text-gray-400">
+                      <div key={i} className="flex justify-between text-xs text-[var(--text-muted)]">
                         <span>{b.range}</span>
                         <span className="font-mono">{b.amount.toLocaleString('fr-FR')}</span>
                       </div>
                     ))}
-                    <div className="flex justify-between font-bold text-orange-400 pt-2 border-t border-gray-700">
+                    <div className="flex justify-between font-bold text-amber-400 pt-2 border-t border-gray-700">
                       <span>Total ITS</span>
                       <span className="font-mono">{simResult.total.toLocaleString('fr-FR')}</span>
                     </div>
@@ -1009,20 +1009,20 @@ const handleSave = async () => {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => setShowConfirm(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-800"
+          <div className="bg-[var(--surface)] rounded-2xl p-6 max-w-md w-full shadow-2xl border border-[var(--border)]"
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 text-sky-500 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 rounded-full flex items-center justify-center">
                 <Shield size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Confirmer les modifications</h3>
-                <p className="text-sm text-gray-500">Ces changements impactent tous les bulletins futurs.</p>
+                <h3 className="text-lg font-bold text-[var(--text)]">Confirmer les modifications</h3>
+                <p className="text-sm text-[var(--text-muted)]">Ces changements impactent tous les bulletins futurs.</p>
               </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
               <button onClick={handleSave} disabled={isSaving}

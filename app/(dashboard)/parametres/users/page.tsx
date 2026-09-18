@@ -37,10 +37,10 @@ interface Department {
 
 const ROLE_CONFIG: Record<string, { label: string, color: string, bg: string }> = {
   SUPER_ADMIN: { label: 'Super Admin', color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/30' },
-  ADMIN: { label: 'Admin', color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-  HR_MANAGER: { label: 'Manager RH', color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+  ADMIN: { label: 'Admin', color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+  HR_MANAGER: { label: 'Manager RH', color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30' },
   MANAGER: { label: 'Manager', color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-  EMPLOYEE: { label: 'Employé', color: 'text-gray-600', bg: 'bg-gray-100 dark:bg-gray-700' },
+  EMPLOYEE: { label: 'Employé', color: 'text-[var(--text-muted)]', bg: 'bg-[var(--surface-2)]' },
 };
 
 export default function UserManagementPage() {
@@ -228,7 +228,7 @@ export default function UserManagementPage() {
     });
   }, [users, searchQuery, roleFilter]);
 
-  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-sky-500" size={48} /></div>;
+  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={48} /></div>;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
@@ -236,18 +236,18 @@ export default function UserManagementPage() {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-           <button onClick={() => router.back()} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-             <ArrowLeft size={20} className="text-gray-500" />
+           <button onClick={() => router.back()} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
+             <ArrowLeft size={20} className="text-[var(--text-muted)]" />
            </button>
            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Gestion des Utilisateurs</h1>
-              <p className="text-gray-500 dark:text-gray-400">Contrôle d'accès, rôles et sécurité.</p>
+              <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">Gestion des Utilisateurs</h1>
+              <p className="text-[var(--text-muted)]">Contrôle d'accès, rôles et sécurité.</p>
            </div>
         </div>
 
         <button 
            onClick={() => setInviteModal(true)}
-           className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
+           className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-500/20 hover:scale-105 transition-all flex items-center gap-2"
         >
            <UserPlus size={20} /> Inviter Utilisateur
         </button>
@@ -255,16 +255,16 @@ export default function UserManagementPage() {
 
       {/* STATS CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase font-bold">Total Utilisateurs</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{users.length}</p>
+         <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-sm">
+            <p className="text-xs text-[var(--text-muted)] uppercase font-bold">Total Utilisateurs</p>
+            <p className="text-2xl font-bold text-[var(--text)] mt-1">{users.length}</p>
          </div>
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase font-bold">Administrateurs</p>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">{users.filter(u => u.role === 'ADMIN').length}</p>
+         <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-sm">
+            <p className="text-xs text-[var(--text-muted)] uppercase font-bold">Administrateurs</p>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{users.filter(u => u.role === 'ADMIN').length}</p>
          </div>
-         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <p className="text-xs text-gray-500 uppercase font-bold">Actifs</p>
+         <div className="bg-[var(--surface)] p-4 rounded-2xl border border-[var(--border)] shadow-sm">
+            <p className="text-xs text-[var(--text-muted)] uppercase font-bold">Actifs</p>
             <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-2">
                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                {users.filter(u => u.isActive).length}
@@ -273,25 +273,25 @@ export default function UserManagementPage() {
       </div>
 
       {/* FILTERS & LIST */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
          
          {/* Toolbar */}
-         <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50 dark:bg-gray-900/50">
+         <div className="p-4 border-b border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--surface-2)]">
             <div className="flex items-center gap-3 w-full md:w-auto">
                <div className="relative flex-1 md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" size={16} />
                   <input 
                      type="text" 
                      placeholder="Rechercher..." 
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-sky-500/20 outline-none"
+                     className="w-full pl-9 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none"
                   />
                </div>
                <select 
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
-                  className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium"
+                  className="p-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm font-medium"
                >
                   <option value="All">Tous les rôles</option>
                   {Object.keys(ROLE_CONFIG).filter(r => r !== 'SUPER_ADMIN').map(r => <option key={r} value={r}>{ROLE_CONFIG[r].label}</option>)}
@@ -304,23 +304,23 @@ export default function UserManagementPage() {
             {filteredUsers.map(user => {
                const config = ROLE_CONFIG[user.role] || ROLE_CONFIG.EMPLOYEE;
                return (
-               <div key={user.id} className="group bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:border-sky-200 dark:hover:border-sky-800 transition-all relative overflow-hidden">
+               <div key={user.id} className="group bg-[var(--surface)] rounded-2xl p-5 border border-[var(--border)] hover:shadow-xl hover:border-emerald-200 dark:hover:border-emerald-800 transition-all relative overflow-hidden">
                   <div className="flex justify-between items-start mb-4 relative z-10">
                      <div className="flex items-center gap-4">
                         <div className="relative">
-                           <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`} className={`w-14 h-14 rounded-full object-cover border-2 ${!user.isActive ? 'border-red-200 grayscale' : 'border-white dark:border-gray-600'}`} />
-                           <span className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-white dark:border-gray-800 rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-gray-300'}`}></span>
+                           <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName}&background=random`} className={`w-14 h-14 rounded-full object-cover border-2 ${!user.isActive ? 'border-red-200 grayscale' : 'border-[var(--surface)]'}`} />
+                           <span className={`absolute bottom-0 right-0 w-4 h-4 border-2 border-[var(--surface)] rounded-full ${user.isActive ? 'bg-emerald-500' : 'bg-[var(--text-muted)]'}`}></span>
                         </div>
                         <div>
-                           <h3 className={`font-bold text-lg ${!user.isActive ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-white'}`}>{user.firstName} {user.lastName}</h3>
-                           <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{user.email}</p>
+                           <h3 className={`font-bold text-lg ${!user.isActive ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text)]'}`}>{user.firstName} {user.lastName}</h3>
+                           <p className="text-sm text-[var(--text-muted)] truncate max-w-[150px]">{user.email}</p>
                         </div>
                      </div>
                      
                      <div className="flex items-center gap-1">
                        <button 
                           onClick={() => openEditModal(user)}
-                          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-400 hover:text-sky-500 transition-colors"
+                          className="p-2 hover:bg-[var(--surface-2)] rounded-lg text-[var(--text-muted)] hover:text-emerald-500 transition-colors"
                           title="Modifier le rôle/statut"
                        >
                           <Edit size={18} />
@@ -329,7 +329,7 @@ export default function UserManagementPage() {
                          <button
                             onClick={() => handleDelete(user)}
                             disabled={deletingId === user.id}
-                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-[var(--text-muted)] hover:text-red-500 transition-colors disabled:opacity-50"
                             title="Supprimer définitivement"
                          >
                             {deletingId === user.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
@@ -344,14 +344,14 @@ export default function UserManagementPage() {
                             {config.label}
                         </span>
                         {user.canRecordAttendanceForAll && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-sky-600 bg-sky-100 dark:bg-sky-900/30" title="Peut pointer pour tout le monde">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30" title="Peut pointer pour tout le monde">
                                 <Shield size={12} /> Secrétaire
                             </span>
                         )}
                         {!user.isActive && <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Ban size={12}/> Désactivé</span>}
                      </div>
                      
-                     <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 dark:bg-gray-750/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
+                     <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] bg-[var(--surface-2)] p-2 rounded-lg border border-[var(--border)]">
                         <Clock size={14} /> Dernier accès: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Jamais'}
                      </div>
                   </div>
@@ -369,26 +369,26 @@ export default function UserManagementPage() {
             >
                 <motion.div 
                     initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-                    className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-700"
+                    className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full shadow-2xl border border-[var(--border)]"
                 >
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Modifier Utilisateur</h2>
-                        <button onClick={() => setEditModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
+                        <h2 className="text-xl font-bold text-[var(--text)]">Modifier Utilisateur</h2>
+                        <button onClick={() => setEditModal(false)} className="p-2 hover:bg-[var(--surface-2)] rounded-full"><X size={20} /></button>
                     </div>
 
-                    <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                        <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-gray-500">
+                    <div className="flex items-center gap-4 mb-6 p-4 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)]">
+                        <div className="w-12 h-12 rounded-full bg-[var(--surface-2)] flex items-center justify-center font-bold text-[var(--text-muted)]">
                             {editingUser.firstName[0]}{editingUser.lastName[0]}
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white">{editingUser.firstName} {editingUser.lastName}</h3>
-                            <p className="text-xs text-gray-500">{editingUser.email}</p>
+                            <h3 className="font-bold text-[var(--text)]">{editingUser.firstName} {editingUser.lastName}</h3>
+                            <p className="text-xs text-[var(--text-muted)]">{editingUser.email}</p>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Rôle système</label>
+                            <label className="block text-sm font-bold mb-2 text-[var(--text)]">Rôle système</label>
                             <div className="grid grid-cols-1 gap-2">
                                 {Object.entries(ROLE_CONFIG).filter(([key]) => key !== 'SUPER_ADMIN').map(([key, config]) => (
                                     <label 
@@ -396,8 +396,8 @@ export default function UserManagementPage() {
                                         className={`
                                             flex items-center p-3 rounded-xl border cursor-pointer transition-all
                                             ${editForm.role === key 
-                                                ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-1 ring-sky-500' 
-                                                : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'}
+                                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500' 
+                                                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'}
                                         `}
                                     >
                                         <input 
@@ -408,10 +408,10 @@ export default function UserManagementPage() {
                                             onChange={(e) => setEditForm({...editForm, role: e.target.value})}
                                             className="hidden"
                                         />
-                                        <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${editForm.role === key ? 'border-sky-500' : 'border-gray-400'}`}>
-                                            {editForm.role === key && <div className="w-2 h-2 rounded-full bg-sky-500"></div>}
+                                        <div className={`w-4 h-4 rounded-full border mr-3 flex items-center justify-center ${editForm.role === key ? 'border-emerald-500' : 'border-[var(--text-muted)]'}`}>
+                                            {editForm.role === key && <div className="w-2 h-2 rounded-full bg-emerald-500"></div>}
                                         </div>
-                                        <span className={`text-sm font-bold ${editForm.role === key ? 'text-sky-700 dark:text-sky-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                        <span className={`text-sm font-bold ${editForm.role === key ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text-muted)]'}`}>
                                             {config.label}
                                         </span>
                                     </label>
@@ -420,40 +420,40 @@ export default function UserManagementPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Permission supplémentaire</label>
+                            <label className="block text-sm font-bold mb-2 text-[var(--text)]">Permission supplémentaire</label>
                             <button
                                 type="button"
                                 onClick={() => setEditForm({...editForm, canRecordAttendanceForAll: !editForm.canRecordAttendanceForAll})}
-                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${editForm.canRecordAttendanceForAll ? 'border-sky-500 bg-sky-50 dark:bg-sky-900/20 ring-1 ring-sky-500' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'}`}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${editForm.canRecordAttendanceForAll ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500' : 'border-[var(--border)] hover:bg-[var(--surface-2)]'}`}
                             >
                                 <div className="pr-4">
-                                    <p className={`text-sm font-bold ${editForm.canRecordAttendanceForAll ? 'text-sky-700 dark:text-sky-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                    <p className={`text-sm font-bold ${editForm.canRecordAttendanceForAll ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text)]'}`}>
                                         Pointage pour tout le monde (Secrétaire)
                                     </p>
-                                    <p className="text-xs text-gray-500 mt-0.5">
+                                    <p className="text-xs text-[var(--text-muted)] mt-0.5">
                                         Peut faire le pointage manuel de n'importe quel employé de l'entreprise, quel que soit son rôle (indépendant du département pour un Manager).
                                     </p>
                                 </div>
-                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${editForm.canRecordAttendanceForAll ? 'bg-sky-500 justify-end' : 'bg-gray-300 dark:bg-gray-600 justify-start'}`}>
+                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${editForm.canRecordAttendanceForAll ? 'bg-emerald-500 justify-end' : 'bg-[var(--border)] justify-start'}`}>
                                     <div className="w-5 h-5 rounded-full bg-white shadow" />
                                 </div>
                             </button>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">Statut du compte</label>
+                            <label className="block text-sm font-bold mb-2 text-[var(--text)]">Statut du compte</label>
                             <div className="flex items-center gap-4">
                                 <button 
                                     type="button"
                                     onClick={() => setEditForm({...editForm, isActive: true})}
-                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${editForm.isActive ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700'}`}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${editForm.isActive ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'}`}
                                 >
                                     Actif
                                 </button>
                                 <button 
                                     type="button"
                                     onClick={() => setEditForm({...editForm, isActive: false})}
-                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${!editForm.isActive ? 'bg-red-500 text-white border-red-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-700'}`}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm border transition-all ${!editForm.isActive ? 'bg-red-500 text-white border-red-500' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]'}`}
                                 >
                                     Désactivé
                                 </button>
@@ -461,8 +461,8 @@ export default function UserManagementPage() {
                         </div>
 
                         <div className="pt-4 flex gap-3">
-                            <button onClick={() => setEditModal(false)} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
-                            <button onClick={handleUpdate} disabled={isSaving} className="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
+                            <button onClick={() => setEditModal(false)} className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold hover:bg-[var(--surface-2)]">Annuler</button>
+                            <button onClick={handleUpdate} disabled={isSaving} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
                                 {isSaving ? <Loader2 className="animate-spin" size={20}/> : <><Save size={18}/> Enregistrer</>}
                             </button>
                         </div>
@@ -481,25 +481,25 @@ export default function UserManagementPage() {
             >
                 <motion.div 
                     initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-                    className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-gray-700"
+                    className="bg-[var(--surface)] rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-[var(--border)]"
                 >
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{inviteSuccessInfo ? 'Partager les identifiants' : 'Inviter un collaborateur'}</h2>
-                        <button onClick={closeInviteModal} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
+                        <h2 className="text-2xl font-bold text-[var(--text)]">{inviteSuccessInfo ? 'Partager les identifiants' : 'Inviter un collaborateur'}</h2>
+                        <button onClick={closeInviteModal} className="p-2 hover:bg-[var(--surface-2)] rounded-full"><X size={20} /></button>
                     </div>
 
                     {inviteSuccessInfo ? (
                         <div className="space-y-5">
                             <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl">
                                 <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                <p className="text-sm text-[var(--text)]">
                                     <strong>{inviteSuccessInfo.firstName} {inviteSuccessInfo.lastName}</strong> a été invité(e) avec succès. Partage-lui maintenant ses identifiants.
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl">
-                                <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">Aperçu du message</p>
-                                <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-line leading-relaxed">{buildInviteMessage(inviteSuccessInfo)}</p>
+                            <div className="p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl">
+                                <p className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">Aperçu du message</p>
+                                <p className="text-xs text-[var(--text-muted)] whitespace-pre-line leading-relaxed">{buildInviteMessage(inviteSuccessInfo)}</p>
                             </div>
 
                             <div className="space-y-2.5">
@@ -513,20 +513,20 @@ export default function UserManagementPage() {
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <button
                                         onClick={() => handleShareSms(inviteSuccessInfo)}
-                                        className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                        className="flex items-center justify-center gap-2 py-3 border border-[var(--border)] rounded-xl font-bold text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     >
                                         <Mail size={16} /> SMS
                                     </button>
                                     <button
                                         onClick={() => handleCopyInviteMessage(inviteSuccessInfo)}
-                                        className="flex items-center justify-center gap-2 py-3 border border-gray-200 dark:border-gray-600 rounded-xl font-bold text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                        className="flex items-center justify-center gap-2 py-3 border border-[var(--border)] rounded-xl font-bold text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     >
                                         {copiedInviteMsg ? <><Check size={16} className="text-emerald-500" /> Copié !</> : <>Copier le message</>}
                                     </button>
                                 </div>
                             </div>
 
-                            <button onClick={closeInviteModal} className="w-full py-3 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                            <button onClick={closeInviteModal} className="w-full py-3 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
                                 Fermer sans partager
                             </button>
                         </div>
@@ -535,17 +535,17 @@ export default function UserManagementPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-bold mb-1">Prénom</label>
-                                <input required value={inviteForm.firstName} onChange={e => setInviteForm({...inviteForm, firstName: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                                <input required value={inviteForm.firstName} onChange={e => setInviteForm({...inviteForm, firstName: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
                             <div>
                                 <label className="block text-sm font-bold mb-1">Nom</label>
-                                <input required value={inviteForm.lastName} onChange={e => setInviteForm({...inviteForm, lastName: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                                <input required value={inviteForm.lastName} onChange={e => setInviteForm({...inviteForm, lastName: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-bold mb-1">Email professionnel</label>
-                            <input type="email" required value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
+                            <input type="email" required value={inviteForm.email} onChange={e => setInviteForm({...inviteForm, email: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20" />
                         </div>
 
                         <div>
@@ -574,18 +574,18 @@ export default function UserManagementPage() {
                                     options={departments.map(d => ({ value: d.id, label: d.name }))}
                                     placeholder="Choisir département..."
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Le manager n'aura accès qu'aux employés de ce département.</p>
+                                <p className="text-xs text-[var(--text-muted)] mt-1">Le manager n'aura accès qu'aux employés de ce département.</p>
                             </motion.div>
                         )}
 
                         <div>
                             <label className="block text-sm font-bold mb-1">Mot de passe provisoire</label>
-                            <input type="text" required minLength={6} value={inviteForm.password} onChange={e => setInviteForm({...inviteForm, password: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono" placeholder="Ex: Welcome2025!" />
-                            <p className="text-xs text-gray-500 mt-1">Communiquez ce mot de passe à l'utilisateur.</p>
+                            <input type="text" required minLength={6} value={inviteForm.password} onChange={e => setInviteForm({...inviteForm, password: e.target.value})} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 font-mono" placeholder="Ex: Welcome2025!" />
+                            <p className="text-xs text-[var(--text-muted)] mt-1">Communiquez ce mot de passe à l'utilisateur.</p>
                         </div>
 
                         <div className="pt-4 flex gap-3">
-                            <button type="button" onClick={closeInviteModal} className="flex-1 py-3 border border-gray-200 dark:border-gray-700 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-700">Annuler</button>
+                            <button type="button" onClick={closeInviteModal} className="flex-1 py-3 border border-[var(--border)] rounded-xl font-bold hover:bg-[var(--surface-2)]">Annuler</button>
                             <button type="submit" disabled={isInviting} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg flex justify-center items-center gap-2">
                                 {isInviting ? <Loader2 className="animate-spin" size={20}/> : <><Mail size={18}/> Envoyer l'invitation</>}
                             </button>
