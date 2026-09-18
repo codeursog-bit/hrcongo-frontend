@@ -84,15 +84,24 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
     );
   }, [allRequests, typeFilter, deptFilter, nameFilter]);
 
+  // ✅ Une demande PENDING/REJECTED/CANCELLED n'a jamais été décaissée — elle
+  // ne doit jamais compter dans un total "accordé", "emprunté" ou "dette".
+  // Seul un prêt ACTIVE/PAID ou une avance APPROVED/PAID/DEDUCTED représente
+  // de l'argent réellement sorti de la caisse.
+  const isGranted = (r: any) =>
+    r.kind === 'loan'
+      ? ['ACTIVE', 'PAID'].includes(r.status)
+      : ['APPROVED', 'PAID', 'DEDUCTED'].includes(r.status);
+
   // ── KPI ─────────────────────────────────────────────────────────────────
   const kpis = useMemo(() => {
     const thisMonth = allRequests.filter(r => {
       const d = refDate(r);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const countThisMonth = thisMonth.length;
-    const totalThisMonth = thisMonth.reduce((s, r) => s + Number(r.amount ?? 0), 0);
-    const totalAllTime = allRequests.reduce((s, r) => s + Number(r.amount ?? 0), 0);
+    const countThisMonth = thisMonth.length; // ✅ compte TOUTES les demandes reçues, quel que soit leur statut — c'est le sens de "Demandes ce mois-ci"
+    const totalThisMonth = thisMonth.filter(isGranted).reduce((s, r) => s + Number(r.amount ?? 0), 0);
+    const totalAllTime = allRequests.filter(isGranted).reduce((s, r) => s + Number(r.amount ?? 0), 0);
 
     // Reste à recouvrer : solde restant des prêts actifs + avances approuvées non déduites
     const outstandingLoans = loans.filter(l => l.status === 'ACTIVE').reduce((s, l) => s + Number(l.remainingBalance ?? 0), 0);
@@ -116,7 +125,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
       const emprunte = allRequests
         .filter(r => {
           const d = refDate(r);
-          return d.getFullYear() === year && d.getMonth() === idx;
+          return isGranted(r) && d.getFullYear() === year && d.getMonth() === idx;
         })
         .reduce((s, r) => s + Number(r.amount ?? 0), 0);
 
@@ -142,14 +151,14 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
   // ── Répartition par type (montant) ─────────────────────────────────────
   const byType = useMemo(() => {
     const map: Record<string, number> = {};
-    allRequests.forEach(r => { map[r.requestType] = (map[r.requestType] ?? 0) + Number(r.amount ?? 0); });
+    allRequests.filter(isGranted).forEach(r => { map[r.requestType] = (map[r.requestType] ?? 0) + Number(r.amount ?? 0); });
     return Object.entries(map).map(([type, value]) => ({ name: TYPE_LABEL[type] ?? type, value }));
   }, [allRequests]);
 
   // ── Top départements par montant de dette ───────────────────────────────
   const byDept = useMemo(() => {
     const map: Record<string, number> = {};
-    allRequests.forEach(r => {
+    allRequests.filter(isGranted).forEach(r => {
       const name = r.employee?.department?.name || 'Sans département';
       map[name] = (map[name] ?? 0) + Number(r.amount ?? 0);
     });
