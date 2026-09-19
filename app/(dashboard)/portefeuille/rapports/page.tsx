@@ -306,7 +306,8 @@ export default function PortfolioReportsPage() {
             <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text)' }}>Détail par entreprise — {monthLabels[monthLabels.length - 1]}</h3>
             </div>
-            <div className="grid px-6 py-3" style={{ gridTemplateColumns: '1fr 100px 150px 150px 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+            <div className="overflow-x-auto">
+            <div className="grid px-6 py-3" style={{ minWidth: 900, gridTemplateColumns: '1fr 100px 150px 150px 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
               {['Entreprise', 'Effectif', 'Masse nette', 'Salaire moyen', 'Coût employeur', 'CNSS + ITS'].map((h, i) => (
                 <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
               ))}
@@ -315,7 +316,7 @@ export default function PortfolioReportsPage() {
               const last = c.payrollByMonth[c.payrollByMonth.length - 1];
               return (
                 <div key={c.id} className="grid items-center px-6 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                  style={{ gridTemplateColumns: '1fr 100px 150px 150px 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                  style={{ minWidth: 900, gridTemplateColumns: '1fr 100px 150px 150px 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{c.name}</p>
                   <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{c.headcount}</p>
                   <p className="text-sm" style={{ color: 'var(--text)' }}>{fmtFCFA(last?.net ?? 0)}</p>
@@ -325,6 +326,7 @@ export default function PortfolioReportsPage() {
                 </div>
               );
             })}
+            </div>
           </Panel>
         </>
       )}

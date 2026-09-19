@@ -165,8 +165,8 @@ export default function PortfolioTeamPage() {
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Invitez un associé ou un collègue à co-gérer vos entreprises.</p>
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ gridTemplateColumns: '1fr 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 500, gridTemplateColumns: '1fr 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Email', 'Statut', 'Envoyée le'].map((h, i) => (
               <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
@@ -174,7 +174,7 @@ export default function PortfolioTeamPage() {
           {invitations.map(inv => {
             const expired = !inv.accepted && new Date(inv.expiresAt) < new Date();
             return (
-              <div key={inv.id} className="grid items-center px-4 py-3" style={{ gridTemplateColumns: '1fr 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+              <div key={inv.id} className="grid items-center px-4 py-3" style={{ minWidth: 500, gridTemplateColumns: '1fr 150px 150px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                 <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{inv.email}</p>
                 {inv.accepted ? (
                   <span className="inline-flex w-fit items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">

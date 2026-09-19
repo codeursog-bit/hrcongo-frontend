@@ -35,12 +35,11 @@ export default function CompleteHRReport() {
   const { bp } = useBasePath();
   const now = new Date();
 
-  // ✅ Sélecteur de période — seul le mode "Mensuel" est branché sur les
-  // données ici, car /reports/comparison et /reports/overtime n'acceptent
-  // qu'un mois+année. /reports/payroll, /reports/departments,
-  // /reports/top-employees et /reports/leaves n'ont pas encore de
-  // paramètre de période côté backend — changer le sélecteur ne les
-  // affecte pas tant qu'ils ne sont pas étendus.
+  // ✅ Sélecteur de période — mode "Mensuel" uniquement ici (données
+  // affichées par mois). /reports/comparison, /reports/overtime,
+  // /reports/payroll et /reports/departments suivent tous maintenant le
+  // mois/année choisis. /reports/top-employees et /reports/leaves restent
+  // à part (pas utilisés sur cette page).
   const [period, setPeriod] = useState<PeriodValue>({
     mode: 'MOIS',
     month: now.getMonth() + 1,
@@ -61,8 +60,8 @@ export default function CompleteHRReport() {
     const fetchAllData = async () => {
       try {
         const [payroll, departments, comparison, topEmployees, overtime, leaves] = await Promise.all([
-          api.get('/reports/payroll'),
-          api.get('/reports/departments'),
+          api.get(`/reports/payroll?month=${currentMonth}&year=${currentYear}`),
+          api.get(`/reports/departments?month=${currentMonth}&year=${currentYear}`),
           api.get(`/reports/comparison?month=${currentMonth}&year=${currentYear}`),
           api.get('/reports/top-employees'),
           api.get(`/reports/overtime?month=${currentMonth}&year=${currentYear}`),

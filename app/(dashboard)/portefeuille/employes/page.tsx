@@ -209,15 +209,15 @@ export default function PortfolioEmployeesPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ gridTemplateColumns: '1fr 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 620, gridTemplateColumns: '1fr 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Employé', 'Entreprise', 'Poste', ''].map((h, i) => (
               <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
           </div>
           {employees.map(emp => (
             <div key={emp.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-              style={{ gridTemplateColumns: '1fr 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+              style={{ minWidth: 620, gridTemplateColumns: '1fr 160px 160px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
                   {emp.firstName[0]}{emp.lastName[0]}

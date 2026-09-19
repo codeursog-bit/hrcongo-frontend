@@ -32,9 +32,9 @@ export default function PayrollAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const now = new Date();
-  // ✅ Même limite que Rapport Complet : /reports/payroll et
-  // /reports/departments n'ont pas encore de paramètre de période côté
-  // backend — seul /reports/comparison en profite pour l'instant.
+  // ✅ /reports/payroll, /reports/departments et /reports/comparison
+  // acceptent tous maintenant month+year — le sélecteur pilote toute
+  // la page (fini le blocage sur le mois du jour).
   const [period, setPeriod] = useState<PeriodValue>({
     mode: 'MOIS',
     month: now.getMonth() + 1,
@@ -47,8 +47,8 @@ export default function PayrollAnalyticsPage() {
     const fetchData = async () => {
       try {
         const [payrollRes, deptRes, compRes] = await Promise.all([
-          api.get('/reports/payroll'),
-          api.get('/reports/departments'),
+          api.get(`/reports/payroll?month=${currentMonth}&year=${currentYear}`),
+          api.get(`/reports/departments?month=${currentMonth}&year=${currentYear}`),
           api.get(`/reports/comparison?month=${currentMonth}&year=${currentYear}`)
         ]) as [any, any, any];
         

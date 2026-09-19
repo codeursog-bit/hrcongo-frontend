@@ -3,10 +3,11 @@
 // app/(dashboard)/portefeuille/paie/liste/page.tsx
 
 import React, { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   FileText, Loader2, AlertCircle, CheckCircle2, XCircle, Trash2,
-  Printer,
+  Printer, Wallet,
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
@@ -159,12 +160,21 @@ export default function PortfolioPayrollListPage() {
         />
       )}
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Liste de paie</h1>
-        <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          {totals.count} bulletin{totals.count > 1 ? 's' : ''} · {fmtFCFA(totals.netTotal)} net au total
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>Liste de paie</h1>
+          <p className="mt-1 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            {totals.count} bulletin{totals.count > 1 ? 's' : ''} · {fmtFCFA(totals.netTotal)} net au total
+          </p>
+        </div>
+        <Link
+          href="/portefeuille/paie"
+          className="px-4 py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 hover:bg-[var(--surface-2)] w-fit"
+          style={{ border: '1px solid var(--border)', color: 'var(--text)' }}
+        >
+          <Wallet size={16} /> Générer une paie
+        </Link>
       </div>
 
       {error && (
@@ -194,8 +204,8 @@ export default function PortfolioPayrollListPage() {
           <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Aucun bulletin pour cette période</p>
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ gridTemplateColumns: '1fr 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 780, gridTemplateColumns: '1fr 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Employé', 'Entreprise', 'Net à payer', 'Statut', ''].map((h, i) => (
               <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
@@ -205,7 +215,7 @@ export default function PortfolioPayrollListPage() {
             const isBusy = busyId === entry.id;
             return (
               <div key={entry.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                style={{ gridTemplateColumns: '1fr 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                style={{ minWidth: 780, gridTemplateColumns: '1fr 160px 130px 100px 190px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{entry.employee.firstName} {entry.employee.lastName}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{entry.employee.employeeNumber}</p>

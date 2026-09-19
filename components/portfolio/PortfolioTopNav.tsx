@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronRight, Moon, Sun, ChevronDown, User, LogOut, Mail } from 'lucide-react';
+import { ChevronRight, Moon, Sun, ChevronDown, User, LogOut, Mail, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/providers/ThemeProvider';
 
@@ -26,9 +26,10 @@ const PAGE_LABELS: Record<string, string> = {
 interface PortfolioTopNavProps {
   userName?: string;
   userEmail?: string;
+  onMenuClick?: () => void;
 }
 
-export default function PortfolioTopNav({ userName, userEmail }: PortfolioTopNavProps) {
+export default function PortfolioTopNav({ userName, userEmail, onMenuClick }: PortfolioTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
@@ -65,13 +66,16 @@ export default function PortfolioTopNav({ userName, userEmail }: PortfolioTopNav
   return (
     <header className="sticky top-0 z-40 print:hidden">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <nav className="flex items-center text-sm font-medium">
-          <span style={{ color: 'var(--text-muted)' }}>Portefeuille</span>
-          <ChevronRight size={14} className="mx-2" style={{ color: 'var(--text-muted)' }} />
-          <span className="font-bold" style={{ color: 'var(--text)' }}>{title}</span>
-        </nav>
-
         <div className="flex items-center gap-3">
+          <button onClick={onMenuClick} className="p-2 -ml-2 md:hidden rounded-lg" style={{ color: 'var(--text-muted)' }}>
+            <Menu size={22} />
+          </button>
+          <span className="hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Portefeuille</span>
+          <ChevronRight size={14} className="mx-1 hidden sm:inline" style={{ color: 'var(--text-muted)' }} />
+          <span className="font-bold" style={{ color: 'var(--text)' }}>{title}</span>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={toggleTheme}
             className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"

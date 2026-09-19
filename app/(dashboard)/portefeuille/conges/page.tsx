@@ -166,7 +166,7 @@ function CreateModal({ companies, onClose, onCreated }: {
             </select>
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Date de début *">
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} style={{ color: 'var(--text)' }} />
             </Field>
@@ -341,8 +341,8 @@ export default function PortfolioLeavesPage() {
           <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Aucune demande de congé</p>
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="grid px-4 py-3" style={{ gridTemplateColumns: '1fr 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+        <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="grid px-4 py-3" style={{ minWidth: 840, gridTemplateColumns: '1fr 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
             {['Employé', 'Entreprise', 'Période', 'Statut', ''].map((h, i) => (
               <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
             ))}
@@ -354,7 +354,7 @@ export default function PortfolioLeavesPage() {
             const cancellable = item.status === 'APPROVED';
             return (
               <div key={item.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                style={{ gridTemplateColumns: '1fr 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                style={{ minWidth: 840, gridTemplateColumns: '1fr 150px 190px 130px 170px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{item.employee.firstName} {item.employee.lastName}</p>
                   {item.reason && <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{item.reason}</p>}

@@ -19,11 +19,14 @@ import {
 import { api } from '@/services/api';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
+import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
+import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printLoanDocument } from '@/lib/loan-print';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
+const NATURE_LABEL: Record<string, string> = { SOCIAL: 'Prêt social', SCOLARITE: 'Prêt scolarité', LOGEMENT: 'Prêt logement', EXCEPTIONNEL: 'Prêt exceptionnel', AUTRE: 'Autre' };
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 
 const STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
@@ -171,6 +174,33 @@ export default function ValidationsPage() {
     docType: selected.kind === 'loan' ? (selected.item.type || 'ARGENT') : 'AVANCE',
     amount: selected.item.amount, monthlyRepayment: selected.item.monthlyRepayment, status: selected.item.status,
     startDate: selected.item.startDate, endDate: selected.item.endDate, createdAt: selected.item.createdAt,
+  } : null;
+
+  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const standardLoanData = docData && selected?.kind === 'loan' ? {
+    reference,
+    company: docData.company,
+    employee: docData.employee,
+    nature: docData.nature,
+    amount: docData.amount,
+    durationMonths: docData.monthlyRepayment ? Math.ceil(Number(docData.amount) / Number(docData.monthlyRepayment)) : undefined,
+    recoverViaPayroll: docData.recoverViaPayroll,
+    reason: docData.reason,
+    requestedAt: docData.createdAt,
+    drhDecision: docData.drhDecision,
+    dgDecision: docData.dgDecision,
+  } : null;
+  const standardAdvanceData = docData && selected?.kind === 'advance' ? {
+    reference,
+    company: docData.company,
+    employee: docData.employee,
+    amount: docData.amount,
+    month: docData.deductMonth,
+    year: docData.deductYear,
+    recoverViaPayroll: docData.recoverViaPayroll,
+    reason: docData.reason,
+    requestedAt: docData.createdAt,
+    status: docData.status,
   } : null;
 
   const handleDownloadOrcaXlsx = async () => {
@@ -348,6 +378,7 @@ export default function ValidationsPage() {
 
             <div className="space-y-2 text-sm mb-4">
               <Row label="Type" value={TYPE_LABEL[selected.kind === 'loan' ? (selected.item.type ?? 'ARGENT') : 'AVANCE']} />
+              {selected.kind === 'loan' && selected.item.nature && <Row label="Nature" value={NATURE_LABEL[selected.item.nature] || selected.item.nature} />}
               <Row label="Montant" value={fmt(Number(selected.item.amount))} />
               {selected.kind === 'loan' && <Row label="Mensualité" value={fmt(Number(selected.item.monthlyRepayment))} />}
               <Row label="Département" value={selected.item.employee?.department?.name || '—'} />
@@ -412,6 +443,10 @@ export default function ValidationsPage() {
               {selected && docData && (
                 docData.company?.documentTemplate === 'ORCA' ? (
                   orcaHtml && <div id="val-print-target" dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+                ) : isStandard ? (
+                  selected.kind === 'loan'
+                    ? standardLoanData && <StandardLoanRequestForm id="val-print-target" data={standardLoanData as any} />
+                    : standardAdvanceData && <StandardAdvanceRequestForm id="val-print-target" data={standardAdvanceData as any} />
                 ) : (
                   printData && <LoanRequestPrintable id="val-print-target" data={printData as any} />
                 )
@@ -425,6 +460,10 @@ export default function ValidationsPage() {
         {selected && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+          ) : isStandard ? (
+            selected.kind === 'loan'
+              ? standardLoanData && <StandardLoanRequestForm id="val-doc-preview" data={standardLoanData as any} />
+              : standardAdvanceData && <StandardAdvanceRequestForm id="val-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="val-doc-preview" data={printData as any} />
           )

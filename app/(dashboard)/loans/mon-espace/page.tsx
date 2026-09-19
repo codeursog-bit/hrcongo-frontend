@@ -18,9 +18,12 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
+import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
+import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 
+const NATURE_LABEL: Record<string, string> = { SOCIAL: 'Prêt social', SCOLARITE: 'Prêt scolarité', LOGEMENT: 'Prêt logement', EXCEPTIONNEL: 'Prêt exceptionnel', AUTRE: 'Autre' };
 const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   PENDING:    { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock },
   PENDING_DG: { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300', icon: Clock }, // legacy, plus produit
@@ -151,6 +154,33 @@ export default function MonEspacePretsAvancesPage() {
     drhDecision: selected.kind === 'loan' ? selected.data.drhDecision : undefined,
     dgDecision: selected.kind === 'loan' ? selected.data.dgDecision : undefined,
     chefDecision: selected.kind === 'advance' ? (['APPROVED', 'DEDUCTED', 'PAID'].includes(selected.data.status) ? 'OUI' : selected.data.status === 'REJECTED' ? 'NON' : null) : undefined,
+  } : null;
+
+  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const standardLoanData = docData && selected?.kind === 'loan' ? {
+    reference,
+    company: docData.company,
+    employee: docData.employee,
+    nature: docData.nature,
+    amount: docData.amount,
+    durationMonths: docData.monthlyRepayment ? Math.ceil(Number(docData.amount) / Number(docData.monthlyRepayment)) : undefined,
+    recoverViaPayroll: docData.recoverViaPayroll,
+    reason: docData.reason,
+    requestedAt: docData.createdAt,
+    drhDecision: docData.drhDecision,
+    dgDecision: docData.dgDecision,
+  } : null;
+  const standardAdvanceData = docData && selected?.kind === 'advance' ? {
+    reference,
+    company: docData.company,
+    employee: docData.employee,
+    amount: docData.amount,
+    month: docData.deductMonth,
+    year: docData.deductYear,
+    recoverViaPayroll: docData.recoverViaPayroll,
+    reason: docData.reason,
+    requestedAt: docData.createdAt,
+    status: docData.status,
   } : null;
 
   const handleDownloadPdf = async () => {
@@ -323,6 +353,9 @@ export default function MonEspacePretsAvancesPage() {
                     {selected.kind === 'loan' && (
                       <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Solde restant</p><p className="font-bold text-[var(--text)]">{Number(selected.data.remainingBalance).toLocaleString('fr-FR')} FCFA</p></div>
                     )}
+                    {selected.kind === 'loan' && selected.data.nature && (
+                      <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Nature</p><p className="font-bold text-[var(--text)]">{NATURE_LABEL[selected.data.nature] || selected.data.nature}</p></div>
+                    )}
                     {selected.data.reason && <div className="text-sm"><p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p><p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3 rounded-xl">{selected.data.reason}</p></div>}
                     {selected.data.status === 'REJECTED' && selected.data.rejectionReason && (
                       <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">Motif du refus : {selected.data.rejectionReason}</div>
@@ -364,6 +397,10 @@ export default function MonEspacePretsAvancesPage() {
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {docData?.company?.documentTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+                    ) : isStandard ? (
+                      selected.kind === 'loan'
+                        ? standardLoanData && <StandardLoanRequestForm id={PRINT_ID} data={standardLoanData as any} />
+                        : standardAdvanceData && <StandardAdvanceRequestForm id={PRINT_ID} data={standardAdvanceData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -433,6 +470,10 @@ export default function MonEspacePretsAvancesPage() {
         {selected && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+          ) : isStandard ? (
+            selected.kind === 'loan'
+              ? standardLoanData && <StandardLoanRequestForm id="my-doc-preview" data={standardLoanData as any} />
+              : standardAdvanceData && <StandardAdvanceRequestForm id="my-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="my-doc-preview" data={printData as any} />
           )

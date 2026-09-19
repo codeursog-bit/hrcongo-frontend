@@ -25,6 +25,8 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
+import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
+import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import LoansOverview from '@/components/loans/LoansOverview';
@@ -34,6 +36,7 @@ import CashPaymentModal from '@/components/loans/CashPaymentModal';
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const DG_ROLES  = ['ADMIN', 'SUPER_ADMIN'];
 const FULL_ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN'];
+const NATURE_LABEL: Record<string, string> = { SOCIAL: 'Prêt social', SCOLARITE: 'Prêt scolarité', LOGEMENT: 'Prêt logement', EXCEPTIONNEL: 'Prêt exceptionnel', AUTRE: 'Autre' };
 
 const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; dot: string; icon: any }> = {
   PENDING:    { label: 'En attente',  cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300', dot: 'bg-amber-500', icon: Clock },
@@ -205,6 +208,65 @@ export default function LoansManagementPage() {
     } catch (e: any) { alert(e?.message || 'Erreur'); }
   };
 
+  // ── Modification (RH/Admin uniquement — le backend l'impose déjà via
+  // requireFinanceAccess) : montant, mensualité/durée pour un prêt,
+  // mois-année de déduction pour une avance. Corrige "en combien de temps
+  // la dette doit être réduite" sans passer par annuler + recréer.
+  const [editModal, setEditModal] = useState<'loan' | 'advance' | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const openEditLoan = () => {
+    if (!selectedLoan) return;
+    setEditForm({
+      amount: selectedLoan.amount,
+      monthlyRepayment: selectedLoan.monthlyRepayment,
+      startDate: selectedLoan.startDate ? String(selectedLoan.startDate).slice(0, 10) : '',
+      endDate: selectedLoan.endDate ? String(selectedLoan.endDate).slice(0, 10) : '',
+      reason: selectedLoan.reason || '',
+      nature: selectedLoan.nature || '',
+    });
+    setEditModal('loan');
+  };
+  const openEditAdvance = () => {
+    if (!selectedAdvance) return;
+    setEditForm({
+      amount: selectedAdvance.amount,
+      deductMonth: selectedAdvance.deductMonth || '',
+      deductYear: selectedAdvance.deductYear || '',
+      reason: selectedAdvance.reason || '',
+    });
+    setEditModal('advance');
+  };
+  const handleSaveEdit = async () => {
+    setIsSavingEdit(true);
+    try {
+      if (editModal === 'loan' && selectedLoan) {
+        await api.patch(`/loans/${selectedLoan.id}`, {
+          amount: Number(editForm.amount),
+          monthlyRepayment: Number(editForm.monthlyRepayment),
+          startDate: editForm.startDate || undefined,
+          endDate: editForm.endDate || undefined,
+          reason: editForm.reason,
+          nature: editForm.nature || undefined,
+        });
+      } else if (editModal === 'advance' && selectedAdvance) {
+        await api.patch(`/loans/advances/${selectedAdvance.id}`, {
+          amount: Number(editForm.amount),
+          deductMonth: editForm.deductMonth ? Number(editForm.deductMonth) : undefined,
+          deductYear: editForm.deductYear ? Number(editForm.deductYear) : undefined,
+          reason: editForm.reason,
+        });
+      }
+      setEditModal(null);
+      await load();
+    } catch (e: any) {
+      alert(e?.message || 'Erreur lors de la modification');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   // ── Actions avances ────────────────────────────────────────────────────────
 
   const handleAdvanceDecision = async (decision: 'APPROVED' | 'REJECTED') => {
@@ -285,6 +347,7 @@ export default function LoansManagementPage() {
   // ── Impression ─────────────────────────────────────────────────────────────
 
   const PRINT_ID = 'loan-doc-print';
+  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
   const printSource = tab === 'loans' ? selectedLoan : selectedAdvance;
   const printReference = printSource ? `${tab === 'loans' ? 'PR' : 'AV'}-${printSource.id.slice(0, 8).toUpperCase()}` : '';
 
@@ -312,6 +375,33 @@ export default function LoansManagementPage() {
     status: printSource.status,
     drhDecision: selectedLoan?.drhDecision, dgDecision: selectedLoan?.dgDecision,
     chefDecision: tab === 'advances' ? (selectedAdvance?.status === 'APPROVED' || selectedAdvance?.status === 'DEDUCTED' || selectedAdvance?.status === 'PAID' ? 'OUI' : selectedAdvance?.status === 'REJECTED' ? 'NON' : null) : undefined,
+  } : null;
+
+  const standardLoanData = docData && tab === 'loans' ? {
+    reference: printReference,
+    company: docData.company,
+    employee: docData.employee,
+    nature: docData.nature,
+    amount: docData.amount,
+    durationMonths: docData.monthlyRepayment ? Math.ceil(Number(docData.amount) / Number(docData.monthlyRepayment)) : undefined,
+    recoverViaPayroll: docData.recoverViaPayroll,
+    reason: docData.reason,
+    requestedAt: docData.createdAt,
+    drhDecision: docData.drhDecision,
+    dgDecision: docData.dgDecision,
+  } : null;
+
+  const standardAdvanceData = docData && tab === 'advances' ? {
+    reference: printReference,
+    company: docData.company,
+    employee: docData.employee,
+    amount: docData.amount,
+    month: docData.deductMonth,
+    year: docData.deductYear,
+    recoverViaPayroll: docData.recoverViaPayroll,
+    reason: docData.reason,
+    requestedAt: docData.createdAt,
+    status: docData.status,
   } : null;
 
   const handleDownloadPdf = async () => {
@@ -584,6 +674,9 @@ export default function LoansManagementPage() {
                     <DetailTile icon={Wallet} label="Mensualité" value={`${Number(selectedLoan.monthlyRepayment).toLocaleString('fr-FR')} FCFA`} tone="emerald" />
                     <DetailTile icon={PiggyBank} label="Solde restant" value={`${Number(selectedLoan.remainingBalance).toLocaleString('fr-FR')} FCFA`} tone={Number(selectedLoan.remainingBalance) === 0 ? 'emerald' : 'amber'} />
                     <DetailTile icon={Receipt} label="Type" value={selectedLoan.type} tone="amber" />
+                    {selectedLoan.nature && (
+                      <DetailTile icon={Receipt} label="Nature" value={NATURE_LABEL[selectedLoan.nature] || selectedLoan.nature} tone="amber" />
+                    )}
                   </div>
 
                   {/* Progression du remboursement — repère visuel rapide */}
@@ -673,6 +766,9 @@ export default function LoansManagementPage() {
                   )}
 
                   <div className="flex gap-2 pt-2">
+                    {DRH_ROLES.includes(userRole) && (
+                      <button onClick={openEditLoan} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</button>
+                    )}
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedLoan.status === 'PENDING') && (
                       <button onClick={() => handleDeleteLoan(selectedLoan.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
                     )}
@@ -699,6 +795,8 @@ export default function LoansManagementPage() {
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {docData?.company?.documentTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+                    ) : isStandard ? (
+                      standardLoanData && <StandardLoanRequestForm id={PRINT_ID} data={standardLoanData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -903,9 +1001,14 @@ export default function LoansManagementPage() {
                     </div>
                   )}
 
-                  {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedAdvance.status === 'PENDING') && (
-                    <button onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="w-full py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
-                  )}
+                  <div className="flex gap-2">
+                    {DRH_ROLES.includes(userRole) && (
+                      <button onClick={openEditAdvance} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</button>
+                    )}
+                    {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedAdvance.status === 'PENDING') && (
+                      <button onClick={() => handleDeleteAdvance(selectedAdvance.id)} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-red-500 hover:bg-red-50 flex items-center justify-center gap-1.5"><Trash2 size={13} /> Supprimer</button>
+                    )}
+                  </div>
 
                   <div className="flex gap-2">
                     <button onClick={() => setTimeout(() => printLoanDocument(PRINT_ID), 50)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]"><Printer size={16} /> Imprimer</button>
@@ -923,6 +1026,8 @@ export default function LoansManagementPage() {
                   <div className="fixed -left-[9999px] top-0 pointer-events-none" aria-hidden="true">
                     {docData?.company?.documentTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+                    ) : isStandard ? (
+                      standardAdvanceData && <StandardAdvanceRequestForm id={PRINT_ID} data={standardAdvanceData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -1228,6 +1333,8 @@ export default function LoansManagementPage() {
         {tab === 'loans' && selectedLoan && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+          ) : isStandard ? (
+            standardLoanData && <StandardLoanRequestForm id="loan-doc-preview" data={standardLoanData as any} />
           ) : (
             printData && <LoanRequestPrintable id="loan-doc-preview" data={printData as any} />
           )
@@ -1235,6 +1342,8 @@ export default function LoansManagementPage() {
         {tab === 'advances' && selectedAdvance && docData && (
           docData.company?.documentTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
+          ) : isStandard ? (
+            standardAdvanceData && <StandardAdvanceRequestForm id="advance-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="advance-doc-preview" data={printData as any} />
           )
@@ -1258,6 +1367,80 @@ export default function LoansManagementPage() {
             : `${selectedAdvance?.employee?.firstName || ''} ${selectedAdvance?.employee?.lastName || ''}`.trim()
         }
       />
+
+      {/* ── Modale de modification (RH/Admin) ──────────────────────────────── */}
+      {editModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditModal(null)}>
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-[var(--text)] mb-1">
+              Modifier {editModal === 'loan' ? 'le prêt' : "l'avance"}
+            </h3>
+            <p className="text-xs text-[var(--text-muted)] mb-5">
+              Réservé RH/Admin — n'affecte pas les remboursements déjà enregistrés.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Montant (FCFA)</label>
+                <input type="number" min={1} value={editForm.amount ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, amount: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+              </div>
+
+              {editModal === 'loan' ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Remboursement mensuel (FCFA)</label>
+                    <input type="number" min={1} value={editForm.monthlyRepayment ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, monthlyRepayment: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Date de début</label>
+                      <input type="date" value={editForm.startDate ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, startDate: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Date de fin estimée</label>
+                      <input type="date" value={editForm.endDate ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, endDate: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Nature du prêt</label>
+                    <select value={editForm.nature ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, nature: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]">
+                      <option value="">— Non précisé —</option>
+                      <option value="SOCIAL">Prêt social</option>
+                      <option value="SCOLARITE">Prêt scolarité</option>
+                      <option value="LOGEMENT">Prêt logement</option>
+                      <option value="EXCEPTIONNEL">Prêt exceptionnel</option>
+                      <option value="AUTRE">Autre</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Mois de déduction (1-12)</label>
+                    <input type="number" min={1} max={12} value={editForm.deductMonth ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, deductMonth: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Année de déduction</label>
+                    <input type="number" min={new Date().getFullYear()} value={editForm.deductYear ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, deductYear: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Motif</label>
+                <textarea rows={2} value={editForm.reason ?? ''} onChange={e => setEditForm((f: any) => ({ ...f, reason: e.target.value }))} className="w-full p-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]" />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button onClick={() => setEditModal(null)} className="flex-1 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</button>
+              <button onClick={handleSaveEdit} disabled={isSavingEdit} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                {isSavingEdit ? <Loader2 size={16} className="animate-spin" /> : null} Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

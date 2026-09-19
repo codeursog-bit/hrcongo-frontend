@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutGrid, Fingerprint, KeyRound, FileText, CalendarClock,
-  BarChart3, Ticket, CalendarDays,
+  BarChart3, Ticket, CalendarDays, Tablet,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -39,6 +39,7 @@ export default function PresenceSubNav({ userRole, canRecordAttendanceForAll = f
     { href: '/presences/absences/suivi',   label: 'Suivi des absences', icon: CalendarDays },
     { href: '/presences/permissions',      label: 'Permissions',        icon: Ticket },
     ...(canManage ? [{ href: '/presences/shifts', label: 'Shifts', icon: CalendarClock }] : []),
+    ...(canManage ? [{ href: '/presences/tablettes', label: 'Tablettes', icon: Tablet }] : []),
     { href: '/presences/resume',           label: 'Mon résumé',         icon: BarChart3 },
   ];
 

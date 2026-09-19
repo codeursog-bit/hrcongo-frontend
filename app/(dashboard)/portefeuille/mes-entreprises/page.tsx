@@ -177,7 +177,7 @@ function CreateCompanyModal({ onClose, onCreated }: { onClose: () => void; onCre
           )}
         </div>
 
-        <div className="px-6 py-5 grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto">
           <Field label="Raison sociale *" value={form.legalName} onChange={v => set('legalName', v)} placeholder="ACME SARL" />
           <Field label="Nom commercial" value={form.tradeName} onChange={v => set('tradeName', v)} placeholder="Acme" />
           <Field label="N° RCCM *" value={form.rccmNumber} onChange={v => set('rccmNumber', v)} placeholder="BZV-01-2024-B12-0001" />

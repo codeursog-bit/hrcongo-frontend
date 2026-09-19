@@ -24,6 +24,7 @@ import LeaveAuthorizationLetterPrintable from '@/components/LeaveAuthorizationLe
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
+import StandardLeaveRequestForm from '@/components/documents/standard/StandardLeaveRequestForm';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -270,6 +271,7 @@ export default function LeaveDetailPage() {
   const LETTER_ID = 'leave-letter-print';
   const reference = `CGE-${leave.id.slice(0, 8).toUpperCase()}`;
   const isOrca = docData?.company?.documentTemplate === 'ORCA';
+  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
 
   const formData = {
     reference,
@@ -345,6 +347,27 @@ export default function LeaveDetailPage() {
         reason={docData.reason}
         status={docData.status}
         company={docData.company}
+      />
+    ) : isStandard ? (
+      <StandardLeaveRequestForm
+        id={elementId}
+        data={{
+          reference,
+          company: docData?.company || leave.company || {},
+          employee: {
+            firstName: leave.employee?.firstName || '',
+            lastName: leave.employee?.lastName || '',
+            employeeNumber: leave.employee?.employeeNumber,
+            position: leave.employee?.position,
+            departmentName: leave.employee?.department?.name,
+            hireDate: leave.employee?.hireDate,
+          },
+          startDate: leave.startDate,
+          endDate: leave.endDate,
+          daysCount: leave.daysCount,
+          status: leave.status,
+          requestedAt: leave.requestedAt || leave.createdAt,
+        }}
       />
     ) : (
       <LeaveRequestFormPrintable data={formData as any} />

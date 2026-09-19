@@ -160,15 +160,15 @@ export default function PortfolioAttendancePage() {
                 <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Aucune donnée pour cette période</p>
               </div>
             ) : (
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <div className="grid px-4 py-3" style={{ gridTemplateColumns: '1fr 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+              <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="grid px-4 py-3" style={{ minWidth: 720, gridTemplateColumns: '1fr 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                   {['Employé', 'Département', 'Présent', 'Retard', 'Absent', 'Heures'].map((h, i) => (
                     <p key={i} className="text-[11px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{h}</p>
                   ))}
                 </div>
                 {report.map(row => (
                   <div key={row.id} className="grid items-center px-4 py-3 transition-colors hover:bg-[var(--surface-2)]"
-                    style={{ gridTemplateColumns: '1fr 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
+                    style={{ minWidth: 720, gridTemplateColumns: '1fr 140px 90px 90px 100px 100px', gap: 12, borderBottom: '1px solid var(--border)' }}>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{row.name}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{row.matricule}</p>

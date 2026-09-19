@@ -1,13 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, CalendarDays, CalendarRange } from 'lucide-react';
+import { FancySelect } from '@/components/ui/FancySelect';
 
 // ─────────────────────────────────────────────────────────────────────────
-// ✅ Sélecteur de période partagé — à utiliser sur toute page rapport qui
-// a besoin de plus qu'un simple mois courant : vue mensuelle, vue annuelle,
-// ou plage pluriannuelle (ex. 2020 → 2023) pour comparer plusieurs années
-// d'un coup. Un seul composant, un seul comportement, sur toutes les pages.
+// ✅ Sélecteur de période partagé — même composant (FancySelect) et même
+// style que la page Effectifs, pour que tous les rapports se ressemblent.
+// 3 modes : Mensuel, Annuel, ou plage pluriannuelle (ex. 2020 → 2023).
+//
+// Utilise FancySelect plutôt qu'un <select> natif : le menu déroulant est
+// un vrai composant React (portal), pas le widget natif du navigateur —
+// ça évite le bug où le menu ouvert ignore les couleurs du thème et
+// affiche du texte illisible.
 // ─────────────────────────────────────────────────────────────────────────
 
 export type PeriodMode = 'MOIS' | 'ANNEE' | 'PLAGE';
@@ -32,18 +37,22 @@ interface Props {
   modes?: PeriodMode[]; // limiter les modes proposés si une page n'a pas besoin des 3
 }
 
+const MODE_META: Record<PeriodMode, { label: string; icon: any }> = {
+  MOIS: { label: 'Mensuel', icon: Calendar },
+  ANNEE: { label: 'Annuel', icon: CalendarDays },
+  PLAGE: { label: 'Plusieurs années', icon: CalendarRange },
+};
+
 export default function PeriodSelector({ value, onChange, minYear, maxYear, modes }: Props) {
   const currentYear = new Date().getFullYear();
   const lo = minYear ?? currentYear - 6;
   const hi = maxYear ?? currentYear;
-  const years = Array.from({ length: hi - lo + 1 }, (_, i) => hi - i);
+  const yearOptions = Array.from({ length: hi - lo + 1 }, (_, i) => hi - i).map((y) => ({
+    value: String(y),
+    label: String(y),
+  }));
+  const monthOptions = MOIS.map((m, i) => ({ value: String(i + 1), label: m }));
   const availableModes: PeriodMode[] = modes ?? ['MOIS', 'ANNEE', 'PLAGE'];
-
-  const MODE_LABEL: Record<PeriodMode, string> = {
-    MOIS: 'Mensuel',
-    ANNEE: 'Annuel',
-    PLAGE: 'Plusieurs années',
-  };
 
   function setMode(mode: PeriodMode) {
     if (mode === 'PLAGE' && value.yearTo === undefined) {
@@ -54,88 +63,90 @@ export default function PeriodSelector({ value, onChange, minYear, maxYear, mode
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60 rounded-xl px-3 py-2">
-      <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+    <div className="flex flex-wrap items-end gap-3">
+      {/* Sélecteur de mode — même esprit que les filtres Effectifs, en pilules */}
+      {availableModes.length > 1 && (
+        <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-[46px] self-end">
+          {availableModes.map((m) => {
+            const Icon = MODE_META[m].icon;
+            const active = value.mode === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`flex items-center gap-1.5 px-3 h-full text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Icon size={16} />
+                {MODE_META[m].label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Sélecteur de mode */}
-      <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-        {availableModes.map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMode(m)}
-            className={`px-2.5 py-1 text-xs font-medium transition-colors ${
-              value.mode === m
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
-                : 'bg-transparent text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            {MODE_LABEL[m]}
-          </button>
-        ))}
-      </div>
-
-      {/* Contrôles contextuels selon le mode */}
       {value.mode === 'MOIS' && (
         <>
-          <select
-            value={value.month}
-            onChange={(e) => onChange({ ...value, month: Number(e.target.value) })}
-            className="bg-transparent text-sm font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
-          >
-            {MOIS.map((m, i) => (
-              <option key={m} value={i + 1}>{m}</option>
-            ))}
-          </select>
-          <select
-            value={value.year}
-            onChange={(e) => onChange({ ...value, year: Number(e.target.value) })}
-            className="bg-transparent text-sm font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <div className="w-40">
+            <FancySelect
+              label="Mois"
+              value={String(value.month)}
+              onChange={(v) => onChange({ ...value, month: Number(v) })}
+              icon={Calendar}
+              options={monthOptions}
+            />
+          </div>
+          <div className="w-32">
+            <FancySelect
+              label="Année"
+              value={String(value.year)}
+              onChange={(v) => onChange({ ...value, year: Number(v) })}
+              icon={Calendar}
+              options={yearOptions}
+            />
+          </div>
         </>
       )}
 
       {value.mode === 'ANNEE' && (
-        <select
-          value={value.year}
-          onChange={(e) => onChange({ ...value, year: Number(e.target.value) })}
-          className="bg-transparent text-sm font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
-        >
-          {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+        <div className="w-32">
+          <FancySelect
+            label="Année"
+            value={String(value.year)}
+            onChange={(v) => onChange({ ...value, year: Number(v) })}
+            icon={Calendar}
+            options={yearOptions}
+          />
+        </div>
       )}
 
       {value.mode === 'PLAGE' && (
         <>
-          <span className="text-xs text-slate-400">De</span>
-          <select
-            value={value.year}
-            onChange={(e) => {
-              const y = Number(e.target.value);
-              onChange({ ...value, year: y, yearTo: Math.max(y, value.yearTo ?? y) });
-            }}
-            className="bg-transparent text-sm font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <span className="text-xs text-slate-400">à</span>
-          <select
-            value={value.yearTo ?? value.year}
-            onChange={(e) => onChange({ ...value, yearTo: Number(e.target.value) })}
-            className="bg-transparent text-sm font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
-          >
-            {years.filter((y) => y >= value.year).map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <div className="w-32">
+            <FancySelect
+              label="De"
+              value={String(value.year)}
+              onChange={(v) => {
+                const y = Number(v);
+                onChange({ ...value, year: y, yearTo: Math.max(y, value.yearTo ?? y) });
+              }}
+              icon={Calendar}
+              options={yearOptions}
+            />
+          </div>
+          <div className="w-32">
+            <FancySelect
+              label="À"
+              value={String(value.yearTo ?? value.year)}
+              onChange={(v) => onChange({ ...value, yearTo: Number(v) })}
+              icon={Calendar}
+              options={yearOptions.filter((o) => Number(o.value) >= value.year)}
+            />
+          </div>
         </>
       )}
     </div>

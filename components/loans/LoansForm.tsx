@@ -314,9 +314,20 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loadingEmployees, setLoadingEmployees] = useState(true);
     const [userRole, setUserRole] = useState('');
+    // ✅ Le formulaire s'adapte au modèle de document choisi par l'entreprise
+    // (paramètres → Modèle de document) : "Nature du prêt" n'a de sens que
+    // pour le modèle STANDARD (Arkia/Petrodys/Infinitium...), pas pour le
+    // modèle par défaut qui ne l'affiche jamais sur le document imprimé.
+    const [documentTemplate, setDocumentTemplate] = useState<string>('DEFAULT');
 
     useEffect(() => {
         try { const stored = localStorage.getItem('user'); if (stored) setUserRole(JSON.parse(stored).role || ''); } catch {}
+        (async () => {
+            try {
+                const company: any = await api.get('/companies/mine');
+                setDocumentTemplate(company?.documentTemplate || 'DEFAULT');
+            } catch {}
+        })();
     }, []);
 
     // Le choix "paie / espèces" n'a d'effet que quand un ADMIN/SUPER_ADMIN/HR_MANAGER
@@ -430,6 +441,24 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
 
     const isLoan = formType === 'LOAN';
 
+    // 🐛 Bug pré-existant corrigé : le backend rejette toute requête contenant
+    // un champ non déclaré dans le DTO (ValidationPipe forbidNonWhitelisted:
+    // true). Si on remplissait le formulaire en "Prêt" (monthlyRepayment,
+    // startDate, endDate, nature...) puis qu'on basculait sur "Avance" sans
+    // réinitialiser, la création échouait avec un 400 silencieux — les champs
+    // du prêt restaient dans formData et n'existent pas dans CreateAdvanceDto
+    // (et vice-versa pour deductMonth/deductYear côté prêt). On ne garde que
+    // les champs communs au changement d'onglet.
+    const handleFormTypeChange = (next: FormType) => {
+        setFormType(next);
+        setFormData((prev: any) => ({
+            employeeId: prev.employeeId,
+            amount: prev.amount,
+            reason: prev.reason,
+            recoverViaPayroll: prev.recoverViaPayroll ?? true,
+        }));
+    };
+
     return (
         <GlassCard>
             <div className="flex justify-between items-center mb-6 border-b pb-4 border-[var(--border)]">
@@ -439,13 +468,13 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                 </h2>
                 <div className="flex bg-[var(--surface-2)] rounded-full p-1 shadow-inner">
                     <button
-                        onClick={() => setFormType('LOAN')}
+                        onClick={() => handleFormTypeChange('LOAN')}
                         className={`px-4 py-2 text-sm font-semibold rounded-full transition-all flex items-center ${isLoan ? 'bg-emerald-600 text-white shadow-md' : 'text-[var(--text-muted)] hover:bg-white/10'}`}
                     >
                         {isLoan && <ArrowLeft size={16} className="mr-2" />} Prêt
                     </button>
                     <button
-                        onClick={() => setFormType('ADVANCE')}
+                        onClick={() => handleFormTypeChange('ADVANCE')}
                         className={`px-4 py-2 text-sm font-semibold rounded-full transition-all flex items-center ${!isLoan ? 'bg-emerald-600 text-white shadow-md' : 'text-[var(--text-muted)] hover:bg-white/10'}`}
                     >
                         Avance {!isLoan && <ArrowRight size={16} className="ml-2" />}
@@ -489,6 +518,24 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                             <Input icon={Wallet} label="Remboursement Mensuel (FCFA)" name="monthlyRepayment" type="number" value={formData.monthlyRepayment || ''} onChange={handleChange} placeholder="Ex: 25000" min={1} required />
                             <Input icon={Calendar} label="Date de Début" name="startDate" type="date" value={formData.startDate || ''} onChange={handleChange} required />
                             <Input icon={Clock} label="Date de Fin Estimée" name="endDate" type="date" value={formData.endDate || ''} onChange={handleChange} required />
+                            {documentTemplate === 'STANDARD' && (
+                                <div className="md:col-span-3">
+                                    <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Nature du prêt</label>
+                                    <select
+                                        name="nature"
+                                        value={formData.nature || ''}
+                                        onChange={handleChange}
+                                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)]"
+                                    >
+                                        <option value="">— Non précisé —</option>
+                                        <option value="SOCIAL">Prêt social</option>
+                                        <option value="SCOLARITE">Prêt scolarité</option>
+                                        <option value="LOGEMENT">Prêt logement</option>
+                                        <option value="EXCEPTIONNEL">Prêt exceptionnel</option>
+                                        <option value="AUTRE">Autre</option>
+                                    </select>
+                                </div>
+                            )}
                         </motion.div>
                     ) : (
                         <motion.div

@@ -168,7 +168,7 @@ function IndividualPayrollTab({ companies }: { companies: PortfolioCompany[] }) 
     <div className="space-y-5 max-w-2xl">
       <EmployeePicker companies={companies} onSelect={setEmployee} selected={employee} />
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Mois">
           <select value={month} onChange={e => setMonth(e.target.value)} className={inputCls} style={{ color: 'var(--text)' }}>
             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
@@ -297,7 +297,7 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
         </div>
         <div className="space-y-2">
           {bonuses.map((b, i) => (
-            <div key={i} className="grid grid-cols-[1fr_120px_150px_32px] gap-2 items-center">
+            <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_150px_32px] gap-2 sm:items-center">
               <input placeholder="Libellé (ex: Prime transport)" value={b.bonusType} onChange={e => setBonuses(rows => rows.map((r, idx) => idx === i ? { ...r, bonusType: e.target.value } : r))} className={inputCls} style={{ color: 'var(--text)' }} />
               <input type="number" placeholder="Montant" value={b.amount} onChange={e => setBonuses(rows => rows.map((r, idx) => idx === i ? { ...r, amount: e.target.value } : r))} className={inputCls} style={{ color: 'var(--text)' }} />
               <select value={b.fiscalType} onChange={e => setBonuses(rows => rows.map((r, idx) => idx === i ? { ...r, fiscalType: e.target.value as any } : r))} className={inputCls} style={{ color: 'var(--text)' }}>
@@ -321,7 +321,7 @@ function ManualPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
         </div>
         <div className="space-y-2">
           {deductions.map((d, i) => (
-            <div key={i} className="grid grid-cols-[1fr_120px_32px] gap-2 items-center">
+            <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_120px_32px] gap-2 sm:items-center">
               <input placeholder="Libellé (ex: Avance sur salaire)" value={d.label} onChange={e => setDeductions(rows => rows.map((r, idx) => idx === i ? { ...r, label: e.target.value } : r))} className={inputCls} style={{ color: 'var(--text)' }} />
               <input type="number" placeholder="Montant" value={d.amount} onChange={e => setDeductions(rows => rows.map((r, idx) => idx === i ? { ...r, amount: e.target.value } : r))} className={inputCls} style={{ color: 'var(--text)' }} />
               <button onClick={() => setDeductions(rows => rows.filter((_, idx) => idx !== i))} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500"><Trash2 size={14} /></button>
@@ -631,7 +631,7 @@ export default function PortfolioPayrollPage() {
         </div>
       ) : (
         <>
-          <div className="flex bg-[var(--surface-2)] p-1 rounded-xl w-fit">
+          <div className="flex bg-[var(--surface-2)] p-1 rounded-xl w-fit max-w-full overflow-x-auto">
             {TABS.map(t => {
               const Icon = t.icon;
               return (

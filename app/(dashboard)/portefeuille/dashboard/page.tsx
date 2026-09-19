@@ -44,7 +44,7 @@ const EMPTY_STATS: PortfolioStats = {
 
 function Panel({ className = '', children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={`rounded-2xl p-6 ${className}`} style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <div className={`rounded-2xl p-4 sm:p-6 ${className}`} style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       {children}
     </div>
   );
@@ -108,7 +108,7 @@ export default function PortfolioDashboardPage() {
       </div>
 
       {s.companies.total === 0 && (
-        <div className="flex items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
           <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
             Vous n'avez pas encore d'entreprise — les indicateurs ci-dessous s'activeront dès que vous en ajoutez une.
           </p>
@@ -135,10 +135,19 @@ export default function PortfolioDashboardPage() {
               Aucune donnée pour le moment
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={s.employeesByCompany} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={s.employeesByCompany.length > 4 ? 260 : 220}>
+              <BarChart data={s.employeesByCompany} margin={{ top: 10, right: 10, left: 0, bottom: s.employeesByCompany.length > 4 ? 40 : 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} dy={10} />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                  interval={0}
+                  angle={s.employeesByCompany.length > 4 ? -30 : 0}
+                  textAnchor={s.employeesByCompany.length > 4 ? 'end' : 'middle'}
+                  dy={10}
+                />
                 <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
                 <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 12 }} />
                 <Bar dataKey="count" fill="#10B981" name="Employés" radius={[6, 6, 0, 0]} />
