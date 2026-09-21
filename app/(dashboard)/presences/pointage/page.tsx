@@ -289,74 +289,6 @@ export default function AttendanceCheckInPage() {
     if (geoState.allowed && showRadar) setShowRadar(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geoState.allowed]);
-
-  // ✅ Position dédiée au radar — même pattern que "Tester en marchant" côté
-  // paramètres : un watchPosition qui ne tourne QUE pendant que le panneau
-  // est ouvert, indépendant du geoState partagé avec le badge principal.
-  // C'est ça qui corrige "ma position ne bouge pas dans le radar".
-  const [radarOffset, setRadarOffset] = useState<{ east: number; north: number } | null>(null);
-  useEffect(() => {
-    if (!showRadar) { setRadarOffset(null); return; }
-    if (!navigator.geolocation) return;
-    if (!companySettings?.latitude || !companySettings?.longitude) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        setRadarOffset(
-          computeMetersOffset(
-            companySettings.latitude, companySettings.longitude,
-            pos.coords.latitude, pos.coords.longitude,
-          ),
-        );
-      },
-      () => { /* silencieux : le texte-guide reste affiché avec la dernière position connue */ },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 1000 },
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRadar, companySettings?.latitude, companySettings?.longitude]);
-
-  // ✅ Boussole (cap du téléphone) — même principe : active uniquement
-  // pendant que le radar est ouvert. Sur iOS 13+, la permission doit être
-  // demandée suite à un geste utilisateur direct (voir handleOpenRadar
-  // ci-dessous) ; sans elle ou sur un appareil sans capteur, deviceHeading
-  // reste null et le composant retombe simplement sur le texte directionnel.
-  const [deviceHeading, setDeviceHeading] = useState<number | null>(null);
-  useEffect(() => {
-    if (!showRadar) { setDeviceHeading(null); return; }
-    if (typeof window === 'undefined' || !('DeviceOrientationEvent' in window)) return;
-
-    const handleOrientation = (e: any) => {
-      let heading: number | null = null;
-      if (typeof e.webkitCompassHeading === 'number') {
-        heading = e.webkitCompassHeading; // iOS Safari : cap déjà correct (0 = Nord)
-      } else if (e.absolute && typeof e.alpha === 'number') {
-        heading = (360 - e.alpha) % 360; // Android/Chrome via l'événement "absolute"
-      }
-      if (heading != null && Number.isFinite(heading)) setDeviceHeading(heading);
-    };
-
-    const useAbsolute = 'ondeviceorientationabsolute' in window;
-    const eventName = useAbsolute ? 'deviceorientationabsolute' : 'deviceorientation';
-    window.addEventListener(eventName, handleOrientation as any);
-
-    return () => window.removeEventListener(eventName, handleOrientation as any);
-  }, [showRadar]);
-
-  // ✅ Ouverture du radar : sur iOS 13+, la permission d'accès aux capteurs
-  // d'orientation DOIT être demandée depuis un geste utilisateur direct
-  // (un clic) — impossible de la déclencher depuis un useEffect. D'où ce
-  // handler dédié plutôt qu'un simple setShowRadar(true) inline.
-  const handleOpenRadar = useCallback(async () => {
-    try {
-      const DOE: any = (window as any).DeviceOrientationEvent;
-      if (DOE && typeof DOE.requestPermission === 'function') {
-        await DOE.requestPermission(); // ignoré si refusé — deviceHeading restera simplement null
-      }
-    } catch { /* pas de boussole dispo, le texte directionnel suffit */ }
-    setShowRadar(true);
-  }, []);
   useEffect(() => {
     const allowedRadius = companySettings?.allowedRadius || 100;
     const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
@@ -503,7 +435,10 @@ export default function AttendanceCheckInPage() {
       navigator.geolocation.getCurrentPosition(
         handlePositionSuccess,
         () => { /* silencieux : watchPosition/erreur initiale restent la source d'erreur affichée */ },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+        // ✅ maximumAge: 0 — on interdit explicitement au navigateur de
+        // recycler une position déjà en cache : chaque sondage force une
+        // vraie relecture du capteur GPS.
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
       );
     }, 4000);
 
@@ -872,7 +807,7 @@ export default function AttendanceCheckInPage() {
                       <div className="text-center">
                         <button
                           type="button"
-                          onClick={handleOpenRadar}
+                          onClick={() => setShowRadar(true)}
                           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
                         >
                           <MapPin size={14} /> Ma position par rapport à la zone
@@ -883,8 +818,14 @@ export default function AttendanceCheckInPage() {
                         <GeofenceRadiusPreview
                           radius={allowedRadius}
                           showReliabilityMessage={false}
-                          userOffset={radarOffset}
-                          deviceHeading={deviceHeading}
+                          userOffset={
+                            geoState.latitude && geoState.longitude && companySettings?.latitude && companySettings?.longitude
+                              ? computeMetersOffset(
+                                  companySettings.latitude, companySettings.longitude,
+                                  geoState.latitude, geoState.longitude,
+                                )
+                              : null
+                          }
                         />
                         {/* ✅ Message encourageant — purement motivant, sans
                             aucun rôle dans la décision d'autorisation */}

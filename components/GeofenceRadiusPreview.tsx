@@ -25,11 +25,6 @@ interface GeofenceRadiusPreviewProps {
   // positif). Calculée par l'appelant (pas ce composant) via
   // computeMetersOffset() ci-dessous, à partir de deux couples lat/lon.
   userOffset?: { east: number; north: number } | null;
-  // ✅ Cap actuel du téléphone (0-360°, 0 = Nord, sens horaire), fourni par
-  // DeviceOrientationEvent côté appelant. Optionnel — si absent (capteur
-  // indisponible, permission refusée), le composant retombe simplement sur
-  // le texte directionnel existant, sans flèche.
-  deviceHeading?: number | null;
   // ✅ Message d'analyse de fiabilité du rayon (ex: "Remontez à au moins
   // 20m") — utile à l'admin qui configure le rayon, mais inutile (et
   // déroutant, car il n'a pas la main dessus) pour l'employé qui consulte
@@ -57,14 +52,8 @@ export function computeMetersOffset(
 }
 
 const COMPASS = ['Nord', 'Nord-Est', 'Est', 'Sud-Est', 'Sud', 'Sud-Ouest', 'Ouest', 'Nord-Ouest'];
-// ✅ Angle brut (continu, 0-360°, 0 = Nord, sens horaire) — utilisé pour
-// faire tourner la flèche boussole en douceur. compassLabel() (ci-dessous)
-// s'en sert aussi, mais arrondit à 8 directions pour le texte.
-function bearingDegrees(east: number, north: number): number {
-  return (Math.atan2(east, north) * 180 / Math.PI + 360) % 360;
-}
 function compassLabel(east: number, north: number): string {
-  const angle = bearingDegrees(east, north);
+  const angle = (Math.atan2(east, north) * 180 / Math.PI + 360) % 360;
   return COMPASS[Math.round(angle / 45) % 8];
 }
 const OPPOSITE: Record<string, string> = {
@@ -78,7 +67,6 @@ export default function GeofenceRadiusPreview({
   gpsUncertainty = 10,
   siteName,
   userOffset,
-  deviceHeading,
   showReliabilityMessage = true,
 }: GeofenceRadiusPreviewProps) {
   const safeRadius = Math.max(1, radius || 1);
@@ -177,22 +165,6 @@ export default function GeofenceRadiusPreview({
     }
 
     userPoint = { px, py, distance, direction, inside, clamped };
-  }
-
-  // ── Boussole : angle de la flèche à afficher ─────────────────────────────
-  // bearingToCenter = direction réelle (0-360°, Nord=0) à suivre pour
-  // rejoindre le centre depuis la position actuelle — l'inverse de la
-  // direction "centre → utilisateur" qu'on a déjà (d'où le +180°).
-  // arrowRotation = ce cap, corrigé de l'orientation actuelle du téléphone,
-  // pour que la flèche pointe physiquement vers le centre à l'écran quel
-  // que soit le sens vers lequel l'utilisateur tient son téléphone.
-  let arrowRotation: number | null = null;
-  if (
-    userOffset && Number.isFinite(userOffset.east) && Number.isFinite(userOffset.north) &&
-    Number.isFinite(deviceHeading)
-  ) {
-    const bearingToCenter = (bearingDegrees(userOffset.east, userOffset.north) + 180) % 360;
-    arrowRotation = (bearingToCenter - (deviceHeading as number) + 360) % 360;
   }
 
   return (
@@ -308,26 +280,6 @@ export default function GeofenceRadiusPreview({
             ? `✅ Vous êtes dans la zone (à ${Math.round(userPoint.distance)}m du centre).`
             : `Vous êtes à ${Math.round(userPoint.distance)}m au ${(userPoint.direction || '').toLowerCase()} du centre — avancez vers le ${(OPPOSITE[userPoint.direction] || '').toLowerCase()}.`}
         </p>
-      )}
-
-      {/* ✅ Cadran boussole — uniquement si le cap du téléphone est
-          disponible (capteur + permission accordée) ET qu'on n'est pas déjà
-          dans la zone (inutile une fois arrivé). Purement une aide visuelle
-          en plus du texte ci-dessus, jamais la seule source d'info. */}
-      {userPoint && !userPoint.inside && arrowRotation !== null && (
-        <div className="mt-3 flex flex-col items-center">
-          <div className="relative w-16 h-16">
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              <circle cx="50" cy="50" r="46" fill="none" stroke="var(--border)" strokeWidth="2" />
-              <text x="50" y="13" textAnchor="middle" fontSize="9" className="fill-[var(--text-muted)]">N</text>
-              <g style={{ transform: `rotate(${arrowRotation}deg)`, transformOrigin: '50px 50px', transition: 'transform 0.15s linear' }}>
-                <polygon points="50,16 42,58 50,48 58,58" fill="#8b5cf6" />
-              </g>
-              <circle cx="50" cy="50" r="3" fill="#8b5cf6" />
-            </svg>
-          </div>
-          <span className="text-[10px] text-[var(--text-muted)] mt-1">Suivez la flèche</span>
-        </div>
       )}
 
       {showReliabilityMessage && reliability.message && (
