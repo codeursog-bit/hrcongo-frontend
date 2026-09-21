@@ -633,8 +633,8 @@ export function BlogEditor({
                       { ok: form.seoDesc.length >= 120 && form.seoDesc.length <= 160, label: 'Meta description 120-160 car.' },
                       { ok: form.keywords.length >= 3, label: '3+ mots-clés renseignés' },
                       { ok: !!form.coverImage, label: 'Image de couverture ajoutée' },
-                      { ok: form.content.includes('## '), label: 'Sous-titres H2 dans le contenu' },
-                      { ok: form.content.includes('## Questions'), label: 'Section "Questions fréquentes"' },
+                      { ok: form.content.includes('# '), label: 'Sous-titres H2 dans le contenu' },
+                      { ok: form.content.includes('# Questions'), label: 'Section "Questions fréquentes"' },
                       { ok: form.content.includes('konza-rh.cg'), label: 'CTA Konza en fin d\'article' },
                     ].map(c => (
                       <div key={c.label} className="flex items-center gap-2.5">
@@ -654,7 +654,7 @@ export function BlogEditor({
                         form.title.length >= 5, form.excerpt.length >= 50,
                         form.seoTitle.length >= 20, form.seoDesc.length >= 120,
                         form.keywords.length >= 3, !!form.coverImage,
-                        form.content.includes('## '), form.content.includes('## Questions'),
+                        form.content.includes('# '), form.content.includes('# Questions'),
                         form.content.includes('konza-rh.cg'),
                       ].filter(Boolean).length;
                       const pct = Math.round((score / 9) * 100);
