@@ -7,16 +7,34 @@
 // ✅ Consomme le module backend checkin-devices livré précédemment.
 // ============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
   Tablet, Plus, Trash2, Loader2, Copy, Check, QrCode,
-  Search, ShieldAlert, Radio, Download, X,
+  Search, ShieldAlert, Radio, Download, X, Camera, CameraOff,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import PresenceSubNav from '@/components/PresenceSubNav';
 import { useBasePath } from '@/hooks/useBasePath';
+
+const BADGE_SCAN_REGION_ID = 'admin-badge-scan-region';
+// Mêmes formats que la tablette : QR codes ET codes-barres classiques
+// (cartes d'accès, badges professionnels déjà imprimés).
+const BADGE_SCAN_CONFIG = {
+  fps: 8,
+  qrbox: { width: 240, height: 160 },
+  formatsToSupport: [
+    Html5QrcodeSupportedFormats.QR_CODE,
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39,
+    Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8,
+    Html5QrcodeSupportedFormats.ITF,
+    Html5QrcodeSupportedFormats.CODABAR,
+  ],
+};
 
 // ── Types ────────────────────────────────────────────────────────────────
 interface CurrentUser {
@@ -101,6 +119,8 @@ export default function TablettesPage() {
   const [sharingLinks, setSharingLinks] = useState<Record<string, AdditionalCompanyLink[]>>({});
   const [newShareCompanyId, setNewShareCompanyId] = useState('');
   const [newShareActingUserId, setNewShareActingUserId] = useState('');
+  const [shareCompanyAdmins, setShareCompanyAdmins] = useState<{ id: string; firstName: string; lastName: string; role: string }[]>([]);
+  const [loadingShareAdmins, setLoadingShareAdmins] = useState(false);
   const [savingShare, setSavingShare] = useState(false);
 
   // ── Bloc badges/QR ──────────────────────────────────────────────────
@@ -110,6 +130,9 @@ export default function TablettesPage() {
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [badgeIdentifier, setBadgeIdentifier] = useState('');
   const [registeringBadge, setRegisteringBadge] = useState(false);
+  const [scanningBadge, setScanningBadge] = useState(false);
+  const [scanFeedback, setScanFeedback] = useState<string | null>(null);
+  const badgeScannerRef = useRef<Html5Qrcode | null>(null);
 
   // ── Chargement initial ────────────────────────────────────────────────
   useEffect(() => {
@@ -185,20 +208,42 @@ export default function TablettesPage() {
     setExpandedSharing(deviceId);
     setNewShareCompanyId('');
     setNewShareActingUserId('');
+    setShareCompanyAdmins([]);
     if (!sharingLinks[deviceId]) loadSharingLinks(deviceId);
   };
 
+  // Dès qu'une entreprise est choisie dans le premier menu, on va chercher
+  // ses admins/RH éligibles pour remplir le second menu (par nom, jamais par ID).
+  const handleShareCompanyChange = async (companyId: string) => {
+    setNewShareCompanyId(companyId);
+    setNewShareActingUserId('');
+    setShareCompanyAdmins([]);
+    if (!companyId) return;
+    setLoadingShareAdmins(true);
+    try {
+      const admins = await api.get<{ id: string; firstName: string; lastName: string; role: string }[]>(
+        `/checkin-devices/company-admins?companyId=${companyId}`,
+      );
+      setShareCompanyAdmins(admins);
+    } catch {
+      setShareCompanyAdmins([]);
+    } finally {
+      setLoadingShareAdmins(false);
+    }
+  };
+
   const addSharedCompany = async (deviceId: string) => {
-    if (!newShareCompanyId || !newShareActingUserId.trim()) return;
+    if (!newShareCompanyId || !newShareActingUserId) return;
     setSavingShare(true);
     try {
       await api.post(`/checkin-devices/devices/${deviceId}/companies`, {
         companyId: newShareCompanyId,
-        actingUserId: newShareActingUserId.trim(),
+        actingUserId: newShareActingUserId,
       });
       addNotification({ type: 'SUCCESS', title: 'Entreprise ajoutée', message: 'Cette tablette peut désormais servir cette société aussi.' });
       setNewShareCompanyId('');
       setNewShareActingUserId('');
+      setShareCompanyAdmins([]);
       await loadSharingLinks(deviceId);
       await loadDevices();
     } catch (e: any) {
@@ -245,13 +290,14 @@ export default function TablettesPage() {
     }
   };
 
-  const handleDeactivateDevice = async (id: string) => {
+  const handleDeleteDevice = async (id: string, name: string) => {
+    if (!window.confirm(`Supprimer définitivement la tablette "${name}" ? Cette action est irréversible.`)) return;
     try {
       await api.delete(`/checkin-devices/devices/${id}`);
-      addNotification({ type: 'SUCCESS', title: 'Tablette désactivée', message: 'Elle ne pourra plus enregistrer de pointages.' });
+      addNotification({ type: 'SUCCESS', title: 'Tablette supprimée', message: 'Elle a été retirée définitivement.' });
       await loadDevices();
     } catch (e: any) {
-      addNotification({ type: 'ALERT', title: 'Erreur', message: e.message || 'Désactivation impossible.' });
+      addNotification({ type: 'ALERT', title: 'Erreur', message: e.message || 'Suppression impossible.' });
     }
   };
 
@@ -296,7 +342,51 @@ export default function TablettesPage() {
     }
   };
 
-  // ── Associer un badge NFC existant ─────────────────────────────────────
+  // ── Scanner un badge avec la caméra de CET ordinateur/téléphone ────────
+  // Pas besoin d'avoir déjà une tablette configurée : n'importe quel
+  // appareil avec une caméra (webcam, portable) peut lire un badge une
+  // fois, pour récupérer son identifiant machine et l'associer ici.
+  const startBadgeScan = async () => {
+    setScanFeedback(null);
+    setScanningBadge(true);
+    // Laisse le temps au <div> de s'afficher avant d'y attacher la caméra.
+    setTimeout(async () => {
+      try {
+        const scanner = new Html5Qrcode(BADGE_SCAN_REGION_ID, { verbose: false });
+        badgeScannerRef.current = scanner;
+        await scanner.start(
+          { facingMode: 'environment' },
+          BADGE_SCAN_CONFIG,
+          (decodedText) => {
+            setBadgeIdentifier(decodedText.trim());
+            setScanFeedback(`Code lu : ${decodedText.trim()} — vérifie puis clique "Associer".`);
+            stopBadgeScan();
+          },
+          () => {},
+        );
+      } catch {
+        setScanFeedback("Caméra indisponible ou permission refusée sur cet appareil.");
+        setScanningBadge(false);
+      }
+    }, 50);
+  };
+
+  const stopBadgeScan = () => {
+    const scanner = badgeScannerRef.current;
+    badgeScannerRef.current = null;
+    setScanningBadge(false);
+    if (scanner) {
+      scanner.stop().catch(() => {}).finally(() => scanner.clear());
+    }
+  };
+
+  // Coupe proprement la caméra si l'admin change d'employé ou quitte la page
+  // pendant qu'un scan est en cours.
+  useEffect(() => {
+    return () => {
+      badgeScannerRef.current?.stop().catch(() => {});
+    };
+  }, []);
   const handleRegisterBadge = async () => {
     if (!selectedEmployee || !badgeIdentifier.trim()) return;
     setRegisteringBadge(true);
@@ -308,6 +398,7 @@ export default function TablettesPage() {
       });
       addNotification({ type: 'SUCCESS', title: 'Badge associé', message: `Le badge est maintenant lié à ${selectedEmployee.firstName}.` });
       setBadgeIdentifier('');
+      setScanFeedback(null);
       await loadCredentials();
     } catch (e: any) {
       addNotification({ type: 'ALERT', title: 'Erreur', message: e.message || 'Association impossible.' });
@@ -316,13 +407,14 @@ export default function TablettesPage() {
     }
   };
 
-  const handleRevokeCredential = async (id: string) => {
+  const handleDeleteCredential = async (id: string, employeeName: string) => {
+    if (!window.confirm(`Supprimer définitivement ce badge/QR de ${employeeName} ?`)) return;
     try {
       await api.delete(`/checkin-devices/credentials/${id}`);
-      addNotification({ type: 'SUCCESS', title: 'Identifiant révoqué', message: 'Ce badge/QR ne fonctionnera plus.' });
+      addNotification({ type: 'SUCCESS', title: 'Identifiant supprimé', message: 'Ce badge/QR a été retiré définitivement.' });
       await loadCredentials();
     } catch (e: any) {
-      addNotification({ type: 'ALERT', title: 'Erreur', message: e.message || 'Révocation impossible.' });
+      addNotification({ type: 'ALERT', title: 'Erreur', message: e.message || 'Suppression impossible.' });
     }
   };
 
@@ -474,11 +566,9 @@ export default function TablettesPage() {
                     >
                       Pause déjeuner
                     </button>
-                    {d.isActive && (
-                      <button onClick={() => handleDeactivateDevice(d.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+                    <button onClick={() => handleDeleteDevice(d.id, d.name)} className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
 
@@ -507,7 +597,7 @@ export default function TablettesPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <select
                         value={newShareCompanyId}
-                        onChange={(e) => setNewShareCompanyId(e.target.value)}
+                        onChange={(e) => handleShareCompanyChange(e.target.value)}
                         className="px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none"
                       >
                         <option value="">Choisir une entreprise...</option>
@@ -515,15 +605,30 @@ export default function TablettesPage() {
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
                       </select>
-                      <input
+
+                      <select
                         value={newShareActingUserId}
                         onChange={(e) => setNewShareActingUserId(e.target.value)}
-                        placeholder="ID du porteur dans cette entreprise"
-                        className="flex-1 min-w-[180px] px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none focus:border-emerald-500/50"
-                      />
+                        disabled={!newShareCompanyId || loadingShareAdmins}
+                        className="flex-1 min-w-[180px] px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-xs outline-none disabled:opacity-50"
+                      >
+                        <option value="">
+                          {loadingShareAdmins
+                            ? 'Chargement...'
+                            : !newShareCompanyId
+                            ? "Choisis d'abord une entreprise"
+                            : shareCompanyAdmins.length === 0
+                            ? 'Aucun admin/RH trouvé'
+                            : 'Choisir le porteur...'}
+                        </option>
+                        {shareCompanyAdmins.map((u) => (
+                          <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
+                        ))}
+                      </select>
+
                       <button
                         onClick={() => addSharedCompany(d.id)}
-                        disabled={savingShare || !newShareCompanyId || !newShareActingUserId.trim()}
+                        disabled={savingShare || !newShareCompanyId || !newShareActingUserId}
                         className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 disabled:opacity-50 flex items-center gap-1.5"
                       >
                         {savingShare && <Loader2 size={12} className="animate-spin" />} Ajouter
@@ -590,7 +695,7 @@ export default function TablettesPage() {
             {filteredEmployees.map((emp) => (
               <button
                 key={emp.id}
-                onClick={() => { setSelectedEmployee(emp); setQrImage(null); }}
+                onClick={() => { stopBadgeScan(); setScanFeedback(null); setBadgeIdentifier(''); setSelectedEmployee(emp); setQrImage(null); }}
                 className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-colors ${
                   selectedEmployee?.id === emp.id
                     ? 'bg-emerald-500/10 border-emerald-500/40'
@@ -640,13 +745,37 @@ export default function TablettesPage() {
                 {/* Badge NFC existant */}
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)] mb-1.5 flex items-center gap-1.5">
-                    <Radio size={13} /> Associer un badge NFC existant
+                    <Radio size={13} /> Associer un badge existant
                   </label>
+
+                  {!scanningBadge ? (
+                    <button
+                      onClick={startBadgeScan}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[var(--surface)] border border-dashed border-[var(--border)] text-[var(--text)] text-sm font-semibold hover:border-emerald-500/50 hover:text-emerald-500 transition-colors mb-2"
+                    >
+                      <Camera size={15} /> Scanner ce badge avec la caméra
+                    </button>
+                  ) : (
+                    <div className="relative rounded-lg overflow-hidden bg-black mb-2 aspect-video">
+                      <div id={BADGE_SCAN_REGION_ID} className="w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover" />
+                      <button
+                        onClick={stopBadgeScan}
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white hover:bg-black/80"
+                      >
+                        <CameraOff size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  {scanFeedback && (
+                    <p className="text-[11px] text-emerald-500 mb-2">{scanFeedback}</p>
+                  )}
+
                   <div className="flex gap-2">
                     <input
                       value={badgeIdentifier}
                       onChange={(e) => setBadgeIdentifier(e.target.value)}
-                      placeholder="Identifiant lu sur la tablette"
+                      placeholder="Ou saisis l'identifiant manuellement"
                       className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
                     />
                     <button
@@ -658,7 +787,7 @@ export default function TablettesPage() {
                     </button>
                   </div>
                   <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
-                    Si un badge inconnu est présenté sur une tablette, elle affiche sa référence à l'écran — recopie-la ici.
+                    Fonctionne avec un QR code ou un code-barres classique (carte d'accès imprimée). Pour un badge NFC sans code visible, utilise plutôt le mode enrôlement sur la tablette.
                   </p>
                 </div>
               </div>
@@ -682,7 +811,7 @@ export default function TablettesPage() {
                       <p className="text-[11px] text-[var(--text-muted)] font-mono">{c.identifier.slice(0, 18)}...</p>
                     </div>
                   </div>
-                  <button onClick={() => handleRevokeCredential(c.id)} className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
+                  <button onClick={() => handleDeleteCredential(c.id, `${c.employee.firstName} ${c.employee.lastName}`)} className="p-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors">
                     <Trash2 size={15} />
                   </button>
                 </div>
