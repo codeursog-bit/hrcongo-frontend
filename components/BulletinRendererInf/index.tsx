@@ -110,10 +110,11 @@ function cleanLabel(label: string): string {
     .trim();
 }
 function itemBase(item: any): string {
-  if (item.base == null || nv(item.base) === 0) return '';
+  if (!item || item.base == null || nv(item.base) === 0) return '';
   return Math.round(nv(item.base)).toLocaleString('fr-FR');
 }
 function itemTaux(item: any): string {
+  if (!item) return '';
   if (item.quantity != null && nv(item.quantity) !== 0) return String(nv(item.quantity));
   if (item.rate == null) return '';
   const r = nv(item.rate);
