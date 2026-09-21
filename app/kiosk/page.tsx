@@ -18,7 +18,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
   CheckCircle2, LogOut, AlertTriangle, ShieldQuestion, Settings,
   WifiOff, Loader2, ScanFace, Search, X, UserPlus,
@@ -26,7 +26,45 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const STORAGE_KEY = 'kioskApiKey';
+
+// Certains hébergeurs gratuits (Render...) mettent le serveur en veille après
+// une période d'inactivité : le tout premier appel peut prendre 30-50s le
+// temps qu'il se réveille. On laisse large, et on retente une fois avant
+// d'abandonner, pour ne pas afficher une fausse erreur à ce moment-là.
+async function fetchKiosk(url: string, options: RequestInit, allowRetry = true): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeout);
+    return res;
+  } catch (err) {
+    clearTimeout(timeout);
+    if (allowRetry) {
+      await new Promise((r) => setTimeout(r, 3000));
+      return fetchKiosk(url, options, false);
+    }
+    throw err;
+  }
+}
 const QR_REGION_ID = 'kiosk-qr-video';
+
+// La caméra lit les QR codes qu'on génère nous-mêmes, ET les codes-barres
+// classiques déjà imprimés sur des badges existants (type carte d'accès,
+// carte professionnelle) — pas besoin de NFC pour ce genre de badge.
+const SCAN_CONFIG = {
+  fps: 5,
+  qrbox: { width: 260, height: 260 },
+  formatsToSupport: [
+    Html5QrcodeSupportedFormats.QR_CODE,
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39,
+    Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8,
+    Html5QrcodeSupportedFormats.ITF,
+    Html5QrcodeSupportedFormats.CODABAR,
+  ],
+};
 
 // ── Messages qui font vivre l'écran — un tirage aléatoire à chaque scan,
 //    pour que la tablette ne sonne jamais robotique sur la durée. ─────────
@@ -189,7 +227,7 @@ export default function KioskPage() {
   // ── Récupération des horaires officiels de l'entreprise ────────────────
   useEffect(() => {
     if (!apiKey) return;
-    fetch(`${API_URL}/checkin-devices/schedule`, { headers: { 'x-kiosk-api-key': apiKey } })
+    fetchKiosk(`${API_URL}/checkin-devices/schedule`, { headers: { 'x-kiosk-api-key': apiKey } })
       .then((r) => r.json())
       .then(setSchedule)
       .catch(() => setSchedule(null)); // pas de planning connu → reste active en continu, par sécurité
@@ -205,7 +243,7 @@ export default function KioskPage() {
     if (!key) return;
     setBusy(true);
     try {
-      const res = await fetch(`${API_URL}/checkin-devices/scan`, {
+      const res = await fetchKiosk(`${API_URL}/checkin-devices/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-kiosk-api-key': key },
         body: JSON.stringify({ identifier, ...extra }),
@@ -240,8 +278,14 @@ export default function KioskPage() {
           ? { kind: 'check-out', name, line: pickMessage(GOODBYE_MESSAGES, firstName) }
           : { kind: 'check-in', name, line: pickMessage(WELCOME_MESSAGES, firstName) },
       );
-    } catch {
-      setFeedback({ kind: 'error', message: 'Connexion au serveur impossible.' });
+    } catch (err: any) {
+      // Message précis affiché à l'écran — utile pour diagnostiquer sans
+      // avoir besoin d'ouvrir la console du navigateur sur la tablette.
+      const detail =
+        err?.name === 'AbortError'
+          ? 'le serveur met trop de temps à répondre'
+          : err?.message || 'réseau';
+      setFeedback({ kind: 'error', message: `Connexion au serveur impossible (${detail}).` });
     } finally {
       setBusy(false);
     }
@@ -254,7 +298,7 @@ export default function KioskPage() {
     if (!key || pendingEnrollRef.current) return;
 
     try {
-      const res = await fetch(`${API_URL}/checkin-devices/lookup?identifier=${encodeURIComponent(identifier)}`, {
+      const res = await fetchKiosk(`${API_URL}/checkin-devices/lookup?identifier=${encodeURIComponent(identifier)}`, {
         headers: { 'x-kiosk-api-key': key },
       });
       const data = await res.json();
@@ -300,7 +344,7 @@ export default function KioskPage() {
     scanner
       .start(
         { facingMode: 'environment' },
-        { fps: 5, qrbox: { width: 260, height: 260 } },
+        SCAN_CONFIG,
         (decodedText) => handleIdentifier(decodedText.trim()),
         () => {},
       )
@@ -379,7 +423,7 @@ export default function KioskPage() {
         scanner
           .start(
             { facingMode: 'environment' },
-            { fps: 5, qrbox: { width: 260, height: 260 } },
+            SCAN_CONFIG,
             (decodedText) => handleIdentifier(decodedText.trim()),
             () => {},
           )
@@ -402,6 +446,43 @@ export default function KioskPage() {
     }, 12 * 60 * 60 * 1000);
     return () => clearInterval(t);
   }, []);
+
+  // ── Lecteur RFID USB "clavier virtuel" (keyboard-wedge) ─────────────────
+  // Certains badges (cartes de proximité 125kHz) n'ont ni QR ni code-barres
+  // lisible et ne sont PAS compatibles avec le NFC d'un téléphone — c'est
+  // une autre techno radio. La solution classique : un petit lecteur USB
+  // pas cher qui « tape » le numéro du badge comme un clavier, suivi
+  // d'Entrée. On capte ça uniquement sur l'écran principal de pointage
+  // (jamais pendant la config ou l'enrôlement, où on tape du texte normal).
+  useEffect(() => {
+    if (!apiKey || enrollMode || showSettings) return;
+
+    let buffer = '';
+    let lastKeyTs = 0;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      // On ignore si le focus est sur un vrai champ de saisie (au cas où).
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+
+      const now = Date.now();
+      // Un lecteur USB tape en quelques millisecondes ; si trop de temps
+      // s'est écoulé depuis la dernière touche, on repart d'un tampon vide
+      // (évite qu'une frappe humaine isolée ne déclenche quelque chose).
+      if (now - lastKeyTs > 300) buffer = '';
+      lastKeyTs = now;
+
+      if (e.key === 'Enter') {
+        if (buffer.length >= 4) handleIdentifier(buffer);
+        buffer = '';
+        return;
+      }
+      if (e.key.length === 1) buffer += e.key;
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [apiKey, enrollMode, showSettings, handleIdentifier]);
 
   // ── Accès discret aux réglages : 5 taps sur l'horloge ──────────────────
   const handleClockTap = () => {
@@ -426,7 +507,7 @@ export default function KioskPage() {
   const startEnrollMode = async () => {
     if (!apiKey) return;
     try {
-      const res = await fetch(`${API_URL}/checkin-devices/employees`, { headers: { 'x-kiosk-api-key': apiKey } });
+      const res = await fetchKiosk(`${API_URL}/checkin-devices/employees`, { headers: { 'x-kiosk-api-key': apiKey } });
       setEnrollEmployees(await res.json());
     } catch {
       setEnrollEmployees([]);
@@ -439,7 +520,7 @@ export default function KioskPage() {
     if (!pendingEnroll || !apiKey) return;
     setEnrolling(true);
     try {
-      const res = await fetch(`${API_URL}/checkin-devices/enroll`, {
+      const res = await fetchKiosk(`${API_URL}/checkin-devices/enroll`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-kiosk-api-key': apiKey },
         body: JSON.stringify({ identifier: pendingEnroll, employeeId, type: 'NFC_BADGE' }),

@@ -775,7 +775,8 @@ export default function TablettesPage() {
                     <input
                       value={badgeIdentifier}
                       onChange={(e) => setBadgeIdentifier(e.target.value)}
-                      placeholder="Ou saisis l'identifiant manuellement"
+                      onKeyDown={(e) => { if (e.key === 'Enter' && badgeIdentifier.trim()) handleRegisterBadge(); }}
+                      placeholder="Ou pose le badge sur un lecteur RFID USB / saisis à la main"
                       className="flex-1 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-emerald-500/50"
                     />
                     <button
@@ -787,7 +788,7 @@ export default function TablettesPage() {
                     </button>
                   </div>
                   <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
-                    Fonctionne avec un QR code ou un code-barres classique (carte d'accès imprimée). Pour un badge NFC sans code visible, utilise plutôt le mode enrôlement sur la tablette.
+                    Fonctionne avec un QR code, un code-barres imprimé, un lecteur RFID USB (le champ se remplit tout seul), ou une saisie manuelle du numéro inscrit sur le badge.
                   </p>
                 </div>
               </div>
