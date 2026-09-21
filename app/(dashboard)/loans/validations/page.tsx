@@ -383,6 +383,7 @@ export default function ValidationsPage() {
               {selected.kind === 'loan' && <Row label="Mensualité" value={fmt(Number(selected.item.monthlyRepayment))} />}
               <Row label="Département" value={selected.item.employee?.department?.name || '—'} />
               <Row label="Statut" value={(STATUS_CFG[selected.item.status] ?? STATUS_CFG.PENDING).label} />
+              <Row label="Mode de remboursement" value={selected.item.recoverViaPayroll ? 'Sur la paie' : 'Espèces'} />
               <Row label="Demandée le" value={new Date(selected.item.createdAt).toLocaleDateString('fr-FR')} />
               {selected.item.reason && <Row label="Motif" value={selected.item.reason} />}
               {selected.item.rejectionReason && <Row label="Motif du refus" value={selected.item.rejectionReason} />}

@@ -20,15 +20,15 @@ import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 const COLORS = {
-  primary: '#0EA5E9',
+  primary: '#10B981',
   success: '#10B981',
   warning: '#F59E0B',
   danger: '#EF4444',
-  purple: '#8B5CF6',
-  indigo: '#6366F1'
+  purple: '#059669',
+  indigo: '#D97706'
 };
 
-const CHART_COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
+const CHART_COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669', '#D97706'];
 
 export default function CompleteHRReport() {
   const router = useRouter();
@@ -103,8 +103,8 @@ export default function CompleteHRReport() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-sky-500 mb-4" size={48} />
-        <p className="text-gray-500">Génération du rapport en cours...</p>
+        <Loader2 className="animate-spin text-[var(--brand)] mb-4" size={48} />
+        <p className="text-[var(--text-muted)]">Génération du rapport en cours...</p>
       </div>
     );
   }
@@ -123,15 +123,15 @@ export default function CompleteHRReport() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.push(bp('/rapports'))} 
-            className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
+            className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
-            <ArrowLeft size={20} className="text-gray-500" />
+            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">
               Rapport RH Complet
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               Période : {new Date(currentYear, currentMonth - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </p>
           </div>
@@ -139,11 +139,11 @@ export default function CompleteHRReport() {
 
         <div className="flex items-center gap-3">
           <PeriodSelector value={period} onChange={setPeriod} modes={['MOIS']} />
-          <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-bold hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2">
             <Download size={18} />
             Exporter PDF
           </button>
-          <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-bold hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2">
             <Printer size={18} />
             Imprimer
           </button>
@@ -156,16 +156,16 @@ export default function CompleteHRReport() {
       {/* ========================================
           SECTION 1 : COMPARAISON AVEC MOIS PRÉCÉDENT
       ======================================== */}
-      <div className="bg-gradient-to-r from-sky-500 to-blue-600 rounded-2xl p-8 text-white shadow-xl">
+      <div className="bg-[var(--brand)] rounded-2xl p-8 text-white shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold mb-2">📊 Évolution vs Mois Précédent</h2>
-            <p className="text-sky-100">
+            <p className="text-white/80">
               Comparaison {now.toLocaleDateString('fr-FR', { month: 'long' })} vs {comparisonData?.previous ? new Date(comparisonData.previous.year, comparisonData.previous.month - 1).toLocaleDateString('fr-FR', { month: 'long' }) : 'mois précédent'}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sky-100 text-sm">Variation Globale</p>
+            <p className="text-white/80 text-sm">Variation Globale</p>
             <div className={`text-4xl font-bold flex items-center gap-2 ${isGrossUp ? 'text-white' : 'text-red-200'}`}>
               {isGrossUp ? <ArrowUpRight size={32} /> : <ArrowDownRight size={32} />}
               {formatPercent(variations.grossPercent)}
@@ -175,7 +175,7 @@ export default function CompleteHRReport() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-sky-100 text-xs uppercase font-bold mb-2">Masse Salariale Brute</p>
+            <p className="text-white/80 text-xs uppercase font-bold mb-2">Masse Salariale Brute</p>
             <p className="text-2xl font-bold">{formatCurrency(comparisonData?.current?.gross)}</p>
             <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${isGrossUp ? 'text-emerald-200' : 'text-red-200'}`}>
               {isGrossUp ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
@@ -184,7 +184,7 @@ export default function CompleteHRReport() {
           </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-sky-100 text-xs uppercase font-bold mb-2">Salaire Net Total</p>
+            <p className="text-white/80 text-xs uppercase font-bold mb-2">Salaire Net Total</p>
             <p className="text-2xl font-bold">{formatCurrency(comparisonData?.current?.net)}</p>
             <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.netPercent > 0 ? 'text-emerald-200' : 'text-red-200'}`}>
               {variations.netPercent > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
@@ -193,7 +193,7 @@ export default function CompleteHRReport() {
           </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-sky-100 text-xs uppercase font-bold mb-2">Coût Employeur Total</p>
+            <p className="text-white/80 text-xs uppercase font-bold mb-2">Coût Employeur Total</p>
             <p className="text-2xl font-bold">{formatCurrency(comparisonData?.current?.cost)}</p>
             <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.costPercent > 0 ? 'text-red-200' : 'text-emerald-200'}`}>
               {variations.costPercent > 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
@@ -202,7 +202,7 @@ export default function CompleteHRReport() {
           </div>
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <p className="text-sky-100 text-xs uppercase font-bold mb-2">Bulletins Générés</p>
+            <p className="text-white/80 text-xs uppercase font-bold mb-2">Bulletins Générés</p>
             <p className="text-2xl font-bold">{comparisonData?.current?.count || 0}</p>
             <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${isCountUp ? 'text-emerald-200' : 'text-red-200'}`}>
               {isCountUp ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
@@ -215,7 +215,7 @@ export default function CompleteHRReport() {
         <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
           <div className="flex items-start gap-3">
             <Info size={20} className="text-white mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-sky-50 leading-relaxed">
+            <div className="text-sm text-white/70 leading-relaxed">
               <strong>Interprétation :</strong> {
                 isGrossUp 
                   ? `La masse salariale a augmenté de ${formatPercent(variations.grossPercent)}, principalement dû à ${
@@ -239,14 +239,14 @@ export default function CompleteHRReport() {
       ======================================== */}
       {departmentData && departmentData.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <Building2 size={24} className="text-sky-500" />
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+            <Building2 size={24} className="text-[var(--brand)]" />
             Analyse Détaillée par Département
           </h2>
 
           <div className="grid grid-cols-1 gap-6">
             {departmentData.map((dept: any, idx: number) => (
-              <div key={dept.id} className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+              <div key={dept.id} className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center gap-4">
                     <div 
@@ -256,8 +256,8 @@ export default function CompleteHRReport() {
                       {dept.name[0]}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{dept.name}</h3>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <h3 className="text-xl font-bold text-[var(--text)]">{dept.name}</h3>
+                      <p className="text-[var(--text-muted)]">
                         {dept.headcount} employé(s) · Salaire moyen : {formatCurrency(dept.avgSalary)}
                       </p>
                     </div>
@@ -265,26 +265,26 @@ export default function CompleteHRReport() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Masse Salariale Brute</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(dept.totalGross)}</p>
+                  <div className="bg-[var(--surface-2)]/50 rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] font-bold uppercase mb-1">Masse Salariale Brute</p>
+                    <p className="text-lg font-bold text-[var(--text)]">{formatCurrency(dept.totalGross)}</p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Salaire Net Total</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(dept.totalNet)}</p>
+                  <div className="bg-[var(--surface-2)]/50 rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] font-bold uppercase mb-1">Salaire Net Total</p>
+                    <p className="text-lg font-bold text-[var(--text)]">{formatCurrency(dept.totalNet)}</p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">CNSS Patronale</p>
-                    <p className="text-lg font-bold text-orange-600">{formatCurrency(dept.totalCNSS)}</p>
+                  <div className="bg-[var(--surface-2)]/50 rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] font-bold uppercase mb-1">CNSS Patronale</p>
+                    <p className="text-lg font-bold text-[var(--accent-2)]">{formatCurrency(dept.totalCNSS)}</p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">ITS Collecté</p>
-                    <p className="text-lg font-bold text-purple-600">{formatCurrency(dept.totalItsReel ?? dept.totalITS)}</p>
+                  <div className="bg-[var(--surface-2)]/50 rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] font-bold uppercase mb-1">ITS Collecté</p>
+                    <p className="text-lg font-bold text-[var(--brand)]">{formatCurrency(dept.totalItsReel ?? dept.totalITS)}</p>
                     {(dept.totalBnc10 > 0 || dept.totalBnc20 > 0) && (
-                      <p className="text-[11px] text-gray-400 mt-1">
+                      <p className="text-[11px] text-[var(--text-muted)] mt-1">
                         + BNC : {formatCurrency((dept.totalBnc10 || 0) + (dept.totalBnc20 || 0))}
                         {dept.totalBnc10 > 0 && ` (${formatCurrency(dept.totalBnc10)} à 10%)`}
                         {dept.totalBnc20 > 0 && ` (${formatCurrency(dept.totalBnc20)} à 20%)`}
@@ -293,26 +293,26 @@ export default function CompleteHRReport() {
                     )}
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Heures Sup Total</p>
-                    <p className="text-lg font-bold text-indigo-600">{dept.totalOvertime || 0}h</p>
+                  <div className="bg-[var(--surface-2)]/50 rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] font-bold uppercase mb-1">Heures Sup Total</p>
+                    <p className="text-lg font-bold text-[var(--accent-2)]">{dept.totalOvertime || 0}h</p>
                   </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">Congés Validés</p>
+                  <div className="bg-[var(--surface-2)]/50 rounded-xl p-4">
+                    <p className="text-xs text-[var(--text-muted)] font-bold uppercase mb-1">Congés Validés</p>
                     <p className="text-lg font-bold text-emerald-600">{dept.totalLeaves || 0}</p>
                   </div>
                 </div>
 
                 {/* Barre de contribution */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-4 pt-4 border-t border-[var(--border)]">
                   <div className="flex justify-between items-center text-sm mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">Coût Total Employeur</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(dept.totalEmployerCost)}</span>
+                    <span className="text-[var(--text-muted)]">Coût Total Employeur</span>
+                    <span className="font-bold text-[var(--text)]">{formatCurrency(dept.totalEmployerCost)}</span>
                   </div>
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--surface-2)] rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-sky-500 to-blue-600 transition-all duration-500"
+                      className="h-full bg-[var(--brand)] transition-all duration-500"
                       style={{ 
                         width: `${Math.min(100, (dept.totalEmployerCost / (departmentData?.reduce((sum: number, d: any) => sum + d.totalEmployerCost, 0) || 1)) * 100)}%` 
                       }}
@@ -329,26 +329,26 @@ export default function CompleteHRReport() {
           SECTION 3 : HEURES SUPPLÉMENTAIRES
       ======================================== */}
       {overtimeData?.byEmployee?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Clock size={24} className="text-indigo-500" />
+              <h2 className="text-2xl font-bold text-[var(--text)] flex items-center gap-2">
+                <Clock size={24} className="text-[var(--accent-2)]" />
                 Heures Supplémentaires Détaillées
               </h2>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-[var(--text-muted)]">
                 {overtimeData.summary?.totalHours || 0}h totales · {overtimeData.summary?.totalAmount || '0 FCFA'}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Employés concernés</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{overtimeData.summary?.employeesWithOvertime || 0}</p>
+              <p className="text-sm text-[var(--text-muted)]">Employés concernés</p>
+              <p className="text-3xl font-bold text-[var(--text)]">{overtimeData.summary?.employeesWithOvertime || 0}</p>
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
+              <thead className="bg-[var(--surface-2)]/50 text-xs uppercase text-[var(--text-muted)] font-semibold">
                 <tr>
                   <th className="px-4 py-3 text-left">Employé</th>
                   <th className="px-4 py-3 text-left">Département</th>
@@ -358,15 +358,15 @@ export default function CompleteHRReport() {
                   <th className="px-4 py-3 text-right">Montant</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-[var(--border)]">
                 {overtimeData.byEmployee.map((emp: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{emp.name || 'N/A'}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{emp.department || 'N/A'}</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-900 dark:text-white">{safeToFixed(emp.overtime15)}h</td>
-                    <td className="px-4 py-3 text-right font-mono text-gray-900 dark:text-white">{safeToFixed(emp.overtime50)}h</td>
-                    <td className="px-4 py-3 text-right font-mono font-bold text-indigo-600">{safeToFixed(emp.totalOvertime)}h</td>
-                    <td className="px-4 py-3 text-right font-bold text-gray-900 dark:text-white">{formatCurrency(emp.amount)}</td>
+                  <tr key={idx} className="hover:bg-[var(--surface-2)] transition-colors">
+                    <td className="px-4 py-3 font-medium text-[var(--text)]">{emp.name || 'N/A'}</td>
+                    <td className="px-4 py-3 text-[var(--text-muted)]">{emp.department || 'N/A'}</td>
+                    <td className="px-4 py-3 text-right font-mono text-[var(--text)]">{safeToFixed(emp.overtime15)}h</td>
+                    <td className="px-4 py-3 text-right font-mono text-[var(--text)]">{safeToFixed(emp.overtime50)}h</td>
+                    <td className="px-4 py-3 text-right font-mono font-bold text-[var(--accent-2)]">{safeToFixed(emp.totalOvertime)}h</td>
+                    <td className="px-4 py-3 text-right font-bold text-[var(--text)]">{formatCurrency(emp.amount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -374,10 +374,10 @@ export default function CompleteHRReport() {
           </div>
 
           {/* Explication heures sup */}
-          <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4 border border-indigo-200 dark:border-indigo-800">
+          <div className="mt-6 bg-[var(--accent-2-soft)] rounded-xl p-4 border border-[var(--accent-2)]/30">
             <div className="flex items-start gap-3">
-              <Zap size={20} className="text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-indigo-900 dark:text-indigo-100 leading-relaxed">
+              <Zap size={20} className="text-[var(--accent-2)] mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-[var(--text)] leading-relaxed">
                 <strong>Analyse :</strong> Les heures supplémentaires représentent un coût de <strong>{overtimeData.summary?.totalAmount || '0 FCFA'}</strong>. 
                 {(overtimeData.summary?.totalHours || 0) > 50 
                   ? " Volume élevé d'heures sup détecté. Envisagez d'analyser la charge de travail ou de recruter."
@@ -395,26 +395,26 @@ export default function CompleteHRReport() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Heures Sup */}
         {topEmployeesData?.topOvertime?.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Award size={20} className="text-amber-500" />
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Top 10 Heures Supplémentaires</h3>
+              <h3 className="text-lg font-bold text-[var(--text)]">Top 10 Heures Supplémentaires</h3>
             </div>
             <div className="space-y-3">
               {topEmployeesData.topOvertime.slice(0, 10).map((emp: any, idx: number) => (
-                <div key={emp.id || idx} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
+                <div key={emp.id || idx} className="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-xl hover:opacity-80 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center font-bold text-sm">
                       {idx + 1}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{emp.name || 'N/A'}</p>
-                      <p className="text-xs text-gray-500">{emp.department || 'N/A'}</p>
+                      <p className="font-medium text-[var(--text)]">{emp.name || 'N/A'}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{emp.department || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-indigo-600">{safeToFixed(emp.totalOvertime)}h</p>
-                    <p className="text-xs text-gray-500">{formatCurrency(emp.overtimeAmount)}</p>
+                    <p className="font-bold text-[var(--accent-2)]">{safeToFixed(emp.totalOvertime)}h</p>
+                    <p className="text-xs text-[var(--text-muted)]">{formatCurrency(emp.overtimeAmount)}</p>
                   </div>
                 </div>
               ))}
@@ -424,26 +424,26 @@ export default function CompleteHRReport() {
 
         {/* Top Congés */}
         {topEmployeesData?.topLeaves?.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <Calendar size={20} className="text-emerald-500" />
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Top 10 Congés Pris</h3>
+              <h3 className="text-lg font-bold text-[var(--text)]">Top 10 Congés Pris</h3>
             </div>
             <div className="space-y-3">
               {topEmployeesData.topLeaves.slice(0, 10).map((emp: any, idx: number) => (
-                <div key={emp.id || idx} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
+                <div key={emp.id || idx} className="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-xl hover:opacity-80 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center font-bold text-sm">
                       {idx + 1}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{emp.name || 'N/A'}</p>
-                      <p className="text-xs text-gray-500">{emp.department || 'N/A'}</p>
+                      <p className="font-medium text-[var(--text)]">{emp.name || 'N/A'}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{emp.department || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-emerald-600">{safeToFixed(emp.leavesDays, 1)} jours</p>
-                    <p className="text-xs text-gray-500">{emp.leavesCount || 0} demande(s)</p>
+                    <p className="text-xs text-[var(--text-muted)]">{emp.leavesCount || 0} demande(s)</p>
                   </div>
                 </div>
               ))}
@@ -456,9 +456,9 @@ export default function CompleteHRReport() {
           SECTION 5 : ÉVOLUTION TENDANCE
       ======================================== */}
       {payrollData?.trend?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <TrendingUp size={24} className="text-sky-500" />
+        <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-6 flex items-center gap-2">
+            <TrendingUp size={24} className="text-[var(--brand)]" />
             Évolution sur 6 Mois
           </h2>
           <div className="h-[400px]">
@@ -474,15 +474,15 @@ export default function CompleteHRReport() {
                     <stop offset="95%" stopColor={COLORS.success} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#1f2937', 
-                    color: '#fff', 
+                    backgroundColor: 'var(--surface)', 
+                    color: 'var(--text)', 
                     borderRadius: '12px', 
-                    border: 'none',
+                    border: '1px solid var(--border)',
                     padding: '12px'
                   }} 
                 />
@@ -523,8 +523,8 @@ export default function CompleteHRReport() {
       ======================================== */}
       {leavesData?.distribution?.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
+            <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
               <Calendar size={20} className="text-emerald-500" />
               Répartition des Congés par Type
             </h3>
@@ -552,13 +552,13 @@ export default function CompleteHRReport() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Statistiques Congés</h3>
+          <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
+            <h3 className="text-lg font-bold text-[var(--text)] mb-4">Statistiques Congés</h3>
             <div className="space-y-4">
               {leavesData.kpi?.map((kpi: any, idx: number) => (
-                <div key={idx} className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-bold uppercase mb-1">{kpi.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{kpi.value}</p>
+                <div key={idx} className="p-4 bg-[var(--surface-2)]/50 rounded-xl">
+                  <p className="text-sm text-[var(--text-muted)] font-bold uppercase mb-1">{kpi.label}</p>
+                  <p className="text-3xl font-bold text-[var(--text)]">{kpi.value}</p>
                 </div>
               ))}
 
@@ -582,7 +582,7 @@ export default function CompleteHRReport() {
       {/* ========================================
           SECTION 7 : RÉSUMÉ GLOBAL
       ======================================== */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-black rounded-2xl p-8 text-white shadow-xl">
+      <div className="bg-[var(--brand)] rounded-2xl p-8 text-white shadow-xl">
         <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
           <FileBarChart size={24} />
           Résumé Exécutif
@@ -644,7 +644,7 @@ export default function CompleteHRReport() {
       </div>
 
       {/* Footer */}
-      <div className="text-center text-gray-500 dark:text-gray-400 text-sm py-8">
+      <div className="text-center text-[var(--text-muted)] text-sm py-8">
         <p>Rapport généré automatiquement le {new Date().toLocaleDateString('fr-FR', { dateStyle: 'full' })}</p>
         <p className="mt-2">Konza-rh System · Confidentiel · À usage interne uniquement</p>
       </div>

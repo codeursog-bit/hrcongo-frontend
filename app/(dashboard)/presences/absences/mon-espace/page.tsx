@@ -18,6 +18,7 @@ import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
+import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
@@ -111,6 +112,28 @@ export default function MonEspaceAbsencesPage() {
     reviewedByName: selected.reviewedByUser?.email,
     reviewedAt: selected.reviewedAt,
     rejectionReason: selected.rejectionReason,
+  } : null;
+
+  const isStandard = company?.documentTemplate === 'STANDARD';
+  const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
+  useEffect(() => {
+    if (!isStandard) return;
+    (async () => { try { setMotifCatalog(await api.get('/absence-requests/motifs') || []); } catch {} })();
+  }, [isStandard]);
+
+  const standardAbsenceData = selected && isStandard ? {
+    reference: `DEA-${selected.id.slice(0, 8).toUpperCase()}`,
+    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, address: company?.address, city: company?.city, country: company?.country, phone: company?.phone, email: company?.email, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
+    employee: { firstName: employee?.firstName || '', lastName: employee?.lastName || '', employeeNumber: employee?.employeeNumber, position: employee?.position },
+    catalog: motifCatalog,
+    // Le motif choisi n'est pas stocké comme référence — on retrouve la
+    // ligne cochée en comparant au texte enregistré (= libellé exact de la
+    // convention au moment de la demande), même logique que le backend.
+    motifKey: motifCatalog.find((m: any) => m.label === selected.reason)?.key,
+    startDate: selected.startDate,
+    endDate: selected.endDate,
+    status: selected.status,
+    requestedAt: selected.requestedAt || selected.createdAt,
   } : null;
 
   if (isLoading) {
@@ -286,7 +309,11 @@ export default function MonEspaceAbsencesPage() {
                   {/* Aperçu imprimable */}
                   <div className="bg-[var(--surface-2)] rounded-2xl p-3 overflow-hidden border border-[var(--border)]">
                     <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
-                      {printData && <AbsenceRequestPrintable data={printData as any} />}
+                      {isStandard ? (
+                        standardAbsenceData && <StandardAbsenceRequestForm data={standardAbsenceData as any} />
+                      ) : (
+                        printData && <AbsenceRequestPrintable data={printData as any} />
+                      )}
                     </div>
                   </div>
                 </div>

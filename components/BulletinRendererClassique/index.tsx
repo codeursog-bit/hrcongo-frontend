@@ -536,9 +536,8 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
           <div style={{ textAlign: 'center', fontSize: 8.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
         )}
 
-        <div style={{ fontSize: 7.8, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-          <span>Pour vous aider à faire valoir vos droits, conservez ce bulletin sans limitation de durée · CNSS 4% sal. · ITS barème 2026 · SMIG 70 400 FCFA</span>
-          <strong style={{ color: K }}>KONZARH</strong>
+        <div style={{ fontSize: 7.8, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, textAlign: 'center', flexShrink: 0 }}>
+          Pour vous aider à faire valoir vos droits, conservez ce bulletin sans limitation de durée · CNSS 4% sal. · ITS barème 2026 · SMIG 70 400 FCFA
         </div>
 
       </div>

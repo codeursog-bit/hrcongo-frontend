@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { api } from '@/services/api';
@@ -28,6 +28,13 @@ export default function BatchPayrollPage() {
   const [month, setMonth]       = useState('Février');
   const [year, setYear]         = useState(2026);
   const [workDays, setWorkDays] = useState(26);
+
+  // ✅ Jours travaillés par employé.
+  //  - autoDays  : valeur calculée par le back depuis les présences (lecture seule)
+  //  - daysInput : valeur saisie à la main (texte brut, pour pouvoir effacer/retaper)
+  const [autoDays, setAutoDays]     = useState<Record<string, number>>({});
+  const [daysInput, setDaysInput]   = useState<Record<string, string>>({});
+  const estimationReq = useRef(0);
 
   // ✅ Estimation venant du back — JAMAIS calculée localement
   const [estimation, setEstimation]            = useState({ gross: 0, cost: 0, net: 0, count: 0 });
@@ -67,23 +74,54 @@ export default function BatchPayrollPage() {
     init();
   }, []);
 
+  // ─── Jours saisis valides → { employeeId: jours } (bornés 0…workDays) ────
+  const buildDaysOverrides = (): Record<string, number> => {
+    const out: Record<string, number> = {};
+    for (const id of selectedIds) {
+      const raw = daysInput[id];
+      if (raw === undefined || raw.trim() === '') continue;
+      const n = Number(raw.replace(',', '.'));
+      if (!Number.isFinite(n)) continue;
+      out[id] = Math.min(Math.max(0, n), workDays);
+    }
+    return out;
+  };
+
+  const handleDaysChange = (id: string, value: string) => {
+    setDaysInput(prev => ({ ...prev, [id]: value }));
+  };
+  const handleDaysReset = (id: string) => {
+    setDaysInput(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  // Re-estimation (avec pause de 400 ms pour ne pas appeler le back à chaque frappe)
   useEffect(() => {
     if (selectedIds.length === 0) {
       setEstimation({ gross: 0, cost: 0, net: 0, count: 0 });
       return;
     }
-    fetchEstimation();
-  }, [selectedIds, month, year]);
+    const t = setTimeout(fetchEstimation, 400);
+    return () => clearTimeout(t);
+  }, [selectedIds, month, year, workDays, daysInput]);
 
   // ─── ✅ Estimation via simulate-batch — back calcule, front affiche ──────
   const fetchEstimation = async () => {
+    const reqId = ++estimationReq.current;
+    const sentOverrides = buildDaysOverrides();
     setIsLoadingEst(true);
     try {
       const result: any = await api.post('/payrolls/simulate-batch', {
         employeeIds: selectedIds,
         month: getMonthNumber(month),
         year,
+        workDays,
+        daysOverrides: sentOverrides,
       });
+      if (reqId !== estimationReq.current) return; // réponse périmée
       const s = result?.summary;
       if (s) {
         setEstimation({
@@ -93,10 +131,24 @@ export default function BatchPayrollPage() {
           cost:  s.totalEmployerCost || 0,
         });
       }
+      // Jours "auto" (présences) : on ne mémorise que pour les employés non modifiés
+      if (Array.isArray(result?.results)) {
+        setAutoDays(prev => {
+          const next = { ...prev };
+          for (const r of result.results) {
+            const d = r?.data?.daysToPay;
+            if (r?.success && d != null && sentOverrides[r.employeeId] === undefined) {
+              next[r.employeeId] = Number(d);
+            }
+          }
+          return next;
+        });
+      }
     } catch {
+      if (reqId !== estimationReq.current) return;
       setEstimation({ gross: 0, cost: 0, net: 0, count: selectedIds.length });
     } finally {
-      setIsLoadingEst(false);
+      if (reqId === estimationReq.current) setIsLoadingEst(false);
     }
   };
 
@@ -141,6 +193,7 @@ export default function BatchPayrollPage() {
         month:          monthNumber,
         year:           year,
         customWorkDays: workDays,
+        daysOverrides:  buildDaysOverrides(),
       }, (line: any) => {
         if (line.type === 'detail') {
           processed++;
@@ -217,6 +270,11 @@ export default function BatchPayrollPage() {
           {currentStep === 2 && (
             <SelectionStep employees={employees} selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
+              workDays={workDays}
+              autoDays={autoDays}
+              daysInput={daysInput}
+              onDaysChange={handleDaysChange}
+              onDaysReset={handleDaysReset}
               estimation={estimation}
               isLoadingEstimation={isLoadingEstimation} />
           )}

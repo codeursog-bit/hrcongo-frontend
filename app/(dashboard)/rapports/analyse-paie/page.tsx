@@ -21,7 +21,7 @@ import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 
 
-const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
+const COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669', '#D97706'];
 
 export default function PayrollAnalyticsPage() {
   const router = useRouter();
@@ -77,7 +77,7 @@ export default function PayrollAnalyticsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-sky-500" size={48} />
+        <Loader2 className="animate-spin text-[var(--brand)]" size={48} />
       </div>
     );
   }
@@ -91,15 +91,15 @@ export default function PayrollAnalyticsPage() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.push(bp('/rapports'))} 
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
-            <ArrowLeft size={20} className="text-gray-500" />
+            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">
               Analyse Détaillée de Paie
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               Rapports financiers et décomposition des coûts salariaux
             </p>
           </div>
@@ -107,11 +107,11 @@ export default function PayrollAnalyticsPage() {
 
         <div className="flex items-center gap-3">
           <PeriodSelector value={period} onChange={setPeriod} modes={['MOIS']} />
-          <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-bold hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2">
             <Download size={18} />
             Exporter
           </button>
-          <button className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] font-bold hover:bg-[var(--surface-2)] transition-colors flex items-center gap-2">
             <Printer size={18} />
             Imprimer
           </button>
@@ -123,29 +123,25 @@ export default function PayrollAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {data?.summary?.map((metric: any, i: number) => {
           const icons = [Wallet, Shield, DollarSign, TrendingUp];
-          const colors = [
-            'from-sky-500 to-blue-600',
-            'from-orange-500 to-red-600',
-            'from-emerald-500 to-teal-600',
-            'from-purple-500 to-indigo-600'
-          ];
+          // ✅ 2 teintes max (émeraude/ambre), plus de dégradé
+          const colors = ['bg-[var(--brand)]', 'bg-[var(--accent-2)]', 'bg-[var(--brand)]', 'bg-[var(--accent-2)]'];
           const Icon = icons[i % icons.length];
 
           return (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
+            <div key={i} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className={`absolute top-0 right-0 w-32 h-32 ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
               
               <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
+                <div className={`w-12 h-12 rounded-xl ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
                   <Icon size={24} />
                 </div>
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">
                   {metric.label}
                 </p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-2xl font-bold text-[var(--text)] tracking-tight">
                   {metric.value}
                 </h3>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-[var(--text-muted)] mt-2">
                   {metric.currency} {metric.sub && `· ${metric.sub}`}
                 </p>
               </div>
@@ -156,13 +152,13 @@ export default function PayrollAnalyticsPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
-        <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="xl:col-span-2 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-bold text-[var(--text)]">
                 Évolution Masse Salariale
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 Tendance sur 6 mois (en millions FCFA)
               </p>
             </div>
@@ -234,12 +230,12 @@ export default function PayrollAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
+        <div className="bg-[var(--brand)] rounded-2xl p-6 text-white shadow-xl">
           <h3 className="text-lg font-bold mb-4">Comparaison vs Mois Précédent</h3>
           
           <div className="space-y-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <p className="text-sky-100 text-xs uppercase font-bold mb-1">Masse Brute</p>
+              <p className="text-white/80 text-xs uppercase font-bold mb-1">Masse Brute</p>
               <p className="text-2xl font-bold">{formatCurrency(comparison?.current?.gross)}</p>
               <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.grossPercent > 0 ? 'text-emerald-200' : 'text-red-200'}`}>
                 {variations.grossPercent > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
@@ -248,7 +244,7 @@ export default function PayrollAnalyticsPage() {
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <p className="text-sky-100 text-xs uppercase font-bold mb-1">Salaire Net</p>
+              <p className="text-white/80 text-xs uppercase font-bold mb-1">Salaire Net</p>
               <p className="text-2xl font-bold">{formatCurrency(comparison?.current?.net)}</p>
               <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.netPercent > 0 ? 'text-emerald-200' : 'text-red-200'}`}>
                 {variations.netPercent > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
@@ -257,7 +253,7 @@ export default function PayrollAnalyticsPage() {
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-              <p className="text-sky-100 text-xs uppercase font-bold mb-1">Coût Employeur</p>
+              <p className="text-white/80 text-xs uppercase font-bold mb-1">Coût Employeur</p>
               <p className="text-2xl font-bold">{formatCurrency(comparison?.current?.cost)}</p>
               <div className={`flex items-center gap-1 text-sm font-bold mt-2 ${variations.costPercent > 0 ? 'text-red-200' : 'text-emerald-200'}`}>
                 {variations.costPercent > 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
@@ -273,7 +269,7 @@ export default function PayrollAnalyticsPage() {
               ) : (
                 <CheckCircle size={16} className="text-emerald-300 mt-0.5 flex-shrink-0" />
               )}
-              <p className="text-xs text-sky-50 leading-relaxed">
+              <p className="text-xs text-white/70 leading-relaxed">
                 {variations.grossPercent > 5 
                   ? "Hausse importante détectée. Vérifiez les heures supplémentaires et nouvelles embauches."
                   : "Évolution dans la normale. Pas d'alerte particulière."
@@ -284,14 +280,14 @@ export default function PayrollAnalyticsPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
+      <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Building2 size={20} className="text-sky-500" />
+            <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
+              <Building2 size={20} className="text-[var(--brand)]" />
               Répartition par Département
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--text-muted)]">
               Masse salariale et charges détaillées
             </p>
           </div>
@@ -299,7 +295,7 @@ export default function PayrollAnalyticsPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
+            <thead className="bg-[var(--surface-2)] text-xs uppercase text-[var(--text-muted)] font-semibold">
               <tr>
                 <th className="px-4 py-3 text-left">Département</th>
                 <th className="px-4 py-3 text-right">Effectif</th>
@@ -310,9 +306,9 @@ export default function PayrollAnalyticsPage() {
                 <th className="px-4 py-3 text-right">Coût Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-[var(--border)]">
               {departments?.map((dept: any, idx: number) => (
-                <tr key={dept.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                <tr key={dept.id} className="hover:bg-[var(--surface-2)] transition-colors">
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <div 
@@ -321,30 +317,30 @@ export default function PayrollAnalyticsPage() {
                       >
                         {dept.name[0]}
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-white">{dept.name}</span>
+                      <span className="font-medium text-[var(--text)]">{dept.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-right font-medium text-gray-900 dark:text-white">
+                  <td className="px-4 py-4 text-right font-medium text-[var(--text)]">
                     {dept.headcount}
                   </td>
-                  <td className="px-4 py-4 text-right font-bold text-gray-900 dark:text-white">
+                  <td className="px-4 py-4 text-right font-bold text-[var(--text)]">
                     {formatCurrency(dept.totalGross)}
                   </td>
                   <td className="px-4 py-4 text-right font-bold text-emerald-600">
                     {formatCurrency(dept.totalNet)}
                   </td>
-                  <td className="px-4 py-4 text-right font-bold text-orange-600">
+                  <td className="px-4 py-4 text-right font-bold text-[var(--accent-2)]">
                     {formatCurrency(dept.totalCNSS)}
                   </td>
-                  <td className="px-4 py-4 text-right font-bold text-purple-600">
+                  <td className="px-4 py-4 text-right font-bold text-[var(--brand)]">
                     {formatCurrency(dept.totalItsReel ?? dept.totalITS)}
                     {(dept.totalBnc10 > 0 || dept.totalBnc20 > 0) && (
-                      <div className="text-[11px] font-normal text-gray-400 mt-0.5">
+                      <div className="text-[11px] font-normal text-[var(--text-muted)] mt-0.5">
                         + BNC {formatCurrency((dept.totalBnc10 || 0) + (dept.totalBnc20 || 0))}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-4 text-right font-bold text-sky-600">
+                  <td className="px-4 py-4 text-right font-bold text-[var(--accent-2)]">
                     {formatCurrency(dept.totalEmployerCost)}
                   </td>
                 </tr>
@@ -355,8 +351,8 @@ export default function PayrollAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-4">
             Répartition Masse Salariale
           </h3>
           <div className="h-[300px]">
@@ -383,8 +379,8 @@ export default function PayrollAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-4">
             Charges Patronales par Département
           </h3>
           <div className="h-[300px]">
@@ -396,9 +392,9 @@ export default function PayrollAnalyticsPage() {
                 <Tooltip formatter={(value: any) => formatCurrency(value)} />
                 <Legend />
                 <Bar dataKey="totalCNSS" name="CNSS" fill="#F59E0B" />
-                <Bar dataKey="totalItsReel" name="ITS" fill="#8B5CF6" />
+                <Bar dataKey="totalItsReel" name="ITS" fill="#10B981" />
                 <Bar dataKey="totalBnc10" name="BNC 10%" fill="#FBBF24" stackId="bnc" />
-                <Bar dataKey="totalBnc20" name="BNC 20%" fill="#EA580C" stackId="bnc" />
+                <Bar dataKey="totalBnc20" name="BNC 20%" fill="#059669" stackId="bnc" />
               </BarChart>
             </ResponsiveContainer>
           </div>

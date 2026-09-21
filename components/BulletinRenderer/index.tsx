@@ -812,11 +812,10 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
         )}
         <div style={{
           borderTop:'0.5px solid #999', marginTop:4, paddingTop:3,
-          display:'flex', justifyContent:'space-between',
           fontSize:7.5, color:'#444', flexShrink:0,
         }}>
-          <span>CNSS sal. 4% · ITS barème 2026 · Parts fiscales maintenues · SMIG 70 400 FCFA · Décret N°78-360</span>
-          <span style={{ fontWeight:700, color:K }}>KONZARH</span>
+          <div>Pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.</div>
+          <div style={{ marginTop: 2 }}>CNSS sal. 4% · ITS barème 2026 · Parts fiscales maintenues · SMIG 70 400 FCFA · Décret N°78-360</div>
         </div>
 
       </div>

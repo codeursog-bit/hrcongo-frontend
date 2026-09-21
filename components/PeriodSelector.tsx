@@ -66,7 +66,7 @@ export default function PeriodSelector({ value, onChange, minYear, maxYear, mode
     <div className="flex flex-wrap items-end gap-3">
       {/* Sélecteur de mode — même esprit que les filtres Effectifs, en pilules */}
       {availableModes.length > 1 && (
-        <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 h-[46px] self-end">
+        <div className="flex rounded-xl overflow-hidden border border-[var(--border)] bg-[var(--surface)] h-[46px] self-end">
           {availableModes.map((m) => {
             const Icon = MODE_META[m].icon;
             const active = value.mode === m;
@@ -77,8 +77,8 @@ export default function PeriodSelector({ value, onChange, minYear, maxYear, mode
                 onClick={() => setMode(m)}
                 className={`flex items-center gap-1.5 px-3 h-full text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    ? 'bg-[var(--brand-soft)] text-[var(--brand)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
                 }`}
               >
                 <Icon size={16} />

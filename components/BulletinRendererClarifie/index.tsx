@@ -573,10 +573,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
         {/* ══ MENTIONS LÉGALES ══════════════════════════════════════════ */}
         <div style={{ fontSize: 8, color: '#333', marginTop: 4, borderTop: '0.5px solid #999', paddingTop: 3, flexShrink: 0 }}>
           Pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.
-          <span style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-            <span>CNSS sal. 4% · ITS barème 2026 · SMIG 70 400 FCFA</span>
-            <strong style={{ color: K }}>KONZARH</strong>
-          </span>
+          <div style={{ marginTop: 2 }}>CNSS sal. 4% · ITS barème 2026 · SMIG 70 400 FCFA</div>
         </div>
 
       </div>

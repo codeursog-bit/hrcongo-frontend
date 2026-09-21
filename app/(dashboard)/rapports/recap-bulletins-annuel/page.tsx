@@ -1,109 +1,71 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Download, Loader2, CalendarDays, CalendarRange, Info,
-  ChevronDown, Users, Wallet, Landmark, TrendingDown, ShieldCheck, X,
-  Printer, AlertTriangle,
+  ArrowLeft, Download, Loader2, FileSpreadsheet, ChevronDown,
+  Users, Wallet, Landmark, ShieldCheck, X, Search, Printer, RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 
-// ─── Types (miroir de payroll-recap.service.ts côté backend) ───────────────
+// ─── Types (miroir de das1-declaration.service.ts côté backend — l'API et
+// les noms de route restent "das1" côté backend, seul l'affichage change) ─
 
-interface IndemniteColumn {
-  key: string;
+interface BulletinAnnuelIndemniteLine {
   label: string;
+  amount: number;
 }
 
-interface RecapRow {
+interface BulletinAnnuelItem {
+  ordre: number;
   employeeId: string;
   employeeName: string;
-  matricule: string | null;
-  status: 'PAYE' | 'CONGE' | 'SANS_PAIE';
-  leaveLabel?: string | null;
-  salBrut: number;
-  cnss: number;
-  irpp: number;
-  // ✅ Précise si "irpp" est un vrai ITS ou une retenue BNC (10%/20%,
-  // prestataires) — jamais additionner sans regarder ce label, voir le
-  // badge affiché à côté du montant.
-  fiscalCategory: 'ITS' | 'BNC_10' | 'BNC_20' | 'EXONERE' | 'AGENCE' | 'MIXTE';
-  reste1: number;
-  indemnites: Record<string, number>;
-  sousTotal: number;
-  avance: number;
-  pharmacie: number;
-  tol: number;
-  taxeDept: number;
-  autresTaxes: number;
-  netAPayer: number;
-  autresRetenuesNonDetaillees: number;
-  moisEnConge?: number[];
-  moisSansPaie?: number[];
+  niu: string | null;
+  position: string;
+  address: string;
+  city: string;
+  phone: string | null;
+  maritalStatusLabel: string;
+  numberOfChildren: number;
+  periodFrom: string;
+  periodTo: string;
+  montantEspeces: number;
+  avantageNatureLogement: number;
+  avantageNatureAutres: number;
+  montantImposable80: number;
+  irppRetenu: number;
+  taxeDepartementale: number;
+  tolRetenu: number;
+  indemnitesNonImposables: BulletinAnnuelIndemniteLine[];
+  totalIndemnitesNonImposables: number;
+  moisPresence: number;
+  moisConge: number;
+  moisSansPaie: number;
 }
 
-interface MonthlyRecap {
-  month: number;
+interface BulletinAnnuelDeclaration {
   year: number;
-  indemniteColumns: IndemniteColumn[];
-  rows: RecapRow[];
-  totals: RecapRow;
+  companyName: string;
+  companyActivity: string | null;
+  companyAddress: string;
+  companyCity: string;
+  companyPhone: string;
+  bulletins: BulletinAnnuelItem[];
 }
-
-interface AnnualRecap {
-  year: number;
-  indemniteColumns: IndemniteColumn[];
-  rows: RecapRow[];
-  totals: RecapRow;
-  monthlyTotals: { month: number; sousTotal: number; netAPayer: number }[];
-}
-
-const MONTHS = [
-  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-];
-const MONTHS_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
+const YEARS = [CURRENT_YEAR - 2, CURRENT_YEAR - 1, CURRENT_YEAR];
 
-function fmt(val: number | undefined | null) {
-  const n = Number(val ?? 0);
-  if (!n) return '—';
-  return n.toLocaleString('fr-FR');
-}
-
-// ✅ Badge affiché à côté de tout montant "irpp" — pour ne jamais laisser
-// croire qu'un ITS et une retenue BNC (10%/20%) sont la même chose. Voir
-// classifyFiscalCategory côté backend (payroll-recap.service.ts).
-const FISCAL_BADGE: Record<RecapRow['fiscalCategory'], { label: string; className: string }> = {
-  ITS: { label: 'ITS', className: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  BNC_10: { label: 'BNC 10%', className: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  BNC_20: { label: 'BNC 20%', className: 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  EXONERE: { label: 'Exonéré', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
-  AGENCE: { label: 'Agence', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
-  MIXTE: { label: 'Mixte', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+const fmt = (n: number | undefined | null) => {
+  const v = Number(n ?? 0);
+  return v ? new Intl.NumberFormat('fr-FR').format(Math.round(v)) : '—';
 };
 
-function FiscalBadge({ category }: { category: RecapRow['fiscalCategory'] }) {
-  const b = FISCAL_BADGE[category] ?? FISCAL_BADGE.MIXTE;
-  return (
-    <span className={`ml-1.5 inline-block px-1.5 py-0.5 rounded text-[10px] font-medium align-middle ${b.className}`}>
-      {b.label}
-    </span>
-  );
-}
-
-// Couleurs de ligne selon le statut du mois — bleu pour congé (comme dans
-// le modèle Excel d'origine), ambre pour une absence de bulletin
-// inexpliquée (à vérifier), rien de spécial si le bulletin est normal.
-function rowClasses(status: RecapRow['status']) {
-  if (status === 'CONGE') return 'bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20';
-  if (status === 'SANS_PAIE') return 'bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20';
-  return 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+function normalizeSearch(s: string) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -115,80 +77,47 @@ function downloadBlob(blob: Blob, filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export default function RecapPersonnelPage() {
+export default function BulletinAnnuelPage() {
   const router = useRouter();
   const { bp } = useBasePath();
 
-  const now = new Date();
-  const [mode, setMode] = useState<'mensuel' | 'annuel'>('mensuel');
-  const [period, setPeriod] = useState({ month: now.getMonth() + 1, year: now.getFullYear() });
-
-  const [monthly, setMonthly] = useState<MonthlyRecap | null>(null);
-  const [annual, setAnnual] = useState<AnnualRecap | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [year, setYear] = useState(CURRENT_YEAR - 1); // se déclare pour l'année N-1
+  const [declaration, setDeclaration] = useState<BulletinAnnuelDeclaration | null>(null);
+  const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const [pendingExport, setPendingExport] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
+  const loadDeclaration = useCallback(async (y: number) => {
+    setLoading(true);
+    setError(null);
     try {
-      if (mode === 'mensuel') {
-        const data = await api.get<MonthlyRecap>(
-          `/reports/personnel-recap?month=${period.month}&year=${period.year}`,
-        );
-        setMonthly(data);
-      } else {
-        const data = await api.get<AnnualRecap>(
-          `/reports/personnel-recap/annual?year=${period.year}`,
-        );
-        setAnnual(data);
-      }
+      // ⚠️ Route API inchangée côté backend (/reports/das1) — seul
+      // l'affichage front devient "Bulletin Annuel".
+      const data = await api.get<BulletinAnnuelDeclaration>(`/reports/das1?year=${y}`);
+      setDeclaration(data);
     } catch (e: any) {
-      setLoadError(e?.message || 'Erreur de chargement');
-      if (mode === 'mensuel') setMonthly(null);
-      else setAnnual(null);
+      setError(e?.message || 'Erreur de chargement');
+      setDeclaration(null);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [mode, period]);
+  }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const current = mode === 'mensuel' ? monthly : annual;
-  const indemniteColumns = current?.indemniteColumns ?? [];
-  const rows = current?.rows ?? [];
-  const totals = current?.totals;
-
-  const hasEcart = useMemo(
-    () => rows.some((r) => Math.abs(r.autresRetenuesNonDetaillees) > 1),
-    [rows],
-  );
-
-  // ── KPI de la page ────────────────────────────────────────────────────
-  const effectifPaye = rows.filter((r) => r.status === 'PAYE').length;
-  const totalCharges = (totals?.cnss ?? 0) + (totals?.irpp ?? 0) + (totals?.tol ?? 0) + (totals?.taxeDept ?? 0);
+    loadDeclaration(year);
+  }, [year, loadDeclaration]);
 
   const runExport = async () => {
     setExporting(true);
-    setLoadError(null);
+    setError(null);
     try {
-      const url = mode === 'mensuel'
-        ? `/reports/personnel-recap/export?month=${period.month}&year=${period.year}`
-        : `/reports/personnel-recap/annual/export?year=${period.year}`;
-      const blob = await api.getBlob(url);
-      downloadBlob(
-        blob,
-        mode === 'mensuel'
-          ? `recap_personnel_${period.month}_${period.year}.xlsx`
-          : `recap_personnel_annuel_${period.year}.xlsx`,
-      );
+      const blob = await api.getBlob(`/reports/das1/export?year=${year}`);
+      downloadBlob(blob, `Bulletin_Annuel_${year}.xlsx`);
       setPendingExport(false);
     } catch (e: any) {
-      setLoadError(e?.message || "Échec de l'export");
+      setError(e?.message || "Échec de l'export");
     } finally {
       setExporting(false);
     }
@@ -196,327 +125,297 @@ export default function RecapPersonnelPage() {
 
   const handlePrint = () => window.print();
 
+  const bulletins = declaration?.bulletins ?? [];
+
+  // Recherche par nom — insensible à la casse et aux accents.
+  const filteredBulletins = search.trim()
+    ? bulletins.filter((b) => normalizeSearch(b.employeeName).includes(normalizeSearch(search)))
+    : bulletins;
+
+  // KPI de la page — toujours basés sur l'exercice entier, pas sur la recherche.
+  const totalMontantEspeces = bulletins.reduce((s, b) => s + b.montantEspeces, 0);
+  const totalIrpp = bulletins.reduce((s, b) => s + b.irppRetenu, 0);
+  const totalIndemnites = bulletins.reduce((s, b) => s + b.totalIndemnitesNonImposables, 0);
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 print:bg-white print:p-0">
+    <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6 print:bg-white print:p-0">
       {/* ── En-tête ─────────────────────────────────────────────────────── */}
       <div className="mb-6 print:hidden">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push(bp('/rapports'))}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-slate-500" />
+              <ArrowLeft className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
-            <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
-              <Users className="w-5 h-5 text-white" />
+            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
+              <FileSpreadsheet className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white">
-                Récapitulatif du Personnel
+              <h1 className="text-lg font-bold text-[var(--text)]">
+                Bulletin Annuel — Bulletin Individuel DAS
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Brut, charges, indemnités et retenues — mensuel &amp; annuel
+              <p className="text-sm text-[var(--text-muted)]">
+                Modèle officiel DGI · un bulletin par salarié
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMode('mensuel')}
-              className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5 ${
-                mode === 'mensuel'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              <CalendarDays className="w-4 h-4" /> Mensuel
-            </button>
-            <button
-              onClick={() => setMode('annuel')}
-              className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5 ${
-                mode === 'annuel'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              <CalendarRange className="w-4 h-4" /> Annuel
-            </button>
-          </div>
         </div>
 
-        {/* ── Sélecteurs période ────────────────────────────────────────── */}
         <div className="mt-4 flex items-center gap-3 flex-wrap">
-          {mode === 'mensuel' && (
-            <div className="relative">
-              <select
-                value={period.month}
-                onChange={(e) => setPeriod((p) => ({ ...p, month: Number(e.target.value) }))}
-                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-              >
-                {MONTHS.map((m, i) => (
-                  <option key={m} value={i + 1}>{m}</option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
-            </div>
-          )}
           <div className="relative">
             <select
-              value={period.year}
-              onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) }))}
-              className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
             >
               {YEARS.map((y) => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
-            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
           </div>
+
+          <button
+            onClick={() => loadDeclaration(year)}
+            className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
+            title="Rafraîchir"
+          >
+            <RefreshCw className="w-4 h-4 text-[var(--text-muted)]" />
+          </button>
         </div>
 
-        <RapportsSubNav active="/rapports/recap-personnel" />
+        <RapportsSubNav active="/rapports/recap-bulletins-annuel" />
 
-        {loadError && (
+        {error && (
           <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
             <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700 dark:text-red-300">{loadError}</p>
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         )}
       </div>
 
-      {isLoading ? (
+      {loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+          <Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" />
         </div>
-      ) : !current || rows.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 border border-slate-200 dark:border-slate-700/60 text-center text-slate-500 dark:text-slate-400">
-          Aucun bulletin trouvé pour cette période.
-        </div>
-      ) : (
+      ) : declaration && bulletins.length > 0 ? (
         <>
-          {/* ── Indicateurs ─────────────────────────────────────────────── */}
+          {/* ── Carte entreprise ──────────────────────────────────────── */}
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 p-5 mb-4 shadow-sm print:shadow-none print:border-black">
+            <p className="font-semibold text-[var(--text)]">{declaration.companyName}</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              {declaration.companyActivity ? `${declaration.companyActivity} · ` : ''}
+              {declaration.companyAddress}
+              {declaration.companyCity ? `, ${declaration.companyCity}` : ''}
+              {declaration.companyPhone ? ` · Tél. ${declaration.companyPhone}` : ''}
+            </p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {bulletins.length} bulletin{bulletins.length > 1 ? 's' : ''} individuel
+              {bulletins.length > 1 ? 's' : ''} — Exercice {year}
+            </p>
+          </div>
+
+          {/* ── Indicateurs ───────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Salariés payés</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
-                  {effectifPaye} / {rows.length}
-                </p>
+                <p className="text-xs text-[var(--text-muted)]">Employés inclus</p>
+                <p className="text-lg font-bold text-[var(--text)]">{bulletins.length}</p>
+                <p className="text-[11px] text-[var(--text-muted)]">CDD / CDI uniquement</p>
               </div>
-              <Users className="w-5 h-5 text-blue-500" />
+              <Users className="w-5 h-5 text-[var(--brand)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Masse salariale brute</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">{fmt(totals?.salBrut)} F</p>
+                <p className="text-xs text-[var(--text-muted)]">Masse salariale (espèces)</p>
+                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalMontantEspeces)} F</p>
               </div>
               <Wallet className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Charges &amp; retenues (CNSS+IRPP+TOL+Dépt)</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">{fmt(totalCharges)} F</p>
+                <p className="text-xs text-[var(--text-muted)]">IRPP retenu cumulé</p>
+                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalIrpp)} F</p>
               </div>
               <Landmark className="w-5 h-5 text-red-500" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Net à payer</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">{fmt(totals?.netAPayer)} F</p>
+                <p className="text-xs text-[var(--text-muted)]">Indemnités non imposables</p>
+                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalIndemnites)} F</p>
               </div>
-              <TrendingDown className="w-5 h-5 text-violet-500" />
+              <ShieldCheck className="w-5 h-5 text-[var(--accent-2)]" />
             </div>
           </div>
 
-          {/* ── Bandeau titre + légende ───────────────────────────────── */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden print:shadow-none print:border-black">
-            <div className="flex items-center justify-between px-6 pt-5 flex-wrap gap-3">
-              <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">
-                  {mode === 'mensuel'
-                    ? `${MONTHS[period.month - 1]} ${period.year}`
-                    : `Récapitulatif annuel ${period.year}`}
-                </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {rows.length} employé{rows.length > 1 ? 's' : ''}
-                </p>
-              </div>
-              {hasEcart && (
-                <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-3 py-1.5 rounded-lg">
-                  <Info className="w-3.5 h-3.5" />
-                  Certains employés ont d&apos;autres retenues (prêt, etc.) non détaillées ici
-                </div>
-              )}
-            </div>
+          {/* ── Recherche ─────────────────────────────────────────────── */}
+          <div className="relative mb-4 print:hidden">
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un employé par nom..."
+              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] outline-none focus:ring-2 focus:ring-[var(--brand)]/40"
+            />
+          </div>
 
-            <div className="flex items-center gap-4 px-6 pt-3 text-xs text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm bg-sky-100 dark:bg-sky-500/20 border border-sky-300 dark:border-sky-500/40 inline-block" />
-                En congé (normal, pas de bulletin)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm bg-amber-100 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40 inline-block" />
-                Sans bulletin ni congé (à vérifier)
-              </span>
-            </div>
-
-            {/* ── Tableau ─────────────────────────────────────────────── */}
-            <div className="overflow-x-auto mt-4">
-              <table className="w-full text-sm whitespace-nowrap">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-500 dark:text-slate-400">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold sticky left-0 bg-slate-50 dark:bg-slate-800/60 z-10">Nom</th>
-                    <th className="px-4 py-3 text-right font-semibold">Sal. Brut</th>
-                    <th className="px-4 py-3 text-right font-semibold">CNSS 4%</th>
-                    <th className="px-4 py-3 text-right font-semibold">IRPP</th>
-                    <th className="px-4 py-3 text-right font-semibold">Reste 1</th>
-                    {indemniteColumns.map((c) => (
-                      <th key={c.key} className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{c.label}</th>
-                    ))}
-                    <th className="px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">S/Total</th>
-                    <th className="px-4 py-3 text-right font-semibold text-red-500">Avance</th>
-                    <th className="px-4 py-3 text-right font-semibold text-red-500">Pharmacie</th>
-                    <th className="px-4 py-3 text-right font-semibold text-red-500">TOL</th>
-                    <th className="px-4 py-3 text-right font-semibold text-red-500">Taxe Dpt</th>
-                    <th className="px-4 py-3 text-right font-semibold text-red-500">Autres</th>
-                    <th className="px-4 py-3 text-right font-semibold text-blue-600 dark:text-blue-400">Net à payer</th>
+          {/* ── Tableau des bulletins ─────────────────────────────────── */}
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 overflow-hidden shadow-sm print:shadow-none print:border-black">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[var(--surface-2)]/60 text-left text-xs text-[var(--text-muted)]">
+                    <th className="px-4 py-3 font-semibold">N°</th>
+                    <th className="px-4 py-3 font-semibold">NIU</th>
+                    <th className="px-4 py-3 font-semibold">Nom &amp; prénom</th>
+                    <th className="px-4 py-3 font-semibold">Emploi</th>
+                    <th className="px-4 py-3 font-semibold">Adresse</th>
+                    <th className="px-4 py-3 font-semibold">Téléphone</th>
+                    <th className="px-4 py-3 font-semibold">Situation</th>
+                    <th className="px-4 py-3 font-semibold text-center">Enf.</th>
+                    <th className="px-4 py-3 font-semibold">Période</th>
+                    <th className="px-4 py-3 font-semibold text-center">Présence</th>
+                    <th className="px-4 py-3 font-semibold text-center">Congé</th>
+                    <th className="px-4 py-3 font-semibold text-right">Montant espèces</th>
+                    <th className="px-4 py-3 font-semibold text-right">Avant. logement</th>
+                    <th className="px-4 py-3 font-semibold text-right">Avant. autres</th>
+                    <th className="px-4 py-3 font-semibold text-right">Imposable 80%</th>
+                    <th className="px-4 py-3 font-semibold text-right">IRPP retenu</th>
+                    <th className="px-4 py-3 font-semibold text-right">Taxe Dépt</th>
+                    <th className="px-4 py-3 font-semibold text-right">TOL retenu</th>
+                    <th className="px-4 py-3 font-semibold">Indemnités</th>
+                    <th className="px-4 py-3 font-semibold text-right">Total indem.</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {rows.map((r) => {
-                    const isAbsent = r.status !== 'PAYE';
-                    return (
-                      <tr key={r.employeeId} className={`transition-colors ${rowClasses(r.status)}`}>
-                        <td className="px-4 py-3 sticky left-0 z-10" style={{ background: 'inherit' }}>
-                          <div className="font-medium text-slate-900 dark:text-white">{r.employeeName}</div>
-                          {r.status === 'CONGE' && (
-                            <div className="text-[11px] text-sky-600 dark:text-sky-400 font-medium">
-                              {r.leaveLabel ?? 'En congé'}
-                            </div>
-                          )}
-                          {r.status === 'SANS_PAIE' && (
-                            <div className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                              Aucun bulletin ni congé — à vérifier
-                            </div>
-                          )}
-                          {mode === 'annuel' && !!r.moisEnConge?.length && (
-                            <div className="text-[10px] text-sky-500 mt-0.5">
-                              Congé : {r.moisEnConge.map((m) => MONTHS_SHORT[m - 1]).join(', ')}
-                            </div>
-                          )}
-                          {mode === 'annuel' && !!r.moisSansPaie?.length && (
-                            <div className="text-[10px] text-amber-500 mt-0.5">
-                              Sans paie : {r.moisSansPaie.map((m) => MONTHS_SHORT[m - 1]).join(', ')}
-                            </div>
-                          )}
-                        </td>
-                        {isAbsent && mode === 'mensuel' ? (
-                          <td colSpan={4 + indemniteColumns.length} className="px-4 py-3 text-center text-slate-400 italic text-xs">
-                            Pas de bulletin ce mois-ci
-                          </td>
-                        ) : (
-                          <>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.salBrut)}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.cnss)}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                              {fmt(r.irpp)}
-                              <FiscalBadge category={r.fiscalCategory} />
-                            </td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.reste1)}</td>
-                            {indemniteColumns.map((c) => (
-                              <td key={c.key} className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400">
-                                {fmt(r.indemnites[c.key])}
-                              </td>
-                            ))}
-                          </>
-                        )}
-                        <td className="px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">{fmt(r.sousTotal)}</td>
-                        <td className="px-4 py-3 text-right text-red-500">{fmt(r.avance)}</td>
-                        <td className="px-4 py-3 text-right text-red-500">{fmt(r.pharmacie)}</td>
-                        <td className="px-4 py-3 text-right text-red-500">{fmt(r.tol)}</td>
-                        <td className="px-4 py-3 text-right text-red-500">{fmt(r.taxeDept)}</td>
-                        <td className="px-4 py-3 text-right text-red-500">{fmt(r.autresTaxes)}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-blue-600 dark:text-blue-400">{fmt(r.netAPayer)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                {totals && (
-                  <tfoot className="bg-slate-50 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <td className="px-4 py-3 sticky left-0 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white">TOTAL</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.salBrut)}</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.cnss)}</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white whitespace-nowrap">
-                        {fmt(totals.irpp)}
-                        <FiscalBadge category="MIXTE" />
+                <tbody className="divide-y divide-[var(--border)]">
+                  {filteredBulletins.map((b) => (
+                    <tr key={b.employeeId} className="hover:bg-[var(--surface-2)]/40">
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{b.ordre}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)] whitespace-nowrap">
+                        {b.niu || '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.reste1)}</td>
-                      {indemniteColumns.map((c) => (
-                        <td key={c.key} className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400">
-                          {fmt(totals.indemnites[c.key])}
-                        </td>
-                      ))}
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.sousTotal)}</td>
-                      <td className="px-4 py-3 text-right text-red-500">{fmt(totals.avance)}</td>
-                      <td className="px-4 py-3 text-right text-red-500">{fmt(totals.pharmacie)}</td>
-                      <td className="px-4 py-3 text-right text-red-500">{fmt(totals.tol)}</td>
-                      <td className="px-4 py-3 text-right text-red-500">{fmt(totals.taxeDept)}</td>
-                      <td className="px-4 py-3 text-right text-red-500">{fmt(totals.autresTaxes)}</td>
-                      <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400">{fmt(totals.netAPayer)}</td>
+                      <td className="px-4 py-3 font-medium text-[var(--text)] whitespace-nowrap">
+                        {b.employeeName}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text)]">{b.position}</td>
+                      <td className="px-4 py-3 text-[var(--text)]">
+                        {b.address}
+                        {b.city ? `, ${b.city}` : ''}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text)] whitespace-nowrap">
+                        {b.phone || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text)] whitespace-nowrap">
+                        {b.maritalStatusLabel}
+                      </td>
+                      <td className="px-4 py-3 text-center text-[var(--text)]">
+                        {b.numberOfChildren}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text)] whitespace-nowrap">
+                        {b.periodFrom} → {b.periodTo}
+                      </td>
+                      <td className="px-4 py-3 text-center text-[var(--text)]">
+                        {b.moisPresence}
+                      </td>
+                      <td className="px-4 py-3 text-center text-[var(--text)]">
+                        {b.moisConge > 0 ? b.moisConge : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
+                        {fmt(b.montantEspeces)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
+                        {b.avantageNatureLogement > 0 ? fmt(b.avantageNatureLogement) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
+                        {b.avantageNatureAutres > 0 ? fmt(b.avantageNatureAutres) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
+                        {fmt(b.montantImposable80)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-[var(--text)]">
+                        {fmt(b.irppRetenu)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
+                        {b.taxeDepartementale > 0 ? fmt(b.taxeDepartementale) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
+                        {b.tolRetenu > 0 ? fmt(b.tolRetenu) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--text)] whitespace-nowrap">
+                        {b.indemnitesNonImposables.length === 0
+                          ? '—'
+                          : b.indemnitesNonImposables.map((l) => l.label).join(', ')}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-[var(--text)]">
+                        {fmt(b.totalIndemnitesNonImposables)}
+                      </td>
                     </tr>
-                  </tfoot>
-                )}
+                  ))}
+                  {filteredBulletins.length === 0 && (
+                    <tr>
+                      <td colSpan={19} className="px-4 py-10 text-center text-[var(--text-muted)]">
+                        Aucun employé ne correspond à &quot;{search}&quot;.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
-            <div className="h-5" />
           </div>
 
-          {/* ── Actions ─────────────────────────────────────────────────── */}
+          {/* ── Actions ───────────────────────────────────────────────── */}
           <div className="mt-5 flex items-center gap-3 print:hidden">
             <button
               onClick={() => setPendingExport(true)}
-              disabled={exporting || !current}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+              disabled={exporting || bulletins.length === 0}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
             >
               {exporting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Download className="w-4 h-4" />
               )}
-              Exporter Excel
+              Exporter le Bulletin Annuel (.xlsx)
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
             >
               <Printer className="w-4 h-4" />
               Imprimer
             </button>
           </div>
         </>
+      ) : (
+        <div className="bg-[var(--surface)] rounded-2xl p-12 border border-[var(--border)]/60 text-center text-[var(--text-muted)]">
+          Aucun bulletin trouvé pour {year}.
+        </div>
       )}
 
       {/* ── Modale de revue avant export ────────────────────────────────── */}
       {pendingExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden">
-            <div className="p-5 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-xl shrink-0">
-                <ShieldCheck className="w-5 h-5 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)]/60 overflow-hidden">
+            <div className="p-5 flex items-start gap-3 border-b border-[var(--border)]">
+              <div className="p-2 bg-[var(--brand-soft)] rounded-xl shrink-0">
+                <ShieldCheck className="w-5 h-5 text-[var(--brand)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">
-                  Une dernière vérification avant diffusion
+                <h3 className="font-semibold text-[var(--text)]">
+                  Une dernière vérification avant l'envoi
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {mode === 'mensuel' ? `${MONTHS[period.month - 1]} ${period.year}` : `Année ${period.year}`}
+                <p className="text-xs text-[var(--text-muted)]">
+                  Exercice {year} · {bulletins.length} employé{bulletins.length > 1 ? 's' : ''}
                 </p>
               </div>
               <button
                 onClick={() => setPendingExport(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 aria-label="Fermer"
               >
                 <X className="w-4 h-4" />
@@ -524,31 +423,33 @@ export default function RecapPersonnelPage() {
             </div>
 
             <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Le fichier reprend les bulletins validés de la période — brut,
-                charges, indemnités, net à payer. Toutes les cellules restent
-                modifiables à la main une fois ouvertes dans Excel.
+              <p className="text-sm text-[var(--text)] leading-relaxed">
+                Le fichier reprend fidèlement ce que KonzaRH a enregistré sur la
+                paie de l'année — brut, IRPP, indemnités, congés. L'essentiel
+                du travail est fait.
               </p>
-              {hasEcart && (
-                <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed">
-                  Certains employés ont d'autres retenues (prêt, etc.) non
-                  détaillées dans ce tableau — pensez à les vérifier avant de
-                  diffuser le fichier.
-                </p>
-              )}
+              <p className="text-sm text-[var(--text)] leading-relaxed">
+                Une fois téléchargé, avant de le déposer aux impôts, ouvrez-le
+                et vérifiez chaque ligne — en particulier les{' '}
+                <strong className="text-[var(--text)]">avantages en nature</strong>{' '}
+                (logement, autres — jamais suivis automatiquement) et les{' '}
+                <strong className="text-[var(--text)]">informations personnelles</strong>{' '}
+                d'un employé qui aurait eu un changement récent. Vous seul(e) avez
+                le dernier mot sur ce qui part.
+              </p>
             </div>
 
             <div className="p-5 pt-0 flex items-center gap-3">
               <button
                 onClick={() => setPendingExport(false)}
-                className="flex-1 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl hover:bg-[var(--surface-2)] transition-colors"
               >
                 Revoir avant
               </button>
               <button
                 onClick={runExport}
                 disabled={exporting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
               >
                 {exporting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

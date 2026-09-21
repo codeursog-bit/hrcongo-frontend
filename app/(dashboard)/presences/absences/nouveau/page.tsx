@@ -18,6 +18,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
+import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
 
@@ -89,6 +90,31 @@ export default function NouvelleAbsencePage() {
   const [desiredDays, setDesiredDays] = useState('');
   const [isCalculatingReturn, setIsCalculatingReturn] = useState(false);
 
+  // ✅ Modèle STANDARD : catalogue de motifs conventionnels propre à
+  // l'entreprise, avec un nombre de jours fixe (remplace le choix
+  // type/sous-type/raison libre + double date de la version DEFAULT).
+  const isStandard = company?.documentTemplate === 'STANDARD';
+  const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
+  const [selectedMotifKey, setSelectedMotifKey] = useState('');
+
+  useEffect(() => {
+    if (!isStandard) return;
+    (async () => {
+      try {
+        const list: any = await api.get('/absence-requests/motifs');
+        setMotifCatalog(list || []);
+      } catch (e) { console.error('Erreur chargement catalogue de motifs', e); }
+    })();
+  }, [isStandard]);
+
+  const selectedMotif = motifCatalog.find(m => m.key === selectedMotifKey);
+  const standardEndDate = useMemo(() => {
+    if (!startDate || !selectedMotif) return '';
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + (selectedMotif.days - 1));
+    return d.toISOString().slice(0, 10);
+  }, [startDate, selectedMotif]);
+
   useEffect(() => {
     if (!onBehalf) return;
     (async () => {
@@ -151,15 +177,23 @@ export default function NouvelleAbsencePage() {
 
   const workingDays = useMemo(() => workingDaysBetween(startDate, endDate), [startDate, endDate]);
 
-  const canSubmit = type && subType && startDate && endDate && reason.trim().length >= 3 && workingDays > 0
-    && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
+  const canSubmit = isStandard
+    ? !!selectedMotifKey && !!startDate && (!onBehalf || !!selectedEmployeeId) && !isSubmitting
+    : type && subType && startDate && endDate && reason.trim().length >= 3 && workingDays > 0
+      && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setIsSubmitting(true);
     setError(null);
     try {
-      await api.post('/absence-requests', {
+      await api.post('/absence-requests', isStandard ? {
+        employeeId: onBehalf ? selectedEmployeeId : undefined,
+        motifKey: selectedMotifKey,
+        startDate,
+        isPaid,
+        attachmentUrl: uploadedUrl || undefined,
+      } : {
         employeeId: onBehalf ? selectedEmployeeId : undefined,
         type,
         subType,
@@ -175,6 +209,33 @@ export default function NouvelleAbsencePage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const standardPreviewData = {
+    company: {
+      legalName: company?.legalName,
+      tradeName: company?.tradeName,
+      logo: company?.logo,
+      address: company?.address,
+      city: company?.city,
+      country: company?.country,
+      phone: company?.phone,
+      email: company?.email,
+      cachetUrl: company?.cachetUrl,
+      documentFooterText: company?.documentFooterText,
+    },
+    employee: {
+      firstName: selectedTargetEmployee?.firstName || '',
+      lastName: selectedTargetEmployee?.lastName || '',
+      employeeNumber: selectedTargetEmployee?.employeeNumber,
+      position: selectedTargetEmployee?.position,
+    },
+    catalog: motifCatalog,
+    motifKey: selectedMotifKey || undefined,
+    startDate: startDate || new Date(),
+    endDate: standardEndDate || startDate || new Date(),
+    status: 'PENDING',
+    requestedAt: new Date(),
   };
 
   const previewData = {
@@ -297,6 +358,68 @@ export default function NouvelleAbsencePage() {
             </div>
           )}
 
+          {isStandard ? (
+            <>
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Motif de l&apos;absence</label>
+                <p className="text-xs text-[var(--text-muted)] mb-3">Le nombre de jours est fixé par la convention de votre entreprise — pas besoin de le calculer.</p>
+                <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                  {motifCatalog.length === 0 && (
+                    <p className="text-sm text-[var(--text-muted)] italic">Aucun motif configuré pour votre entreprise — contactez les RH.</p>
+                  )}
+                  {motifCatalog.map(m => (
+                    <button
+                      key={m.key}
+                      onClick={() => setSelectedMotifKey(m.key)}
+                      className={`w-full text-left px-3.5 py-2.5 rounded-xl border-2 flex items-center justify-between transition-all ${
+                        selectedMotifKey === m.key ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+                      }`}
+                    >
+                      <span className="text-sm font-medium text-[var(--text)]">{m.label}</span>
+                      <span className="text-xs text-[var(--text-muted)] shrink-0 ml-2">{m.days} j.</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
+                  <div className="relative">
+                    <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  </div>
+                </div>
+                {selectedMotif && startDate && (
+                  <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
+                    <Info size={14} /> Reprise le {new Date(standardEndDate).toLocaleDateString('fr-FR')} — {selectedMotif.days} jour{selectedMotif.days > 1 ? 's' : ''} conventionnel{selectedMotif.days > 1 ? 's' : ''}
+                  </div>
+                )}
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
+                  <div className="flex items-center gap-2">
+                    <Wallet size={16} className="text-[var(--text-muted)]" />
+                    <span className="text-sm font-medium text-[var(--text)]">Absence payée souhaitée</span>
+                  </div>
+                  <button
+                    onClick={() => setIsPaid(!isPaid)}
+                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+                  >
+                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${isPaid ? 'left-5' : 'left-0.5'}`} />
+                  </button>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Justificatif (optionnel)</label>
+                  <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
+                    <Paperclip size={16} />
+                    {uploading ? 'Envoi en cours…' : uploadedUrl ? 'Justificatif joint ✓' : 'Joindre un certificat / document'}
+                    <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+                  </label>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
             <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Type d&apos;absence</label>
             <div className="grid grid-cols-1 gap-2">
@@ -457,6 +580,8 @@ export default function NouvelleAbsencePage() {
               </label>
             </div>
           </div>
+            </>
+          )}
 
           {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
 
@@ -477,7 +602,11 @@ export default function NouvelleAbsencePage() {
             <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3">Aperçu du document</p>
             <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto max-h-[85vh] border border-[var(--border)]">
               <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
-                <AbsenceRequestPrintable data={previewData as any} />
+                {isStandard ? (
+                  <StandardAbsenceRequestForm data={standardPreviewData as any} />
+                ) : (
+                  <AbsenceRequestPrintable data={previewData as any} />
+                )}
               </div>
             </div>
           </div>

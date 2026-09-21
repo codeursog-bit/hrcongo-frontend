@@ -4,12 +4,17 @@
 // ===========================
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Wallet, Loader2 } from 'lucide-react';
+import { Check, Wallet, Loader2, RotateCcw } from 'lucide-react';
 
 interface SelectionStepProps {
   employees: any[];
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
+  workDays: number;                       // jours théoriques du mois (borne max)
+  autoDays: Record<string, number>;       // jours calculés depuis les présences
+  daysInput: Record<string, string>;      // jours saisis à la main
+  onDaysChange: (id: string, value: string) => void;
+  onDaysReset: (id: string) => void;
   estimation: {
     count: number;
     gross: number;
@@ -19,7 +24,11 @@ interface SelectionStepProps {
   isLoadingEstimation?: boolean; // ✅ Nouveau prop
 }
 
-export default function SelectionStep({ employees, selectedIds, onSelectionChange, estimation, isLoadingEstimation }: SelectionStepProps) {
+export default function SelectionStep({
+  employees, selectedIds, onSelectionChange,
+  workDays, autoDays, daysInput, onDaysChange, onDaysReset,
+  estimation, isLoadingEstimation,
+}: SelectionStepProps) {
   const fmt = (val: number) => (val || 0).toLocaleString('fr-FR');
 
   return (
@@ -75,9 +84,49 @@ export default function SelectionStep({ employees, selectedIds, onSelectionChang
                     {emp.position && <p className="text-xs text-gray-400">{emp.position}</p>}
                   </div>
                 </div>
-                <span className="font-mono text-xs font-bold text-gray-600">
-                  {Number(emp.baseSalary || 0).toLocaleString()} F
-                </span>
+                <div className="flex items-center gap-3">
+                  {selectedIds.includes(emp.id) && (() => {
+                    const auto = autoDays[emp.id];
+                    const edited = daysInput[emp.id] !== undefined;
+                    const shown = edited ? daysInput[emp.id] : (auto !== undefined ? String(auto) : '');
+                    return (
+                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                        {edited && (
+                          <button
+                            type="button"
+                            title={auto !== undefined ? `Revenir à ${auto} j (présences)` : 'Réinitialiser'}
+                            onClick={() => onDaysReset(emp.id)}
+                            className="p-1 text-amber-500 hover:text-amber-600"
+                          >
+                            <RotateCcw size={12} />
+                          </button>
+                        )}
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min={0}
+                          max={workDays}
+                          step={0.5}
+                          value={shown}
+                          placeholder="…"
+                          onChange={e => {
+                            const v = e.target.value;
+                            const n = Number(v);
+                            // borne haute : jamais plus que les jours théoriques
+                            onDaysChange(emp.id, v !== '' && n > workDays ? String(workDays) : (n < 0 ? '0' : v));
+                          }}
+                          className={`w-16 px-2 py-1 text-right font-mono text-xs font-bold rounded-lg border bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                            edited ? 'border-amber-400' : 'border-[var(--border)]'
+                          }`}
+                        />
+                        <span className="text-xs text-gray-400">j</span>
+                      </div>
+                    );
+                  })()}
+                  <span className="font-mono text-xs font-bold text-gray-600">
+                    {Number(emp.baseSalary || 0).toLocaleString()} F
+                  </span>
+                </div>
               </div>
             ))}
           </div>

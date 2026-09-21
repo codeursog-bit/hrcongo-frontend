@@ -20,7 +20,7 @@ import EffectifMonthlyList from '@/components/reports/EffectifMonthlyList'; // �
 import { FancySelect } from '@/components/ui/FancySelect'; // 🆕 filtres du rapport
 import { NATIONALITIES } from '@/lib/nationalities'; // 🆕 filtre nationalité
 
-const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+const COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669'];
 
 interface Metric {
   value: number;
@@ -189,7 +189,7 @@ export default function EmployeeAnalyticsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-sky-500" size={48}/>
+        <Loader2 className="animate-spin text-[var(--brand)]" size={48}/>
       </div>
     );
   }
@@ -204,15 +204,15 @@ export default function EmployeeAnalyticsPage() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.push(bp('/rapports'))} 
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-gray-500"/>
+            <ArrowLeft size={20} className="text-[var(--text-muted)]"/>
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[var(--text)]">
               Analyse des Effectifs
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               Répartition, tendances et pyramide des âges
             </p>
           </div>
@@ -223,25 +223,25 @@ export default function EmployeeAnalyticsPage() {
       <RapportsSubNav active="/rapports/effectifs" />
 
       {/* 🆕 FILTRES DU RAPPORT — repliable pour ne pas surcharger la page */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
         <button
           onClick={() => setFiltersOpen((o) => !o)}
           className="w-full flex items-center justify-between px-5 py-4"
         >
-          <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-            <SlidersHorizontal size={16} className="text-sky-500" />
+          <div className="flex items-center gap-2 text-sm font-bold text-[var(--text)]">
+            <SlidersHorizontal size={16} className="text-[var(--brand)]" />
             Filtres du rapport
-            <span className="text-xs font-normal text-gray-400">
+            <span className="text-xs font-normal text-[var(--text-muted)]">
               — Année {reportFilters.year}
               {reportFilters.department !== 'Tous' ? ` · ${reportFilters.department}` : ''}
               {reportFilters.contractType !== 'Tous' ? ` · ${reportFilters.contractType}` : ''}
               {reportFilters.nationality !== 'Tous' ? ` · ${reportFilters.nationality}` : ''}
             </span>
           </div>
-          {filtersOpen ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+          {filtersOpen ? <ChevronUp size={18} className="text-[var(--text-muted)]" /> : <ChevronDown size={18} className="text-[var(--text-muted)]" />}
         </button>
         {filtersOpen && (
-          <div className="px-5 pb-5 flex flex-wrap items-end gap-3 border-t border-gray-100 dark:border-gray-700 pt-4">
+          <div className="px-5 pb-5 flex flex-wrap items-end gap-3 border-t border-[var(--border)] pt-4">
             <div className="w-40">
               <FancySelect
                 label="Année"
@@ -307,28 +307,26 @@ export default function EmployeeAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {data?.metrics?.map((m: Metric, i: number) => {
           const icons = [Users, UserPlus, TrendingDown];
-          const colors = [
-            'from-sky-500 to-blue-600',
-            'from-emerald-500 to-teal-600',
-            'from-red-500 to-pink-600'
-          ];
+          // ✅ 2 teintes (émeraude/ambre) + rouge réservé au 3ᵉ (départs —
+          // vrai indicateur négatif), plus de dégradé
+          const colors = ['bg-[var(--accent-2)]', 'bg-[var(--brand)]', 'bg-red-500'];
           const Icon = icons[i];
 
           return (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
+            <div key={i} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className={`absolute top-0 right-0 w-32 h-32 ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
               
               <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
+                <div className={`w-12 h-12 rounded-xl ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
                   <Icon size={24} />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-3xl font-bold text-[var(--text)] tracking-tight">
                   {m.value}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wide mt-2">
+                <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wide mt-2">
                   {m.label}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{m.sub}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{m.sub}</p>
               </div>
             </div>
           );
@@ -336,14 +334,14 @@ export default function EmployeeAnalyticsPage() {
       </div>
 
       {/* RÉPARTITION PAR DÉPARTEMENT */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+      <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Building2 size={20} className="text-sky-500" />
+            <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
+              <Building2 size={20} className="text-[var(--brand)]" />
               Répartition par Département
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--text-muted)]">
               Effectif et salaire moyen
             </p>
           </div>
@@ -351,7 +349,7 @@ export default function EmployeeAnalyticsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {departments?.map((dept: Department, idx: number) => (
-            <div key={dept.id} className="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-xl hover:shadow-md transition-shadow">
+            <div key={dept.id} className="p-5 bg-[var(--surface-2)]/50 rounded-xl hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div 
@@ -361,30 +359,30 @@ export default function EmployeeAnalyticsPage() {
                     {dept.name[0]}
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-900 dark:text-white">{dept.name}</h4>
-                    <p className="text-xs text-gray-500">{dept.headcount} employé(s)</p>
+                    <h4 className="font-bold text-[var(--text)]">{dept.name}</h4>
+                    <p className="text-xs text-[var(--text-muted)]">{dept.headcount} employé(s)</p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 dark:text-gray-400">Salaire moyen</span>
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">
+                  <span className="text-xs text-[var(--text-muted)]">Salaire moyen</span>
+                  <span className="text-sm font-bold text-[var(--text)]">
                     {(dept.avgSalary / 1000).toFixed(0)}k FCFA
                   </span>
                 </div>
                 
-                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-[var(--surface-2)] rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-sky-500 to-blue-600 transition-all duration-500"
+                    className="h-full bg-[var(--brand)] transition-all duration-500"
                     style={{ 
                       width: `${Math.min(100, (dept.headcount / totalEmployees) * 100)}%` 
                     }}
                   />
                 </div>
 
-                <div className="flex justify-between items-center text-xs text-gray-500">
+                <div className="flex justify-between items-center text-xs text-[var(--text-muted)]">
                   <span>{((dept.headcount / totalEmployees) * 100).toFixed(1)}% de l'effectif</span>
                 </div>
               </div>
@@ -397,11 +395,11 @@ export default function EmployeeAnalyticsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         
         {/* Évolution */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
             Évolution de l'Effectif — {reportFilters.year}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+          <p className="text-sm text-[var(--text-muted)] mb-5">
             Comparé à {reportFilters.year - 1} (pointillés)
           </p>
           <div className="h-[350px]">
@@ -418,8 +416,8 @@ export default function EmployeeAnalyticsPage() {
                   <AreaChart data={merged}>
                     <defs>
                       <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -438,7 +436,7 @@ export default function EmployeeAnalyticsPage() {
                       type="monotone" 
                       dataKey="total" 
                       name={String(reportFilters.year)}
-                      stroke="#0EA5E9" 
+                      stroke="#10B981" 
                       strokeWidth={3}
                       fill="url(#colorTotal)" 
                     />
@@ -446,7 +444,7 @@ export default function EmployeeAnalyticsPage() {
                       type="monotone"
                       dataKey="totalPrevYear"
                       name={String(reportFilters.year - 1)}
-                      stroke="#94A3B8"
+                      stroke="var(--text-muted)"
                       strokeWidth={2}
                       strokeDasharray="5 5"
                       fill="none"
@@ -459,11 +457,11 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* 🆕 Historique pluriannuel — combien on avait chaque année */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
             Évolution sur 5 ans
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+          <p className="text-sm text-[var(--text-muted)] mb-5">
             Effectif au 31 décembre de chaque année (aujourd'hui pour l'année en cours)
           </p>
           <div className="h-[350px]">
@@ -482,7 +480,7 @@ export default function EmployeeAnalyticsPage() {
                 />
                 <Bar dataKey="total" name="Effectif" radius={[8, 8, 0, 0]}>
                   {(data?.yearlyHeadcount || []).map((yh, idx) => (
-                    <Cell key={idx} fill={yh.year === reportFilters.year ? '#0EA5E9' : '#93C5FD'} />
+                    <Cell key={idx} fill={yh.year === reportFilters.year ? '#10B981' : '#A7F3D0'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -491,11 +489,11 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* Pyramide des Âges */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
             Pyramide des Âges
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+          <p className="text-sm text-[var(--text-muted)] mb-5">
             Femmes à gauche, hommes à droite — par tranche d'âge
           </p>
           <div className="h-[350px]">
@@ -530,17 +528,17 @@ export default function EmployeeAnalyticsPage() {
                       }} 
                     />
                     <Legend />
-                    <ReferenceLine x={0} stroke="#64748b" strokeWidth={2} />
+                    <ReferenceLine x={0} stroke="var(--text-muted)" strokeWidth={2} />
                     <Bar 
                       dataKey="femaleNeg" 
                       name="Femmes" 
-                      fill="#EC4899" 
+                      fill="#F59E0B" 
                       radius={[8, 0, 0, 8]}
                     />
                     <Bar 
                       dataKey="male" 
                       name="Hommes" 
-                      fill="#0EA5E9" 
+                      fill="#10B981" 
                       radius={[0, 8, 8, 0]}
                     />
                   </BarChart>
@@ -551,11 +549,11 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* 🆕 Pyramide de l'Ancienneté */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-1">
             Pyramide de l'Ancienneté
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+          <p className="text-sm text-[var(--text-muted)] mb-5">
             Femmes à gauche, hommes à droite — depuis combien de temps l'effectif est-il en poste ?
           </p>
           <div className="h-[300px]">
@@ -590,9 +588,9 @@ export default function EmployeeAnalyticsPage() {
                       }} 
                     />
                     <Legend />
-                    <ReferenceLine x={0} stroke="#64748b" strokeWidth={2} />
+                    <ReferenceLine x={0} stroke="var(--text-muted)" strokeWidth={2} />
                     <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
-                    <Bar dataKey="male"      name="Hommes" fill="#8B5CF6" radius={[0, 8, 8, 0]} />
+                    <Bar dataKey="male"      name="Hommes" fill="#10B981" radius={[0, 8, 8, 0]} />
                   </BarChart>
                 );
               })()}
@@ -601,21 +599,21 @@ export default function EmployeeAnalyticsPage() {
         </div>
 
         {/* 🆕 Veille Départs à la Retraite */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
               <Hourglass size={20} className="text-amber-500" />
               Veille Départs à la Retraite
             </h3>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+          <p className="text-sm text-[var(--text-muted)] mb-5">
             Âge légal de départ : {data?.retirementWatch?.legalRetirementAge ?? 60} ans
           </p>
 
           {(!data?.retirementWatch || (data.retirementWatch.critical.length === 0 && data.retirementWatch.upcoming.length === 0)) ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <CheckCircle2 size={32} className="text-emerald-400" />
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Aucun départ à la retraite à anticiper dans les 5 prochaines années.</p>
+              <p className="text-sm text-[var(--text-muted)] mt-3">Aucun départ à la retraite à anticiper dans les 5 prochaines années.</p>
             </div>
           ) : (
             <div className="space-y-5 max-h-[320px] overflow-y-auto pr-1">
@@ -628,12 +626,12 @@ export default function EmployeeAnalyticsPage() {
                     {data.retirementWatch.critical.map((e: RetirementCandidate) => (
                       <div key={e.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl">
                         <div>
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">{e.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{e.position}{e.department ? ` · ${e.department}` : ''}</p>
+                          <p className="text-sm font-bold text-[var(--text)]">{e.name}</p>
+                          <p className="text-xs text-[var(--text-muted)]">{e.position}{e.department ? ` · ${e.department}` : ''}</p>
                         </div>
                         <div className="text-right shrink-0 ml-3">
                           <p className="text-sm font-black text-red-600 dark:text-red-400">{e.yearsRemaining === 0 ? 'Éligible' : `${e.yearsRemaining} an${e.yearsRemaining > 1 ? 's' : ''}`}</p>
-                          <p className="text-[11px] text-gray-400">{e.age} ans</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">{e.age} ans</p>
                         </div>
                       </div>
                     ))}
@@ -650,12 +648,12 @@ export default function EmployeeAnalyticsPage() {
                     {data.retirementWatch.upcoming.map((e: RetirementCandidate) => (
                       <div key={e.id} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 rounded-xl">
                         <div>
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">{e.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{e.position}{e.department ? ` · ${e.department}` : ''}</p>
+                          <p className="text-sm font-bold text-[var(--text)]">{e.name}</p>
+                          <p className="text-xs text-[var(--text-muted)]">{e.position}{e.department ? ` · ${e.department}` : ''}</p>
                         </div>
                         <div className="text-right shrink-0 ml-3">
                           <p className="text-sm font-black text-amber-600 dark:text-amber-400">{e.yearsRemaining} ans</p>
-                          <p className="text-[11px] text-gray-400">{e.age} ans</p>
+                          <p className="text-[11px] text-[var(--text-muted)]">{e.age} ans</p>
                         </div>
                       </div>
                     ))}
@@ -669,14 +667,14 @@ export default function EmployeeAnalyticsPage() {
 
       {/* 🆕 RÉPARTITIONS AVANCÉES */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Répartitions Avancées</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Contrat, nationalité et catégorie conventionnelle</p>
+        <h3 className="text-lg font-bold text-[var(--text)] mb-1">Répartitions Avancées</h3>
+        <p className="text-sm text-[var(--text-muted)] mb-4">Contrat, nationalité et catégorie conventionnelle</p>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
           {/* Type de contrat */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h4 className="text-base font-bold text-gray-900 dark:text-white mb-5">Répartition par Type de Contrat</h4>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+            <h4 className="text-base font-bold text-[var(--text)] mb-5">Répartition par Type de Contrat</h4>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart layout="vertical" data={data?.byContractType || []} margin={{ left: 10, right: 20 }}>
@@ -695,22 +693,22 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* 🆕 Nationalité — détail réel par pays, cliquable pour voir la liste */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Globe size={17} className="text-teal-500" /> Répartition par Nationalité
+              <h4 className="text-base font-bold text-[var(--text)] flex items-center gap-2">
+                <Globe size={17} className="text-[var(--brand)]" /> Répartition par Nationalité
               </h4>
             </div>
             {data?.nationalitySummary && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                <strong className="text-gray-900 dark:text-white">{data.nationalitySummary.distinctCount}</strong> nationalité{data.nationalitySummary.distinctCount > 1 ? 's' : ''} différente{data.nationalitySummary.distinctCount > 1 ? 's' : ''} dans l'effectif —{' '}
-                <strong className="text-gray-900 dark:text-white">{data.nationalitySummary.foreignPercentage}%</strong> de salariés étrangers
+              <p className="text-sm text-[var(--text-muted)] mb-4">
+                <strong className="text-[var(--text)]">{data.nationalitySummary.distinctCount}</strong> nationalité{data.nationalitySummary.distinctCount > 1 ? 's' : ''} différente{data.nationalitySummary.distinctCount > 1 ? 's' : ''} dans l'effectif —{' '}
+                <strong className="text-[var(--text)]">{data.nationalitySummary.foreignPercentage}%</strong> de salariés étrangers
                 {data.nationalitySummary.unspecifiedCount > 0 && (
                   <> · {data.nationalitySummary.unspecifiedCount} fiche{data.nationalitySummary.unspecifiedCount > 1 ? 's' : ''} sans nationalité renseignée</>
                 )}
               </p>
             )}
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">Cliquez sur une barre pour voir le détail des employés</p>
+            <p className="text-xs text-[var(--text-muted)] mb-3">Cliquez sur une barre pour voir le détail des employés</p>
             <div style={{ height: Math.max(220, (data?.byNationality?.length || 0) * 34) }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
@@ -743,17 +741,17 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* Regroupement CSP */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <h4 className="text-base font-bold text-gray-900 dark:text-white">Regroupement Socio-Professionnel (CSP)</h4>
+              <h4 className="text-base font-bold text-[var(--text)]">Regroupement Socio-Professionnel (CSP)</h4>
             </div>
             {data?.hasConvention === false ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400 py-10 text-center">
+              <p className="text-sm text-[var(--text-muted)] py-10 text-center">
                 Aucune convention collective configurée pour cette entreprise — cette répartition n'est disponible qu'avec une convention active.
               </p>
             ) : (
               <>
-                <p className="text-xs text-gray-400 mb-5">Estimation basée sur la grille conventionnelle — pas une classification légale</p>
+                <p className="text-xs text-[var(--text-muted)] mb-5">Estimation basée sur la grille conventionnelle — pas une classification légale</p>
                 <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -781,11 +779,11 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* Catégorie / Échelon conventionnel */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h4 className="text-base font-bold text-gray-900 dark:text-white mb-5">Effectif par Catégorie / Échelon</h4>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+            <h4 className="text-base font-bold text-[var(--text)] mb-5">Effectif par Catégorie / Échelon</h4>
             <div className="h-[280px] overflow-y-auto pr-1">
               {(data?.byCategory || []).length === 0 ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-10">Aucune catégorie renseignée pour le moment.</p>
+                <p className="text-sm text-[var(--text-muted)] text-center py-10">Aucune catégorie renseignée pour le moment.</p>
               ) : (
                 <div className="space-y-2.5">
                   {data!.byCategory!.map((c: CategoryData, idx: number) => {
@@ -793,10 +791,10 @@ export default function EmployeeAnalyticsPage() {
                     return (
                       <div key={c.label}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="font-semibold text-gray-700 dark:text-gray-300">{c.label}</span>
-                          <span className="text-gray-400">{c.count}</span>
+                          <span className="font-semibold text-[var(--text)]">{c.label}</span>
+                          <span className="text-[var(--text-muted)]">{c.count}</span>
                         </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className="h-2 bg-[var(--surface-2)] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full"
                             style={{ width: `${(c.count / max) * 100}%`, backgroundColor: COLORS[idx % COLORS.length] }}
@@ -815,45 +813,45 @@ export default function EmployeeAnalyticsPage() {
 
       {/* 🆕 KPI BILAN SOCIAL */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">KPI Bilan Social</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Turnover détaillé et absentéisme — indicateurs RH classiques</p>
+        <h3 className="text-lg font-bold text-[var(--text)] mb-1">KPI Bilan Social</h3>
+        <p className="text-sm text-[var(--text-muted)] mb-4">Turnover détaillé et absentéisme — indicateurs RH classiques</p>
 
         {/* Cartes Absentéisme */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
             <div className="flex items-center gap-2 mb-2">
-              <Activity size={16} className="text-rose-500" />
-              <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Taux d'absentéisme</span>
+              <Activity size={16} className="text-red-500" />
+              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Taux d'absentéisme</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{data?.absenteeism?.rate ?? 0}%</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-3xl font-bold text-[var(--text)]">{data?.absenteeism?.rate ?? 0}%</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
               {data?.absenteeism?.totalAbsenceDays ?? 0} j. d'absence / {data?.absenteeism?.theoreticalWorkingDays ?? 0} j. ouvrés théoriques (12 mois)
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
             <div className="flex items-center gap-2 mb-2">
               <Clock size={16} className="text-amber-500" />
-              <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Durée moyenne d'absence</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Durée moyenne d'absence</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{data?.absenteeism?.avgDurationDays ?? 0} j.</p>
-            <p className="text-xs text-gray-400 mt-1">{data?.absenteeism?.totalAbsenceCount ?? 0} absence(s) enregistrée(s) sur 12 mois</p>
+            <p className="text-3xl font-bold text-[var(--text)]">{data?.absenteeism?.avgDurationDays ?? 0} j.</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{data?.absenteeism?.totalAbsenceCount ?? 0} absence(s) enregistrée(s) sur 12 mois</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
             <div className="flex items-center gap-2 mb-2">
-              <LogOut size={16} className="text-sky-500" />
-              <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Motifs de départ enregistrés</span>
+              <LogOut size={16} className="text-[var(--accent-2)]" />
+              <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Motifs de départ enregistrés</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">{data?.turnoverDetail?.recordedRuptures ?? 0}</p>
-            <p className="text-xs text-gray-400 mt-1">via le module rupture de contrat (12 mois)</p>
+            <p className="text-3xl font-bold text-[var(--text)]">{data?.turnoverDetail?.recordedRuptures ?? 0}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">via le module rupture de contrat (12 mois)</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
           {/* Turnover mensuel */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h4 className="text-base font-bold text-gray-900 dark:text-white mb-1">Turnover Mensuel (12 mois)</h4>
-            <p className="text-xs text-gray-400 mb-5">Départs du mois / effectif moyen du mois × 100</p>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+            <h4 className="text-base font-bold text-[var(--text)] mb-1">Turnover Mensuel (12 mois)</h4>
+            <p className="text-xs text-[var(--text-muted)] mb-5">Départs du mois / effectif moyen du mois × 100</p>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data?.turnoverDetail?.monthly || []} margin={{ left: 0, right: 10 }}>
@@ -868,11 +866,11 @@ export default function EmployeeAnalyticsPage() {
           </div>
 
           {/* Turnover par motif */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h4 className="text-base font-bold text-gray-900 dark:text-white mb-1">Départs par Motif (12 mois)</h4>
-            <p className="text-xs text-gray-400 mb-5">Source : dossiers de rupture de contrat validés</p>
+          <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+            <h4 className="text-base font-bold text-[var(--text)] mb-1">Départs par Motif (12 mois)</h4>
+            <p className="text-xs text-[var(--text-muted)] mb-5">Source : dossiers de rupture de contrat validés</p>
             {(data?.turnoverDetail?.byMotif || []).length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-16">Aucune rupture de contrat enregistrée sur les 12 derniers mois.</p>
+              <p className="text-sm text-[var(--text-muted)] text-center py-16">Aucune rupture de contrat enregistrée sur les 12 derniers mois.</p>
             ) : (
               <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -894,12 +892,12 @@ export default function EmployeeAnalyticsPage() {
 
           {/* Turnover par département */}
           {(data?.turnoverDetail?.byDepartment || []).length > 0 && (
-            <div className="xl:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-              <h4 className="text-base font-bold text-gray-900 dark:text-white mb-5">Départs par Département (12 mois)</h4>
+            <div className="xl:col-span-2 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+              <h4 className="text-base font-bold text-[var(--text)] mb-5">Départs par Département (12 mois)</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data!.turnoverDetail!.byDepartment.map((d: TurnoverByDept, idx: number) => (
-                  <div key={d.department} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{d.department}</span>
+                  <div key={d.department} className="flex items-center justify-between p-3 bg-[var(--surface-2)]/50 rounded-xl">
+                    <span className="text-sm font-semibold text-[var(--text)]">{d.department}</span>
                     <span
                       className="text-sm font-black px-2.5 py-0.5 rounded-full text-white"
                       style={{ backgroundColor: COLORS[idx % COLORS.length] }}
@@ -916,8 +914,8 @@ export default function EmployeeAnalyticsPage() {
 
       {/* DISTRIBUTION PAR GENRE */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-4">
             Répartition par Genre
           </h3>
           <div className="h-[250px]">
@@ -935,8 +933,8 @@ export default function EmployeeAnalyticsPage() {
                   dataKey="value"
                   label
                 >
-                  <Cell fill="#0EA5E9" />
-                  <Cell fill="#EC4899" />
+                  <Cell fill="#10B981" />
+                  <Cell fill="#F59E0B" />
                 </Pie>
                 <Tooltip />
                 <Legend />
@@ -945,14 +943,14 @@ export default function EmployeeAnalyticsPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
+        <div className="lg:col-span-2 bg-[var(--brand)] rounded-2xl p-6 text-white shadow-xl">
           <h3 className="text-lg font-bold mb-1">Conseils RH — Assistant Effectifs</h3>
-          <p className="text-sm text-sky-100 mb-4">Généré automatiquement à partir des données de {data?.selectedYear || new Date().getFullYear()}</p>
+          <p className="text-sm text-white/80 mb-4">Généré automatiquement à partir des données de {data?.selectedYear || new Date().getFullYear()}</p>
 
           <div className="space-y-4">
             {(!data?.insights || data.insights.length === 0) && (
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                <p className="text-sm text-sky-50 leading-relaxed">
+                <p className="text-sm text-white/70 leading-relaxed">
                   Pas encore assez de données pour générer des conseils. Revenez lorsque l'effectif aura un peu plus d'historique.
                 </p>
               </div>
@@ -965,7 +963,7 @@ export default function EmployeeAnalyticsPage() {
                     <InsightIcon size={20} className="flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-bold mb-1">{insight.title}</p>
-                      <p className="text-sm text-sky-50 leading-relaxed">{insight.message}</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{insight.message}</p>
                     </div>
                   </div>
                 </div>
@@ -992,25 +990,25 @@ export default function EmployeeAnalyticsPage() {
       >
         {nationalityLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 size={24} className="animate-spin text-sky-500" />
+            <Loader2 size={24} className="animate-spin text-[var(--brand)]" />
           </div>
         ) : nationalityEmployees.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-12">Aucun employé trouvé pour cette nationalité.</p>
+          <p className="text-sm text-[var(--text-muted)] text-center py-12">Aucun employé trouvé pour cette nationalité.</p>
         ) : (
           <div className="space-y-2">
             {nationalityEmployees.map((e) => (
-              <div key={e.id} className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+              <div key={e.id} className="p-3 bg-[var(--surface-2)]/50 rounded-xl border border-[var(--border)]">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{e.name}</p>
-                  <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0">
+                  <p className="text-sm font-bold text-[var(--text)]">{e.name}</p>
+                  <span className="text-[10px] uppercase font-bold tracking-wide px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text)] shrink-0">
                     {e.gender === 'MALE' ? 'H' : e.gender === 'FEMALE' ? 'F' : '—'}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">
                   {e.position}{e.department ? ` · ${e.department}` : ''}
                 </p>
                 {e.hireDate && (
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-[var(--text-muted)] mt-1">
                     Embauché(e) le {new Date(e.hireDate).toLocaleDateString('fr-FR')}
                   </p>
                 )}

@@ -80,12 +80,12 @@ function fmt(val: number | undefined | null) {
 // croire qu'un ITS et une retenue BNC (10%/20%) sont la même chose. Voir
 // classifyFiscalCategory côté backend (payroll-recap.service.ts).
 const FISCAL_BADGE: Record<RecapRow['fiscalCategory'], { label: string; className: string }> = {
-  ITS: { label: 'ITS', className: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  ITS: { label: 'ITS', className: 'bg-[var(--brand-soft)] text-[var(--brand)]' },
   BNC_10: { label: 'BNC 10%', className: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  BNC_20: { label: 'BNC 20%', className: 'bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  EXONERE: { label: 'Exonéré', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
-  AGENCE: { label: 'Agence', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
-  MIXTE: { label: 'Mixte', className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+  BNC_20: { label: 'BNC 20%', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200' },
+  EXONERE: { label: 'Exonéré', className: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
+  AGENCE: { label: 'Agence', className: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
+  MIXTE: { label: 'Mixte', className: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
 };
 
 function FiscalBadge({ category }: { category: RecapRow['fiscalCategory'] }) {
@@ -97,13 +97,13 @@ function FiscalBadge({ category }: { category: RecapRow['fiscalCategory'] }) {
   );
 }
 
-// Couleurs de ligne selon le statut du mois — bleu pour congé (comme dans
-// le modèle Excel d'origine), ambre pour une absence de bulletin
-// inexpliquée (à vérifier), rien de spécial si le bulletin est normal.
+// Couleurs de ligne selon le statut du mois — émeraude doux pour congé,
+// ambre pour une absence de bulletin inexpliquée (à vérifier), rien de
+// spécial si le bulletin est normal.
 function rowClasses(status: RecapRow['status']) {
-  if (status === 'CONGE') return 'bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20';
+  if (status === 'CONGE') return 'bg-[var(--brand-soft)] hover:opacity-90';
   if (status === 'SANS_PAIE') return 'bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20';
-  return 'hover:bg-slate-50 dark:hover:bg-slate-800/40';
+  return 'hover:bg-[var(--surface-2)]';
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -197,25 +197,25 @@ export default function RecapPersonnelPage() {
   const handlePrint = () => window.print();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 print:bg-white print:p-0">
+    <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6 print:bg-white print:p-0">
       {/* ── En-tête ─────────────────────────────────────────────────────── */}
       <div className="mb-6 print:hidden">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push(bp('/rapports'))}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
             >
-              <ArrowLeft className="w-4 h-4 text-slate-500" />
+              <ArrowLeft className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
-            <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
               <Users className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h1 className="text-lg font-bold text-[var(--text)]">
                 Récapitulatif du Personnel
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 Brut, charges, indemnités et retenues — mensuel &amp; annuel
               </p>
             </div>
@@ -226,8 +226,8 @@ export default function RecapPersonnelPage() {
               onClick={() => setMode('mensuel')}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5 ${
                 mode === 'mensuel'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
               <CalendarDays className="w-4 h-4" /> Mensuel
@@ -236,8 +236,8 @@ export default function RecapPersonnelPage() {
               onClick={() => setMode('annuel')}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5 ${
                 mode === 'annuel'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
               <CalendarRange className="w-4 h-4" /> Annuel
@@ -252,26 +252,26 @@ export default function RecapPersonnelPage() {
               <select
                 value={period.month}
                 onChange={(e) => setPeriod((p) => ({ ...p, month: Number(e.target.value) }))}
-                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
               >
                 {MONTHS.map((m, i) => (
                   <option key={m} value={i + 1}>{m}</option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
             </div>
           )}
           <div className="relative">
             <select
               value={period.year}
               onChange={(e) => setPeriod((p) => ({ ...p, year: Number(e.target.value) }))}
-              className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
             >
               {YEARS.map((y) => (
                 <option key={y} value={y}>{y}</option>
               ))}
             </select>
-            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
           </div>
         </div>
 
@@ -287,58 +287,58 @@ export default function RecapPersonnelPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+          <Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" />
         </div>
       ) : !current || rows.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 border border-slate-200 dark:border-slate-700/60 text-center text-slate-500 dark:text-slate-400">
+        <div className="bg-[var(--surface)] rounded-2xl p-12 border border-[var(--border)] text-center text-[var(--text-muted)]">
           Aucun bulletin trouvé pour cette période.
         </div>
       ) : (
         <>
           {/* ── Indicateurs ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Salariés payés</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                <p className="text-xs text-[var(--text-muted)]">Salariés payés</p>
+                <p className="text-lg font-bold text-[var(--text)]">
                   {effectifPaye} / {rows.length}
                 </p>
               </div>
-              <Users className="w-5 h-5 text-blue-500" />
+              <Users className="w-5 h-5 text-[var(--brand)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Masse salariale brute</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">{fmt(totals?.salBrut)} F</p>
+                <p className="text-xs text-[var(--text-muted)]">Masse salariale brute</p>
+                <p className="text-lg font-bold text-[var(--text)]">{fmt(totals?.salBrut)} F</p>
               </div>
               <Wallet className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Charges &amp; retenues (CNSS+IRPP+TOL+Dépt)</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">{fmt(totalCharges)} F</p>
+                <p className="text-xs text-[var(--text-muted)]">Charges &amp; retenues (CNSS+IRPP+TOL+Dépt)</p>
+                <p className="text-lg font-bold text-[var(--text)]">{fmt(totalCharges)} F</p>
               </div>
               <Landmark className="w-5 h-5 text-red-500" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Net à payer</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">{fmt(totals?.netAPayer)} F</p>
+                <p className="text-xs text-[var(--text-muted)]">Net à payer</p>
+                <p className="text-lg font-bold text-[var(--text)]">{fmt(totals?.netAPayer)} F</p>
               </div>
-              <TrendingDown className="w-5 h-5 text-violet-500" />
+              <TrendingDown className="w-5 h-5 text-[var(--accent-2)]" />
             </div>
           </div>
 
           {/* ── Bandeau titre + légende ───────────────────────────────── */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden print:shadow-none print:border-black">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden print:shadow-none print:border-black">
             <div className="flex items-center justify-between px-6 pt-5 flex-wrap gap-3">
               <div>
-                <h3 className="font-semibold text-slate-900 dark:text-white">
+                <h3 className="font-semibold text-[var(--text)]">
                   {mode === 'mensuel'
                     ? `${MONTHS[period.month - 1]} ${period.year}`
                     : `Récapitulatif annuel ${period.year}`}
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-[var(--text-muted)]">
                   {rows.length} employé{rows.length > 1 ? 's' : ''}
                 </p>
               </div>
@@ -350,9 +350,9 @@ export default function RecapPersonnelPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-4 px-6 pt-3 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-4 px-6 pt-3 text-xs text-[var(--text-muted)]">
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm bg-sky-100 dark:bg-sky-500/20 border border-sky-300 dark:border-sky-500/40 inline-block" />
+                <span className="w-3 h-3 rounded-sm bg-[var(--brand-soft)] border border-[var(--brand)]/40 inline-block" />
                 En congé (normal, pas de bulletin)
               </span>
               <span className="flex items-center gap-1.5">
@@ -364,9 +364,9 @@ export default function RecapPersonnelPage() {
             {/* ── Tableau ─────────────────────────────────────────────── */}
             <div className="overflow-x-auto mt-4">
               <table className="w-full text-sm whitespace-nowrap">
-                <thead className="bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-500 dark:text-slate-400">
+                <thead className="bg-[var(--surface-2)]/60 text-xs text-[var(--text-muted)]">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold sticky left-0 bg-slate-50 dark:bg-slate-800/60 z-10">Nom</th>
+                    <th className="px-4 py-3 text-left font-semibold sticky left-0 bg-[var(--surface-2)]/60 z-10">Nom</th>
                     <th className="px-4 py-3 text-right font-semibold">Sal. Brut</th>
                     <th className="px-4 py-3 text-right font-semibold">CNSS 4%</th>
                     <th className="px-4 py-3 text-right font-semibold">IRPP</th>
@@ -374,24 +374,24 @@ export default function RecapPersonnelPage() {
                     {indemniteColumns.map((c) => (
                       <th key={c.key} className="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{c.label}</th>
                     ))}
-                    <th className="px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">S/Total</th>
+                    <th className="px-4 py-3 text-right font-semibold text-[var(--text)]">S/Total</th>
                     <th className="px-4 py-3 text-right font-semibold text-red-500">Avance</th>
                     <th className="px-4 py-3 text-right font-semibold text-red-500">Pharmacie</th>
                     <th className="px-4 py-3 text-right font-semibold text-red-500">TOL</th>
                     <th className="px-4 py-3 text-right font-semibold text-red-500">Taxe Dpt</th>
                     <th className="px-4 py-3 text-right font-semibold text-red-500">Autres</th>
-                    <th className="px-4 py-3 text-right font-semibold text-blue-600 dark:text-blue-400">Net à payer</th>
+                    <th className="px-4 py-3 text-right font-semibold text-[var(--brand)] dark:text-[var(--brand)]">Net à payer</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-[var(--border)]">
                   {rows.map((r) => {
                     const isAbsent = r.status !== 'PAYE';
                     return (
                       <tr key={r.employeeId} className={`transition-colors ${rowClasses(r.status)}`}>
                         <td className="px-4 py-3 sticky left-0 z-10" style={{ background: 'inherit' }}>
-                          <div className="font-medium text-slate-900 dark:text-white">{r.employeeName}</div>
+                          <div className="font-medium text-[var(--text)]">{r.employeeName}</div>
                           {r.status === 'CONGE' && (
-                            <div className="text-[11px] text-sky-600 dark:text-sky-400 font-medium">
+                            <div className="text-[11px] text-[var(--brand)] font-medium">
                               {r.leaveLabel ?? 'En congé'}
                             </div>
                           )}
@@ -401,7 +401,7 @@ export default function RecapPersonnelPage() {
                             </div>
                           )}
                           {mode === 'annuel' && !!r.moisEnConge?.length && (
-                            <div className="text-[10px] text-sky-500 mt-0.5">
+                            <div className="text-[10px] text-[var(--brand)] mt-0.5">
                               Congé : {r.moisEnConge.map((m) => MONTHS_SHORT[m - 1]).join(', ')}
                             </div>
                           )}
@@ -412,18 +412,18 @@ export default function RecapPersonnelPage() {
                           )}
                         </td>
                         {isAbsent && mode === 'mensuel' ? (
-                          <td colSpan={4 + indemniteColumns.length} className="px-4 py-3 text-center text-slate-400 italic text-xs">
+                          <td colSpan={4 + indemniteColumns.length} className="px-4 py-3 text-center text-[var(--text-muted)] italic text-xs">
                             Pas de bulletin ce mois-ci
                           </td>
                         ) : (
                           <>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.salBrut)}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.cnss)}</td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(r.salBrut)}</td>
+                            <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(r.cnss)}</td>
+                            <td className="px-4 py-3 text-right text-[var(--text)] whitespace-nowrap">
                               {fmt(r.irpp)}
                               <FiscalBadge category={r.fiscalCategory} />
                             </td>
-                            <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-300">{fmt(r.reste1)}</td>
+                            <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(r.reste1)}</td>
                             {indemniteColumns.map((c) => (
                               <td key={c.key} className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400">
                                 {fmt(r.indemnites[c.key])}
@@ -431,40 +431,40 @@ export default function RecapPersonnelPage() {
                             ))}
                           </>
                         )}
-                        <td className="px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">{fmt(r.sousTotal)}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-[var(--text)]">{fmt(r.sousTotal)}</td>
                         <td className="px-4 py-3 text-right text-red-500">{fmt(r.avance)}</td>
                         <td className="px-4 py-3 text-right text-red-500">{fmt(r.pharmacie)}</td>
                         <td className="px-4 py-3 text-right text-red-500">{fmt(r.tol)}</td>
                         <td className="px-4 py-3 text-right text-red-500">{fmt(r.taxeDept)}</td>
                         <td className="px-4 py-3 text-right text-red-500">{fmt(r.autresTaxes)}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-blue-600 dark:text-blue-400">{fmt(r.netAPayer)}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-[var(--brand)] dark:text-[var(--brand)]">{fmt(r.netAPayer)}</td>
                       </tr>
                     );
                   })}
                 </tbody>
                 {totals && (
-                  <tfoot className="bg-slate-50 dark:bg-slate-800/60 font-semibold border-t-2 border-slate-200 dark:border-slate-700">
+                  <tfoot className="bg-[var(--surface-2)]/60 font-semibold border-t-2 border-[var(--border)]">
                     <tr>
-                      <td className="px-4 py-3 sticky left-0 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white">TOTAL</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.salBrut)}</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.cnss)}</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white whitespace-nowrap">
+                      <td className="px-4 py-3 sticky left-0 bg-[var(--surface-2)]/60 text-[var(--text)]">TOTAL</td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(totals.salBrut)}</td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(totals.cnss)}</td>
+                      <td className="px-4 py-3 text-right text-[var(--text)] whitespace-nowrap">
                         {fmt(totals.irpp)}
                         <FiscalBadge category="MIXTE" />
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.reste1)}</td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(totals.reste1)}</td>
                       {indemniteColumns.map((c) => (
                         <td key={c.key} className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400">
                           {fmt(totals.indemnites[c.key])}
                         </td>
                       ))}
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">{fmt(totals.sousTotal)}</td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">{fmt(totals.sousTotal)}</td>
                       <td className="px-4 py-3 text-right text-red-500">{fmt(totals.avance)}</td>
                       <td className="px-4 py-3 text-right text-red-500">{fmt(totals.pharmacie)}</td>
                       <td className="px-4 py-3 text-right text-red-500">{fmt(totals.tol)}</td>
                       <td className="px-4 py-3 text-right text-red-500">{fmt(totals.taxeDept)}</td>
                       <td className="px-4 py-3 text-right text-red-500">{fmt(totals.autresTaxes)}</td>
-                      <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400">{fmt(totals.netAPayer)}</td>
+                      <td className="px-4 py-3 text-right text-[var(--brand)] dark:text-[var(--brand)]">{fmt(totals.netAPayer)}</td>
                     </tr>
                   </tfoot>
                 )}
@@ -478,7 +478,7 @@ export default function RecapPersonnelPage() {
             <button
               onClick={() => setPendingExport(true)}
               disabled={exporting || !current}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
             >
               {exporting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -489,7 +489,7 @@ export default function RecapPersonnelPage() {
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
             >
               <Printer className="w-4 h-4" />
               Imprimer
@@ -500,23 +500,23 @@ export default function RecapPersonnelPage() {
 
       {/* ── Modale de revue avant export ────────────────────────────────── */}
       {pendingExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden">
-            <div className="p-5 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-xl shrink-0">
-                <ShieldCheck className="w-5 h-5 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden">
+            <div className="p-5 flex items-start gap-3 border-b border-[var(--border)]">
+              <div className="p-2 bg-[var(--brand-soft)] rounded-xl shrink-0">
+                <ShieldCheck className="w-5 h-5 text-[var(--brand)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">
+                <h3 className="font-semibold text-[var(--text)]">
                   Une dernière vérification avant diffusion
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   {mode === 'mensuel' ? `${MONTHS[period.month - 1]} ${period.year}` : `Année ${period.year}`}
                 </p>
               </div>
               <button
                 onClick={() => setPendingExport(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 aria-label="Fermer"
               >
                 <X className="w-4 h-4" />
@@ -524,7 +524,7 @@ export default function RecapPersonnelPage() {
             </div>
 
             <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-sm text-[var(--text)] leading-relaxed">
                 Le fichier reprend les bulletins validés de la période — brut,
                 charges, indemnités, net à payer. Toutes les cellules restent
                 modifiables à la main une fois ouvertes dans Excel.
@@ -541,14 +541,14 @@ export default function RecapPersonnelPage() {
             <div className="p-5 pt-0 flex items-center gap-3">
               <button
                 onClick={() => setPendingExport(false)}
-                className="flex-1 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl hover:bg-[var(--surface-2)] transition-colors"
               >
                 Revoir avant
               </button>
               <button
                 onClick={runExport}
                 disabled={exporting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
               >
                 {exporting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

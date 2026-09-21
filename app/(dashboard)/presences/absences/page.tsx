@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
+import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
@@ -183,6 +184,19 @@ export default function AbsenceManagementPage() {
     reviewedByName: selected.reviewedByUser?.email,
     reviewedAt: selected.reviewedAt,
     rejectionReason: selected.rejectionReason,
+  } : null;
+
+  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const standardAbsenceData = docData && isStandard ? {
+    reference: `DEA-${selected?.id?.slice(0, 8).toUpperCase() || ''}`,
+    company: docData.company,
+    employee: docData.employee,
+    catalog: docData.catalog || [],
+    motifKey: docData.motifKey,
+    startDate: docData.startDate,
+    endDate: docData.endDate,
+    status: docData.status,
+    requestedAt: selected?.requestedAt || selected?.createdAt,
   } : null;
 
   if (isLoading) {
@@ -463,6 +477,8 @@ export default function AbsenceManagementPage() {
                         status={docData.status}
                         company={docData.company}
                       />
+                    ) : isStandard ? (
+                      standardAbsenceData && <StandardAbsenceRequestForm id="absence-print-root" data={standardAbsenceData as any} />
                     ) : (
                       printData && <AbsenceRequestPrintable data={printData as any} />
                     )}

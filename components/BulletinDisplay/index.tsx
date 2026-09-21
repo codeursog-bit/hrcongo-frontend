@@ -26,6 +26,7 @@ import React from 'react';
 import BulletinRenderer from '@/components/BulletinRenderer';
 import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
 import BulletinRendererClassique from '@/components/BulletinRendererClassique';
+import BulletinRendererInf from '@/components/BulletinRendererInf';
 import CanvasRenderer   from '@/components/CanvasRenderer';
 import FactureDisplay   from '@/components/FactureDisplay';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
@@ -81,6 +82,15 @@ export default function BulletinDisplay({ payroll, previewMode = false }: Props)
   if (templateId === 'classique') {
     return (
       <BulletinRendererClassique
+        payroll={payroll}
+        template={config.templateConfig}
+        previewMode={previewMode}
+      />
+    );
+  }
+  if (templateId === 'inf') {
+    return (
+      <BulletinRendererInf
         payroll={payroll}
         template={config.templateConfig}
         previewMode={previewMode}

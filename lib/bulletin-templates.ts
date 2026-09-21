@@ -118,18 +118,50 @@ export const TEMPLATE_CLASSIQUE: BulletinTemplateConfig = {
   ]),
 };
 
+// ─── 4. INF — Numéroté + logo, bloc identité bicolonne, cumuls M/A ───────────
+
+export const TEMPLATE_INF: BulletinTemplateConfig = {
+  templateId: 'inf',
+  name: 'Bulletin de paie numéroté (modèle INF)',
+  style: {
+    primaryColor:      '#000000',
+    secondaryColor:    '#555555',
+    textColor:         '#000000',
+    fontFamily:        'sans',
+    fontSize:          'sm',
+    density:           'compact',
+    layout:            '1col',
+    borderRadius:      0,
+    headerStyle:       'line',
+    showLogo:          true,
+    logoPosition:      'left',
+    showAddress:       true,
+    showFiscalNumbers: true,
+    showPageNumber:    false,
+    showGeneratedDate: false,
+    showHrSignature:   false,
+    footerMessage:     '',
+  },
+  blocks: cloneBlocks([
+    { id:'employer', visible:true  },
+    { id:'message',  visible:false },
+  ]),
+};
+
 // ─── Registre ─────────────────────────────────────────────────────────────────
 
 export const TEMPLATES: Record<string, BulletinTemplateConfig> = {
   default:   TEMPLATE_DEFAULT,
   clarifie:  TEMPLATE_CLARIFIE,
   classique: TEMPLATE_CLASSIQUE,
+  inf:       TEMPLATE_INF,
 };
 
 export const TEMPLATE_LIST = [
   TEMPLATE_DEFAULT,
   TEMPLATE_CLARIFIE,
   TEMPLATE_CLASSIQUE,
+  TEMPLATE_INF,
 ];
 
 export function getBaseTemplate(templateId: string): BulletinTemplateConfig {

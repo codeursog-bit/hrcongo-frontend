@@ -28,6 +28,8 @@ interface TileDef {
   render: (big: boolean) => React.ReactNode;
 }
 
+import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
+
 export default function IndicateursRhPage() {
   const router = useRouter();
   const { bp } = useBasePath();
@@ -40,17 +42,26 @@ export default function IndicateursRhPage() {
   const [payroll, setPayroll] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodValue>({
+    mode: 'ANNEE',
+    month: 1,
+    year: new Date().getFullYear(),
+  });
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
+        const y = period.year;
         const [w, d, l, p, r, t, pay] = await Promise.all([
-          api.get('/reports/workforce'),
+          api.get(`/reports/workforce?year=${y}`),
+          // ⚠️ Ces deux-là ignorent encore l'année choisie : traceability
+          // est une fenêtre glissante de 3 mois par conception, et
+          // /reports/payroll n'a pas encore de paramètre de période.
           api.get('/reports/department-traceability'),
-          api.get('/reports/leaves'),
-          api.get('/reports/performance-indicators'),
-          api.get('/reports/recruitment-indicators'),
-          api.get('/reports/training-indicators'),
+          api.get(`/reports/leaves?year=${y}`),
+          api.get(`/reports/performance-indicators?year=${y}`),
+          api.get(`/reports/recruitment-indicators?year=${y}`),
+          api.get(`/reports/training-indicators?year=${y}`),
           api.get('/reports/payroll'),
         ]);
         setWorkforce(w); setDepartments(d); setLeaves(l);
@@ -62,12 +73,12 @@ export default function IndicateursRhPage() {
       }
     };
     fetchAll();
-  }, []);
+  }, [period.year]);
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-sky-500" size={48} />
+        <Loader2 className="animate-spin text-[var(--brand)]" size={48} />
       </div>
     );
   }
@@ -346,22 +357,21 @@ export default function IndicateursRhPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(bp('/rapports'))}
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-gray-500" />
+            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[var(--text)]">
               Indicateurs RH
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               Recrutement, effectifs, départements, coûts, formations — clique un graphe pour l'agrandir
             </p>
           </div>
         </div>
+        <PeriodSelector value={period} onChange={setPeriod} modes={['ANNEE']} />
       </div>
-
-      {/* NAVIGATION RAPPORTS */}
       <RapportsSubNav active="/rapports/indicateurs" />
 
       {/* GRILLE DE GRAPHES — c'est tout ce que cette page affiche */}
@@ -370,17 +380,17 @@ export default function IndicateursRhPage() {
           <button
             key={tile.key}
             onClick={() => setExpanded(tile.key)}
-            className="group text-left bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-sky-300 dark:hover:border-sky-500/50 transition-all"
+            className="group text-left bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md hover:border-[var(--brand)] transition-all"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2">
-                <tile.icon size={17} className="text-sky-500" />
+                <tile.icon size={17} className="text-[var(--brand)]" />
                 <div>
-                  <h4 className="text-base font-bold text-gray-900 dark:text-white">{tile.title}</h4>
-                  {tile.subtitle && <p className="text-xs text-gray-400">{tile.subtitle}</p>}
+                  <h4 className="text-base font-bold text-[var(--text)]">{tile.title}</h4>
+                  {tile.subtitle && <p className="text-xs text-[var(--text-muted)]">{tile.subtitle}</p>}
                 </div>
               </div>
-              <Maximize2 size={15} className="text-gray-300 group-hover:text-sky-500 transition-colors shrink-0 mt-1" />
+              <Maximize2 size={15} className="text-[var(--text-muted)] group-hover:text-[var(--brand)] transition-colors shrink-0 mt-1" />
             </div>
             {tile.render(false)}
           </button>
@@ -394,20 +404,20 @@ export default function IndicateursRhPage() {
           onClick={() => setExpanded(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-4xl p-8 relative max-h-[90vh] overflow-y-auto"
+            className="bg-[var(--surface)] rounded-2xl shadow-2xl w-full max-w-4xl p-8 relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setExpanded(null)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="absolute top-5 right-5 p-2 rounded-xl bg-[var(--surface-2)] hover:opacity-80 transition-colors"
             >
-              <X size={18} className="text-gray-500 dark:text-gray-300" />
+              <X size={18} className="text-[var(--text-muted)]" />
             </button>
             <div className="flex items-center gap-2 mb-1">
-              <activeTile.icon size={20} className="text-sky-500" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{activeTile.title}</h3>
+              <activeTile.icon size={20} className="text-[var(--brand)]" />
+              <h3 className="text-xl font-bold text-[var(--text)]">{activeTile.title}</h3>
             </div>
-            {activeTile.subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{activeTile.subtitle}</p>}
+            {activeTile.subtitle && <p className="text-sm text-[var(--text-muted)] mb-6">{activeTile.subtitle}</p>}
             {activeTile.render(true)}
           </div>
         </div>
@@ -419,7 +429,7 @@ export default function IndicateursRhPage() {
 
 function EmptyChart({ label, big }: { label: string; big: boolean }) {
   return (
-    <div className="flex items-center justify-center text-sm text-gray-400 dark:text-gray-500" style={{ height: big ? 480 : 260 }}>
+    <div className="flex items-center justify-center text-sm text-[var(--text-muted)]" style={{ height: big ? 480 : 260 }}>
       {label}
     </div>
   );

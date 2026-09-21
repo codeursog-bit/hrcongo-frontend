@@ -282,6 +282,7 @@ export default function CataloguePrimesPage() {
   const [seniorityStartRate,  setSeniorityStartRate]  = useState<number | ''>(2);
   const [seniorityRatePerYr,  setSeniorityRatePerYr]  = useState<number | ''>(1);
   const [seniorityCapPercent, setSeniorityCapPercent] = useState<number | ''>('');
+  const [seniorityProrata,    setSeniorityProrata]    = useState(false);
   const [savingSeniority,     setSavingSeniority]     = useState(false);
   const [senioritySaved,      setSenioritySaved]      = useState(false);
 
@@ -294,6 +295,7 @@ export default function CataloguePrimesPage() {
     try {
       // 🆕 Config générale ancienneté — stockée sur Company
       const ci = await api.get<any>('/companies/mine');
+      setSeniorityProrata(!!ci?.seniorityProrata);
       const cfg = ci?.seniorityLinearConfig;
       if (cfg && typeof cfg === 'object') {
         setSeniorityEnabled(!!cfg.enabled);
@@ -325,7 +327,7 @@ export default function CataloguePrimesPage() {
         ratePerYear: Number(seniorityRatePerYr) || 0,
         capPercent:  seniorityCapPercent === '' ? null : Number(seniorityCapPercent),
       };
-      await api.patch('/companies', { seniorityLinearConfig: payload });
+      await api.patch('/companies', { seniorityLinearConfig: payload, seniorityProrata });
       setSenioritySaved(true);
       alert.success('Enregistré', "Configuration générale de la prime d'ancienneté mise à jour.");
       setTimeout(() => setSenioritySaved(false), 3000);
@@ -569,6 +571,22 @@ export default function CataloguePrimesPage() {
             </p>
           </>
         )}
+
+        {/* Prorata aux jours travaillés — valable pour la formule, la convention et les primes manuelles */}
+        <div className="flex items-center justify-between gap-3 mb-3 px-3 py-2 rounded-xl bg-[var(--surface-2)]">
+          <div>
+            <p className="text-xs font-bold text-[var(--text)]">Proratiser selon les jours travaillés</p>
+            <p className="text-[11px] text-[var(--text-muted)]">
+              {seniorityProrata
+                ? 'Activé — ex. 22 j sur 26 = 22/26 de la prime.'
+                : "Désactivé — prime d'ancienneté toujours versée en entier."}
+            </p>
+          </div>
+          <button onClick={() => setSeniorityProrata(v => !v)}
+            className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${seniorityProrata ? 'bg-amber-500' : 'bg-[var(--surface)]'}`}>
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${seniorityProrata ? 'translate-x-5' : ''}`} />
+          </button>
+        </div>
 
         <button onClick={saveSeniorityConfig} disabled={savingSeniority}
           className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">

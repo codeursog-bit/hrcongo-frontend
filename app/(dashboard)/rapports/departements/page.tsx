@@ -65,7 +65,7 @@ export default function DepartmentTraceabilityPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-sky-500" size={48} />
+        <Loader2 className="animate-spin text-[var(--brand)]" size={48} />
       </div>
     );
   }
@@ -83,15 +83,15 @@ export default function DepartmentTraceabilityPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(bp('/rapports'))}
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-gray-500" />
+            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[var(--text)]">
               Vue Département
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               Coût, absences, retards et turnover par département — {data?.period?.label || '3 derniers mois'}
             </p>
           </div>
@@ -110,8 +110,8 @@ export default function DepartmentTraceabilityPage() {
           <div className="space-y-2">
             {data!.alerts.map((a, idx) => (
               <div key={idx} className="flex items-center gap-2 text-sm">
-                <span className="font-bold text-gray-900 dark:text-white">{a.department}</span>
-                <span className="text-gray-500 dark:text-gray-400">— {a.reason}</span>
+                <span className="font-bold text-[var(--text)]">{a.department}</span>
+                <span className="text-[var(--text-muted)]">— {a.reason}</span>
               </div>
             ))}
           </div>
@@ -120,37 +120,37 @@ export default function DepartmentTraceabilityPage() {
 
       {/* KPI RAPIDES */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <Clock size={16} className="text-rose-500" />
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Le plus de retards</span>
+            <Clock size={16} className="text-[var(--accent-2)]" />
+            <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Le plus de retards</span>
           </div>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{mostLate?.name ?? '—'}</p>
-          <p className="text-xs text-gray-400 mt-1">{mostLate?.lateCount ?? 0} retard(s) sur la période</p>
+          <p className="text-xl font-bold text-[var(--text)]">{mostLate?.name ?? '—'}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{mostLate?.lateCount ?? 0} retard(s) sur la période</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <UserX size={16} className="text-amber-500" />
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Le plus d'absences</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Le plus d'absences</span>
           </div>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{mostAbsences?.name ?? '—'}</p>
-          <p className="text-xs text-gray-400 mt-1">{mostAbsences?.absenceCount ?? 0} absence(s) · {mostAbsences?.absenceDays ?? 0} j.</p>
+          <p className="text-xl font-bold text-[var(--text)]">{mostAbsences?.name ?? '—'}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{mostAbsences?.absenceCount ?? 0} absence(s) · {mostAbsences?.absenceDays ?? 0} j.</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Wallet size={16} className="text-emerald-500" />
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Salaire moyen le plus élevé</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">Salaire moyen le plus élevé</span>
           </div>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{costliest?.name ?? '—'}</p>
-          <p className="text-xs text-gray-400 mt-1">{costliest ? fcfa(costliest.avgSalary) : '—'} / employé</p>
+          <p className="text-xl font-bold text-[var(--text)]">{costliest?.name ?? '—'}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{costliest ? fcfa(costliest.avgSalary) : '—'} / employé</p>
         </div>
       </div>
 
       {/* GRAPHIQUES COMPARATIFS */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h4 className="text-base font-bold text-gray-900 dark:text-white mb-1">Taux de retard par département</h4>
-          <p className="text-xs text-gray-400 mb-5">Pour 10 employés — moyenne entreprise : {data?.companyAverages?.lateRatePer10 ?? 0}</p>
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h4 className="text-base font-bold text-[var(--text)] mb-1">Taux de retard par département</h4>
+          <p className="text-xs text-[var(--text-muted)] mb-5">Pour 10 employés — moyenne entreprise : {data?.companyAverages?.lateRatePer10 ?? 0}</p>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={departments} margin={{ left: 10, right: 20 }}>
@@ -166,9 +166,9 @@ export default function DepartmentTraceabilityPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h4 className="text-base font-bold text-gray-900 dark:text-white mb-1">Taux d'absence par département</h4>
-          <p className="text-xs text-gray-400 mb-5">Pour 10 employés — moyenne entreprise : {data?.companyAverages?.absenceRatePer10 ?? 0}</p>
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h4 className="text-base font-bold text-[var(--text)] mb-1">Taux d'absence par département</h4>
+          <p className="text-xs text-[var(--text-muted)] mb-5">Pour 10 employés — moyenne entreprise : {data?.companyAverages?.absenceRatePer10 ?? 0}</p>
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={departments} margin={{ left: 10, right: 20 }}>
@@ -187,68 +187,68 @@ export default function DepartmentTraceabilityPage() {
 
       {/* FICHES PAR DÉPARTEMENT */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Fiches par Département</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Vue complète — coût, absences, retards, turnover</p>
+        <h3 className="text-lg font-bold text-[var(--text)] mb-1">Fiches par Département</h3>
+        <p className="text-sm text-[var(--text-muted)] mb-5">Vue complète — coût, absences, retards, turnover</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {departments.map((dept, idx) => (
-            <div key={dept.id} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <div key={dept.id} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: dept.color || COLORS[idx % COLORS.length] }} />
-                  <h4 className="text-base font-bold text-gray-900 dark:text-white">{dept.name}</h4>
+                  <h4 className="text-base font-bold text-[var(--text)]">{dept.name}</h4>
                 </div>
-                <span className="text-xs font-bold text-gray-400 flex items-center gap-1"><Users size={12} /> {dept.headcount}</span>
+                <span className="text-xs font-bold text-[var(--text-muted)] flex items-center gap-1"><Users size={12} /> {dept.headcount}</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-gray-400">Coût employeur</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{fcfa(dept.totalEmployerCost)}</p>
+                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Coût employeur</p>
+                  <p className="text-sm font-bold text-[var(--text)]">{fcfa(dept.totalEmployerCost)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-gray-400">Salaire moyen</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{fcfa(dept.avgSalary)}</p>
+                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Salaire moyen</p>
+                  <p className="text-sm font-bold text-[var(--text)]">{fcfa(dept.avgSalary)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-gray-400">H. Sup.</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{dept.totalOvertime}h</p>
+                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">H. Sup.</p>
+                  <p className="text-sm font-bold text-[var(--text)]">{dept.totalOvertime}h</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-gray-400">Départs (3 mois)</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1"><LogOut size={11} className="text-gray-400" />{dept.departureCount}</p>
+                  <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Départs (3 mois)</p>
+                  <p className="text-sm font-bold text-[var(--text)] flex items-center gap-1"><LogOut size={11} className="text-[var(--text-muted)]" />{dept.departureCount}</p>
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 dark:border-gray-700 pt-4 grid grid-cols-2 gap-4">
+              <div className="border-t border-[var(--border)] pt-4 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-1 flex items-center gap-1">
                     <Clock size={12} /> Retards
                     {dept.lateRatePer10 >= (data?.companyAverages?.lateRatePer10 || 0) * 1.5 && dept.headcount > 0 && (
                       <span className="text-[9px] px-1.5 py-0.5 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full font-black">au-dessus</span>
                     )}
                   </p>
-                  <p className="text-lg font-black text-gray-900 dark:text-white">{dept.lateCount}</p>
+                  <p className="text-lg font-black text-[var(--text)]">{dept.lateCount}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-1 flex items-center gap-1">
                     <UserX size={12} /> Absences
                     {dept.absenceRatePer10 >= (data?.companyAverages?.absenceRatePer10 || 0) * 1.5 && dept.headcount > 0 && (
                       <span className="text-[9px] px-1.5 py-0.5 bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 rounded-full font-black">au-dessus</span>
                     )}
                   </p>
-                  <p className="text-lg font-black text-gray-900 dark:text-white">{dept.absenceCount} <span className="text-xs font-normal text-gray-400">({dept.absenceDays} j.)</span></p>
+                  <p className="text-lg font-black text-[var(--text)]">{dept.absenceCount} <span className="text-xs font-normal text-[var(--text-muted)]">({dept.absenceDays} j.)</span></p>
                 </div>
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-900/50 rounded-full text-gray-500 dark:text-gray-400">
+                <span className="text-[10px] px-2 py-1 bg-[var(--surface-2)] rounded-full text-[var(--text-muted)]">
                   Maladie : {dept.absencesByType?.MALADIE ?? 0}
                 </span>
-                <span className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-900/50 rounded-full text-gray-500 dark:text-gray-400">
+                <span className="text-[10px] px-2 py-1 bg-[var(--surface-2)] rounded-full text-[var(--text-muted)]">
                   Conventionnelle : {dept.absencesByType?.CONVENTIONNELLE ?? 0}
                 </span>
-                <span className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-900/50 rounded-full text-gray-500 dark:text-gray-400">
+                <span className="text-[10px] px-2 py-1 bg-[var(--surface-2)] rounded-full text-[var(--text-muted)]">
                   Permission (exceptionnelle) : {dept.absencesByType?.EXCEPTIONNELLE ?? 0}
                 </span>
               </div>

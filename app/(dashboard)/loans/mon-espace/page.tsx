@@ -356,6 +356,7 @@ export default function MonEspacePretsAvancesPage() {
                     {selected.kind === 'loan' && selected.data.nature && (
                       <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Nature</p><p className="font-bold text-[var(--text)]">{NATURE_LABEL[selected.data.nature] || selected.data.nature}</p></div>
                     )}
+                    <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Mode de remboursement</p><p className="font-bold text-[var(--text)]">{selected.data.recoverViaPayroll ? 'Sur la paie' : 'Espèces'}</p></div>
                     {selected.data.reason && <div className="text-sm"><p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p><p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3 rounded-xl">{selected.data.reason}</p></div>}
                     {selected.data.status === 'REJECTED' && selected.data.rejectionReason && (
                       <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">Motif du refus : {selected.data.rejectionReason}</div>

@@ -216,10 +216,10 @@ export default function PointageManuelPage() {
   // ========================================
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
         <div className="text-center">
           <Loader2 className="animate-spin text-emerald-500 mx-auto mb-4" size={48}/>
-          <p className="text-slate-400">Vérification des accès...</p>
+          <p className="text-[var(--text-muted)]">Vérification des accès...</p>
         </div>
       </div>
     );
@@ -230,19 +230,19 @@ export default function PointageManuelPage() {
   // ========================================
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
         <div className="max-w-md w-full bg-red-500/10 backdrop-blur-xl rounded-3xl p-8 border border-red-500/30 text-center">
           <ShieldAlert size={64} className="text-red-400 mx-auto mb-4"/>
-          <h1 className="text-2xl font-bold text-white mb-2">Accès Refusé</h1>
+          <h1 className="text-2xl font-bold text-red-300 mb-2">Accès Refusé</h1>
           <p className="text-red-300 mb-6">
             Vous n'avez pas les droits nécessaires pour accéder au pointage manuel.
           </p>
-          <p className="text-sm text-slate-400 mb-6">
+          <p className="text-sm text-[var(--text-muted)] mb-6">
             Cette fonctionnalité est réservée aux administrateurs, RH et managers.
           </p>
           <button
             onClick={() => router.back()}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors flex items-center gap-2 mx-auto"
+            className="px-6 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text)] rounded-xl transition-colors flex items-center gap-2 mx-auto"
           >
             <ArrowLeft size={20}/>
             Retour
@@ -262,19 +262,19 @@ export default function PointageManuelPage() {
   // ✅ INTERFACE PRINCIPALE
   // ========================================
   return (
-    <div className="min-h-screen pb-20 relative overflow-hidden bg-slate-900 text-white">
+    <div className="min-h-screen pb-20 relative overflow-hidden bg-[var(--bg)] text-[var(--text)]">
       
       {/* Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-emerald-500/20 rounded-full animate-[ping_3s_linear_infinite]"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-emerald-500/30 rounded-full"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-slate-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg)]/50 to-[var(--bg)]"></div>
       </div>
 
       {/* Header */}
       <div className="absolute top-4 left-4 z-20">
-        <button onClick={() => router.back()} className="p-2 bg-white/10 backdrop-blur-md rounded-full hover:bg-white/20 transition-colors">
-          <ArrowLeft size={24} className="text-white"/>
+        <button onClick={() => router.back()} className="p-2 bg-[var(--surface)] border border-[var(--border)] backdrop-blur-md rounded-full hover:bg-[var(--surface-2)] transition-colors">
+          <ArrowLeft size={24} className="text-[var(--text)]"/>
         </button>
       </div>
 
@@ -293,10 +293,10 @@ export default function PointageManuelPage() {
           )}
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400">
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-[var(--text)] to-[var(--text-muted)]">
           Saisie Manuelle
         </h1>
-        <p className="text-slate-400 mt-2 text-lg">
+        <p className="text-[var(--text-muted)] mt-2 text-lg">
           Enregistrez les présences avec heures personnalisées
           {isManager && ' (Votre département)'}
         </p>
@@ -333,10 +333,10 @@ export default function PointageManuelPage() {
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-400/70 mb-0.5">
                 Me pointer moi-même
               </p>
-              <p className="text-lg font-bold text-white">
+              <p className="text-lg font-bold text-emerald-300">
                 Ma Pointeuse GPS
               </p>
-              <p className="text-sm text-slate-400 mt-0.5">
+              <p className="text-sm text-[var(--text-muted)] mt-0.5">
                 {currentUser?.firstName} {currentUser?.lastName} — Pointer mon arrivée / départ via GPS
               </p>
             </div>
@@ -350,13 +350,13 @@ export default function PointageManuelPage() {
         {showSuccess && (
           <div className="bg-emerald-500/20 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/30 text-center animate-pulse">
             <CheckCircle2 size={64} className="mx-auto text-emerald-400 mb-4"/>
-            <h2 className="text-2xl font-bold text-white">Enregistré !</h2>
+            <h2 className="text-2xl font-bold text-emerald-300">Enregistré !</h2>
             <p className="text-sm text-emerald-300 mt-2">Le pointage a été créé avec succès</p>
           </div>
         )}
 
         {!showSuccess && (
-          <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/10 space-y-6">
+          <div className="bg-[var(--surface)] backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-[var(--border)] space-y-6">
             
             <div className="bg-emerald-500/10 backdrop-blur-md rounded-2xl p-4 border border-emerald-500/30 flex items-start gap-3">
               <CheckCircle2 size={20} className="text-emerald-400 shrink-0 mt-0.5"/>
@@ -394,39 +394,39 @@ export default function PointageManuelPage() {
 
             {/* Recherche Employé */}
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-2">
+              <label className="block text-sm font-bold text-[var(--text)] mb-2">
                 <User size={16} className="inline mr-2"/>
                 Employé
-                {isManager && <span className="ml-2 text-xs text-slate-500">(Votre département)</span>}
+                {isManager && <span className="ml-2 text-xs text-[var(--text-muted)]">(Votre département)</span>}
               </label>
               
               <div className="relative">
-                <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"/>
                 <input
                   type="text"
                   placeholder={employees.length === 0 ? "Aucun employé accessible" : "Rechercher un employé..."}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   disabled={employees.length === 0}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               {searchQuery && (
-                <div className="mt-2 max-h-60 overflow-y-auto bg-slate-700/50 rounded-xl border border-slate-600">
+                <div className="mt-2 max-h-60 overflow-y-auto bg-[var(--surface-2)] rounded-xl border border-[var(--border)]">
                   {filteredEmployees.length > 0 ? (
                     filteredEmployees.map(emp => (
                       <button
                         key={emp.id}
                         onClick={() => { setSelectedEmployee(emp); setSearchQuery(''); }}
-                        className="w-full p-3 hover:bg-slate-600/50 transition-colors text-left flex items-center gap-3 border-b border-slate-600 last:border-0"
+                        className="w-full p-3 hover:bg-[var(--border)] transition-colors text-left flex items-center gap-3 border-b border-[var(--border)] last:border-0"
                       >
-                        <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text)] font-bold">
                           {emp.firstName[0]}{emp.lastName[0]}
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-white">{emp.firstName} {emp.lastName}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="font-medium text-[var(--text)]">{emp.firstName} {emp.lastName}</p>
+                          <p className="text-xs text-[var(--text-muted)]">
                             {emp.employeeNumber} - {emp.position}
                             {emp.department && <span className="ml-2 text-emerald-400">• {emp.department.name}</span>}
                           </p>
@@ -434,7 +434,7 @@ export default function PointageManuelPage() {
                       </button>
                     ))
                   ) : (
-                    <p className="p-4 text-center text-slate-400 text-sm">Aucun employé trouvé</p>
+                    <p className="p-4 text-center text-[var(--text-muted)] text-sm">Aucun employé trouvé</p>
                   )}
                 </div>
               )}
@@ -446,7 +446,7 @@ export default function PointageManuelPage() {
                       {selectedEmployee.firstName[0]}{selectedEmployee.lastName[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-white">{selectedEmployee.firstName} {selectedEmployee.lastName}</p>
+                      <p className="font-bold text-emerald-100">{selectedEmployee.firstName} {selectedEmployee.lastName}</p>
                       <p className="text-xs text-emerald-300">
                         {selectedEmployee.employeeNumber}
                         {selectedEmployee.department && ` • ${selectedEmployee.department.name}`}
@@ -462,7 +462,7 @@ export default function PointageManuelPage() {
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-2">
+              <label className="block text-sm font-bold text-[var(--text)] mb-2">
                 <Calendar size={16} className="inline mr-2"/>
                 Date
               </label>
@@ -471,14 +471,14 @@ export default function PointageManuelPage() {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             {/* Heures — chacune activable indépendamment */}
             <div className="grid grid-cols-2 gap-4">
-              <div className={`p-3 rounded-xl border transition-colors ${recordCheckIn ? 'border-green-500/40 bg-green-500/5' : 'border-slate-700 bg-slate-700/20 opacity-60'}`}>
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-300 mb-2 cursor-pointer select-none">
+              <div className={`p-3 rounded-xl border transition-colors ${recordCheckIn ? 'border-green-500/40 bg-green-500/5' : 'border-[var(--border)] bg-[var(--surface-2)] opacity-60'}`}>
+                <label className="flex items-center gap-2 text-sm font-bold text-[var(--text)] mb-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={recordCheckIn}
@@ -493,12 +493,12 @@ export default function PointageManuelPage() {
                   value={checkInTime}
                   disabled={!recordCheckIn}
                   onChange={(e) => setCheckInTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
 
-              <div className={`p-3 rounded-xl border transition-colors ${recordCheckOut ? 'border-red-500/40 bg-red-500/5' : 'border-slate-700 bg-slate-700/20 opacity-60'}`}>
-                <label className="flex items-center gap-2 text-sm font-bold text-slate-300 mb-2 cursor-pointer select-none">
+              <div className={`p-3 rounded-xl border transition-colors ${recordCheckOut ? 'border-red-500/40 bg-red-500/5' : 'border-[var(--border)] bg-[var(--surface-2)] opacity-60'}`}>
+                <label className="flex items-center gap-2 text-sm font-bold text-[var(--text)] mb-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={recordCheckOut}
@@ -513,19 +513,19 @@ export default function PointageManuelPage() {
                   value={checkOutTime}
                   disabled={!recordCheckOut}
                   onChange={(e) => setCheckOutTime(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
-            <p className="text-xs text-slate-500 -mt-2">
+            <p className="text-xs text-[var(--text-muted)] -mt-2">
               Astuce : activez seulement "Entrée" si l'employé vient d'arriver et que sa sortie n'est pas encore connue — vous pourrez revenir compléter la sortie plus tard sur ce même pointage.
             </p>
 
             {/* Aperçu durée — uniquement si les deux sont activées */}
             {recordCheckIn && recordCheckOut && checkInTime && checkOutTime && (
-              <div className="bg-slate-700/30 rounded-xl p-3 flex items-center justify-between">
-                <span className="text-sm text-slate-400">Durée totale</span>
-                <span className="text-lg font-bold text-white">
+              <div className="bg-[var(--surface-2)] rounded-xl p-3 flex items-center justify-between">
+                <span className="text-sm text-[var(--text-muted)]">Durée totale</span>
+                <span className="text-lg font-bold text-[var(--text)]">
                   {(() => {
                     const start = new Date(`2000-01-01T${checkInTime}:00`);
                     const end = new Date(`2000-01-01T${checkOutTime}:00`);
@@ -540,7 +540,7 @@ export default function PointageManuelPage() {
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-bold text-slate-300 mb-2">
+              <label className="block text-sm font-bold text-[var(--text)] mb-2">
                 Raison du pointage manuel
               </label>
               <textarea
@@ -548,7 +548,7 @@ export default function PointageManuelPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Ex: Oubli de pointage, problème technique, correction..."
                 rows={3}
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                className="w-full px-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
               />
             </div>
 
@@ -572,11 +572,11 @@ export default function PointageManuelPage() {
         )}
 
         {/* Info Box */}
-        <div className="bg-slate-800/30 backdrop-blur-md rounded-3xl p-6 border border-white/5">
-          <h3 className="text-xs font-bold uppercase text-slate-500 mb-3 tracking-widest">
+        <div className="bg-[var(--surface)] backdrop-blur-md rounded-2xl p-6 border border-[var(--border)]">
+          <h3 className="text-xs font-bold uppercase text-[var(--text-muted)] mb-3 tracking-widest">
             ℹ️ Information
           </h3>
-          <p className="text-sm text-slate-400 mb-2">
+          <p className="text-sm text-[var(--text-muted)] mb-2">
             Cette fonctionnalité utilise le système de correction pour enregistrer des pointages
             avec des heures personnalisées. Les timestamps seront enregistrés exactement comme saisis.
           </p>

@@ -164,7 +164,7 @@ export default function DasDeclarationPage() {
     : Array.from({ length: 7 }, (_, i) => currentYear - i);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 print:bg-white print:p-0">
+    <div className="min-h-screen bg-[var(--bg)] p-4 md:p-6 print:bg-white print:p-0">
       {/* ── En-tête ─────────────────────────────────────────────────────── */}
 
       <RapportsSubNav active="/rapports/das-declaration" />
@@ -172,14 +172,14 @@ export default function DasDeclarationPage() {
       <div className="mb-6 mt-6 print:hidden">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+            <div className="p-2.5 bg-[var(--brand)] rounded-xl shadow-lg shadow-[var(--brand)]/30">
               <FileSpreadsheet className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900 dark:text-white">
+              <h1 className="text-lg font-bold text-[var(--text)]">
                 Déclaration Annuelle des Salaires — DAS I
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 CNSS-Impôts · récapitulatif annuel par salarié
               </p>
             </div>
@@ -190,8 +190,8 @@ export default function DasDeclarationPage() {
               onClick={() => setRangeMode(false)}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors ${
                 !rangeMode
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
               Une année
@@ -200,8 +200,8 @@ export default function DasDeclarationPage() {
               onClick={() => setRangeMode(true)}
               className={`px-3 py-2 text-sm font-semibold rounded-xl transition-colors ${
                 rangeMode
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  ? 'bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30'
+                  : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text)]'
               }`}
             >
               Plage d'années
@@ -216,7 +216,7 @@ export default function DasDeclarationPage() {
               <select
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
               >
                 {yearOptions.map((y) => (
                   <option key={y} value={y}>
@@ -224,7 +224,7 @@ export default function DasDeclarationPage() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
             </div>
           ) : (
             <>
@@ -232,7 +232,7 @@ export default function DasDeclarationPage() {
                 <select
                   value={startYear}
                   onChange={(e) => setStartYear(Number(e.target.value))}
-                  className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>
@@ -240,14 +240,14 @@ export default function DasDeclarationPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
               </div>
-              <span className="text-slate-400 text-sm">à</span>
+              <span className="text-[var(--text-muted)] text-sm">à</span>
               <div className="relative">
                 <select
                   value={endYear}
                   onChange={(e) => setEndYear(Number(e.target.value))}
-                  className="pl-3 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/50"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>
@@ -255,7 +255,7 @@ export default function DasDeclarationPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-slate-400 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 absolute right-2.5 top-2.5 text-[var(--text-muted)] pointer-events-none" />
               </div>
             </>
           )}
@@ -263,10 +263,10 @@ export default function DasDeclarationPage() {
           {!rangeMode && (
             <button
               onClick={() => loadRecap(year)}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors"
               title="Rafraîchir"
             >
-              <RefreshCw className="w-4 h-4 text-slate-500" />
+              <RefreshCw className="w-4 h-4 text-[var(--text-muted)]" />
             </button>
           )}
         </div>
@@ -281,14 +281,14 @@ export default function DasDeclarationPage() {
 
       {/* ── Mode plage d'années : juste l'action d'export groupé ─────────── */}
       {rangeMode ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-6 shadow-sm print:hidden">
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 p-6 shadow-sm print:hidden">
           <div className="flex items-center gap-3 mb-4">
-            <FileArchive className="w-5 h-5 text-blue-600" />
-            <h2 className="font-semibold text-slate-900 dark:text-white">
+            <FileArchive className="w-5 h-5 text-[var(--brand)]" />
+            <h2 className="font-semibold text-[var(--text)]">
               Export groupé {startYear} → {endYear}
             </h2>
           </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <p className="text-sm text-[var(--text-muted)] mb-4">
             Génère un fichier .zip contenant un DAS I (.xlsx) par année de la
             plage sélectionnée — seules les années où des paies ont été
             validées sont incluses.
@@ -296,7 +296,7 @@ export default function DasDeclarationPage() {
           <button
             onClick={() => setPendingExport('range')}
             disabled={exporting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
           >
             {exporting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -308,19 +308,19 @@ export default function DasDeclarationPage() {
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+          <Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" />
         </div>
       ) : recap ? (
         <>
           {/* ── Carte entreprise / période ──────────────────────────────── */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-5 mb-4 shadow-sm print:shadow-none print:border-black">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 p-5 mb-4 shadow-sm print:shadow-none print:border-black">
             <div className="flex items-center gap-3 mb-3">
-              <Building2 className="w-5 h-5 text-blue-600" />
+              <Building2 className="w-5 h-5 text-[var(--brand)]" />
               <div>
-                <p className="font-semibold text-slate-900 dark:text-white">
+                <p className="font-semibold text-[var(--text)]">
                   {recap.company?.legalName || '—'}
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-[var(--text-muted)]">
                   Matricule CNSS : {recap.company?.cnssAffiliationNumber || '—'} · NIU :{' '}
                   {recap.company?.taxNumber || '—'}
                 </p>
@@ -334,41 +334,41 @@ export default function DasDeclarationPage() {
 
           {/* ── Indicateurs ─────────────────────────────────────────────── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 print:hidden">
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Effectif déclaré</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                <p className="text-xs text-[var(--text-muted)]">Effectif déclaré</p>
+                <p className="text-lg font-bold text-[var(--text)]">
                   {recap.totals.effectif}
                 </p>
               </div>
-              <Users className="w-5 h-5 text-blue-500" />
+              <Users className="w-5 h-5 text-[var(--brand)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Masse salariale brute</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                <p className="text-xs text-[var(--text-muted)]">Masse salariale brute</p>
+                <p className="text-lg font-bold text-[var(--text)]">
                   {fmt(recap.totals.salaireBrut)} F
                 </p>
               </div>
               <Banknote className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">IRPP retenu (cumul)</p>
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
+                <p className="text-xs text-[var(--text-muted)]">IRPP retenu (cumul)</p>
+                <p className="text-lg font-bold text-[var(--text)]">
                   {fmt(recap.totals.irppRetenu)} F
                 </p>
               </div>
-              <CheckCircle2 className="w-5 h-5 text-violet-500" />
+              <CheckCircle2 className="w-5 h-5 text-[var(--accent-2)]" />
             </div>
-            <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm">
+            <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 shadow-sm">
               <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Avantages en nature</p>
-                <p className={`text-lg font-bold ${recap.totals.avantageNature > 0 ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                <p className="text-xs text-[var(--text-muted)]">Avantages en nature</p>
+                <p className={`text-lg font-bold ${recap.totals.avantageNature > 0 ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
                   {fmt(recap.totals.avantageNature)} F
                 </p>
                 {recap.totals.avantageNature === 0 && (
-                  <p className="text-[11px] text-slate-400 mt-0.5">Aucune prime configurée « en nature »</p>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">Aucune prime configurée « en nature »</p>
                 )}
               </div>
               <Building2 className="w-5 h-5 text-amber-500" />
@@ -376,11 +376,11 @@ export default function DasDeclarationPage() {
           </div>
 
           {/* ── Tableau salariés ────────────────────────────────────────── */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden shadow-sm print:shadow-none print:border-black">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)]/60 overflow-hidden shadow-sm print:shadow-none print:border-black">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/60 text-left text-xs text-slate-500 dark:text-slate-400">
+                  <tr className="bg-[var(--surface-2)]/60 text-left text-xs text-[var(--text-muted)]">
                     <th className="px-4 py-3 font-semibold">Matricule</th>
                     <th className="px-4 py-3 font-semibold">NIU</th>
                     <th className="px-4 py-3 font-semibold">N° CNSS</th>
@@ -408,73 +408,73 @@ export default function DasDeclarationPage() {
                     <th className="px-4 py-3 font-semibold text-right">Taxe Dépt</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-[var(--border)]">
                   {recap.employees.map((e) => (
-                    <tr key={e.employeeId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{e.matricule}</td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{e.niu || '—'}</td>
-                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{e.cnssNumber || '—'}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                    <tr key={e.employeeId} className="hover:bg-[var(--surface-2)]/40">
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{e.matricule}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{e.niu || '—'}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{e.cnssNumber || '—'}</td>
+                      <td className="px-4 py-3 font-medium text-[var(--text)] whitespace-nowrap">
                         {e.nom} {e.prenom}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{e.profession}</td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{e.adresse || '—'}</td>
-                      <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300">{e.sexe || '—'}</td>
-                      <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-[var(--text)]">{e.profession}</td>
+                      <td className="px-4 py-3 text-[var(--text)]">{e.adresse || '—'}</td>
+                      <td className="px-4 py-3 text-center text-[var(--text)]">{e.sexe || '—'}</td>
+                      <td className="px-4 py-3 text-center text-[var(--text)]">
                         {e.situationMatrimoniale || '—'}
                       </td>
-                      <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300">{e.nbEnfants}</td>
-                      <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-center text-[var(--text)]">{e.nbEnfants}</td>
+                      <td className="px-4 py-3 text-center text-[var(--text)]">
                         {e.nationaliteCode || '—'}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      <td className="px-4 py-3 text-[var(--text)] whitespace-nowrap">
                         {fmtDate(e.dateEmbauche)}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      <td className="px-4 py-3 text-[var(--text)] whitespace-nowrap">
                         {fmtDate(e.dateParti)}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{e.dureeEmploi || '—'}</td>
-                      <td className="px-4 py-3 text-right text-slate-900 dark:text-white">
+                      <td className="px-4 py-3 text-[var(--text)]">{e.dureeEmploi || '—'}</td>
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {fmt(e.salaireBrut)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {fmt(e.salairePlafonne)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {e.salaireDeConge > 0 ? fmt(e.salaireDeConge) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {fmt(e.salaireDePresence)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {fmt(e.salaireBrutTaxable)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {fmt(e.baseImposable)}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-slate-900 dark:text-white">
+                      <td className="px-4 py-3 text-right font-medium text-[var(--text)]">
                         {fmt(e.irppRetenu)}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {e.avantageNature > 0 ? fmt(e.avantageNature) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {e.indemniteTransport > 0 ? fmt(e.indemniteTransport) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {e.indemnitePanier > 0 ? fmt(e.indemnitePanier) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {e.tolAnnuel > 0 ? fmt(e.tolAnnuel) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-right text-[var(--text)]">
                         {e.taxeDeptAnnuel > 0 ? fmt(e.taxeDeptAnnuel) : '—'}
                       </td>
                     </tr>
                   ))}
                   {recap.employees.length === 0 && (
                     <tr>
-                      <td colSpan={25} className="px-4 py-10 text-center text-slate-400">
+                      <td colSpan={25} className="px-4 py-10 text-center text-[var(--text-muted)]">
                         Aucune paie validée pour {recap.year}
                       </td>
                     </tr>
@@ -489,7 +489,7 @@ export default function DasDeclarationPage() {
             <button
               onClick={() => setPendingExport('single')}
               disabled={exporting || recap.employees.length === 0}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
             >
               {exporting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -500,7 +500,7 @@ export default function DasDeclarationPage() {
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl transition-all"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[var(--surface)] hover:bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl transition-all"
             >
               <Printer className="w-4 h-4" />
               Imprimer
@@ -511,20 +511,20 @@ export default function DasDeclarationPage() {
 
       {/* ── Modale de revue avant export ────────────────────────────────── */}
       {pendingExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700/60 overflow-hidden">
-            <div className="p-5 flex items-start gap-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-xl shrink-0">
-                <ShieldCheck className="w-5 h-5 text-blue-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm print:hidden">
+          <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)]/60 overflow-hidden">
+            <div className="p-5 flex items-start gap-3 border-b border-[var(--border)]">
+              <div className="p-2 bg-[var(--brand-soft)] rounded-xl shrink-0">
+                <ShieldCheck className="w-5 h-5 text-[var(--brand)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white">
+                <h3 className="font-semibold text-[var(--text)]">
                   Une dernière vérification avant le dépôt
                 </h3>
               </div>
               <button
                 onClick={() => setPendingExport(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                 aria-label="Fermer"
               >
                 <X className="w-4 h-4" />
@@ -532,11 +532,11 @@ export default function DasDeclarationPage() {
             </div>
 
             <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-sm text-[var(--text)] leading-relaxed">
                 Le fichier a été rempli automatiquement à partir des bulletins
                 de paie de la période — l'essentiel du travail est fait.
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-sm text-[var(--text)] leading-relaxed">
                 Avant de le transmettre à la CNSS, un dernier regard reste
                 utile : compléter une information manquante, ajuster un
                 détail propre à un salarié. Vous seul(e) avez le dernier mot
@@ -547,14 +547,14 @@ export default function DasDeclarationPage() {
             <div className="p-5 pt-0 flex items-center gap-3">
               <button
                 onClick={() => setPendingExport(null)}
-                className="flex-1 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] text-sm font-semibold rounded-xl hover:bg-[var(--surface-2)] transition-colors"
               >
                 Revoir avant
               </button>
               <button
                 onClick={pendingExport === 'range' ? runExportRange : runExport}
                 disabled={exporting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/30 transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--brand)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl shadow-md shadow-[var(--brand)]/30 transition-all"
               >
                 {exporting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard, ClipboardList, DollarSign, UsersRound, Building2,
   UserCircle, BarChart3, UmbrellaOff, BookOpen, CalendarDays,
-  MoreHorizontal, ChevronDown, Check, ReceiptText, FileSpreadsheet,
+  MoreHorizontal, ChevronDown, Check, ReceiptText, FileSpreadsheet, ArrowRightLeft,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -38,6 +38,7 @@ const PRIMARY = [
 
 const MORE = [
   { href: '/rapports/recap-personnel',     label: 'Récap. Personnel',    Icon: ReceiptText },
+  { href: '/rapports/mouvements-effectifs', label: 'Mouvements Effectif', Icon: ArrowRightLeft },
   { href: '/rapports/das-declaration',     label: 'DAS annuelle',        Icon: FileSpreadsheet },
   { href: '/rapports/recap-bulletins-annuel',     label: 'Récap Bulletin Annuel',     Icon: BookOpen },
   { href: '/rapports/its-bnc',             label: 'ITS / BNC par mois',  Icon: DollarSign },
@@ -46,8 +47,7 @@ const MORE = [
   { href: '/rapports/analyse-conges',      label: 'Congés',               Icon: UmbrellaOff },
   { href: '/rapports/observatoire-conges', label: 'Observatoire congés',  Icon: UmbrellaOff },
   { href: '/rapports/absences',            label: 'Absences',             Icon: CalendarDays },
-  { href: '/rapports/analyse-paie',        label: 'analyse-paie',         Icon: BookOpen },
-  
+  { href: '/rapports/comptabilite',        label: 'Comptabilité',         Icon: BookOpen },
 ];
 
 export default function RapportsSubNav({ active }: { active: string }) {
@@ -81,8 +81,8 @@ export default function RapportsSubNav({ active }: { active: string }) {
             onClick={() => go(href)}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
               active === href
-                ? 'bg-sky-500 text-white shadow-sm'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                ? 'bg-[var(--brand)] text-white shadow-sm'
+                : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
             }`}
           >
             <Icon size={14} /> {label}
@@ -96,8 +96,8 @@ export default function RapportsSubNav({ active }: { active: string }) {
           onClick={() => setOpen((o) => !o)}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
             activeInMore
-              ? 'bg-sky-500 text-white shadow-sm'
-              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              ? 'bg-[var(--brand)] text-white shadow-sm'
+              : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
           }`}
         >
           {activeInMore ? <activeInMore.Icon size={14} /> : <MoreHorizontal size={14} />}
@@ -106,16 +106,16 @@ export default function RapportsSubNav({ active }: { active: string }) {
         </button>
 
         {open && (
-          <div className="absolute left-0 top-full mt-2 w-56 bg-white dark:bg-[#0B1121] border border-gray-100 dark:border-white/10 rounded-2xl shadow-xl z-20 py-1.5 overflow-hidden">
+          <div className="absolute left-0 top-full mt-2 w-56 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl z-20 py-1.5 overflow-hidden">
             {MORE.map(({ href, label, Icon }) => (
               <button
                 key={href}
                 onClick={() => go(href)}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 text-left"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-2)] text-left"
               >
-                <Icon size={15} className="text-gray-400 shrink-0" />
+                <Icon size={15} className="text-[var(--text-muted)] shrink-0" />
                 <span className="flex-1">{label}</span>
-                {active === href && <Check size={14} className="text-sky-500" />}
+                {active === href && <Check size={14} className="text-[var(--brand)]" />}
               </button>
             ))}
           </div>

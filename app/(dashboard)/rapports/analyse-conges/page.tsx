@@ -16,6 +16,7 @@ import {
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
 
@@ -25,13 +26,18 @@ export default function LeaveAnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [topEmployees, setTopEmployees] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [period, setPeriod] = useState<PeriodValue>({
+    mode: 'ANNEE',
+    month: 1,
+    year: new Date().getFullYear(),
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [leavesRes, topRes] = await Promise.all([
-          api.get('/reports/leaves'),
-          api.get('/reports/top-employees')
+          api.get(`/reports/leaves?year=${period.year}`),
+          api.get(`/reports/top-employees?year=${period.year}`)
         ]);
         
         setData(leavesRes);
@@ -43,12 +49,12 @@ export default function LeaveAnalyticsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [period.year]);
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-sky-500" size={48}/>
+        <Loader2 className="animate-spin text-[var(--brand)]" size={48}/>
       </div>
     );
   }
@@ -63,19 +69,20 @@ export default function LeaveAnalyticsPage() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.push(bp('/rapports'))} 
-            className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+            className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]"
           >
-            <ArrowLeft size={20} className="text-gray-500"/>
+            <ArrowLeft size={20} className="text-[var(--text-muted)]"/>
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-[var(--text)]">
               Analyse des Congés
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               Répartition, saisonnalité et suivi des soldes
             </p>
           </div>
         </div>
+        <PeriodSelector value={period} onChange={setPeriod} modes={['ANNEE']} />
       </div>
 
       {/* ✅ NAVIGATION RAPPORTS */}
@@ -85,25 +92,22 @@ export default function LeaveAnalyticsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {data?.kpi?.map((m: any, i: number) => {
           const icons = [Calendar, CheckCircle, Clock];
-          const colors = [
-            'from-emerald-500 to-teal-600',
-            'from-sky-500 to-blue-600',
-            'from-purple-500 to-indigo-600'
-          ];
+          // ✅ 2 teintes max (émeraude/ambre), plus de dégradé
+          const colors = ['bg-[var(--brand)]', 'bg-[var(--accent-2)]', 'bg-[var(--brand)]'];
           const Icon = icons[i];
 
           return (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
+            <div key={i} className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className={`absolute top-0 right-0 w-32 h-32 ${colors[i]} opacity-5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-150 transition-transform`} />
               
               <div className="relative z-10">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
+                <div className={`w-12 h-12 rounded-xl ${colors[i]} flex items-center justify-center text-white shadow-lg mb-4`}>
                   <Icon size={24} />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-3xl font-bold text-[var(--text)] tracking-tight">
                   {m.value}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wide mt-2">
+                <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wide mt-2">
                   {m.label}
                 </p>
               </div>
@@ -116,12 +120,12 @@ export default function LeaveAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Répartition par Type */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-bold text-[var(--text)]">
               Répartition par Type de Congé
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-[var(--text-muted)]">
               {totalLeaves} demande(s) au total
             </p>
           </div>
@@ -151,15 +155,15 @@ export default function LeaveAnalyticsPage() {
           {/* Légende détaillée */}
           <div className="mt-6 space-y-2">
             {data?.distribution?.map((item: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+              <div key={idx} className="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg">
                 <div className="flex items-center gap-3">
                   <div 
                     className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: COLORS[idx % COLORS.length] }}
                   />
-                  <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
+                  <span className="font-medium text-[var(--text)]">{item.name}</span>
                 </div>
-                <span className="font-bold text-gray-900 dark:text-white">
+                <span className="font-bold text-[var(--text)]">
                   {item.value} ({((item.value / totalLeaves) * 100).toFixed(0)}%)
                 </span>
               </div>
@@ -168,8 +172,8 @@ export default function LeaveAnalyticsPage() {
         </div>
 
         {/* Saisonnalité */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-6">
             Saisonnalité des Congés
           </h3>
           <div className="h-[300px]">
@@ -236,14 +240,14 @@ export default function LeaveAnalyticsPage() {
 
       {/* TOP EMPLOYÉS CONGÉS */}
       {topEmployees?.topLeaves?.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
                 <Award size={20} className="text-emerald-500" />
                 Top 10 Employés - Congés Pris
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 Classement par nombre de jours
               </p>
             </div>
@@ -251,19 +255,19 @@ export default function LeaveAnalyticsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {topEmployees.topLeaves.slice(0, 10).map((emp: any, idx: number) => (
-              <div key={emp.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors">
+              <div key={emp.id} className="flex items-center justify-between p-4 bg-[var(--surface-2)] rounded-xl hover:bg-[var(--surface-2)] transition-colors">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center font-bold">
                     {idx + 1}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 dark:text-white">{emp.name}</p>
-                    <p className="text-xs text-gray-500">{emp.department}</p>
+                    <p className="font-bold text-[var(--text)]">{emp.name}</p>
+                    <p className="text-xs text-[var(--text-muted)]">{emp.department}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold text-emerald-600">{emp.leavesDays.toFixed(1)}</p>
-                  <p className="text-xs text-gray-500">{emp.leavesCount} demande(s)</p>
+                  <p className="text-xs text-[var(--text-muted)]">{emp.leavesCount} demande(s)</p>
                 </div>
               </div>
             ))}
@@ -275,7 +279,7 @@ export default function LeaveAnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Statistiques Clés */}
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-xl">
+        <div className="bg-[var(--brand)] rounded-2xl p-6 text-white shadow-xl">
           <h3 className="text-lg font-bold mb-4">Statistiques Clés</h3>
           
           <div className="space-y-4">
@@ -312,8 +316,8 @@ export default function LeaveAnalyticsPage() {
         </div>
 
         {/* Insights */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <div className="lg:col-span-2 bg-[var(--surface)] p-6 rounded-2xl border border-[var(--border)] shadow-sm">
+          <h3 className="text-lg font-bold text-[var(--text)] mb-4">
             Insights & Recommandations
           </h3>
 
@@ -332,14 +336,14 @@ export default function LeaveAnalyticsPage() {
               </div>
             </div>
 
-            <div className="p-4 bg-sky-50 dark:bg-sky-900/20 rounded-xl border border-sky-200 dark:border-sky-800">
+            <div className="p-4 bg-[var(--brand-soft)] rounded-xl border border-[var(--brand)]/30">
               <div className="flex items-start gap-3">
-                <Users size={20} className="text-sky-600 dark:text-sky-400 mt-0.5 flex-shrink-0" />
+                <Users size={20} className="text-[var(--brand)] mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-bold text-sky-900 dark:text-sky-100 mb-1">
+                  <p className="font-bold text-[var(--text)] mb-1">
                     Planification
                   </p>
-                  <p className="text-sm text-sky-800 dark:text-sky-200 leading-relaxed">
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                     Anticipez les périodes de forte demande (vacances scolaires) pour maintenir la continuité opérationnelle.
                   </p>
                 </div>
@@ -362,14 +366,14 @@ export default function LeaveAnalyticsPage() {
               </div>
             )}
 
-            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+            <div className="p-4 bg-[var(--accent-2-soft)] rounded-xl border border-[var(--accent-2)]/30">
               <div className="flex items-start gap-3">
-                <TrendingUp size={20} className="text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                <TrendingUp size={20} className="text-[var(--accent-2)] mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-bold text-purple-900 dark:text-purple-100 mb-1">
+                  <p className="font-bold text-[var(--text)] mb-1">
                     Soldes à Surveiller
                   </p>
-                  <p className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
+                  <p className="text-sm text-[var(--text-muted)] leading-relaxed">
                     Encouragez les employés avec des soldes élevés à planifier leurs congés pour éviter les pertes en fin d'année.
                   </p>
                 </div>

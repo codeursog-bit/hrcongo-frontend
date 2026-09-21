@@ -20,12 +20,12 @@ export default function RapportAbsencesPage() {
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => router.push(bp('/rapports'))} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <ArrowLeft size={20} className="text-gray-500" />
+        <button onClick={() => router.push(bp('/rapports'))} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
+          <ArrowLeft size={20} className="text-[var(--text-muted)]" />
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Observatoire RH des absences</h1>
-          <p className="text-gray-500 dark:text-gray-400">Congés, permissions et absences injustifiées — vue consolidée pour le pilotage RH</p>
+          <h1 className="text-3xl font-bold text-[var(--text)]">Observatoire RH des absences</h1>
+          <p className="text-[var(--text-muted)]">Congés, permissions et absences injustifiées — vue consolidée pour le pilotage RH</p>
         </div>
       </div>
 

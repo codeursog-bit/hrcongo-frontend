@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
-  Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil,
+  Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil, Paperclip,
   ArrowRight, Info, ShieldCheck, Landmark, Lock, Unlock, LayoutDashboard, Eye,PiggyBank, Users,
   CreditCard, Calendar, SlidersHorizontal
 } from 'lucide-react';
@@ -677,7 +677,18 @@ export default function LoansManagementPage() {
                     {selectedLoan.nature && (
                       <DetailTile icon={Receipt} label="Nature" value={NATURE_LABEL[selectedLoan.nature] || selectedLoan.nature} tone="amber" />
                     )}
+                    <DetailTile
+                      icon={selectedLoan.recoverViaPayroll ? CreditCard : Banknote}
+                      label="Mode de remboursement"
+                      value={selectedLoan.recoverViaPayroll ? 'Sur la paie' : 'Espèces'}
+                      tone="slate"
+                    />
                   </div>
+                  {selectedLoan.attachmentUrl && (
+                    <a href={selectedLoan.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-emerald-600 hover:underline">
+                      <Paperclip size={14} /> Voir la pièce jointe
+                    </a>
+                  )}
 
                   {/* Progression du remboursement — repère visuel rapide */}
                   {Number(selectedLoan.amount) > 0 && (
@@ -917,6 +928,12 @@ export default function LoansManagementPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <DetailTile icon={Banknote} label="Montant" value={`${Number(selectedAdvance.amount).toLocaleString('fr-FR')} FCFA`} tone="slate" />
                     <DetailTile icon={Wallet} label="Déduction prévue" value={`${MONTH_LABELS[selectedAdvance.deductMonth - 1]} ${selectedAdvance.deductYear}`} tone="emerald" />
+                    <DetailTile
+                      icon={selectedAdvance.recoverViaPayroll ? CreditCard : Banknote}
+                      label="Mode de récupération"
+                      value={selectedAdvance.recoverViaPayroll ? 'Sur la paie' : 'Espèces'}
+                      tone="slate"
+                    />
                   </div>
 
                   {Number(selectedAdvance.amount) > 0 && ['APPROVED', 'PAID', 'DEDUCTED'].includes(selectedAdvance.status) && (

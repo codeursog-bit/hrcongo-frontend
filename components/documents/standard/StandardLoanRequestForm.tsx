@@ -55,6 +55,7 @@ export interface StandardLoanRequestFormData {
   durationMonths?: number | string | null; // dérivé de startDate/endDate côté page
   recoverViaPayroll?: boolean | null;
   reason?: string | null;
+  attachmentUrl?: string | null;
   requestedAt?: string | Date;
   drhDecision?: 'OUI' | 'NON' | null;
   dgDecision?: 'OUI' | 'NON' | null;
@@ -166,6 +167,9 @@ export default function StandardLoanRequestForm({ data, id }: { data: StandardLo
       />
       <div style={{ fontSize: 12.5, marginBottom: 18 }}>
         <strong>Motif de la demande :</strong> {data.reason || ''}
+      </div>
+      <div style={{ fontSize: 12.5, marginBottom: 18 }}>
+        <strong>Pièce justificative jointe :</strong> {data.attachmentUrl ? 'Oui' : 'Non'}
       </div>
 
       <p style={{ fontSize: 12, lineHeight: 1.6, margin: '0 0 20px' }}>

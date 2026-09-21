@@ -214,15 +214,15 @@ export default function AccountingPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push(bp('/rapports'))}
-            className="p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors"
+            className="p-2.5 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
           >
-            <ArrowLeft size={20} className="text-gray-500" />
+            <ArrowLeft size={20} className="text-[var(--text-muted)]" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">
               Écritures Comptables
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-[var(--text-muted)]">
               OD de paie — Norme OHADA · {monthName}
             </p>
           </div>
@@ -230,19 +230,19 @@ export default function AccountingPage() {
 
         {/* Sélecteur de période */}
         <div className="flex items-center gap-3">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center px-4 py-2.5 gap-3 shadow-sm">
-            <span className="text-gray-400 text-sm font-medium">Période :</span>
+          <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] flex items-center px-4 py-2.5 gap-3 shadow-sm">
+            <span className="text-[var(--text-muted)] text-sm font-medium">Période :</span>
             <select
               value={period.month}
               onChange={e => setPeriod(p => ({ ...p, month: parseInt(e.target.value) }))}
-              className="bg-transparent font-bold text-gray-900 dark:text-white outline-none cursor-pointer text-sm"
+              className="bg-transparent font-bold text-[var(--text)] outline-none cursor-pointer text-sm"
             >
               {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>
             <select
               value={period.year}
               onChange={e => setPeriod(p => ({ ...p, year: parseInt(e.target.value) }))}
-              className="bg-transparent font-bold text-gray-900 dark:text-white outline-none cursor-pointer text-sm"
+              className="bg-transparent font-bold text-[var(--text)] outline-none cursor-pointer text-sm"
             >
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -260,17 +260,17 @@ export default function AccountingPage() {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Tableau du journal */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden">
+          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-xl overflow-hidden">
 
             {/* En-tête */}
-            <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50">
+            <div className="p-5 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-2)]/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-xl">
+                <div className="p-2 bg-[var(--brand-soft)] text-[var(--brand)] rounded-xl">
                   <ArrowRightLeft size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">Journal de Paie — OD</h3>
-                  <p className="text-xs text-gray-500">{entries.length} écritures · {monthName}</p>
+                  <h3 className="font-bold text-[var(--text)]">Journal de Paie — OD</h3>
+                  <p className="text-xs text-[var(--text-muted)]">{entries.length} écritures · {monthName}</p>
                 </div>
               </div>
               <div className={`px-3 py-1.5 rounded-full text-xs font-bold border
@@ -284,17 +284,17 @@ export default function AccountingPage() {
             <div className="overflow-x-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="animate-spin text-sky-500" size={36} />
+                  <Loader2 className="animate-spin text-[var(--brand)]" size={36} />
                 </div>
               ) : entries.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+                <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
                   <Receipt size={40} className="mb-3 opacity-30" />
                   <p className="font-medium">Aucune écriture pour cette période</p>
                   <p className="text-sm mt-1">Générez d'abord les bulletins de paie</p>
                 </div>
               ) : (
                 <table className="w-full text-sm text-left font-mono">
-                  <thead className="bg-gray-100 dark:bg-gray-900 text-gray-500 uppercase text-xs font-semibold">
+                  <thead className="bg-[var(--surface-2)] text-[var(--text-muted)] uppercase text-xs font-semibold">
                     <tr>
                       <th className="px-5 py-3 w-20">Compte</th>
                       <th className="px-5 py-3">Libellé</th>
@@ -302,25 +302,25 @@ export default function AccountingPage() {
                       <th className="px-5 py-3 w-28 text-right text-red-500">Crédit</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
+                  <tbody className="divide-y divide-[var(--border)]">
                     {Object.entries(groupedByPiece).map(([piece, pEntries], pi) => (
                       <React.Fragment key={piece}>
                         {/* Séparateur de pièce */}
                         <tr>
-                          <td colSpan={4} className="px-5 py-2 bg-blue-50 dark:bg-blue-900/10">
-                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                          <td colSpan={4} className="px-5 py-2 bg-[var(--brand-soft)]">
+                            <span className="text-xs font-bold text-[var(--brand)]">
                               📄 {piece}
                             </span>
                           </td>
                         </tr>
                         {pEntries.map((entry, i) => (
-                          <tr key={`${pi}-${i}`} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-                            <td className="px-5 py-2.5 font-bold text-gray-900 dark:text-white">{entry.account}</td>
-                            <td className="px-5 py-2.5 text-gray-600 dark:text-gray-300 text-xs">{entry.label}</td>
-                            <td className="px-5 py-2.5 text-right text-gray-800 dark:text-gray-200 bg-emerald-50/40 dark:bg-emerald-900/5">
+                          <tr key={`${pi}-${i}`} className="hover:bg-[var(--surface-2)] transition-colors">
+                            <td className="px-5 py-2.5 font-bold text-[var(--text)]">{entry.account}</td>
+                            <td className="px-5 py-2.5 text-[var(--text)] text-xs">{entry.label}</td>
+                            <td className="px-5 py-2.5 text-right text-[var(--text)] bg-emerald-50/40 dark:bg-emerald-900/5">
                               {Number(entry.debit) > 0 ? Number(entry.debit).toLocaleString('fr-FR') : '–'}
                             </td>
-                            <td className="px-5 py-2.5 text-right text-gray-800 dark:text-gray-200 bg-red-50/40 dark:bg-red-900/5">
+                            <td className="px-5 py-2.5 text-right text-[var(--text)] bg-red-50/40 dark:bg-red-900/5">
                               {Number(entry.credit) > 0 ? Number(entry.credit).toLocaleString('fr-FR') : '–'}
                             </td>
                           </tr>
@@ -328,9 +328,9 @@ export default function AccountingPage() {
                       </React.Fragment>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-100 dark:bg-gray-900 font-bold border-t-2 border-gray-200 dark:border-gray-600">
+                  <tfoot className="bg-[var(--surface-2)] font-bold border-t-2 border-[var(--border)]">
                     <tr>
-                      <td colSpan={2} className="px-5 py-4 text-right uppercase tracking-wider text-xs text-gray-500">
+                      <td colSpan={2} className="px-5 py-4 text-right uppercase tracking-wider text-xs text-[var(--text-muted)]">
                         TOTAUX ({entries.length} lignes)
                       </td>
                       <td className="px-5 py-4 text-right text-emerald-600 text-base">{totalDebit.toLocaleString('fr-FR')}</td>
@@ -343,15 +343,15 @@ export default function AccountingPage() {
           </div>
 
           {/* Note plan comptable */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl p-5 flex gap-4">
-            <div className="p-2 bg-white dark:bg-blue-900/40 rounded-xl text-blue-500 shrink-0 self-start">
+          <div className="bg-[var(--brand-soft)] border border-[var(--brand)]/30 rounded-2xl p-5 flex gap-4">
+            <div className="p-2 bg-white/20 rounded-xl text-white shrink-0 self-start">
               <Settings size={20} />
             </div>
             <div>
-              <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-1">
+              <h4 className="font-bold text-[var(--text)] mb-1">
                 Plan Comptable OHADA
               </h4>
-              <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed mb-1">
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed mb-1">
                 Comptes utilisés par défaut :
                 <span className="font-mono mx-1">661100</span> Salaires bruts ·
                 <span className="font-mono mx-1">431100</span> CNSS Salarié ·
@@ -360,7 +360,7 @@ export default function AccountingPage() {
                 <span className="font-mono mx-1">664100</span> Charges patronales ·
                 <span className="font-mono mx-1">443000</span> TUS
               </p>
-              <p className="text-xs text-blue-600 dark:text-blue-500">
+              <p className="text-xs text-[var(--brand)]">
                 L'export Sage remplace ces comptes par le format PNM compatible Sage Comptabilité.
               </p>
             </div>
@@ -371,9 +371,9 @@ export default function AccountingPage() {
         <div className="space-y-6">
 
           {/* Formats d'export */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Download size={18} className="text-sky-500" />
+          <div className="bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm">
+            <h3 className="font-bold text-[var(--text)] mb-4 flex items-center gap-2">
+              <Download size={18} className="text-[var(--brand)]" />
               Formats d'Export
             </h3>
             <div className="space-y-3">
@@ -382,80 +382,80 @@ export default function AccountingPage() {
               <button
                 onClick={handleExcelExport}
                 disabled={exportLoading === 'excel'}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group disabled:opacity-50"
+                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">XL</div>
                   <div className="text-left">
-                    <p className="font-bold text-sm text-gray-900 dark:text-white">Excel Complet</p>
-                    <p className="text-xs text-gray-500">3 feuilles : Paie + Charges + CNSS</p>
+                    <p className="font-bold text-sm text-[var(--text)]">Excel Complet</p>
+                    <p className="text-xs text-[var(--text-muted)]">3 feuilles : Paie + Charges + CNSS</p>
                   </div>
                 </div>
                 {exportLoading === 'excel'
                   ? <Loader2 size={16} className="animate-spin text-emerald-500" />
-                  : <Download size={16} className="text-gray-400 group-hover:text-emerald-500" />}
+                  : <Download size={16} className="text-[var(--text-muted)] group-hover:text-emerald-500" />}
               </button>
 
               {/* Sage */}
               <button
                 onClick={handleSageExport}
                 disabled={exportLoading === 'sage'}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group disabled:opacity-50"
+                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">SG</div>
+                  <div className="w-9 h-9 rounded-xl bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center font-bold text-xs">SG</div>
                   <div className="text-left">
-                    <p className="font-bold text-sm text-gray-900 dark:text-white">Sage Comptabilité</p>
-                    <p className="text-xs text-gray-500">Format journal .TXT (PNM)</p>
+                    <p className="font-bold text-sm text-[var(--text)]">Sage Comptabilité</p>
+                    <p className="text-xs text-[var(--text-muted)]">Format journal .TXT (PNM)</p>
                   </div>
                 </div>
                 {exportLoading === 'sage'
-                  ? <Loader2 size={16} className="animate-spin text-blue-500" />
-                  : <Download size={16} className="text-gray-400 group-hover:text-blue-500" />}
+                  ? <Loader2 size={16} className="animate-spin text-[var(--brand)]" />
+                  : <Download size={16} className="text-[var(--text-muted)] group-hover:text-[var(--brand)]" />}
               </button>
 
               {/* eTax DGID */}
               <button
                 onClick={handleETaxExport}
                 disabled={exportLoading === 'etax'}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all group disabled:opacity-50"
+                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent-2)] hover:bg-[var(--accent-2-soft)] transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-[var(--accent-2-soft)] text-[var(--accent-2)] flex items-center justify-center">
                     <Globe size={16} />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-sm text-gray-900 dark:text-white">eTax Congo (DGID)</p>
-                    <p className="text-xs text-gray-500">Déclaration ITS/IRPP · FCFA</p>
+                    <p className="font-bold text-sm text-[var(--text)]">eTax Congo (DGID)</p>
+                    <p className="text-xs text-[var(--text-muted)]">Déclaration ITS/IRPP · FCFA</p>
                   </div>
                 </div>
                 {exportLoading === 'etax'
-                  ? <Loader2 size={16} className="animate-spin text-violet-500" />
-                  : <Download size={16} className="text-gray-400 group-hover:text-violet-500" />}
+                  ? <Loader2 size={16} className="animate-spin text-[var(--accent-2)]" />
+                  : <Download size={16} className="text-[var(--text-muted)] group-hover:text-[var(--accent-2)]" />}
               </button>
 
               {/* CSV Générique */}
               <button
                 onClick={handleCSVExport}
                 disabled={exportLoading === 'csv'}
-                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/40 transition-all group disabled:opacity-50"
+                className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-xs">CSV</div>
+                  <div className="w-9 h-9 rounded-xl bg-[var(--surface-2)] text-[var(--text-muted)] flex items-center justify-center font-bold text-xs">CSV</div>
                   <div className="text-left">
-                    <p className="font-bold text-sm text-gray-900 dark:text-white">CSV Générique</p>
-                    <p className="text-xs text-gray-500">Universel — tous logiciels</p>
+                    <p className="font-bold text-sm text-[var(--text)]">CSV Générique</p>
+                    <p className="text-xs text-[var(--text-muted)]">Universel — tous logiciels</p>
                   </div>
                 </div>
                 {exportLoading === 'csv'
-                  ? <Loader2 size={16} className="animate-spin text-gray-500" />
-                  : <Download size={16} className="text-gray-400 group-hover:text-gray-600" />}
+                  ? <Loader2 size={16} className="animate-spin text-[var(--text-muted)]" />
+                  : <Download size={16} className="text-[var(--text-muted)] group-hover:text-[var(--text)]" />}
               </button>
             </div>
           </div>
 
           {/* Synthèse financière */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-black rounded-2xl p-6 text-white shadow-xl">
+          <div className="bg-[var(--brand)] rounded-2xl p-6 text-white shadow-xl">
             <div className="flex items-center gap-2 mb-4 opacity-70">
               <Building2 size={16} />
               <span className="text-xs font-bold uppercase tracking-wider">Synthèse {monthName}</span>
@@ -469,7 +469,7 @@ export default function AccountingPage() {
                 { label: 'Équilibre',           val: isBalanced ? '✓ OK' : '⚠ Écart : ' + Math.abs(totalDebit - totalCredit).toLocaleString(), mono: false, color: isBalanced ? 'text-emerald-400' : 'text-amber-400' },
               ].map((item, i) => (
                 <div key={i} className={`flex justify-between items-center pb-3 ${i < 3 ? 'border-b border-white/10' : ''}`}>
-                  <span className="text-sm text-gray-300">{item.label}</span>
+                  <span className="text-sm text-white/80">{item.label}</span>
                   <span className={`font-bold ${item.mono ? 'font-mono text-sm' : ''} ${item.color || ''}`}>
                     {item.val}
                   </span>
@@ -488,17 +488,17 @@ export default function AccountingPage() {
           </div>
 
           {/* Aide eTax DGI — specs précises */}
-          <div className="bg-violet-50 dark:bg-violet-900/20 rounded-2xl p-5 border border-violet-200 dark:border-violet-800 space-y-3">
+          <div className="bg-[var(--accent-2-soft)] rounded-2xl p-5 border border-[var(--accent-2)]/30 space-y-3">
             <div className="flex items-start gap-3">
-              <Globe size={18} className="text-violet-600 mt-0.5 shrink-0" />
+              <Globe size={18} className="text-[var(--accent-2)] mt-0.5 shrink-0" />
               <div className="flex-1">
-                <h4 className="font-bold text-violet-900 dark:text-violet-200 text-sm mb-2">
+                <h4 className="font-bold text-[var(--text)] text-sm mb-2">
                   eTax DGI Congo — Format officiel
                 </h4>
 
                 {/* Colonnes obligatoires */}
                 <div className="space-y-1 mb-3">
-                  <p className="text-xs font-bold text-violet-700 dark:text-violet-300 uppercase tracking-wide mb-1">
+                  <p className="text-xs font-bold text-[var(--accent-2)] uppercase tracking-wide mb-1">
                     Colonnes (ordre DGI) :
                   </p>
                   {[
@@ -510,11 +510,11 @@ export default function AccountingPage() {
                     { col: 'F', label: 'TUS', desc: 'Brut × 5% (charge patronale)' },
                   ].map((item) => (
                     <div key={item.col} className="flex items-center gap-2 text-xs">
-                      <span className="w-5 h-5 rounded bg-violet-200 dark:bg-violet-800 text-violet-700 dark:text-violet-200 font-bold text-center leading-5 text-xs shrink-0">
+                      <span className="w-5 h-5 rounded bg-[var(--accent-2-soft)] text-[var(--accent-2)] font-bold text-center leading-5 text-xs shrink-0">
                         {item.col}
                       </span>
-                      <span className="font-medium text-violet-800 dark:text-violet-200 w-24 shrink-0">{item.label}</span>
-                      <span className="text-violet-600 dark:text-violet-400">{item.desc}</span>
+                      <span className="font-medium text-[var(--text)] w-24 shrink-0">{item.label}</span>
+                      <span className="text-[var(--text-muted)]">{item.desc}</span>
                     </div>
                   ))}
                 </div>
@@ -529,7 +529,7 @@ export default function AccountingPage() {
                   </ul>
                 </div>
 
-                <p className="text-xs text-violet-600 dark:text-violet-400 mt-2">
+                <p className="text-xs text-[var(--accent-2)] mt-2">
                   Portail : <span className="font-bold">etax.finances.gouv.cg</span>
                   &nbsp;→ Déclarations → ITS/IRPP → Importer fichier
                 </p>
@@ -538,14 +538,14 @@ export default function AccountingPage() {
           </div>
 
           {/* Aide Sage */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5 border border-blue-200 dark:border-blue-800">
+          <div className="bg-[var(--brand-soft)] rounded-2xl p-5 border border-[var(--brand)]/30">
             <div className="flex items-start gap-3">
-              <FileText size={18} className="text-blue-600 mt-0.5 shrink-0" />
+              <FileText size={18} className="text-[var(--brand)] mt-0.5 shrink-0" />
               <div>
-                <h4 className="font-bold text-blue-900 dark:text-blue-200 text-sm mb-1">
+                <h4 className="font-bold text-[var(--text)] text-sm mb-1">
                   Import Sage Comptabilité
                 </h4>
-                <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">
                   Format journal PNM pipe-séparé. Dans Sage : <em>Fichier → Import → Écritures comptables</em> puis sélectionnez le fichier .TXT.
                   Les comptes 661100, 431100, 431300, 447200, 422100, 664100, 641300 doivent exister dans votre plan comptable.
                 </p>
@@ -557,258 +557,3 @@ export default function AccountingPage() {
     </div>
   );
 }
-
-
-
-
-// 'use client';
-
-// import React, { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { 
-//   ArrowLeft, Download, FileSpreadsheet, Copy, 
-//   CheckCircle2, Building2, ArrowRightLeft, Settings
-// } from 'lucide-react';
-// import { api } from '@/services/api';
-
-// // --- Types ---
-// interface JournalEntry {
-//   account: string;
-//   label: string;
-//   debit: number;
-//   credit: number;
-//   ref: string;
-// }
-
-// export default function AccountingExportPage() {
-//   const router = useRouter();
-//   const [period, setPeriod] = useState({ month: 11, year: 2025 }); // Nov 2025 default
-//   const [copied, setCopied] = useState(false);
-//   const [entries, setEntries] = useState<JournalEntry[]>([]);
-//   const [isLoading, setIsLoading] = useState(true);
-
-//   useEffect(() => {
-//     const fetchJournal = async () => {
-//       setIsLoading(true);
-//       try {
-//         const data = await api.get<JournalEntry[]>(`/payrolls/journal?month=${period.month}&year=${period.year}`);
-//         setEntries(Array.isArray(data) ? data : []);
-//       } catch (e) {
-//         console.error("Erreur chargement journal", e);
-//         setEntries([]);
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     };
-//     fetchJournal();
-//   }, [period]);
-
-//   const totalDebit = entries.reduce((acc, curr) => acc + curr.debit, 0);
-//   const totalCredit = entries.reduce((acc, curr) => acc + curr.credit, 0);
-//   const isBalanced = Math.abs(totalDebit - totalCredit) < 1; // Tolerance for float errors
-
-//   const handleCopy = () => {
-//     // Logic to copy text to clipboard
-//     const text = entries.map(e => `${e.account}\t${e.label}\t${e.debit}\t${e.credit}`).join('\n');
-//     navigator.clipboard.writeText(text);
-//     setCopied(true);
-//     setTimeout(() => setCopied(false), 2000);
-//   };
-
-//   return (
-//     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
-      
-//       {/* HEADER */}
-//       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-//         <div className="flex items-center gap-4">
-//            <button onClick={() => router.back()} className="p-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
-//              <ArrowLeft size={20} className="text-gray-500" />
-//            </button>
-//            <div>
-//               <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Ecritures Comptables</h1>
-//               <p className="text-gray-500 dark:text-gray-400">Génération automatique des OD de paie (Norme OHADA).</p>
-//            </div>
-//         </div>
-
-//         <div className="flex items-center gap-3">
-//            <div className="bg-white dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center px-3 py-2 shadow-sm">
-//               <span className="text-gray-500 text-sm font-medium mr-2">Période :</span>
-//               <select 
-//                  value={period.month}
-//                  onChange={(e) => setPeriod({ ...period, month: parseInt(e.target.value) })}
-//                  className="bg-transparent font-bold text-gray-900 dark:text-white outline-none cursor-pointer text-sm mr-2"
-//               >
-//                  <option value={10}>Octobre</option>
-//                  <option value={11}>Novembre</option>
-//                  <option value={12}>Décembre</option>
-//               </select>
-//               <select 
-//                  value={period.year}
-//                  onChange={(e) => setPeriod({ ...period, year: parseInt(e.target.value) })}
-//                  className="bg-transparent font-bold text-gray-900 dark:text-white outline-none cursor-pointer text-sm"
-//               >
-//                  <option value={2024}>2024</option>
-//                  <option value={2025}>2025</option>
-//               </select>
-//            </div>
-           
-//            <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all">
-//               <FileSpreadsheet size={18} />
-//               <span>Export Excel</span>
-//            </button>
-//         </div>
-//       </div>
-
-//       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         
-//          {/* LEFT: THE JOURNAL (The Core Feature) */}
-//          <div className="lg:col-span-2 space-y-6">
-//             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-//                <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-//                   <div className="flex items-center gap-3">
-//                      <div className="p-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 rounded-lg">
-//                         <ArrowRightLeft size={20} />
-//                      </div>
-//                      <div>
-//                         <h3 className="font-bold text-gray-900 dark:text-white">Journal de Paie</h3>
-//                         <p className="text-xs text-gray-500">Brouillard de saisie</p>
-//                      </div>
-//                   </div>
-//                   <div className={`px-3 py-1 rounded-full text-xs font-bold border ${isBalanced ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
-//                      {isBalanced ? 'ÉQUILIBRÉ' : 'DÉSÉQUILIBRÉ'}
-//                   </div>
-//                </div>
-
-//                <div className="overflow-x-auto">
-//                   <table className="w-full text-sm text-left font-mono">
-//                      <thead className="bg-gray-100 dark:bg-gray-900 text-gray-500 uppercase text-xs font-semibold">
-//                         <tr>
-//                            <th className="px-6 py-3 w-24">Compte</th>
-//                            <th className="px-6 py-3">Libellé de l'écriture</th>
-//                            <th className="px-6 py-3 w-32 text-right text-emerald-600">Débit</th>
-//                            <th className="px-6 py-3 w-32 text-right text-red-500">Crédit</th>
-//                         </tr>
-//                      </thead>
-//                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-//                         {isLoading ? (
-//                             <tr><td colSpan={4} className="p-8 text-center text-gray-500">Chargement des écritures...</td></tr>
-//                         ) : entries.length === 0 ? (
-//                             <tr><td colSpan={4} className="p-8 text-center text-gray-500">Aucune écriture pour cette période.</td></tr>
-//                         ) : (
-//                             entries.map((entry, i) => (
-//                             <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
-//                                 <td className="px-6 py-3 font-bold text-gray-900 dark:text-white">{entry.account}</td>
-//                                 <td className="px-6 py-3 text-gray-600 dark:text-gray-300">{entry.label}</td>
-//                                 <td className="px-6 py-3 text-right text-gray-800 dark:text-gray-200 border-r border-gray-100 dark:border-gray-700 bg-emerald-50/30 dark:bg-emerald-900/10">
-//                                     {entry.debit > 0 ? entry.debit.toLocaleString() : '-'}
-//                                 </td>
-//                                 <td className="px-6 py-3 text-right text-gray-800 dark:text-gray-200 bg-red-50/30 dark:bg-red-900/10">
-//                                     {entry.credit > 0 ? entry.credit.toLocaleString() : '-'}
-//                                 </td>
-//                             </tr>
-//                             ))
-//                         )}
-//                      </tbody>
-//                      <tfoot className="bg-gray-100 dark:bg-gray-900 font-bold border-t-2 border-gray-200 dark:border-gray-600">
-//                         <tr>
-//                            <td colSpan={2} className="px-6 py-4 text-right uppercase tracking-wider text-xs">Totaux</td>
-//                            <td className="px-6 py-4 text-right text-emerald-600">{totalDebit.toLocaleString()}</td>
-//                            <td className="px-6 py-4 text-right text-red-600">{totalCredit.toLocaleString()}</td>
-//                         </tr>
-//                      </tfoot>
-//                   </table>
-//                </div>
-//             </div>
-
-//             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 flex gap-4 items-start">
-//                <div className="p-2 bg-white dark:bg-blue-900/40 rounded-full text-blue-500 shrink-0">
-//                   <Settings size={20} />
-//                </div>
-//                <div>
-//                   <h4 className="font-bold text-blue-800 dark:text-blue-300 text-sm">Configuration du Plan Comptable</h4>
-//                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 mb-3">
-//                      Les numéros de comptes (6611, 4221...) sont configurés par défaut selon le plan OHADA. Vous pouvez les personnaliser pour correspondre à votre logiciel comptable (Sage, Ciel, Xero).
-//                   </p>
-//                   <button className="text-xs font-bold bg-white dark:bg-blue-800 text-blue-600 dark:text-blue-200 px-3 py-1.5 rounded border border-blue-200 dark:border-blue-700 hover:shadow-sm transition-all">
-//                      Modifier le mapping des comptes
-//                   </button>
-//                </div>
-//             </div>
-//          </div>
-
-//          {/* RIGHT: ACTIONS & SUMMARY */}
-//          <div className="space-y-6">
-            
-//             <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm">
-//                <h3 className="font-bold text-gray-900 dark:text-white mb-4">Formats d'export</h3>
-//                <div className="space-y-3">
-//                   <button className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group">
-//                      <div className="flex items-center gap-3">
-//                         <div className="w-8 h-8 rounded-lg bg-green-100 text-green-700 flex items-center justify-center font-bold text-xs">XL</div>
-//                         <div className="text-left">
-//                            <p className="font-bold text-sm text-gray-900 dark:text-white">Excel (Standard)</p>
-//                            <p className="text-xs text-gray-500">Pour révision manuelle</p>
-//                         </div>
-//                      </div>
-//                      <Download size={16} className="text-gray-400 group-hover:text-emerald-500" />
-//                   </button>
-
-//                   <button className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group">
-//                      <div className="flex items-center gap-3">
-//                         <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">SG</div>
-//                         <div className="text-left">
-//                            <p className="font-bold text-sm text-gray-900 dark:text-white">Sage Comptabilité</p>
-//                            <p className="text-xs text-gray-500">Format .PNM ou .TXT</p>
-//                         </div>
-//                      </div>
-//                      <Download size={16} className="text-gray-400 group-hover:text-blue-500" />
-//                   </button>
-
-//                   <button className="w-full flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group">
-//                      <div className="flex items-center gap-3">
-//                         <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">CS</div>
-//                         <div className="text-left">
-//                            <p className="font-bold text-sm text-gray-900 dark:text-white">CSV Générique</p>
-//                            <p className="text-xs text-gray-500">Universel</p>
-//                         </div>
-//                      </div>
-//                      <Download size={16} className="text-gray-400 group-hover:text-purple-500" />
-//                   </button>
-//                </div>
-//             </div>
-
-//             <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-800 dark:to-black rounded-2xl p-6 text-white shadow-lg">
-//                <div className="flex items-center gap-2 mb-4 opacity-80">
-//                   <Building2 size={18} />
-//                   <span className="text-sm font-bold uppercase tracking-wider">Synthèse</span>
-//                </div>
-//                <div className="space-y-4">
-//                   <div className="flex justify-between items-center pb-2 border-b border-white/10">
-//                      <span className="text-sm text-gray-300">Total Charges</span>
-//                      <span className="font-mono font-bold">{entries.find(e => e.account === '6641')?.debit.toLocaleString() || 0}</span>
-//                   </div>
-//                   <div className="flex justify-between items-center pb-2 border-b border-white/10">
-//                      <span className="text-sm text-gray-300">Net à Payer</span>
-//                      <span className="font-mono font-bold text-emerald-400">{entries.find(e => e.account === '4221')?.credit.toLocaleString() || 0}</span>
-//                   </div>
-//                   <div className="flex justify-between items-center pt-2">
-//                      <span className="text-sm font-bold">Masse Totale</span>
-//                      <span className="font-mono font-bold text-xl">{totalDebit.toLocaleString()}</span>
-//                   </div>
-//                </div>
-               
-//                <button 
-//                   onClick={handleCopy}
-//                   className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-//                >
-//                   {copied ? <CheckCircle2 size={16} className="text-emerald-400"/> : <Copy size={16} />}
-//                   {copied ? 'Copié !' : 'Copier les montants'}
-//                </button>
-//             </div>
-
-//          </div>
-
-//       </div>
-//     </div>
-//   );
-// }

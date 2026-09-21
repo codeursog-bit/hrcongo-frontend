@@ -25,6 +25,7 @@ import { invalidateBulletinTemplateCache } from '@/hooks/useBulletinConfig';
 import BulletinRenderer from '@/components/BulletinRenderer';
 import BulletinRendererClarifie from '@/components/BulletinRendererClarifie';
 import BulletinRendererClassique from '@/components/BulletinRendererClassique';
+import BulletinRendererInf from '@/components/BulletinRendererInf';
 import FactureRendererForfait from '@/components/FactureRendererForfait';
 import FactureRendererDetaillee from '@/components/FactureRendererDetaillee';
 import CanvasEditor from '@/components/CanvasEditor';
@@ -764,6 +765,8 @@ export default function BulletinDesignerPage() {
                 <BulletinRendererClarifie payroll={payroll} template={cfg} previewMode />
               ) : cfg.templateId === 'classique' ? (
                 <BulletinRendererClassique payroll={payroll} template={cfg} previewMode />
+              ) : cfg.templateId === 'inf' ? (
+                <BulletinRendererInf payroll={payroll} template={cfg} previewMode />
               ) : (
                 <BulletinRenderer payroll={payroll} template={cfg} previewMode />
               )}

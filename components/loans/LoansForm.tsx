@@ -4,10 +4,11 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { 
     CreditCard, Calendar, Clock, DollarSign, List, UserCheck, 
     ArrowLeft, ArrowRight, Save, Loader2, CheckCircle, XCircle, 
-    Wallet, Search, ChevronDown
+    Wallet, Search, ChevronDown, Paperclip
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 // --- Types ---
 interface Employee {
@@ -424,6 +425,7 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                 ...formData,
                 amount: Number(formData.amount),
                 ...(formType === 'LOAN' && { monthlyRepayment: Number(formData.monthlyRepayment) }),
+                ...(formType === 'LOAN' && attachmentUrl && { attachmentUrl }),
                 ...(isAdminCreatingForSomeoneElse && { recoverViaPayroll: !!formData.recoverViaPayroll }),
             });
             setMessage({ type: 'success', text: `${label} créé et approuvé avec succès !` });
@@ -440,6 +442,11 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
     };
 
     const isLoan = formType === 'LOAN';
+
+    // ✅ Pièce jointe (Pièces jointes / justificatif) — n'a de sens visible
+    // sur le papier que pour le Prêt, pas pour l'Avance. Réutilise le même
+    // hook d'upload que le module congé/absence (Cloudinary).
+    const { uploadedUrl: attachmentUrl, uploading: uploadingAttachment, handleFileSelect: handleAttachmentSelect } = useImageUpload({ folder: 'loans' });
 
     // 🐛 Bug pré-existant corrigé : le backend rejette toute requête contenant
     // un champ non déclaré dans le DTO (ValidationPipe forbidNonWhitelisted:
@@ -534,6 +541,16 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                                         <option value="EXCEPTIONNEL">Prêt exceptionnel</option>
                                         <option value="AUTRE">Autre</option>
                                     </select>
+                                </div>
+                            )}
+                            {documentTemplate === 'STANDARD' && (
+                                <div className="md:col-span-3">
+                                    <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Pièce jointe (devis, justificatif de scolarité, certificat médical...)</label>
+                                    <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
+                                        <Paperclip size={16} />
+                                        {uploadingAttachment ? 'Envoi en cours…' : attachmentUrl ? 'Pièce jointe ✓' : 'Joindre un document'}
+                                        <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleAttachmentSelect(e.target.files[0])} />
+                                    </label>
                                 </div>
                             )}
                         </motion.div>
