@@ -172,8 +172,24 @@ export default function DailyView({
       if (isBeforeWorkTime && dayStatus.status === 'ABSENT_UNPAID') return;
       if (dayStatus.status === 'OFF_DAY') return;
 
+      // ✅ FIX : dayStatus ne porte pas l'id réel du pointage (le backend ne
+      // l'expose pas dans dayStatuses). On va donc chercher le vrai
+      // enregistrement — et son vrai UUID Prisma — dans data.attendances
+      // (même source que CorrectionsView.tsx). Sans ça, "id" était fabriqué
+      // en concaténant l'id employé + la date, une chaîne qui RESSEMBLE à un
+      // UUID mais n'en est pas un → Prisma refusait la suppression
+      // ("Error creating UUID, invalid group count: expected 5, found 8").
+      const realAtt = data.attendances?.find(
+        (a: any) => a.employeeId === emp.id && a.date?.split('T')[0] === dateStr
+      );
+
       dailyData.push({
-        id: `${emp.id}-${dateStr}`,
+        // "id" = vrai UUID à supprimer, null si aucun pointage réel n'existe
+        // (ex : statut calculé "ABSENT_UNPAID" sans ligne en base — rien à
+        // supprimer dans ce cas, le bouton sera désactivé).
+        id: realAtt?.id ?? null,
+        // clé React stable, indépendante de l'existence d'un pointage réel
+        rowKey: `${emp.id}-${dateStr}`,
         employee: emp,
         date: dateStr,
         status: dayStatus.status,
@@ -443,7 +459,7 @@ export default function DailyView({
               ) : (
                 filteredAttendances.map(att => (
                   <tr
-                    key={att.id}
+                    key={att.rowKey}
                     onClick={() => setSelectedRow(att)}
                     className="hover:bg-[var(--surface-2)] transition-colors cursor-pointer"
                   >
@@ -482,18 +498,25 @@ export default function DailyView({
                     <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
                     {isAdmin && (
                       <td className="px-6 py-4 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation(); // ne pas ouvrir la sidebar de détail
-                            handleDeleteAttendance(att.id, `${att.employee.firstName} ${att.employee.lastName}`);
-                          }}
-                          disabled={deletingId === att.id}
-                          title="Supprimer ce pointage (définitif)"
-                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
-                        >
-                          {deletingId === att.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                        </button>
+                        {att.id ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation(); // ne pas ouvrir la sidebar de détail
+                              handleDeleteAttendance(att.id, `${att.employee.firstName} ${att.employee.lastName}`);
+                            }}
+                            disabled={deletingId === att.id}
+                            title="Supprimer ce pointage (définitif)"
+                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+                          >
+                            {deletingId === att.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                          </button>
+                        ) : (
+                          // ✅ Pas de pointage réel en base pour ce statut calculé
+                          // (ex : absence déduite, sans ligne "attendance") —
+                          // rien à supprimer, donc pas de bouton actionnable.
+                          <span className="text-xs text-[var(--text-muted)]" title="Aucun pointage réel enregistré pour ce jour">—</span>
+                        )}
                       </td>
                     )}
                   </tr>
