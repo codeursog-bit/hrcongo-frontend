@@ -38,6 +38,8 @@ function PricingContent() {
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
   const [checkoutTarget, setCheckoutTarget] = useState<{ plan: 'BASIC' | 'PRO' | 'ENTERPRISE'; billingPeriod: 'monthly' | 'yearly'; amount: number } | null>(null);
 
+  const router = useRouter();
+
   // 🔀 Bascule automatique de prestataire — voir GET /subscriptions/payment-provider.
   const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
@@ -86,7 +88,7 @@ function PricingContent() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
       </div>
     );
   }
@@ -97,11 +99,11 @@ function PricingContent() {
 
   const getPlanIcon = (planKey: string) => {
     switch (planKey) {
-      case 'FREE':       return <Star      className="w-5 h-5 text-[var(--text-muted)]" />;
-      case 'BASIC':      return <Rocket    className="w-5 h-5 text-amber-500" />;
-      case 'PRO':        return <Zap       className="w-5 h-5 text-emerald-500" />;
-      case 'ENTERPRISE': return <Building2 className="w-5 h-5 text-amber-500" />;
-      default:           return <Star      className="w-5 h-5 text-[var(--text-muted)]" />;
+      case 'FREE':       return <Star      className="w-5 h-5 text-slate-400" />;
+      case 'BASIC':      return <Rocket    className="w-5 h-5 text-blue-400" />;
+      case 'PRO':        return <Zap       className="w-5 h-5 text-purple-400" />;
+      case 'ENTERPRISE': return <Building2 className="w-5 h-5 text-pink-400" />;
+      default:           return <Star      className="w-5 h-5 text-slate-400" />;
     }
   };
 
@@ -109,19 +111,19 @@ function PricingContent() {
     <div className="min-h-screen pb-20">
       {/* Fond Aurora */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-0 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 -right-40 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
 
         {/* Alerte annulation */}
         {canceled && (
-          <div className="mb-8 bg-amber-500/10 border-l-4 border-amber-500 p-6 rounded-lg flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+          <div className="mb-8 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-6 rounded-lg flex items-start gap-4">
+            <AlertTriangle className="w-6 h-6 text-yellow-400 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-lg font-semibold text-amber-500 mb-1">Paiement annulé</h3>
-              <p className="text-sm text-amber-500/90">
+              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-400 mb-1">Paiement annulé</h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
                 Aucune somme n'a été prélevée. Vous pouvez réessayer ci-dessous.
               </p>
             </div>
@@ -130,15 +132,15 @@ function PricingContent() {
 
         {/* Plan FREE actuel si retour au gratuit */}
         {subscription?.plan === 'FREE' && (
-          <div className="mb-8 bg-[var(--surface-2)] border border-[var(--border)] p-5 rounded-xl flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[var(--surface)] flex items-center justify-center shrink-0">
-              <Star className="w-5 h-5 text-[var(--text-muted)]" />
+          <div className="mb-8 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-5 rounded-xl flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5 text-slate-500" />
             </div>
             <div>
-              <p className="font-semibold text-[var(--text)] text-sm">
+              <p className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
                 Vous êtes sur le plan <span className="font-bold">Gratuit</span>
               </p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Choisissez un plan ci-dessous pour débloquer toutes les fonctionnalités.
               </p>
             </div>
@@ -148,13 +150,13 @@ function PricingContent() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 glass-card rounded-full mb-6">
-            <Gift className="w-5 h-5 text-emerald-500" />
+            <Gift className="w-5 h-5 text-purple-400" />
             <span className="text-sm font-semibold glow-text">30 jours d'essai PRO gratuit !</span>
           </div>
-          <h1 className="text-5xl font-bold mb-4 text-[var(--text)]">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
             Choisissez votre plan
           </h1>
-          <p className="text-lg text-[var(--text-muted)] max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             Paiement Mobile Money direct — MTN, Airtel, Orange. Activation immédiate.
           </p>
         </div>
@@ -169,13 +171,13 @@ function PricingContent() {
                 className={`
                   px-6 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 relative
                   ${billingPeriod === period
-                    ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'}
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}
                 `}
               >
                 {period === 'monthly' ? 'Mensuel' : 'Annuel'}
                 {period === 'yearly' && (
-                  <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">
+                  <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">
                     -17%
                   </span>
                 )}
@@ -201,17 +203,17 @@ function PricingContent() {
                 key={planKey}
                 className={`
                   relative glass-panel rounded-2xl p-6 transition-all duration-300 hover:scale-105
-                  ${isPro ? 'border-2 border-emerald-500/50 shadow-2xl shadow-emerald-500/20' : ''}
-                  ${isCurrentPlan ? 'ring-2 ring-emerald-500' : ''}
+                  ${isPro ? 'border-2 border-purple-500/50 shadow-2xl shadow-purple-500/20' : ''}
+                  ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}
                 `}
               >
                 {isPro && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-emerald-500 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap">
                     <Sparkles className="w-4 h-4" /> Populaire
                   </div>
                 )}
                 {isCurrentPlan && (
-                  <div className="absolute -top-4 right-4 px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-full whitespace-nowrap">
+                  <div className="absolute -top-4 right-4 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full whitespace-nowrap">
                     ✓ Plan actuel
                   </div>
                 )}
@@ -221,7 +223,7 @@ function PricingContent() {
                     {getPlanIcon(planKey)}
                     <h3 className="text-xl font-bold">{plan.name}</h3>
                   </div>
-                  <p className="text-sm text-[var(--text-muted)]">{plan.description}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{plan.description}</p>
                 </div>
 
                 <div className="mb-6">
@@ -232,11 +234,11 @@ function PricingContent() {
                       <div className="text-4xl font-bold mb-1">
                         {monthlyPrice.toLocaleString()} <span className="text-lg">FCFA</span>
                       </div>
-                      <div className="text-sm text-[var(--text-muted)]">
+                      <div className="text-sm text-slate-500">
                         {billingPeriod === 'yearly' ? (
                           <>
                             {totalPrice.toLocaleString()} FCFA / an
-                            <span className="ml-2 text-emerald-500 font-semibold">
+                            <span className="ml-2 text-green-500 font-semibold">
                               -{((plan.priceMonthly * 12) - plan.priceYearly).toLocaleString()} FCFA
                             </span>
                           </>
@@ -253,14 +255,14 @@ function PricingContent() {
                     w-full py-3 px-6 rounded-lg font-bold text-sm mb-6
                     transition-all duration-300 flex items-center justify-center gap-2
                     ${isFree
-                      ? 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed'
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
                       : isCurrentPlan
-                        ? 'bg-emerald-500 text-white cursor-not-allowed opacity-80'
+                        ? 'bg-green-500 text-white cursor-not-allowed'
                         : isUpgrading
-                          ? 'bg-emerald-400 text-white cursor-not-allowed'
+                          ? 'bg-purple-400 text-white cursor-not-allowed'
                           : isPro
-                            ? 'bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105'
-                            : 'bg-amber-500 text-white hover:bg-amber-600 hover:scale-105'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:shadow-lg hover:scale-105'
+                            : 'bg-gradient-to-r from-blue-500 to-sky-500 text-white hover:shadow-lg hover:scale-105'
                     }
                   `}
                 >
@@ -276,33 +278,33 @@ function PricingContent() {
                 </button>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[var(--text-muted)] mb-2">Inclus :</p>
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Inclus :</p>
                   <div className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                     <span>
                       {plan.limits.maxEmployees === -1 ? 'Employés illimités' : `${plan.limits.maxEmployees} employés max`}
                     </span>
                   </div>
                   <div className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                     <span>
                       {plan.limits.maxUsers === -1 ? 'Utilisateurs illimités' : `${plan.limits.maxUsers} utilisateur${plan.limits.maxUsers > 1 ? 's' : ''}`}
                     </span>
                   </div>
-                  <div className="border-t border-[var(--border)] pt-2 mt-2 space-y-2">
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2 space-y-2">
                     {plan.limits.hasEmployeeImportExcel && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span>Import Excel</span>
+                        <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" /><span>Import Excel</span>
                       </div>
                     )}
                     {plan.limits.hasLeaveManagement && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span>Gestion congés</span>
+                        <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" /><span>Gestion congés</span>
                       </div>
                     )}
                     {plan.limits.hasAttendanceGPS && (
                       <div className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span>Pointage GPS</span>
+                        <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" /><span>Pointage GPS</span>
                       </div>
                     )}
                   </div>
@@ -318,17 +320,17 @@ function PricingContent() {
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="font-bold mb-2 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-emerald-500" /> Comment fonctionne l'essai gratuit ?
+                <Gift className="w-5 h-5 text-purple-400" /> Comment fonctionne l'essai gratuit ?
               </h3>
-              <p className="text-sm text-[var(--text-muted)]">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 30 jours d'essai PRO gratuit à l'inscription. Aucune carte bancaire requise.
               </p>
             </div>
             <div>
               <h3 className="font-bold mb-2 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-amber-500" /> Moyens de paiement ?
+                <Zap className="w-5 h-5 text-blue-400" /> Moyens de paiement ?
               </h3>
-              <p className="text-sm text-[var(--text-muted)]">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Mobile Money direct depuis l'app : MTN, Airtel, Orange via Moteki.
               </p>
             </div>
@@ -345,6 +347,7 @@ function PricingContent() {
           planLabel={PLAN_LABELS[checkoutTarget.plan] ?? checkoutTarget.plan}
           onClose={() => setCheckoutTarget(null)}
           onError={(msg) => toast.error(msg)}
+          onSuccess={() => router.push(`/success?plan=${checkoutTarget.plan}&immediate=true`)}
         />
       )}
 
@@ -380,7 +383,7 @@ export default function PricingPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
       </div>
     }>
       <PricingContent />

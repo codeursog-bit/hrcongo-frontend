@@ -101,6 +101,11 @@ export default function CreatePayrollPage() {
   const [overtime100, setOvertime100] = useState(0);
   const [overtimeEdited, setOvertimeEdited] = useState(false);
 
+  // ✅ Jours travaillés — pré-rempli avec les vrais jours de présence (BDD)
+  // renvoyés par la simulation, modifiable avant de créer le bulletin.
+  const [workedDaysInput, setWorkedDaysInput] = useState<number | ''>('');
+  const [workedDaysEdited, setWorkedDaysEdited] = useState(false);
+
   const [simulation, setSimulation]           = useState<SimulationResult | null>(null);
   const [isSimulating, setIsSimulating]       = useState(false);
   const [simulationError, setSimulationError] = useState<string | null>(null);
@@ -124,10 +129,19 @@ export default function CreatePayrollPage() {
     if (!selectedEmployee) {
       setSimulation(null); setSimulationError(null); setOvertimeEdited(false);
       setOvertime10(0); setOvertime25(0); setOvertime50(0); setOvertime100(0);
+      setWorkedDaysInput(''); setWorkedDaysEdited(false);
       return;
     }
+    setWorkedDaysEdited(false); // nouvel employé/période → on repart des vraies présences
     runSimulation(false);
   }, [selectedEmployee, month, year]);
+
+  // ── Relancer si RH corrige les jours travaillés (debounce 700ms) ───────────
+  useEffect(() => {
+    if (!selectedEmployee || !workedDaysEdited) return;
+    const t = setTimeout(() => runSimulation(true), 700);
+    return () => clearTimeout(t);
+  }, [workedDaysInput]);
 
   // ── Relancer si RH corrige heures sup (debounce 700ms) ─────────────────────
   useEffect(() => {
@@ -157,6 +171,10 @@ export default function CreatePayrollPage() {
         body.overtimeHours50  = overtime50;
         body.overtimeHours100 = overtime100;
       }
+      // Si le RH a corrigé les jours travaillés, on les envoie
+      if (workedDaysEdited && workedDaysInput !== '') {
+        body.workedDays = workedDaysInput;
+      }
       const result = await api.post<SimulationResult>('/payrolls/simulate', body);
       setSimulation(result);
       // Initialiser les heures sup depuis le pointage backend (première fois)
@@ -166,6 +184,10 @@ export default function CreatePayrollPage() {
         setOvertime50(result.overtime.hours50);
         setOvertime100(result.overtime.hours100);
         setOvertimeEdited(false);
+      }
+      // Idem pour les jours travaillés : vrai chiffre BDD tant que non modifié
+      if (!workedDaysEdited) {
+        setWorkedDaysInput(result.daysToPay);
       }
     } catch (e: any) {
       setSimulationError(e?.response?.data?.message || e?.message || 'Erreur de simulation');
@@ -184,7 +206,10 @@ export default function CreatePayrollPage() {
         employeeId:  selectedEmployee.id,
         month:       getMonthNumber(month),
         year,
-        workedDays:  simulation.daysToPay,
+        // ✅ Utilise le chiffre affiché/modifié à l'écran, pas seulement celui
+        // de la dernière simulation (au cas où le debounce n'aurait pas
+        // encore renvoyé le dernier recalcul au moment du clic).
+        workedDays:  workedDaysEdited && workedDaysInput !== '' ? workedDaysInput : simulation.daysToPay,
         overtime10,   // ✅ noms alignés avec CreatePayrollDto backend
         overtime25,
         overtime50,
@@ -453,9 +478,26 @@ export default function CreatePayrollPage() {
                   <p className="text-sm font-bold text-white/80">
                     {simulation.employee.firstName} {simulation.employee.lastName}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {simulation.daysToPay}/{simulation.workDays} jours travaillés
-                  </p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <input type="number" min={0} max={simulation.workDays} value={workedDaysInput}
+                      onChange={e => {
+                        setWorkedDaysEdited(true);
+                        const v = e.target.value;
+                        setWorkedDaysInput(v === '' ? '' : Math.min(simulation.workDays, Math.max(0, Number(v))));
+                      }}
+                      className={`w-16 px-2 py-1 bg-white/10 border rounded-lg text-xs font-bold text-center text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/40 ${
+                        workedDaysEdited ? 'border-amber-400' : 'border-white/20'
+                      }`} />
+                    <p className="text-xs text-gray-400">
+                      / {simulation.workDays} jours travaillés
+                      {!workedDaysEdited && <span className="text-emerald-400 ml-1">(présences)</span>}
+                    </p>
+                  </div>
+                  {!workedDaysEdited && simulation.daysToPay === 0 && (
+                    <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
+                      <AlertCircle size={10} /> Aucune présence trouvée en BDD pour ce mois — vérifiez le pointage ou ajustez ce champ.
+                    </p>
+                  )}
                 </div>
 
                 <div className="p-5 space-y-1.5 text-sm">

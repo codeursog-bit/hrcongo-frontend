@@ -3,23 +3,17 @@
 // ============================================================================
 // components/payment/MotekiCheckoutModal.tsx
 // ============================================================================
-// Remplace les anciens PaymentModal dupliqués (Yabetoo, 2 étapes intent →
-// confirm) par un flux Moteki en une seule étape : on collecte
-// opérateur+téléphone, on appelle /subscriptions/upgrade/moteki, puis on
-// redirige le navigateur vers la page de paiement hébergée par Moteki
-// (checkout_url). Moteki lui-même gère l'écran "confirmez sur votre
-// téléphone" ensuite — on n'a plus besoin de le simuler côté app.
-//
-// Au retour, Moteki renvoie le client vers l'URL configurée sur le store
-// Moteki (dashboard → Paramètres), avec ?status=success ou ?status=cancel.
-// Cette URL doit être réglée sur .../success côté Moteki. On mémorise le
-// plan choisi en sessionStorage juste avant de rediriger, car l'URL de
-// retour est fixe côté Moteki et ne peut pas porter nos propres query params
-// (voir /success/page.tsx qui lit ce fallback).
+// ⚠️ MIGRATION v1 → v2 (Merchant Payments API). Contrairement à l'ancien
+// flux v1 (redirection vers une page Moteki hébergée), le flux v2 ne
+// redirige JAMAIS le navigateur : on envoie un push Mobile Money directement
+// au numéro du client (code PIN/USSD à valider sur son téléphone), puis on
+// sonde nous-mêmes le statut du paiement (pas de webhook v2 documenté — "le
+// polling fait foi"). Ce modal ne quitte donc plus la page : il affiche un
+// écran d'attente avec sondage automatique, jusqu'à un état final.
 // ============================================================================
 
-import React, { useEffect, useState } from 'react';
-import { Loader2, X, Phone, ChevronDown, Mail, User as UserIcon } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Loader2, X, Phone, ChevronDown, Mail, CheckCircle2, XCircle } from 'lucide-react';
 import { api } from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -43,7 +37,14 @@ export interface MotekiCheckoutModalProps {
   amount: number;
   onClose: () => void;
   onError: (msg: string) => void;
+  /** Appelé une fois le paiement confirmé payé — le parent redirige vers /success. */
+  onSuccess: () => void;
 }
+
+type ModalPhase = 'form' | 'waiting' | 'succeeded' | 'failed';
+
+const POLL_INTERVAL_MS = 3000;
+const MAX_POLL_ATTEMPTS = 20; // ~60s de sondage avant d'abandonner l'attente active
 
 // ─── Composant ───────────────────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ export function MotekiCheckoutModal({
   amount,
   onClose,
   onError,
+  onSuccess,
 }: MotekiCheckoutModalProps) {
   const { user } = useAuth();
 
@@ -63,6 +65,11 @@ export function MotekiCheckoutModal({
   const [email, setEmail] = useState(user?.email ?? '');
   const [loadingMethods, setLoadingMethods] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  const [phase, setPhase] = useState<ModalPhase>('form');
+  const [failMessage, setFailMessage] = useState('');
+  const pollAttempts = useRef(0);
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Charger dynamiquement les opérateurs activés côté Moteki ─────────────
   useEffect(() => {
@@ -80,9 +87,7 @@ export function MotekiCheckoutModal({
         }
       } catch {
         // Repli silencieux — au pire l'utilisateur ne verra pas de liste
-        // pré-remplie, mais le reste du formulaire reste utilisable une
-        // fois Moteki configuré. On ne bloque pas l'affichage du modal
-        // pour ça.
+        // pré-remplie, mais le reste du formulaire reste utilisable.
       } finally {
         if (!cancelled) setLoadingMethods(false);
       }
@@ -91,6 +96,51 @@ export function MotekiCheckoutModal({
       cancelled = true;
     };
   }, []);
+
+  // Nettoyage du timer de polling si le modal se démonte en cours d'attente
+  useEffect(() => {
+    return () => {
+      if (pollTimer.current) clearTimeout(pollTimer.current);
+    };
+  }, []);
+
+  const pollPayment = (paymentId: string) => {
+    pollTimer.current = setTimeout(async () => {
+      pollAttempts.current += 1;
+      try {
+        const result = await api.post<{ activated: boolean; status: string }>(
+          `/subscriptions/moteki/check-order/${paymentId}`,
+          {},
+        );
+        if (result.activated) {
+          setPhase('succeeded');
+          setTimeout(onSuccess, 1200);
+          return;
+        }
+        if (result.status === 'failed') {
+          setPhase('failed');
+          setFailMessage("Le paiement a échoué ou a été refusé sur votre téléphone.");
+          return;
+        }
+      } catch {
+        // Erreur réseau ponctuelle — on continue le sondage, pas d'abandon
+        // sur un seul échec de requête.
+      }
+
+      if (pollAttempts.current >= MAX_POLL_ATTEMPTS) {
+        // On abandonne l'attente ACTIVE (l'utilisateur ne va pas rester 5
+        // minutes sur cette modale) — mais le cron de polling côté serveur
+        // (toutes les 5 min) continue de vérifier en arrière-plan, donc
+        // l'abonnement s'activera quand même si le paiement finit par passer.
+        setPhase('failed');
+        setFailMessage(
+          "Toujours en attente de votre part. Si vous avez validé le paiement, votre abonnement s'activera automatiquement dans quelques minutes — sinon réessayez.",
+        );
+        return;
+      }
+      pollPayment(paymentId);
+    }, POLL_INTERVAL_MS);
+  };
 
   const handleConfirm = async () => {
     if (!phone || phone.length < 9) {
@@ -108,28 +158,43 @@ export function MotekiCheckoutModal({
 
     setLoading(true);
     try {
-      const result = await api.post<{ checkoutUrl: string; orderNumber: string; paymentId: string }>(
-        '/subscriptions/upgrade/moteki',
-        {
-          plan,
-          billingPeriod,
-          customerFirstName: user?.firstName || 'Client',
-          customerLastName: user?.lastName || '',
-          customerEmail: email,
-          customerPhone: phone,
-          paymentMethod: 'mobile_money',
-          paymentOperator: operator,
-        },
-      );
+      const result = await api.post<{
+        paymentId: string;
+        paymentReference: string;
+        orderNumber: string;
+        status: 'processing' | 'succeeded' | 'failed';
+        activated: boolean;
+        code?: string;
+        message?: string;
+      }>('/subscriptions/upgrade/moteki', {
+        plan,
+        billingPeriod,
+        customerFirstName: user?.firstName || 'Client',
+        customerLastName: user?.lastName || '',
+        customerEmail: email,
+        customerPhone: phone,
+        paymentMethod: 'mobile_money',
+        paymentOperator: operator,
+      });
 
-      // On mémorise le contexte pour /success — l'URL de retour Moteki est
-      // fixe (configurée sur le dashboard) et ne portera pas ces infos.
-      sessionStorage.setItem(
-        'pendingSubscriptionCheckout',
-        JSON.stringify({ plan, billingPeriod, orderNumber: result.orderNumber, paymentId: result.paymentId }),
-      );
+      if (result.status === 'succeeded' || result.activated) {
+        setPhase('succeeded');
+        setTimeout(onSuccess, 1200);
+        return;
+      }
 
-      window.location.href = result.checkoutUrl;
+      if (result.status === 'failed') {
+        setPhase('failed');
+        setFailMessage(result.message || 'Le paiement a été refusé.');
+        setLoading(false);
+        return;
+      }
+
+      // 'processing' — push envoyé, on bascule sur l'écran d'attente et on
+      // sonde nous-mêmes (pas de webhook v2).
+      setPhase('waiting');
+      pollAttempts.current = 0;
+      pollPayment(result.paymentId);
     } catch (err: any) {
       onError(
         err?.message ||
@@ -160,6 +225,50 @@ export function MotekiCheckoutModal({
           </button>
         </div>
 
+        {/* Écran d'attente (push envoyé, en attente de validation PIN/USSD) */}
+        {phase === 'waiting' && (
+          <div className="p-6 flex flex-col items-center text-center gap-3">
+            <Loader2 size={28} className="animate-spin text-gray-400" />
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              Validez le paiement sur votre téléphone
+            </p>
+            <p className="text-xs text-gray-400">
+              Un push a été envoyé au {phone} via {OPERATOR_LABELS[operator] ?? 'votre opérateur'}.
+              Entrez votre code PIN pour confirmer.
+            </p>
+            <p className="text-[11px] text-gray-300 mt-2">Vérification automatique en cours…</p>
+          </div>
+        )}
+
+        {/* Écran succès */}
+        {phase === 'succeeded' && (
+          <div className="p-6 flex flex-col items-center text-center gap-3">
+            <CheckCircle2 size={32} className="text-emerald-500" />
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Paiement confirmé !</p>
+            <p className="text-xs text-gray-400">Votre abonnement {planLabel} est en cours d'activation…</p>
+          </div>
+        )}
+
+        {/* Écran échec */}
+        {phase === 'failed' && (
+          <div className="p-6 flex flex-col items-center text-center gap-3">
+            <XCircle size={32} className="text-red-500" />
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Paiement non confirmé</p>
+            <p className="text-xs text-gray-400">{failMessage}</p>
+            <button
+              onClick={() => {
+                setPhase('form');
+                setLoading(false);
+              }}
+              className="mt-2 px-4 py-2 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-bold hover:opacity-90"
+            >
+              Réessayer
+            </button>
+          </div>
+        )}
+
+        {/* Formulaire initial */}
+        {phase === 'form' && (
         <div className="p-5 space-y-4">
           {/* Opérateur */}
           <div>
@@ -243,14 +352,15 @@ export function MotekiCheckoutModal({
             className="w-full py-3 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-bold transition-all hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={15} className="animate-spin" />}
-            {loading ? 'Redirection…' : 'Continuer le paiement'}
+            {loading ? 'Envoi du push…' : 'Payer maintenant'}
           </button>
 
           <p className="text-[11px] text-center text-gray-400">
-            Vous serez redirigé vers la page de paiement sécurisée Moteki pour confirmer
-            via {OPERATOR_LABELS[operator] ?? 'votre opérateur'}.
+            Un push sera envoyé sur votre téléphone via {OPERATOR_LABELS[operator] ?? 'votre opérateur'} —
+            validez-le avec votre code PIN.
           </p>
         </div>
+        )}
       </div>
     </div>
   );

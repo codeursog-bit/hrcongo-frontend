@@ -15,6 +15,7 @@ import {
   LayoutList, LayoutGrid, Star,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { usePlans } from '@/hooks/useSubscription';
 import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
 import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
 import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
@@ -51,40 +52,43 @@ interface Payment {
 
 // ── Configs ───────────────────────────────────────────────────────────────────
 const PLAN_STYLES: Record<string, { color: string; bg: string; label: string; iconColor: string }> = {
-  FREE:       { color: 'text-[var(--text-muted)]', bg: 'bg-[var(--surface-2)]', label: 'Gratuit',    iconColor: 'bg-[var(--text-muted)]' },
-  BASIC:      { color: 'text-emerald-600',bg: 'bg-emerald-100 dark:bg-emerald-900/30', label: 'Basic',      iconColor: 'bg-emerald-500' },
-  PRO:        { color: 'text-amber-600',  bg: 'bg-amber-100 dark:bg-amber-900/30',   label: 'Pro',        iconColor: 'bg-amber-500' },
+  FREE:       { color: 'text-gray-600',   bg: 'bg-gray-100 dark:bg-gray-800',       label: 'Gratuit',    iconColor: 'bg-gray-500' },
+  BASIC:      { color: 'text-blue-600',   bg: 'bg-blue-100 dark:bg-blue-900/30',     label: 'Basic',      iconColor: 'bg-blue-500' },
+  PRO:        { color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-900/30', label: 'Pro',        iconColor: 'bg-purple-500' },
   ENTERPRISE: { color: 'text-amber-600',  bg: 'bg-amber-100 dark:bg-amber-900/30',   label: 'Enterprise', iconColor: 'bg-amber-500' },
 };
 
 const STATUS_STYLES: Record<string, { color: string; bg: string; border: string; label: string; icon: React.ReactNode }> = {
   ACTIVE:   { color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-100 dark:bg-emerald-900/30', border: 'border-emerald-200 dark:border-emerald-700', label: 'Actif',         icon: <CheckCircle size={12} /> },
-  TRIALING: { color: 'text-amber-700 dark:text-amber-300',     bg: 'bg-amber-100 dark:bg-amber-900/30',     border: 'border-amber-200 dark:border-amber-700',     label: 'Essai gratuit', icon: <Sparkles size={12} /> },
+  TRIALING: { color: 'text-blue-700 dark:text-blue-300',       bg: 'bg-blue-100 dark:bg-blue-900/30',       border: 'border-blue-200 dark:border-blue-700',       label: 'Essai gratuit', icon: <Sparkles size={12} /> },
   CANCELED: { color: 'text-red-700 dark:text-red-300',         bg: 'bg-red-100 dark:bg-red-900/30',         border: 'border-red-200 dark:border-red-700',         label: 'Annulé',        icon: <XCircle size={12} /> },
-  PAST_DUE: { color: 'text-amber-700 dark:text-amber-300',     bg: 'bg-amber-100 dark:bg-amber-900/30',     border: 'border-amber-200 dark:border-amber-700',     label: 'En retard',     icon: <AlertTriangle size={12} /> },
-  PAUSED:   { color: 'text-[var(--text-muted)]', bg: 'bg-[var(--surface-2)]', border: 'border-[var(--border)]', label: 'Pausé',         icon: <AlertTriangle size={12} /> },
+  PAST_DUE: { color: 'text-orange-700 dark:text-orange-300',   bg: 'bg-orange-100 dark:bg-orange-900/30',   border: 'border-orange-200 dark:border-orange-700',   label: 'En retard',     icon: <AlertTriangle size={12} /> },
+  PAUSED:   { color: 'text-gray-600 dark:text-gray-400',       bg: 'bg-gray-100 dark:bg-gray-800',          border: 'border-gray-200 dark:border-gray-700',       label: 'Pausé',         icon: <AlertTriangle size={12} /> },
 };
 
 // ✅ FREE inclus
+// 💰 Les PRIX ne sont plus codés en dur ici : ils viennent de usePlans()
+// (GET /subscriptions/plans), la même source que pricing/page.tsx et que
+// les modals de paiement. Seuls le libellé et la liste de fonctionnalités
+// (copy statique, pas de la donnée financière) restent définis ici. Changer
+// un prix dans src/subscriptions/config/plans.config.ts côté backend et
+// redéployer met donc à jour cette page, /pricing, ET le montant réel
+// débité — une seule source de vérité, plus de désynchronisation possible.
 const PLANS_CONFIG = [
   {
     name: 'FREE' as const,
-    price: 0,
     features: ['5 employés max', '1 utilisateur', '1 département', '2 offres d\'emploi', 'Fonctions de base'],
   },
   {
     name: 'BASIC' as const,
-    price: 10000,
     features: ['20 employés max', '3 utilisateurs', '2 départements', '5 offres d\'emploi', 'Support email'],
   },
   {
     name: 'PRO' as const,
-    price: 25000,
     features: ['100 employés max', '10 utilisateurs', '10 départements', '20 offres d\'emploi', 'Support prioritaire'],
   },
   {
     name: 'ENTERPRISE' as const,
-    price: 45000,
     features: ['Employés illimités', 'Utilisateurs illimités', 'Départements illimités', 'Offres illimitées', 'Support dédié 24/7'],
   },
 ];
@@ -107,15 +111,15 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 function UsageBar({ label, icon, current, max }: { label: string; icon: React.ReactNode; current: number; max: number }) {
   const unlimited = max === -1;
   const pct = unlimited ? 0 : Math.min(Math.round((current / max) * 100), 100);
-  const barColor = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-400' : 'bg-emerald-500';
+  const barColor = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-orange-400' : 'bg-emerald-500';
 
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <span className="flex items-center gap-2 text-[var(--text-muted)] text-xs font-medium">{icon} {label}</span>
-        <span className="text-xs font-bold text-[var(--text)] font-mono">{current} / {unlimited ? '∞' : max}</span>
+        <span className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-medium">{icon} {label}</span>
+        <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">{current} / {unlimited ? '∞' : max}</span>
       </div>
-      <div className="h-1.5 w-full bg-[var(--surface-2)] rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
         {unlimited
           ? <div className="h-full rounded-full bg-emerald-400 w-full opacity-30" />
           : <div className={`h-full rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${pct}%` }} />
@@ -139,8 +143,17 @@ export default function SubscriptionPage() {
   // serveur, sinon YABETOOPAY reprend le relais automatiquement — voir
   // GET /subscriptions/payment-provider). null tant qu'on ne sait pas encore,
   // 'NONE' si aucun des deux n'est configuré côté serveur.
+  const router = useRouter();
+
   const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
+
+  // 💰 Vrais tarifs (même source que /pricing et que les modals de paiement)
+  const { plans, isLoading: plansLoading } = usePlans();
+  const displayPlans = PLANS_CONFIG.map((p) => ({
+    ...p,
+    price: plansLoading ? null : (plans?.[p.name]?.priceMonthly ?? 0),
+  }));
 
   const showToast = (message: string, type: 'success' | 'error') => setToast({ message, type });
 
@@ -171,8 +184,11 @@ export default function SubscriptionPage() {
   // prestataire configuré côté serveur, on ne tente rien et on prévient.
   const handleUpgrade = async (targetPlan: string) => {
     if (targetPlan === 'FREE') return;
-    const planConfig = PLANS_CONFIG.find((p) => p.name === targetPlan);
-    if (!planConfig) return;
+    const realAmount = plans?.[targetPlan]?.priceMonthly;
+    if (!realAmount) {
+      showToast('Impossible de déterminer le tarif de ce plan, réessayez.', 'error');
+      return;
+    }
 
     if (activeProvider === 'NONE') {
       showToast('Le paiement en ligne est momentanément indisponible. Contactez le support.', 'error');
@@ -195,12 +211,13 @@ export default function SubscriptionPage() {
       return;
     }
 
-    // MOTEKI (ou encore null le temps du chargement initial — on tente
-    // Moteki par défaut plutôt que de bloquer l'utilisateur)
+    // MOTEKI/CHARIOW (ou encore null le temps du chargement initial — on
+    // tente ce chemin par défaut plutôt que de bloquer l'utilisateur ; le
+    // rendu choisit le bon modal selon activeProvider)
     setCheckoutTarget({
       plan: targetPlan as 'BASIC' | 'PRO' | 'ENTERPRISE',
       billingPeriod: 'monthly',
-      amount: planConfig.price,
+      amount: realAmount,
     });
   };
 
@@ -219,32 +236,32 @@ export default function SubscriptionPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/parametres" className="p-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
-          <ChevronLeft size={18} className="text-[var(--text-muted)]" />
+        <Link href="/parametres" className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 transition-colors">
+          <ChevronLeft size={18} className="text-gray-500" />
         </Link>
-        <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
           <Crown size={18} color="white" />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-black text-[var(--text)]">Abonnement</h1>
-          <p className="text-xs text-[var(--text-muted)]">Plan actuel, utilisation et facturation</p>
+          <h1 className="text-xl font-black text-gray-900 dark:text-white">Abonnement</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Plan actuel, utilisation et facturation</p>
         </div>
       </div>
 
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-[var(--text-muted)]" size={28} />
+          <Loader2 className="animate-spin text-gray-400" size={28} />
         </div>
       ) : (
         <>
           {/* Plan actuel */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
-              <Shield size={13} className="text-[var(--text-muted)]" />
-              <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Plan actuel</h2>
+              <Shield size={13} className="text-gray-400" />
+              <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plan actuel</h2>
             </div>
 
-            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div className="flex items-center gap-4">
                   <div className={`w-11 h-11 rounded-xl ${planStyle.iconColor} flex items-center justify-center shrink-0`}>
@@ -263,13 +280,13 @@ export default function SubscriptionPage() {
                       </span>
                     </div>
                     {status === 'TRIALING' && subscription?.trialEndsAt && (
-                      <p className="text-xs text-amber-500 mt-1 flex items-center gap-1">
+                      <p className="text-xs text-blue-500 mt-1 flex items-center gap-1">
                         <Sparkles size={10} />
                         Essai jusqu'au {new Date(subscription.trialEndsAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
                       </p>
                     )}
                     {plan === 'FREE' && (
-                      <p className="text-xs text-[var(--text-muted)] mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         Fonctionnalités limitées — upgradez pour en profiter pleinement.
                       </p>
                     )}
@@ -278,14 +295,14 @@ export default function SubscriptionPage() {
 
                 <div className="flex flex-col gap-1.5 text-right shrink-0">
                   {subscription?.pricePerMonth != null && subscription.pricePerMonth > 0 && (
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] justify-end">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 justify-end">
                       <CreditCard size={11} />
-                      <span className="font-mono font-bold text-[var(--text)]">{subscription.pricePerMonth.toLocaleString('fr-FR')} FCFA</span>
+                      <span className="font-mono font-bold text-gray-700 dark:text-gray-200">{subscription.pricePerMonth.toLocaleString('fr-FR')} FCFA</span>
                       <span>/mois</span>
                     </div>
                   )}
                   {subscription?.currentPeriodEnd && status !== 'TRIALING' && plan !== 'FREE' && (
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] justify-end">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 justify-end">
                       <Calendar size={11} />
                       Renouvellement le {new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>
@@ -294,7 +311,7 @@ export default function SubscriptionPage() {
               </div>
 
               {subscription?.planDetails?.limits && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-[var(--border)]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <UsageBar label="Employés"        icon={<Users size={11} />}     current={0} max={subscription.planDetails.limits.maxEmployees}   />
                   <UsageBar label="Utilisateurs"    icon={<Users size={11} />}     current={0} max={subscription.planDetails.limits.maxUsers}        />
                   <UsageBar label="Départements"    icon={<Building2 size={11} />} current={0} max={subscription.planDetails.limits.maxDepartments}  />
@@ -308,17 +325,17 @@ export default function SubscriptionPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <TrendingUp size={13} className="text-[var(--text-muted)]" />
-                <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Changer de plan</h2>
+                <TrendingUp size={13} className="text-gray-400" />
+                <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Changer de plan</h2>
               </div>
 
               {/* ✅ Toggle liste / grille */}
-              <div className="flex items-center gap-1 p-1 bg-[var(--surface-2)] rounded-xl">
+              <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-lg transition-all ${viewMode === 'list'
-                    ? 'bg-[var(--surface)] shadow text-[var(--text)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                    ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   title="Vue liste"
                 >
                   <LayoutList size={14} />
@@ -326,8 +343,8 @@ export default function SubscriptionPage() {
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid'
-                    ? 'bg-[var(--surface)] shadow text-[var(--text)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}
+                    ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white'
+                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                   title="Vue grille"
                 >
                   <LayoutGrid size={14} />
@@ -338,7 +355,7 @@ export default function SubscriptionPage() {
             {/* VUE LISTE */}
             {viewMode === 'list' && (
               <div className="grid gap-3">
-                {PLANS_CONFIG.map(p => {
+                {displayPlans.map(p => {
                   const isCurrent   = plan === p.name;
                   const isUpgrading = upgradeLoading === p.name;
                   const ps          = PLAN_STYLES[p.name];
@@ -346,10 +363,10 @@ export default function SubscriptionPage() {
 
                   return (
                     <div key={p.name}
-                      className={`bg-[var(--surface)] rounded-2xl border p-4 transition-all
+                      className={`bg-white dark:bg-gray-800 rounded-2xl border p-4 transition-all
                         ${isCurrent
-                          ? 'border-[var(--text-muted)] ring-1 ring-[var(--border)]'
-                          : 'border-[var(--border)]'}`}>
+                          ? 'border-gray-300 dark:border-gray-600 ring-1 ring-gray-200 dark:ring-gray-700'
+                          : 'border-gray-100 dark:border-gray-700'}`}>
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-xl ${ps.iconColor} flex items-center justify-center shrink-0`}>
                           {isFree ? <Star size={17} className="text-white" /> : <Crown size={17} className="text-white" />}
@@ -358,17 +375,21 @@ export default function SubscriptionPage() {
                           <div className="flex items-center gap-2 flex-wrap mb-1">
                             <span className={`text-sm font-bold ${ps.color}`}>{ps.label}</span>
                             {isCurrent && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)]">
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                                 Plan actuel
                               </span>
                             )}
-                            <span className="text-xs font-mono font-bold text-[var(--text)] ml-auto">
-                              {p.price === 0 ? 'Gratuit' : `${p.price.toLocaleString('fr-FR')} FCFA/mois`}
+                            <span className="text-xs font-mono font-bold text-gray-900 dark:text-white ml-auto">
+                              {p.price === null
+                                ? '…'
+                                : p.price === 0
+                                  ? 'Gratuit'
+                                  : `${p.price.toLocaleString('fr-FR')} FCFA/mois`}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                             {p.features.map((f, i) => (
-                              <span key={i} className="text-[11px] text-[var(--text-muted)] flex items-center gap-1">
+                              <span key={i} className="text-[11px] text-gray-400 flex items-center gap-1">
                                 <CheckCircle size={9} className="text-emerald-400 shrink-0" /> {f}
                               </span>
                             ))}
@@ -376,11 +397,11 @@ export default function SubscriptionPage() {
                         </div>
                         <button
                           onClick={() => !isCurrent && !isFree && handleUpgrade(p.name)}
-                          disabled={isCurrent || isUpgrading || isFree}
+                          disabled={isCurrent || isUpgrading || isFree || p.price === null}
                           className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all
                             ${isCurrent || isFree
-                              ? 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed'
-                              : 'bg-[var(--text)] text-[var(--bg)] hover:opacity-90'}`}
+                              ? 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90'}`}
                         >
                           {isUpgrading
                             ? <Loader2 size={13} className="animate-spin" />
@@ -400,7 +421,7 @@ export default function SubscriptionPage() {
             {/* VUE GRILLE */}
             {viewMode === 'grid' && (
               <div className="grid grid-cols-2 gap-3">
-                {PLANS_CONFIG.map(p => {
+                {displayPlans.map(p => {
                   const isCurrent   = plan === p.name;
                   const isUpgrading = upgradeLoading === p.name;
                   const ps          = PLAN_STYLES[p.name];
@@ -408,10 +429,10 @@ export default function SubscriptionPage() {
 
                   return (
                     <div key={p.name}
-                      className={`bg-[var(--surface)] rounded-2xl border p-4 flex flex-col gap-3 transition-all
+                      className={`bg-white dark:bg-gray-800 rounded-2xl border p-4 flex flex-col gap-3 transition-all
                         ${isCurrent
-                          ? 'border-[var(--text-muted)] ring-2 ring-[var(--border)]'
-                          : 'border-[var(--border)] hover:border-[var(--text-muted)]'}`}>
+                          ? 'border-gray-300 dark:border-gray-600 ring-2 ring-gray-300 dark:ring-gray-600'
+                          : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-lg ${ps.iconColor} flex items-center justify-center shrink-0`}>
                           {isFree ? <Star size={14} className="text-white" /> : <Crown size={14} className="text-white" />}
@@ -419,36 +440,40 @@ export default function SubscriptionPage() {
                         <div>
                           <span className={`text-sm font-bold ${ps.color}`}>{ps.label}</span>
                           {isCurrent && (
-                            <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)]">
+                            <span className="ml-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
                               Actuel
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="text-lg font-black text-[var(--text)] font-mono">
-                        {p.price === 0 ? 'Gratuit' : `${p.price.toLocaleString('fr-FR')}`}
-                        {p.price > 0 && <span className="text-xs font-normal text-[var(--text-muted)] ml-0.5">FCFA/mois</span>}
+                      <div className="text-lg font-black text-gray-900 dark:text-white font-mono">
+                        {p.price === null
+                          ? '…'
+                          : p.price === 0
+                            ? 'Gratuit'
+                            : `${p.price.toLocaleString('fr-FR')}`}
+                        {p.price !== null && p.price > 0 && <span className="text-xs font-normal text-gray-400 ml-0.5">FCFA/mois</span>}
                       </div>
 
                       <div className="space-y-1 flex-1">
                         {p.features.slice(0, 3).map((f, i) => (
-                          <span key={i} className="flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+                          <span key={i} className="flex items-center gap-1 text-[10px] text-gray-400">
                             <CheckCircle size={8} className="text-emerald-400 shrink-0" /> {f}
                           </span>
                         ))}
                         {p.features.length > 3 && (
-                          <span className="text-[10px] text-[var(--text-muted)]">+{p.features.length - 3} autres…</span>
+                          <span className="text-[10px] text-gray-300 dark:text-gray-600">+{p.features.length - 3} autres…</span>
                         )}
                       </div>
 
                       <button
                         onClick={() => !isCurrent && !isFree && handleUpgrade(p.name)}
-                        disabled={isCurrent || isUpgrading || isFree}
+                        disabled={isCurrent || isUpgrading || isFree || p.price === null}
                         className={`w-full py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1
                           ${isCurrent || isFree
-                            ? 'bg-[var(--surface-2)] text-[var(--text-muted)] cursor-not-allowed'
-                            : 'bg-[var(--text)] text-[var(--bg)] hover:opacity-90'}`}
+                            ? 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90'}`}
                       >
                         {isUpgrading
                           ? <Loader2 size={12} className="animate-spin" />
@@ -468,32 +493,32 @@ export default function SubscriptionPage() {
           {subscription?.payments && subscription.payments.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
-                <Receipt size={13} className="text-[var(--text-muted)]" />
-                <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Historique des paiements</h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--surface-2)] text-[var(--text-muted)]">
+                <Receipt size={13} className="text-gray-400" />
+                <h2 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Historique des paiements</h2>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
                   {subscription.payments.length}
                 </span>
               </div>
-              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                 {subscription.payments.map((payment, i) => (
                   <div key={payment.id}
-                    className={`flex items-center gap-4 px-5 py-4 ${i !== subscription.payments!.length - 1 ? 'border-b border-[var(--border)]' : ''}`}>
+                    className={`flex items-center gap-4 px-5 py-4 ${i !== subscription.payments!.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''}`}>
                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0
                       ${payment.status === 'SUCCEEDED' ? 'bg-emerald-100 dark:bg-emerald-900/30' :
-                        payment.status === 'PROCESSING' ? 'bg-amber-100 dark:bg-amber-900/30' :
+                        payment.status === 'PROCESSING' ? 'bg-blue-100 dark:bg-blue-900/30' :
                         'bg-red-100 dark:bg-red-900/30'}`}>
                       {payment.status === 'SUCCEEDED'
                         ? <CheckCircle size={14} className="text-emerald-600" />
                         : payment.status === 'PROCESSING'
-                          ? <Loader2 size={14} className="text-amber-500 animate-spin" />
+                          ? <Loader2 size={14} className="text-blue-500 animate-spin" />
                           : <XCircle size={14} className="text-red-500" />
                       }
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-[var(--text)] truncate">
+                      <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                         {payment.description ?? 'Paiement abonnement'}
                       </p>
-                      <p className="text-[11px] text-[var(--text-muted)]">
+                      <p className="text-[11px] text-gray-400">
                         {new Date(payment.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
                     </div>
@@ -501,11 +526,11 @@ export default function SubscriptionPage() {
                       ${payment.status === 'SUCCEEDED'
                         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700'
                         : payment.status === 'PROCESSING'
-                          ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
                           : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700'}`}>
                       {payment.status === 'SUCCEEDED' ? 'Réussi' : payment.status === 'PROCESSING' ? 'En cours' : 'Échoué'}
                     </span>
-                    <span className="font-bold text-sm text-[var(--text)] font-mono whitespace-nowrap">
+                    <span className="font-bold text-sm text-gray-900 dark:text-white font-mono whitespace-nowrap">
                       {payment.amount.toLocaleString('fr-FR')} {payment.currency}
                     </span>
                   </div>
@@ -515,10 +540,10 @@ export default function SubscriptionPage() {
           )}
 
           {/* Info facturation */}
-          <div className="p-4 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] flex gap-3">
-            <Info size={14} className="text-[var(--text-muted)] shrink-0 mt-0.5" />
-            <div className="text-xs text-[var(--text-muted)] space-y-1">
-              <p className="font-semibold text-[var(--text)]">Comment fonctionne la facturation ?</p>
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 flex gap-3">
+            <Info size={14} className="text-gray-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+              <p className="font-semibold text-gray-700 dark:text-gray-300">Comment fonctionne la facturation ?</p>
               <p>Les paiements sont traités via Moteki (Mobile Money MTN / Airtel / Orange). Votre abonnement est activé après confirmation du paiement sur votre téléphone.</p>
             </div>
           </div>
@@ -534,6 +559,7 @@ export default function SubscriptionPage() {
           planLabel={PLAN_STYLES[checkoutTarget.plan]?.label ?? checkoutTarget.plan}
           onClose={() => setCheckoutTarget(null)}
           onError={(msg) => showToast(msg, 'error')}
+          onSuccess={() => router.push(`/success?plan=${checkoutTarget.plan}&immediate=true`)}
         />
       )}
 

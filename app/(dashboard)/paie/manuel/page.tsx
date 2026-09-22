@@ -95,7 +95,7 @@ interface SimResult {
   month: number; year: number; daysToPay: number; workDays: number;
   absenceDeduction: number;
   overtime: { hours10: number; amount10: number; hours25: number; amount25: number; hours50: number; amount50: number; hours100: number; amount100: number; total: number };
-  bonuses: Array<{ bonusType: string; amount: number }>;
+  bonuses: Array<{ bonusType: string; amount: number; isCnss?: boolean; isTaxable?: boolean }>;
   adjustedBaseSalary: number; grossSalary: number;
   cnssSalarial: number; its: number; totalDeductions: number; netSalary: number;
   cnssEmployerPension: number; cnssEmployerFamily: number; cnssEmployerAccident: number;
@@ -375,7 +375,16 @@ export default function ManuelPayrollPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [month, setMonth]               = useState(MONTHS[now.getMonth()]);
   const [year, setYear]                 = useState(now.getFullYear());
-  const [workedDays, setWorkedDays]     = useState<number | ''>(26);
+  // ✅ Vide par défaut — rempli avec les VRAIS jours de présence renvoyés
+  // par la simulation (sim.daysToPay), tant que l'utilisateur n'a pas
+  // modifié le champ à la main (workedDaysEdited).
+  const [workedDays, setWorkedDays]         = useState<number | ''>('');
+  const [workedDaysEdited, setWorkedDaysEdited] = useState(false);
+  // ✅ Préremplissage primes/indemnités depuis ce qui est déjà configuré
+  // pour l'employé (convention, ancienneté, primes récurrentes) — une
+  // seule fois par employé sélectionné, pour ne pas écraser une saisie
+  // en cours à chaque recalcul.
+  const [bonusesPrefilled, setBonusesPrefilled] = useState(false);
   const [ot10, setOt10]   = useState<number | ''>(0);
   const [ot25, setOt25]   = useState<number | ''>(0);
   const [ot50, setOt50]   = useState<number | ''>(0);
@@ -460,6 +469,8 @@ export default function ManuelPayrollPage() {
       setLoans([]); setAdvances([]);
       return;
     }
+    // Nouvel employé → on retente le préremplissage des primes/indemnités
+    setBonusesPrefilled(false);
     setLoadingDetail(true);
     Promise.all([
       api.get<any>(`/employees/${selectedEmp.id}`).catch(() => null),
@@ -695,7 +706,11 @@ export default function ManuelPayrollPage() {
       const result = await api.post<SimResult>('/payrolls/simulate', {
         employeeId: selectedEmp.id,
         month: MONTHS.findIndex(m => m === month) + 1,
-        year, workedDays: n(workedDays) || 26,
+        year,
+        // ✅ N'envoie un override que si l'utilisateur a lui-même modifié le
+        // champ — sinon le backend va chercher les vrais jours en BDD
+        // (présences), au lieu de forcer 26 (plein mois) par défaut.
+        ...(workedDaysEdited && workedDays !== '' ? { workedDays: n(workedDays) } : {}),
         baseSalary: baseSal,
         overtimeHours10:  n(ot10),
         overtimeHours25:  n(ot25),
@@ -705,6 +720,27 @@ export default function ManuelPayrollPage() {
         manualDeductions:  manualDeductionsPayload.length > 0 ? manualDeductionsPayload : undefined,
       });
       setSim(result);
+      // ✅ Première simulation (champ pas encore touché) → on affiche les
+      // vrais jours renvoyés par le backend, comme pour les heures sup.
+      if (!workedDaysEdited && result?.daysToPay != null) {
+        setWorkedDays(result.daysToPay);
+      }
+      // ✅ Préremplir primes/indemnités avec ce qui est déjà configuré pour
+      // cet employé (convention, ancienneté, primes récurrentes) — visible
+      // et modifiable au lieu de s'appliquer en silence. Seulement au tout
+      // premier calcul pour cet employé (formulaire encore vide, pas de
+      // reprise "mois précédent" en cours).
+      if (!bonusesPrefilled && !usePrevData && primes.length === 0 && indemnites.length === 0) {
+        const cong = /cong[eé]/i;
+        const configured = (result?.bonuses ?? []).filter(b => !cong.test(b.bonusType || ''));
+        const toPrimes     = configured.filter(b => b.isCnss !== false)
+          .map(b => ({ localId: uid(), label: b.bonusType, base: b.amount, rate: 1, amount: b.amount }));
+        const toIndemnites = configured.filter(b => b.isCnss === false)
+          .map(b => ({ localId: uid(), label: b.bonusType, base: b.amount, rate: 1, amount: b.amount }));
+        if (toPrimes.length > 0)     setPrimes(sortPrimes(toPrimes));
+        if (toIndemnites.length > 0) setIndemnites(toIndemnites);
+      }
+      setBonusesPrefilled(true);
     } catch (e: any) {
       setSimError(e?.response?.data?.message || e?.message || 'Erreur');
       setSim(null);
@@ -726,7 +762,10 @@ export default function ManuelPayrollPage() {
       const result: any = await api.post('/payrolls/manual', {
         employeeId: selectedEmp.id,
         month: MONTHS.findIndex(m => m === month) + 1,
-        year, workedDays: n(workedDays) || 26,
+        year,
+        // ✅ Idem simulate() : override seulement si modifié à la main,
+        // sinon le backend reprend les vrais jours en BDD.
+        ...(workedDaysEdited && workedDays !== '' ? { workedDays: n(workedDays) } : {}),
         baseSalary: n(empDetail.baseSalary as any),
         overtimeHours10:  n(ot10), overtimeHours25: n(ot25),
         overtimeHours50:  n(ot50), overtimeHours100: n(ot100),
@@ -785,7 +824,8 @@ export default function ManuelPayrollPage() {
       // ── Extraire les données du bulletin précédent ──────────────────────
 
       // Jours travaillés
-      if (prev.workedDays) setWorkedDays(prev.workedDays);
+      // Valeur reprise d'un bulletin précédent = un choix explicite, pas la valeur auto
+      if (prev.workedDays) { setWorkedDays(prev.workedDays); setWorkedDaysEdited(true); }
 
       // Heures sup
       setOt10(Number(prev.overtimeHours10  ?? 0));
@@ -846,15 +886,20 @@ export default function ManuelPayrollPage() {
   const clearPrevData = () => {
     setPrimes([]); setIndemnites([]); setRetenues([]);
     setOt10(0); setOt25(0); setOt50(0); setOt100(0);
-    setWorkedDays(26);
+    // ✅ Retour aux vrais jours de présence (pas un 26 en dur) — voir le
+    // correctif sur workedDays plus haut dans ce fichier.
+    setWorkedDays(''); setWorkedDaysEdited(false);
     setCongesDroits(''); setCongesPris(''); setCongesSolde('');
     setPrevDataLoaded(false);
+    // ✅ Le formulaire redevient vide → laisser le préremplissage depuis les
+    // primes déjà configurées reprendre la main au prochain calcul.
+    setBonusesPrefilled(false);
   };
 
   const resetPage = () => {
     setSuccess(false); setSim(null); setSelectedEmp(null); setEmpSearch('');
     setEmpDetail(null); setEmpLoans([]); setEmpAdvances([]);
-    setWorkedDays(26); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
+    setWorkedDays(''); setWorkedDaysEdited(false); setOt10(0); setOt25(0); setOt50(0); setOt100(0);
     setPrimes([]); setIndemnites([]); setTaxes([]); setLoans([]); setAdvances([]); setRetenues([]);
     setCarryOverBrut(''); setCarryOverTauxPat(Number(companyInfo?.cnssEmployerRate) || 20.28);
     setCongesDroits(''); setCongesPris(''); setCongesSolde(''); setJoursCongesPris(''); setCarryOverSaved(false);
@@ -1077,17 +1122,34 @@ export default function ManuelPayrollPage() {
 
             {selectedEmp && (
               <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700/50 pt-4">
-                <SLabel>Jours travaillés <span className="font-normal text-gray-400">/ 26 jours théoriques</span></SLabel>
+                <SLabel>
+                  Jours travaillés{' '}
+                  <span className="font-normal text-gray-400">/ {sim?.workDays ?? 26} jours théoriques</span>
+                  {!workedDaysEdited && sim && (
+                    <span className="ml-1.5 text-[10px] font-bold text-emerald-500">(présences)</span>
+                  )}
+                </SLabel>
                 <div className="flex items-center gap-3">
-                  <input type="number" min={0} max={26} value={workedDays}
-                    onChange={e => setWorkedDays(e.target.value === '' ? '' : Math.min(26, Math.max(0, Number(e.target.value))))}
-                    className="w-20 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
+                  <input type="number" min={0} max={sim?.workDays ?? 26} value={workedDays}
+                    onChange={e => {
+                      setWorkedDaysEdited(true);
+                      const max = sim?.workDays ?? 26;
+                      setWorkedDays(e.target.value === '' ? '' : Math.min(max, Math.max(0, Number(e.target.value))));
+                    }}
+                    className={`w-20 px-3 py-2 bg-gray-50 dark:bg-gray-900/50 border rounded-xl text-sm font-bold text-center text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 ${
+                      workedDaysEdited ? 'border-amber-400' : 'border-gray-200 dark:border-gray-700'
+                    }`} />
                   <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full bg-emerald-400 rounded-full transition-all"
-                      style={{ width: `${Math.min(100,(n(workedDays)/26)*100)}%` }} />
+                      style={{ width: `${Math.min(100,(n(workedDays)/(sim?.workDays ?? 26))*100)}%` }} />
                   </div>
-                  <span className="text-xs text-gray-400 tabular-nums w-8 text-right">{Math.round((n(workedDays)/26)*100)}%</span>
+                  <span className="text-xs text-gray-400 tabular-nums w-8 text-right">{Math.round((n(workedDays)/(sim?.workDays ?? 26))*100)}%</span>
                 </div>
+                {!workedDaysEdited && sim?.daysToPay === 0 && (
+                  <p className="text-[10px] text-amber-500 mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={9} /> Aucune présence trouvée en BDD pour ce mois — vérifiez le pointage ou ajustez ce champ.
+                  </p>
+                )}
               </div>
             )}
           </Card>

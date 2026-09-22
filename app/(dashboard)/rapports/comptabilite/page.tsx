@@ -507,7 +507,7 @@ export default function AccountingPage() {
                     { col: 'C', label: 'Salaire Brut', desc: 'Total avant déductions' },
                     { col: 'D', label: 'Base ITS/IRPP', desc: '(Brut − CNSS) × 80%' },
                     { col: 'E', label: 'Montant ITS', desc: 'Impôt retenu à la source' },
-                    { col: 'F', label: 'TUS', desc: 'Brut × 5% (charge patronale)' },
+                    { col: 'F', label: 'TUS', desc: 'Brut × 7,5% (charge patronale)' },
                   ].map((item) => (
                     <div key={item.col} className="flex items-center gap-2 text-xs">
                       <span className="w-5 h-5 rounded bg-[var(--accent-2-soft)] text-[var(--accent-2)] font-bold text-center leading-5 text-xs shrink-0">
