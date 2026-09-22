@@ -226,6 +226,21 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   const tusCnssItem        = findItem('TUS_CNSS');
   const ctaxPatItems       = items.filter((i: any) => typeof i.code === 'string' && i.code.startsWith('CTAX_EMP_'));
 
+  // ✅ Filet de sécurité — tout item DEDUCTION / EMPLOYER_COST déjà "réclamé"
+  // ci-dessus (CNSS, ITS, CTAX_*, prêts, avances, retenues diverses, TUS…)
+  // est exclu ; tout le reste s'affiche quand même en ligne générique, pour
+  // qu'une taxe/retenue configurable avec un code imprévu ne disparaisse
+  // jamais silencieusement du bulletin.
+  const claimed = new Set<any>(
+    [
+      cnssSalItem, itsItem, absCongeItem,
+      cnssEmpPensionItem, cnssEmpFamItem, cnssEmpAtItem, tusDgiItem, tusCnssItem,
+      ...ctaxSalItems, ...ctaxPatItems, ...loanItemsList, ...advanceItemsList, ...companyDeductions,
+    ].filter(Boolean).map((i: any) => i.id ?? i.code),
+  );
+  const otherDeductionItems    = items.filter((i: any) => i.type === 'DEDUCTION'      && !claimed.has(i.id ?? i.code));
+  const otherEmployerCostItems = items.filter((i: any) => i.type === 'EMPLOYER_COST'  && !claimed.has(i.id ?? i.code));
+
   const cnssSal    = nv(cnssSalItem?.amount ?? payroll.cnssSalarial);
   const itsAmount  = nv(itsItem?.amount ?? payroll.its);
   const itsLabel   = itsItem?.label || 'ITS Mensuel';
