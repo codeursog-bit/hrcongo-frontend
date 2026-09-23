@@ -15,7 +15,7 @@ import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Calendar, ArrowRight, Printer, UserCircle, Plus, Stethoscope,
   FileText, Sparkles, Wallet, Paperclip, Info, Lock, Unlock, FileDown,
-  LayoutDashboard, ListChecks, Download,
+  LayoutDashboard, ListChecks, Download, Trash2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -63,6 +63,7 @@ export default function AbsenceManagementPage() {
   const [showPrintAuthModal, setShowPrintAuthModal] = useState(false);
   const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
   const [docData, setDocData] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     try {
@@ -152,6 +153,24 @@ export default function AbsenceManagementPage() {
       alert(e?.message || "Erreur lors de la mise à jour de l'autorisation d'impression");
     } finally {
       setIsTogglingPrintAuth(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    if (!confirm('Supprimer définitivement cette demande ? Cette action est irréversible.')) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/absence-requests/${selected.id}`);
+      setRequests(prev => {
+        const remaining = prev.filter(r => r.id !== selected.id);
+        setSelectedId(remaining[0]?.id ?? null);
+        return remaining;
+      });
+    } catch (e: any) {
+      alert(e?.message || 'Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -445,6 +464,16 @@ export default function AbsenceManagementPage() {
                     >
                       {isExportingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
                     </button>
+                    {canApprove && (
+                      <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        title="Supprimer définitivement"
+                        className="px-3.5 py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-red-500 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 disabled:opacity-40"
+                      >
+                        {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                      </button>
+                    )}
                   </div>
 
                   {docData?.company?.documentTemplate === 'ORCA' && (

@@ -43,6 +43,7 @@ export const adminService = {
   getUsersRecentlyOnline: (hours?: number) => adminFetch<any>(`/admin/users/recently-online${hours ? `?hours=${hours}` : ''}`),
   getMostActiveUsers:     (period?: 'today' | 'week' | 'month') => adminFetch<any>(`/admin/users/most-active?period=${period ?? 'week'}`),
   getPushStatus:          () => adminFetch<any>('/admin/users/push-status'),
+  getPushDiagnostics:     () => adminFetch<any>('/admin/users/push-diagnostics'),
   // ── Portefeuilles multi-entreprises ─────────────────────────────────────
   searchPortfolioUsers: (q?: string) => adminFetch<any>(`/admin/portfolio-users/search${q ? `?q=${encodeURIComponent(q)}` : ''}`),
   getPortfolioUserDetail: (userId: string) => adminFetch<any>(`/admin/portfolio-users/${userId}`),

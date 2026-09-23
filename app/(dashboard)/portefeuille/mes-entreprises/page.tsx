@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Plus, LayoutGrid, List, X, Loader2, AlertCircle,
-  Building2, MapPin, ArrowRight, CheckCircle2, Lock,
+  Building2, MapPin, ArrowRight, CheckCircle2, Lock, Users,
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
@@ -22,6 +22,7 @@ interface PortfolioCompany {
   logo?: string | null;
   isActive: boolean;
   city?: string | null;
+  employeeCount?: number;
 }
 
 interface CreateCompanyForm {
@@ -40,22 +41,38 @@ const AVATAR_GRADIENTS = [
   'from-rose-500 to-pink-400', 'from-indigo-500 to-blue-400',
 ];
 
+// ─── Avatar entreprise : logo si dispo (fond blanc, cadré proprement), sinon initiales ──
+
+function CompanyAvatar({ company, idx, size = 'md' }: { company: PortfolioCompany; idx: number; size?: 'md' | 'sm' }) {
+  const initials = company.name.slice(0, 2).toUpperCase();
+  const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
+  const dims = size === 'md' ? 'w-11 h-11 rounded-xl' : 'w-9 h-9 rounded-lg';
+
+  if (company.logo) {
+    return (
+      <div className={`${dims} bg-white shrink-0 overflow-hidden flex items-center justify-center`} style={{ border: '1px solid var(--border)' }}>
+        <img src={company.logo} alt={company.name} className="w-full h-full object-contain p-1.5" />
+      </div>
+    );
+  }
+  return (
+    <div className={`${dims} bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold ${size === 'md' ? 'text-sm' : 'text-xs'} shrink-0`}>
+      {initials}
+    </div>
+  );
+}
+
 // ─── Carte entreprise ─────────────────────────────────────────────────────────
 
 function CompanyCard({ company, idx, onOpen, opening }: {
   company: PortfolioCompany; idx: number; onOpen: (c: PortfolioCompany) => void; opening: boolean;
 }) {
-  const initials = company.name.slice(0, 2).toUpperCase();
-  const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
-
   return (
     <div className="group relative rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1"
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
-            {initials}
-          </div>
+          <CompanyAvatar company={company} idx={idx} />
           <div className="min-w-0">
             <p className="font-bold text-sm truncate" style={{ color: 'var(--text)' }}>{company.name}</p>
             {company.city && (
@@ -76,6 +93,13 @@ function CompanyCard({ company, idx, onOpen, opening }: {
         )}
       </div>
 
+      {typeof company.employeeCount === 'number' && (
+        <div className="flex items-center gap-1.5 mb-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <Users size={12} />
+          {company.employeeCount} employé{company.employeeCount > 1 ? 's' : ''}
+        </div>
+      )}
+
       <button
         onClick={() => onOpen(company)}
         disabled={opening}
@@ -91,18 +115,20 @@ function CompanyCard({ company, idx, onOpen, opening }: {
 function CompanyRow({ company, idx, onOpen, opening }: {
   company: PortfolioCompany; idx: number; onOpen: (c: PortfolioCompany) => void; opening: boolean;
 }) {
-  const initials = company.name.slice(0, 2).toUpperCase();
-  const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
-
   return (
     <div className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-[var(--surface-2)]"
       style={{ borderBottom: '1px solid var(--border)' }}>
-      <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shrink-0`}>
-        {initials}
-      </div>
+      <CompanyAvatar company={company} idx={idx} size="sm" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{company.name}</p>
-        {company.city && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{company.city}</p>}
+        <div className="flex items-center gap-2 flex-wrap">
+          {company.city && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{company.city}</p>}
+          {typeof company.employeeCount === 'number' && (
+            <span className="text-xs flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+              <Users size={11} />{company.employeeCount}
+            </span>
+          )}
+        </div>
       </div>
       {company.isActive ? (
         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>

@@ -3,7 +3,7 @@
 // ============================================================================
 import {
   LayoutDashboard, Building2, BarChart2, CreditCard, Bug,
-  Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio, Layers,
+  Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio, Layers, Bell,
 } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
@@ -12,6 +12,7 @@ export const NAVIGATION_ITEMS = [
   { path: '/admin/portefeuilles',label: 'Portefeuilles', icon: Layers          },
   { path: '/admin/subscriptions',label: 'Abonnements',   icon: Repeat          },
   { path: '/admin/user-activity',label: 'Activité Users',icon: Radio           },
+  { path: '/admin/push-notifications', label: 'Notifications Push', icon: Bell },
   { path: '/admin/analytics',    label: 'Analytics',     icon: BarChart2       },
   { path: '/admin/billing',      label: 'Revenus',       icon: CreditCard      },
   { path: '/admin/monitoring',   label: 'Monitoring',    icon: Terminal        },

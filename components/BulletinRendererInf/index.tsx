@@ -607,3 +607,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
     </>
   );
 }
+
+
+
+

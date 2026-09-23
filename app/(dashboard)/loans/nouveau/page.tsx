@@ -8,13 +8,16 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Banknote, Package, HelpCircle, Wallet, Send, Loader2, CheckCircle2,
-  ArrowLeft, Search, Eye,
+  ArrowLeft, Search, Eye, Paperclip,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
+import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
+import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 
 type ReqType = 'ARGENT' | 'MARCHANDISE' | 'AVANCE' | 'AUTRE';
@@ -64,6 +67,15 @@ export default function NouvellePretAvancePage() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ✅ Modèle STANDARD — champs propres au papier client, absents du modèle
+  // par défaut : "Nature du prêt" (Social/Scolarité/...) et une pièce
+  // jointe réelle (au lieu des cases "j'ai un devis" non vérifiables).
+  // N'a de sens que pour un prêt (argent/marchandise/autre) — l'avance n'a
+  // pas cette notion sur le papier.
+  const isStandard = company?.documentTemplate === 'STANDARD';
+  const [nature, setNature] = useState('');
+  const { uploadedUrl: attachmentUrl, uploading: uploadingAttachment, handleFileSelect: handleAttachmentSelect } = useImageUpload({ folder: 'loans' });
 
   // Dette déjà en cours de l'employé (autres prêts/avances non soldés), pour
   // que la personne qui remplit sache où elle en est avant même d'envoyer sa
@@ -172,6 +184,8 @@ export default function NouvellePretAvancePage() {
           startDate,
           endDate,
           reason: reason.trim(),
+          ...(isStandard && nature && { nature }),
+          ...(isStandard && attachmentUrl && { attachmentUrl }),
           ...(isFinance && onBehalf && { recoverViaPayroll }),
         });
       }
@@ -190,16 +204,36 @@ export default function NouvellePretAvancePage() {
     docType: type,
     reason: reason || 'Motif…',
     amount: amount || 0,
-    // ✅ Avant : new Date() en dur, donc l'aperçu affichait toujours la date
-    // du jour même si l'utilisateur choisissait une autre date de départ.
-    // startDate vaut déjà aujourd'hui par défaut (voir useState plus haut),
-    // donc ça ne change rien tant que l'utilisateur ne la modifie pas.
-    // Même précaution ici : évite d'afficher "Invalid Date" sur l'aperçu
-    // pendant que le champ date est momentanément vide.
     requestedAt: startDate && !isNaN(new Date(startDate).getTime()) ? new Date(startDate) : new Date(),
     monthlyRepayment: monthlyRepayment || undefined,
     durationMonths,
     previousLoanAmount: hasKnownEmployee ? existingDebt : undefined,
+    status: 'PENDING',
+  };
+
+  const standardPreviewData = {
+    reference: 'XX-XXXXXXXX',
+    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, address: company?.address, city: company?.city, country: company?.country, phone: company?.phone, email: company?.email, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
+    employee: { firstName: targetEmployee?.firstName || '', lastName: targetEmployee?.lastName || '', employeeNumber: targetEmployee?.employeeNumber, position: targetEmployee?.position, phone: targetEmployee?.phone },
+    nature: nature || undefined,
+    amount: amount || 0,
+    durationMonths,
+    recoverViaPayroll,
+    reason: reason || '',
+    attachmentUrl: attachmentUrl || undefined,
+    requestedAt: startDate && !isNaN(new Date(startDate).getTime()) ? new Date(startDate) : new Date(),
+  };
+
+  const standardAdvancePreviewData = {
+    reference: 'XX-XXXXXXXX',
+    company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, address: company?.address, city: company?.city, country: company?.country, phone: company?.phone, email: company?.email, cachetUrl: company?.cachetUrl, documentFooterText: company?.documentFooterText },
+    employee: { firstName: targetEmployee?.firstName || '', lastName: targetEmployee?.lastName || '', employeeNumber: targetEmployee?.employeeNumber, position: targetEmployee?.position, phone: targetEmployee?.phone },
+    amount: amount || 0,
+    month: deductMonth,
+    year: deductYear,
+    recoverViaPayroll,
+    reason: reason || '',
+    requestedAt: startDate && !isNaN(new Date(startDate).getTime()) ? new Date(startDate) : new Date(),
     status: 'PENDING',
   };
 
@@ -363,6 +397,30 @@ export default function NouvellePretAvancePage() {
               <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif</label>
               <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none" />
             </div>
+
+            {isStandard && !isAdvance && (
+              <>
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Nature du prêt</label>
+                  <select value={nature} onChange={e => setNature(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
+                    <option value="">— Non précisé —</option>
+                    <option value="SOCIAL">Prêt social</option>
+                    <option value="SCOLARITE">Prêt scolarité</option>
+                    <option value="LOGEMENT">Prêt logement</option>
+                    <option value="EXCEPTIONNEL">Prêt exceptionnel</option>
+                    <option value="AUTRE">Autre</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Pièce jointe (devis, justificatif de scolarité, certificat médical...)</label>
+                  <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">
+                    <Paperclip size={16} />
+                    {uploadingAttachment ? 'Envoi en cours…' : attachmentUrl ? 'Pièce jointe ✓' : 'Joindre un document'}
+                    <input type="file" accept="image/*,.pdf" hidden onChange={e => e.target.files?.[0] && handleAttachmentSelect(e.target.files[0])} />
+                  </label>
+                </div>
+              </>
+            )}
           </div>
 
           {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-xl">{error}</div>}
@@ -379,7 +437,13 @@ export default function NouvellePretAvancePage() {
       </div>
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
-        <LoanRequestPrintable id="preview-loan" data={previewData as any} />
+        {isStandard ? (
+          isAdvance
+            ? <StandardAdvanceRequestForm id="preview-loan" data={standardAdvancePreviewData as any} />
+            : <StandardLoanRequestForm id="preview-loan" data={standardPreviewData as any} />
+        ) : (
+          <LoanRequestPrintable id="preview-loan" data={previewData as any} />
+        )}
       </DocumentPreviewModal>
     </div>
   );
