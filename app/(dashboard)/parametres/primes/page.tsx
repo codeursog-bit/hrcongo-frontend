@@ -950,6 +950,29 @@ export default function CataloguePrimesPage() {
                   </div>
                 )}
 
+                {/* ✅ CORRECTIF (bug confirmé) : ce toggle n'existait pas — le
+                    formulaire envoyait toujours isProratized: false au
+                    backend (jamais undefined), donc le fallback sur le
+                    défaut de la catégorie (ex: PERFORMANCE → proratisée)
+                    ne se déclenchait jamais. Résultat : une prime affichée
+                    avec la description "réduite proportionnellement aux
+                    absences" restait pourtant payée en entier sur le
+                    bulletin, quel que soit le nombre de jours travaillés. */}
+                <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-[var(--surface-2)]">
+                  <div>
+                    <p className="text-sm font-bold text-[var(--text)]">Proratiser selon les jours travaillés</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      {form.isProratized
+                        ? 'Activé — ex. 20 j sur 26 = 20/26 du montant de la prime.'
+                        : 'Désactivé — la prime est toujours versée en entier, même en cas d\'absences.'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setForm(p => ({ ...p, isProratized: !p.isProratized }))}
+                    className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${form.isProratized ? 'bg-emerald-500' : 'bg-[var(--surface)]'}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.isProratized ? 'translate-x-5' : ''}`} />
+                  </button>
+                </div>
+
                 {/* Fréquence */}
                 <div>
                   <label className="block text-sm font-bold text-[var(--text)] mb-2">Fréquence par défaut</label>
