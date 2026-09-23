@@ -552,57 +552,64 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
         </div>
 
         {/* ══ CUMULS + NET A PAYER ══════════════════════════════════════ */}
-        {/* display:flex + alignItems:stretch garantit que l'encart NET A
-            PAYER a EXACTEMENT la même hauteur que le tableau Cumuls à sa
-            gauche (Mensuel + Annuel), fidèle au fichier Excel source. */}
-        <div className="nobreak" style={{ display: 'flex', alignItems: 'stretch', width: '100%', marginTop: 5, flexShrink: 0 }}>
-          <div style={{ width: '78%' }}>
-            <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: BDB, tableLayout: 'fixed' }}>
-              <thead>
-                <tr>
-                  <th style={th({ width: '9%' })}>Cumuls</th>
-                  <th style={th()}>Salaire brut</th>
-                  <th style={th()}>Charges salariales</th>
-                  <th style={th()}>Charges patronales</th>
-                  <th style={th()}>ITS</th>
-                  <th style={th()}>Net Imposable</th>
-                  <th style={th()}>Base Congé</th>
-                  <th style={th()}>Jrs Congé</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={tdC({ fontWeight: 800, borderRight: BD })}>Mensuel</td>
-                  <td style={tdR()}>{fmtZ(totalBrut)}</td>
-                  <td style={tdR()}>{fmtZ(totalChargesSalariales)}</td>
-                  <td style={tdR()}>{fmtZ(totalPat)}</td>
-                  <td style={tdR()}>{fmtZ(itsAmount)}</td>
-                  <td style={tdR()}>{fmtOpt(netImposable)}</td>
-                  <td style={tdR()}>{fmtOpt(baseConge)}</td>
-                  <td style={{ ...tdR({ borderRight: BD }) }}>{joursCongeMois == null ? '' : Number(joursCongeMois).toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td style={{ ...tdC({ fontWeight: 800, borderTop: BD, borderRight: BD }) }}>Annuel</td>
-                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdGross)}</td>
-                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnss)}</td>
-                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnssEmp)}</td>
-                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdIts)}</td>
-                  <td style={{ ...tdR({ borderTop: BD }) }}></td>
-                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdBaseConge)}</td>
-                  <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div style={{ width: '22%', paddingLeft: 6, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ border: BDB, flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ ...th(), fontSize: 10.5 }}>NET A PAYER</div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 10px', fontFamily: SANS, fontSize: 17, fontWeight: 900 }}>
+        {/* ✅ Un seul et même <table> pour les deux blocs (au lieu de deux
+            arbres séparés alignés en flex) : "NET A PAYER" est une vraie
+            cellule d'en-tête sur la MÊME ligne que "Cumuls"/"Salaire
+            brut"/…, donc sa hauteur suit automatiquement si "Charges
+            salariales"/"Charges patronales" passent sur 2 lignes — exactement
+            comme sur le fichier Excel source, où c'est la même ligne de
+            feuille de calcul. La valeur du NET A PAYER fusionne les 2 lignes
+            (Mensuel+Annuel) via rowSpan, comme la fusion K60:L61 de l'Excel. */}
+        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', border: BDB, marginTop: 5, tableLayout: 'fixed', flexShrink: 0 }}>
+          <colgroup>
+            <col style={{ width: '8%'  }} /><col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+            <col style={{ width: '22%' }} />
+          </colgroup>
+          <thead>
+            <tr>
+              <th style={th()}>Cumuls</th>
+              <th style={th()}>Salaire brut</th>
+              <th style={th()}>Charges salariales</th>
+              <th style={th()}>Charges patronales</th>
+              <th style={th()}>ITS</th>
+              <th style={th()}>Net Imposable</th>
+              <th style={th()}>Base Congé</th>
+              <th style={th()}>Jrs Congé</th>
+              <th style={th({ borderLeft: BDB, fontSize: 10.5 })}>NET A PAYER</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={tdC({ fontWeight: 800, borderRight: BD })}>Mensuel</td>
+              <td style={tdR()}>{fmtZ(totalBrut)}</td>
+              <td style={tdR()}>{fmtZ(totalChargesSalariales)}</td>
+              <td style={tdR()}>{fmtZ(totalPat)}</td>
+              <td style={tdR()}>{fmtZ(itsAmount)}</td>
+              <td style={tdR()}>{fmtOpt(netImposable)}</td>
+              <td style={tdR()}>{fmtOpt(baseConge)}</td>
+              <td style={{ ...tdR({ borderRight: BD }) }}>{joursCongeMois == null ? '' : Number(joursCongeMois).toFixed(2)}</td>
+              <td rowSpan={2} style={{
+                ...tdR({ borderLeft: BDB, borderRight: BD, fontFamily: SANS, fontSize: 17, fontWeight: 900 }),
+                height: 'auto', lineHeight: 'normal', verticalAlign: 'middle', padding: '0 12px',
+              }}>
                 {fmtZ(netSalary)}
-              </div>
-            </div>
-          </div>
-        </div>
+              </td>
+            </tr>
+            <tr>
+              <td style={{ ...tdC({ fontWeight: 800, borderTop: BD, borderRight: BD }) }}>Annuel</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdGross)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnss)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnssEmp)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdIts)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}></td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdBaseConge)}</td>
+              <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}></td>
+            </tr>
+          </tbody>
+        </table>
 
         {/* ══ SIGNATURES ═════════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10, flexShrink: 0 }}>
