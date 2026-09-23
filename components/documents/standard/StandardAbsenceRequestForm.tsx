@@ -76,7 +76,7 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
   const rejected = data.status === 'REJECTED';
 
   return (
-    <div id={id} style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', padding: '16mm 18mm', boxSizing: 'border-box' }}>
+    <div id={id} style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', padding: '12mm 15mm', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <div>
           {data.company.logo ? (
@@ -109,44 +109,44 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
       </div>
 
       <div style={{ borderTop: '1.5px solid #92400e', margin: '0 0 14px' }} />
-      <h1 style={{ textAlign: 'center', fontSize: 20, fontWeight: 700, letterSpacing: 1, margin: '0 0 6px' }}>
+      <h1 style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 1, margin: '0 0 4px' }}>
         DEMANDE D'AUTORISATION D'ABSENCE
       </h1>
       <div style={{ borderTop: '1px solid #92400e', margin: '0 0 8px' }} />
-      <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#6b7280', fontSize: 11, margin: '0 0 16px' }}>
+      <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#6b7280', fontSize: 10.5, margin: '0 0 10px' }}>
         Absence pour événement familial ou motif conventionnel
       </p>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
+      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 6px' }}>
         RENSEIGNEMENTS DU COLLABORATEUR
       </h2>
-      <div style={{ marginBottom: 6, fontSize: 13 }}>
+      <div style={{ marginBottom: 4, fontSize: 12 }}>
         <strong>Nom(s) et prénom(s) :</strong> {`${data.employee.lastName} ${data.employee.firstName}`.trim()}
       </div>
       {data.employee.employeeNumber && (
-        <div style={{ marginBottom: 6, fontSize: 13 }}><strong>Matricule :</strong> {data.employee.employeeNumber}</div>
+        <div style={{ marginBottom: 4, fontSize: 12 }}><strong>Matricule :</strong> {data.employee.employeeNumber}</div>
       )}
-      <div style={{ marginBottom: 16, fontSize: 13 }}><strong>Poste occupé :</strong> {data.employee.position || ''}</div>
+      <div style={{ marginBottom: 8, fontSize: 12 }}><strong>Poste occupé :</strong> {data.employee.position || ''}</div>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
+      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 6px' }}>
         MOTIF DE L'ABSENCE (COCHER LA CASE CORRESPONDANTE)
       </h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, marginBottom: 16 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5, marginBottom: 8 }}>
         <thead>
           <tr>
-            <th style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'left', background: '#f3f4f6' }}>Motif</th>
-            <th style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'left', background: '#f3f4f6', width: '18%' }}>Durée conventionnelle</th>
-            <th style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'center', background: '#f3f4f6', width: 60 }}>Choix</th>
+            <th style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'left', background: '#f3f4f6', fontSize: 10.5 }}>Motif</th>
+            <th style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'left', background: '#f3f4f6', width: '16%', fontSize: 10.5 }}>Durée</th>
+            <th style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'center', background: '#f3f4f6', width: 50, fontSize: 10.5 }}>Choix</th>
           </tr>
         </thead>
         <tbody>
           {data.catalog.map((m) => (
             <tr key={m.key}>
-              <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>{m.label}</td>
-              <td style={{ border: '1px solid #1f2937', padding: '6px 10px', color: '#6b7280' }}>
-                {m.days} jour{m.days > 1 ? 's' : ''} conventionnel{m.days > 1 ? 's' : ''}
+              <td style={{ border: '1px solid #1f2937', padding: '3px 8px' }}>{m.label}</td>
+              <td style={{ border: '1px solid #1f2937', padding: '3px 8px', color: '#6b7280' }}>
+                {m.days}j
               </td>
-              <td style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'center' }}>
+              <td style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'center' }}>
                 <Checkbox checked={data.motifKey === m.key} />
               </td>
             </tr>
@@ -154,22 +154,22 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
         </tbody>
       </table>
 
-      <div style={{ fontSize: 13, marginBottom: 6 }}>
+      <div style={{ fontSize: 11.5, marginBottom: 4 }}>
         <strong>Période d'absence du</strong> {fmtDate(data.startDate)} <strong>au</strong> {fmtDate(data.endDate)}
       </div>
 
-      <div style={{ fontSize: 12, margin: '18px 0 8px' }}>Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt)}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 26 }}>Signature du collaborateur : ___________________________</div>
+      <div style={{ fontSize: 10.5, margin: '8px 0 4px' }}>Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt)}</div>
+      <div style={{ fontSize: 10.5, fontWeight: 700, marginBottom: 10 }}>Signature du collaborateur : ___________________________</div>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
+      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '8px 0 4px' }}>
         DÉCISION DE LA HIÉRARCHIE
       </h2>
-      <div style={{ fontSize: 13, marginBottom: 20 }}>
+      <div style={{ fontSize: 11.5, marginBottom: 8 }}>
         <Checkbox checked={validated} /> Accordé &nbsp;&nbsp;&nbsp;<Checkbox checked={rejected} /> Refusé
       </div>
-      <div style={{ fontSize: 12, marginBottom: 40 }}><strong>Commentaire :</strong> {' '}</div>
+      <div style={{ fontSize: 10.5, marginBottom: 14 }}><strong>Commentaire :</strong> {' '}</div>
 
-      <table style={{ width: '100%', fontSize: 11, textAlign: 'center', marginBottom: 20 }}>
+      <table style={{ width: '100%', fontSize: 9.5, textAlign: 'center', marginBottom: 8 }}>
         <tbody>
           <tr>
             <td style={{ width: '33%' }}>Le Supérieur hiérarchique</td>
@@ -177,11 +177,11 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
             <td style={{ width: '33%' }}>La Direction Générale</td>
           </tr>
           <tr>
-            <td style={{ height: 50 }} />
+            <td style={{ height: 30 }} />
             <td>
               {validated && data.company.cachetUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 44, objectFit: 'contain', margin: '0 auto' }} />
+                <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 32, objectFit: 'contain', margin: '0 auto' }} />
               ) : null}
             </td>
             <td />
@@ -189,7 +189,7 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
         </tbody>
       </table>
 
-      <div style={{ marginTop: 20, textAlign: 'center', fontSize: 10, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+      <div style={{ marginTop: 8, textAlign: 'center', fontSize: 8.5, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
         {data.company.documentFooterText || `${companyName} — Document confidentiel à usage exclusif du destinataire`}
       </div>
     </div>

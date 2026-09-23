@@ -130,19 +130,19 @@ const BDB    = '1px solid #000';
 const HDR_BG = '#A6CAEC'; // bleu clair des en-têtes (Excel: 166,202,236)
 const K      = '#000';
 
-const ROW_H  = 16.5;
-const HEAD_H = 18;
-const FS     = 9;
+const ROW_H  = 19;
+const HEAD_H = 20;
+const FS     = 10;
 
 const th = (o?: React.CSSProperties): React.CSSProperties => ({
-  border: BD, padding: '1px 3px', fontSize: 8.3, fontWeight: 700,
+  border: BD, padding: '2px 3px', fontSize: 9.3, fontWeight: 700,
   textAlign: 'center', background: HDR_BG, fontFamily: SANS,
   verticalAlign: 'middle', color: K, height: HEAD_H, lineHeight: `${HEAD_H}px`,
   overflow: 'hidden', ...o,
 });
 const td = (o?: React.CSSProperties): React.CSSProperties => ({
   borderLeft: BD, borderRight: 'none', borderTop: 'none', borderBottom: 'none',
-  padding: '0 4px', height: ROW_H, lineHeight: `${ROW_H}px`, fontSize: FS,
+  padding: '0.5px 4px', height: ROW_H, lineHeight: `${ROW_H}px`, fontSize: FS,
   verticalAlign: 'middle', color: K, fontFamily: SANS, background: '#fff',
   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...o,
 });
@@ -152,25 +152,25 @@ const tdC = (o?: React.CSSProperties) => td({ textAlign: 'center', ...o });
 const Row = ({ n, label, nombre = '', base = '', tauxS = '', gain = '', ret = '', tauxP = '', retP = '', bold = false }:
   { n?: number | string; label: string; nombre?: string; base?: string; tauxS?: string; gain?: string; ret?: string; tauxP?: string; retP?: string; bold?: boolean }) => (
   <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-    <td style={tdC({ fontSize: 8.3 })}>{n ?? ''}</td>
+    <td style={tdC({ fontSize: 9.3 })}>{n ?? ''}</td>
     <td style={td({ paddingLeft: 5, fontWeight: bold ? 700 : 400 })}>{cleanLabel(label)}</td>
     <td style={tdR()}>{nombre}</td>
     <td style={tdR()}>{base}</td>
-    <td style={tdC({ fontSize: 8 })}>{tauxS}</td>
+    <td style={tdC({ fontSize: 9 })}>{tauxS}</td>
     <td style={tdR({ fontWeight: gain ? 600 : 400 })}>{gain}</td>
     <td style={tdR({ fontWeight: ret ? 600 : 400 })}>{ret}</td>
-    <td style={tdC({ fontSize: 8 })}>{tauxP}</td>
+    <td style={tdC({ fontSize: 9 })}>{tauxP}</td>
     <td style={tdR({ fontWeight: retP ? 600 : 400, borderRight: BD })}>{retP}</td>
   </tr>
 );
 
 const TotalRow = ({ n, label, gain = '', ret = '' }: { n?: number | string; label: string; gain?: string; ret?: string }) => (
   <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-    <td style={tdC({ fontSize: 8.3, fontWeight: 800 })}>{n ?? ''}</td>
-    <td colSpan={3} style={{ ...td({ fontWeight: 800, fontSize: 10.5, borderTop: BDB, borderBottom: BDB }) }}>{label}</td>
+    <td style={tdC({ fontSize: 9.3, fontWeight: 800 })}>{n ?? ''}</td>
+    <td colSpan={3} style={{ ...td({ fontWeight: 800, fontSize: 11.5, borderTop: BDB, borderBottom: BDB }) }}>{label}</td>
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10.5, borderTop: BDB, borderBottom: BDB }) }}>{gain}</td>
-    <td style={{ ...tdR({ fontWeight: 800, fontSize: 10.5, borderTop: BDB, borderBottom: BDB }) }}>{ret}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 11.5, borderTop: BDB, borderBottom: BDB }) }}>{gain}</td>
+    <td style={{ ...tdR({ fontWeight: 800, fontSize: 11.5, borderTop: BDB, borderBottom: BDB }) }}>{ret}</td>
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB }) }} />
     <td style={{ ...td({ borderTop: BDB, borderBottom: BDB, borderRight: BD }) }} />
   </tr>
@@ -183,7 +183,7 @@ const DashRow = () => (
 );
 
 const InfoField = ({ label, value, labelWidth = 108 }: { label: string; value: React.ReactNode; labelWidth?: number }) => (
-  <div style={{ display: 'flex', gap: 4, fontSize: 9, padding: '2.5px 0' }}>
+  <div style={{ display: 'flex', gap: 4, fontSize: 10, padding: '3px 0' }}>
     <span style={{ fontWeight: 700, minWidth: labelWidth, flexShrink: 0, color: K }}>{label}</span>
     <span style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
   </div>
@@ -255,15 +255,23 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   const absDeductItem = gainItems.find((i: any) => i.code === 'ABS_DEDUCT') ?? null;
   const gains = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
 
-  // ✅ AUCUN recalcul de paie ici — "Total Cotisations" / "TOTAL RETENUES" /
-  // "Charges patronales" sont les totaux DÉJÀ calculés et stockés par le
-  // moteur de paie sur le bulletin lui-même (payroll.totalDeductions,
-  // payroll.totalEmployerCost). Le composant les affiche tels quels, il ne
-  // les reconstruit jamais en additionnant les items un par un — ça
-  // éviterait tout écart d'arrondi ou d'item non prévu par rapport au vrai
-  // moteur de calcul.
-  const totalPat       = nv(payroll.totalEmployerCost);
-  const totalCotisSal  = nv(payroll.totalDeductions);
+  // ✅ "TOTAL RETENUES" (rubrique 9950, bas de tableau) = le vrai total
+  // final déduit du salaire, tel que stocké par le moteur de paie
+  // (payroll.totalDeductions) — cotisations ET dettes du salarié confondues
+  // (prêts, avances, retenues diverses), puisque tout ça réduit bien le net
+  // à payer. Aucun recalcul ici.
+  const totalPat            = nv(payroll.totalEmployerCost);
+  const totalRetenuesFinal  = nv(payroll.totalDeductions);
+
+  // ✅ "Total Cotisations" (milieu de tableau) et "Charges salariales"
+  // (bloc Cumuls) sont un concept différent : uniquement les cotisations/
+  // taxes (CNSS, ITS, TOL/CAMU/CTAX_…) — PAS les dettes du salarié
+  // (prêts, avances, retenues diverses type pharmacie), qui n'en sont pas
+  // vraiment. Le back ne distingue pas les deux dans totalDeductions, donc
+  // ce sous-total est un filtre + une somme des montants déjà fournis par
+  // le back (jamais un taux ou un montant recalculé/deviné).
+  const totalChargesSalariales = cnssSal + itsAmount + nv(absCongeItem?.amount)
+    + ctaxSalItems.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
   // ✅ "TOTAL GAINS" (rubrique 9900) n'existe pas comme champ unique côté
   // back : c'est, comme sur le fichier Excel source, la somme visuelle du
@@ -325,7 +333,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
 
       <div id="bul-wrap" data-bulletin-root="true" style={{ background: '#fff' }}>
       <div id="bul-inf" style={{
-        fontFamily: SANS, fontSize: 9, lineHeight: 1.25, background: '#fff', color: K,
+        fontFamily: SANS, fontSize: 10, lineHeight: 1.3, background: '#fff', color: K,
         width: '210mm', height: '297mm', boxSizing: 'border-box', padding: '6mm 7mm',
         margin: '0 auto', boxShadow: '0 2px 16px rgba(0,0,0,0.10)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
@@ -344,22 +352,22 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                 )}
               </td>
               <td style={{ width: '62%', verticalAlign: 'top' }}>
-                <div style={{ textAlign: 'right', fontSize: 23, fontWeight: 900, letterSpacing: .5, textTransform: 'uppercase' as const, fontFamily: SANS }}>
+                <div style={{ textAlign: 'right', fontSize: 24, fontWeight: 900, letterSpacing: .5, textTransform: 'uppercase' as const, fontFamily: SANS }}>
                   Bulletin de paie
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4 }}>
                   <tbody>
                     <tr>
-                      <td style={{ fontSize: 9, padding: '1px 0' }}><strong>Période du :</strong> {periodStart} au {periodEnd}</td>
-                      <td style={{ fontSize: 9, padding: '1px 0', width: '18%' }}><strong>Mois de :</strong></td>
-                      <td style={{ fontSize: 9, padding: '1px 0', width: '18%' }}><strong>Année :</strong></td>
+                      <td style={{ fontSize: 10, padding: '1.5px 0' }}><strong>Période du :</strong> {periodStart} au {periodEnd}</td>
+                      <td style={{ fontSize: 10, padding: '1.5px 0', width: '18%' }}><strong>Mois de :</strong></td>
+                      <td style={{ fontSize: 10, padding: '1.5px 0', width: '18%' }}><strong>Année :</strong></td>
                     </tr>
                     <tr>
-                      <td style={{ fontSize: 9, padding: '1px 0' }}>
+                      <td style={{ fontSize: 10, padding: '1.5px 0' }}>
                         <strong>Paie :</strong> Le 5 du mois suivant &nbsp; par <strong>{PAYMENT[e.paymentMethod ?? ''] || 'Virement'}</strong>
                       </td>
-                      <td style={{ fontSize: 9, padding: '1px 0', fontWeight: 700 }}>{moisLabel(payroll.month)}</td>
-                      <td style={{ fontSize: 9, padding: '1px 0', fontWeight: 700 }}>{payroll.year}</td>
+                      <td style={{ fontSize: 10, padding: '1.5px 0', fontWeight: 700 }}>{moisLabel(payroll.month)}</td>
+                      <td style={{ fontSize: 10, padding: '1.5px 0', fontWeight: 700 }}>{payroll.year}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -391,8 +399,8 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                 <InfoField label="Nbre parts ITS :"         value={(payroll as any).irppFiscalParts ?? '—'} labelWidth={116} />
               </td>
               <td style={{ width: '15%', verticalAlign: 'top', padding: '4px 8px', borderLeft: BDB }}>
-                <div style={{ fontSize: 9, fontWeight: 700 }}>Localité:</div>
-                <div style={{ fontSize: 9, marginTop: 2 }}>{co.city || '—'}</div>
+                <div style={{ fontSize: 10, fontWeight: 700 }}>Localité:</div>
+                <div style={{ fontSize: 10, marginTop: 2 }}>{co.city || '—'}</div>
               </td>
             </tr>
           </tbody>
@@ -486,8 +494,22 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               {tusCnss > 0 && (
                 <Row label="TUS CNSS" tauxP={itemTaux(tusCnssItem) || '5,475%'} retP={fmt(tusCnss)} />
               )}
+              {/* Filet de sécurité — toute charge patronale configurable non
+                  couverte par les codes ci-dessus (taxe custom avec code
+                  imprévu, futur type de charge…) */}
+              {otherEmployerCostItems.map((item: any, idx: number) => (
+                <Row key={item.id || item.code || `oec-${idx}`} label={item.label} base={itemBase(item)} tauxP={itemTaux(item)} retP={fmt(item.amount)} />
+              ))}
 
-              {/* Prêts, avances, retenues diverses (pharmacie, cantine…) */}
+              {/* ✅ "Total Cotisations" = uniquement les taxes/cotisations
+                  ci-dessus (CNSS, ITS, TOL/CAMU/CTAX_, TUS…). Les dettes du
+                  salarié (prêts, avances, retenues diverses) ne sont PAS
+                  des cotisations — elles s'affichent séparément juste
+                  après, et ne comptent que dans le TOTAL RETENUES final. */}
+              <TotalRow label="Total Cotisations" ret={fmtZ(totalChargesSalariales)} />
+
+              {/* Prêts, avances, retenues diverses (pharmacie, cantine…) —
+                  ce sont des dettes du salarié, pas des charges/cotisations */}
               {loanItemsList.map((item: any) => (
                 <Row key={item.id || item.code} label={item.label} ret={fmt(item.amount)} />
               ))}
@@ -497,8 +519,11 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               {companyDeductions.map((item: any, idx: number) => (
                 <Row key={item.id || item.code || idx} label={item.label} ret={fmt(item.amount)} />
               ))}
-
-              <TotalRow label="Total Cotisations" ret={fmtZ(totalCotisSal)} />
+              {/* Filet de sécurité — toute retenue salariale configurable
+                  non couverte par les codes ci-dessus */}
+              {otherDeductionItems.map((item: any, idx: number) => (
+                <Row key={item.id || item.code || `od-${idx}`} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} ret={fmt(item.amount)} />
+              ))}
 
               {/* ── Indemnités hors brut (numérotées 4100, 4120…) ─────── */}
               {indemItems.map((item: any) => { const n = rubIndem; rubIndem += 20; return (
@@ -507,7 +532,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
 
               <DashRow />
               <TotalRow n={9900} label="TOTAL GAINS" gain={fmtZ(totalGains)} />
-              <TotalRow n={9950} label="TOTAL RETENUES" ret={fmtZ(totalCotisSal)} />
+              <TotalRow n={9950} label="TOTAL RETENUES" ret={fmtZ(totalRetenuesFinal)} />
               <DashRow />
 
               {/* ── Spacer — absorbe l'espace restant du canevas A4 fixe ─ */}
@@ -527,67 +552,68 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
         </div>
 
         {/* ══ CUMULS + NET A PAYER ══════════════════════════════════════ */}
-        <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 5, flexShrink: 0 }}>
-          <tbody>
-            <tr>
-              <td style={{ width: '78%', verticalAlign: 'top' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: BDB, tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr>
-                      <th style={th({ width: '9%' })}>Cumuls</th>
-                      <th style={th()}>Salaire brut</th>
-                      <th style={th()}>Charges salariales</th>
-                      <th style={th()}>Charges patronales</th>
-                      <th style={th()}>ITS</th>
-                      <th style={th()}>Net Imposable</th>
-                      <th style={th()}>Base Congé</th>
-                      <th style={th()}>Jrs Congé</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={tdC({ fontWeight: 800, borderRight: BD })}>Mensuel</td>
-                      <td style={tdR()}>{fmtZ(totalBrut)}</td>
-                      <td style={tdR()}>{fmtZ(totalCotisSal)}</td>
-                      <td style={tdR()}>{fmtZ(totalPat)}</td>
-                      <td style={tdR()}>{fmtZ(itsAmount)}</td>
-                      <td style={tdR()}>{fmtOpt(netImposable)}</td>
-                      <td style={tdR()}>{fmtOpt(baseConge)}</td>
-                      <td style={{ ...tdR({ borderRight: BD }) }}>{joursCongeMois == null ? '' : Number(joursCongeMois).toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td style={{ ...tdC({ fontWeight: 800, borderTop: BD, borderRight: BD }) }}>Annuel</td>
-                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdGross)}</td>
-                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnss)}</td>
-                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnssEmp)}</td>
-                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdIts)}</td>
-                      <td style={{ ...tdR({ borderTop: BD }) }}></td>
-                      <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdBaseConge)}</td>
-                      <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </td>
-              <td style={{ width: '22%', verticalAlign: 'top', paddingLeft: 6 }}>
-                <div style={{ border: BDB, height: '100%' }}>
-                  <div style={{ ...th(), height: HEAD_H, lineHeight: `${HEAD_H}px`, fontSize: 9.5 }}>NET A PAYER</div>
-                  <div style={{ textAlign: 'right', padding: '10px 10px 0', fontFamily: SANS, fontSize: 16, fontWeight: 900 }}>{fmtZ(netSalary)}</div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* display:flex + alignItems:stretch garantit que l'encart NET A
+            PAYER a EXACTEMENT la même hauteur que le tableau Cumuls à sa
+            gauche (Mensuel + Annuel), fidèle au fichier Excel source. */}
+        <div className="nobreak" style={{ display: 'flex', alignItems: 'stretch', width: '100%', marginTop: 5, flexShrink: 0 }}>
+          <div style={{ width: '78%' }}>
+            <table style={{ width: '100%', height: '100%', borderCollapse: 'collapse', border: BDB, tableLayout: 'fixed' }}>
+              <thead>
+                <tr>
+                  <th style={th({ width: '9%' })}>Cumuls</th>
+                  <th style={th()}>Salaire brut</th>
+                  <th style={th()}>Charges salariales</th>
+                  <th style={th()}>Charges patronales</th>
+                  <th style={th()}>ITS</th>
+                  <th style={th()}>Net Imposable</th>
+                  <th style={th()}>Base Congé</th>
+                  <th style={th()}>Jrs Congé</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={tdC({ fontWeight: 800, borderRight: BD })}>Mensuel</td>
+                  <td style={tdR()}>{fmtZ(totalBrut)}</td>
+                  <td style={tdR()}>{fmtZ(totalChargesSalariales)}</td>
+                  <td style={tdR()}>{fmtZ(totalPat)}</td>
+                  <td style={tdR()}>{fmtZ(itsAmount)}</td>
+                  <td style={tdR()}>{fmtOpt(netImposable)}</td>
+                  <td style={tdR()}>{fmtOpt(baseConge)}</td>
+                  <td style={{ ...tdR({ borderRight: BD }) }}>{joursCongeMois == null ? '' : Number(joursCongeMois).toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...tdC({ fontWeight: 800, borderTop: BD, borderRight: BD }) }}>Annuel</td>
+                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdGross)}</td>
+                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnss)}</td>
+                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdCnssEmp)}</td>
+                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdIts)}</td>
+                  <td style={{ ...tdR({ borderTop: BD }) }}></td>
+                  <td style={{ ...tdR({ borderTop: BD }) }}>{fmtOpt(ytdBaseConge)}</td>
+                  <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ width: '22%', paddingLeft: 6, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ border: BDB, flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ ...th(), fontSize: 10.5 }}>NET A PAYER</div>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 10px', fontFamily: SANS, fontSize: 17, fontWeight: 900 }}>
+                {fmtZ(netSalary)}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ══ SIGNATURES ═════════════════════════════════════════════════ */}
         <table className="nobreak" style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10, flexShrink: 0 }}>
           <tbody>
             <tr>
               <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top' }}>
-                <div style={{ fontWeight: 700, fontSize: 9, marginBottom: 4 }}>Signature Employé</div>
+                <div style={{ fontWeight: 700, fontSize: 10, marginBottom: 4 }}>Signature Employé</div>
                 <div style={{ border: BD, height: 46, width: '70%', margin: '0 auto' }} />
               </td>
               <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'top' }}>
-                <div style={{ fontWeight: 700, fontSize: 9, marginBottom: 4 }}>Signature Employeur &amp; Cachet</div>
+                <div style={{ fontWeight: 700, fontSize: 10, marginBottom: 4 }}>Signature Employeur &amp; Cachet</div>
                 <div style={{ border: BD, height: 46, width: '70%', margin: '0 auto' }} />
               </td>
             </tr>
@@ -595,10 +621,10 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
         </table>
 
         {tpl.style.footerMessage && (
-          <div style={{ textAlign: 'center', fontSize: 8.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
+          <div style={{ textAlign: 'center', fontSize: 9.5, fontStyle: 'italic', marginTop: 3, flexShrink: 0 }}>{tpl.style.footerMessage}</div>
         )}
 
-        <div style={{ fontSize: 8, color: '#000', marginTop: 6, textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ fontSize: 9, color: '#000', marginTop: 6, textAlign: 'center', flexShrink: 0 }}>
           Pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.
         </div>
 
@@ -607,7 +633,3 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
     </>
   );
 }
-
-
-
-

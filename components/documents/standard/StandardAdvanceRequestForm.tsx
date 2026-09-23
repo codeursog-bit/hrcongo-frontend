@@ -68,9 +68,9 @@ function Checkbox({ checked }: { checked: boolean }) {
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ fontWeight: 700, fontSize: 13 }}>{label}</div>
-      <div style={{ borderBottom: '1px solid #9ca3af', minHeight: 18, paddingTop: 2, fontSize: 13 }}>{value ?? ''}</div>
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ fontWeight: 700, fontSize: 12.5 }}>{label}</div>
+      <div style={{ borderBottom: '1px solid #9ca3af', minHeight: 15, paddingTop: 1, fontSize: 12.5 }}>{value ?? ''}</div>
     </div>
   );
 }
@@ -81,7 +81,7 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
   const rejected = data.status === 'REJECTED';
 
   return (
-    <div id={id} style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', padding: '16mm 18mm', boxSizing: 'border-box' }}>
+    <div id={id} style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', padding: '12mm 15mm', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <div>
           {data.company.logo ? (
@@ -114,20 +114,20 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
       </div>
 
       <div style={{ borderTop: '1.5px solid #92400e', margin: '0 0 14px' }} />
-      <h1 style={{ textAlign: 'center', fontSize: 20, fontWeight: 700, letterSpacing: 1, margin: '0 0 6px' }}>
+      <h1 style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 1, margin: '0 0 4px' }}>
         FORMULAIRE DE DEMANDE D'AVANCE SUR SALAIRE
       </h1>
       <div style={{ borderTop: '1px solid #92400e', margin: '0 0 8px' }} />
-      <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#6b7280', fontSize: 11, margin: '0 0 16px' }}>
+      <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#6b7280', fontSize: 10.5, margin: '0 0 10px' }}>
         Avance sur salaire — à usage interne
       </p>
 
-      <p style={{ fontSize: 12.5, marginBottom: 18 }}>
+      <p style={{ fontSize: 11.5, marginBottom: 12 }}>
         À compléter par le/la salarié(e) demandeur(se) et à remettre à la Direction des Ressources Humaines, accompagné
         des pièces justificatives requises.
       </p>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
+      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 6px' }}>
         IDENTITÉ DU DEMANDEUR
       </h2>
       <Field label="Nom et prénom" value={`${data.employee.lastName} ${data.employee.firstName}`.trim()} />
@@ -135,7 +135,7 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
       <Field label="Poste occupé" value={data.employee.position} />
       <Field label="Téléphone" value={data.employee.phone} />
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '18px 0 8px' }}>
+      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '12px 0 6px' }}>
         OBJET DE LA DEMANDE
       </h2>
       <Field label="Montant de l'avance sollicitée" value={`${fmtMoney(data.amount)} FCFA`} />
@@ -146,40 +146,40 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
         label="Mode de récupération"
         value={data.recoverViaPayroll == null ? '' : data.recoverViaPayroll ? 'Prélèvement sur salaire' : 'Autre'}
       />
-      <div style={{ fontSize: 12.5, marginBottom: 18 }}>
+      <div style={{ fontSize: 11.5, marginBottom: 10 }}>
         <strong>Motif de la demande :</strong> {data.reason || ''}
       </div>
 
-      <p style={{ fontSize: 12, lineHeight: 1.6, margin: '0 0 20px' }}>
+      <p style={{ fontSize: 10.5, lineHeight: 1.4, margin: '0 0 12px' }}>
         Je reconnais que cette avance sera déduite de mon salaire selon les modalités approuvées par la Direction,
         conformément au règlement intérieur en vigueur.
       </p>
 
-      <div style={{ fontSize: 12, marginBottom: 8 }}>Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt)}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 22 }}>Signature du demandeur : ___________________________</div>
+      <div style={{ fontSize: 11, marginBottom: 6 }}>Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt)}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 14 }}>Signature du demandeur : ___________________________</div>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
+      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '10px 0 6px' }}>
         AVIS HIÉRARCHIQUE ET DÉCISION
       </h2>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
         <thead>
           <tr>
-            <th style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'left', background: '#f3f4f6' }}>Fonction</th>
-            <th style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'left', background: '#f3f4f6' }}>Nom et visa</th>
-            <th style={{ border: '1px solid #1f2937', padding: '6px 10px', textAlign: 'left', background: '#f3f4f6' }}>Décision</th>
+            <th style={{ border: '1px solid #1f2937', padding: '5px 10px', textAlign: 'left', background: '#f3f4f6' }}>Fonction</th>
+            <th style={{ border: '1px solid #1f2937', padding: '5px 10px', textAlign: 'left', background: '#f3f4f6' }}>Nom et visa</th>
+            <th style={{ border: '1px solid #1f2937', padding: '5px 10px', textAlign: 'left', background: '#f3f4f6' }}>Décision</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>Responsable direct</td>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>&nbsp;</td>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>Responsable direct</td>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>&nbsp;</td>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
               <Checkbox checked={false} /> Favorable &nbsp;&nbsp;<Checkbox checked={false} /> Défavorable
             </td>
           </tr>
           <tr>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>Direction des Ressources Humaines</td>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>Direction des Ressources Humaines</td>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
               {validated && data.company.cachetUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 34, objectFit: 'contain' }} />
@@ -187,25 +187,25 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
                 '\u00A0'
               )}
             </td>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
               <Checkbox checked={validated} /> Favorable &nbsp;&nbsp;<Checkbox checked={rejected} /> Défavorable
             </td>
           </tr>
           <tr>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>Direction Générale</td>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>&nbsp;</td>
-            <td style={{ border: '1px solid #1f2937', padding: '10px' }}>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>Direction Générale</td>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>&nbsp;</td>
+            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
               <Checkbox checked={false} /> Favorable &nbsp;&nbsp;<Checkbox checked={false} /> Défavorable
             </td>
           </tr>
         </tbody>
       </table>
 
-      <div style={{ marginTop: 18, fontSize: 12.5 }}>
+      <div style={{ marginTop: 10, fontSize: 11.5 }}>
         Montant approuvé : {validated ? `${fmtMoney(data.amount)} FCFA` : '……………………………………………………..'}
       </div>
 
-      <div style={{ marginTop: 32, textAlign: 'center', fontSize: 10, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+      <div style={{ marginTop: 16, textAlign: 'center', fontSize: 9, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
         {data.company.documentFooterText || `${companyName} — Document confidentiel à usage exclusif du destinataire`}
       </div>
     </div>
