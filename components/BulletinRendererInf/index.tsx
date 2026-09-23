@@ -119,9 +119,13 @@ function itemTaux(item: any): string {
   if (item.rate == null) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
-  if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '') + '%';
-  return (Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',')) + '%';
+  if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
+  return (Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ','));
 }
+// ✅ Uniquement pour les 4 lignes CNSS (salariale + les 3 branches
+// patronales) : elles gardent le "%", contrairement à TOL/CAMU/TUS/taxes
+// custom qui restent en nombre nu.
+const pct = (s: string): string => s ? `${s}%` : s;
 
 // ── Tokens visuels — fidèles au fichier Excel source ────────────────────────
 const SANS   = 'Arial,Helvetica,sans-serif';
@@ -454,7 +458,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                    directement dessus — jamais recalculés ici). ─────────── */}
               <Row label={cnssSalItem?.label || 'Cotisation CNSS'}
                 base={itemBase(cnssSalItem) || fmtZ(totalBrut)}
-                tauxS={itemTaux(cnssSalItem) || '4%'} ret={fmt(cnssSal)} />
+                tauxS={pct(itemTaux(cnssSalItem) || '4')} ret={fmt(cnssSal)} />
 
               {/* CNSS patronale — 3 branches distinctes (ou 1 seule pour un
                   stagiaire, cf. §10 du service : accidents du travail
@@ -462,13 +466,13 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                   parenthèses — le taux est déjà visible dans la colonne
                   "Taux" juste à côté. */}
               {cnssEmpPension  > 0 && (
-                <Row label="CNSS Pension" tauxP={itemTaux(cnssEmpPensionItem) || '8%'} retP={fmt(cnssEmpPension)} />
+                <Row label="CNSS Pension" tauxP={itemTaux(cnssEmpPensionItem) || '8'} retP={fmt(cnssEmpPension)} />
               )}
               {cnssEmpFamily   > 0 && (
-                <Row label="CNSS Famille" tauxP={itemTaux(cnssEmpFamItem) || '10,03%'} retP={fmt(cnssEmpFamily)} />
+                <Row label="CNSS Famille" tauxP={itemTaux(cnssEmpFamItem) || '10,03'} retP={fmt(cnssEmpFamily)} />
               )}
               {cnssEmpAccident > 0 && (
-                <Row label="CNSS Accidents" tauxP={itemTaux(cnssEmpAtItem) || '2,25%'} retP={fmt(cnssEmpAccident)} />
+                <Row label="CNSS Accidents" tauxP={itemTaux(cnssEmpAtItem) || '2,25'} retP={fmt(cnssEmpAccident)} />
               )}
 
               <Row label={itsLabel} ret={fmt(itsAmount)} />
@@ -489,10 +493,10 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               {/* TUS — 2 lignes distinctes DGI + CNSS (part patronale) —
                   libellés courts, taux affiché dans la colonne dédiée */}
               {tusDgi  > 0 && (
-                <Row label="TUS DGI" tauxP={itemTaux(tusDgiItem) || '2,025%'} retP={fmt(tusDgi)} />
+                <Row label="TUS DGI" tauxP={itemTaux(tusDgiItem) || '2,025'} retP={fmt(tusDgi)} />
               )}
               {tusCnss > 0 && (
-                <Row label="TUS CNSS" tauxP={itemTaux(tusCnssItem) || '5,475%'} retP={fmt(tusCnss)} />
+                <Row label="TUS CNSS" tauxP={itemTaux(tusCnssItem) || '5,475'} retP={fmt(tusCnss)} />
               )}
               {/* Filet de sécurité — toute charge patronale configurable non
                   couverte par les codes ci-dessus (taxe custom avec code

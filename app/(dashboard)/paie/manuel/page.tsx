@@ -82,6 +82,12 @@ interface Row {
   base: number | '';
   rate: number | '';
   amount: number;
+  // ✅ true = ligne préremplie depuis les primes déjà configurées pour
+  // l'employé, jamais touchée par l'utilisateur. Reste synchronisée avec
+  // le calcul automatique (donc reproratisée) à chaque recalcul, et n'est
+  // PAS envoyée comme "manualBonuses" — dès que l'utilisateur modifie la
+  // ligne, elle devient une vraie correction manuelle figée pour ce mois.
+  auto?: boolean;
 }
 
 interface ManualDeduction {
@@ -509,7 +515,9 @@ export default function ManuelPayrollPage() {
     set(prev => {
       const updated = prev.map(r => {
         if (r.localId !== localId) return r;
-        const next = { ...r, ...patch };
+        // ✅ Dès que l'utilisateur touche une ligne préremplie, elle sort du
+        // mode "auto" — son montant est désormais figé et envoyé tel quel.
+        const next = { ...r, ...patch, auto: false };
         next.amount = Math.round((Number(next.base) || 0) * (Number(next.rate) || 0));
         return next;
       });
@@ -665,8 +673,14 @@ export default function ManuelPayrollPage() {
     setPrimes(prev => sortPrimes([...prev, { localId: uid(), label, base: baseConge, rate: 1, amount: baseConge }]));
   };;
 
+  // ✅ Les lignes encore "auto" (préremplies, non modifiées) ne sont PAS
+  // envoyées : le backend les recalcule lui-même depuis les primes
+  // configurées, avec le prorata à jour selon les jours travaillés du
+  // moment. Ne partent en "manualBonuses" que les lignes ajoutées ou
+  // corrigées à la main — sinon leur montant resterait figé à sa valeur
+  // du premier calcul, sans jamais suivre un changement de jours ensuite.
   const buildBonusPayload = (rows: Row[], taxable: boolean) =>
-    rows.filter(r => n(r.amount) > 0).map(r => ({
+    rows.filter(r => !r.auto && n(r.amount) > 0).map(r => ({
       bonusType:  r.label || (taxable ? 'Prime' : 'Indemnité'),
       amount:     r.amount,
       // ✅ Si base non saisie → base = amount (gain direct sans calcul)
@@ -734,11 +748,29 @@ export default function ManuelPayrollPage() {
         const cong = /cong[eé]/i;
         const configured = (result?.bonuses ?? []).filter(b => !cong.test(b.bonusType || ''));
         const toPrimes     = configured.filter(b => b.isCnss !== false)
-          .map(b => ({ localId: uid(), label: b.bonusType, base: b.amount, rate: 1, amount: b.amount }));
+          .map(b => ({ localId: uid(), label: b.bonusType, base: b.amount, rate: 1, amount: b.amount, auto: true }));
         const toIndemnites = configured.filter(b => b.isCnss === false)
-          .map(b => ({ localId: uid(), label: b.bonusType, base: b.amount, rate: 1, amount: b.amount }));
+          .map(b => ({ localId: uid(), label: b.bonusType, base: b.amount, rate: 1, amount: b.amount, auto: true }));
         if (toPrimes.length > 0)     setPrimes(sortPrimes(toPrimes));
         if (toIndemnites.length > 0) setIndemnites(toIndemnites);
+      } else {
+        // ✅ Recalcul suivant : les lignes encore "auto" (non éditées) sont
+        // resynchronisées sur le dernier montant renvoyé par le backend
+        // (donc reproratisé si les jours travaillés ont changé). Une ligne
+        // dont la prime n'existe plus côté backend (ex: convention
+        // désactivée entre-temps) reste affichée telle quelle — retirer
+        // silencieusement une ligne que l'utilisateur voit à l'écran
+        // serait plus perturbant qu'utile.
+        const freshByType = new Map(
+          (result?.bonuses ?? []).map(b => [String(b.bonusType || '').trim().toLowerCase(), b.amount]),
+        );
+        const syncAuto = (rows: Row[]) => rows.map(r => {
+          if (!r.auto) return r;
+          const fresh = freshByType.get(String(r.label || '').trim().toLowerCase());
+          return fresh != null ? { ...r, base: fresh, rate: 1, amount: fresh } : r;
+        });
+        if (primes.some(r => r.auto))     setPrimes(prev => syncAuto(prev));
+        if (indemnites.some(r => r.auto)) setIndemnites(prev => syncAuto(prev));
       }
       setBonusesPrefilled(true);
     } catch (e: any) {
