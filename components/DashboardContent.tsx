@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Users, Wallet, Calendar, Clock, UserPlus, BarChart as BarChartIcon, ArrowRight,
   Loader2, CheckCircle, PlayCircle, Fingerprint, Bell, Radio, User,
-  UserCheck, UserX, AlertTriangle, TrendingUp, Building2, ChevronRight,
+  UserCheck, UserX, AlertTriangle, Building2, ChevronRight,
   Timer, Umbrella, Activity, Shield, FileText, Ticket, Sparkles, LayoutGrid
 } from 'lucide-react';
 import {
@@ -52,6 +52,36 @@ const StatusDot = ({ status }: { status: string }) => {
   return <span className={`inline-block w-2 h-2 rounded-full ${map[status] || 'bg-gray-400'}`} />;
 };
 
+// 🆕 Solde de congés — secours si /leaves/balance échoue. Mêmes règles que
+// partout ailleurs dans l'app (Code du travail congolais : 26 j/an, soit
+// 26/12 j/mois) — PAS 30j/2.5j comme l'ancien calcul de secours.
+function computeFallbackLeaveBalance(employeeProfile: any, approvedAnnualLeaves: any[]) {
+  const takenDays = approvedAnnualLeaves.reduce((acc: number, curr: any) => acc + (curr.daysCount || 0), 0);
+  if (!employeeProfile?.hireDate) return 0;
+  const months = (Date.now() - new Date(employeeProfile.hireDate).getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+  return Math.max(0, Math.round(Math.min(26, months * (26 / 12)) * 10) / 10 - takenDays);
+}
+
+// 🆕 KPI dettes (prêts + avances) de l'employé connecté — même logique que
+// /loans/mon-espace (myKpis), pour rester cohérent avec le reste de l'app.
+function computeDebtKpis(loans: any[] = [], advances: any[] = []) {
+  const dueLoans = loans.filter((l) => ['ACTIVE', 'PAID'].includes(l.status));
+  const paidLoans = dueLoans.reduce((s, l) => s + (Number(l.amount) - Number(l.remainingBalance)), 0);
+  const paidAdvances = advances.filter((a) => ['DEDUCTED', 'PAID'].includes(a.status)).reduce((s, a) => s + Number(a.amount), 0);
+  const totalRemaining = loans.filter((l) => l.status === 'ACTIVE').reduce((s, l) => s + Number(l.remainingBalance), 0)
+    + advances.filter((a) => a.status === 'APPROVED').reduce((s, a) => s + Number(a.amount), 0);
+  return { totalPaid: paidLoans + paidAdvances, totalRemaining };
+}
+
+// 🆕 Taux de présence du mois en cours uniquement, à partir de
+// /attendance/employee/:id (mêmes statuts DayStatus que partout ailleurs).
+function computeMonthlyPresenceRate(dayStatuses: any[] = []) {
+  const workable = dayStatuses.filter((d) => !['OFF_DAY', 'HOLIDAY', 'FUTURE', 'LEAVE'].includes(d.status));
+  if (workable.length === 0) return 0;
+  const present = workable.filter((d) => ['PRESENT', 'LATE', 'REMOTE'].includes(d.status)).length;
+  return Math.round((present / workable.length) * 100);
+}
+
 export const DashboardContent = () => {
   const router = useRouter();
   const [loading, setLoading]           = useState(true);
@@ -88,10 +118,14 @@ export const DashboardContent = () => {
           setManagerStats(managerData);
 
           if (employeeProfile?.id) {
-            const [leaves, attendance, payrolls] = await Promise.all([
+            const now = new Date();
+            const [leaves, attendance, payrolls, loans, advancesList, dayStatuses] = await Promise.all([
               api.get<any[]>('/leaves/me').catch(() => []),
               api.get<any[]>('/attendance/today').catch(() => []),
-              api.get<any[]>(`/payrolls?employeeId=${employeeProfile.id}`).catch(() => [])
+              api.get<any[]>(`/payrolls?employeeId=${employeeProfile.id}`).catch(() => []),
+              api.get<any[]>('/loans/me').catch(() => []),
+              api.get<any[]>('/loans/advances/me').catch(() => []),
+              api.get<any[]>(`/attendance/employee/${employeeProfile.id}?month=${now.getMonth() + 1}&year=${now.getFullYear()}`).catch(() => []),
             ]);
             const pendingLeaves = leaves.filter((l: any) => l.status === 'PENDING').length;
             const todayStatus   = attendance.find((a: any) => a.employeeId === employeeProfile.id);
@@ -101,32 +135,54 @@ export const DashboardContent = () => {
               lastSalaryAmount = sorted[0].netSalary.toLocaleString() + ' F';
               lastSalaryMonth  = new Date(0, sorted[0].month - 1).toLocaleString('fr-FR', { month: 'long' });
             }
-            setMyStats({ pendingLeaves, checkIn: todayStatus?.checkIn, checkOut: todayStatus?.checkOut, lastSalary: lastSalaryAmount, lastSalaryMonth });
+
+            let remainingLeaves = 0;
+            try {
+              const balance = await api.get<any>(`/leaves/balance/${employeeProfile.id}?year=${now.getFullYear()}`);
+              remainingLeaves = balance.annualRemaining || 0;
+            } catch {
+              const approvedLeaves = leaves.filter((l: any) => l.status === 'APPROVED' && l.type === 'ANNUAL' && new Date(l.startDate).getFullYear() === now.getFullYear());
+              remainingLeaves = computeFallbackLeaveBalance(employeeProfile, approvedLeaves);
+            }
+
+            const debtKpis = computeDebtKpis(loans, advancesList);
+            const presenceRateMonth = computeMonthlyPresenceRate(dayStatuses);
+
+            setMyStats({
+              pendingLeaves,
+              remainingLeaves: Number(remainingLeaves).toFixed(1),
+              checkIn: todayStatus?.checkIn,
+              checkOut: todayStatus?.checkOut,
+              lastSalary: lastSalaryAmount,
+              lastSalaryMonth,
+              totalDebt: debtKpis.totalRemaining,
+              totalPaid: debtKpis.totalPaid,
+              presenceRateMonth,
+            });
           }
 
         } else {
           const employeeProfile = await api.get<any>('/employees/me');
           if (!employeeProfile?.id) { setLoading(false); return; }
 
-          const [leaves, attendance, payrolls] = await Promise.all([
+          const now = new Date();
+          const [leaves, attendance, payrolls, loans, advancesList, dayStatuses] = await Promise.all([
             api.get<any[]>('/leaves/me').catch(() => []),
             api.get<any[]>('/attendance/today').catch(() => []),
-            api.get<any[]>(`/payrolls?employeeId=${employeeProfile.id}`).catch(() => [])
+            api.get<any[]>(`/payrolls?employeeId=${employeeProfile.id}`).catch(() => []),
+            api.get<any[]>('/loans/me').catch(() => []),
+            api.get<any[]>('/loans/advances/me').catch(() => []),
+            api.get<any[]>(`/attendance/employee/${employeeProfile.id}?month=${now.getMonth() + 1}&year=${now.getFullYear()}`).catch(() => []),
           ]);
           const pendingLeaves = leaves.filter((l: any) => l.status === 'PENDING').length;
 
           let remainingLeaves = 0;
           try {
-            const balance = await api.get<any>(`/leaves/balance/${employeeProfile.id}?year=${new Date().getFullYear()}`);
+            const balance = await api.get<any>(`/leaves/balance/${employeeProfile.id}?year=${now.getFullYear()}`);
             remainingLeaves = balance.annualRemaining || 0;
           } catch {
-            const currentYear = new Date().getFullYear();
-            const approvedLeaves = leaves.filter((l: any) => l.status === 'APPROVED' && l.type === 'ANNUAL' && new Date(l.startDate).getFullYear() === currentYear);
-            const takenDays = approvedLeaves.reduce((acc: number, curr: any) => acc + (curr.daysCount || 0), 0);
-            if (employeeProfile.hireDate) {
-              const months = (Date.now() - new Date(employeeProfile.hireDate).getTime()) / (1000 * 60 * 60 * 24 * 30.44);
-              remainingLeaves = Math.max(0, Math.round(Math.min(30, months * 2.5) * 10) / 10 - takenDays);
-            }
+            const approvedLeaves = leaves.filter((l: any) => l.status === 'APPROVED' && l.type === 'ANNUAL' && new Date(l.startDate).getFullYear() === now.getFullYear());
+            remainingLeaves = computeFallbackLeaveBalance(employeeProfile, approvedLeaves);
           }
 
           let lastSalaryAmount = '0 F', lastSalaryMonth = '-';
@@ -136,7 +192,20 @@ export const DashboardContent = () => {
             lastSalaryMonth  = new Date(0, sorted[0].month - 1).toLocaleString('fr-FR', { month: 'long' });
           }
           const todayStatus = attendance.find((a: any) => a.employeeId === employeeProfile.id);
-          setMyStats({ pendingLeaves, remainingLeaves: Number(remainingLeaves).toFixed(1), checkIn: todayStatus?.checkIn, checkOut: todayStatus?.checkOut, lastSalary: lastSalaryAmount, lastSalaryMonth });
+          const debtKpis = computeDebtKpis(loans, advancesList);
+          const presenceRateMonth = computeMonthlyPresenceRate(dayStatuses);
+
+          setMyStats({
+            pendingLeaves,
+            remainingLeaves: Number(remainingLeaves).toFixed(1),
+            checkIn: todayStatus?.checkIn,
+            checkOut: todayStatus?.checkOut,
+            lastSalary: lastSalaryAmount,
+            lastSalaryMonth,
+            totalDebt: debtKpis.totalRemaining,
+            totalPaid: debtKpis.totalPaid,
+            presenceRateMonth,
+          });
         }
       } catch (error) {
         console.error('❌ Erreur chargement dashboard:', error);
@@ -411,6 +480,20 @@ export const DashboardContent = () => {
                 <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{myStats.checkIn ? new Date(myStats.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Pointer'}</p>
               </div>
               <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Solde congés</p>
+                <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">{myStats.remainingLeaves || '0'} j</p>
+              </div>
+              <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Reste à rembourser</p>
+                <p className="text-xl font-extrabold text-amber-500">{formatCurrency(myStats.totalDebt || 0)} F</p>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Déjà remboursé : {formatCurrency(myStats.totalPaid || 0)} F</p>
+              </div>
+              <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Ma présence (mois)</p>
+                <p className={`text-2xl font-extrabold ${(myStats.presenceRateMonth || 0) >= 90 ? 'text-emerald-600 dark:text-emerald-400' : (myStats.presenceRateMonth || 0) >= 70 ? 'text-amber-500' : 'text-red-500'}`}>{myStats.presenceRateMonth || 0}%</p>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{monthLabel}</p>
+              </div>
+              <div className="rounded-xl p-4" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>Actions rapides</p>
                 <div className="flex flex-col gap-2">
                   <button onClick={() => router.push('/conges/nouveau')} className="w-full text-[11px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-1.5 rounded-lg font-bold transition-colors border border-emerald-500/20 text-left flex items-center gap-1.5"><Calendar size={12} /> + Congé</button>
@@ -429,7 +512,7 @@ export const DashboardContent = () => {
   // ══════════════════════════════════════════════════════════════
   if (userRole === 'EMPLOYEE') {
     const remaining = parseFloat(myStats.remainingLeaves) || 0;
-    const annualQuota = 30;
+    const annualQuota = 26;
     const used = Math.max(0, annualQuota - remaining);
 
     return (
@@ -463,8 +546,28 @@ export const DashboardContent = () => {
           </motion.div>
         </div>
 
+        {/* 🆕 Indicateurs complémentaires */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* 🆕 Enrichissement : visuel du solde de congés, à partir des données déjà chargées */}
+          <motion.div variants={itemVariants}><StatCard label="Présence (mois)" value={`${myStats.presenceRateMonth || 0}%`} trend={monthLabel} isPositive={(myStats.presenceRateMonth || 0) >= 90} icon={Activity} color={(myStats.presenceRateMonth || 0) >= 90 ? 'emerald' : (myStats.presenceRateMonth || 0) >= 70 ? 'amber' : 'red'} /></motion.div>
+
+          <motion.div variants={itemVariants} className="lg:col-span-2">
+            <Panel>
+              <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>Mes prêts & avances</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Déjà remboursé</p>
+                  <p className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">{formatCurrency(myStats.totalPaid || 0)} F</p>
+                </div>
+                <div>
+                  <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Reste à rembourser</p>
+                  <p className="text-xl font-extrabold text-amber-500">{formatCurrency(myStats.totalDebt || 0)} F</p>
+                </div>
+              </div>
+            </Panel>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <Panel>
               <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Solde de congés</h3>
@@ -514,13 +617,9 @@ export const DashboardContent = () => {
   // ══════════════════════════════════════════════════════════════
   const pendingTotal = stats.pendingRequestsTotal ?? ((stats.pendingLeaves||0)+(stats.pendingAbsences||0)+(stats.pendingPermissions||0));
 
-  // 🆕 Indicateurs RH dérivés — calculés à partir des données déjà chargées
-  //    (aucun nouvel appel API, donc rien à casser côté back)
-  const avgSalary = stats.totalEmployees > 0 ? Math.round((stats.masseSalariale || 0) / stats.totalEmployees) : 0;
-  const trend = charts.salaryTrend || [];
-  const salaryVariation = trend.length >= 2
-    ? Math.round((((trend[trend.length - 1]?.masseSalariale || 0) - (trend[trend.length - 2]?.masseSalariale || 0)) / (trend[trend.length - 2]?.masseSalariale || 1)) * 100)
-    : 0;
+  // 🆕 Indicateurs RH complémentaires — fournis directement par /dashboard/summary
+  const leavesThisMonth = stats.leavesThisMonth || 0;
+  const totalPretAvanceMois = stats.totalPretAvanceMois || 0;
   const deptCount = (charts.deptDistribution || []).length;
 
   return (
@@ -542,8 +641,8 @@ export const DashboardContent = () => {
 
       {/* 🆕 Indicateurs RH complémentaires */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <motion.div variants={itemVariants}><StatCard label="Salaire Moyen" value={`${formatCurrency(avgSalary)} F`} trend="Par employé" isPositive={true} icon={Wallet} color="emerald" /></motion.div>
-        <motion.div variants={itemVariants}><StatCard label="Variation Masse Salariale" value={`${salaryVariation > 0 ? '+' : ''}${salaryVariation}%`} trend="vs mois précédent" isPositive={salaryVariation >= 0} icon={TrendingUp} color={salaryVariation >= 0 ? 'emerald' : 'red'} /></motion.div>
+        <motion.div variants={itemVariants}><StatCard label="Départs en Congé" value={leavesThisMonth.toString()} trend={monthLabel} isPositive={true} icon={Umbrella} color="emerald" /></motion.div>
+        <motion.div variants={itemVariants}><StatCard label="Prêts & Avances" value={`${formatCurrency(totalPretAvanceMois)} F`} trend="Accordés ce mois" isPositive={true} icon={Wallet} color="emerald" /></motion.div>
         <motion.div variants={itemVariants}><StatCard label="Départements" value={deptCount.toString()} trend="Actifs" isPositive={true} icon={Building2} color="amber" /></motion.div>
       </div>
 

@@ -68,9 +68,15 @@ ${styleInlines}
      il devient quasi invisible une fois forcé sur fond blanc ici — d'où le
      texte "délavé" à l'impression/export (même bug identifié sur les prêts,
      cf. loan-print.ts). On impose une couleur de texte sûre à tout le
-     contenu imprimé, quelle que soit la classe/le thème d'origine.
+     contenu imprimé, quelle que soit la classe/le thème d'origine — SAUF
+     aux éléments du formulaire lui-même (classes "std-*" : std-abs-*,
+     std-adv-*, std-loan-*, std-leave-*), qui verrouillent déjà leurs
+     propres couleurs de marque (filets dorés, titres colorés…) via leur
+     <style> scopé en !important. Sans cette exception, ce garde-fou les
+     écrasait en noir uniforme — c'est le même mécanisme que pour les
+     prêts, avances et congés, voir loan-print.ts / leave-print.ts.
   */
-  #absence-print-target, #absence-print-target * {
+  #absence-print-target, #absence-print-target *:not([class*="std-"]) {
     color: #111 !important;
     background-color: transparent !important;
   }
@@ -127,27 +133,29 @@ export async function downloadAbsenceRequestPDF(filename: string): Promise<void>
   ].join(';');
 
   const clone = el.cloneNode(true) as HTMLElement;
-  clone.style.cssText = [
-    'width:210mm',
-    'min-height:297mm',
-    'padding:14mm 16mm',
-    'margin:0',
-    'box-shadow:none',
-    'border:none',
-    'background:#fff',
-    'box-sizing:border-box',
-    'color-scheme:light',
-  ].join(';');
+  // ✅ CORRECTIF : on ne remplace PLUS le style inline du clone (l'ancien
+  // `clone.style.cssText = ...` effaçait fontFamily, display:flex, height,
+  // overflow et le padding calé du formulaire → police sans-serif et
+  // espacements faux dans le PDF). On ne touche qu'aux propriétés
+  // strictement nécessaires ; width, height, padding, police et flex
+  // restent ceux du composant.
+  clone.style.margin = '0';
+  clone.style.boxShadow = 'none';
+  clone.style.border = 'none';
+  clone.style.colorScheme = 'light';
   clone.id = 'pdf-export-target';
 
   // ✅ CORRECTIF : même filet de sécurité que loan-print.ts / leave-print.ts
   // — le site étant en dark mode par défaut, un élément stylé en
   // "dark:text-*" (texte clair sur fond sombre) copié tel quel par
   // cloneNode() ressort quasi invisible une fois html2canvas forcé sur fond
-  // blanc. On impose ici une couleur de texte sûre à tout le clone.
+  // blanc. On impose ici une couleur de texte sûre à tout le clone — SAUF
+  // aux éléments "std-*" du formulaire, qui verrouillent déjà leurs propres
+  // couleurs de marque (voir le commentaire équivalent dans printAbsenceRequest
+  // ci-dessus).
   const styleOverride = document.createElement('style');
   styleOverride.textContent = `
-    #pdf-export-target, #pdf-export-target * { color: #111 !important; background-color: transparent !important; }
+    #pdf-export-target, #pdf-export-target *:not([class*="std-"]) { color: #111 !important; background-color: transparent !important; }
     #pdf-export-target { background-color: #fff !important; }
     #pdf-export-target img { background-color: initial !important; }
   `;

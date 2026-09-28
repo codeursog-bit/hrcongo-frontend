@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Home, Users, LifeBuoy, Map } from 'lucide-react';
+import { Search, LayoutDashboard, Users, LifeBuoy, Map } from 'lucide-react';
 import { ErrorLayout } from '@/components/ui/ErrorLayout';
 
 const HR_TIPS = [
@@ -41,8 +40,11 @@ export default function NotFound() {
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Link href="/dashoard" className="flex items-center justify-center gap-2 px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 hover:scale-105">
-            <Home size={18} /> Retour à l'accueil
+          {/* ✅ CORRECTIF : lien cassé "/dashoard" (faute de frappe) → "/dashboard",
+              et bouton renommé "Retour au Dashboard" — il n'a jamais mené à
+              l'accueil public, seulement au tableau de bord. */}
+          <Link href="/dashboard" className="flex items-center justify-center gap-2 px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 hover:scale-105">
+            <LayoutDashboard size={18} /> Retour au Dashboard
           </Link>
           <Link href="/employes" className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             <Users size={18} /> Voir mes employés
@@ -52,9 +54,15 @@ export default function NotFound() {
         {/* Helper Links */}
         <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
           <p className="text-sm text-gray-500 mb-3">{tip}</p>
-          <Link href="#" className="inline-flex items-center gap-1 text-sm text-sky-500 hover:underline font-medium">
-            <LifeBuoy size={14} /> Contacter le support IT
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="#" className="inline-flex items-center gap-1 text-sm text-sky-500 hover:underline font-medium">
+              <LifeBuoy size={14} /> Contacter le support IT
+            </Link>
+            {/* Discret, non mis en avant — même traitement que app/error.tsx */}
+            <Link href="/" className="text-xs text-gray-400 underline hover:text-gray-600 dark:hover:text-gray-300">
+              Retour à l'accueil
+            </Link>
+          </div>
         </div>
       </div>
     </ErrorLayout>

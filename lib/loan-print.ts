@@ -50,7 +50,7 @@ ${styleInlines}
      de toute façon ; ce filet de sécurité ne fait que rattraper ceux qui
      hériteraient sinon d'un blanc/gris clair invisible.
   */
-  #loan-print-target, #loan-print-target * {
+  #loan-print-target, #loan-print-target *:not([class*="std-"]) {
     color: #111 !important;
     background-color: transparent !important;
   }
@@ -100,7 +100,7 @@ export async function downloadLoanDocumentPDF(elementId: string, filename: strin
   // ici une couleur de texte sûre à tout le clone avant capture.
   const styleOverride = document.createElement('style');
   styleOverride.textContent = `
-    #pdf-export-target, #pdf-export-target * { color: #111 !important; background-color: transparent !important; }
+    #pdf-export-target, #pdf-export-target *:not([class*="std-"]) { color: #111 !important; background-color: transparent !important; }
     #pdf-export-target { background-color: #fff !important; }
     #pdf-export-target img { background-color: initial !important; }
   `;

@@ -7,12 +7,11 @@ import {
   ArrowLeft, Loader2, Mail, Phone, MapPin, Calendar, Briefcase, Building2,
   Users, Heart, Flag, CreditCard, BadgeCheck, Hash,
   Shirt,
-  Palmtree, CheckCircle2, Fingerprint, XCircle, KeyRound, Eye, EyeOff,
+  CheckCircle2, KeyRound, Eye, EyeOff,
   AlertCircle, Lock, Pencil, Save, X, Camera, Loader,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { PushToggleButton } from '@/components/PushNotificationBanner';
-import { StatCard } from '@/components/ui/StatCard';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
 import { FancySelect } from '@/components/ui/FancySelect';
@@ -208,9 +207,6 @@ export default function MonProfilPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasEmployee, setHasEmployee] = useState(true);
 
-  const [leaveBalanceData, setLeaveBalanceData] = useState<any>(null);
-  const [attendanceSummary, setAttendanceSummary] = useState<any>(null);
-
   // ── Édition (auto-service) ────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState<EditableFields>(EMPTY_FORM);
@@ -245,17 +241,6 @@ export default function MonProfilPage() {
           const emp = await api.get<EmployeeProfile>('/employees/me');
           setEmployee(emp);
           setForm(formStateFromEmployee(emp));
-
-          try {
-            const balance = await api.get<any>('/leaves/me/balance');
-            setLeaveBalanceData(balance);
-          } catch { /* silencieux */ }
-
-          try {
-            const now = new Date();
-            const summary = await api.get<any>(`/attendance/summary/${emp.id}/${now.getMonth() + 1}/${now.getFullYear()}`);
-            setAttendanceSummary(summary);
-          } catch { /* silencieux */ }
         } catch {
           setHasEmployee(false);
         }
@@ -341,13 +326,6 @@ export default function MonProfilPage() {
   const avatarSrc = imageUpload.preview || form.photoUrl || employee?.photoUrl
     || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=10B981&color=fff&size=256`;
 
-  const stats = {
-    leaveBalance: leaveBalanceData ? Math.round(Number(leaveBalanceData.annualRemaining ?? 0) * 10) / 10 : 0,
-    leaveTaken: leaveBalanceData ? Math.round(Number(leaveBalanceData.annualTaken ?? 0) * 10) / 10 : 0,
-    presencesThisMonth: attendanceSummary ? Number(attendanceSummary.daysPresent ?? 0) : 0,
-    absencesThisMonth: attendanceSummary ? Number(attendanceSummary.daysAbsentPaid ?? 0) + Number(attendanceSummary.daysAbsentUnpaid ?? 0) : 0,
-  };
-
   const pwdChecks = [/[A-Z]/.test(pwdForm.next), /[a-z]/.test(pwdForm.next), /[0-9]/.test(pwdForm.next), pwdForm.next.length >= 8];
   const pwdStrength = pwdChecks.filter(Boolean).length;
   const pwdStrengthColor = pwdStrength === 4 ? 'bg-emerald-500 w-full' : pwdStrength >= 2 ? 'bg-yellow-500 w-2/3' : 'bg-red-500 w-1/3';
@@ -370,50 +348,37 @@ export default function MonProfilPage() {
           <p className="text-sm text-[var(--text-muted)]">Toutes vos informations personnelles et professionnelles.</p>
         </div>
 
-        {/* ══ EN-TÊTE + STATS (côte à côte sur desktop) ══ */}
-        <div className="flex flex-col lg:flex-row gap-5">
-          <motion.div variants={itemVariants} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 lg:w-[380px] shrink-0">
-            <div className="flex flex-col items-center text-center gap-3">
-              <div className="relative shrink-0">
-                <img src={avatarSrc} alt={fullName} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-[var(--border)]" />
-                {isEditing && (
-                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-emerald-600 transition-colors">
-                    {imageUpload.uploading ? <Loader size={13} className="text-white animate-spin" /> : <Camera size={13} className="text-white" />}
-                    <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && imageUpload.handleFileSelect(e.target.files[0])} />
-                  </label>
-                )}
-              </div>
+        {/* ══ EN-TÊTE ══ */}
+        <motion.div variants={itemVariants} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
+            <div className="relative shrink-0">
+              <img src={avatarSrc} alt={fullName} className="w-20 h-20 rounded-2xl object-cover ring-4 ring-[var(--border)]" />
+              {isEditing && (
+                <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-emerald-600 transition-colors">
+                  {imageUpload.uploading ? <Loader size={13} className="text-white animate-spin" /> : <Camera size={13} className="text-white" />}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && imageUpload.handleFileSelect(e.target.files[0])} />
+                </label>
+              )}
+            </div>
 
-              <div>
-                <h1 className="text-xl font-black text-[var(--text)]">{fullName}</h1>
-                <p className="text-sm text-[var(--text-muted)]">
-                  {employee?.position ?? roleInfo.label}
-                  {employee?.department && <span className="text-emerald-500"> · {employee.department.name}</span>}
-                </p>
-              </div>
-
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-black text-[var(--text)]">{fullName}</h1>
+              <p className="text-sm text-[var(--text-muted)]">
+                {employee?.position ?? roleInfo.label}
+                {employee?.department && <span className="text-emerald-500"> · {employee.department.name}</span>}
+              </p>
               {employee && (
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center gap-1">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-muted)] flex items-center justify-center sm:justify-start gap-1 mt-2">
                   <Hash size={10} /> ID Employé : {employee.employeeNumber}
+                  {employee.hireDate && <span className="normal-case font-semibold">· Ancienneté : {seniority(employee.hireDate)}</span>}
                 </p>
               )}
-
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 mt-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Employé actif
               </span>
             </div>
-          </motion.div>
-
-          {/* ══ STATS ══ */}
-          {hasEmployee && (
-            <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <motion.div variants={itemVariants}><StatCard label="Ancienneté" value={employee?.hireDate ? seniority(employee.hireDate) : '—'} trend="vs dernier" isPositive icon={Calendar} color="emerald" /></motion.div>
-              <motion.div variants={itemVariants}><StatCard label="Congés restants" value={`${stats.leaveBalance} jours dispo.`} trend="vs dernier" isPositive icon={Palmtree} color="amber" /></motion.div>
-              <motion.div variants={itemVariants}><StatCard label="Présences" value={`${stats.presencesThisMonth} ce mois-ci`} trend="vs dernier" isPositive icon={Fingerprint} color="emerald" /></motion.div>
-              <motion.div variants={itemVariants}><StatCard label="Absences" value={`${stats.absencesThisMonth} ce mois-ci`} trend="vs dernier" isPositive={stats.absencesThisMonth === 0} icon={XCircle} color="red" /></motion.div>
-            </div>
-          )}
-        </div>
+          </div>
+        </motion.div>
 
         {saveError && (
           <motion.div variants={itemVariants} className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-500">

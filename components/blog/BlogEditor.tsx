@@ -96,11 +96,25 @@ function Preview({ content, isSA }: { content: string; isSA?: boolean }) {
   const nodes: React.ReactNode[] = [];
   let i = 0;
   let olIndex = 0;
-  const inline = (text: string) => text
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, `<code class="bg-white/10 ${isSA?'text-amber-400':'text-cyan-400'} px-1 rounded text-xs font-mono">$1</code>`)
-    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-cyan-400 underline" target="_blank">$1</a>');
+  const inline = (text: string) => {
+    // 🔒 CORRECTIF SÉCURITÉ : même échappement que côté public
+    // (BlogPostClient.tsx / renderInline) — l'aperçu live rendait aussi le
+    // HTML brut sans échappement avant ce correctif.
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    return escaped
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, `<code class="bg-white/10 ${isSA?'text-amber-400':'text-cyan-400'} px-1 rounded text-xs font-mono">$1</code>`)
+      .replace(/\[(.+?)\]\((.+?)\)/g, (_m, label, url) => {
+        const safe = /^(https?:|mailto:|tel:|#|\/)/i.test(url.trim()) ? url.trim() : '#';
+        return `<a href="${safe}" class="text-cyan-400 underline" target="_blank">${label}</a>`;
+      });
+  };
 
   while (i < lines.length) {
     const line = lines[i];

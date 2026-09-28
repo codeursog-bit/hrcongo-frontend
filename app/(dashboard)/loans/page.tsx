@@ -14,6 +14,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   Banknote, Wallet, Receipt, Plus, Printer, Download, Trash2, Pencil, Paperclip,
@@ -148,7 +149,7 @@ export default function LoansManagementPage() {
         if ((data as Record<string, any>)?.company?.documentTemplate === 'ORCA') {
           const htmlPath = tab === 'loans' ? `/loans/${id}/document/orca-html` : `/loans/advances/${id}/document/orca-html`;
           const res: any = await api.get(htmlPath);
-          setOrcaHtml(res?.html ?? null);
+          setOrcaHtml(sanitizeOrcaHtml(res?.html));
         } else {
           setOrcaHtml(null);
         }

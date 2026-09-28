@@ -15,6 +15,7 @@ import {
 import { motion } from 'framer-motion';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { api } from '@/services/api';
+import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
@@ -114,7 +115,7 @@ export default function MonEspacePretsAvancesPage() {
         if ((data as any)?.company?.documentTemplate === 'ORCA') {
           const htmlPath = selected.kind === 'loan' ? `/loans/${selected.id}/document/orca-html` : `/loans/advances/${selected.id}/document/orca-html`;
           const res: any = await api.get(htmlPath);
-          setOrcaHtml(res?.html ?? null);
+          setOrcaHtml(sanitizeOrcaHtml(res?.html));
         } else {
           setOrcaHtml(null);
         }

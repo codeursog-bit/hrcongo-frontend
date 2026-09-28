@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, Wallet, Calendar, Clock, BarChart3,
   FileText, Settings, LogOut, Hexagon, Briefcase, Target,
   GraduationCap, Flag, Monitor, Fingerprint, FolderHeart,
-  UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit,
+  UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit, Ticket,
   ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
@@ -115,9 +115,23 @@ const navItems: NavItem[] = [
   },
   {
     id: 'mes_conges_manager',
-    label: 'Mes Demandes',
+    label: 'Mes congés',
     icon: FolderHeart,
     path: '/conges/mon-espace',
+    allowedRoles: ['MANAGER'],
+  },
+  {
+    id: 'mes_absences_manager',
+    label: 'Mes Absences',
+    icon: UserMinus,
+    path: '/presences/absences/mon-espace',
+    allowedRoles: ['MANAGER'],
+  },
+  {
+    id: 'mes_permissions_manager',
+    label: 'Mes Permissions',
+    icon: Ticket,
+    path: '/presences/permissions/mon-espace',
     allowedRoles: ['MANAGER'],
   },
   {
@@ -125,6 +139,20 @@ const navItems: NavItem[] = [
     label: 'Mes Prêts & Avances',
     icon: HandCoins,
     path: '/loans/mon-espace',
+    allowedRoles: ['MANAGER'],
+  },
+  {
+    id: 'ma_paie_manager',
+    label: 'Ma Paie',
+    icon: Wallet,
+    path: '/ma-paie',
+    allowedRoles: ['MANAGER'],
+  },
+  {
+    id: 'mon_profil_manager',
+    label: 'Mon Profil',
+    icon: UserCircle,
+    path: '/mon-profil',
     allowedRoles: ['MANAGER'],
   },
 
@@ -151,10 +179,38 @@ const navItems: NavItem[] = [
     allowedRoles: ['EMPLOYEE'],
   },
   {
+    id: 'mes_absences',
+    label: 'Mes Absences',
+    icon: UserMinus,
+    path: '/presences/absences/mon-espace',
+    allowedRoles: ['EMPLOYEE'],
+  },
+  {
+    id: 'mes_permissions',
+    label: 'Mes Permissions',
+    icon: Ticket,
+    path: '/presences/permissions/mon-espace',
+    allowedRoles: ['EMPLOYEE'],
+  },
+  {
     id: 'mes_prets',
     label: 'Mes Prêts & Avances',
     icon: HandCoins,
     path: '/loans/mon-espace',
+    allowedRoles: ['EMPLOYEE'],
+  },
+  {
+    id: 'ma_paie',
+    label: 'Ma Paie',
+    icon: Wallet,
+    path: '/ma-paie',
+    allowedRoles: ['EMPLOYEE'],
+  },
+  {
+    id: 'mon_profil',
+    label: 'Mon Profil',
+    icon: UserCircle,
+    path: '/mon-profil',
     allowedRoles: ['EMPLOYEE'],
   },
 
@@ -388,8 +444,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               presences_equipe_admin: 'Gestion RH', pointage_manuel_admin: 'Gestion RH',
               presences_equipe_secretary: 'Gestion RH', pointage_manuel_secretary: 'Gestion RH',
               mon_equipe: 'Mon équipe', conges_manager: 'Mon équipe', presences_equipe_manager: 'Mon équipe', pointage_manuel_manager: 'Mon équipe',
-              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_prets_manager: 'Mon espace',
-              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_prets: 'Mon espace',
+              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace',
+              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace',
               recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 

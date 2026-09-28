@@ -9,7 +9,7 @@
 // backend (règles/grille salariale ET rupture de contrat), après
 // alignement de PETROLIER→PETROLE et suppression du doublon TIC (gardé :
 // NTIC) — décision actée, voir back/PATCH_conventions.service.ts_petrole-ntic.md :
-//   BTP, COMMERCE, INDUSTRIE, HOTELLERIE, PHARMACIE, TRANSPORT, PETROLE, NTIC
+//   BTP, COMMERCE, INDUSTRIE, HOTELLERIE, PHARMACIE, TRANSPORT, PETROLE, NTIC, MINE
 //
 // PRESSE reste exclue : gérée côté rupture de contrat mais absente de la
 // grille salariale/règles — à ajouter le jour où quelqu'un digitalise ses
@@ -17,7 +17,7 @@
 // ============================================================================
 
 import {
-  HardHat, ShoppingCart, Factory, Utensils, Truck, HeartPulse, Wifi, Flame,
+  HardHat, ShoppingCart, Factory, Utensils, Truck, HeartPulse, Wifi, Flame, Mountain,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -133,6 +133,22 @@ export const CONVENTIONS_CATALOG: ConventionCatalogEntry[] = [
     },
     missingNote:
       "Pas de suggestion de changement d'échelon pour cette convention : l'avancement (Art.20/22) résulte d'un examen annuel au mérite décidé par la direction, pas d'une progression automatique. Grille remise à jour depuis une image nette du barème signé — échelons 1 à 6 désormais tous confirmés. ⚠️ Cette convention se renégocie quasi chaque année (12 barèmes différents entre 2010 et 2023) — la grille devra être vérifiée plus souvent que les autres.",
+  },
+  {
+    code: 'MINE',
+    label: 'Mines',
+    description: 'Prospection, Recherche et Exploitation Minières',
+    icon: Mountain,
+    status: 'complete',
+    coverage: {
+      salaryGrid: true,
+      senioritybonus: true,
+      extraLeave: true,
+      bonusPresets: true,
+      echelonSuggestions: false,
+    },
+    missingNote:
+      "Pas de suggestion de changement d'échelon pour cette convention : l'avancement (Art.26/27) est explicitement décrit comme non lié à l'ancienneté — c'est un examen de mérite mené tous les 2 ans par la direction, pas une progression automatique. Grille transcrite depuis une image nette du barème signé (22/02/2013) — les catégories 1 à 3 n'ont que 3 échelons chiffrés dans le tableau original (pas un manque de transcription). ⚠️ La grille est censée être révisée tous les 2 ans en commission mixte paritaire — à vérifier s'il existe un barème plus récent que celui de 2013.",
   },
   {
     code: 'HOTELLERIE',

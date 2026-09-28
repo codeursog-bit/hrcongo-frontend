@@ -252,7 +252,18 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
 
 
   const CNSS_PAT_SUMMARY   = ['CNSS_PAT_SUMMARY','CNSS_PATRON_SUMMARY','CNSS_PAT','CNSS_EMPLOYER_TOTAL'];
-  const CNSS_PAT_INDIVIDUAL = ['CNSS_EMP_PENSION','CNSS_EMP_FAMILY','CNSS_EMP_ACCIDENT',
+  // ⚠️ CORRECTIF — ces codes ne correspondaient pas aux vrais codes générés
+  // par payroll-items.service.ts (CNSS_EMP_FAM / CNSS_EMP_AT, pas
+  // CNSS_EMP_FAMILY / CNSS_EMP_ACCIDENT). Résultat : le filtre par code ne
+  // matchait jamais, et le filtre de secours par libellé ("prestations
+  // familiales"/"accidents du travail") ne matchait plus non plus depuis le
+  // raccourcissement des libellés ("CNSS Famille"/"CNSS Accidents"). Les
+  // items CNSS_EMP_FAM/CNSS_EMP_AT n'étaient donc plus exclus de ctaxPat :
+  // ils étaient comptés ET affichés une seconde fois en plus des lignes
+  // cnssEmpFamily/cnssEmpAccident — double cotisation CNSS patronale sur le
+  // bulletin (visible et dans le total).
+  const CNSS_PAT_INDIVIDUAL = ['CNSS_EMP_PENSION','CNSS_EMP_FAM','CNSS_EMP_AT',
+    'CNSS_EMP_FAMILY','CNSS_EMP_ACCIDENT', // anciens codes gardés par sécurité
     'CNSS_PENSION','CNSS_FAMILY','CNSS_ACCIDENT','CNSS_VIEILLESSE','CNSS_FAMILLE','CNSS_AT'];
   const TUS_CODES = ['TUS_DGI','TUS_CNSS'];
 
@@ -261,12 +272,15 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
     const code = (item.code  ?? '').toLowerCase();
     if (lbl.includes('pension') && (lbl.includes('famil') || lbl.includes('accident'))) return true;
     if (CNSS_PAT_SUMMARY.includes(item.code)) return true;
-    if (CNSS_PAT_INDIVIDUAL.some(c => code.includes(c.toLowerCase()))) return true;
+    if (CNSS_PAT_INDIVIDUAL.some(c => code === c.toLowerCase() || code.includes(c.toLowerCase()))) return true;
     if (lbl.includes('cnss patronale') && lbl.includes('famil'))    return true;
     if (lbl.includes('cnss patronale') && lbl.includes('accident')) return true;
     if (lbl.includes('cnss patronale') && lbl.includes('pension'))  return true;
     if (lbl.includes('prestations familiales'))                      return true;
     if (lbl.includes('accidents du travail'))                        return true;
+    // ✅ Libellés courts actuels (payroll-items.service.ts) :
+    // "CNSS Pension" / "CNSS Famille" / "CNSS Accidents"
+    if (/^cnss\s+(pension|famille|accidents?)\b/.test(lbl))          return true;
     return false;
   };
 

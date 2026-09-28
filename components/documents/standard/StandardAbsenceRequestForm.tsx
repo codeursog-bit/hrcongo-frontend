@@ -1,19 +1,17 @@
 'use client';
 
 // ============================================================================
-// 📁 components/documents/standard/StandardAbsenceRequestForm.tsx
-// ✅ Reproduit le modèle "DEMANDE D'AUTORISATION D'ABSENCE" (Axis Oil,
-//    Geolane, Petrodys, Infinitium) — un seul composant pour toute
-//    entreprise au modèle STANDARD. La liste des motifs et leur nombre de
-//    jours conventionnels vient du catalogue propre à l'entreprise
-//    (AbsenceMotif) — rien n'est en dur, chaque entreprise a ses propres
-//    valeurs (ex: "Décès du conjoint" = 6, 7 ou 10 jours selon le client).
-// ✅ Même simplification hiérarchique que les autres modèles : seule la
-//    ligne RH reflète une vraie décision ; "Le Supérieur hiérarchique" et
-//    "La Direction Générale" restent des cases à signer à la main.
+// components/documents/standard/StandardAbsenceRequestForm.tsx
+// Modèle "DEMANDE D'AUTORISATION D'ABSENCE" (STANDARD) — calé sur le PDF
+// Infinitium. Une seule page A4 : hauteur fixe, pied de page ancré en bas.
+// Les motifs et leur durée viennent de la convention collective (catalog).
+// Les couleurs sont verrouillées par un <style> scopé en !important pour
+// résister aux CSS globaux (mode sombre) à l'écran comme à l'export.
+// Les espaceurs (<Spacer />) se compriment si le contenu grandit (ex. ligne
+// Matricule) afin que le pied de page ne soit jamais rogné.
 // ============================================================================
 
-import React from 'react';
+import type { ReactNode } from 'react';
 
 interface StandardCompany {
   legalName: string;
@@ -45,30 +43,83 @@ export interface StandardAbsenceRequestFormData {
     employeeNumber?: string | null;
     position?: string;
   };
-  /** Catalogue complet de l'entreprise (pour reproduire le tableau tel quel sur le papier). */
   catalog: StandardAbsenceMotifRow[];
-  /** Clé du motif choisi dans le catalogue — coche la bonne ligne. */
   motifKey?: string | null;
   startDate: string | Date;
   endDate: string | Date;
   requestedAt?: string | Date;
-  status: string; // PENDING | APPROVED | REJECTED | CANCELLED
+  status: string;
 }
 
+const FONT = `'Baskerville Old Face', Baskerville, Garamond, Georgia, 'Times New Roman', serif`;
+const GOLD = '#b8860b';
+const RULE = '#d1d5db';
+
 const fmtDate = (d?: string | Date | null) => {
-  if (!d) return '……/……./……';
+  if (!d) return '';
   const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '……/……./……';
+  if (isNaN(date.getTime())) return '';
   return date.toLocaleDateString('fr-FR');
 };
 
+const cell = {
+  border: `1px solid ${RULE}`,
+  padding: '4px 8px',
+  verticalAlign: 'top',
+} as const;
+
 function Checkbox({ checked }: { checked: boolean }) {
   return (
-    <span style={{ display: 'inline-flex', width: 13, height: 13, border: '1px solid #1f2937', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700 }}>
+    <span
+      className="std-abs-black"
+      style={{
+        display: 'inline-block',
+        width: 10,
+        height: 10,
+        boxSizing: 'border-box',
+        border: '1px solid #4b5563',
+        overflow: 'hidden', // baseline identique case cochée / vide
+        textAlign: 'center',
+        fontSize: 8,
+        fontWeight: 700,
+        lineHeight: '8px',
+        verticalAlign: '-1px',
+      }}
+    >
       {checked ? '✕' : ''}
     </span>
   );
 }
+
+function SectionTitle({ children, mt }: { children: ReactNode; mt: number }) {
+  return (
+    <h2
+      className="std-abs-navy"
+      style={{ margin: `${mt}px 0 0`, fontSize: 12.5, fontWeight: 700, letterSpacing: 0.3, lineHeight: 1.2 }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+function Field({ label, value, mt = 4 }: { label: string; value: ReactNode; mt?: number }) {
+  return (
+    <div style={{ marginTop: mt }}>
+      <div className="std-abs-black" style={{ fontWeight: 700, fontSize: 12, lineHeight: 1.2 }}>{label}</div>
+      <div
+        className="std-abs-black"
+        style={{ boxSizing: 'border-box', height: 21, paddingTop: 3, borderBottom: `1px solid ${RULE}`, fontSize: 12, lineHeight: 1.2 }}
+      >
+        {value ?? ''}
+      </div>
+    </div>
+  );
+}
+
+// Espace vertical compressible : taille nominale h, minimum 10 px.
+const Spacer = ({ h }: { h: number }) => (
+  <div aria-hidden style={{ flex: `0 1 ${h}px`, minHeight: 10 }} />
+);
 
 export default function StandardAbsenceRequestForm({ data, id }: { data: StandardAbsenceRequestFormData; id?: string }) {
   const companyName = data.company.tradeName || data.company.legalName || 'Entreprise';
@@ -76,21 +127,55 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
   const rejected = data.status === 'REJECTED';
 
   return (
-    <div id={id} style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', padding: '12mm 15mm', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+    <div
+      id={id}
+      className="std-abs-doc"
+      style={{
+        width: '210mm',
+        height: '296mm', // 296 et non 297 : évite une 2e page blanche à l'export
+        margin: '0 auto',
+        padding: '6mm 18.5mm 2mm',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: '#fff',
+        color: '#111827',
+        fontFamily: FONT,
+        lineHeight: 1.2,
+        breakInside: 'avoid',
+        pageBreakInside: 'avoid',
+      }}
+    >
+      <style>{`
+        .std-abs-doc, .std-abs-doc * { color-scheme: light !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .std-abs-doc { background: #fff !important; color: #111827 !important; }
+        .std-abs-doc > *:not([aria-hidden]) { flex-shrink: 0; }
+        .std-abs-doc td, .std-abs-doc th { background: transparent !important; }
+        .std-abs-doc .std-abs-black { color: #111827 !important; }
+        .std-abs-doc .std-abs-gray { color: #4b5563 !important; }
+        .std-abs-doc .std-abs-light { color: #6b7280 !important; }
+        .std-abs-doc .std-abs-navy { color: #2c3e50 !important; }
+      `}</style>
+
+      {/* ── En-tête (hauteur fixe → filet doré à ~47 mm du haut) ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', height: '40.8mm' }}>
         <div>
-          {data.company.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.company.logo} alt={companyName} style={{ height: 64, objectFit: 'contain' }} />
-          ) : (
-            <div style={{ fontWeight: 700, fontSize: 20 }}>{companyName}</div>
-          )}
-          <div style={{ marginTop: 6, fontSize: 9.5, color: '#4b5563', lineHeight: 1.5 }}>
+          <div style={{ height: 60, display: 'flex', alignItems: 'center' }}>
+            {data.company.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={data.company.logo} alt={companyName} style={{ height: 60, objectFit: 'contain' }} />
+            ) : (
+              <div className="std-abs-black" style={{ fontWeight: 700, fontSize: 20 }}>{companyName}</div>
+            )}
+          </div>
+          <div className="std-abs-black" style={{ marginTop: 5, fontSize: 9, lineHeight: 1.4, fontWeight: 700 }}>
             {data.company.address && <div>{data.company.address}</div>}
             {(data.company.city || data.company.country) && (
               <div>
-                {data.company.city}{data.company.city && data.company.country ? ', ' : ''}
-                {data.company.country ? (COUNTRY_LABELS[data.company.country] || data.company.country) : ''}
+                {data.company.city}
+                {data.company.city && data.company.country ? ', ' : ''}
+                {data.company.country ? COUNTRY_LABELS[data.company.country] || data.company.country : ''}
               </div>
             )}
             {(data.company.phone || data.company.email) && (
@@ -102,51 +187,74 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
             )}
           </div>
         </div>
-        <div style={{ textAlign: 'right', fontSize: 11 }}>
-          <div style={{ fontWeight: 700 }}>Réf. : {data.reference || '—'}</div>
-          <div style={{ fontStyle: 'italic', color: '#374151' }}>Direction des Ressources Humaines</div>
+
+        {/* Aligné sur le bloc adresse (logo 60 + marge 5 + ajustement optique) */}
+        <div style={{ paddingTop: 68, textAlign: 'right' }}>
+          <div className="std-abs-black" style={{ fontWeight: 700, fontSize: 11 }}>Réf. : {data.reference || '—'}</div>
+          <div className="std-abs-light" style={{ marginTop: 4, fontStyle: 'italic', fontSize: 10 }}>
+            Direction des Ressources Humaines
+          </div>
         </div>
       </div>
 
-      <div style={{ borderTop: '1.5px solid #92400e', margin: '0 0 14px' }} />
-      <h1 style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 1, margin: '0 0 4px' }}>
-        DEMANDE D'AUTORISATION D'ABSENCE
+      {/* ── Filet doré, filet gris, titre, filet gris, sous-titre ── */}
+      <div style={{ borderTop: `2px solid ${GOLD}` }} />
+      <div style={{ marginTop: 20, borderTop: `1px solid ${RULE}` }} />
+
+      <h1
+        className="std-abs-black"
+        style={{ margin: '17px 0 0', textAlign: 'center', fontSize: 19, fontWeight: 700, letterSpacing: 0.5, lineHeight: 1.2 }}
+      >
+        {"DEMANDE D'AUTORISATION D'ABSENCE"}
       </h1>
-      <div style={{ borderTop: '1px solid #92400e', margin: '0 0 8px' }} />
-      <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#6b7280', fontSize: 10.5, margin: '0 0 10px' }}>
+
+      <div style={{ marginTop: 16, borderTop: `1px solid ${RULE}` }} />
+
+      <p className="std-abs-light" style={{ margin: '5px 0 0', textAlign: 'center', fontStyle: 'italic', fontSize: 10, lineHeight: 1.2 }}>
         Absence pour événement familial ou motif conventionnel
       </p>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 6px' }}>
-        RENSEIGNEMENTS DU COLLABORATEUR
-      </h2>
-      <div style={{ marginBottom: 4, fontSize: 12 }}>
-        <strong>Nom(s) et prénom(s) :</strong> {`${data.employee.lastName} ${data.employee.firstName}`.trim()}
-      </div>
-      {data.employee.employeeNumber && (
-        <div style={{ marginBottom: 4, fontSize: 12 }}><strong>Matricule :</strong> {data.employee.employeeNumber}</div>
-      )}
-      <div style={{ marginBottom: 8, fontSize: 12 }}><strong>Poste occupé :</strong> {data.employee.position || ''}</div>
+      {/* ── Renseignements ── */}
+      <SectionTitle mt={16}>RENSEIGNEMENTS DU COLLABORATEUR</SectionTitle>
+      <Field label="Nom(s) et prénom(s)" value={`${data.employee.lastName} ${data.employee.firstName}`.trim()} mt={11} />
+      {data.employee.employeeNumber && <Field label="Matricule" value={data.employee.employeeNumber} />}
+      <Field label="Poste occupé" value={data.employee.position} />
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 6px' }}>
-        MOTIF DE L'ABSENCE (COCHER LA CASE CORRESPONDANTE)
-      </h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5, marginBottom: 8 }}>
+      {/* ── Motifs ── */}
+      <SectionTitle mt={14}>{"MOTIF DE L'ABSENCE (COCHER LA CASE CORRESPONDANTE)"}</SectionTitle>
+      <table
+        style={{ width: '100%', marginTop: 7, borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: 10, lineHeight: 1.35 }}
+      >
+        <colgroup>
+          <col />
+          <col style={{ width: '14%' }} />
+          <col style={{ width: 42 }} />
+        </colgroup>
         <thead>
           <tr>
-            <th style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'left', background: '#f3f4f6', fontSize: 10.5 }}>Motif</th>
-            <th style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'left', background: '#f3f4f6', width: '16%', fontSize: 10.5 }}>Durée</th>
-            <th style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'center', background: '#f3f4f6', width: 50, fontSize: 10.5 }}>Choix</th>
+            <th className="std-abs-black" style={{ ...cell, textAlign: 'left' }}>Motif</th>
+            <th className="std-abs-black" style={{ ...cell, textAlign: 'left', whiteSpace: 'nowrap' }}>
+              Durée<br />conventionnelle
+            </th>
+            <th className="std-abs-black" style={{ ...cell, textAlign: 'center' }}>Choix</th>
           </tr>
         </thead>
         <tbody>
           {data.catalog.map((m) => (
             <tr key={m.key}>
-              <td style={{ border: '1px solid #1f2937', padding: '3px 8px' }}>{m.label}</td>
-              <td style={{ border: '1px solid #1f2937', padding: '3px 8px', color: '#6b7280' }}>
-                {m.days}j
+              <td className="std-abs-gray" style={cell}>{m.label}</td>
+              <td className="std-abs-light" style={{ ...cell, whiteSpace: 'nowrap' }}>
+                {m.days > 0 ? (
+                  <>
+                    {m.days} jour{m.days > 1 ? 's' : ''}
+                    <br />
+                    conventionnel{m.days > 1 ? 's' : ''}
+                  </>
+                ) : (
+                  '0 jours'
+                )}
               </td>
-              <td style={{ border: '1px solid #1f2937', padding: '3px 8px', textAlign: 'center' }}>
+              <td style={{ ...cell, padding: '8px 4px 4px', textAlign: 'center' }}>
                 <Checkbox checked={data.motifKey === m.key} />
               </td>
             </tr>
@@ -154,31 +262,67 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
         </tbody>
       </table>
 
-      <div style={{ fontSize: 11.5, marginBottom: 4 }}>
-        <strong>Période d'absence du</strong> {fmtDate(data.startDate)} <strong>au</strong> {fmtDate(data.endDate)}
+      {/* ── Période : une seule ligne, un seul soulignement ── */}
+      <div
+        className="std-abs-black"
+        style={{
+          marginTop: 20,
+          width: '80.5%',
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 8,
+          paddingBottom: 4,
+          borderBottom: `1px solid ${RULE}`,
+          fontSize: 11.5,
+          lineHeight: 1.2,
+        }}
+      >
+        <strong>{"Période d'absence du"}</strong>
+        <span style={{ flex: 1, textAlign: 'center' }}>{fmtDate(data.startDate)}</span>
+        <strong>au</strong>
+        <span style={{ flex: 1, textAlign: 'center' }}>{fmtDate(data.endDate)}</span>
       </div>
 
-      <div style={{ fontSize: 10.5, margin: '8px 0 4px' }}>Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt)}</div>
-      <div style={{ fontSize: 10.5, fontWeight: 700, marginBottom: 10 }}>Signature du collaborateur : ___________________________</div>
-
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '8px 0 4px' }}>
-        DÉCISION DE LA HIÉRARCHIE
-      </h2>
-      <div style={{ fontSize: 11.5, marginBottom: 8 }}>
-        <Checkbox checked={validated} /> Accordé &nbsp;&nbsp;&nbsp;<Checkbox checked={rejected} /> Refusé
+      <Spacer h={43} />
+      <div className="std-abs-gray" style={{ fontSize: 11.5 }}>
+        Fait à {data.company.city || 'Pointe-Noire'}, le{' '}
+        <strong className="std-abs-black">{fmtDate(data.requestedAt) || '………………………………………'}</strong>
       </div>
-      <div style={{ fontSize: 10.5, marginBottom: 14 }}><strong>Commentaire :</strong> {' '}</div>
 
-      <table style={{ width: '100%', fontSize: 9.5, textAlign: 'center', marginBottom: 8 }}>
+      {/* ── Décision ── */}
+      <Spacer h={37} />
+      <SectionTitle mt={0}>DÉCISION DE LA HIÉRARCHIE</SectionTitle>
+      <div className="std-abs-gray" style={{ marginTop: 11, fontSize: 11.5 }}>
+        Accordé <Checkbox checked={validated} />
+        <span style={{ marginLeft: 28 }}>
+          Refusé <Checkbox checked={rejected} />
+        </span>
+      </div>
+      <div className="std-abs-black" style={{ marginTop: 16, fontSize: 11.5, fontWeight: 700 }}>Commentaire</div>
+
+      <div style={{ marginTop: 20, borderTop: `1px solid ${RULE}` }} />
+
+      {/* Table en layout auto : les colonnes se répartissent comme sur le PDF */}
+      <Spacer h={37} />
+      <table
+        style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: 10,
+          fontWeight: 700,
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+        }}
+      >
         <tbody>
           <tr>
-            <td style={{ width: '33%' }}>Le Supérieur hiérarchique</td>
-            <td style={{ width: '33%' }}>La Direction des Ressources Humaines</td>
-            <td style={{ width: '33%' }}>La Direction Générale</td>
+            <td className="std-abs-black">Le Supérieur hiérarchique</td>
+            <td className="std-abs-black">La Direction des Ressources Humaines</td>
+            <td className="std-abs-black">La Direction Générale</td>
           </tr>
           <tr>
-            <td style={{ height: 30 }} />
-            <td>
+            <td style={{ height: 45 }} />
+            <td style={{ verticalAlign: 'middle' }}>
               {validated && data.company.cachetUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 32, objectFit: 'contain', margin: '0 auto' }} />
@@ -189,8 +333,17 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
         </tbody>
       </table>
 
-      <div style={{ marginTop: 8, textAlign: 'center', fontSize: 8.5, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-        {data.company.documentFooterText || `${companyName} — Document confidentiel à usage exclusif du destinataire`}
+      {/* ── Pied de page ancré en bas de la feuille ── */}
+      <div style={{ marginTop: 'auto' }}>
+        <div style={{ borderTop: `1px solid ${RULE}` }} />
+        {data.company.documentFooterText ? (
+          <div
+            className="std-abs-gray"
+            style={{ marginTop: 6, textAlign: 'center', fontSize: 8.5, lineHeight: 1.4, whiteSpace: 'pre-line' }}
+          >
+            {data.company.documentFooterText}
+          </div>
+        ) : null}
       </div>
     </div>
   );

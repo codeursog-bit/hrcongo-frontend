@@ -26,6 +26,7 @@ const BNC_CONTRACTS  = ['CONSULTANT', 'PRESTATAIRE'];
 
 interface EmployeeDetail {
   id: string;
+  companyId?: string; // 🔒 utilisé pour fiabiliser les actions d'écriture (voir handleDelete)
   firstName: string;
   lastName: string;
   email: string;
@@ -286,7 +287,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     if (!employee) return;
     setIsDeleting(true);
     try {
-      await api.delete(`/employees/${params.id}`);
+      await api.delete(`/employees/${params.id}${employee?.companyId ? `?companyId=${employee.companyId}` : ''}`);
       router.push(bp('/employes'));
     } catch (err: any) {
       alert(err?.message || 'Erreur lors de la suppression');
@@ -302,7 +303,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     setIsTogglingSelfService(true);
     try {
       const next = !employee.selfServiceEnabled;
-      const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
+      const res: any = await api.patch(`/employees/${params.id}/self-service${employee.companyId ? `?companyId=${employee.companyId}` : ''}`, { enabled: next });
       setEmployee(prev => prev ? { ...prev, selfServiceEnabled: !!res.selfServiceEnabled } : prev);
     } catch (err: any) {
       alert(err?.message || "Erreur lors de la mise à jour de l'accès");

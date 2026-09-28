@@ -79,8 +79,18 @@ export function YabetooCheckoutModal({
     }
   };
 
-  const handleWaitingDone = () => {
-    router.push(`/success?plan=${intent.plan}&waiting=true`);
+  const handleWaitingDone = async () => {
+    // ✅ Vérification immédiate (best-effort) plutôt que de compter
+    // uniquement sur le webhook — voir SubscriptionsService.
+    // checkAndActivateYabetooPayment. On redirige dans tous les cas
+    // ensuite, mais /success saura déjà si c'est activé ou encore en
+    // attente grâce au paramètre paymentId transmis ici.
+    try {
+      await api.post(`/subscriptions/yabetoo/check-payment/${intent.paymentId}`, {});
+    } catch {
+      // pas grave — le cron de polling (toutes les 3 min) prendra le relais
+    }
+    router.push(`/success?plan=${intent.plan}&provider=yabetoo&paymentId=${intent.paymentId}`);
     onClose();
   };
 

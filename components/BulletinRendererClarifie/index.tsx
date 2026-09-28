@@ -234,12 +234,17 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
   const absDeductItem = gainItems.find((i: any) => i.code === 'ABS_DEDUCT') ?? null;
   const gains  = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
 
-  const CNSS_PAT_INDIVIDUAL = ['CNSS_EMP_PENSION','CNSS_EMP_FAMILY','CNSS_EMP_ACCIDENT',
+  // ⚠️ CORRECTIF — mêmes codes/libellés réels que BulletinRendererClassique,
+  // voir son commentaire pour le détail du bug corrigé (double cotisation
+  // patronale CNSS Famille/Accidents).
+  const CNSS_PAT_INDIVIDUAL = ['CNSS_EMP_PENSION','CNSS_EMP_FAM','CNSS_EMP_AT',
+    'CNSS_EMP_FAMILY','CNSS_EMP_ACCIDENT', // anciens codes gardés par sécurité
     'CNSS_PENSION','CNSS_FAMILY','CNSS_ACCIDENT','CNSS_VIEILLESSE','CNSS_FAMILLE','CNSS_AT'];
   const isCnssPatSummary = (item: any) => {
     const lbl = (item.label ?? '').toLowerCase();
-    if (CNSS_PAT_INDIVIDUAL.some(c => (item.code ?? '').toLowerCase().includes(c.toLowerCase()))) return true;
-    return lbl.includes('pension') || lbl.includes('prestations familiales') || lbl.includes('accidents du travail');
+    if (CNSS_PAT_INDIVIDUAL.some(c => (item.code ?? '').toLowerCase() === c.toLowerCase() || (item.code ?? '').toLowerCase().includes(c.toLowerCase()))) return true;
+    if (lbl.includes('pension') || lbl.includes('prestations familiales') || lbl.includes('accidents du travail')) return true;
+    return /^cnss\s+(pension|famille|accidents?)\b/.test(lbl);
   };
 
   const manualDeductions = retenueItems.filter((i: any) => i.code === 'MANUAL_DEDUCTION');
@@ -251,6 +256,12 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
 
   const totalPat = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusDgi + tusCnss
     + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
+  // ✅ CORRECTIF — "Chg. salariales" Mois (bloc Cumuls) ne comptait que
+  // CNSS+ITS, sans les taxes custom (CAMU/TOL/CTAX_) — incohérent avec
+  // "Année" (ytdChargesSal, déjà élargi au même périmètre). Même notion
+  // des deux côtés désormais.
+  const totalChargesSalMois = cnssSal + itsAmount
+    + ctaxEmp.reduce((s: number, i: any) => s + nv(i.amount), 0);
 
   const congesDroits = nv(ytd.droitsConge ?? (payroll as any).congesDroits ?? 0);
   const congesPris   = nv(ytd.priseConge  ?? (payroll as any).congesPris   ?? 0);
@@ -260,7 +271,16 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
   const ytdGross  = nv(ytd.grossSalary);
   const ytdCnss   = nv(ytd.cnssSalarial);
   const ytdCnssEmp = nv(ytd.cnssEmployer);
+  const ytdIts    = nv(ytd.its);
   const ytdNetImp = nv(ytd.netImposable) || (ytdGross - ytdCnss);
+  // ✅ "Chg. salariales"/"Chg. patronales" doivent rester la même notion en
+  // Mois et en Année — le back expose maintenant
+  // ytd.totalChargesSalariales/totalChargesPatronales (cumul réel : CNSS +
+  // ITS + TUS + taxes custom CTAX_*/TOL/CAMU, comme côté Mois ligne 519).
+  // Repli CNSS+ITS / CNSS seul si un back plus ancien ne renvoie pas
+  // encore ces champs.
+  const ytdChargesSal = nv(ytd.totalChargesSalariales ?? (ytdCnss + ytdIts));
+  const ytdChargesPat = nv(ytd.totalChargesPatronales ?? ytdCnssEmp);
 
   const periodStart = `01/${String(payroll.month ?? 1).padStart(2,'0')}/${payroll.year}`;
   const periodEnd   = `${new Date(payroll.year, payroll.month, 0).getDate()}/${String(payroll.month ?? 1).padStart(2,'0')}/${payroll.year}`;
@@ -516,7 +536,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
             <tr>
               <td style={tdC({ fontWeight: 800 })}>Mois</td>
               <td style={tdR()}>{fmtZ(totalBrut)}</td>
-              <td style={tdR()}>{fmtD(cnssSal + itsAmount)}</td>
+              <td style={tdR()}>{fmtD(totalChargesSalMois)}</td>
               <td style={tdR()}>{fmtD(totalPat)}</td>
               <td style={tdR()}>{fmtZ(totalBrut - cnssSal)}</td>
               <td style={{ ...tdR({ borderRight: BD }) }}>{fmt((payroll.workedDays ?? 0) * 8) || '—'}</td>
@@ -524,8 +544,8 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
             <tr>
               <td style={{ ...tdC({ fontWeight: 800, borderTop: BD }) }}>Année</td>
               <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdGross)}</td>
-              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdCnss)}</td>
-              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdCnssEmp)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdChargesSal)}</td>
+              <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdChargesPat)}</td>
               <td style={{ ...tdR({ borderTop: BD }) }}>{fmtD(ytdNetImp)}</td>
               <td style={{ ...tdR({ borderTop: BD, borderRight: BD }) }}>—</td>
             </tr>

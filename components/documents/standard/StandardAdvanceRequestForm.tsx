@@ -2,17 +2,24 @@
 
 // ============================================================================
 // 📁 components/documents/standard/StandardAdvanceRequestForm.tsx
-// ✅ Reproduit le modèle "FORMULAIRE DE DEMANDE D'AVANCE SUR SALAIRE" (Arkia,
-//    Axis Oil, Petrodys, Geolane). "Mois de rattachement" (vu uniquement sur
-//    le PDF Axis) est affiché dès qu'on a la donnée — les autres entreprises
-//    au même modèle ne le remplissent simplement jamais, aucune branche
-//    séparée nécessaire.
+// ✅ Modèle "FORMULAIRE DE DEMANDE D'AVANCE SUR SALAIRE" (STANDARD) — calé sur
+//    le PDF Arkia : une seule page A4, filets dorés, titres de section dorés,
+//    en-tête du tableau gris, adresse en pied de page ("Siège Social : …").
+// ✅ Une seule page : hauteur fixe 296 mm ; les <Spacer /> se compriment si le
+//    contenu grandit (Matricule, Mois de rattachement, motif long…) et le pied
+//    de page reste ancré en bas.
+// ✅ Mise en page ET police posées par le <style> scopé (!important) : elles
+//    survivent à un `clone.style.cssText = …` (export PDF) qui effacerait le
+//    style inline de la racine.
+// ✅ Les éléments de classe "std-adv-*" gardent leurs couleurs et fonds : voir
+//    l'exception à ajouter dans lib/loan-print.ts (sinon impression/export les
+//    aplatissent en noir sur fond transparent).
 // ✅ Même simplification hiérarchique que le prêt : seule la ligne RH reflète
-//    une vraie décision ; Responsable direct / Direction Générale restent
-//    des cases à signer à la main.
+//    une vraie décision ; Responsable direct / Direction Générale restent des
+//    cases à signer à la main.
 // ============================================================================
 
-import React from 'react';
+import type { ReactNode } from 'react';
 
 interface StandardCompany {
   legalName: string;
@@ -50,163 +57,300 @@ export interface StandardAdvanceRequestFormData {
   status: string; // PENDING | APPROVED | REJECTED | PAID | DEDUCTED | CANCELLED
 }
 
+const FONT = `'Baskerville Old Face', Baskerville, Garamond, Georgia, 'Times New Roman', serif`;
+const SANS = `'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif`;
+const GOLD = '#b8860b';
+const GOLD_SOFT = '#c9a227';
+const RULE = '#d1d5db';
+
 const fmtDate = (d?: string | Date | null) => {
-  if (!d) return '……/……./……';
+  if (!d) return '';
   const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '……/……./……';
+  if (isNaN(date.getTime())) return '';
   return date.toLocaleDateString('fr-FR');
 };
-const fmtMoney = (n?: number | string) => (n != null && n !== '' ? Number(n).toLocaleString('fr-FR') : '…………');
+const fmtMoney = (n: number | string) => Number(n).toLocaleString('fr-FR');
+
+const cellBase = {
+  border: `1px solid ${RULE}`,
+  padding: '8px 8px 0',
+  verticalAlign: 'top',
+  fontSize: 10.5,
+  lineHeight: '14px',
+} as const;
 
 function Checkbox({ checked }: { checked: boolean }) {
   return (
-    <span style={{ display: 'inline-flex', width: 13, height: 13, border: '1px solid #1f2937', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, marginRight: 4 }}>
+    <span
+      className="std-adv-black"
+      style={{
+        display: 'inline-block',
+        width: 10,
+        height: 10,
+        boxSizing: 'border-box',
+        border: '1px solid #9ca3af',
+        overflow: 'hidden', // baseline identique case cochée / vide
+        textAlign: 'center',
+        fontSize: 8,
+        fontWeight: 700,
+        lineHeight: '8px',
+        verticalAlign: '-1px',
+      }}
+    >
       {checked ? '✕' : ''}
     </span>
   );
 }
 
-function Field({ label, value }: { label: string; value: React.ReactNode }) {
+function Decision({ favorable, unfavorable }: { favorable: boolean; unfavorable: boolean }) {
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ fontWeight: 700, fontSize: 12.5 }}>{label}</div>
-      <div style={{ borderBottom: '1px solid #9ca3af', minHeight: 15, paddingTop: 1, fontSize: 12.5 }}>{value ?? ''}</div>
+    <span className="std-adv-pale" style={{ fontStyle: 'italic' }}>
+      <Checkbox checked={favorable} /> Favorable
+      <span style={{ marginLeft: 10 }}>
+        <Checkbox checked={unfavorable} /> Défavorable
+      </span>
+    </span>
+  );
+}
+
+function Heading({ children, mt }: { children: ReactNode; mt: number }) {
+  return (
+    <h2
+      className="std-adv-gold"
+      style={{ margin: `${mt}px 0 0`, fontSize: 12.5, fontWeight: 700, letterSpacing: 0.3, lineHeight: '15px' }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+// Ligne "libellé gras + valeur" soulignée d'un filet gris (27 px de haut).
+function Row({ label, value, mt = 0 }: { label: string; value?: ReactNode; mt?: number }) {
+  return (
+    <div
+      style={{
+        marginTop: mt,
+        display: 'flex',
+        alignItems: 'baseline',
+        padding: '5px 0',
+        borderBottom: `1px solid ${RULE}`,
+        fontSize: 12.5,
+        lineHeight: '16px',
+      }}
+    >
+      <span className="std-adv-black" style={{ width: 180, flexShrink: 0, fontWeight: 700 }}>{label}</span>
+      <span className="std-adv-body" style={{ flex: 1, minWidth: 0 }}>{value ?? ''}</span>
     </div>
   );
 }
+
+// Espace vertical compressible : taille nominale h, minimum 10 px.
+const Spacer = ({ h }: { h: number }) => (
+  <div aria-hidden style={{ flex: `0 1 ${h}px`, minHeight: 10 }} />
+);
 
 export default function StandardAdvanceRequestForm({ data, id }: { data: StandardAdvanceRequestFormData; id?: string }) {
   const companyName = data.company.tradeName || data.company.legalName || 'Entreprise';
   const validated = data.status === 'APPROVED' || data.status === 'PAID' || data.status === 'DEDUCTED';
   const rejected = data.status === 'REJECTED';
+  const hasAmount = data.amount != null && data.amount !== '';
+  const requestedDate = fmtDate(data.requestedAt);
+
+  const addressLine = [
+    data.company.address,
+    data.company.city,
+    data.company.country ? COUNTRY_LABELS[data.company.country] || data.company.country : null,
+  ].filter(Boolean).join(', ');
+
+  const approvers = [
+    { fn: 'Responsable direct', h: 33, fav: false, unf: false, cachet: false },
+    { fn: 'Direction des Ressources Humaines', h: 33, fav: validated, unf: rejected, cachet: true },
+    { fn: 'Direction Générale', h: 48, fav: false, unf: false, cachet: false },
+  ];
 
   return (
-    <div id={id} style={{ width: '210mm', minHeight: '297mm', margin: '0 auto', background: '#fff', color: '#111827', fontFamily: 'Georgia, "Times New Roman", serif', padding: '12mm 15mm', boxSizing: 'border-box' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+    <div id={id} className="std-adv-doc">
+      <style>{`
+        .std-adv-doc {
+          width: 210mm !important; height: 296mm !important; min-height: 0 !important; /* 296 et non 297 : évite une 2e page blanche */
+          margin: 0 auto !important; padding: 6mm 18.5mm 4.4mm !important; box-sizing: border-box !important;
+          display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          background: #fff !important; color: #111827 !important;
+          font-family: ${FONT} !important; line-height: 1.2 !important;
+          break-inside: avoid; page-break-inside: avoid;
+        }
+        .std-adv-doc, .std-adv-doc * { color-scheme: light !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .std-adv-doc > *:not([aria-hidden]) { flex-shrink: 0; }
+        .std-adv-doc td, .std-adv-doc th { background-color: transparent !important; }
+        .std-adv-doc th.std-adv-th { background-color: #a6a6a6 !important; }
+        .std-adv-doc .std-adv-black { color: #111827 !important; }
+        .std-adv-doc .std-adv-body  { color: #374151 !important; }
+        .std-adv-doc .std-adv-gray  { color: #4b5563 !important; }
+        .std-adv-doc .std-adv-light { color: #6b7280 !important; }
+        .std-adv-doc .std-adv-pale  { color: #8b9098 !important; }
+        .std-adv-doc .std-adv-gold  { color: #a1781a !important; }
+        .std-adv-doc .std-adv-title { font-family: ${SANS} !important; }
+      `}</style>
+
+      {/* ── En-tête : logo à gauche, référence à droite (hauteur fixe → filet doré à ~39 mm) ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', height: '32.9mm' }}>
         <div>
           {data.company.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.company.logo} alt={companyName} style={{ height: 64, objectFit: 'contain' }} />
+            <img src={data.company.logo} alt={companyName} style={{ height: 88, maxWidth: 240, objectFit: 'contain' }} />
           ) : (
-            <div style={{ fontWeight: 700, fontSize: 20 }}>{companyName}</div>
+            <div className="std-adv-black" style={{ fontWeight: 700, fontSize: 20 }}>{companyName}</div>
           )}
-          <div style={{ marginTop: 6, fontSize: 9.5, color: '#4b5563', lineHeight: 1.5 }}>
-            {data.company.address && <div>{data.company.address}</div>}
-            {(data.company.city || data.company.country) && (
-              <div>
-                {data.company.city}{data.company.city && data.company.country ? ', ' : ''}
-                {data.company.country ? (COUNTRY_LABELS[data.company.country] || data.company.country) : ''}
-              </div>
-            )}
-            {(data.company.phone || data.company.email) && (
-              <div>
-                {data.company.phone && <>Tél. : {data.company.phone}</>}
-                {data.company.phone && data.company.email ? ' · ' : ''}
-                {data.company.email && <>Email : {data.company.email}</>}
-              </div>
-            )}
-          </div>
         </div>
-        <div style={{ textAlign: 'right', fontSize: 11 }}>
-          <div style={{ fontWeight: 700 }}>Réf. : {data.reference || '—'}</div>
-          <div style={{ fontStyle: 'italic', color: '#374151' }}>Direction des Ressources Humaines</div>
+        {/* Retrait à droite mesuré sur le modèle Arkia */}
+        <div style={{ paddingTop: 50, paddingRight: 58, textAlign: 'right' }}>
+          <div className="std-adv-black" style={{ fontSize: 11, fontWeight: 700, lineHeight: '16px' }}>Réf. : {data.reference || '—'}</div>
+          <div className="std-adv-gray" style={{ fontSize: 11.5, lineHeight: '16px' }}>Direction des Ressources Humaines</div>
         </div>
       </div>
 
-      <div style={{ borderTop: '1.5px solid #92400e', margin: '0 0 14px' }} />
-      <h1 style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: 1, margin: '0 0 4px' }}>
-        FORMULAIRE DE DEMANDE D'AVANCE SUR SALAIRE
+      {/* ── Filets dorés, titre, sous-titre ── */}
+      <div style={{ borderTop: `2px solid ${GOLD}` }} />
+      <div style={{ marginTop: 20, borderTop: `1px solid ${GOLD_SOFT}` }} />
+
+      <h1
+        className="std-adv-title std-adv-black"
+        style={{
+          margin: '16px 0 0', height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          textAlign: 'center', fontSize: 20, lineHeight: '24px', fontWeight: 700, letterSpacing: 1.6,
+        }}
+      >
+        <span>{"FORMULAIRE DE DEMANDE D'AVANCE SUR SALAIRE"}</span>
       </h1>
-      <div style={{ borderTop: '1px solid #92400e', margin: '0 0 8px' }} />
-      <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#6b7280', fontSize: 10.5, margin: '0 0 10px' }}>
+
+      <div style={{ marginTop: 17, borderTop: `1px solid ${GOLD_SOFT}` }} />
+
+      <p className="std-adv-light" style={{ margin: '4px 0 0', textAlign: 'center', fontStyle: 'italic', fontSize: 10.5, lineHeight: '13px' }}>
         Avance sur salaire — à usage interne
       </p>
 
-      <p style={{ fontSize: 11.5, marginBottom: 12 }}>
+      <p className="std-adv-body" style={{ margin: '13px 0 0', fontSize: 12.5, lineHeight: '19px', textAlign: 'justify' }}>
         À compléter par le/la salarié(e) demandeur(se) et à remettre à la Direction des Ressources Humaines, accompagné
         des pièces justificatives requises.
       </p>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 6px' }}>
-        IDENTITÉ DU DEMANDEUR
-      </h2>
-      <Field label="Nom et prénom" value={`${data.employee.lastName} ${data.employee.firstName}`.trim()} />
-      <Field label="Matricule" value={data.employee.employeeNumber} />
-      <Field label="Poste occupé" value={data.employee.position} />
-      <Field label="Téléphone" value={data.employee.phone} />
+      {/* ── Identité ── */}
+      <Heading mt={17}>IDENTITÉ DU DEMANDEUR</Heading>
+      <Row mt={5} label="Nom et prénom" value={`${data.employee.lastName} ${data.employee.firstName}`.trim()} />
+      {data.employee.employeeNumber && <Row label="Matricule" value={data.employee.employeeNumber} />}
+      <Row label="Poste occupé" value={data.employee.position} />
+      <Row label="Téléphone" value={data.employee.phone} />
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '12px 0 6px' }}>
-        OBJET DE LA DEMANDE
-      </h2>
-      <Field label="Montant de l'avance sollicitée" value={`${fmtMoney(data.amount)} FCFA`} />
+      {/* ── Objet de la demande ── */}
+      <Spacer h={31} />
+      <Heading mt={0}>OBJET DE LA DEMANDE</Heading>
+      <Row mt={5} label="Montant de l'avance sollicitée" value={hasAmount ? `${fmtMoney(data.amount)} FCFA` : ''} />
       {data.month && data.year && (
-        <Field label="Mois de rattachement" value={`${MONTH_LABELS[data.month - 1] || data.month} ${data.year}`} />
+        <Row label="Mois de rattachement" value={`${MONTH_LABELS[data.month - 1] || data.month} ${data.year}`} />
       )}
-      <Field
+      <Row
+        mt={12}
         label="Mode de récupération"
         value={data.recoverViaPayroll == null ? '' : data.recoverViaPayroll ? 'Prélèvement sur salaire' : 'Autre'}
       />
-      <div style={{ fontSize: 11.5, marginBottom: 10 }}>
-        <strong>Motif de la demande :</strong> {data.reason || ''}
+
+      <div style={{ marginTop: 10, display: 'flex', alignItems: 'baseline', fontSize: 12.5, lineHeight: '16px' }}>
+        <span className="std-adv-body" style={{ flexShrink: 0, marginRight: 6 }}>Motif de la demande :</span>
+        {data.reason ? (
+          <span className="std-adv-black" style={{ flex: 1, minWidth: 0 }}>{data.reason}</span>
+        ) : (
+          <span className="std-adv-black" aria-hidden style={{ flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+            {'…'.repeat(160)}
+          </span>
+        )}
       </div>
 
-      <p style={{ fontSize: 10.5, lineHeight: 1.4, margin: '0 0 12px' }}>
+      <p className="std-adv-body" style={{ margin: '16px 0 0', fontSize: 12.5, lineHeight: '19px', textAlign: 'justify' }}>
         Je reconnais que cette avance sera déduite de mon salaire selon les modalités approuvées par la Direction,
         conformément au règlement intérieur en vigueur.
       </p>
 
-      <div style={{ fontSize: 11, marginBottom: 6 }}>Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt)}</div>
-      <div style={{ fontSize: 11, fontWeight: 700, marginBottom: 14 }}>Signature du demandeur : ___________________________</div>
+      <Spacer h={26} />
+      <div className="std-adv-body" style={{ fontSize: 12.5, lineHeight: '16px' }}>
+        Fait à {data.company.city || 'Pointe-Noire'}, le{' '}
+        {requestedDate ? (
+          <span className="std-adv-black">{requestedDate}</span>
+        ) : (
+          <span className="std-adv-pale" style={{ fontStyle: 'italic' }}>……/……../{new Date().getFullYear()}</span>
+        )}
+      </div>
 
-      <h2 style={{ color: '#92400e', fontSize: 13, fontWeight: 700, letterSpacing: 0.5, margin: '10px 0 6px' }}>
-        AVIS HIÉRARCHIQUE ET DÉCISION
-      </h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
+      <Spacer h={36} />
+      <div className="std-adv-black" style={{ fontSize: 12.5, lineHeight: '16px', fontWeight: 700 }}>
+        Signature du demandeur : <span style={{ fontWeight: 400 }}>{'_'.repeat(32)}</span>
+      </div>
+
+      {/* ── Avis hiérarchique et décision ── */}
+      <Spacer h={41} />
+      <Heading mt={0}>AVIS HIÉRARCHIQUE ET DÉCISION</Heading>
+
+      <table style={{ width: '100%', marginTop: 25, borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+        <colgroup>
+          <col style={{ width: '32%' }} />
+          <col style={{ width: '30.5%' }} />
+          <col style={{ width: '37.5%' }} />
+        </colgroup>
         <thead>
-          <tr>
-            <th style={{ border: '1px solid #1f2937', padding: '5px 10px', textAlign: 'left', background: '#f3f4f6' }}>Fonction</th>
-            <th style={{ border: '1px solid #1f2937', padding: '5px 10px', textAlign: 'left', background: '#f3f4f6' }}>Nom et visa</th>
-            <th style={{ border: '1px solid #1f2937', padding: '5px 10px', textAlign: 'left', background: '#f3f4f6' }}>Décision</th>
+          <tr style={{ height: 23 }}>
+            {['Fonction', 'Nom et visa', 'Décision'].map((t) => (
+              <th
+                key={t}
+                className="std-adv-th std-adv-black"
+                style={{ border: `1px solid ${RULE}`, padding: '4px 8px', textAlign: 'left', fontSize: 11, fontWeight: 700, lineHeight: '14px' }}
+              >
+                {t}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>Responsable direct</td>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>&nbsp;</td>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
-              <Checkbox checked={false} /> Favorable &nbsp;&nbsp;<Checkbox checked={false} /> Défavorable
-            </td>
-          </tr>
-          <tr>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>Direction des Ressources Humaines</td>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
-              {validated && data.company.cachetUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 34, objectFit: 'contain' }} />
-              ) : (
-                '\u00A0'
-              )}
-            </td>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
-              <Checkbox checked={validated} /> Favorable &nbsp;&nbsp;<Checkbox checked={rejected} /> Défavorable
-            </td>
-          </tr>
-          <tr>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>Direction Générale</td>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>&nbsp;</td>
-            <td style={{ border: '1px solid #1f2937', padding: '6px 10px' }}>
-              <Checkbox checked={false} /> Favorable &nbsp;&nbsp;<Checkbox checked={false} /> Défavorable
-            </td>
-          </tr>
+          {approvers.map((r) => {
+            const showCachet = r.cachet && validated && !!data.company.cachetUrl;
+            return (
+              <tr key={r.fn} style={{ height: r.h }}>
+                <td className="std-adv-gray" style={cellBase}>{r.fn}</td>
+                <td className="std-adv-gray" style={showCachet ? { ...cellBase, padding: '3px 8px', verticalAlign: 'middle' } : cellBase}>
+                  {showCachet ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.company.cachetUrl as string} alt="Cachet" style={{ height: 26, objectFit: 'contain' }} />
+                  ) : null}
+                </td>
+                <td style={cellBase}>
+                  <Decision favorable={r.fav} unfavorable={r.unf} />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
-      <div style={{ marginTop: 10, fontSize: 11.5 }}>
-        Montant approuvé : {validated ? `${fmtMoney(data.amount)} FCFA` : '……………………………………………………..'}
+      <Spacer h={48} />
+      <div className="std-adv-body" style={{ fontSize: 12.5, lineHeight: '16px' }}>
+        Montant approuvé :{' '}
+        {validated && hasAmount ? (
+          <span className="std-adv-black">{fmtMoney(data.amount)} FCFA</span>
+        ) : (
+          <span className="std-adv-pale">{'…'.repeat(21)}</span>
+        )}
       </div>
 
-      <div style={{ marginTop: 16, textAlign: 'center', fontSize: 9, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-        {data.company.documentFooterText || `${companyName} — Document confidentiel à usage exclusif du destinataire`}
+      {/* ── Pied de page ancré en bas : adresse du siège, puis filet ── */}
+      <div style={{ marginTop: 'auto' }}>
+        {data.company.documentFooterText ? (
+          <div className="std-adv-gray" style={{ marginBottom: 3, textAlign: 'center', fontSize: 8, lineHeight: '11px', whiteSpace: 'pre-line' }}>
+            {data.company.documentFooterText}
+          </div>
+        ) : addressLine ? (
+          <div className="std-adv-gray" style={{ marginBottom: 3, textAlign: 'center', fontSize: 8, lineHeight: '11px' }}>
+            <strong>Siège Social :</strong> {addressLine}
+          </div>
+        ) : null}
+        <div style={{ borderTop: `1px solid ${RULE}` }} />
       </div>
     </div>
   );

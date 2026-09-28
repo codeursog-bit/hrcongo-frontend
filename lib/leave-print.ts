@@ -53,9 +53,14 @@ ${styleInlines}
      il devient quasi invisible une fois forcé sur fond blanc ici — d'où le
      texte "délavé" à l'impression/export (même bug identifié sur les prêts,
      cf. loan-print.ts). On impose une couleur de texte sûre à tout le
-     contenu imprimé, quelle que soit la classe/le thème d'origine.
+     contenu imprimé, quelle que soit la classe/le thème d'origine — SAUF
+     aux éléments du formulaire lui-même (classes "std-*" : std-abs-*,
+     std-adv-*, std-loan-*, std-leave-*), qui verrouillent déjà leurs
+     propres couleurs de marque (filets, titres colorés…) via leur <style>
+     scopé en !important. Sans cette exception, ce garde-fou les écrasait
+     en noir uniforme.
   */
-  #leave-print-target, #leave-print-target * {
+  #leave-print-target, #leave-print-target *:not([class*="std-"]) {
     color: #111 !important;
     background-color: transparent !important;
   }
@@ -106,7 +111,11 @@ export async function downloadLeaveDocumentPDF(elementId: string, filename: stri
   // de texte d'origine et d'autres styles inline du composant source, qui
   // retomberaient alors sur les styles hérités du thème (souvent clair sur
   // fond clair / invisible). On ajoute seulement ce qui est nécessaire pour
-  // l'export, par-dessus le style existant du clone.
+  // l'export, par-dessus le style existant du clone. Sur les formulaires
+  // "std-leave-*", ces propriétés (width/height/padding…) sont déjà posées
+  // en !important par le <style> scopé du composant — ces setProperty()
+  // sans !important n'ont alors aucun effet, ce qui est voulu : on n'écrase
+  // pas la mise en page calée du formulaire.
   clone.style.setProperty('width', `${pageWidthMm}mm`);
   clone.style.setProperty('min-height', `${pageHeightMm}mm`);
   clone.style.setProperty('padding', isLandscape ? '10mm 12mm' : '14mm 16mm');
@@ -123,10 +132,13 @@ export async function downloadLeaveDocumentPDF(elementId: string, filename: stri
   // sombre, le site étant en dark mode par défaut). Ces enfants gardaient
   // leur couleur claire, invisible une fois forcés sur fond blanc — d'où le
   // texte "délavé" (même bug identifié sur les prêts, cf. loan-print.ts).
-  // On impose donc une couleur sûre à TOUT le clone, pas seulement sa racine.
+  // On impose donc une couleur sûre à TOUT le clone, pas seulement sa racine
+  // — SAUF aux éléments "std-*" du formulaire, qui verrouillent déjà leurs
+  // propres couleurs de marque (voir le commentaire équivalent dans
+  // printLeaveDocument ci-dessus).
   const styleOverride = document.createElement('style');
   styleOverride.textContent = `
-    #pdf-export-target, #pdf-export-target * { color: #1f2937 !important; background-color: transparent !important; }
+    #pdf-export-target, #pdf-export-target *:not([class*="std-"]) { color: #1f2937 !important; background-color: transparent !important; }
     #pdf-export-target { background-color: #fff !important; }
     #pdf-export-target img { background-color: initial !important; }
   `;

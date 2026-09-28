@@ -237,7 +237,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   // jamais silencieusement du bulletin.
   const claimed = new Set<any>(
     [
-      cnssSalItem, itsItem, absCongeItem,
+      cnssSalItem, itsItem, absCongeItem, findItem('ABS_DEDUCT'),
       cnssEmpPensionItem, cnssEmpFamItem, cnssEmpAtItem, tusDgiItem, tusCnssItem,
       ...ctaxSalItems, ...ctaxPatItems, ...loanItemsList, ...advanceItemsList, ...companyDeductions,
     ].filter(Boolean).map((i: any) => i.id ?? i.code),
@@ -264,18 +264,31 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   // (payroll.totalDeductions) — cotisations ET dettes du salarié confondues
   // (prêts, avances, retenues diverses), puisque tout ça réduit bien le net
   // à payer. Aucun recalcul ici.
-  const totalPat            = nv(payroll.totalEmployerCost);
   const totalRetenuesFinal  = nv(payroll.totalDeductions);
+
+  // ⚠️ CORRECTIF — payroll.totalEmployerCost N'EST PAS "Charges
+  // patronales" : c'est un COÛT (grossSalary + charges), comme le confirme
+  // le calculateur lui-même ("totalEmployerCost = grossSalary + cnssEmployer
+  // + tusTotal + employerCustomTaxTotal", log "COÛT EMP"). Vérifié sur 3
+  // bulletins réels : totalEmployerCost = Total Brut + vraies charges
+  // patronales, à la centaine de FCFA près, à chaque fois. La vraie charge
+  // patronale = CNSS employeur + TUS + taxes custom patronales — trois
+  // champs déjà stockés tels quels sur le bulletin, jamais du salaire.
+  const totalPat = nv(payroll.cnssEmployer) + nv((payroll as any).tusTotal) + nv((payroll as any).employerCustomTaxTotal);
 
   // ✅ "Total Cotisations" (milieu de tableau) et "Charges salariales"
   // (bloc Cumuls) sont un concept différent : uniquement les cotisations/
   // taxes (CNSS, ITS, TOL/CAMU/CTAX_…) — PAS les dettes du salarié
   // (prêts, avances, retenues diverses type pharmacie), qui n'en sont pas
-  // vraiment. Le back ne distingue pas les deux dans totalDeductions, donc
-  // ce sous-total est un filtre + une somme des montants déjà fournis par
-  // le back (jamais un taux ou un montant recalculé/deviné).
-  const totalChargesSalariales = cnssSal + itsAmount + nv(absCongeItem?.amount)
-    + ctaxSalItems.reduce((s: number, i: any) => s + nv(i.amount), 0);
+  // vraiment. CNSS + ITS + toutes les taxes custom salariales sont déjà
+  // sommées par le back dans payroll.employeeCustomTaxTotal (+ cnssSalarial
+  // + its) — on lit ces 3 champs directement plutôt que de recomposer à
+  // partir des items un par un (même principe que totalPat ci-dessus).
+  // ABS_CONGE reste ajouté à part : géré hors calculateur (voir
+  // payroll-generator.service.ts), donc jamais inclus dans
+  // employeeCustomTaxTotal.
+  const totalChargesSalariales = nv(payroll.cnssSalarial) + nv(payroll.its)
+    + nv((payroll as any).employeeCustomTaxTotal) + nv(absCongeItem?.amount);
 
   // ✅ "TOTAL GAINS" (rubrique 9900) n'existe pas comme champ unique côté
   // back : c'est, comme sur le fichier Excel source, la somme visuelle du
@@ -290,9 +303,15 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   // l'objet ytd est absent, les cellules "Annuel" restent vides).
   const hasYtd     = (payroll as any).ytd != null;
   const ytdGross     = hasYtd ? nv(ytd.grossSalary)   : null;
-  const ytdCnss       = hasYtd ? nv(ytd.cnssSalarial)   : null;
-  const ytdCnssEmp   = hasYtd ? nv(ytd.cnssEmployer)   : null;
   const ytdIts         = hasYtd ? nv(ytd.its)             : null;
+  // ✅ "Charges salariales"/"Charges patronales" doivent rester la MÊME
+  // notion en Mensuel et en Annuel — le back expose maintenant
+  // ytd.totalChargesSalariales/totalChargesPatronales (cumul réel de
+  // totalDeductions/totalEmployerCost sur l'année : CNSS + ITS + TUS +
+  // toutes les taxes custom CTAX_*/TOL/CAMU, comme le Mensuel). Repli sur
+  // CNSS+ITS seul si un back plus ancien ne renvoie pas encore ces champs.
+  const ytdCnss       = hasYtd ? nv(ytd.totalChargesSalariales ?? (nv(ytd.cnssSalarial) + nv(ytd.its))) : null;
+  const ytdCnssEmp   = hasYtd ? nv(ytd.totalChargesPatronales ?? ytd.cnssEmployer) : null;
   const ytdBaseConge = hasYtd ? nv(ytd.baseConge)   : null;
 
   // ✅ "Net Imposable" / "Base Congé" / "Jrs Congé" — champs optionnels
@@ -491,12 +510,19 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               ))}
 
               {/* TUS — 2 lignes distinctes DGI + CNSS (part patronale) —
-                  libellés courts, taux affiché dans la colonne dédiée */}
+                  taux fixes légaux (2,025% / 5,475%), affichés en dur comme
+                  dans les 3 autres gabarits (BulletinRenderer/Clarifie/
+                  Classique) : ce sont des taux réglementaires qui ne
+                  changent que sur décision légale (pas par salarié/mois),
+                  donc pas besoin de les relire depuis payroll_items.rate —
+                  colonne stockée en DECIMAL(10,4), insuffisante pour les
+                  5 décimales de 0.02025/0.05475 (arrondi visible sinon :
+                  2,03 / 5,48 au lieu de 2,025 / 5,475). */}
               {tusDgi  > 0 && (
-                <Row label="TUS DGI" tauxP={itemTaux(tusDgiItem) || '2,025'} retP={fmt(tusDgi)} />
+                <Row label="TUS DGI" tauxP="2,025" retP={fmt(tusDgi)} />
               )}
               {tusCnss > 0 && (
-                <Row label="TUS CNSS" tauxP={itemTaux(tusCnssItem) || '5,475'} retP={fmt(tusCnss)} />
+                <Row label="TUS CNSS" tauxP="5,475" retP={fmt(tusCnss)} />
               )}
               {/* Filet de sécurité — toute charge patronale configurable non
                   couverte par les codes ci-dessus (taxe custom avec code

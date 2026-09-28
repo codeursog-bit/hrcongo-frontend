@@ -2,20 +2,34 @@
 
 // ============================================================================
 // 📁 components/documents/standard/StandardLeaveRequestForm.tsx
-// ✅ Reproduit à l'identique le modèle "FORMULAIRE DE DEPART EN CONGE" fourni
-//    par les clients Arkia / Axis Oil / Petrodys / Geolane — c'est le MÊME
-//    gabarit chez les 4 (mêmes tableaux, mêmes libellés) : seuls le logo, la
-//    raison sociale et le pied de page changent. Un seul composant sert donc
-//    pour n'importe quelle entreprise ayant choisi ce modèle — rien n'est en
-//    dur, tout vient de `company` (déjà multi-entreprise dans l'app).
-// ✅ Sélectionné via company.documentTemplate === 'STANDARD' (voir
-//    parametres/entreprise → "Modèle de document" → "Modèle 2"), exactement
-//    comme le modèle Orca existant. N'importe quelle entreprise dont le
-//    service RH utilise ce type de formulaire peut choisir ce même modèle —
-//    il n'est pas spécifique à un seul client.
+// ✅ Modèle "FORMULAIRE DE DEPART EN CONGE" (STANDARD) — calé sur le PDF
+//    Geolane : un seul filet fin au-dessus du titre, un filet fin en dessous,
+//    titre noir centré, sections "IDENTITÉ DU SALARIÉ" / "OBJET DE LA
+//    DEMANDE" en bleu-nuit soulignées d'un filet pleine largeur, section
+//    "Signature" en noir avec un simple soulignement de texte, 4 tableaux à
+//    bordures noires fines (colonne libellé ~38 %), pied de page en gras
+//    centré (adresse du site).
+// ✅ Reste valable pour Arkia / Axis Oil / Petrodys (même gabarit chez les 4,
+//    seuls logo/raison sociale/pied de page changent) — rien n'est en dur,
+//    tout vient de `company`.
+// ✅ Une seule page A4 : hauteur fixe 296 mm ; les <Spacer /> se compriment si
+//    le contenu grandit (Matricule long, Service/Direction long…) et le pied
+//    de page reste ancré en bas.
+// ✅ Mise en page ET police posées par le <style> scopé (!important) : elles
+//    survivent à un `clone.style.cssText = …` (export PDF) qui effacerait le
+//    style inline de la racine.
+// ✅ Les éléments de classe "std-leave-*" gardent leurs couleurs et fonds :
+//    voir l'exception à ajouter dans lib/loan-print.ts, même mécanisme que
+//    std-adv-*/std-loan-* (sinon impression/export les aplatissent en noir
+//    sur fond transparent).
+// ✅ Hiérarchie du papier d'origine conservée : "Le Salarié" et "Le
+//    Responsable Hiérarchique" restent des cases à signer à la main ; seule
+//    la ligne "Les Ressources Humaines" reflète une vraie décision (cachet
+//    si validé) ; "Signature de la Direction Générale" reste à signer à la
+//    main, comme sur le papier — pas de rôle DG dans le workflow congés.
 // ============================================================================
 
-import React from 'react';
+import type { ReactNode } from 'react';
 
 // Congo (République du) est la valeur par défaut du champ `country` en base
 // (@default("CG")) — les autres codes s'affichent tels quels si un client
@@ -39,9 +53,9 @@ interface StandardCompany {
 
 export interface StandardLeaveRequestFormData {
   id?: string;
-  /** Code d'en-tête du document (ex. "ARK-010-2026/FDA/DRH"). Optionnel —
-   *  à défaut, la référence de la demande elle-même est affichée (plus
-   *  utile : elle identifie CE dossier précis, pas seulement le modèle). */
+  /** Code d'en-tête du document (ex. "GLN-AMC-DRH-010"). Optionnel — à défaut,
+   *  la référence de la demande elle-même est affichée (plus utile : elle
+   *  identifie CE dossier précis, pas seulement le modèle). */
   documentReferenceCode?: string;
   reference?: string;
   company: StandardCompany;
@@ -60,35 +74,50 @@ export interface StandardLeaveRequestFormData {
   requestedAt?: string | Date;
 }
 
+const FONT = `'Baskerville Old Face', Baskerville, Garamond, Georgia, 'Times New Roman', serif`;
+const RULE = '#9ca3af';
+const TEAL = '#1b4f4f';
+
 const fmtDate = (d?: string | Date | null) => {
-  if (!d) return '……/……./……';
+  if (!d) return '';
   const date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '……/……./……';
+  if (isNaN(date.getTime())) return '';
   return date.toLocaleDateString('fr-FR');
 };
+const PLACEHOLDER_DATE = '……/……./……';
 
-function Row({ label, value, tall }: { label: string; value: React.ReactNode; tall?: boolean }) {
+function Heading({ children, underline = true }: { children: ReactNode; underline?: boolean }) {
   return (
-    <tr>
+    <h2
+      className="std-leave-teal"
+      style={{
+        margin: 0,
+        paddingBottom: underline ? 5 : 0,
+        borderBottom: underline ? `1px solid ${TEAL}` : 'none',
+        fontSize: 13.5,
+        fontWeight: 700,
+        letterSpacing: 0.2,
+        lineHeight: '17px',
+      }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+// Ligne "libellé | valeur" d'un tableau à bordures noires fines.
+function Row({ label, value, h = 30 }: { label: string; value: ReactNode; h?: number }) {
+  return (
+    <tr style={{ height: h }}>
       <td
-        style={{
-          border: '1px solid #1f2937',
-          padding: '8px 12px',
-          fontWeight: 700,
-          width: '38%',
-          verticalAlign: tall ? 'top' : 'middle',
-        }}
+        className="std-leave-black"
+        style={{ border: '1px solid #1f2937', padding: '6px 10px', width: '38%', fontWeight: 700, fontSize: 12, verticalAlign: h > 30 ? 'top' : 'middle' }}
       >
         {label}
       </td>
       <td
-        style={{
-          border: '1px solid #1f2937',
-          padding: '8px 12px',
-          minHeight: tall ? 54 : undefined,
-          height: tall ? 54 : undefined,
-          verticalAlign: 'top',
-        }}
+        className="std-leave-black"
+        style={{ border: '1px solid #1f2937', padding: '6px 10px', fontSize: 12, verticalAlign: h > 30 ? 'top' : 'middle' }}
       >
         {value}
       </td>
@@ -96,34 +125,47 @@ function Row({ label, value, tall }: { label: string; value: React.ReactNode; ta
   );
 }
 
+const tableStyle = { width: '100%', borderCollapse: 'collapse' as const };
+
+// Espace vertical compressible : taille nominale h, minimum 8 px.
+const Spacer = ({ h }: { h: number }) => (
+  <div aria-hidden style={{ flex: `0 1 ${h}px`, minHeight: 8 }} />
+);
+
 export default function StandardLeaveRequestForm({ data, id }: { data: StandardLeaveRequestFormData; id?: string }) {
   const companyName = data.company.tradeName || data.company.legalName || 'Entreprise';
   const validated = data.status === 'APPROVED';
+  const requestedDate = fmtDate(data.requestedAt);
 
   return (
-    <div
-      id={id}
-      style={{
-        width: '210mm',
-        minHeight: '297mm',
-        margin: '0 auto',
-        background: '#fff',
-        color: '#111827',
-        fontFamily: 'Georgia, "Times New Roman", serif',
-        padding: '16mm 18mm',
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* En-tête : logo à gauche, référence + direction à droite */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+    <div id={id} className="std-leave-doc">
+      <style>{`
+        .std-leave-doc {
+          width: 210mm !important; height: 296mm !important; min-height: 0 !important; /* 296 et non 297 : évite une 2e page blanche */
+          margin: 0 auto !important; padding: 8mm 18mm 5mm !important; box-sizing: border-box !important;
+          display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          background: #fff !important; color: #111827 !important;
+          font-family: ${FONT} !important; line-height: 1.2 !important;
+          break-inside: avoid; page-break-inside: avoid;
+        }
+        .std-leave-doc, .std-leave-doc * { color-scheme: light !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .std-leave-doc > *:not([aria-hidden]) { flex-shrink: 0; }
+        .std-leave-doc td, .std-leave-doc th { background-color: transparent !important; }
+        .std-leave-doc .std-leave-black { color: #111827 !important; }
+        .std-leave-doc .std-leave-gray  { color: #4b5563 !important; }
+        .std-leave-doc .std-leave-teal  { color: ${TEAL} !important; }
+      `}</style>
+
+      {/* ── En-tête : logo + raison sociale + coordonnées à gauche, référence à droite ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', height: '25.5mm' }}>
         <div>
           {data.company.logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.company.logo} alt={companyName} style={{ height: 64, objectFit: 'contain' }} />
+            <img src={data.company.logo} alt={companyName} style={{ height: 52, objectFit: 'contain' }} />
           ) : (
-            <div style={{ fontWeight: 700, fontSize: 20 }}>{companyName}</div>
+            <div className="std-leave-black" style={{ fontWeight: 700, fontSize: 20 }}>{companyName}</div>
           )}
-          <div style={{ marginTop: 6, fontSize: 9.5, color: '#4b5563', lineHeight: 1.5 }}>
+          <div className="std-leave-gray" style={{ marginTop: 5, fontSize: 9, lineHeight: '13px' }}>
             {data.company.address && <div>{data.company.address}</div>}
             {(data.company.city || data.company.country) && (
               <div>
@@ -141,89 +183,91 @@ export default function StandardLeaveRequestForm({ data, id }: { data: StandardL
             )}
           </div>
         </div>
-        <div style={{ textAlign: 'right', fontSize: 11 }}>
-          <div style={{ fontWeight: 700 }}>
+        <div style={{ textAlign: 'right' }}>
+          <div className="std-leave-black" style={{ fontWeight: 700, fontSize: 11 }}>
             Réf. : {data.documentReferenceCode || data.reference || '—'}
           </div>
-          <div style={{ fontStyle: 'italic', color: '#374151' }}>Direction des Ressources Humaines</div>
+          <div className="std-leave-gray" style={{ marginTop: 3, fontStyle: 'italic', fontSize: 10 }}>Direction des Ressources Humaines</div>
         </div>
       </div>
 
-      <div style={{ borderTop: '1.5px solid #92400e', margin: '0 0 14px' }} />
-
+      {/* ── Filet, titre, filet ── */}
+      <div style={{ borderTop: `1px solid ${RULE}` }} />
       <h1
-        style={{
-          textAlign: 'center',
-          fontSize: 21,
-          fontWeight: 700,
-          letterSpacing: 1,
-          margin: '0 0 6px',
-        }}
+        className="std-leave-black"
+        style={{ margin: '14px 0 0', textAlign: 'center', fontSize: 20, fontWeight: 700, letterSpacing: 0.8, lineHeight: 1.2 }}
       >
         FORMULAIRE DE DEPART EN CONGE
       </h1>
+      <div style={{ marginTop: 12, borderTop: `1px solid ${RULE}` }} />
 
-      <div style={{ borderTop: '1px solid #92400e', margin: '0 0 26px' }} />
-
-      <h2 style={{ color: '#92400e', fontSize: 14, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
-        IDENTITÉ DU SALARIÉ
-      </h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 22 }}>
+      {/* ── Identité du salarié ── */}
+      <Spacer h={30} />
+      <Heading>IDENTITÉ DU SALARIÉ</Heading>
+      <table style={{ ...tableStyle, marginTop: 10, fontSize: 12 }}>
         <tbody>
           <Row label="Nom et prénom" value={`${data.employee.lastName} ${data.employee.firstName}`.trim()} />
-          <Row label="Matricule" value={data.employee.employeeNumber || ''} />
+          {data.employee.employeeNumber && <Row label="Matricule" value={data.employee.employeeNumber} />}
           <Row label="Poste occupé" value={data.employee.position || ''} />
           <Row label="Service / Direction" value={data.employee.departmentName || ''} />
-          <Row label="Date d'embauche" value={fmtDate(data.employee.hireDate)} />
+          <Row label="Date d'embauche" value={fmtDate(data.employee.hireDate) || PLACEHOLDER_DATE} />
         </tbody>
       </table>
 
-      <h2 style={{ color: '#92400e', fontSize: 14, fontWeight: 700, letterSpacing: 0.5, margin: '0 0 8px' }}>
-        OBJET DE LA DEMANDE
-      </h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 22 }}>
+      {/* ── Objet de la demande ── */}
+      <Spacer h={26} />
+      <Heading>OBJET DE LA DEMANDE</Heading>
+      <table style={{ ...tableStyle, marginTop: 10, fontSize: 12 }}>
         <tbody>
-          <Row label="Date de départ" value={fmtDate(data.startDate)} />
-          <Row label="Date de retour" value={fmtDate(data.endDate)} />
+          <Row label="Date de départ" value={fmtDate(data.startDate) || PLACEHOLDER_DATE} />
+          <Row label="Date de retour" value={fmtDate(data.endDate) || PLACEHOLDER_DATE} />
           <Row label="Nombre de jours" value={String(data.daysCount)} />
         </tbody>
       </table>
 
-      <h2 style={{ fontSize: 14, fontWeight: 700, textDecoration: 'underline', margin: '0 0 8px' }}>
-        Signature
-      </h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 26 }}>
+      {/* ── Signature ── */}
+      <Spacer h={26} />
+      <Heading underline={false}>
+        <span style={{ textDecoration: 'underline' }}>Signature</span>
+      </Heading>
+      <table style={{ ...tableStyle, marginTop: 10, fontSize: 12 }}>
         <tbody>
-          <Row label="Le Salarié" value=" " tall />
-          <Row label="Le Responsable Hiérarchique" value=" " tall />
+          <Row label="Le Salarié" value=" " h={44} />
+          <Row label="Le Responsable Hiérarchique" value=" " h={44} />
           <Row
             label="Les Ressources Humaines"
-            tall
+            h={44}
             value={
               validated && data.company.cachetUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 48, objectFit: 'contain' }} />
+                <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 36, objectFit: 'contain' }} />
               ) : (
                 ' '
               )
             }
           />
-          <Row label="Signature de la Direction Générale" value=" " tall />
+          <Row label="Signature de la Direction Générale" value=" " h={44} />
         </tbody>
       </table>
 
-      <p style={{ fontSize: 12, lineHeight: 1.6, margin: '0 0 30px' }}>
+      <p className="std-leave-black" style={{ margin: '18px 0 0', fontSize: 11.5, lineHeight: '17px' }}>
         Le présent formulaire, une fois complété et validé, est transmis au service des Ressources Humaines pour
         établissement de l'attestation de mise en congé et mise à jour du dossier administratif du salarié.
       </p>
 
-      <div style={{ textAlign: 'right', fontSize: 12, marginBottom: 30 }}>
-        Fait à {data.company.city || 'Pointe-Noire'}, le {fmtDate(data.requestedAt) !== '……/……./……' ? fmtDate(data.requestedAt) : '……/……./……'}
+      <Spacer h={32} />
+      <div className="std-leave-black" style={{ textAlign: 'right', fontSize: 11.5 }}>
+        Fait à {data.company.city || 'Pointe-Noire'}, le {requestedDate || PLACEHOLDER_DATE}
       </div>
 
-      {/* Pied de page — même mécanisme que le reste de l'app (paramètres → pied de page des documents) */}
-      <div style={{ marginTop: 'auto', textAlign: 'center', fontSize: 10, color: '#4b5563', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-        {data.company.documentFooterText || `${companyName} — Document confidentiel à usage exclusif du destinataire`}
+      {/* ── Pied de page ancré en bas : adresse en gras centrée, petites capitales ── */}
+      <div style={{ marginTop: 'auto' }}>
+        <div
+          className="std-leave-black"
+          style={{ textAlign: 'center', fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', lineHeight: '12px', whiteSpace: 'pre-line' }}
+        >
+          {data.company.documentFooterText || data.company.address || `${companyName} — Document confidentiel à usage exclusif du destinataire`}
+        </div>
       </div>
     </div>
   );

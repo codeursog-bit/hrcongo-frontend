@@ -26,6 +26,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
+import { sanitizeArticleHtml } from '@/lib/sanitize-html';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.konza-rh.cg';
 
@@ -103,12 +104,41 @@ function slugify(text: string): string {
     .slice(0, 60);
 }
 
-function renderInline(text: string): string {
+// 🔒 CORRECTIF SÉCURITÉ (audit, moyen) : le texte brut n'était jamais échappé
+// avant d'être inséré dans le HTML final rendu via dangerouslySetInnerHTML.
+// Un article contenant du HTML/JS brut (<script>, <img onerror=...>, un lien
+// javascript:) s'exécutait donc chez TOUT visiteur public du blog. Réservé
+// aux comptes admin aujourd'hui, mais aucune barrière technique n'empêchait
+// un compte de rédaction (si ce rôle existe/est ajouté un jour) d'en abuser.
+function escapeHtml(text: string): string {
   return text
+    .replace(/&/g, '&amp;') // doit être fait EN PREMIER
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// N'autorise que des schémas d'URL inoffensifs dans les liens — bloque
+// notamment javascript:, data:, vbscript:, etc.
+function safeHref(url: string): string {
+  const trimmed = url.trim();
+  if (/^(https?:|mailto:|tel:|#|\/)/i.test(trimmed)) return trimmed;
+  return '#';
+}
+
+function renderInline(text: string): string {
+  // Échappement AVANT toute transformation markdown — les marqueurs
+  // markdown (`, *, [, ], (, )) ne sont pas touchés par escapeHtml, donc les
+  // remplacements ci-dessous continuent de fonctionner normalement.
+  const escaped = escapeHtml(text);
+  return escaped
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, url) => {
+      return `<a href="${safeHref(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
 }
 
 function renderArticleContent(markdown: string): { html: string; toc: TocEntry[] } {
@@ -299,7 +329,11 @@ export default function BlogPostClient({ slug, initialPost }: Props) {
 
   // ── Contenu parsé + sommaire (mémoïsé, ne recalcule que si le contenu change) ──
   const { html: contentHtml, toc } = useMemo(
-    () => (post ? renderArticleContent(post.content) : { html: '', toc: [] }),
+    () => {
+      if (!post) return { html: '', toc: [] };
+      const { html, toc } = renderArticleContent(post.content);
+      return { html: sanitizeArticleHtml(html), toc };
+    },
     [post?.content],
   );
   const readingTime = useMemo(

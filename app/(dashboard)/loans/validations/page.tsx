@@ -17,6 +17,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import { api } from '@/services/api';
+import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
 import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
@@ -88,7 +89,7 @@ export default function ValidationsPage() {
         if ((data as any)?.company?.documentTemplate === 'ORCA') {
           const htmlPath = selected.kind === 'loan' ? `/loans/${selected.item.id}/document/orca-html` : `/loans/advances/${selected.item.id}/document/orca-html`;
           const res: any = await api.get(htmlPath);
-          setOrcaHtml(res?.html ?? null);
+          setOrcaHtml(sanitizeOrcaHtml(res?.html));
         } else {
           setOrcaHtml(null);
         }

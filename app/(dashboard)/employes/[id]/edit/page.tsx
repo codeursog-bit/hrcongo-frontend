@@ -105,6 +105,15 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const alert  = useAlert();
   const [isSaving, setIsSaving]   = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // 🔒 CORRECTIF (audit) : companyId capturé à la lecture, renvoyé explicitement
+  // sur les actions d'écriture (voir handleSubmit / handleToggleSelfService) —
+  // pour un admin multi-entreprises, la session (user.companyId en base) est
+  // partagée entre TOUS ses appareils connectés ; si un autre appareil bascule
+  // d'entreprise entre le chargement de cette page et l'enregistrement, l'ancien
+  // code se retrouvait à agir sur la mauvaise entreprise (ou se faisait
+  // refuser l'accès à tort). En envoyant le companyId réellement affiché ici,
+  // l'action reste correcte quoi qu'il se passe ailleurs.
+  const [employeeCompanyId, setEmployeeCompanyId] = useState<string | undefined>();
   const [activeSection, setActiveSection] = useState<'identity' | 'family' | 'contract' | 'payment' | 'fiscal' | 'additional' | 'statut'>('identity');
   const [departments, setDepartments]         = useState<any[]>([]);
   const [companyConvention, setCompanyConvention]       = useState<string | null>(null);
@@ -151,6 +160,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           api.get<any>('/companies/mine'),
         ]);
         setDepartments(depts || []);
+        setEmployeeCompanyId(employee.companyId);
         setSelfService({ enabled: !!employee.selfServiceEnabled, at: employee.selfServiceEnabledAt, by: employee.selfServiceEnabledBy });
         if (company?.collectiveAgreement) {
           setCompanyConvention(company.collectiveAgreement);
@@ -271,7 +281,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     setIsTogglingSelfService(true);
     try {
       const next = !selfService.enabled;
-      const res: any = await api.patch(`/employees/${params.id}/self-service`, { enabled: next });
+      const res: any = await api.patch(`/employees/${params.id}/self-service${employeeCompanyId ? `?companyId=${employeeCompanyId}` : ''}`, { enabled: next });
       setSelfService({ enabled: !!res.selfServiceEnabled, at: res.selfServiceEnabledAt, by: res.selfServiceEnabledBy });
     } catch (err: any) {
       alert.error(err?.message || "Erreur lors de la mise à jour de l'accès");
@@ -283,7 +293,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await api.patch(`/employees/${params.id}`, {
+      await api.patch(`/employees/${params.id}${employeeCompanyId ? `?companyId=${employeeCompanyId}` : ''}`, {
         firstName: formData.firstName, lastName: formData.lastName,
         dateOfBirth: formData.dateOfBirth, placeOfBirth: formData.placeOfBirth,
         gender: formData.gender, phone: formData.phone, secondaryPhone: formData.secondaryPhone?.trim() || null, email: formData.email,
