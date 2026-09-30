@@ -81,7 +81,7 @@ export const adminScreensApi = {
     api.post<AdminScreen>('/admin/display-screens/approve', b),
   rename:  (id: string, name: string) => api.patch<AdminScreen>(`/admin/display-screens/${id}`, { name }),
   revoke:  (id: string) => api.delete<{ success: boolean }>(`/admin/display-screens/${id}`),
-  regenerate: (id: string) => api.post<{ success: boolean }>(`/admin/display-screens/${id}/regenerate`),
+  regenerate: (id: string) => api.post<{ success: boolean }>(`/admin/display-screens/${id}/regenerate`, {}),
 };
 
 // ── Employé connecté (scan) + code secret géré par ADMIN / RH uniquement ──────────────────────────────
