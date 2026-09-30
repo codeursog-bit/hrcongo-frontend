@@ -24,7 +24,10 @@ export default function MyPayrollsPage() {
   const [isLoading, setIsLoading]   = useState(true);
   const [employee, setEmployee]     = useState<any>(null);
   const [viewing, setViewing]       = useState<any | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
+  // ✅ NOUVEAU — sélecteur d'année (2025, 2026, 2027…)
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,6 +37,13 @@ export default function MyPayrollsPage() {
         setEmployee(me);
         const data = await api.get<any[]>('/payrolls');
         setPayrolls(data);
+        // ✅ Année par défaut : l'année civile en cours si elle a des
+        // bulletins, sinon la plus récente année disponible.
+        if (data.length > 0) {
+          const years = Array.from(new Set(data.map((p: any) => p.year))) as number[];
+          const now = new Date().getFullYear();
+          setSelectedYear(years.includes(now) ? now : Math.max(...years));
+        }
       } catch (e: any) {
         console.error('Erreur chargement bulletins:', e);
       } finally {
@@ -45,9 +55,34 @@ export default function MyPayrollsPage() {
   const fmtMoney = (v: number) => (v ?? 0).toLocaleString('fr-FR');
   const fmtMonth = (m: number) => new Date(0, m - 1).toLocaleString('fr-FR', { month: 'long' });
 
-  const currentYear         = new Date().getFullYear();
-  const currentYearPayrolls = payrolls.filter(p => p.year === currentYear);
-  const yearTotal           = currentYearPayrolls.reduce((s, p) => s + Number(p.netSalary || 0), 0);
+  // ✅ Années disponibles (triées, plus récente en premier) — on inclut
+  // toujours l'année civile en cours, même sans bulletin dessus, pour que
+  // l'employé puisse naviguer vers 2026/2027 à l'avance et voir "aucun
+  // bulletin" plutôt que de ne jamais avoir l'option.
+  const availableYears  = Array.from(new Set([...payrolls.map(p => p.year), new Date().getFullYear()])).sort((a, b) => b - a);
+  const yearPayrolls    = selectedYear == null ? payrolls : payrolls.filter(p => p.year === selectedYear);
+  const yearTotal       = yearPayrolls.reduce((s, p) => s + Number(p.netSalary || 0), 0);
+
+  // ✅ FIX — la liste /payrolls ne renvoie que les champs résumé (id, month,
+  // year, netSalary…), pas les relations employee/company/items/ytd. La
+  // page admin "détail bulletin" utilise, elle, /payrolls/:id (findOne) qui
+  // renvoie l'objet complet — sans ça, le bulletin affiche des "—" partout
+  // (conv. collective, date d'embauche, N° CNSS, cumuls…), comme constaté.
+  // On va donc chercher le détail complet au clic, au lieu de réutiliser
+  // directement l'objet allégé de la liste.
+  const openBulletin = async (payrollListItem: any) => {
+    setViewLoading(true);
+    setViewing(payrollListItem); // aperçu immédiat (évite un flash vide) — remplacé dès que le détail arrive
+    try {
+      const full = await api.get<any>(`/payrolls/${payrollListItem.id}`);
+      setViewing(full);
+    } catch (e) {
+      console.error('Erreur chargement détail bulletin:', e);
+      // on garde payrollListItem affiché — imparfait mais pas pire qu'avant
+    } finally {
+      setViewLoading(false);
+    }
+  };
 
   // ── Id du bulletin actif (dépend du template de l'entreprise) ─────────────
   const activeBulletinId = getBulletinRootId(viewing?.company?.bulletinTemplateId ?? 'default');
@@ -120,22 +155,54 @@ export default function MyPayrollsPage() {
                 <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center">
                   <Download size={20} className="text-amber-500" />
                 </div>
-                <p className="text-sm text-[var(--text-muted)] font-medium">Total {currentYear}</p>
+                <p className="text-sm text-[var(--text-muted)] font-medium">Total {selectedYear ?? ''}</p>
               </div>
               <p className="text-2xl font-bold text-[var(--text)]">{fmtMoney(yearTotal)} F</p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">{currentYearPayrolls.length} bulletin(s)</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">{yearPayrolls.length} bulletin(s)</p>
             </div>
           </div>
 
-          {/* Grille bulletins */}
+          {/* ✅ Sélecteur d'année — toujours visible (inclut l'année en
+              cours même sans bulletin dessus) */}
+          {availableYears.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-[var(--text-muted)] font-medium mr-1">Année :</span>
+              {availableYears.map(y => {
+                const count = payrolls.filter(p => p.year === y).length;
+                return (
+                  <button
+                    key={y}
+                    onClick={() => setSelectedYear(y)}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors flex items-center gap-1.5 ${
+                      y === selectedYear
+                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--surface-2)]'
+                    }`}
+                  >
+                    {y}
+                    <span className={`text-xs font-normal ${y === selectedYear ? 'text-white/80' : 'text-[var(--text-muted)]/70'}`}>
+                      ({count})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Grille bulletins — filtrée sur l'année sélectionnée */}
+          {yearPayrolls.length === 0 ? (
+            <div className="bg-[var(--surface)] rounded-2xl p-10 text-center border border-[var(--border)] shadow-sm">
+              <p className="text-[var(--text-muted)]">Aucun bulletin pour {selectedYear}.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...payrolls]
+            {[...yearPayrolls]
               .sort((a, b) => b.year !== a.year ? b.year - a.year : b.month - a.month)
               .map((payroll) => (
                 <div
                   key={payroll.id}
                   className="group bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 shadow-sm hover:shadow-lg transition-colors relative overflow-hidden cursor-pointer"
-                  onClick={() => setViewing(payroll)}
+                  onClick={() => openBulletin(payroll)}
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full -mr-6 -mt-6 group-hover:scale-150 transition-transform" />
                   <div className="relative z-10">
@@ -161,7 +228,7 @@ export default function MyPayrollsPage() {
                         </p>
                       </div>
                       <button
-                        onClick={e => { e.stopPropagation(); setViewing(payroll); }}
+                        onClick={e => { e.stopPropagation(); openBulletin(payroll); }}
                         className="p-2 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-lg hover:bg-emerald-500 hover:text-white transition-colors"
                         title="Voir le bulletin"
                       >
@@ -172,6 +239,7 @@ export default function MyPayrollsPage() {
                 </div>
               ))}
           </div>
+          )}
 
           {/* Info */}
           <div className="bg-emerald-500/10 rounded-2xl p-6 border border-emerald-500/20">
@@ -313,7 +381,15 @@ export default function MyPayrollsPage() {
                   Le BulletinDisplay rend lui-même le div #bulletin-root avec width:210mm
                   Ce wrapper sert juste de centrage visuel dans la modal
                 */}
-                <div style={{ display:'flex', justifyContent:'center' }}>
+                <div style={{ display:'flex', justifyContent:'center', position: 'relative' }}>
+                  {viewLoading && (
+                    <div style={{
+                      position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
+                    }}>
+                      <Loader2 className="animate-spin text-emerald-500" size={32} />
+                    </div>
+                  )}
                   <BulletinDisplay payroll={viewing} />
                 </div>
               </div>

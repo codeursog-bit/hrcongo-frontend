@@ -63,8 +63,9 @@ function handle401() {
     path.startsWith('/entreprises') ||
     path.startsWith('/jobs') ||
     path.startsWith('/affiliate/login') ||
-    path.startsWith('/verify');
-    path.startsWith('/kiosk'); // 🆕 tablette de pointage — pas de session
+    path.startsWith('/verify') ||
+    path.startsWith('/kiosk') || // 🆕 tablette de pointage — pas de session
+    path.startsWith('/ecran');   // 🆕 écran QR de pointage — jeton d'appareil, pas de session
 
   if (!isAuthPage && !isPublicPage) {
     // Nettoyer uniquement les données d'affichage (pas les tokens — ils sont en cookie)

@@ -19,7 +19,7 @@ import {
   Clock, MapPin, LogOut, ArrowLeft, Loader2, CheckCircle2,
   AlertTriangle, History, Ban, Fingerprint, Wifi,
   HelpCircle, Zap, Timer,
-  CheckCircle, XCircle, Info, Sparkles,
+  CheckCircle, XCircle, Info, Sparkles, ScanLine,
 } from 'lucide-react';
 import { attendanceApi } from '@/services/attendance-api';
 import GeofenceRadiusPreview, { computeMetersOffset } from '@/components/GeofenceRadiusPreview';
@@ -29,6 +29,8 @@ import { useNotification } from '@/components/providers/NotificationProvider';
 import { useAttendanceOffline } from '@/hooks/useAttendanceOffline';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceSubNav from '@/components/PresenceSubNav';
+import QrPunchModal from '@/components/pointage/QrPunchModal';
+import { employeeQrApi, PunchResult, PunchMode } from '@/services/display-screen-api';
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PageStatus = 'loading' | 'idle' | 'working' | 'completed' | 'error';
 type OvertimeStatus =
@@ -273,6 +275,15 @@ export default function AttendanceCheckInPage() {
   });
 
   const [companySettings, setCompanySettings] = useState<any>(null);
+
+  // 🆕 Mode de pointage : SCAN (QR de la tablette fixe) ou GPS.
+  // SCAN par défaut si et seulement si un écran QR est configuré pour
+  // l'entreprise ; sinon GPS (comportement historique, inchangé).
+  const [qrEnabled, setQrEnabled]   = useState(false);
+  const [mode, setMode]             = useState<PunchMode>('GPS');
+  const [modeReady, setModeReady]   = useState(false);
+  const [showQr, setShowQr]         = useState(false);
+  const scanMode = mode === 'SCAN';
   // ✅ Animation du scan biométrique (purement visuel, ne simule aucune
   // vraie biométrie — juste un retour visuel satisfaisant au clic)
   const [scanAnim, setScanAnim] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
@@ -337,6 +348,14 @@ export default function AttendanceCheckInPage() {
         const company: any = await api.get('/companies/mine');
         setCompanySettings(company);
 
+        // 🆕 Config du pointage par scan (échec silencieux → GPS par défaut)
+        try {
+          const cfg = await employeeQrApi.config();
+          setQrEnabled(!!cfg.enabled);
+          setMode(cfg.enabled ? cfg.defaultMode : 'GPS');
+        } catch { /* GPS par défaut */ }
+        setModeReady(true);
+
         const todayData: any = await attendanceApi.getToday();
         const myAtt = todayData.find((a: any) => a.employeeId === me.id);
         if (myAtt) {
@@ -374,7 +393,9 @@ export default function AttendanceCheckInPage() {
   const handlePositionSuccessRef = React.useRef<(pos: GeolocationPosition) => void>();
 
   useEffect(() => {
-    if (!companySettings) return;
+    // 🆕 Le GPS n'est lu qu'en mode GPS : en mode scan, la tablette fixe est la preuve
+    // de présence (le GPS « saute » parfois) → aucune permission ni relevé inutile.
+    if (!companySettings || !modeReady || mode !== 'GPS') return;
 
     const handlePositionSuccess = (pos: GeolocationPosition) => {
       const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
@@ -446,7 +467,7 @@ export default function AttendanceCheckInPage() {
       navigator.geolocation.clearWatch(watchId);
       clearInterval(pollId);
     };
-  }, [companySettings]);
+  }, [companySettings, modeReady, mode]);
 
   // ✅ Actualisation manuelle (bouton) : relit la position tout de suite,
   // sans attendre le prochain sondage automatique.
@@ -588,6 +609,21 @@ export default function AttendanceCheckInPage() {
     }
   };
 
+  // ── 🆕 Fin d'un scan QR réussi (le scan bascule tout seul : entrée OU sortie) ──
+  const handleQrDone = useCallback(async (r: PunchResult) => {
+    if (!r.success) return;
+    if (r.direction === 'OUT') { setStatus('completed'); setShowConfetti(true); }
+    else { setStatus('working'); }
+    try {
+      const todayData: any = await attendanceApi.getToday();
+      const myAtt = todayData.find((a: any) => a.employeeId === employeeId);
+      if (myAtt) setTodayAttendance(myAtt);
+    } catch { /* silencieux */ }
+  }, [employeeId]);
+
+  // Bouton principal : SCAN → ouvre le scanner ; GPS → flux historique (handleAction)
+  const onMainAction = () => (scanMode ? setShowQr(true) : handleAction());
+
   // ── Overtime : OUBLI ──────────────────────────────────────────────────────
   const handleResolveForgotten = useCallback(async () => {
     if (!todayAttendance?.id) return;
@@ -622,6 +658,11 @@ export default function AttendanceCheckInPage() {
 
   // ── Badge GPS ─────────────────────────────────────────────────────────────
   const getGpsBadge = () => {
+    if (scanMode) {
+      return isOffline
+        ? { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30', icon: <Wifi size={12} />, text: 'Hors ligne — scan indisponible' }
+        : { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <ScanLine size={12} />, text: 'Pointage par scan' };
+    }
     if (geoState.loading)         return { color: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',            icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
     if (geoState.error)           return { color: 'bg-red-500/15 text-red-500 border-red-500/30',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
     if (isOffline)                return { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
@@ -694,8 +735,22 @@ export default function AttendanceCheckInPage() {
             </div>
           )}
 
+          {/* 🆕 Choix du mode : visible seulement si le pointage par scan est configuré */}
+          {qrEnabled && (status === 'idle' || status === 'working') && (
+            <div role="tablist" aria-label="Mode de pointage" className="mb-6 grid grid-cols-2 gap-1 p-1 rounded-xl bg-[var(--surface-2)]">
+              {([['SCAN', 'Scanner le QR', ScanLine], ['GPS', 'Position GPS', MapPin]] as const).map(([m, label, Icon]) => (
+                <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
+                  className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                    mode === m ? 'bg-emerald-500 text-white shadow' : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  }`}>
+                  <Icon size={16} /> {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Alertes GPS */}
-          {geoState.error && status === 'idle' && (
+          {!scanMode && geoState.error && status === 'idle' && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-left">
               <div className="flex items-center gap-2 text-red-500 font-bold mb-1"><AlertTriangle size={18} /> Erreur GPS</div>
               <p className="text-xs text-red-500">{geoState.error}</p>
@@ -704,7 +759,7 @@ export default function AttendanceCheckInPage() {
 
           {/* ℹ️ Purement informatif : le bouton reste actif, c'est le
               backend qui accepte ou rejette réellement le pointage. */}
-          {!geoState.loading && !geoState.error && !geoState.allowed && !geoState.isMockedSuspect && status === 'idle' && (
+          {!scanMode && !geoState.loading && !geoState.error && !geoState.allowed && !geoState.isMockedSuspect && status === 'idle' && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-left">
               <div className="flex items-center gap-2 text-red-500 font-bold mb-1"><Ban size={18} /> Hors zone (probable)</div>
               <p className="text-xs text-red-500/90">
@@ -713,7 +768,7 @@ export default function AttendanceCheckInPage() {
             </div>
           )}
 
-          {!geoState.loading && !geoState.error && !geoState.allowed && geoState.isMockedSuspect && status === 'idle' && (
+          {!scanMode && !geoState.loading && !geoState.error && !geoState.allowed && geoState.isMockedSuspect && status === 'idle' && (
             <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-left">
               <div className="flex items-center gap-2 text-yellow-500 font-bold mb-1"><Wifi size={18} /> Signal Faible</div>
               <p className="text-xs text-yellow-500/90">
@@ -725,7 +780,11 @@ export default function AttendanceCheckInPage() {
           {isOffline && status === 'idle' && (
             <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
               <div className="flex items-center gap-2 text-amber-500 font-bold mb-1"><Wifi size={18} /> Mode Hors Ligne</div>
-              <p className="text-xs text-amber-500/90">Pointage enregistré localement, synchronisé dès le retour du réseau.</p>
+              <p className="text-xs text-amber-500/90">
+                {scanMode
+                  ? 'Le scan nécessite une connexion. Passez en mode GPS pour pointer hors ligne.'
+                  : 'Pointage enregistré localement, synchronisé dès le retour du réseau.'}
+              </p>
             </div>
           )}
 
@@ -742,9 +801,9 @@ export default function AttendanceCheckInPage() {
                   vrai lecteur biométrique, sans en être un. */}
               <button
                 type="button"
-                onClick={handleAction}
-                disabled={isProcessing || geoState.loading}
-                aria-label="Pointer l'entrée"
+                onClick={onMainAction}
+                disabled={isProcessing || (!scanMode && geoState.loading) || (scanMode && isOffline)}
+                aria-label={scanMode ? "Scanner le QR pour pointer l'entrée" : "Pointer l'entrée"}
                 className={`relative w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-300 focus:outline-none active:scale-90 disabled:cursor-not-allowed ${
                   scanAnim === 'success'
                     ? 'bg-emerald-500/30 text-emerald-300 scale-110 shadow-[0_0_40px_rgba(16,185,129,0.5)]'
@@ -752,7 +811,7 @@ export default function AttendanceCheckInPage() {
                     ? 'bg-red-500/30 text-red-300 shadow-[0_0_30px_rgba(239,68,68,0.4)]'
                     : scanAnim === 'scanning'
                     ? 'bg-emerald-500/20 text-emerald-300'
-                    : geoState.allowed || isOffline
+                    : scanMode || geoState.allowed || isOffline
                     ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
                     : geoState.isMockedSuspect ? 'bg-yellow-500/20 text-yellow-400'
                     : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
@@ -771,7 +830,9 @@ export default function AttendanceCheckInPage() {
                 ) : scanAnim === 'error' ? (
                   <XCircle size={44} strokeWidth={1.5} className="animate-pulse" />
                 ) : (
-                  <Fingerprint size={48} strokeWidth={1.5} className={scanAnim === 'scanning' ? 'animate-pulse' : ''} />
+                  scanMode
+                    ? <ScanLine size={48} strokeWidth={1.5} />
+                    : <Fingerprint size={48} strokeWidth={1.5} className={scanAnim === 'scanning' ? 'animate-pulse' : ''} />
                 )}
               </button>
 
@@ -780,7 +841,7 @@ export default function AttendanceCheckInPage() {
                   Au-delà, un simple message informatif sans radar ni ton
                   motivant — ça n'aurait pas de sens de dire "encore un
                   effort !" à quelqu'un à 800m du bureau. */}
-              {(() => {
+              {!scanMode && (() => {
                 const allowedRadius = companySettings?.allowedRadius || 100;
                 const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
                 const isTooFar = overshoot > RADAR_MAX_OVERSHOOT_METERS;
@@ -851,7 +912,7 @@ export default function AttendanceCheckInPage() {
                   si on est mal positionné depuis un moment (pas au premier
                   instant — laisser le sondage automatique faire son travail
                   d'abord, ~12s), pour ne pas encombrer l'écran inutilement. */}
-              {badSince && currentTime && (currentTime.getTime() - badSince > 12000) && status === 'idle' && (
+              {!scanMode && badSince && currentTime && (currentTime.getTime() - badSince > 12000) && status === 'idle' && (
                 <div className="mb-6 -mt-4 text-center">
                   <p className="text-xs text-[var(--text-muted)] mb-2">
                     {geoState.allowed ? '' : `Vous semblez hors zone ou un peu loin (${geoState.distance}m).`}
@@ -872,12 +933,12 @@ export default function AttendanceCheckInPage() {
                   côté client. On tente toujours le pointage, le backend est
                   seul juge (voir attendance-check.service.ts). */}
               <button
-                onClick={handleAction}
-                disabled={isProcessing || geoState.loading}
-                className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600"
+                onClick={onMainAction}
+                disabled={isProcessing || (!scanMode && geoState.loading) || (scanMode && isOffline)}
+                className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-60"
               >
-                {isProcessing ? <Loader2 className="animate-spin" /> : <Clock size={20} />}
-                {isOffline ? 'Pointer (Hors Ligne)' : "Pointer l'Entrée"}
+                {isProcessing ? <Loader2 className="animate-spin" /> : scanMode ? <ScanLine size={20} /> : <Clock size={20} />}
+                {scanMode ? "Scanner pour pointer l'entrée" : isOffline ? 'Pointer (Hors Ligne)' : "Pointer l'Entrée"}
               </button>
             </>
           )}
@@ -896,10 +957,10 @@ export default function AttendanceCheckInPage() {
                   ? new Date(history[0].checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   : "l'instant"}
               </p>
-              <button onClick={handleAction} disabled={isProcessing}
-                className="w-full py-4 bg-red-500/10 border border-red-500/50 text-red-400 font-bold rounded-2xl hover:bg-red-500/20 flex justify-center items-center gap-3 transition-transform active:scale-95">
-                {isProcessing ? <Loader2 className="animate-spin" /> : <LogOut size={20} />}
-                Fin de journée
+              <button onClick={onMainAction} disabled={isProcessing || (scanMode && isOffline)}
+                className="w-full py-4 bg-red-500/10 border border-red-500/50 text-red-400 font-bold rounded-2xl hover:bg-red-500/20 flex justify-center items-center gap-3 transition-transform active:scale-95 disabled:opacity-60">
+                {isProcessing ? <Loader2 className="animate-spin" /> : scanMode ? <ScanLine size={20} /> : <LogOut size={20} />}
+                {scanMode ? 'Scanner pour la sortie' : 'Fin de journée'}
               </button>
             </>
           )}
@@ -927,6 +988,7 @@ export default function AttendanceCheckInPage() {
               </button>
             </div>
           )}
+
         </div>
 
         {/* ── 🆕 Overtime Workflow ───────────────────────────────────────── */}
@@ -993,6 +1055,9 @@ export default function AttendanceCheckInPage() {
         </div>
 
       </div>
+
+      {/* 🆕 Scanner QR + code secret (interface employé connectée uniquement) */}
+      {showQr && <QrPunchModal onClose={() => setShowQr(false)} onDone={handleQrDone} />}
     </div>
   );
 }

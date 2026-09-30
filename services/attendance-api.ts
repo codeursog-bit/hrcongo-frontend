@@ -288,6 +288,8 @@ import { api } from '@/services/api';
 // 📦 TYPES (Alignés sur le backend)
 // ========================================
 
+export type PunchMethodValue = 'GPS' | 'KIOSK' | 'QR_SCAN' | 'SECRET_CODE' | 'MANUAL';
+
 export interface AttendanceRecord {
   id: string;
   employeeId: string;
@@ -306,6 +308,11 @@ export interface AttendanceRecord {
   checkOutSiteId?: string | null;
   checkOutSiteName?: string | null;
   checkOutDistance?: number | null;
+  // 🆕 Méthode de pointage (traçabilité admin) + écran utilisé
+  checkInMethod?: PunchMethodValue | null;
+  checkOutMethod?: PunchMethodValue | null;
+  checkInSource?: string | null;
+  checkOutSource?: string | null;
   status: string;
   totalHours?: number;
   normalHours?: number;

@@ -47,20 +47,6 @@ const SUBTYPE_OPTIONS: Record<AbsenceType, Array<{ value: AbsenceSubType; label:
   ],
 };
 
-function workingDaysBetween(start?: string, end?: string): number {
-  if (!start || !end) return 0;
-  const s = new Date(start);
-  const e = new Date(end);
-  if (e < s) return 0;
-  let count = 0;
-  const cur = new Date(s);
-  while (cur <= e) {
-    if (cur.getDay() !== 0) count++;
-    cur.setDate(cur.getDate() + 1);
-  }
-  return count;
-}
-
 export default function NouvelleAbsencePage() {
   const router = useRouter();
   const { bp } = useBasePath();
@@ -78,9 +64,9 @@ export default function NouvelleAbsencePage() {
   const [type, setType]           = useState<AbsenceType>('CONVENTIONNELLE');
   const [subType, setSubType]     = useState<AbsenceSubType>('MALADIE');
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate]     = useState('');
+  const [returnDate, setReturnDate] = useState(''); // jour de REPRISE (l'absence court jusqu'à la veille)
   const [reason, setReason]       = useState('');
-  const [isPaid, setIsPaid]       = useState(false);
+  const [isPaid, setIsPaid]       = useState(true); // payée par défaut — la RH tranche à la validation
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone]             = useState(false);
@@ -89,6 +75,7 @@ export default function NouvelleAbsencePage() {
   const [returnCalc, setReturnCalc] = useState<any>(null);
   const [desiredDays, setDesiredDays] = useState('');
   const [isCalculatingReturn, setIsCalculatingReturn] = useState(false);
+  const [coverage, setCoverage] = useState<any>(null); // jours justifiés / au-delà du droit
 
   // ✅ Modèle STANDARD : catalogue de motifs conventionnels propre à
   // l'entreprise, avec un nombre de jours fixe (remplace le choix
@@ -108,13 +95,6 @@ export default function NouvelleAbsencePage() {
   }, [isStandard]);
 
   const selectedMotif = motifCatalog.find(m => m.key === selectedMotifKey);
-  const standardEndDate = useMemo(() => {
-    if (!startDate || !selectedMotif) return '';
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + (selectedMotif.days - 1));
-    return d.toISOString().slice(0, 10);
-  }, [startDate, selectedMotif]);
-
   useEffect(() => {
     if (!onBehalf) return;
     (async () => {
@@ -133,14 +113,16 @@ export default function NouvelleAbsencePage() {
 
   const selectedTargetEmployee = onBehalf ? employeesList.find(e => e.id === selectedEmployeeId) : employee;
 
-  const handleCalculateReturn = async () => {
-    if (!selectedTargetEmployee?.id || !startDate || !desiredDays) return;
+  const handleCalculateReturn = async (daysOverride?: number) => {
+    const days = daysOverride ?? parseFloat(desiredDays);
+    if (!selectedTargetEmployee?.id || !startDate || !days) return;
     setIsCalculatingReturn(true);
     try {
       const result: any = await api.get(
-        `/absence-requests/calculate-return-date?employeeId=${selectedTargetEmployee.id}&startDate=${startDate}&days=${desiredDays}`,
+        `/absence-requests/calculate-return-date?employeeId=${selectedTargetEmployee.id}&startDate=${startDate}&days=${days}`,
       );
-      setEndDate(result.lastLeaveDay);
+      // returnDate = prochain jour OUVRABLE après le dernier jour d'absence
+      setReturnDate(result.returnDate);
       setReturnCalc(result);
     } catch (e: any) {
       alert(e?.message || "Erreur lors du calcul de la date de retour");
@@ -148,6 +130,41 @@ export default function NouvelleAbsencePage() {
       setIsCalculatingReturn(false);
     }
   };
+
+  // Standard : le motif choisi fixe la valeur PAR DÉFAUT (droit conventionnel).
+  // On pré-remplit le nombre de jours et la date de reprise ; l'employé peut
+  // ensuite changer le nombre de jours ou saisir sa date de reprise à la main.
+  useEffect(() => {
+    if (!isStandard || !selectedMotif) return;
+    setDesiredDays(String(selectedMotif.days));
+    setReturnCalc(null);
+    if (startDate && selectedTargetEmployee?.id) handleCalculateReturn(selectedMotif.days);
+    else setReturnDate('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMotifKey, startDate, selectedTargetEmployee?.id, isStandard]);
+
+  // Aperçu de couverture (jours justifiés vs au-delà du droit) — recalculé à chaque changement
+  useEffect(() => {
+    if (!startDate || !returnDate || returnDate <= startDate) { setCoverage(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const q = new URLSearchParams({ startDate, returnDate });
+        if (isStandard && selectedMotifKey) q.set('motifKey', selectedMotifKey);
+        const r: any = await api.get(`/absence-requests/coverage-preview?${q.toString()}`);
+        if (!cancelled) setCoverage(r);
+      } catch { if (!cancelled) setCoverage(null); }
+    })();
+    return () => { cancelled = true; };
+  }, [startDate, returnDate, selectedMotifKey, isStandard]);
+
+  // Dernier jour d'absence = veille de la reprise (sert à l'aperçu imprimable)
+  const lastAbsenceDate = useMemo(() => {
+    if (!returnDate) return '';
+    const d = new Date(returnDate);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }, [returnDate]);
 
   const { uploadedUrl, uploading, preview, handleFileSelect } = useImageUpload({ folder: 'absences' });
 
@@ -175,11 +192,11 @@ export default function NouvelleAbsencePage() {
     setSubType(SUBTYPE_OPTIONS[t][0].value);
   };
 
-  const workingDays = useMemo(() => workingDaysBetween(startDate, endDate), [startDate, endDate]);
+  const workingDays = coverage?.workingDays ?? 0;
 
   const canSubmit = isStandard
-    ? !!selectedMotifKey && !!startDate && (!onBehalf || !!selectedEmployeeId) && !isSubmitting
-    : type && subType && startDate && endDate && reason.trim().length >= 3 && workingDays > 0
+    ? !!selectedMotifKey && !!startDate && !!returnDate && workingDays > 0 && (!onBehalf || !!selectedEmployeeId) && !isSubmitting
+    : type && subType && startDate && returnDate && reason.trim().length >= 3 && workingDays > 0
       && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
 
   const handleSubmit = async () => {
@@ -191,6 +208,7 @@ export default function NouvelleAbsencePage() {
         employeeId: onBehalf ? selectedEmployeeId : undefined,
         motifKey: selectedMotifKey,
         startDate,
+        returnDate,
         isPaid,
         attachmentUrl: uploadedUrl || undefined,
       } : {
@@ -198,7 +216,7 @@ export default function NouvelleAbsencePage() {
         type,
         subType,
         startDate,
-        endDate,
+        returnDate,
         reason: reason.trim(),
         isPaid,
         attachmentUrl: uploadedUrl || undefined,
@@ -233,7 +251,7 @@ export default function NouvelleAbsencePage() {
     catalog: motifCatalog,
     motifKey: selectedMotifKey || undefined,
     startDate: startDate || new Date(),
-    endDate: standardEndDate || startDate || new Date(),
+    endDate: lastAbsenceDate || startDate || new Date(),
     status: 'PENDING',
     requestedAt: new Date(),
   };
@@ -261,12 +279,99 @@ export default function NouvelleAbsencePage() {
     reason: reason || 'Motif de l\u2019absence…',
     isPaid,
     startDate: startDate || new Date(),
-    endDate: endDate || new Date(),
+    endDate: lastAbsenceDate || new Date(),
     workingDays: workingDays || '—',
     hasAttachment: !!uploadedUrl,
     status: 'PENDING' as const,
     requestedAt: new Date(),
   };
+
+  const fmt = (d?: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR') : '');
+
+  // Bloc "nombre de jours → date de reprise" (valeur par défaut = droit conventionnel en Standard)
+  const calcBox = (
+    <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 space-y-3">
+      <div>
+        <label className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">
+          {isStandard ? 'Nombre de jours & date de reprise' : 'Vous ne connaissez pas votre date de reprise ?'}
+        </label>
+        <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
+          {isStandard
+            ? "Par défaut, on prend les jours prévus par la convention pour ce motif. Vous pouvez changer le nombre de jours puis recalculer, ou saisir directement votre date de reprise plus bas. Les jours de repos de votre entreprise et les jours fériés ne sont pas comptés."
+            : "Optionnel — indiquez le nombre de jours voulu, on calcule la date de reprise (jours de repos et jours fériés exclus). Sinon, saisissez directement la date de reprise plus bas."}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="number" min="1" step="0.5"
+          placeholder="Ex : 4 jours"
+          value={desiredDays}
+          onChange={e => setDesiredDays(e.target.value)}
+          className="flex-1 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-[var(--surface)] text-sm"
+        />
+        <button
+          type="button"
+          onClick={() => handleCalculateReturn()}
+          disabled={isCalculatingReturn || !selectedTargetEmployee?.id || !startDate || !desiredDays}
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
+        >
+          {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
+          Calculer ma date de reprise
+        </button>
+      </div>
+      {!startDate && <p className="text-xs text-emerald-600 dark:text-emerald-400">Renseignez d&apos;abord la date de départ.</p>}
+      {returnCalc && (returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
+        <details className="text-xs text-emerald-600 dark:text-emerald-400">
+          <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
+          <div className="mt-2 space-y-1 pl-2">
+            <p>{returnCalc.sundaysSkipped} jour(s) de repos exclu(s) de la période</p>
+            {returnCalc.excludedHolidays?.length > 0 && (
+              <>
+                <p className="font-semibold mt-1">Jours fériés exclus :</p>
+                {returnCalc.excludedHolidays.map((h: any) => (
+                  <p key={h.date}>— {fmt(h.date)} : {h.name}</p>
+                ))}
+              </>
+            )}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+
+  // Saisie manuelle de la date de reprise (le jour où l'employé est attendu)
+  const returnInput = (
+    <div>
+      <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>
+      <div className="relative">
+        <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+        <input type="date" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+      </div>
+    </div>
+  );
+
+  // Ce que le système va faire : jours justifiés vs jours au-delà du droit
+  const coverageBox = coverage && returnDate ? (
+    <div className="space-y-2">
+      <div className="flex items-start gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
+        <Info size={14} className="mt-0.5 shrink-0" />
+        <span>
+          Reprise le <strong>{fmt(returnDate)}</strong> — <strong>{coverage.coveredDays} jour{coverage.coveredDays > 1 ? 's' : ''} justifié{coverage.coveredDays > 1 ? 's' : ''}</strong>
+          {coverage.entitledDays != null ? ` (droit conventionnel : ${coverage.entitledDays} j.)` : ''}, sans déduction sur la paie
+          {coverage.lastCoveredDate ? ` jusqu'au ${fmt(coverage.lastCoveredDate)}` : ''}.
+        </span>
+      </div>
+      {coverage.uncoveredDays > 0 && (
+        <div className="flex items-start gap-2 text-sm bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-lg">
+          <Info size={14} className="mt-0.5 shrink-0" />
+          <span>
+            {coverage.uncoveredDays} jour{coverage.uncoveredDays > 1 ? 's' : ''} au-delà du droit : non payé{coverage.uncoveredDays > 1 ? 's' : ''}.
+            {' '}Ils ne comptent comme absence que si vous ne pointez pas ces jours-là. En cas de besoin, voyez avec les RH.
+          </span>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   if (isDone) {
     return (
@@ -284,7 +389,7 @@ export default function NouvelleAbsencePage() {
           <button onClick={() => router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">
             {onBehalf ? 'Voir les demandes' : 'Voir mes demandes'}
           </button>
-          <button onClick={() => { setIsDone(false); setStartDate(''); setEndDate(''); setReason(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
+          <button onClick={() => { setIsDone(false); setStartDate(''); setReturnDate(''); setCoverage(null); setReturnCalc(null); setReason(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
             Nouvelle demande
           </button>
         </div>
@@ -362,7 +467,7 @@ export default function NouvelleAbsencePage() {
             <>
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Motif de l&apos;absence</label>
-                <p className="text-xs text-[var(--text-muted)] mb-3">Le nombre de jours est fixé par la convention de votre entreprise — pas besoin de le calculer.</p>
+                <p className="text-xs text-[var(--text-muted)] mb-3">Le nombre de jours conventionnels est pris par défaut ; vous pouvez ensuite ajuster votre date de reprise.</p>
                 <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                   {motifCatalog.length === 0 && (
                     <p className="text-sm text-[var(--text-muted)] italic">Aucun motif configuré pour votre entreprise — contactez les RH.</p>
@@ -391,9 +496,11 @@ export default function NouvelleAbsencePage() {
                   </div>
                 </div>
                 {selectedMotif && startDate && (
-                  <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
-                    <Info size={14} /> Reprise le {new Date(standardEndDate).toLocaleDateString('fr-FR')} — {selectedMotif.days} jour{selectedMotif.days > 1 ? 's' : ''} conventionnel{selectedMotif.days > 1 ? 's' : ''}
-                  </div>
+                  <>
+                    {calcBox}
+                    {returnInput}
+                    {coverageBox}
+                  </>
                 )}
                 <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
                   <div className="flex items-center gap-2">
@@ -464,63 +571,7 @@ export default function NouvelleAbsencePage() {
             </div>
           </div>
 
-          <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-4 space-y-3">
-            <div>
-              <label className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block">
-                Vous ne connaissez pas votre date de reprise ?
-              </label>
-              <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
-                Optionnel — utile si vous savez combien de jours vous voulez prendre, mais pas encore la date exacte de retour
-                (ça dépend des dimanches et jours fériés entre les deux). Indiquez le nombre de jours ci-dessous, on calcule
-                la date de reprise et on la remplit pour vous plus bas.
-              </p>
-              <p className="text-xs text-[var(--text-muted)] mt-1">
-                Vous connaissez déjà vos deux dates (ex: du 1er au 30) ? Ignorez ce bloc et remplissez directement les champs en bas.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="number" min="1" step="0.5"
-                placeholder="Ex : 12 jours"
-                value={desiredDays}
-                onChange={e => setDesiredDays(e.target.value)}
-                className="flex-1 px-3 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-700 bg-[var(--surface)] text-sm"
-              />
-              <button
-                type="button"
-                onClick={handleCalculateReturn}
-                disabled={isCalculatingReturn || !selectedTargetEmployee?.id || !startDate || !desiredDays}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2 shrink-0"
-              >
-                {isCalculatingReturn ? <Loader2 size={16} className="animate-spin" /> : null}
-                Calculer la date de reprise
-              </button>
-            </div>
-            {!startDate && <p className="text-xs text-emerald-600 dark:text-emerald-400">Renseignez d'abord la date de départ ci-dessous, puis revenez ici.</p>}
-            {returnCalc && (
-              <div className="pt-2 border-t border-emerald-100 dark:border-emerald-800 space-y-1.5">
-                <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                  Reprise du travail : <strong>{new Date(returnCalc.returnDate).toLocaleDateString('fr-FR')}</strong>
-                </p>
-                {(returnCalc.excludedHolidays?.length > 0 || returnCalc.sundaysSkipped > 0) && (
-                  <details className="text-xs text-emerald-600 dark:text-emerald-400">
-                    <summary className="cursor-pointer font-semibold">Détail du calcul (transparence)</summary>
-                    <div className="mt-2 space-y-1 pl-2">
-                      <p>{returnCalc.sundaysSkipped} dimanche(s) exclu(s) de la période</p>
-                      {returnCalc.excludedHolidays?.length > 0 && (
-                        <>
-                          <p className="font-semibold mt-1">Jours fériés exclus :</p>
-                          {returnCalc.excludedHolidays.map((h: any) => (
-                            <p key={h.date}>— {new Date(h.date).toLocaleDateString('fr-FR')} : {h.name}</p>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  </details>
-                )}
-              </div>
-            )}
-          </div>
+          {calcBox}
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -532,19 +583,15 @@ export default function NouvelleAbsencePage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Reprise du travail</label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>
                 <div className="relative">
                   <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  <input type="date" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
             </div>
 
-            {workingDays > 0 && (
-              <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
-                <Info size={14} /> {workingDays} jour{workingDays > 1 ? 's' : ''} ouvrable{workingDays > 1 ? 's' : ''} d&apos;absence
-              </div>
-            )}
+            {coverageBox}
 
             <div>
               <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Motif de l&apos;absence</label>

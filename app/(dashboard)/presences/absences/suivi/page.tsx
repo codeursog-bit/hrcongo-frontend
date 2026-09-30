@@ -23,7 +23,7 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import SlideOver from '@/components/SlideOver';
-import { colorFor, LEADERBOARD_LABELS } from '@/components/absences/absenceColors';
+import { colorFor, LEADERBOARD_LABELS, LEGEND_FAMILY_ORDER, FAMILY_LABEL, SHORT_CODE } from '@/components/absences/absenceColors';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav'; 
 
@@ -368,10 +368,20 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
   const holidayByDay = new Map(data.holidays.map((h: any) => [h.day, h.name]));
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
   const currentDay = isCurrentMonth ? today.getDate() : null;
+  // 🆕 Jours travaillés de l'entreprise (config paie) fournis par le backend — plus de samedi/dimanche en dur
+  const workDays: number[] = Array.isArray(data.workDays) && data.workDays.length ? data.workDays : [1, 2, 3, 4, 5];
   const workingDaysCount = days.filter(d => {
     const wd = new Date(year, month - 1, d).getDay();
-    return wd !== 0 && wd !== 6 && !holidayByDay.has(String(d).padStart(2, '0'));
+    return workDays.includes(wd) && !holidayByDay.has(String(d).padStart(2, '0'));
   }).length;
+
+  // 🆕 Légende : uniquement les motifs réellement visibles dans la grille, groupés par famille
+  const usedCodes = new Set<string>();
+  filteredEmployees.forEach((e: any) => Object.values(e.cells ?? {}).forEach((c: any) => usedCodes.add(c.code)));
+  const legendGroups = LEGEND_FAMILY_ORDER
+    .map(fam => ({ family: fam, items: (data.legend ?? []).filter((l: any) => l.family === fam && usedCodes.has(l.code)) }))
+    .filter(g => g.items.length > 0);
+  const cellText = (code?: string) => (!code ? '' : code in SHORT_CODE ? SHORT_CODE[code] : String(code).slice(0, 3));
   const getDayName = (d: number) => new Date(year, month - 1, d).toLocaleDateString('fr-FR', { weekday: 'short' }).slice(0, 3).toUpperCase();
 
   return (
@@ -391,19 +401,37 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
         </div>
       )}
 
-      {/* légende — blocs de couleur pleine, comme le module Présences */}
+      {/* légende — uniquement les motifs présents ce mois-ci, groupés par famille, avec le sigle affiché dans les cases */}
       <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
-        <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">Légende</h4>
-        <div className="flex flex-wrap gap-4">
-          {data.legend.map((l: any) => {
-            const c = colorFor(l.colorKey);
-            return (
-              <div key={l.code} className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded" style={{ background: c.hex }} />
-                <span className="text-xs text-[var(--text-muted)]">{l.label}</span>
+        <h4 className="text-sm font-bold text-[var(--text-muted)] mb-3">
+          Légende <span className="font-normal text-xs">— motifs présents ce mois-ci</span>
+        </h4>
+        <div className="flex flex-wrap gap-x-8 gap-y-4">
+          {legendGroups.map(g => (
+            <div key={g.family}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">{FAMILY_LABEL[g.family] ?? g.family}</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {g.items.map((l: any) => {
+                  const c = colorFor(l.colorKey);
+                  return (
+                    <div key={l.code} className="flex items-center gap-2">
+                      <div className="min-w-[2rem] h-6 px-1 rounded flex items-center justify-center text-[9px] font-bold leading-none" style={{ background: c.hex, color: c.fg }}>
+                        {cellText(l.code)}
+                      </div>
+                      <span className="text-xs text-[var(--text-muted)]">{l.label}</span>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          ))}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Calendrier</p>
+            <div className="flex items-center gap-2">
+              <div className="min-w-[2rem] h-6 rounded bg-[var(--border)]" />
+              <span className="text-xs text-[var(--text-muted)]">Jour de repos ou férié</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -439,7 +467,7 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
                 {days.map(d => {
                   const isToday = d === currentDay;
                   const wd = new Date(year, month - 1, d).getDay();
-                  const isWorking = wd !== 0 && wd !== 6;
+                  const isWorking = workDays.includes(wd);
                   const holidayName = holidayByDay.get(String(d).padStart(2, '0')) as string | undefined;
                   return (
                     <div key={d} title={holidayName ?? ''} className={`w-10 shrink-0 text-center p-2 border-r ${
@@ -478,15 +506,17 @@ function GrilleTab({ year, month }: { year: number; month: number; shiftMonth: (
                       const c = cell ? colorFor(cell.colorKey) : null;
                       const isToday = d === currentDay;
                       const wd = new Date(year, month - 1, d).getDay();
-                      const isWorking = wd !== 0 && wd !== 6;
+                      const isWorking = workDays.includes(wd);
                       const holidayName = holidayByDay.get(dayStr) as string | undefined;
                       return (
                         <div
                           key={d}
                           title={cell?.label ?? (holidayName || (!isWorking ? 'Jour non ouvrable' : ''))}
-                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-[var(--border)] ${isToday ? 'ring-2 ring-emerald-500 ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-[var(--border)]' : ''}`}
-                          style={cell ? { background: c!.hex } : undefined}
-                        />
+                          className={`w-10 shrink-0 min-h-[32px] border-b border-r border-[var(--border)] flex items-center justify-center text-[9px] font-bold leading-none ${isToday ? 'ring-2 ring-emerald-500 ring-inset' : ''} ${!cell && (!isWorking || holidayName) ? 'bg-[var(--border)]' : ''}`}
+                          style={cell ? { background: c!.hex, color: c!.fg } : undefined}
+                        >
+                          {cell ? cellText(cell.code) : null}
+                        </div>
                       );
                     })}
                   </div>
@@ -570,7 +600,17 @@ function JournalTab({ year, month }: { year: number; month: number }) {
                   <td className="px-3 py-2.5 text-[var(--text-muted)] whitespace-nowrap text-xs">
                     {new Date(j.startDate).toLocaleDateString('fr-FR')} → {new Date(j.endDate).toLocaleDateString('fr-FR')}
                   </td>
-                  <td className="px-3 py-2.5 font-bold text-[var(--text)]">{j.days} j</td>
+                  <td className="px-3 py-2.5 font-bold text-[var(--text)]">
+                    {j.days} j
+                    {j.uncoveredDays > 0 && (
+                      <span
+                        className="block text-[10px] font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap"
+                        title="Jours demandés au-delà du droit conventionnel : non payés, comptés absents seulement si l'employé ne pointe pas."
+                      >
+                        +{j.uncoveredDays} j hors droit
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2.5">
                     {j.family === 'CONGE_STATUTAIRE' && !j.trackable ? (
                       // ✅ Congé annuel/anticipé = droit acquis, toujours payé par définition —

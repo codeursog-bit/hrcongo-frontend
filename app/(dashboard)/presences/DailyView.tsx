@@ -27,6 +27,31 @@ interface DailyViewProps {
   canRecordAttendanceForAll?: boolean; // 🆕 permission "secrétaire" : pointage manuel pour tout le monde
 }
 
+// 🆕 Badge « méthode de pointage » (traçabilité admin). SECRET_CODE en orange :
+// c'est la seule méthode qui n'identifie pas la personne physiquement.
+const PUNCH_METHOD_LABEL: Record<string, string> = {
+  GPS: 'Téléphone (GPS)',
+  KIOSK: 'Tablette (badge)',
+  QR_SCAN: 'Scan QR',
+  SECRET_CODE: 'Code secret',
+  MANUAL: 'Saisie manuelle',
+};
+
+function PunchMethodBadge({ method, source, label }: { method?: string | null; source?: string | null; label: string }) {
+  if (!method) return <span className="text-[var(--text-muted)]">-</span>;
+  const warn = method === 'SECRET_CODE';
+  return (
+    <span
+      title={`${label} : ${PUNCH_METHOD_LABEL[method] || method}${source ? ` · ${source}` : ''}`}
+      className={`inline-block mr-1 px-2 py-0.5 rounded-full font-semibold ${
+        warn ? 'bg-amber-500/15 text-amber-600' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
+      }`}
+    >
+      {PUNCH_METHOD_LABEL[method] || method}
+    </span>
+  );
+}
+
 export default function DailyView({
   selectedDate,
   setSelectedDate,
@@ -422,6 +447,7 @@ export default function DailyView({
                 <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Statut</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Entrée</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Site</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Méthode</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Sortie</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-[var(--text-muted)] uppercase">Durée</th>
                 {isAdmin && (
@@ -432,7 +458,7 @@ export default function DailyView({
             <tbody className="divide-y divide-[var(--border)]">
               {filteredAttendances.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-12 text-center">
+                  <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">
                       {!isWorkingDay ? (
                         <>
@@ -493,6 +519,12 @@ export default function DailyView({
                             )}
                           </span>
                         : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-xs">
+                      <PunchMethodBadge method={(att as any).checkInMethod} source={(att as any).checkInSource} label="Entrée" />
+                      {(att as any).checkOutMethod && (att as any).checkOutMethod !== (att as any).checkInMethod && (
+                        <PunchMethodBadge method={(att as any).checkOutMethod} source={(att as any).checkOutSource} label="Sortie" />
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkOut)}</td>
                     <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
