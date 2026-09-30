@@ -22,9 +22,7 @@ import {
   CheckCircle, XCircle, Info, Sparkles, ScanLine,
 } from 'lucide-react';
 import { attendanceApi } from '@/services/attendance-api';
-import GeofenceRadiusPreview, { computeMetersOffset } from '@/components/GeofenceRadiusPreview';
 import { api } from '@/services/api';
-import { getDistanceFromLatLonInMeters } from '@/utils/geo';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import { useAttendanceOffline } from '@/hooks/useAttendanceOffline';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -215,30 +213,6 @@ function OvertimeWorkflowCard({
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
-// ✅ Messages encourageants, tirés au sort par palier de distance —
-// affichés dans le radar pendant que l'employé se rapproche de la zone.
-// Purement cosmétique/motivant, aucun impact sur la décision d'autorisation
-// (qui reste entièrement gérée par le backend).
-// ✅ Au-delà de ce dépassement (en mètres, par rapport au rayon autorisé),
-// le radar + les messages motivants n'ont plus de sens : ce n'est plus "un
-// petit effort pour se rapprocher", c'est un vrai trajet — voire le signe
-// que l'employé n'est simplement pas au bon endroit. 100m ≈ 1-2 minutes de
-// marche, la limite raisonnable d'un "rapprochement".
-const RADAR_MAX_OVERSHOOT_METERS = 100;
-
-const MOTIVATION_FAR: Array<(d: number) => string> = [
-  (d) => `Encore ${d}m à parcourir — vous y êtes presque 💪`,
-  (d) => `Continuez, plus que ${d}m avant la zone !`,
-  (d) => `Allez, encore un effort : ${d}m et c'est bon 🚶`,
-  (d) => `${d}m restants — vous progressez bien !`,
-];
-const MOTIVATION_CLOSE: Array<(d: number) => string> = [
-  (d) => `Presque arrivé ! Plus que ${d}m 🚀`,
-  (d) => `Vous chauffez, ${d}m et vous y êtes !`,
-  (d) => `Dernier effort : ${d}m à peine 👏`,
-  (d) => `Ça y est presque — ${d}m seulement !`,
-];
-
 export default function AttendanceCheckInPage() {
   const { bp } = useBasePath();
   const router = useRouter();
@@ -287,47 +261,6 @@ export default function AttendanceCheckInPage() {
   // ✅ Animation du scan biométrique (purement visuel, ne simule aucune
   // vraie biométrie — juste un retour visuel satisfaisant au clic)
   const [scanAnim, setScanAnim] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
-  // ✅ Depuis quand on est "mal" positionné (hors zone / signal faible) —
-  // sert à décider quand afficher le petit bouton d'actualisation manuelle
-  const [badSince, setBadSince] = useState<number | null>(null);
-  // ✅ Panneau "Ma position" — une aide optionnelle : fermé par défaut,
-  // visible uniquement quand l'employé clique dessus, et il le referme
-  // lui-même. Se replie aussi tout seul dès qu'on entre dans la zone
-  // (feedback positif immédiat) ou si on s'éloigne trop (le radar n'aide
-  // plus dans ce cas).
-  const [showRadar, setShowRadar] = useState(false);
-  useEffect(() => {
-    if (geoState.allowed && showRadar) setShowRadar(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoState.allowed]);
-  useEffect(() => {
-    const allowedRadius = companySettings?.allowedRadius || 100;
-    const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
-    if (showRadar && overshoot > RADAR_MAX_OVERSHOOT_METERS) setShowRadar(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoState.distance, showRadar]);
-
-  // ✅ Message encourageant, mis à jour par palier de ~8m plutôt qu'à
-  // chaque relevé GPS (sinon ça clignoterait avec le bruit naturel du GPS).
-  const [motivMsg, setMotivMsg] = useState<string | null>(null);
-  const motivBucketRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!showRadar || geoState.allowed || status !== 'idle') {
-      motivBucketRef.current = null;
-      return;
-    }
-    const allowedRadius = companySettings?.allowedRadius || 100;
-    const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
-    const bucket = Math.floor(overshoot / 8);
-    if (bucket !== motivBucketRef.current) {
-      motivBucketRef.current = bucket;
-      const pool = overshoot <= 15 ? MOTIVATION_CLOSE : MOTIVATION_FAR;
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      setMotivMsg(pick(Math.round(overshoot)));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRadar, geoState.distance, geoState.allowed, status]);
-
   // ── Rôle utilisateur (pour PresenceSubNav) ──────────────────────────────────
   useEffect(() => {
     try {
@@ -399,27 +332,12 @@ export default function AttendanceCheckInPage() {
 
     const handlePositionSuccess = (pos: GeolocationPosition) => {
       const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
-      const cLat   = companySettings.latitude;
-      const cLng   = companySettings.longitude;
-      const radius = companySettings.allowedRadius || 100;
-      let isAllowed = false;
-      let dist = 0;
-      if (!cLat || !cLng) {
-        isAllowed = true;
-      } else {
-        dist      = getDistanceFromLatLonInMeters(uLat, uLng, cLat, cLng);
-        isAllowed = dist <= radius;
-      }
+      // La position sert uniquement à être envoyée au backend : la décision
+      // (zone autorisée ou non) et le message viennent exclusivement du serveur.
       setGeoState({
-        allowed: isAllowed, distance: Math.round(dist), accuracy: Math.round(accuracy),
+        allowed: true, distance: null, accuracy: Math.round(accuracy),
         latitude: uLat, longitude: uLng, error: null, loading: false,
-        isMockedSuspect: accuracy > 100,
-      });
-      // Suivi du temps passé "hors zone" pour le bouton d'actualisation manuelle
-      setBadSince(prev => {
-        const isBad = !isAllowed && accuracy <= 100;
-        if (isBad) return prev ?? Date.now();
-        return null;
+        isMockedSuspect: false,
       });
     };
     handlePositionSuccessRef.current = handlePositionSuccess;
@@ -468,18 +386,6 @@ export default function AttendanceCheckInPage() {
       clearInterval(pollId);
     };
   }, [companySettings, modeReady, mode]);
-
-  // ✅ Actualisation manuelle (bouton) : relit la position tout de suite,
-  // sans attendre le prochain sondage automatique.
-  const handleManualRefresh = useCallback(() => {
-    if (!handlePositionSuccessRef.current) return;
-    setGeoState(p => ({ ...p, loading: true }));
-    navigator.geolocation.getCurrentPosition(
-      (pos) => handlePositionSuccessRef.current?.(pos),
-      () => setGeoState(p => ({ ...p, loading: false })),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
-  }, []);
 
   // ✅ Capture une position 100% fraîche, exactement à l'instant du clic sur
   // "Pointer" — plutôt que de réutiliser la dernière valeur en mémoire
@@ -573,17 +479,6 @@ export default function AttendanceCheckInPage() {
             title: 'Pointage refusé',
             message: result.message || 'Impossible de pointer depuis cette position.',
           });
-          // ✅ Si le refus est lié à la position ET que la distance reste
-          // raisonnable, on enchaîne directement sur le radar. Au-delà du
-          // seuil "trop loin", ouvrir le radar n'aiderait pas.
-          const errCode = (result as any)?.code;
-          const errDistance = (result as any)?.data?.distance;
-          const allowedRadius = companySettings?.allowedRadius || 100;
-          const withinRadarRange =
-            errDistance == null || (errDistance - allowedRadius) <= RADAR_MAX_OVERSHOOT_METERS;
-          if ((errCode === 'OUT_OF_GEOFENCE' || errCode === 'LOCATION_REQUIRED') && withinRadarRange) {
-            setShowRadar(true);
-          }
         }
 
       } else {
@@ -666,9 +561,7 @@ export default function AttendanceCheckInPage() {
     if (geoState.loading)         return { color: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',            icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
     if (geoState.error)           return { color: 'bg-red-500/15 text-red-500 border-red-500/30',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
     if (isOffline)                return { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
-    if (geoState.allowed)         return { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <MapPin size={12} />, text: `Zone OK (${geoState.distance}m)` };
-    if (geoState.isMockedSuspect) return { color: 'bg-yellow-500/15 text-yellow-500 border-yellow-500/30',    icon: <Wifi size={12} />,   text: `Signal Faible (${geoState.accuracy}m)` };
-    return                               { color: 'bg-red-500/15 text-red-500 border-red-500/30',              icon: <Ban size={12} />,    text: `Hors Zone (${geoState.distance}m)` };
+    return { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <MapPin size={12} />, text: 'GPS actif' };
   };
 
   const badge = getGpsBadge();
@@ -757,26 +650,6 @@ export default function AttendanceCheckInPage() {
             </div>
           )}
 
-          {/* ℹ️ Purement informatif : le bouton reste actif, c'est le
-              backend qui accepte ou rejette réellement le pointage. */}
-          {!scanMode && !geoState.loading && !geoState.error && !geoState.allowed && !geoState.isMockedSuspect && status === 'idle' && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-left">
-              <div className="flex items-center gap-2 text-red-500 font-bold mb-1"><Ban size={18} /> Hors zone (probable)</div>
-              <p className="text-xs text-red-500/90">
-                Vous semblez à <strong>{geoState.distance}m</strong> du bureau. Zone autorisée : {companySettings?.allowedRadius || 100}m. Vous pouvez essayer de pointer, le serveur vérifiera votre position.
-              </p>
-            </div>
-          )}
-
-          {!scanMode && !geoState.loading && !geoState.error && !geoState.allowed && geoState.isMockedSuspect && status === 'idle' && (
-            <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-left">
-              <div className="flex items-center gap-2 text-yellow-500 font-bold mb-1"><Wifi size={18} /> Signal Faible</div>
-              <p className="text-xs text-yellow-500/90">
-                Position imprécise ({geoState.accuracy}m). Le serveur tranchera au moment du pointage.
-              </p>
-            </div>
-          )}
-
           {isOffline && status === 'idle' && (
             <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
               <div className="flex items-center gap-2 text-amber-500 font-bold mb-1"><Wifi size={18} /> Mode Hors Ligne</div>
@@ -811,9 +684,8 @@ export default function AttendanceCheckInPage() {
                     ? 'bg-red-500/30 text-red-300 shadow-[0_0_30px_rgba(239,68,68,0.4)]'
                     : scanAnim === 'scanning'
                     ? 'bg-emerald-500/20 text-emerald-300'
-                    : scanMode || geoState.allowed || isOffline
+                    : scanMode || isOffline || !geoState.error
                     ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.3)]'
-                    : geoState.isMockedSuspect ? 'bg-yellow-500/20 text-yellow-400'
                     : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                 }`}
               >
@@ -835,99 +707,6 @@ export default function AttendanceCheckInPage() {
                     : <Fingerprint size={48} strokeWidth={1.5} className={scanAnim === 'scanning' ? 'animate-pulse' : ''} />
                 )}
               </button>
-
-              {/* ✅ "Où suis-je ?" : radar inline, seulement dans une plage
-                  "raisonnable" de dépassement (≤ RADAR_MAX_OVERSHOOT_METERS).
-                  Au-delà, un simple message informatif sans radar ni ton
-                  motivant — ça n'aurait pas de sens de dire "encore un
-                  effort !" à quelqu'un à 800m du bureau. */}
-              {!scanMode && (() => {
-                const allowedRadius = companySettings?.allowedRadius || 100;
-                const overshoot = Math.max(0, (geoState.distance ?? 0) - allowedRadius);
-                const isTooFar = overshoot > RADAR_MAX_OVERSHOOT_METERS;
-                const showRadarButton =
-                  status === 'idle' && !geoState.allowed && !geoState.error && !isTooFar;
-
-                // Trop loin : message sobre, pas de radar/ton motivant
-                if (status === 'idle' && !geoState.allowed && !geoState.error && isTooFar) {
-                  return (
-                    <div className="mb-6 -mt-2 text-center">
-                      <p className="text-xs text-[var(--text-muted)]">
-                        Vous semblez loin de la zone autorisée (~{Math.round(geoState.distance ?? 0)}m).
-                        Si vous pensez être au bon endroit, contactez votre RH — sinon, le pointage manuel reste disponible.
-                      </p>
-                    </div>
-                  );
-                }
-
-                if (!showRadarButton && !showRadar) return null;
-
-                return (
-                  <div className="mb-6 -mt-2">
-                    {!showRadar ? (
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          onClick={() => setShowRadar(true)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
-                        >
-                          <MapPin size={14} /> Ma position par rapport à la zone
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
-                        <GeofenceRadiusPreview
-                          radius={allowedRadius}
-                          showReliabilityMessage={false}
-                          userOffset={
-                            geoState.latitude && geoState.longitude && companySettings?.latitude && companySettings?.longitude
-                              ? computeMetersOffset(
-                                  companySettings.latitude, companySettings.longitude,
-                                  geoState.latitude, geoState.longitude,
-                                )
-                              : null
-                          }
-                        />
-                        {/* ✅ Message encourageant — purement motivant, sans
-                            aucun rôle dans la décision d'autorisation */}
-                        {motivMsg && (
-                          <p className="mt-3 text-center text-sm font-medium text-emerald-500 animate-pulse">
-                            {motivMsg}
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setShowRadar(false)}
-                          className="mt-2 w-full text-center text-[11px] text-[var(--text-muted)] hover:text-[var(--text)]"
-                        >
-                          Fermer
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* ✅ Bouton d'actualisation manuelle : discret, n'apparaît QUE
-                  si on est mal positionné depuis un moment (pas au premier
-                  instant — laisser le sondage automatique faire son travail
-                  d'abord, ~12s), pour ne pas encombrer l'écran inutilement. */}
-              {!scanMode && badSince && currentTime && (currentTime.getTime() - badSince > 12000) && status === 'idle' && (
-                <div className="mb-6 -mt-4 text-center">
-                  <p className="text-xs text-[var(--text-muted)] mb-2">
-                    {geoState.allowed ? '' : `Vous semblez hors zone ou un peu loin (${geoState.distance}m).`}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleManualRefresh}
-                    disabled={geoState.loading}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)] transition-colors disabled:opacity-50"
-                  >
-                    {geoState.loading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
-                    Actualiser ma position
-                  </button>
-                </div>
-              )}
 
               {/* ✅ Le bouton reste toujours actif : plus de blocage/forçage
                   côté client. On tente toujours le pointage, le backend est

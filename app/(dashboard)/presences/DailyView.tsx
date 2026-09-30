@@ -16,6 +16,7 @@ import {
 import { api } from '@/services/api';
 import { attendanceApi } from '@/services/attendance-api';
 import EmployeeDayDetailSidebar, { EmployeeDayDetail } from '@/components/EmployeeDayDetailSidebar';
+import { PUNCH_METHOD_LABEL, summaryPunchMethod } from '@/lib/punch-method';
 import DailyAttendanceReportPrintable from '@/components/DailyAttendanceReportPrintable';
 import { printReport, downloadReportPDF } from '@/lib/report-print';
 
@@ -29,21 +30,16 @@ interface DailyViewProps {
 
 // 🆕 Badge « méthode de pointage » (traçabilité admin). SECRET_CODE en orange :
 // c'est la seule méthode qui n'identifie pas la personne physiquement.
-const PUNCH_METHOD_LABEL: Record<string, string> = {
-  GPS: 'Téléphone (GPS)',
-  KIOSK: 'Tablette (badge)',
-  QR_SCAN: 'Scan QR',
-  SECRET_CODE: 'Code secret',
-  MANUAL: 'Saisie manuelle',
-};
-
-function PunchMethodBadge({ method, source, label }: { method?: string | null; source?: string | null; label: string }) {
+// Une seule méthode est affichée (entrée d'abord, QR prioritaire — voir lib/punch-method.ts) ;
+// le détail entrée / sortie est dans le panneau qui s'ouvre au clic sur la ligne.
+function PunchMethodBadge({ att }: { att: any }) {
+  const method = summaryPunchMethod(att.checkInMethod, att.checkOutMethod);
   if (!method) return <span className="text-[var(--text-muted)]">-</span>;
   const warn = method === 'SECRET_CODE';
   return (
     <span
-      title={`${label} : ${PUNCH_METHOD_LABEL[method] || method}${source ? ` · ${source}` : ''}`}
-      className={`inline-block mr-1 px-2 py-0.5 rounded-full font-semibold ${
+      title={`Entrée : ${PUNCH_METHOD_LABEL[att.checkInMethod] || '—'} · Sortie : ${PUNCH_METHOD_LABEL[att.checkOutMethod] || '—'}`}
+      className={`inline-block px-2 py-0.5 rounded-full font-semibold ${
         warn ? 'bg-amber-500/15 text-amber-600' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
       }`}
     >
@@ -521,10 +517,7 @@ export default function DailyView({
                         : '-'}
                     </td>
                     <td className="px-6 py-4 text-xs">
-                      <PunchMethodBadge method={(att as any).checkInMethod} source={(att as any).checkInSource} label="Entrée" />
-                      {(att as any).checkOutMethod && (att as any).checkOutMethod !== (att as any).checkInMethod && (
-                        <PunchMethodBadge method={(att as any).checkOutMethod} source={(att as any).checkOutSource} label="Sortie" />
-                      )}
+                      <PunchMethodBadge att={att} />
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkOut)}</td>
                     <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>

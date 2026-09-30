@@ -25,6 +25,19 @@ const STEP_FALLBACK = 30;
 const RESULT_MS = 6000;      // durée d'affichage d'un résultat
 const SECRET_IDLE_MS = 40000; // retour auto au QR si personne ne tape
 
+// Titre du refus selon la CAUSE (le backend renvoie un code d'erreur) — plus de
+// « Pointage non validé » générique. Les cas congé / repos passent par la
+// confirmation (requiresConfirmation) et gardent leur motif.
+function failureTitle(code?: string): string {
+  const titles: Record<string, string> = {
+    SECRET_NOT_FOUND: 'Code secret non reconnu',
+    LOCKED: 'Trop d’essais',
+    ALREADY_DONE: 'Déjà pointé',
+    NETWORK: 'Connexion impossible',
+  };
+  return titles[code || ''] || 'Pointage impossible';
+}
+
 export default function EcranPage() {
   const [view, setView] = useState<View>('boot');
   const [info, setInfo] = useState<ScreenInfo | null>(null);
@@ -168,9 +181,9 @@ export default function EcranPage() {
         pendingSecret.current = data.requiresConfirmation ? value.trim() : '';
         showOutcome(data);
       } else {
-        showOutcome({ success: false, message: data?.message || 'Pointage impossible, réessayez.' });
+        showOutcome({ success: false, code: (data as any)?.error || (data as any)?.code, message: data?.message || 'Pointage impossible, réessayez.' });
       }
-    } catch { showOutcome({ success: false, message: 'Connexion impossible, réessayez.' }); }
+    } catch { showOutcome({ success: false, code: 'NETWORK', message: 'Vérifiez le réseau de la tablette puis réessayez.' }); }
     finally { setSending(false); setSecret(''); }
   }, [sending, showOutcome]);
 
@@ -233,7 +246,7 @@ export default function EcranPage() {
       <div className={shell}>
         {!ok ? <AlertTriangle size={88} className={tone} /> : isIn ? <CheckCircle2 size={88} className={tone} /> : <LogOut size={80} className={tone} />}
         <h1 className={`mt-6 text-center font-extrabold text-[clamp(1.75rem,6vw,3.5rem)] ${tone}`}>
-          {ok ? `${isIn ? 'Bienvenue' : 'À bientôt'}${outcome.firstName ? `, ${outcome.firstName}` : ''} !` : 'Pointage non validé'}
+          {ok ? `${isIn ? 'Bienvenue' : 'À bientôt'}${outcome.firstName ? `, ${outcome.firstName}` : ''} !` : failureTitle(outcome.code)}
         </h1>
         <p className="mt-3 text-white/70 text-center text-lg max-w-xl">{outcome.message || (ok ? (isIn ? 'Entrée enregistrée.' : 'Sortie enregistrée.') : '')}</p>
       </div>

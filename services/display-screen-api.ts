@@ -84,6 +84,17 @@ export const adminScreensApi = {
   regenerate: (id: string) => api.post<{ success: boolean }>(`/admin/display-screens/${id}/regenerate`, {}),
 };
 
+export interface SecretListItem {
+  employeeId: string;
+  fullName: string;
+  position: string | null;
+  department: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  setByName: string | null;
+}
+
 // ── Employé connecté (scan) + code secret géré par ADMIN / RH uniquement ──────────────────────────────
 export const employeeQrApi = {
   /** enabled = un écran approuvé couvre mon entreprise ; defaultMode = SCAN si enabled, sinon GPS. */
@@ -91,6 +102,7 @@ export const employeeQrApi = {
   scan:    (b: { token: string; confirm?: boolean }) => api.post<PunchResult>('/pointage-qr/scan', b),
 
   // RH
+  listSecrets:          () => api.get<SecretListItem[]>('/pointage-qr/secret/list'),
   employeeSecret:       (employeeId: string) => api.get<SecretStatus>(`/pointage-qr/secret/employee/${employeeId}`),
   setEmployeeSecret:    (employeeId: string, secret: string) =>
     api.put<{ success: boolean }>(`/pointage-qr/secret/employee/${employeeId}`, { secret }),

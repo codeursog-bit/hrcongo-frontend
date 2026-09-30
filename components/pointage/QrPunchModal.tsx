@@ -70,7 +70,7 @@ export default function QrPunchModal({ onClose, onDone }: Props) {
       scannerRef.current = scanner;
       await scanner.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.75); return { width: s, height: s }; } },
+        { fps: 10, aspectRatio: 1, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: s }; } },
         handleDecoded, () => { /* frames sans QR */ },
       );
     } catch {
@@ -87,14 +87,20 @@ export default function QrPunchModal({ onClose, onDone }: Props) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 p-0 sm:p-4" role="dialog" aria-modal="true" aria-label="Scanner le QR de pointage">
-      <div className="w-full sm:max-w-md bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[100dvh] flex flex-col">
+      <div className="w-full sm:max-w-xl bg-[var(--surface)] text-[var(--text)] border border-[var(--border)] rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[100dvh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
           <div className="flex items-center gap-2 font-bold"><ScanLine size={18} /> Scanner le QR de l&apos;écran</div>
           <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-full hover:bg-[var(--surface-2)]"><X size={18} /></button>
         </div>
 
         <div className="p-5 overflow-y-auto">
-          <div id={REGION_ID} className={phase === 'scanning' ? 'w-full aspect-square rounded-2xl overflow-hidden bg-black' : 'hidden'} />
+          {/* La vidéo de la caméra est rectangulaire par défaut : on force un carré (cover) qui prend
+              toute la largeur disponible, sans dépasser la hauteur de l'écran. */}
+          <style>{`
+            #${REGION_ID} { width: min(100%, 68dvh); aspect-ratio: 1 / 1; margin: 0 auto; position: relative; }
+            #${REGION_ID} video { width: 100% !important; height: 100% !important; object-fit: cover; border-radius: 1.25rem; }
+          `}</style>
+          <div id={REGION_ID} className={phase === 'scanning' ? 'rounded-2xl overflow-hidden bg-black' : 'hidden'} />
           {phase === 'scanning' && (
             <p className="mt-4 text-sm text-center text-[var(--text-muted)]">
               Cadrez le QR affiché sur la tablette. Il change toutes les 30 secondes : scannez-le sur place.

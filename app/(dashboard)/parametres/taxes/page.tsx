@@ -11,6 +11,17 @@ import { useBasePath } from '@/hooks/useBasePath';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CompanyTaxBase = 'GROSS' | 'TAXABLE' | 'NET_IMPOSABLE' | 'FIXED';
+type ContractKind = 'CDI' | 'CDD' | 'STAGE' | 'CONSULTANT' | 'PRESTATAIRE' | 'INTERIM';
+
+const CONTRACT_OPTIONS: { value: ContractKind; label: string }[] = [
+  { value: 'CDI',         label: 'CDI' },
+  { value: 'CDD',         label: 'CDD' },
+  { value: 'STAGE',       label: 'Stage' },
+  { value: 'CONSULTANT',  label: 'Consultant' },
+  { value: 'PRESTATAIRE', label: 'Prestataire' },
+  { value: 'INTERIM',     label: 'Intérim' },
+];
+const MONTH_LABELS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 interface CompanyTax {
   id: string;
@@ -28,6 +39,10 @@ interface CompanyTax {
   isActive: boolean;
   minSalaryThreshold?: number;
   thresholdType: 'ELIGIBILITY' | 'EXCESS_ONLY';
+  applicableContractTypes?: ContractKind[];
+  isRecurring?: boolean;
+  applicableMonth?: number | null;
+  applicableYear?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +61,10 @@ interface TaxFormData {
   isActive: boolean;
   minSalaryThreshold: string;
   thresholdType: 'ELIGIBILITY' | 'EXCESS_ONLY';
+  applicableContractTypes: ContractKind[];
+  isRecurring: boolean;
+  applicableMonth: string;
+  applicableYear: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -75,6 +94,10 @@ const EMPTY_FORM: TaxFormData = {
   isActive: true,
   minSalaryThreshold: '',
   thresholdType: 'ELIGIBILITY',
+  applicableContractTypes: ['CDI', 'CDD'],
+  isRecurring: true,
+  applicableMonth: String(new Date().getMonth() + 1),
+  applicableYear: String(new Date().getFullYear()),
 };
 
 // ── Taxes légales non modifiables ─────────────────────────────────────────────
@@ -163,6 +186,10 @@ export default function TaxesPage() {
       isActive: tax.isActive,
       minSalaryThreshold: tax.minSalaryThreshold ? String(tax.minSalaryThreshold) : '',
       thresholdType: tax.thresholdType ?? 'ELIGIBILITY',
+      applicableContractTypes: tax.applicableContractTypes?.length ? tax.applicableContractTypes : ['CDI', 'CDD'],
+      isRecurring: tax.isRecurring ?? true,
+      applicableMonth: tax.applicableMonth ? String(tax.applicableMonth) : String(new Date().getMonth() + 1),
+      applicableYear: tax.applicableYear ? String(tax.applicableYear) : String(new Date().getFullYear()),
     });
     setShowModal(true);
   };
@@ -180,21 +207,40 @@ export default function TaxesPage() {
     // On autorise des taux/montants à 0 — une taxe peut servir de marqueur
     // ou être complétée ultérieurement (ex: CAMU_SOL sans taux configuré)
 
-    const dto = {
+    if (form.applicableContractTypes.length === 0) {
+      showToast('Sélectionnez au moins un type de contrat', 'error');
+      return;
+    }
+    if (!form.isRecurring && (!form.applicableMonth || !form.applicableYear)) {
+      showToast("Choisissez le mois et l'année d'application", 'error');
+      return;
+    }
+
+    // En modification, on envoie `null` pour vider un champ (sinon `undefined`
+    // est ignoré côté serveur et l'ancienne valeur est conservée).
+    const emptyValue = editingTax ? null : undefined;
+
+    const dto: Record<string, any> = {
       name:          form.name.trim(),
-      code:          form.code.trim().toUpperCase(),
-      description:   form.description.trim() || undefined,
+      description:   form.description.trim() || emptyValue,
       baseType:      form.baseType,
       employeeRate:  empRate / 100,   // % saisi (ex: 2.27) → décimal (0.0227) pour le back
       fixedEmployee: empFix,
       employerRate:  patRate / 100,   // % saisi (ex: 4.55) → décimal (0.0455) pour le back
       fixedEmployer: patFix,
       hasCeiling:    form.hasCeiling,
-      ceiling:       form.hasCeiling && form.ceiling ? parseFloat(form.ceiling) : undefined,
+      ceiling:       form.hasCeiling && form.ceiling ? parseFloat(form.ceiling) : emptyValue,
       isActive:      form.isActive,
-      minSalaryThreshold: form.minSalaryThreshold ? parseFloat(form.minSalaryThreshold) : undefined,
+      minSalaryThreshold: form.minSalaryThreshold ? parseFloat(form.minSalaryThreshold) : emptyValue,
       thresholdType: form.minSalaryThreshold ? form.thresholdType : undefined,
+      applicableContractTypes: form.applicableContractTypes,
+      isRecurring:   form.isRecurring,
+      applicableMonth: form.isRecurring ? undefined : parseInt(form.applicableMonth, 10),
+      applicableYear:  form.isRecurring ? undefined : parseInt(form.applicableYear, 10),
     };
+    // Le code n'est envoyé qu'à la création : il est immuable ensuite
+    // (l'envoyer en PATCH provoquait « property code should not exist »).
+    if (!editingTax) dto.code = form.code.trim().toUpperCase();
 
     setIsSaving(true);
     try {
@@ -234,8 +280,8 @@ export default function TaxesPage() {
       showToast('Taxe supprimée', 'success');
       setDeleteTarget(null);
       fetchTaxes();
-    } catch {
-      showToast('Impossible de supprimer cette taxe', 'error');
+    } catch (e: any) {
+      showToast(e?.message || 'Impossible de supprimer cette taxe', 'error');
     } finally {
       setIsDeleting(false);
     }
@@ -347,6 +393,8 @@ export default function TaxesPage() {
                         <span>Base : <strong>{BASE_TYPE_LABELS[tax.baseType]}</strong></span>
                         <span>Taux : <strong className="font-mono">{formatTaxRate(tax)}</strong></span>
                         {tax.hasCeiling && tax.ceiling && <span>Plafond : <strong className="font-mono">{tax.ceiling.toLocaleString('fr-FR')} F</strong></span>}
+                        <span>Contrats : <strong>{(tax.applicableContractTypes?.length ? tax.applicableContractTypes : ['CDI', 'CDD']).join(', ')}</strong></span>
+                        <span>Période : <strong>{tax.isRecurring === false && tax.applicableMonth ? `${MONTH_LABELS[tax.applicableMonth - 1]} ${tax.applicableYear}` : 'Chaque mois'}</strong></span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -408,7 +456,8 @@ export default function TaxesPage() {
                 <div>
                   <label className="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Code *</label>
                   <input value={form.code} onChange={e => setF({ code: e.target.value.toUpperCase() })} placeholder="Ex: TAX_APP"
-                    className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm font-mono bg-[var(--surface)] outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400" />
+                    disabled={!!editingTax} title={editingTax ? 'Le code ne peut pas être modifié' : undefined}
+                    className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm font-mono bg-[var(--surface)] outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed" />
                 </div>
               </div>
 
@@ -512,6 +561,53 @@ export default function TaxesPage() {
                         : `⚠️ Taxe ignorée si salaire brut < ${parseFloat(form.minSalaryThreshold).toLocaleString('fr-FR')} FCFA`}
                     </p>
                   </>
+                )}
+              </div>
+
+              {/* Types de contrat concernés */}
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Types de contrat concernés *</label>
+                <div className="flex flex-wrap gap-2">
+                  {CONTRACT_OPTIONS.map(opt => {
+                    const on = form.applicableContractTypes.includes(opt.value);
+                    return (
+                      <button key={opt.value} type="button"
+                        onClick={() => setF({
+                          applicableContractTypes: on
+                            ? form.applicableContractTypes.filter(c => c !== opt.value)
+                            : [...form.applicableContractTypes, opt.value],
+                        })}
+                        className={`py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${on ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-emerald-300'}`}>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">Par défaut CDI et CDD. La taxe n'impactera que la paie des contrats cochés.</p>
+              </div>
+
+              {/* Périodicité */}
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Application</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setF({ isRecurring: true })}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${form.isRecurring ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-emerald-300'}`}>
+                    Chaque mois
+                  </button>
+                  <button type="button" onClick={() => setF({ isRecurring: false })}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold border transition-all ${!form.isRecurring ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)] hover:border-emerald-300'}`}>
+                    Un mois précis
+                  </button>
+                </div>
+                {!form.isRecurring && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={form.applicableMonth} onChange={e => setF({ applicableMonth: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm bg-[var(--surface)] outline-none">
+                      {MONTH_LABELS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                    </select>
+                    <input type="number" min={2000} max={2100} value={form.applicableYear} onChange={e => setF({ applicableYear: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-[var(--border)] rounded-xl text-sm bg-[var(--surface)] outline-none" />
+                  </div>
                 )}
               </div>
 

@@ -15,7 +15,7 @@ import {
 import PresenceSubNav from '@/components/PresenceSubNav';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import { api } from '@/services/api';
-import { adminScreensApi, employeeQrApi, secretError, AdminScreen, ScreenScope } from '@/services/display-screen-api';
+import { adminScreensApi, employeeQrApi, secretError, AdminScreen, ScreenScope, SecretListItem } from '@/services/display-screen-api';
 
 const STATUS_STYLE: Record<string, string> = {
   APPROVED: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
@@ -102,6 +102,16 @@ export default function EcransPage() {
   const [secretSaving, setSecretSaving] = useState(false);
   const [secretErr, setSecretErr] = useState('');
 
+  // Employés qui ONT un code secret (traçabilité : qui n'y figure pas ne peut pas pointer par code)
+  const [enrolled, setEnrolled] = useState<SecretListItem[]>([]);
+  const [enrolledLoading, setEnrolledLoading] = useState(true);
+  const loadEnrolled = useCallback(async () => {
+    try { setEnrolled(await employeeQrApi.listSecrets()); }
+    catch { setEnrolled([]); }
+    finally { setEnrolledLoading(false); }
+  }, []);
+  useEffect(() => { loadEnrolled(); }, [loadEnrolled]);
+
   useEffect(() => {
     api.get<any>('/employees/simple')
       .then((r) => { const list = Array.isArray(r) ? r : (r?.employees ?? r?.data ?? []); setEmps(list.map((e: any) => ({ id: e.id, label: empLabel(e) }))); })
@@ -127,14 +137,14 @@ export default function EcransPage() {
     try {
       await employeeQrApi.setEmployeeSecret(empId, newSecret.trim());
       addNotification({ type: 'SUCCESS', title: 'Code enregistré', message: 'Communiquez-le à l’employé de vive voix, sans l’écrire.' });
-      setHasSecret(true); setNewSecret('');
+      setHasSecret(true); setNewSecret(''); loadEnrolled();
     } catch (err: any) { setSecretErr(err?.message || 'Enregistrement impossible.'); }
     finally { setSecretSaving(false); }
   };
 
   const removeSecret = async () => {
     if (!confirm('Supprimer le code secret de cet employé ?')) return;
-    try { await employeeQrApi.removeEmployeeSecret(empId); setHasSecret(false); }
+    try { await employeeQrApi.removeEmployeeSecret(empId); setHasSecret(false); loadEnrolled(); }
     catch (err: any) { notifyError('Erreur', err, 'Suppression impossible.'); }
   };
 
@@ -222,7 +232,7 @@ export default function EcransPage() {
         <div>
           <h2 className="font-bold text-[var(--text)] flex items-center gap-2"><KeyRound size={18} /> Code secret d&apos;un employé</h2>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            Pour les employés sans smartphone : ils tapent ce code sur la tablette. Chaque employé peut aussi choisir le sien depuis « Ma pointeuse ».
+            Pour les employés sans smartphone : ils tapent ce code sur la tablette. Seuls l&apos;admin et la RH peuvent le définir ; un employé sans code ne peut pas pointer avec.
             Le code n&apos;est jamais lisible après enregistrement.
           </p>
         </div>
@@ -261,6 +271,42 @@ export default function EcransPage() {
             {secretErr && <p className="sm:col-span-3 text-sm text-red-500" role="alert">{secretErr}</p>}
           </form>
         )}
+
+        {/* Employés enregistrés avec un code secret */}
+        <div className="pt-4 border-t border-[var(--border)]">
+          <h3 className="text-sm font-bold text-[var(--text)] flex items-center gap-2 mb-3">
+            Employés avec un code secret
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{enrolled.length}</span>
+          </h3>
+          {enrolledLoading ? (
+            <div className="py-6 grid place-items-center"><Loader2 className="animate-spin text-[var(--text-muted)]" /></div>
+          ) : enrolled.length === 0 ? (
+            <p className="text-sm text-[var(--text-muted)]">Aucun employé n&apos;a encore de code secret.</p>
+          ) : (
+            <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] overflow-hidden">
+              {enrolled.map((e) => (
+                <li key={e.employeeId} className="flex flex-wrap items-center gap-3 px-4 py-3 bg-[var(--bg)]">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-[var(--text)] truncate">{e.fullName}</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate">
+                      {[e.position, e.department].filter(Boolean).join(' · ') || '—'}
+                    </p>
+                  </div>
+                  {e.status !== 'ACTIVE' && (
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600">
+                      {e.status === 'ON_LEAVE' ? 'En congé' : e.status === 'SUSPENDED' ? 'Suspendu' : 'Inactif'}
+                    </span>
+                  )}
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Défini le {new Date(e.updatedAt).toLocaleDateString('fr-FR')}{e.setByName ? ` par ${e.setByName}` : ''}
+                  </p>
+                  <button type="button" onClick={() => pickEmployee({ id: e.employeeId, label: e.fullName })}
+                    className="text-xs font-semibold text-[var(--brand)] hover:underline">Modifier</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

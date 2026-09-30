@@ -12,6 +12,7 @@ import {
   BadgeCheck, CalendarClock, StickyNote,
 } from 'lucide-react';
 import SlideOver from './SlideOver';
+import { PUNCH_METHOD_LABEL } from '@/lib/punch-method';
 
 const STATUS_CONFIG: Record<string, { label: string; badge: string }> = {
   PRESENT:       { label: 'Présent',          badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' },
@@ -36,6 +37,10 @@ export interface EmployeeDayDetail {
   checkOut?: string;
   totalHours?: number;
   overtime50?: number;
+  checkInMethod?: string | null;
+  checkOutMethod?: string | null;
+  checkInSource?: string | null;
+  checkOutSource?: string | null;
 }
 
 export default function EmployeeDayDetailSidebar({
@@ -46,6 +51,16 @@ export default function EmployeeDayDetailSidebar({
   const cfg = STATUS_CONFIG[detail.status] ?? { label: detail.status, badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]' };
   const initials = `${detail.employee.firstName?.[0] ?? ''}${detail.employee.lastName?.[0] ?? ''}`;
   const fmtTime = (d?: string) => d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—';
+  // Méthode de pointage (entrée / sortie) — « — » quand il n'y a pas de pointage
+  const methodLine = (time: string | undefined, method?: string | null, source?: string | null) => {
+    if (!time) return null;
+    return (
+      <p className={`text-xs mt-1 font-semibold ${method === 'SECRET_CODE' ? 'text-amber-600' : 'text-[var(--text-muted)]'}`}>
+        {method ? (PUNCH_METHOD_LABEL[method] || method) : 'Méthode non enregistrée'}
+        {source ? ` · ${source}` : ''}
+      </p>
+    );
+  };
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
@@ -105,10 +120,12 @@ export default function EmployeeDayDetailSidebar({
         <div className="p-3.5 rounded-xl border border-[var(--border)]">
           <div className="flex items-center gap-1.5 text-[var(--text-muted)] mb-1"><LogIn size={13} /><span className="text-[11px] font-bold uppercase tracking-wider">Entrée</span></div>
           <p className="text-lg font-bold font-mono text-[var(--text)]">{fmtTime(detail.checkIn)}</p>
+          {methodLine(detail.checkIn, detail.checkInMethod, detail.checkInSource)}
         </div>
         <div className="p-3.5 rounded-xl border border-[var(--border)]">
           <div className="flex items-center gap-1.5 text-[var(--text-muted)] mb-1"><LogOut size={13} /><span className="text-[11px] font-bold uppercase tracking-wider">Sortie</span></div>
           <p className="text-lg font-bold font-mono text-[var(--text)]">{fmtTime(detail.checkOut)}</p>
+          {methodLine(detail.checkOut, detail.checkOutMethod, detail.checkOutSource)}
         </div>
         <div className="p-3.5 rounded-xl border border-[var(--border)]">
           <div className="flex items-center gap-1.5 text-[var(--text-muted)] mb-1"><Timer size={13} /><span className="text-[11px] font-bold uppercase tracking-wider">Durée</span></div>

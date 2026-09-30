@@ -225,7 +225,16 @@ export default function MonProfilPage() {
   const [showNext, setShowNext] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
-  const ROLES_WITH_EMPLOYEE_PROFILE = ['EMPLOYEE', 'HR_MANAGER', 'MANAGER'];
+  // 🔧 FIX : ADMIN/SUPER_ADMIN/CABINET_* étaient exclus, donc GET /employees/me
+  // n'était jamais appelé pour eux — même quand ils avaient bien une fiche
+  // employé (photo, situation familiale, etc.), rien ne remontait, la page
+  // retombait uniquement sur le User (nom/prénom/email, rien d'autre). Le
+  // 404 "Profil employé introuvable" est déjà catché juste en dessous
+  // (setHasEmployee(false)) quand un admin n'a réellement pas de fiche.
+  const ROLES_WITH_EMPLOYEE_PROFILE = [
+    'EMPLOYEE', 'HR_MANAGER', 'MANAGER',
+    'ADMIN', 'SUPER_ADMIN', 'CABINET_ADMIN', 'CABINET_GESTIONNAIRE',
+  ];
 
   useEffect(() => { loadProfile(); }, []);
 
@@ -271,7 +280,13 @@ export default function MonProfilPage() {
     setIsSaving(true);
     setSaveError('');
     try {
-      const payload = { ...form, photoUrl: imageUpload.uploadedUrl || form.photoUrl || undefined };
+      // 🔒 maritalStatus/numberOfChildren restent dans `form` uniquement pour
+      // l'affichage (formStateFromEmployee) — jamais envoyés ici : le back
+      // (SelfServiceUpdateEmployeeDto) ne les déclare plus du tout, et avec
+      // forbidNonWhitelisted:true, les envoyer ferait échouer TOUTE la requête
+      // en 400, pas seulement ces deux champs.
+      const { maritalStatus, numberOfChildren, ...editablePayload } = form;
+      const payload = { ...editablePayload, photoUrl: imageUpload.uploadedUrl || form.photoUrl || undefined };
       const updated = await api.patch<EmployeeProfile>('/employees/me', payload);
       setEmployee(updated);
       setForm(formStateFromEmployee(updated));
@@ -418,12 +433,16 @@ export default function MonProfilPage() {
               <MiniField label="Genre" value={employee?.gender ? GENDER_LABELS[employee.gender] : undefined} editing={isEditing}>
                 <FancySelect label="" value={form.gender} onChange={(v) => set('gender', v)} icon={Users} options={GENDER_OPTIONS} />
               </MiniField>
-              <MiniField label="Situation familiale" value={employee?.maritalStatus ? MARITAL_OPTIONS.find(o => o.value === employee.maritalStatus)?.label : undefined} editing={isEditing}>
-                <FancySelect label="" value={form.maritalStatus} onChange={(v) => set('maritalStatus', v)} icon={Heart} options={MARITAL_OPTIONS} />
-              </MiniField>
-              <MiniField label="Nombre d'enfants" value={employee?.numberOfChildren} editing={isEditing}>
-                <input className={inputCls} type="number" min={0} value={form.numberOfChildren} onChange={e => set('numberOfChildren', parseInt(e.target.value) || 0)} />
-              </MiniField>
+              {/*
+                🔒 Situation familiale / Nombre d'enfants : jamais éditables par
+                l'employé lui-même (impact direct sur la paie — nombre de
+                parts fiscales). `editing={false}` en dur, quel que soit
+                isEditing : toujours affiché en lecture seule ici, même quand
+                le reste du profil est en mode édition. Seul un ADMIN/HR_MANAGER
+                peut les modifier, via la fiche employé complète.
+              */}
+              <MiniField label="Situation familiale" value={employee?.maritalStatus ? MARITAL_OPTIONS.find(o => o.value === employee.maritalStatus)?.label : undefined} editing={false} />
+              <MiniField label="Nombre d'enfants" value={employee?.numberOfChildren} editing={false} />
               <MiniField label="Nationalité" value={employee?.nationality} editing={isEditing}>
                 <FancySelect label="" value={form.nationality} onChange={(v) => set('nationality', v)} icon={Flag} placeholder="Sélectionner…" options={NATIONALITY_OPTIONS} />
               </MiniField>
