@@ -11,12 +11,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, UserCheck, UserX, Timer, MapPin, Calendar, ChevronLeft,
   ChevronRight, Search, CalendarOff, Inbox, Printer, Download, Loader2,
-  Trash2,
+  Trash2, Coffee, Pencil,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { attendanceApi } from '@/services/attendance-api';
 import EmployeeDayDetailSidebar, { EmployeeDayDetail } from '@/components/EmployeeDayDetailSidebar';
 import { PUNCH_METHOD_LABEL, summaryPunchMethod } from '@/lib/punch-method';
+import BreakCorrectionModal from '@/components/BreakCorrectionModal';
 import DailyAttendanceReportPrintable from '@/components/DailyAttendanceReportPrintable';
 import { printReport, downloadReportPDF } from '@/lib/report-print';
 
@@ -64,6 +65,7 @@ export default function DailyView({
   // ✅ Suppression réservée aux admins + RH manager — le backend applique la
   // même règle (RolesGuard), ceci n'est qu'un affichage conditionnel côté UI.
   const isAdmin = ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN'].includes(userRole);
+  const [breakEditId, setBreakEditId] = useState<string | null>(null); // 🆕 correction de pause
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<EmployeeDayDetail | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
@@ -518,8 +520,44 @@ export default function DailyView({
                     </td>
                     <td className="px-6 py-4 text-xs">
                       <PunchMethodBadge att={att} />
+                      {(att as any).pause && (() => {
+                        const pz = (att as any).pause;
+                        const hm = (x: string) => new Date(x).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                        return (
+                          <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                            <Coffee size={11} />
+                            <span>{hm(pz.startedAt)} → {pz.endedAt ? hm(pz.endedAt) : 'en cours'}{pz.minutes != null ? ` (${pz.minutes} min)` : ''}</span>
+                            {pz.resumedAuto && <span className="text-amber-600 font-semibold" title="L'employé n'a pas pointé sa reprise : pause clôturée à la durée prévue">· reprise non pointée</span>}
+                            {!pz.resumedAuto && pz.lateNotifiedAt && <span className="text-red-500 font-semibold">· retard {pz.lateMinutes} min</span>}
+                            {pz.editedAt && <span title={pz.editReason || ''} className="text-sky-600">· corrigée</span>}
+                            {isAdmin && (
+                              <button type="button" title="Corriger la reprise" aria-label="Corriger la reprise de pause"
+                                onClick={(e) => { e.stopPropagation(); setBreakEditId(att.id); }}
+                                className="p-1 rounded hover:bg-[var(--surface-2)]"><Pencil size={11} /></button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                      {breakEditId === att.id && (att as any).pause && (
+                        <BreakCorrectionModal
+                          attendanceId={att.id}
+                          pause={(att as any).pause}
+                          onClose={() => setBreakEditId(null)}
+                          onSaved={() => { setBreakEditId(null); fetchDailyData(); }}
+                        />
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkOut)}</td>
+                    <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">
+                      {formatTime(att.checkOut)}
+                      {Number((att as any).extraHoursInfo) > 0 && (
+                        <span
+                          title="Heures au-delà de l'horaire — à titre informatif, non comptées dans la paie"
+                          className="block text-[10px] font-sans font-semibold text-sky-600"
+                        >
+                          +{parseFloat(Number((att as any).extraHoursInfo).toFixed(2))} h (info)
+                        </span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
                     {isAdmin && (
                       <td className="px-6 py-4 text-right">

@@ -167,7 +167,7 @@ export default function EcranPage() {
     setOutcome(r);
     if (r.requiresConfirmation) return;                      // attend le choix de l'employé
     pendingSecret.current = '';
-    if (r.success && r.firstName && r.direction) { try { speakPointageMessage(r.firstName, r.direction); } catch { /* voix indisponible */ } }
+    if (r.success && r.firstName && (r.direction === 'IN' || r.direction === 'OUT')) { try { speakPointageMessage(r.firstName, r.direction); } catch { /* voix indisponible */ } }
     setTimeout(() => { setOutcome(null); leaveSecret(); }, RESULT_MS);
   }, [leaveSecret]);
 
@@ -246,7 +246,7 @@ export default function EcranPage() {
       <div className={shell}>
         {!ok ? <AlertTriangle size={88} className={tone} /> : isIn ? <CheckCircle2 size={88} className={tone} /> : <LogOut size={80} className={tone} />}
         <h1 className={`mt-6 text-center font-extrabold text-[clamp(1.75rem,6vw,3.5rem)] ${tone}`}>
-          {ok ? `${isIn ? 'Bienvenue' : 'À bientôt'}${outcome.firstName ? `, ${outcome.firstName}` : ''} !` : failureTitle(outcome.code)}
+          {ok ? `${outcome.direction === 'BREAK_END' ? 'Bon retour' : isIn ? 'Bienvenue' : 'À bientôt'}${outcome.firstName ? `, ${outcome.firstName}` : ''} !` : failureTitle(outcome.code)}
         </h1>
         <p className="mt-3 text-white/70 text-center text-lg max-w-xl">{outcome.message || (ok ? (isIn ? 'Entrée enregistrée.' : 'Sortie enregistrée.') : '')}</p>
       </div>

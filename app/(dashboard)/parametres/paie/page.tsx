@@ -24,7 +24,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Save, AlertTriangle, Calculator, Percent, Clock,
+  ArrowLeft, Save, AlertTriangle, Calculator, Percent, Clock, Coffee,
   Calendar, Shield, Info, Loader2, CheckCircle2, Moon, Sun,
   ToggleLeft, ToggleRight, Zap, ChevronRight, FileText,
   Users, Gift, Banknote, ClipboardList, Landmark, X, Palmtree, CalendarClock
@@ -62,6 +62,12 @@ interface PayrollSettings {
   workHoursPerDay:         number;
   officialStartHour:       number;
   lateToleranceMinutes:    number;
+  officialEndHour:         number;   // 🆕 fin de journée (fermeture auto + heures en plus)
+  breakEnabled:            boolean;  // 🆕 pause
+  breakStartHour:          number;
+  breakStartMinute:        number;
+  breakDurationMinutes:    number;
+  breakLateToleranceMinutes: number;
   workDays:                number[];
 }
 
@@ -87,6 +93,12 @@ const DEFAULTS: PayrollSettings = {
   workHoursPerDay:         8,
   officialStartHour:       8,
   lateToleranceMinutes:    0,
+  officialEndHour:         17,
+  breakEnabled:            false,
+  breakStartHour:          12,
+  breakStartMinute:        0,
+  breakDurationMinutes:    60,
+  breakLateToleranceMinutes: 35,
   workDays:                [1, 2, 3, 4, 5],
 };
 
@@ -203,6 +215,12 @@ export default function PayrollSettingsPage() {
             workHoursPerDay:         data.workHoursPerDay         ?? 8,
             officialStartHour:       data.officialStartHour       ?? 8,
             lateToleranceMinutes:    data.lateToleranceMinutes    ?? 0,
+            officialEndHour:         data.officialEndHour         ?? 17,
+            breakEnabled:            data.breakEnabled            ?? false,
+            breakStartHour:          data.breakStartHour          ?? 12,
+            breakStartMinute:        data.breakStartMinute        ?? 0,
+            breakDurationMinutes:    data.breakDurationMinutes    ?? 60,
+            breakLateToleranceMinutes: data.breakLateToleranceMinutes ?? 35,
             workDays:                data.workDays                ?? [1, 2, 3, 4, 5],
           });
         }
@@ -814,6 +832,66 @@ const handleSave = async () => {
                       className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
+                </div>
+
+                {/* 🆕 Fin officielle */}
+                <div className="mb-5">
+                  <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heure de fin officielle</label>
+                  <select value={settings.officialEndHour}
+                    onChange={e => set('officialEndHour', +e.target.value)}
+                    className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {Array.from({ length: 23 }, (_, i) => i + 1).map(h => (
+                      <option key={h} value={h}>{String(h).padStart(2, '0')}h00</option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
+                    Sert à fermer automatiquement les sorties oubliées et à calculer les heures en plus.
+                  </p>
+                </div>
+
+                {/* 🆕 Pause de la journée */}
+                <div className="mb-5 p-4 border border-[var(--border)] rounded-2xl">
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-bold text-[var(--text)] flex items-center gap-2 text-sm">
+                      <Coffee size={16} className="text-amber-500" /> Pause de la journée
+                    </h4>
+                    <button type="button" onClick={() => set('breakEnabled', !settings.breakEnabled)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold ${settings.breakEnabled ? 'bg-emerald-500/15 text-emerald-600' : 'bg-[var(--surface-2)] text-[var(--text-muted)]'}`}>
+                      {settings.breakEnabled ? 'Activée' : 'Désactivée'}
+                    </button>
+                  </div>
+                  {settings.breakEnabled && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Début de pause (dès)</label>
+                          <div className="flex gap-2">
+                            <select value={settings.breakStartHour} onChange={e => set('breakStartHour', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500">
+                              {Array.from({ length: 24 }, (_, i) => i).map(h => <option key={h} value={h}>{String(h).padStart(2, '0')}h</option>)}
+                            </select>
+                            <select value={settings.breakStartMinute} onChange={e => set('breakStartMinute', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500">
+                              {[0, 15, 30, 45].map(m => <option key={m} value={m}>{String(m).padStart(2, '0')}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Durée prévue (min)</label>
+                          <input type="number" min={5} max={240} value={settings.breakDurationMinutes}
+                            onChange={e => set('breakDurationMinutes', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500" />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Alerte de retard après la reprise prévue (min)</label>
+                          <input type="number" min={0} max={180} value={settings.breakLateToleranceMinutes}
+                            onChange={e => set('breakLateToleranceMinutes', +e.target.value)} className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500" />
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-3">
+                        L&apos;employé prend sa pause d&apos;un clic (pas avant l&apos;heure de début) et doit pointer sa reprise (scan ou GPS).
+                        Le temps de pause n&apos;est pas compté dans ses heures. Non applicable aux employés avec un planning (shift).
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Preview seuil */}

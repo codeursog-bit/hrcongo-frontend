@@ -96,6 +96,25 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
                         {att.checkOut ? new Date(att.checkOut).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) : '--:--'}
                       </span>
                     </div>
+                    {(att as any).pause?.endedAt && (
+                      <div className="flex justify-between gap-4">
+                        <span>Pause:</span>
+                        <span className="font-mono">
+                          {new Date((att as any).pause.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {' → '}
+                          {new Date((att as any).pause.endedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {(att as any).pause.minutes != null ? ` (${(att as any).pause.minutes} min)` : ''}
+                        </span>
+                      </div>
+                    )}
+                    {Number((att as any).extraHoursInfo) > 0 && (
+                      <div className="flex justify-between gap-4 text-sky-600">
+                        <span>Heures en plus:</span>
+                        <span className="font-mono font-bold" title="À titre informatif, non comptées dans la paie">
+                          +{parseFloat(Number((att as any).extraHoursInfo).toFixed(2))}h (info)
+                        </span>
+                      </div>
+                    )}
                     {att.totalHours && (
                       <div className="flex justify-between gap-4 mt-1 pt-1 border-t border-[var(--border)]">
                         <span className="text-[var(--text-muted)]">Durée:</span>

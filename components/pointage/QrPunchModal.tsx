@@ -82,6 +82,7 @@ export default function QrPunchModal({ onClose, onDone }: Props) {
   useEffect(() => { startScanner(); return () => { stopScanner(); }; }, [startScanner, stopScanner]);
 
   const isIn = result?.direction !== 'OUT';
+  const isBreakEnd = result?.direction === 'BREAK_END';
   const notMine = error.code === 'NOT_IN_COMPANY';
   const canRetry = error.code !== 'ALREADY_DONE';
 
@@ -131,7 +132,7 @@ export default function QrPunchModal({ onClose, onDone }: Props) {
                 {isIn ? <CheckCircle2 size={44} /> : <LogOut size={40} />}
               </div>
               <h3 className="text-xl font-extrabold">
-                {isIn ? 'Entrée enregistrée' : 'Sortie enregistrée'}{result.firstName ? `, ${result.firstName}` : ''} !
+                {isBreakEnd ? 'Reprise enregistrée' : isIn ? 'Entrée enregistrée' : 'Sortie enregistrée'}{result.firstName ? `, ${result.firstName}` : ''} !
               </h3>
               {result.message && <p className="text-sm text-[var(--text-muted)]">{result.message}</p>}
               <button onClick={onClose} className="mt-2 px-6 py-3 rounded-xl bg-[var(--brand)] text-white font-semibold">Terminer</button>

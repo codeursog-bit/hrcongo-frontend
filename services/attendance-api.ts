@@ -313,6 +313,7 @@ export interface AttendanceRecord {
   checkOutMethod?: PunchMethodValue | null;
   checkInSource?: string | null;
   checkOutSource?: string | null;
+  extraHoursInfo?: number | string | null;
   status: string;
   totalHours?: number;
   normalHours?: number;

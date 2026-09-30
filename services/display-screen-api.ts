@@ -25,7 +25,7 @@ export interface ScreenInfo {
 }
 export interface PunchResult {
   success: boolean;
-  direction?: 'IN' | 'OUT';
+  direction?: 'IN' | 'OUT' | 'BREAK_END';
   firstName?: string;
   message?: string;
   code?: string;

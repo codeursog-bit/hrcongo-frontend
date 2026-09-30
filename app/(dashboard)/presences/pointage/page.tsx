@@ -19,7 +19,7 @@ import {
   Clock, MapPin, LogOut, ArrowLeft, Loader2, CheckCircle2,
   AlertTriangle, History, Ban, Fingerprint, Wifi,
   HelpCircle, Zap, Timer,
-  CheckCircle, XCircle, Info, Sparkles, ScanLine,
+  CheckCircle, XCircle, Info, Sparkles, ScanLine, Coffee,
 } from 'lucide-react';
 import { attendanceApi } from '@/services/attendance-api';
 import { api } from '@/services/api';
@@ -29,6 +29,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import PresenceSubNav from '@/components/PresenceSubNav';
 import QrPunchModal from '@/components/pointage/QrPunchModal';
 import { employeeQrApi, PunchResult, PunchMode } from '@/services/display-screen-api';
+import { breakApi, BreakStatus } from '@/services/break-api';
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PageStatus = 'loading' | 'idle' | 'working' | 'completed' | 'error';
 type OvertimeStatus =
@@ -258,6 +259,18 @@ export default function AttendanceCheckInPage() {
   const [modeReady, setModeReady]   = useState(false);
   const [showQr, setShowQr]         = useState(false);
   const scanMode = mode === 'SCAN';
+
+  // 🆕 Pause de la journée
+  const [breakInfo, setBreakInfo] = useState<BreakStatus | null>(null);
+  const [breakBusy, setBreakBusy] = useState(false);
+  const fmtHm = (iso?: string | null) =>
+    iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const loadBreak = useCallback(async () => {
+    try { setBreakInfo(await breakApi.status()); } catch { /* pause indisponible : rien à afficher */ }
+  }, []);
+  const breakLateMin = breakInfo?.state === 'ON_BREAK' && breakInfo.pause
+    ? Math.max(0, Math.round(((currentTime?.getTime() ?? Date.now()) - new Date(breakInfo.pause.expectedEndAt).getTime()) / 60000))
+    : 0;
   // ✅ Animation du scan biométrique (purement visuel, ne simule aucune
   // vraie biométrie — juste un retour visuel satisfaisant au clic)
   const [scanAnim, setScanAnim] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
@@ -314,6 +327,14 @@ export default function AttendanceCheckInPage() {
       }
     })();
   }, []);
+
+  // 🆕 Rafraîchit l'état de la pause tant que l'employé est au travail
+  useEffect(() => {
+    if (status !== 'working') return;
+    loadBreak();
+    const id = setInterval(loadBreak, 60_000);
+    return () => clearInterval(id);
+  }, [status, loadBreak]);
 
   // ── Horloge ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -509,12 +530,43 @@ export default function AttendanceCheckInPage() {
     if (!r.success) return;
     if (r.direction === 'OUT') { setStatus('completed'); setShowConfetti(true); }
     else { setStatus('working'); }
+    loadBreak(); // 🆕 la reprise de pause se fait aussi par scan
     try {
       const todayData: any = await attendanceApi.getToday();
       const myAtt = todayData.find((a: any) => a.employeeId === employeeId);
       if (myAtt) setTodayAttendance(myAtt);
     } catch { /* silencieux */ }
-  }, [employeeId]);
+  }, [employeeId, loadBreak]);
+
+  // ── 🆕 Pause ──────────────────────────────────────────────────────────────
+  const handleBreakStart = async () => {
+    setBreakBusy(true);
+    try {
+      const st = await breakApi.start();
+      setBreakInfo(st);
+      addNotification({
+        type: 'CHECK_IN',
+        title: 'Bonne pause !',
+        message: `Reprise prévue vers ${fmtHm(st.pause?.expectedEndAt)}. À la reprise, scannez ou pointez pour relancer votre journée.`,
+      });
+    } catch (e: any) {
+      addNotification({ type: 'ALERT', title: 'Pause impossible', message: e?.message || 'Erreur' });
+    } finally { setBreakBusy(false); }
+  };
+
+  const handleBreakEndGps = async () => {
+    setBreakBusy(true);
+    try {
+      const pos = await captureFreshPosition();
+      const lat = pos ? pos.coords.latitude  : (geoState.latitude  || undefined);
+      const lng = pos ? pos.coords.longitude : (geoState.longitude || undefined);
+      const r = await breakApi.end(lat, lng);
+      addNotification({ type: 'CHECK_IN', title: 'Bon retour !', message: r?.message || 'Reprise enregistrée.' });
+      await loadBreak();
+    } catch (e: any) {
+      addNotification({ type: 'ALERT', title: 'Reprise impossible', message: e?.message || 'Erreur' });
+    } finally { setBreakBusy(false); }
+  };
 
   // Bouton principal : SCAN → ouvre le scanner ; GPS → flux historique (handleAction)
   const onMainAction = () => (scanMode ? setShowQr(true) : handleAction());
@@ -736,10 +788,57 @@ export default function AttendanceCheckInPage() {
                   ? new Date(history[0].checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   : "l'instant"}
               </p>
+              {breakInfo?.enabled && breakInfo.state && !['UNAVAILABLE', 'NOT_WORKING'].includes(breakInfo.state) && (
+                <div className="mb-5 p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] text-left">
+                  {breakInfo.state === 'TOO_EARLY' && (
+                    <p className="text-xs text-[var(--text-muted)] flex items-center gap-2">
+                      <Coffee size={14} /> Pause possible à partir de {breakInfo.startsAt}.
+                    </p>
+                  )}
+                  {breakInfo.state === 'AVAILABLE' && (
+                    <button type="button" onClick={handleBreakStart} disabled={breakBusy || isProcessing}
+                      className="w-full py-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 font-bold flex items-center justify-center gap-2 hover:bg-amber-500/25 active:scale-95 transition disabled:opacity-50">
+                      {breakBusy ? <Loader2 className="animate-spin" size={18} /> : <Coffee size={18} />} Prendre ma pause
+                    </button>
+                  )}
+                  {breakInfo.state === 'ON_BREAK' && breakInfo.pause && (
+                    <>
+                      <p className="text-sm font-bold text-amber-500 flex items-center gap-2">
+                        <Coffee size={16} /> En pause depuis {fmtHm(breakInfo.pause.startedAt)}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">
+                        Reprise prévue à {fmtHm(breakInfo.pause.expectedEndAt)}.{' '}
+                        {scanMode ? 'Scannez le QR pour reprendre.' : 'Pointez votre reprise en GPS.'}
+                      </p>
+                      {breakLateMin > (breakInfo.toleranceMinutes ?? 35) && (
+                        <p className="text-xs font-semibold text-red-500 mt-2">
+                          ⏰ Vous avez {breakLateMin} min de retard sur la reprise prévue.
+                        </p>
+                      )}
+                      {!scanMode && (
+                        <button type="button" onClick={handleBreakEndGps} disabled={breakBusy || isProcessing}
+                          className="mt-3 w-full py-3 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-emerald-600 active:scale-95 transition disabled:opacity-50">
+                          {breakBusy ? <Loader2 className="animate-spin" size={18} /> : <Clock size={18} />} Reprendre le travail
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {breakInfo.state === 'DONE' && breakInfo.pause && (
+                    <p className="text-xs text-[var(--text-muted)]">
+                      ☕ Pause : {fmtHm(breakInfo.pause.startedAt)} → {fmtHm(breakInfo.pause.endedAt)}
+                      {breakInfo.pause.minutes != null ? ` (${breakInfo.pause.minutes} min)` : ''}
+                      {breakInfo.pause.resumedAuto && <span className="text-amber-500 font-semibold"> · reprise non pointée</span>}
+                      {!breakInfo.pause.resumedAuto && breakInfo.pause.lateMinutes > (breakInfo.toleranceMinutes ?? 35) && (
+                        <span className="text-red-500 font-semibold"> · retard de {breakInfo.pause.lateMinutes} min</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
               <button onClick={onMainAction} disabled={isProcessing || (scanMode && isOffline)}
                 className="w-full py-4 bg-red-500/10 border border-red-500/50 text-red-400 font-bold rounded-2xl hover:bg-red-500/20 flex justify-center items-center gap-3 transition-transform active:scale-95 disabled:opacity-60">
                 {isProcessing ? <Loader2 className="animate-spin" /> : scanMode ? <ScanLine size={20} /> : <LogOut size={20} />}
-                {scanMode ? 'Scanner pour la sortie' : 'Fin de journée'}
+                {scanMode ? (breakInfo?.state === 'ON_BREAK' ? 'Scanner pour reprendre le travail' : 'Scanner pour la sortie') : 'Fin de journée'}
               </button>
             </>
           )}
