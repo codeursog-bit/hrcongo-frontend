@@ -302,7 +302,7 @@ export default function AttendanceCheckInPage() {
         } catch { /* GPS par défaut */ }
         setModeReady(true);
 
-        const todayData: any = await attendanceApi.getToday();
+        const todayData: any = await api.get('/attendance/my-today');
         const myAtt = todayData.find((a: any) => a.employeeId === me.id);
         if (myAtt) {
           setTodayAttendance(myAtt);
@@ -487,7 +487,7 @@ export default function AttendanceCheckInPage() {
 
           // Rafraîchir todayAttendance
           try {
-            const todayData: any = await attendanceApi.getToday();
+            const todayData: any = await api.get('/attendance/my-today');
             const myAtt = todayData.find((a: any) => a.employeeId === employeeId);
             if (myAtt) setTodayAttendance(myAtt);
           } catch (_) { /* silencieux */ }
@@ -532,7 +532,7 @@ export default function AttendanceCheckInPage() {
     else { setStatus('working'); }
     loadBreak(); // 🆕 la reprise de pause se fait aussi par scan
     try {
-      const todayData: any = await attendanceApi.getToday();
+      const todayData: any = await api.get('/attendance/my-today');
       const myAtt = todayData.find((a: any) => a.employeeId === employeeId);
       if (myAtt) setTodayAttendance(myAtt);
     } catch { /* silencieux */ }

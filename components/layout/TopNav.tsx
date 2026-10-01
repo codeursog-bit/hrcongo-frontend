@@ -7,6 +7,7 @@ import { useTheme } from '@/components/providers/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -21,6 +22,10 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
   
   const [user, setUser] = useState<any>(null);
   const [avatar, setAvatar] = useState<string>('');
+  // 🆕 Photo de la fiche employé si la personne connectée en a une. Reste
+  // `null` sinon (404 avalé silencieusement par le hook, aucune erreur
+  // envoyée au front) — on retombe alors sur `avatar` (ui-avatars), inchangé.
+  const employeePhotoUrl = useMyEmployeePhoto();
   
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -263,7 +268,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                 <p className="text-sm font-bold text-slate-800 dark:text-white">{user?.firstName} {user?.lastName}</p>
                 <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">En ligne</p>
               </div>
-              <img src={avatar || 'https://via.placeholder.com/100'} className="h-9 w-9 rounded-lg object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm" />
+              <img src={employeePhotoUrl || avatar || 'https://via.placeholder.com/100'} className="h-9 w-9 rounded-lg object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm" />
               <ChevronDown size={14} className={`text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 

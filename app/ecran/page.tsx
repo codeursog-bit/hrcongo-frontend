@@ -6,13 +6,15 @@
 //    Présences → Écrans QR pour approuver et choisir la portée.
 // 2) Une fois approuvé : jeton d'appareil gardé sur la tablette, plus jamais de
 //    login. QR renouvelé toutes les 30 s à partir d'un lot de tokens.
-// 3) Hors horaires de travail : écran quasi noir, plus de requêtes, veille OK.
+// 3) Hors des horaires de travail, l'écran passe en veille (économie tablette + serveur :
+//    plus aucune requête). Un bouton « Réveiller l'écran » le réactive pour quelques
+//    minutes (équipes de nuit, heures sup), puis il se rendort tout seul.
 // 4) « Mon code secret » : l'employé tape son mot ou PIN (aucun micro).
 // Dépendance : npm install qrcode.react
 // ============================================================================
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import {
+import { Moon, Sun,
   KeyRound, QrCode, Loader2, WifiOff, ShieldOff, CheckCircle2, LogOut,
   AlertTriangle, MonitorSmartphone, Eye, EyeOff,
 } from 'lucide-react';
@@ -24,6 +26,7 @@ const REFILL_BELOW = 3;      // recharge un lot quand il reste < 3 tokens valide
 const STEP_FALLBACK = 30;
 const RESULT_MS = 6000;      // durée d'affichage d'un résultat
 const SECRET_IDLE_MS = 40000; // retour auto au QR si personne ne tape
+const WAKE_MS = 5 * 60 * 1000; // durée d'un réveil manuel hors horaires
 
 // Titre du refus selon la CAUSE (le backend renvoie un code d'erreur) — plus de
 // « Pointage non validé » générique. Les cas congé / repos passent par la
@@ -45,6 +48,7 @@ export default function EcranPage() {
   const [now, setNow] = useState(Date.now());
   const [tokens, setTokens] = useState<QrToken[]>([]);
   const [offline, setOffline] = useState(false);
+  const [awakeUntil, setAwakeUntil] = useState(0); // réveil manuel hors horaires (epoch ms)
   const [mode, setMode] = useState<'qr' | 'secret'>('qr');
   const [secret, setSecret] = useState('');
   const [showSecret, setShowSecret] = useState(false);
@@ -61,11 +65,16 @@ export default function EcranPage() {
   const serverNow = now + skew.current;
 
   // ── Horaires : veille hors plage (économie tablette + serveur) ────────────
+  //    Hors horaires, un bouton « Réveiller l'écran » le réactive WAKE_MS (5 min).
   const hour = new Date(now).getHours();
   const wh = info?.workHours;
   const inHours = !wh || (wh.startHour <= wh.endHour
     ? hour >= wh.startHour - 1 && hour < wh.endHour + 1
     : hour >= wh.startHour - 1 || hour < wh.endHour + 1);
+  const awake = now < awakeUntil;
+  const active = inHours || awake;       // false = écran en veille (aucune requête)
+  const extendAwake = useCallback(() => setAwakeUntil((prev) => Math.max(prev, Date.now() + WAKE_MS)), []);
+  const wakeUp = useCallback(() => { setNow(Date.now()); setAwakeUntil(Date.now() + WAKE_MS); }, []);
 
   // ── Démarrage : déjà appairé ? sinon appairage ────────────────────────────
   const boot = useCallback(async () => {
@@ -119,30 +128,49 @@ export default function EcranPage() {
   }, []);
 
   useEffect(() => {
-    if (view !== 'ready' || !inHours) return;
+    if (view !== 'ready' || !active) return;
     const valid = tokens.filter((t) => t.validUntil > serverNow).length;
     if (valid < REFILL_BELOW) refill();
-  }, [view, inHours, tokens, serverNow, refill]);
+  }, [view, active, tokens, serverNow, refill]);
+
+  // Réveil de l'appareil / retour du réseau : on resynchronise IMMÉDIATEMENT le lot de QR
+  // (les minuteurs sont suspendus pendant la veille → sinon l'écran resterait vide quelques secondes).
+  useEffect(() => {
+    if (view !== 'ready' || !active) return;
+    const wake = () => {
+      if (document.visibilityState === 'hidden') return;
+      setNow(Date.now());
+      refill();
+    };
+    document.addEventListener('visibilitychange', wake);
+    window.addEventListener('online', wake);
+    window.addEventListener('focus', wake);
+    return () => {
+      document.removeEventListener('visibilitychange', wake);
+      window.removeEventListener('online', wake);
+      window.removeEventListener('focus', wake);
+    };
+  }, [view, active, refill]);
 
   // Régénération du QR par l'admin (nouveau sel) : la tablette resynchronise son lot
   // au plus tard 60 s après, sans intervention.
   useEffect(() => {
-    if (view !== 'ready' || !inHours) return;
+    if (view !== 'ready' || !active) return;
     const id = setInterval(refill, 60_000);
     return () => clearInterval(id);
-  }, [view, inHours, refill]);
+  }, [view, active, refill]);
 
-  // Hors horaires : on revérifie juste l'état de l'écran toutes les 5 min
+  // En veille : on revérifie seulement l'état de l'écran toutes les 5 min (révocation)
   useEffect(() => {
-    if (view !== 'ready' || inHours) return;
+    if (view !== 'ready' || active) return;
     const id = setInterval(boot, 5 * 60 * 1000);
     return () => clearInterval(id);
-  }, [view, inHours, boot]);
+  }, [view, active, boot]);
 
-  // ── Wake Lock : seulement pendant les horaires ────────────────────────────
+  // ── Wake Lock : garde l'écran allumé tant que l'écran est éveillé ─────────
   useEffect(() => {
     const wl = (navigator as any).wakeLock;
-    if (view !== 'ready' || !inHours || !wl) return;
+    if (view !== 'ready' || !active || !wl) return;
     let lock: any = null; let cancelled = false;
     const acquire = async () => {
       try { if (!cancelled && document.visibilityState === 'visible') lock = await wl.request('screen'); } catch { /* refusé (batterie faible) */ }
@@ -151,7 +179,7 @@ export default function EcranPage() {
     const onVis = () => { if (document.visibilityState === 'visible') acquire(); };
     document.addEventListener('visibilitychange', onVis);
     return () => { cancelled = true; document.removeEventListener('visibilitychange', onVis); lock?.release?.().catch(() => {}); };
-  }, [view, inHours]);
+  }, [view, active]);
 
   // ── Token courant + compte à rebours ──────────────────────────────────────
   const current = tokens.find((t) => t.validFrom <= serverNow && serverNow < t.validUntil);
@@ -165,11 +193,12 @@ export default function EcranPage() {
 
   const showOutcome = useCallback((r: PunchResult) => {
     setOutcome(r);
+    extendAwake();                                           // quelqu'un utilise l'écran : on reste éveillé
     if (r.requiresConfirmation) return;                      // attend le choix de l'employé
     pendingSecret.current = '';
     if (r.success && r.firstName && (r.direction === 'IN' || r.direction === 'OUT')) { try { speakPointageMessage(r.firstName, r.direction); } catch { /* voix indisponible */ } }
     setTimeout(() => { setOutcome(null); leaveSecret(); }, RESULT_MS);
-  }, [leaveSecret]);
+  }, [leaveSecret, extendAwake]);
 
   const submitSecret = useCallback(async (value: string, confirm?: boolean) => {
     if (sending || value.trim().length < 4) return;
@@ -218,11 +247,16 @@ export default function EcranPage() {
     </div>
   );
 
-  // Hors horaires : quasi noir
-  if (!inHours) return (
+  // Veille hors horaires : écran quasi noir + bouton pour réveiller (ceux qui travaillent tard)
+  if (!active) return (
     <div className={shell}>
+      <Moon size={34} className="text-white/20 mb-3" />
       <div className="text-white/25 text-5xl font-light tabular-nums">{new Date(now).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
-      <p className="mt-2 text-white/20 text-sm">{info?.label} · en veille</p>
+      <p className="mt-2 text-white/30 text-sm">{info?.label} · en veille</p>
+      <button onClick={wakeUp}
+        className="mt-10 inline-flex items-center gap-3 px-8 py-5 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-xl font-semibold transition">
+        <Sun size={24} /> Réveiller l&apos;écran pour pointer
+      </button>
     </div>
   );
 
@@ -276,7 +310,12 @@ export default function EcranPage() {
           <p className="mt-2 text-xs text-white/40 flex items-center gap-2">
             {offline ? <><WifiOff size={14} /> Reconnexion…</> : `Renouvelé dans ${remaining}s`}
           </p>
-          <button onClick={() => setMode('secret')} className="mt-6 inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-lg font-semibold">
+          {!inHours && awake && (
+            <p className="mt-1 text-xs text-white/30">
+              Éveil temporaire · retour en veille à {new Date(awakeUntil).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          )}
+          <button onClick={() => { extendAwake(); setMode('secret'); }} className="mt-6 inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-white/10 hover:bg-white/15 text-lg font-semibold">
             <KeyRound size={22} /> Mon code secret
           </button>
         </>

@@ -15,6 +15,7 @@ import { PushToggleButton } from '@/components/PushNotificationBanner';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
 import { FancySelect } from '@/components/ui/FancySelect';
+import { invalidateMyEmployeePhotoCache } from '@/hooks/useMyEmployeePhoto';
 
 // ============================================================================
 // Types
@@ -290,6 +291,7 @@ export default function MonProfilPage() {
       const updated = await api.patch<EmployeeProfile>('/employees/me', payload);
       setEmployee(updated);
       setForm(formStateFromEmployee(updated));
+      invalidateMyEmployeePhotoCache(); // 🆕 sidebar/topnav récupèrent la nouvelle photo au prochain montage
       setIsEditing(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);

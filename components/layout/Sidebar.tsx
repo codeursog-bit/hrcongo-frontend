@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
 import Image from 'next/image';
+import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -262,6 +263,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  // 🆕 Photo de la fiche employé si la personne connectée en a une (admin
+  // multi-comptes qui est aussi employé, ou employé/manager/RH classique).
+  // Reste `null` sinon (404 avalé silencieusement par le hook) — on retombe
+  // alors sur l'avatar à initiales généré ci-dessous, comportement inchangé.
+  const employeePhotoUrl = useMyEmployeePhoto();
   const [isAutreOpen, setIsAutreOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   // 🆕 Permission "secrétaire" : pointage manuel pour tout le monde
@@ -414,7 +420,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="rounded-xl p-3 flex items-center gap-3 transition-colors group" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <div className="relative shrink-0">
               {user ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-lg object-cover" />
+                <img src={employeePhotoUrl || user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-lg object-cover" />
               ) : (
                 <div className="w-9 h-9 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
               )}

@@ -26,10 +26,13 @@ const PAGE_LABELS: Record<string, string> = {
 interface PortfolioTopNavProps {
   userName?: string;
   userEmail?: string;
+  /** Photo de la fiche employé, si l'admin multi-comptes en a une (sinon
+   *  fallback sur les initiales, comportement inchangé). */
+  userPhotoUrl?: string;
   onMenuClick?: () => void;
 }
 
-export default function PortfolioTopNav({ userName, userEmail, onMenuClick }: PortfolioTopNavProps) {
+export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onMenuClick }: PortfolioTopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
@@ -95,9 +98,13 @@ export default function PortfolioTopNav({ userName, userEmail, onMenuClick }: Po
                 <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{userName ?? 'Mon compte'}</p>
                 <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">Portefeuille</p>
               </div>
-              <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                {initials}
-              </div>
+              {userPhotoUrl ? (
+                <img src={userPhotoUrl} alt={userName ?? 'Photo de profil'} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {initials}
+                </div>
+              )}
               <ChevronDown size={14} className={`text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 

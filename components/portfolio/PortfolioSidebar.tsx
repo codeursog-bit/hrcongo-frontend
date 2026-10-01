@@ -9,10 +9,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Building2, Users, Wallet, HandCoins,
-  Calendar, Users2, ClipboardList, LogOut, Hexagon, BarChart3, UserPlus, X,
+  Calendar, Users2, ClipboardList, LogOut, BarChart3, UserPlus, X,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -39,11 +40,14 @@ const NAV: NavEntry[] = [
 interface PortfolioSidebarProps {
   userName?: string;
   userEmail?: string;
+  /** Photo de la fiche employé, si l'admin multi-comptes en a une (sinon
+   *  fallback sur les initiales, comportement inchangé). */
+  userPhotoUrl?: string;
   open?: boolean;
   onClose?: () => void;
 }
 
-export default function PortfolioSidebar({ userName, userEmail, open = false, onClose }: PortfolioSidebarProps) {
+export default function PortfolioSidebar({ userName, userEmail, userPhotoUrl, open = false, onClose }: PortfolioSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -67,17 +71,14 @@ export default function PortfolioSidebar({ userName, userEmail, open = false, on
         className={`fixed left-0 top-0 h-full w-[240px] flex flex-col z-30 transition-transform duration-200 md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}
       >
-        {/* Logo */}
+        {/* Logo — vrai logo KonzaRH (identique à components/layout/Sidebar.tsx),
+            remplace l'ancien icône hexagone générique */}
         <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
-              <Hexagon size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="font-bold text-sm leading-none" style={{ color: 'var(--text)' }}>KonzaRH</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Mon portefeuille</p>
-            </div>
-          </div>
+          <Link href="/portefeuille/dashboard" className="inline-flex flex-col items-start group">
+            <Image src="/logos/konza_logo_h_color.png" alt="Konza RH Logo" width={507} height={240} priority className="block dark:hidden transition-opacity duration-300 group-hover:opacity-80" style={{ width: '130px', height: 'auto', objectFit: 'contain' }} />
+            <Image src="/logos/konza_logo_h_white.png" alt="Konza RH Logo" width={507} height={240} priority className="hidden dark:block transition-opacity duration-300 group-hover:opacity-80" style={{ width: '130px', height: 'auto', objectFit: 'contain' }} />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>Mon portefeuille</p>
+          </Link>
           <button onClick={onClose} className="p-1.5 rounded-lg md:hidden" style={{ color: 'var(--text-muted)' }}>
             <X size={18} />
           </button>
@@ -112,9 +113,13 @@ export default function PortfolioSidebar({ userName, userEmail, open = false, on
         {/* User footer */}
         <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2.5 px-2.5 py-2 mb-1 rounded-xl" style={{ background: 'var(--surface-2)' }}>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0 text-white text-xs font-bold">
-              {initials}
-            </div>
+            {userPhotoUrl ? (
+              <img src={userPhotoUrl} alt={userName ?? 'Photo de profil'} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0 text-white text-xs font-bold">
+                {initials}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate" style={{ color: 'var(--text)' }}>{userName ?? 'Mon compte'}</p>
               <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{userEmail ?? ''}</p>
