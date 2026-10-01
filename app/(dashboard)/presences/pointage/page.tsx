@@ -727,7 +727,7 @@ export default function AttendanceCheckInPage() {
               <button
                 type="button"
                 onClick={onMainAction}
-                disabled={isProcessing || (!scanMode && geoState.loading) || (scanMode && isOffline)}
+                disabled={isProcessing || (scanMode && isOffline)}
                 aria-label={scanMode ? "Scanner le QR pour pointer l'entrée" : "Pointer l'entrée"}
                 className={`relative w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 transition-all duration-300 focus:outline-none active:scale-90 disabled:cursor-not-allowed ${
                   scanAnim === 'success'
@@ -765,7 +765,7 @@ export default function AttendanceCheckInPage() {
                   seul juge (voir attendance-check.service.ts). */}
               <button
                 onClick={onMainAction}
-                disabled={isProcessing || (!scanMode && geoState.loading) || (scanMode && isOffline)}
+                disabled={isProcessing || (scanMode && isOffline)}
                 className="w-full py-4 font-bold rounded-2xl shadow-lg flex justify-center items-center gap-3 transition-all active:scale-95 bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-60"
               >
                 {isProcessing ? <Loader2 className="animate-spin" /> : scanMode ? <ScanLine size={20} /> : <Clock size={20} />}

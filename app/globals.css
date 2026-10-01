@@ -129,3 +129,19 @@ input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px #0B0C0F inset !important;
   -webkit-text-fill-color: white !important;
 }
+
+/* Pages toujours en thème sombre (login, 2FA, mot de passe oublié...), même
+   quand le thème global de l'app (classe .dark sur <html>) est en mode
+   clair : sans ça, le fallback générique ci-dessus (`inherit`) récupère la
+   couleur de texte ambiante du mode clair (noir) au lieu du blanc de ces
+   champs, d'où le texte illisible sur fond sombre quand le navigateur
+   propose un identifiant/mot de passe enregistré. */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #0B0C0F inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  transition: background-color 5000s ease-in-out 0s;
+}

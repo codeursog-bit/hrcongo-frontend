@@ -235,7 +235,7 @@ function TwoFAModal({ isOpen, tempToken2fa, onSuccess, onCancel }: TwoFAModalPro
                   onChange={handleCodeChange}
                   placeholder="000000"
                   autoFocus
-                  className="w-full text-center text-3xl font-mono tracking-[0.5em] py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                  className="auth-input w-full text-center text-3xl font-mono tracking-[0.5em] py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                 />
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Code TOTP (6 chiffres) ou code de secours (8 caractères)
@@ -376,7 +376,7 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
                   <input
                     {...register('newPassword')}
                     type={showNewPassword ? 'text' : 'password'}
-                    className={`w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.newPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
+                    className={`auth-input w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.newPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
                     placeholder="Minimum 8 caractères"
                   />
                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
@@ -410,7 +410,7 @@ function ChangePasswordModal({ isOpen, tempToken, userInfo, onSuccess, onCancel 
                   <input
                     {...register('confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
-                    className={`w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
+                    className={`auth-input w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.confirmPassword ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-emerald-500/50'}`}
                     placeholder="Retapez votre mot de passe"
                   />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
@@ -649,7 +649,7 @@ function LoginContent() {
                     {...register('email')}
                     type="text"
                     autoComplete="username"
-                    className={`block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
+                    className={`auth-input block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
                     placeholder="admin@konza-rh.cg ou 06 xxx xx xx"
                   />
                 </div>
@@ -667,7 +667,7 @@ function LoginContent() {
                   <input
                     {...register('password')}
                     type={showPassword ? 'text' : 'password'}
-                    className={`block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
+                    className={`auth-input block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${errors.password ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : 'border-white/10 focus:border-emerald-500/50 focus:ring-emerald-500/50'}`}
                     placeholder="••••••••"
                   />
                   <button

@@ -727,11 +727,17 @@ const getPasswordStrength = (pass: string) => {
   return score;
 };
 
+// 🔧 FIX : "auth-input" ajouté (voir app/globals.css) — même bug que sur
+// /auth/login : cette page est toujours en thème sombre sans jamais poser la
+// classe .dark, donc l'autofill du navigateur (mot de passe/email enregistré)
+// retombait sur du texte noir illisible. Ne change RIEN au rendu visuel
+// normal (hors autofill) : la classe n'a d'effet que sur les pseudo-états
+// :-webkit-autofill.
 const inputClass =
-  'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 px-4';
+  'auth-input block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 px-4';
 
 const inputWithIconClass =
-  'block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 pl-11 pr-4';
+  'auth-input block w-full bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all py-3 pl-11 pr-4';
 
 // ── Floating particles ────────────────────────────────────────────────────────
 const FloatingDots = () => (

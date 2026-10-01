@@ -477,7 +477,7 @@ export default function AcceptInvitationPage() {
                       onChange={e => setFirstName(e.target.value)}
                       placeholder="Jean"
                       required
-                      className="block w-full pl-10 sm:pl-12 pr-3 py-2.5 sm:py-3.5 text-sm bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                      className="auth-input block w-full pl-10 sm:pl-12 pr-3 py-2.5 sm:py-3.5 text-sm bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
                     />
                   </div>
                 </div>
@@ -489,7 +489,7 @@ export default function AcceptInvitationPage() {
                     onChange={e => setLastName(e.target.value)}
                     placeholder="Dupont"
                     required
-                    className="block w-full px-3 py-2.5 sm:py-3.5 text-sm bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                    className="auth-input block w-full px-3 py-2.5 sm:py-3.5 text-sm bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   />
                 </div>
               </div>
@@ -505,7 +505,7 @@ export default function AcceptInvitationPage() {
                     onChange={e => setPassword(e.target.value)}
                     placeholder="Minimum 8 caractères"
                     required
-                    className="block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                    className="auth-input block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border border-white/10 focus:border-cyan-500/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
                   />
                   <button type="button" onClick={() => setShowPwd(v => !v)}
                     className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-500 hover:text-white transition-colors">
@@ -552,7 +552,7 @@ export default function AcceptInvitationPage() {
                     onChange={e => setConfirm(e.target.value)}
                     placeholder="Retapez votre mot de passe"
                     required
-                    className={`block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${
+                    className={`auth-input block w-full pl-10 sm:pl-12 pr-11 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base bg-white/5 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${
                       confirm.length > 0 && !passwordMatch
                         ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20'
                         : confirm.length > 0 && passwordMatch

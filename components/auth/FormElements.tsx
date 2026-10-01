@@ -34,7 +34,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           <input
             ref={ref}
             {...props}
-            className={`block w-full rounded-xl border bg-white/[0.03] py-3 text-[14px] text-[#FAFAFA] placeholder-[#5A5E66] outline-none transition-all focus:bg-white/[0.05] ${
+            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 text-[14px] text-[#FAFAFA] placeholder-[#5A5E66] outline-none transition-all focus:bg-white/[0.05] ${
               Icon ? 'pl-10 pr-3.5' : 'px-3.5'
             } ${
               error
@@ -80,7 +80,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
             ref={ref}
             {...props}
             type={visible ? 'text' : 'password'}
-            className={`block w-full rounded-xl border bg-white/[0.03] py-3 pr-11 text-[14px] text-[#FAFAFA] placeholder-[#5A5E66] outline-none transition-all focus:bg-white/[0.05] ${
+            className={`auth-input block w-full rounded-xl border bg-white/[0.03] py-3 pr-11 text-[14px] text-[#FAFAFA] placeholder-[#5A5E66] outline-none transition-all focus:bg-white/[0.05] ${
               Icon ? 'pl-10' : 'pl-3.5'
             } ${
               error
