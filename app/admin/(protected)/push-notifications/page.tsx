@@ -14,9 +14,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Bell, BellRing, BellOff, AlertTriangle, RefreshCw, Loader2,
-  Search, Smartphone, ShieldAlert, CheckCircle2,
+  Search, Smartphone, ShieldAlert, CheckCircle2, Inbox, XCircle, Eye, EyeOff,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
+import { api } from '@/services/api';
 
 type StatusFilter = 'all' | 'active' | 'enabled_no_device' | 'disabled';
 
@@ -36,12 +37,188 @@ const STATUS_META: Record<'active' | 'enabled_no_device' | 'disabled', { label: 
   disabled:           { label: 'Désactivé',          cls: 'text-gray-500 bg-gray-800 border-gray-700',               icon: BellOff },
 };
 
+
+// ─── 🆕 ONGLET « RÉCEPTIONS » : qui a reçu chaque notification, dans l'app et hors app ───────────
+const PUSH_META: Record<string, { label: string; cls: string }> = {
+  SENT:      { label: 'Envoyée (non confirmée)',  cls: 'text-teal-300 bg-teal-500/10 border-teal-500/20' },
+  PARTIAL:   { label: 'Envoyée (1 appareil+)',    cls: 'text-teal-300 bg-teal-500/10 border-teal-500/20' },
+  CONFIRMED: { label: 'Affichée sur l\'appareil', cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  PENDING:   { label: 'Envoi en cours',           cls: 'text-gray-400 bg-gray-800 border-gray-700' },
+  NO_DEVICE: { label: 'Aucun appareil',      cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  DISABLED:  { label: 'Push désactivé',      cls: 'text-gray-400 bg-gray-800 border-gray-700' },
+  EXPIRED:   { label: 'Appareil expiré',     cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  FAILED:    { label: "Échec d'envoi",       cls: 'text-red-400 bg-red-500/10 border-red-500/20' },
+  NO_VAPID:  { label: 'Clés VAPID absentes', cls: 'text-red-400 bg-red-500/10 border-red-500/20' },
+};
+
+const fmtDateTime = (d: string) =>
+  new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Brazzaville' });
+
+function ReceiptsTab() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [hours, setHours] = useState(24);
+  const [type, setType] = useState('all');
+  const [push, setPush] = useState('all');
+  const [read, setRead] = useState('all');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [testMsg, setTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  // 🆕 Envoie une notification de test à MOI (super admin) puis rafraîchit : on voit si elle est
+  // « Affichée sur l'appareil » (accusé de réception) au bout de quelques secondes.
+  const sendTest = async () => {
+    setTesting(true);
+    setTestMsg(null);
+    try {
+      const r: any = await api.post('/admin/push/test', {});
+      setTestMsg(r?.apiPublicUrlConfigured
+        ? { ok: true, text: 'Test envoyé. Vous devriez recevoir la notification ; actualisation automatique dans quelques secondes.' }
+        : { ok: false, text: "Test envoyé, mais API_PUBLIC_URL n'est pas définie sur le serveur : aucun accusé de réception ne sera possible." });
+      setHours(6); setType('all'); setPush('all'); setRead('all'); setSearch(''); setPage(1);
+      setTimeout(load, 4000);
+      setTimeout(load, 12000);
+    } catch (e: any) {
+      setTestMsg({ ok: false, text: e?.message || "Échec de l'envoi du test." });
+    } finally { setTesting(false); }
+  };
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const qs = new URLSearchParams({ hours: String(hours), type, push, read, search, page: String(page), limit: '50' });
+      setData(await api.get(`/admin/push/receipts?${qs.toString()}`));
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [hours, type, push, read, page]);
+  useEffect(() => { const t = setTimeout(() => { setPage(1); load(); }, 400); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [search]);
+
+  const st = data?.stats;
+  const sel = 'bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none';
+
+  return (
+    <div className="space-y-5">
+      {st && (
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+          {[
+            ['Notifications', st.total, 'text-white'],
+            ["Lues dans l'app", st.inAppRead, 'text-sky-400'],
+            ['Affichées sur l\'appareil', st.pushConfirmed ?? 0, 'text-emerald-400'],
+            ['Envoyées hors app', st.pushDelivered, 'text-teal-300'],
+            ['Non envoyées hors app', st.pushNotDelivered, 'text-amber-400'],
+            ['Sans envoi push', st.pushNotAttempted, 'text-gray-400'],
+          ].map(([label, n, cls]: any) => (
+            <div key={label} className="p-3.5 rounded-xl border bg-gray-900 border-gray-800">
+              <p className={`text-2xl font-black ${cls}`}>{n}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        <select className={sel} value={hours} onChange={(e) => { setHours(+e.target.value); setPage(1); }}>
+          <option value={6}>6 dernières heures</option><option value={24}>24 dernières heures</option>
+          <option value={72}>3 jours</option><option value={168}>7 jours</option><option value={720}>30 jours</option>
+        </select>
+        <select className={sel} value={type} onChange={(e) => { setType(e.target.value); setPage(1); }}>
+          <option value="all">Tous les types</option>
+          {(data?.types ?? []).map((t: string) => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <select className={sel} value={push} onChange={(e) => { setPush(e.target.value); setPage(1); }}>
+          <option value="all">Push : tous</option><option value="sent">Envoyés hors app</option>
+          <option value="not_sent">Non envoyés hors app</option><option value="none">Sans envoi push</option>
+        </select>
+        <select className={sel} value={read} onChange={(e) => { setRead(e.target.value); setPage(1); }}>
+          <option value="all">App : toutes</option><option value="read">Lues</option><option value="unread">Non lues</option>
+        </select>
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nom, email, entreprise…"
+            className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none" />
+        </div>
+        <button onClick={load} disabled={loading} className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm disabled:opacity-50">
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
+        <button onClick={sendTest} disabled={testing}
+          className="px-3 py-2 bg-red-600/90 hover:bg-red-600 text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center gap-2">
+          {testing ? <Loader2 size={14} className="animate-spin" /> : <BellRing size={14} />} Envoyer un test
+        </button>
+      </div>
+
+      {testMsg && (
+        <p className={`text-xs rounded-xl border px-3 py-2 ${testMsg.ok ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-300 bg-amber-500/10 border-amber-500/20'}`}>
+          {testMsg.text}
+        </p>
+      )}
+
+      <p className="text-[11px] text-gray-600 flex items-start gap-1.5">
+        <Inbox size={12} className="shrink-0 mt-0.5" />
+        <span>
+          « Affichée sur l&apos;appareil » = confirmé par l&apos;appareil lui-même (le service worker a affiché la notification, appli fermée ou non).
+          « Envoyée (non confirmée) » = acceptée par le service push, sans confirmation : appareil éteint ou hors ligne, ancien service worker
+          pas encore mis à jour, ou variable API_PUBLIC_URL absente. Seuls les envois faits après la mise à jour sont tracés.
+          {st?.capped && ' Résultat limité aux 3000 notifications les plus récentes.'}
+        </span>
+      </p>
+
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 size={22} className="animate-spin text-gray-600" /></div>
+        ) : !data || data.items.length === 0 ? (
+          <p className="text-sm text-gray-600 text-center py-16">Aucune notification pour ces filtres</p>
+        ) : (
+          <div className="divide-y divide-gray-800">
+            {data.items.map((r: any) => {
+              const pKey = r.push ? (r.push.ackAt ? 'CONFIRMED' : r.push.status) : null;
+              const pm = pKey ? (PUSH_META[pKey] ?? { label: pKey, cls: 'text-gray-400 bg-gray-800 border-gray-700' }) : null;
+              return (
+                <div key={r.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-white truncate">{r.name}</p>
+                    <p className="text-xs text-gray-600 truncate">{r.title} · {r.companyName ?? 'Plateforme'} · {fmtDateTime(r.createdAt)}</p>
+                    {r.push?.error && <p className="text-[11px] text-red-400/80 truncate">{r.push.error}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${r.inApp.read ? 'text-sky-400 bg-sky-500/10 border-sky-500/20' : 'text-gray-400 bg-gray-800 border-gray-700'}`}
+                      title={r.inApp.readAt ? `Lue le ${fmtDateTime(r.inApp.readAt)}` : "Reçue dans l'app, pas encore lue"}>
+                      {r.inApp.read ? <Eye size={11} /> : <EyeOff size={11} />} {r.inApp.read ? 'Lue' : "Dans l'app"}
+                    </span>
+                    {pm ? (
+                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${pm.cls}`}
+                        title={`${r.push.devicesOk}/${r.push.devicesTotal} appareil(s) accepté(s)` + (r.push.ackAt ? ` · affichée le ${fmtDateTime(r.push.ackAt)} (${r.push.ackedDevices} appareil(s))` : '')}>{pm.label}</span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border text-gray-600 bg-gray-900 border-gray-800 flex items-center gap-1">
+                        <XCircle size={11} /> Pas d&apos;envoi push
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {data && data.total > data.limit && (
+        <div className="flex items-center justify-between text-sm text-gray-400">
+          <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1.5 bg-gray-800 rounded-lg disabled:opacity-40">Précédent</button>
+          <span>Page {data.page} / {Math.ceil(data.total / data.limit)}</span>
+          <button disabled={page >= Math.ceil(data.total / data.limit)} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 bg-gray-800 rounded-lg disabled:opacity-40">Suivant</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PushNotificationsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [tab, setTab] = useState<'subs' | 'receipts'>('subs'); // 🆕
 
   const load = async () => {
     setLoading(true);
@@ -91,8 +268,20 @@ export default function PushNotificationsPage() {
         </button>
       </div>
 
+      {/* 🆕 Onglets */}
+      <div className="flex gap-1 p-1 bg-gray-900 border border-gray-800 rounded-xl w-fit">
+        {([['subs', 'Abonnements'], ['receipts', 'Réceptions']] as const).map(([k, label]) => (
+          <button key={k} onClick={() => setTab(k)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${tab === k ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'receipts' && <ReceiptsTab />}
+
       {/* Alerte VAPID — cause n°1 d'un push qui ne part jamais, pour PERSONNE */}
-      {data && !data.vapidConfigured && (
+      {tab === 'subs' && data && !data.vapidConfigured && (
         <div className="bg-red-950/40 border border-red-800 rounded-2xl p-4 flex items-start gap-3">
           <ShieldAlert className="text-red-500 shrink-0 mt-0.5" size={20} />
           <div>
@@ -107,7 +296,7 @@ export default function PushNotificationsPage() {
       )}
 
       {/* Compteurs / filtres */}
-      {data && (
+      {tab === 'subs' && data && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {([
             ['all', 'Tous', data.totalUsers, 'text-white'],
@@ -125,6 +314,7 @@ export default function PushNotificationsPage() {
       )}
 
       {/* Recherche */}
+      {tab === 'subs' && (<>
       <div className="relative">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-600" />
         <input
@@ -208,6 +398,7 @@ export default function PushNotificationsPage() {
           </div>
         )}
       </div>
+      </>)}
     </div>
   );
 }

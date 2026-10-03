@@ -441,6 +441,8 @@ export default function CorrectionsView({
   const [loadingHistory, setLoadingHistory]   = useState(false);
   const [pendingOvertimes, setPendingOvertimes] = useState<OvertimePendingItem[]>([]);
   const [activeTab, setActiveTab]             = useState<'absences' | 'overtime'>('absences');
+  // 🔒 HS désactivées pour l'entreprise : aucune HS (onglet, compteurs, liste) n'est affichée
+  const [overtimeEnabled, setOvertimeEnabled]   = useState(true);
   const [searchTerm, setSearchTerm]           = useState('');
   const [toast, setToast]                     = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [savingId, setSavingId]               = useState<string | null>(null);
@@ -462,7 +464,8 @@ export default function CorrectionsView({
   };
 
   useEffect(() => {
-    const fetchSettings = async () => {
+    const init = async () => {
+      let otEnabled = true;
       try {
         const res: any = await api.get('/payroll-settings');
         setCompanySettings({
@@ -470,12 +473,15 @@ export default function CorrectionsView({
           lateToleranceMinutes: res.lateToleranceMinutes || 0,
           workDays: res.workDays || [1, 2, 3, 4, 5],
         });
+        otEnabled = res.overtimeEnabled !== false;
+        setOvertimeEnabled(otEnabled);
       } catch (e) {
         console.error('Erreur settings:', e);
       }
+      // 🔒 HS désactivées : on ne charge même pas les HS en attente
+      if (otEnabled) fetchPendingOvertimes();
     };
-    fetchSettings();
-    fetchPendingOvertimes();
+    init();
   }, []);
 
   useEffect(() => {
@@ -651,8 +657,8 @@ export default function CorrectionsView({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Absences à traiter', value: absences.length, icon: <AlertCircle size={18} />, color: 'from-red-500 to-red-600', bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400' },
-          { label: 'HS en attente', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_APPROVAL').length, icon: <Clock size={18} />, color: 'from-amber-500 to-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
-          { label: 'Réponse employé', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_EMPLOYEE').length, icon: <HelpCircle size={18} />, color: 'from-amber-500 to-emerald-600', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
+          ...(overtimeEnabled ? [{ label: 'HS en attente', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_APPROVAL').length, icon: <Clock size={18} />, color: 'from-amber-500 to-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Réponse employé', value: pendingOvertimes.filter(o => o.overtimeStatus === 'PENDING_EMPLOYEE').length, icon: <HelpCircle size={18} />, color: 'from-amber-500 to-emerald-600', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' }] : []),
           { label: 'Corrections totales', value: historyLogs.length, icon: <History size={18} />, color: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400' },
         ].map((stat) => (
           <div key={stat.label} className={`${stat.bg} border border-current/10 rounded-2xl p-4`}>
@@ -683,7 +689,7 @@ export default function CorrectionsView({
               <span className="px-1.5 py-0.5 bg-red-500 text-white rounded-full text-xs">{absences.length}</span>
             )}
           </button>
-          {isAdmin && (
+          {isAdmin && overtimeEnabled && (
             <button
               onClick={() => setActiveTab('overtime')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
@@ -864,7 +870,7 @@ export default function CorrectionsView({
       )}
 
       {/* ── Tab Heures sup ────────────────────────────────────────────────── */}
-      {activeTab === 'overtime' && isAdmin && (
+      {activeTab === 'overtime' && isAdmin && overtimeEnabled && (
         <div className="space-y-3">
           {filteredOvertimes.length === 0 ? (
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-16 text-center">

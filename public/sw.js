@@ -106,7 +106,15 @@ self.addEventListener('push', (event) => {
     },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  // 🆕 Accusé de réception : une fois la notification RÉELLEMENT affichée, on prévient le serveur
+  // (visible dans le super admin : « affichée sur l'appareil »). Jamais bloquant : si l'appel
+  // échoue (hors-ligne…), la notification reste affichée.
+  const confirmDisplayed = () => {
+    if (!data.ackUrl) return Promise.resolve();
+    return fetch(data.ackUrl, { method: 'POST', mode: 'no-cors', keepalive: true }).catch(() => {});
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options).then(confirmDisplayed));
 });
 
 self.addEventListener('notificationclick', (event) => {

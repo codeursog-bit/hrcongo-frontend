@@ -58,6 +58,8 @@ interface AttendanceSummary {
   overtime25: number;
   overtime50: number;
   overtime100: number;
+  extraHoursInfo?: number; // 🆕 heures en plus à titre informatif (non payées)
+  overtimeEnabled?: boolean; // 🔒 false = HS désactivées : aucune HS affichée
   totalHours: number;
   status: 'perfect' | 'warning' | 'critical';
   trend: 'up' | 'down' | 'stable';
@@ -151,6 +153,8 @@ export default function AttendanceResumePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [data, setData] = useState<AttendanceSummary[] | null>(null);
+  // 🔒 HS désactivées pour l'entreprise : on ne montre AUCUNE heure sup (cartes, colonnes, badges, export)
+  const otOn = !(data ?? []).some(r => r.overtimeEnabled === false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [filter, setFilter] = useState('All');
   const [isValidated, setIsValidated] = useState(false);
@@ -221,10 +225,13 @@ export default function AttendanceResumePage() {
         'Repos':                r.daysOffDay,
         'Jours fériés':         r.daysHoliday,
         'Heures normales':      r.normalHours,
-        'HS +10%':              r.overtime10,
-        'HS +25%':              r.overtime25,
-        'HS Nuit +50%':         r.overtime50,
-        'HS Nuit +100%':        r.overtime100,
+        ...(otOn ? {
+          'HS +10%':              r.overtime10,
+          'HS +25%':              r.overtime25,
+          'HS Nuit +50%':         r.overtime50,
+          'HS Nuit +100%':        r.overtime100,
+        } : {}),
+        'Heures en plus (info)': r.extraHoursInfo || 0,
         'Heures totales':       r.totalHours,
         'Statut':               r.status === 'perfect' ? 'OK' : r.status === 'critical' ? 'Anomalie' : 'À vérifier',
       }));
@@ -451,7 +458,7 @@ export default function AttendanceResumePage() {
             className="bg-[var(--surface)] rounded-2xl p-8 text-center border border-[var(--border)] shadow-sm"
           >
             <h3 className="text-lg font-bold text-[var(--text)] mb-2">Traitement des pointages en cours...</h3>
-            <p className="text-[var(--text-muted)] mb-6">Calcul des heures supplémentaires et vérification des anomalies.</p>
+            <p className="text-[var(--text-muted)] mb-6">{otOn ? 'Calcul des heures supplémentaires et vérification des anomalies.' : 'Heures travaillées et vérification des anomalies.'}</p>
             <div className="max-w-md mx-auto h-3 bg-[var(--surface-2)] rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-emerald-500 rounded-full"
@@ -491,6 +498,8 @@ export default function AttendanceResumePage() {
                 <Percent size={24} />
               </div>
             </div>
+            {otOn && (
+              <>
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-amber-100 dark:border-amber-900/30 shadow-sm flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-amber-600 uppercase mb-1">HS Normales</p>
@@ -515,7 +524,25 @@ export default function AttendanceResumePage() {
                 <Moon size={24} />
               </div>
             </div>
+              </>
+            )}
           </div>
+
+          {/* 🆕 Heures en plus (à titre informatif — n'impactent pas la paie) */}
+          {data.reduce((sum, r) => sum + (r.extraHoursInfo || 0), 0) > 0 && (
+            <div className="bg-sky-50 dark:bg-sky-900/10 border border-sky-200 dark:border-sky-900/30 rounded-2xl p-5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold text-sky-700 dark:text-sky-400 uppercase mb-1">Heures en plus (info)</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">
+                  {fmt(data.reduce((sum, r) => sum + (r.extraHoursInfo || 0), 0))} <span className="text-sm text-[var(--text-muted)]">h</span>
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">Travaillées au-delà de l'horaire. À titre informatif : non comptées dans la paie.</p>
+              </div>
+              <div className="w-12 h-12 bg-sky-100 dark:bg-sky-900/20 text-sky-500 rounded-xl flex items-center justify-center shrink-0">
+                <Clock size={24} />
+              </div>
+            </div>
+          )}
 
           {/* OVERVIEW CARDS — LIGNE 2 : absences & congés */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -569,6 +596,7 @@ export default function AttendanceResumePage() {
                     <th className="px-6 py-3 text-center">Absences</th>
                     <th className="px-6 py-3 text-center">Congés</th>
                     <th className="px-6 py-3 text-right">Heures Norm.</th>
+                    {otOn && (<>
                     <th className="px-6 py-3 text-right text-amber-600">HS +10%</th>
                     <th className="px-6 py-3 text-right text-amber-600">HS +25%</th>
                     <th className="px-6 py-3 text-right text-amber-600">
@@ -577,6 +605,8 @@ export default function AttendanceResumePage() {
                     <th className="px-6 py-3 text-right text-red-600">
                       <span className="flex items-center justify-end gap-1"><Moon size={11} /> +100%</span>
                     </th>
+                    </>)}
+                    <th className="px-6 py-3 text-right text-sky-600">H. en plus (info)</th>
                     <th className="px-6 py-3 text-center">Statut</th>
                     <th className="px-6 py-3 w-10"></th>
                   </tr>
@@ -604,6 +634,7 @@ export default function AttendanceResumePage() {
                         </td>
                         <td className="px-6 py-4 text-center font-medium text-[var(--text-muted)]">{row.daysOnLeave}</td>
                         <td className="px-6 py-4 text-right font-mono text-[var(--text-muted)]">{row.normalHours}</td>
+                        {otOn && (<>
                         <td className="px-6 py-4 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
                           {(row.overtime10 || 0) > 0 ? fmt(row.overtime10) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
@@ -616,6 +647,10 @@ export default function AttendanceResumePage() {
                         <td className="px-6 py-4 text-right font-mono font-bold text-red-600 dark:text-red-400">
                           {(row.overtime100 || 0) > 0 ? fmt(row.overtime100) : <span className="text-[var(--text-muted)]">—</span>}
                         </td>
+                        </>)}
+                        <td className="px-6 py-4 text-right font-mono font-bold text-sky-600 dark:text-sky-400">
+                          {(row.extraHoursInfo || 0) > 0 ? fmt(row.extraHoursInfo || 0) : <span className="text-[var(--text-muted)]">—</span>}
+                        </td>
                         <td className="px-6 py-4 text-center"><StatusBadge status={row.status} /></td>
                         <td className="px-6 py-4 text-[var(--text-muted)]">{expandedRow === row.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</td>
                       </tr>
@@ -623,10 +658,10 @@ export default function AttendanceResumePage() {
                       {/* EXPANDED DETAILS */}
                       {expandedRow === row.id && (
                         <tr className="bg-[var(--surface-2)]">
-                          <td colSpan={11} className="p-0">
+                          <td colSpan={otOn ? 12 : 8} className="p-0">
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="p-6 border-b border-[var(--border)]">
                               {/* Badges HS */}
-                              {((row.overtime10 || 0) + (row.overtime25 || 0) + (row.overtime50 || 0) + (row.overtime100 || 0)) > 0 && (
+                              {otOn && ((row.overtime10 || 0) + (row.overtime25 || 0) + (row.overtime50 || 0) + (row.overtime100 || 0)) > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                   {(row.overtime10 || 0) > 0 && (
                                     <span className="text-xs bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full font-bold">

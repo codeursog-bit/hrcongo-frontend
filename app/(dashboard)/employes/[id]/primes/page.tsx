@@ -1053,6 +1053,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                       percentage: selectedTemplate.defaultPercentage ?? undefined,
                       isTaxable: selectedTemplate.isTaxable,
                       isCnss: selectedTemplate.isCnss,
+                      fiscalType: selectedTemplate.fiscalType,
                     }}
                   />
                 )}

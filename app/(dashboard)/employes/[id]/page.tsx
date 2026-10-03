@@ -830,10 +830,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   </div>
                 </div>
 
-                {/* 🆕 Brut/net estimés — base + primes mensuelles imposables
-                    (transport, sursalaire...). Exclut volontairement le 13e
-                    mois et toute prime à mois ciblé : ce sont des montants
-                    temporaires, pas une base stable pour l'estimation.
+                {/* 🆕 Brut/net estimés — base + primes mensuelles (imposables et
+                    indemnités non imposables), avec le détail de chaque retenue
+                    (CNSS, ITS, TOL, taxes de l'entreprise comme la CAMU).
+                    Exclut volontairement le 13e mois, toute prime à mois ciblé
+                    et les taxes à mois précis : montants temporaires, pas une
+                    base stable pour l'estimation.
                     "Estimé" et pas "contractuel" : ça varie d'un mois à
                     l'autre selon les primes actives ce mois-là. Respecte le
                     même masquage que le salaire de base. */}

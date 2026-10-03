@@ -558,7 +558,7 @@ export default function DailyView({
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${att.totalHours.toFixed(1)}h` : '-'}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-[var(--text)]">{att.totalHours ? `${parseFloat(Number(att.totalHours).toFixed(2))}h` : '-'}</td>
                     {isAdmin && (
                       <td className="px-6 py-4 text-right">
                         {att.id ? (

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronDown } from 'lucide-react';
 import { api } from '@/services/api';
 
 // ── RÉCAP SALAIRE — TOUJOURS CONTRACTUEL, JAMAIS PRORATISÉ ──────────────────
@@ -12,6 +12,10 @@ import { api } from '@/services/api';
 // un brut de Y" — si l'employé s'absente un mois donné, ça ne change RIEN
 // à cette page ; seul le bulletin réel de ce mois-là reflète l'absence
 // (prorata des primes proratisées, jours non payés, etc.).
+//
+// Le détail suit le bulletin réel : brut imposable, indemnités non imposables
+// (ajoutées au net), puis CHAQUE retenue (CNSS, ITS/BNC, TOL, taxes configurées
+// par l'entreprise comme la CAMU solidarité).
 //
 // - Sans `previewBonus` : reflète les primes MENSUELLES déjà enregistrées.
 // - Avec `previewBonus` : ajoute la prime en cours de création (pas encore
@@ -35,7 +39,23 @@ interface PreviewBonusInput {
   percentage?: number;
   isTaxable?: boolean;
   isCnss?: boolean;
+  fiscalType?: 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE' | null;
 }
+
+interface DeductionLine {
+  kind: 'CNSS' | 'ITS' | 'BNC' | 'TAX';
+  code: string;
+  label: string;
+  amount: number;
+  rate?: number | null;
+  base?: number | null;
+}
+
+const fmt = (n: number) => Number(n ?? 0).toLocaleString('fr-FR');
+
+/** Taux décimal → "0,5 %" ; null/undefined → '' (montant fixe). */
+const fmtRate = (r?: number | null) =>
+  r == null ? '' : `${(r * 100).toLocaleString('fr-FR', { maximumFractionDigits: 3 })} %`;
 
 export const SalaryRecap = ({
   employeeId,
@@ -56,6 +76,7 @@ export const SalaryRecap = ({
   const [result, setResult]   = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(false);
+  const [showDetail, setShowDetail] = useState(true);
 
   useEffect(() => {
     if (!employeeId || !employee) return;
@@ -75,6 +96,7 @@ export const SalaryRecap = ({
         params.set('previewAmount', String(amount));
         params.set('previewTaxable', String(previewBonus.isTaxable ?? true));
         params.set('previewCnss', String(previewBonus.isCnss ?? true));
+        if (previewBonus.fiscalType) params.set('previewFiscalType', previewBonus.fiscalType);
       }
     }
     const qs = params.toString();
@@ -96,12 +118,14 @@ export const SalaryRecap = ({
   }, [
     employeeId, employee, bonuses,
     previewBonus?.amount, previewBonus?.percentage, previewBonus?.bonusType,
-    previewBonus?.isTaxable, previewBonus?.isCnss,
+    previewBonus?.isTaxable, previewBonus?.isCnss, previewBonus?.fiscalType,
   ]);
 
   if (error) return null; // silencieux — le récap est une aide, pas un bloquant
 
   const defaultLabel = previewBonus ? 'Brut / net (avec cette prime)' : 'Brut / net';
+  const deductions: DeductionLine[] = Array.isArray(result?.deductions) ? result.deductions : [];
+  const nonTaxable = Number(result?.nonTaxableBonuses ?? 0);
 
   return (
     <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl">
@@ -112,25 +136,67 @@ export const SalaryRecap = ({
         {loading && <Loader2 size={13} className="animate-spin text-slate-400 dark:text-white" />}
       </div>
       {result ? (
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-[10px] text-slate-500 dark:text-white uppercase font-bold">Brut</p>
-            <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">
-              {Number(result.grossSalary ?? 0).toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500 dark:text-slate-200">FCFA</span>
-            </p>
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[10px] text-slate-500 dark:text-white uppercase font-bold">Brut</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">
+                {fmt(result.grossSalary)} <span className="text-xs font-normal text-slate-500 dark:text-slate-200">FCFA</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-500 dark:text-white uppercase font-bold">Net</p>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                {fmt(result.netSalary)} <span className="text-xs font-normal text-slate-500 dark:text-slate-200">FCFA</span>
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] text-slate-500 dark:text-white uppercase font-bold">Net</p>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-              {Number(result.netSalary ?? 0).toLocaleString('fr-FR')} <span className="text-xs font-normal text-slate-500 dark:text-slate-200">FCFA</span>
-            </p>
-          </div>
-        </div>
+
+          {/* ── Détail : indemnités + chaque retenue ───────────────────── */}
+          {(deductions.length > 0 || nonTaxable > 0) && (
+            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setShowDetail(v => !v)}
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-200 hover:text-slate-700"
+              >
+                <ChevronDown size={12} className={`transition-transform ${showDetail ? '' : '-rotate-90'}`} />
+                Détail des retenues
+              </button>
+
+              {showDetail && (
+                <ul className="mt-2 space-y-1 text-xs">
+                  {nonTaxable > 0 && (
+                    <li className="flex items-center justify-between text-teal-700 dark:text-teal-300">
+                      <span>Indemnités non imposables</span>
+                      <span className="font-mono">+ {fmt(nonTaxable)}</span>
+                    </li>
+                  )}
+                  {deductions.map((d) => (
+                    <li key={`${d.kind}-${d.code}`} className="flex items-center justify-between text-slate-600 dark:text-slate-200">
+                      <span>
+                        {d.label}
+                        {d.kind === 'TAX' && d.rate != null && (
+                          <span className="ml-1 text-[10px] text-slate-400 dark:text-slate-300">({fmtRate(d.rate)})</span>
+                        )}
+                      </span>
+                      <span className="font-mono">− {fmt(d.amount)}</span>
+                    </li>
+                  ))}
+                  <li className="flex items-center justify-between pt-1 mt-1 border-t border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-white">
+                    <span>Total retenues</span>
+                    <span className="font-mono">− {fmt(result.totalDeductions)}</span>
+                  </li>
+                </ul>
+              )}
+            </div>
+          )}
+        </>
       ) : (
         <p className="text-sm text-slate-500 dark:text-white italic">Calcul en cours…</p>
       )}
       <p className="text-[10px] text-slate-500 dark:text-slate-200 mt-2">
-        Brut = salaire de base + primes mensuelles imposables. Net = brut moins CNSS, ITS et TOL. Montant contractuel — ne varie pas selon les jours travaillés ce mois-ci ; seul le bulletin réel applique le prorata des primes proratisées.
+        Brut = salaire de base + primes mensuelles imposables. Net = brut − retenues (CNSS, ITS, TOL et taxes configurées par l'entreprise) + indemnités non imposables. Montant contractuel — ne varie pas selon les jours travaillés ce mois-ci ; seul le bulletin réel applique le prorata des primes proratisées. Les taxes à « mois précis » n'y figurent pas.
       </p>
     </div>
   );

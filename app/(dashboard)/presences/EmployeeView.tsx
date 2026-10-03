@@ -119,7 +119,7 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
                       <div className="flex justify-between gap-4 mt-1 pt-1 border-t border-[var(--border)]">
                         <span className="text-[var(--text-muted)]">Durée:</span>
                         <span className="font-mono font-bold text-[var(--text)]">
-                          {att.totalHours.toFixed(1)}h
+                          {parseFloat(Number(att.totalHours).toFixed(2))}h
                         </span>
                       </div>
                     )}
@@ -161,8 +161,8 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
               <span className="font-bold text-2xl">
                 {myAttendances
                   .filter(a => a.status !== 'ON_LEAVE')
-                  .reduce((acc, curr) => acc + (curr.totalHours || 0), 0)
-                  .toFixed(1)}h
+                  .reduce((acc, curr) => acc + (Number(curr.totalHours) || 0), 0)
+                  .toFixed(2)}h
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm">

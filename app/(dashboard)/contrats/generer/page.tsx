@@ -138,6 +138,8 @@ function useLocalBreakdown(form: ContractForm) {
 interface ServerBreakdown {
   totalGross: number; cnss: number; its: number; tol: number; net: number;
   primesTotal: number; indemnitesTotal: number;
+  /** Autres taxes configurées par l'entreprise (CAMU…) — hors TOL */
+  taxes: { code: string; label: string; amount: number }[];
 }
 
 /** Aperçu Brut/CNSS/ITS/TOL/Net calculé par le serveur (vrai barème ITS),
@@ -165,11 +167,13 @@ function useServerBreakdown(form: ContractForm, isTravail: boolean) {
           indemnites: form.indemnites.filter(i => i.label && i.amount),
           situationMatrimoniale: form.situationMatrimoniale,
           nombreEnfants: form.nombreEnfants,
+          contractDuration: form.contractDuration,
         });
         setBreakdown({
           totalGross: res.totalGross, cnss: res.cnssDeduction, its: res.itsDeduction,
           tol: res.tolDeduction, net: res.netPay, primesTotal: res.primesTotal,
           indemnitesTotal: res.indemnitesTotal,
+          taxes: Array.isArray(res.taxes) ? res.taxes : [],
         });
       } catch {
         // silencieux : on garde le dernier aperçu valide plutôt que d'afficher une erreur intrusive
@@ -181,7 +185,7 @@ function useServerBreakdown(form: ContractForm, isTravail: boolean) {
   }, [
     isTravail, form.employeeId, form.salaireBase, form.sursalaire, form.heuresSupplementaires,
     form.primes, form.transport, form.indemniteTransport, form.indemnites,
-    form.situationMatrimoniale, form.nombreEnfants,
+    form.situationMatrimoniale, form.nombreEnfants, form.contractDuration,
   ]);
 
   return { breakdown, loading };
@@ -905,6 +909,9 @@ function GenerateContractInner() {
                     <Row label="Retenues CNSS" value={-serverBreakdown.cnss} muted />
                     <Row label="Retenues ITS" value={-serverBreakdown.its} muted />
                     <Row label="TOL" value={-serverBreakdown.tol} muted />
+                    {serverBreakdown.taxes.map((t) => (
+                      <Row key={t.code} label={t.label} value={-t.amount} muted />
+                    ))}
                     {form.indemniteTransport > 0 && <Row label="Indemnité transport" value={form.indemniteTransport} highlight="teal" />}
                     {serverBreakdown.indemnitesTotal > 0 && <Row label="Indemnités" value={serverBreakdown.indemnitesTotal} highlight="teal" />}
                     <div className="h-px bg-[var(--surface-2)] my-2" />
