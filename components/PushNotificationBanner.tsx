@@ -226,10 +226,11 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 // ─── Bannière principale ──────────────────────────────────────────────────────
 export default function PushNotificationBanner({ userName }: { userName?: string }) {
-  const { isSupported, isSubscribed, isLoading, permission, swError, subscribe } =
+  const { isSupported, isSubscribed, isLoading, permission, swError, isReady, optedOut, subscribe } =
     usePushNotifications();
 
   const [dismissed, setDismissed] = useState(false);
+  const [storageChecked, setStorageChecked] = useState(false);
   const [success, setSuccess]     = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -239,14 +240,12 @@ export default function PushNotificationBanner({ userName }: { userName?: string
     // Vérifier si l'utilisateur a déjà activé (permanent)
     if (localStorage.getItem('push-banner-dismissed')) {
       setDismissed(true);
-      return;
+    } else {
+      // Vérifier si on est en période de "snooze" (3 jours)
+      const snoozedUntil = localStorage.getItem('push-banner-snoozed-until');
+      if (snoozedUntil && Date.now() < Number(snoozedUntil)) setDismissed(true);
     }
-
-    // Vérifier si on est en période de "snooze" (3 jours)
-    const snoozedUntil = localStorage.getItem('push-banner-snoozed-until');
-    if (snoozedUntil && Date.now() < Number(snoozedUntil)) {
-      setDismissed(true);
-    }
+    setStorageChecked(true);
   }, []);
 
   // Synchroniser les erreurs SW dans l'état local
@@ -273,18 +272,21 @@ export default function PushNotificationBanner({ userName }: { userName?: string
     }
   };
 
-  // ── Cas : pas supporté, déjà abonné, bloqué ou déjà masqué ──
-  if (!isSupported || isSubscribed || permission === 'denied' || dismissed) return null;
-  if (typeof window !== 'undefined' && localStorage.getItem('push-banner-dismissed')) return null;
+  // ── Rien à afficher tant que l'état réel n'est pas connu (évite le « flash » au rechargement),
+  //    ni si pas supporté, déjà abonné, désactivé volontairement, bloqué ou masqué.
+  //    (le message de succès, lui, reste affiché quelques secondes)
+  if (!success && (!isReady || !storageChecked || !isSupported || isSubscribed || optedOut || permission === 'denied' || dismissed)) {
+    return null;
+  }
 
   // ── Cas : succès ──────────────────────────────────────────────────────────
   if (success) {
     return (
-      <div className="mx-4 mt-3 flex items-center gap-3 px-5 py-3.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl animate-in fade-in slide-in-from-top-2">
-        <div className="p-2 bg-emerald-500 rounded-xl">
+      <div className="mx-3 sm:mx-4 mt-3 flex items-center gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl animate-in fade-in slide-in-from-top-2">
+        <div className="p-2 bg-emerald-500 rounded-xl flex-shrink-0">
           <Check size={16} className="text-white" />
         </div>
-        <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+        <p className="min-w-0 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
           Notifications activées ! Vous serez prévenu(e) sur ce téléphone, même app fermée.
         </p>
       </div>
@@ -294,27 +296,33 @@ export default function PushNotificationBanner({ userName }: { userName?: string
   // ── Cas : erreur SW (message clair + bouton rechargement auto) ────────────
   if (localError) {
     return (
-      <div className="mx-4 mt-3 flex items-start gap-3 px-5 py-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl shadow-sm">
-        <div className="p-2.5 bg-amber-500 rounded-xl flex-shrink-0 mt-0.5">
-          <AlertTriangle size={18} className="text-white" />
+      <div className="relative mx-3 sm:mx-4 mt-3 flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl shadow-sm">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="p-2.5 bg-amber-500 rounded-xl flex-shrink-0">
+            <AlertTriangle size={18} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0 pr-7 sm:pr-0">
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
+              Notifications temporairement indisponibles
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">
+              Une mise à jour de l'application est disponible. Rechargez pour activer les notifications.
+            </p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-amber-900 dark:text-amber-100">
-            Notifications temporairement indisponibles
-          </p>
-          <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5 leading-relaxed">
-            Une mise à jour de l'application est disponible. Rechargez pour activer les notifications.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:flex-shrink-0">
           <button
             onClick={() => window.location.reload()}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition-all shadow-md"
           >
             <RefreshCw size={13} />
             Recharger
           </button>
-          <button onClick={handleDismiss} className="p-2 text-amber-400 hover:text-amber-600 rounded-xl transition-all">
+          <button
+            onClick={handleDismiss}
+            aria-label="Fermer"
+            className="absolute top-2 right-2 sm:static p-2 text-amber-400 hover:text-amber-600 rounded-xl transition-all"
+          >
             <X size={15} />
           </button>
         </div>
@@ -324,23 +332,25 @@ export default function PushNotificationBanner({ userName }: { userName?: string
 
   // ── Cas : bannière normale ─────────────────────────────────────────────────
   return (
-    <div className="mx-4 mt-3 flex items-start gap-3 px-5 py-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl shadow-sm">
-      <div className="p-2.5 bg-sky-500 rounded-xl flex-shrink-0 mt-0.5">
-        <Smartphone size={18} className="text-white" />
+    <div className="relative mx-3 sm:mx-4 mt-3 flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-2xl shadow-sm">
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <div className="p-2.5 bg-sky-500 rounded-xl flex-shrink-0">
+          <Smartphone size={18} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0 pr-7 sm:pr-0">
+          <p className="text-sm font-bold text-sky-900 dark:text-sky-100">
+            {userName ? `${userName}, activez` : 'Activez'} les notifications sur votre téléphone
+          </p>
+          <p className="text-xs text-sky-700 dark:text-sky-300 mt-0.5 leading-relaxed">
+            Demandes à valider, réponses à vos demandes et rappels de pointage : recevez-les même quand l'app est fermée.
+          </p>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-sky-900 dark:text-sky-100">
-          {userName ? `${userName}, activez` : 'Activez'} les notifications sur votre téléphone
-        </p>
-        <p className="text-xs text-sky-700 dark:text-sky-300 mt-0.5 leading-relaxed">
-          Demandes à valider, réponses à vos demandes et rappels de pointage : recevez-les même quand l'app est fermée.
-        </p>
-      </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:flex-shrink-0">
         <button
           onClick={handleSubscribe}
           disabled={isLoading}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white rounded-xl text-xs font-bold transition-all shadow-md"
         >
           {isLoading
             ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -348,7 +358,11 @@ export default function PushNotificationBanner({ userName }: { userName?: string
           }
           Activer
         </button>
-        <button onClick={handleDismiss} className="p-2 text-sky-400 hover:text-sky-600 rounded-xl transition-all">
+        <button
+          onClick={handleDismiss}
+          aria-label="Fermer"
+          className="absolute top-2 right-2 sm:static p-2 text-sky-400 hover:text-sky-600 rounded-xl transition-all"
+        >
           <X size={15} />
         </button>
       </div>
@@ -439,7 +453,7 @@ export function PushMenuItem({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const { isSupported, isSubscribed, isLoading, permission, subscribe, unsubscribe } =
+  const { isSupported, isSubscribed, isLoading, isReady, permission, subscribe, unsubscribe } =
     usePushNotifications();
 
   if (!isSupported) return null;
@@ -457,7 +471,7 @@ export function PushMenuItem({
     <button
       type="button"
       onClick={() => (isSubscribed ? unsubscribe() : subscribe())}
-      disabled={isLoading}
+      disabled={isLoading || !isReady}
       className={`${className} disabled:opacity-50`}
       style={style}
       title={isSubscribed ? 'Cliquer pour désactiver sur cet appareil' : undefined}

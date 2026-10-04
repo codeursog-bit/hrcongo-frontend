@@ -30,6 +30,15 @@ const CRITERIA_TEMPLATES = [
 
 const QUICK_SCORES = [1, 2, 3, 4, 5];
 
+// Grilles renvoyées par l'API : intégrées (incl. « Facteurs de succès ») + modèles de l'entreprise
+interface GridTpl { id: string; name: string; jobTitle?: string | null; criteria: any[] }
+interface Grids { builtin: GridTpl[]; custom: GridTpl[] }
+const BUILTIN_EMOJI: Record<string, string> = {
+  'builtin:general': '📋', 'builtin:industrial': '⚙️', 'builtin:commercial': '💼',
+  'builtin:probation': '🔍', 'builtin:success_factors': '🎯',
+};
+const normTitle = (s?: string | null) => (s ?? '').trim().toLowerCase();
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -55,9 +64,11 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
   const [improvements, setImprovements] = useState('');
   const [nextGoals,    setNextGoals]    = useState('');
   const [quickScore,   setQuickScore]   = useState(0); // si pas de grille
+  const [grids,        setGrids]        = useState<Grids | null>(null);
+  const [gridId,       setGridId]       = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen) { loadEmployees(); }
+    if (isOpen) { loadEmployees(); loadGrids(); }
     else { reset(); }
   }, [isOpen]);
 
@@ -66,7 +77,20 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
     setReviewType('ANNUAL'); setDate(new Date().toISOString().split('T')[0]);
     setCriteria([]); setUseCriteria(true); setFeedback('');
     setStrengths(''); setImprovements(''); setNextGoals('');
-    setQuickScore(0); setError(null);
+    setQuickScore(0); setError(null); setGridId(null);
+  };
+
+  const loadGrids = async () => {
+    try { setGrids(await api.get<Grids>('/performance/templates')); }
+    catch { setGrids(null); } // repli : les 4 grilles historiques ci-dessous
+  };
+
+  const applyGrid = (g: GridTpl) => {
+    setGridId(g.id);
+    setCriteria(g.criteria.map((c: any) => ({
+      id: c.id, label: c.label, description: c.description,
+      weight: Number(c.weight), score: 0, comment: '',
+    })));
   };
 
   const loadEmployees = async () => {
@@ -79,11 +103,25 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
   const loadTemplate = async (key: string) => {
     setLT(true);
     try {
+      setGridId(`builtin:${key}`);
       const tpl = await api.get<any>(`/performance/criteria/templates/${key}`);
       setCriteria(tpl.criteria.map((c: any) => ({ ...c, score: 0, comment: '' })));
     } catch { setError('Erreur chargement de la grille'); }
     finally { setLT(false); }
   };
+
+  const selectedEmp = employees.find((e: any) => e.id === employeeId);
+  const isRecommended = (g: GridTpl) =>
+    !!g.jobTitle && !!selectedEmp?.position && normTitle(g.jobTitle) === normTitle(selectedEmp.position);
+
+  // Arrivé à l'étape de notation sans grille choisie : si un modèle de l'entreprise correspond
+  // au poste de l'employé, on le charge directement (modifiable en un clic).
+  useEffect(() => {
+    if (step !== 'criteria' || !useCriteria || criteria.length > 0 || !grids) return;
+    const match = grids.custom.find(isRecommended);
+    if (match) applyGrid(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, grids, employeeId]);
 
   const updateCriterionScore = (id: string, score: number) => {
     setCriteria(c => c.map(x => x.id === id ? { ...x, score } : x));
@@ -253,22 +291,61 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
                 {/* Grille de critères */}
                 {useCriteria && (
                   <div className="space-y-4">
-                    <div>
-                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
-                        Choisir une grille prédéfinie
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {CRITERIA_TEMPLATES.map(t => (
-                          <button
-                            key={t.key}
-                            onClick={() => loadTemplate(t.key)}
-                            disabled={loadingTpl}
-                            className="flex items-center gap-2 p-3 border border-gray-200 dark:border-gray-600 rounded-xl text-left hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 disabled:opacity-50"
-                          >
-                            <span className="text-lg">{t.emoji}</span>
-                            {t.label}
-                          </button>
-                        ))}
+                    <div className="space-y-4">
+                      {grids && grids.custom.length > 0 && (
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Vos modèles</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {grids.custom.map(g => (
+                              <button
+                                key={g.id}
+                                onClick={() => applyGrid(g)}
+                                className={`flex items-center gap-2 p-3 border rounded-xl text-left transition-all text-sm font-medium text-gray-700 dark:text-gray-300
+                                  ${gridId === g.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
+                              >
+                                <span className="text-lg">🧩</span>
+                                <span className="min-w-0">
+                                  <span className="block truncate">{g.name}</span>
+                                  {g.jobTitle && <span className="block text-xs text-gray-400 truncate">Poste : {g.jobTitle}</span>}
+                                </span>
+                                {isRecommended(g) && (
+                                  <span className="ml-auto shrink-0 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">Recommandé</span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                          {grids && grids.custom.length > 0 ? 'Grilles intégrées' : 'Choisir une grille prédéfinie'}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {grids
+                            ? grids.builtin.map(g => (
+                                <button
+                                  key={g.id}
+                                  onClick={() => applyGrid(g)}
+                                  className={`flex items-center gap-2 p-3 border rounded-xl text-left transition-all text-sm font-medium text-gray-700 dark:text-gray-300
+                                    ${gridId === g.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}
+                                >
+                                  <span className="text-lg">{BUILTIN_EMOJI[g.id] ?? '📋'}</span>
+                                  {g.name}
+                                </button>
+                              ))
+                            : CRITERIA_TEMPLATES.map(t => (
+                                <button
+                                  key={t.key}
+                                  onClick={() => loadTemplate(t.key)}
+                                  disabled={loadingTpl}
+                                  className="flex items-center gap-2 p-3 border border-gray-200 dark:border-gray-600 rounded-xl text-left hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all text-sm font-medium text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                                >
+                                  <span className="text-lg">{t.emoji}</span>
+                                  {t.label}
+                                </button>
+                              ))}
+                        </div>
                       </div>
                     </div>
 

@@ -54,7 +54,7 @@ function TotalChip({ items }: { items: Array<{ weight?: number | null }> }) {
 }
 
 // ─── Éditeur ─────────────────────────────────────────────────────────────────
-function TemplateEditor({ template, onClose, onSaved }: { template: Template | null; onClose: () => void; onSaved: () => void }) {
+function TemplateEditor({ template, positions, onClose, onSaved }: { template: Template | null; positions: string[]; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState(template?.name ?? '');
   const [jobTitle, setJobTitle] = useState(template?.jobTitle ?? '');
   const [criteria, setCriteria] = useState<Criterion[]>(template?.criteria ?? [
@@ -106,7 +106,9 @@ function TemplateEditor({ template, onClose, onSaved }: { template: Template | n
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Poste concerné</label>
-              <input className={`${inputCls} mt-1`} value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Identique au poste de la fiche employé" />
+              <input className={`${inputCls} mt-1`} list="template-positions" value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Choisissez un poste existant" />
+              <datalist id="template-positions">{positions.map(p => <option key={p} value={p} />)}</datalist>
+              <p className="text-xs text-gray-400 mt-1">Doit être écrit comme dans la fiche employé : c'est ce qui rattache le modèle aux bons employés.</p>
             </div>
           </div>
 
@@ -198,6 +200,7 @@ export default function TemplatesPage() {
   const [error, setError] = useState<string | null>(null);
   const [isHR, setIsHR] = useState(false);
   const [editing, setEditing] = useState<Template | null | 'new'>(null);
+  const [positions, setPositions] = useState<Record<string, { label: string; count: number }>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -212,6 +215,19 @@ export default function TemplatesPage() {
     const u = getStoredUser();
     setIsHR(!!u?.role && HR_ROLES.includes(u.role));
     load();
+    // Postes réellement utilisés dans l'entreprise : aide à la saisie + détection de fautes de frappe
+    api.get<any[]>('/employees/simple')
+      .then(list => {
+        const acc: Record<string, { label: string; count: number }> = {};
+        (Array.isArray(list) ? list : []).forEach(e => {
+          const label = (e.position ?? '').trim();
+          if (!label) return;
+          const k = label.toLowerCase();
+          acc[k] = { label: acc[k]?.label ?? label, count: (acc[k]?.count ?? 0) + 1 };
+        });
+        setPositions(acc);
+      })
+      .catch(() => setPositions({}));
   }, [load]);
 
   const remove = async (t: Template) => {
@@ -266,6 +282,11 @@ export default function TemplatesPage() {
                       <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 truncate">
                         <Briefcase size={13} /> {t.jobTitle || 'Tous les postes'}
                       </p>
+                      {t.jobTitle && Object.keys(positions).length > 0 && (
+                        positions[t.jobTitle.trim().toLowerCase()]
+                          ? <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{positions[t.jobTitle.trim().toLowerCase()].count} employé(s) concerné(s)</p>
+                          : <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-start gap-1"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> Aucun employé n'a ce poste : vérifiez l'orthographe.</p>
+                      )}
                     </div>
                     {isHR && (
                       <div className="flex items-center gap-1 shrink-0">
@@ -307,6 +328,7 @@ export default function TemplatesPage() {
           <TemplateEditor
             key={editing === 'new' ? 'new' : editing.id}
             template={editing === 'new' ? null : editing}
+            positions={Object.values(positions).map(p => p.label)}
             onClose={() => setEditing(null)}
             onSaved={load}
           />

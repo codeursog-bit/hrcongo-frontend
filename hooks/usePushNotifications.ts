@@ -96,6 +96,17 @@ async function cleanupStaleServiceWorkers(): Promise<void> {
 }
 
 // ============================================================================
+// ✅ OPT-OUT : si l'utilisateur désactive lui-même les notifications sur cet appareil,
+//    on s'en souvient (par compte). Sans ça, l'activation automatique les réactiverait
+//    au prochain chargement de page.
+// ============================================================================
+function optOutKey(): string {
+  let uid = '';
+  try { uid = JSON.parse(localStorage.getItem('user') || '{}').id || ''; } catch {}
+  return `push-optout:${uid}`;
+}
+
+// ============================================================================
 // HOOK PRINCIPAL
 // ============================================================================
 export function usePushNotifications() {
@@ -105,15 +116,21 @@ export function usePushNotifications() {
   const [permission, setPermission]     = useState<NotificationPermission>('default');
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [swError, setSwError]           = useState<string | null>(null);
+  // isReady : l'état réel (abonné ou non) est connu → évite que la bannière « clignote » au rechargement
+  const [isReady, setIsReady]           = useState(false);
+  const [optedOut, setOptedOut]         = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       setIsSupported(false);
+      setIsReady(true);
       return;
     }
     setIsSupported(true);
     setPermission(Notification.permission);
+    const userOptedOut = localStorage.getItem(optOutKey()) === '1';
+    setOptedOut(userOptedOut);
 
     const initSW = async () => {
       try {
@@ -153,7 +170,7 @@ export function usePushNotifications() {
         //    on (ré)enregistre l'appareil automatiquement, sans clic. Couvre : première
         //    connexion après autorisation, changement de compte sur le même appareil,
         //    abonnement perdu côté serveur. Une seule fois par session et par compte.
-        if (Notification.permission === 'granted') {
+        if (Notification.permission === 'granted' && !userOptedOut) {
           try {
             const activeReg = await waitForActivation(reg);
             let current = await activeReg.pushManager.getSubscription();
@@ -183,6 +200,8 @@ export function usePushNotifications() {
       } catch (err: any) {
         console.error('[Push] Erreur initialisation SW:', err);
         setSwError(err?.message || 'Erreur service worker');
+      } finally {
+        setIsReady(true);
       }
     };
 
@@ -222,6 +241,8 @@ export function usePushNotifications() {
 
       // ✅ Envoyer l'abonnement au backend
       await api.post('/notifications/push/subscribe', subscription.toJSON());
+      localStorage.removeItem(optOutKey()); // réactivation explicite → on lève l'opt-out
+      setOptedOut(false);
       setIsSubscribed(true);
       return true;
 
@@ -249,6 +270,10 @@ export function usePushNotifications() {
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     if (!registration) return false;
     setIsLoading(true);
+    // 🐛 CORRIGÉ : mémoriser le choix AVANT, sinon l'activation automatique
+    //    ré-abonnait l'appareil au prochain chargement (« impossible de désactiver »).
+    localStorage.setItem(optOutKey(), '1');
+    setOptedOut(true);
     try {
       const sub = await registration.pushManager.getSubscription();
       const endpoint = sub?.endpoint; // capturé avant unsubscribe() côté navigateur
@@ -272,6 +297,8 @@ export function usePushNotifications() {
     isLoading,
     permission,
     swError,       // ✅ Exposé pour que PushNotificationBanner puisse l'afficher
+    isReady,
+    optedOut,
     subscribe,
     unsubscribe,
   };
