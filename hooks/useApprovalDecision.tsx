@@ -17,7 +17,50 @@
 
 import React, { useCallback, useState } from 'react';
 import { Clock, Zap, X, Loader2 } from 'lucide-react';
+import { api } from '@/services/api';
 import { approvalsApi, ApprovalKind, DecisionBody } from '@/services/approvals';
+
+// ✅ REPLI — si le serveur ne connaît pas encore les routes d'avis (module non déployé / non
+// enregistré : réponse Nest « Cannot POST /approvals/... »), on décide avec les routes
+// HISTORIQUES de chaque module, exactement comme avant. Ainsi la validation d'une demande
+// ne dépend jamais du circuit d'avis : sans configuration, le comportement d'avant est garanti.
+const isRouteMissing = (e: any) =>
+  e?.status === 404 && /^Cannot (POST|GET|PUT|PATCH|DELETE) /.test(String(e?.message || ''));
+
+async function legacyDecision(
+  kind: ApprovalKind,
+  id: string,
+  body: Omit<DecisionBody, 'mode'>,
+): Promise<void> {
+  const approve = body.decision === 'APPROVE';
+  const reason = approve ? undefined : body.rejectionReason;
+  if (kind === 'loan') {
+    await api.patch(`/loans/${id}/decision`, {
+      decision: approve ? 'OUI' : 'NON',
+      rejectionReason: reason,
+      recoverViaPayroll: body.recoverViaPayroll,
+    });
+  } else if (kind === 'advance') {
+    await api.patch(`/loans/advances/${id}/decision`, {
+      decision: approve ? 'APPROVED' : 'REJECTED',
+      rejectionReason: reason,
+      recoverViaPayroll: body.recoverViaPayroll,
+    });
+  } else if (kind === 'absence') {
+    await api.patch(`/absence-requests/${id}/status`, {
+      status: approve ? 'APPROVED' : 'REJECTED',
+      rejectionReason: reason,
+      ...(body.isPaid !== undefined ? { isPaid: body.isPaid } : {}),
+    });
+  } else {
+    await api.patch(`/leaves/${id}/status`, {
+      status: approve ? 'APPROVED' : 'REJECTED',
+      rejectionReason: reason,
+      extraDaysGranted: approve ? body.extraDaysGranted : undefined,
+      resumptionNote: approve ? body.resumptionNote : undefined,
+    });
+  }
+}
 
 export type DecideOutcome =
   | { outcome: 'DONE'; forced?: boolean }
@@ -39,7 +82,15 @@ export function useApprovalDecision() {
       id: string,
       body: Omit<DecisionBody, 'mode'>,
     ): Promise<DecideOutcome> => {
-      const first = await approvalsApi.decide(kind, id, { ...body, mode: 'ASK' });
+      let first: Awaited<ReturnType<typeof approvalsApi.decide>>;
+      try {
+        first = await approvalsApi.decide(kind, id, { ...body, mode: 'ASK' });
+      } catch (e: any) {
+        if (!isRouteMissing(e)) throw e;
+        // Routes d'avis absentes côté serveur → décision directe, comme avant.
+        await legacyDecision(kind, id, body);
+        return { outcome: 'DONE' };
+      }
 
       if (first.status === 'FINALIZED') return { outcome: 'DONE' };
       if (first.status === 'WAITING_OPINIONS') return { outcome: 'WAITING' };

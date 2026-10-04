@@ -29,6 +29,8 @@ export default function CircuitsPage() {
   const [draft, setDraft] = useState<Record<TypeKey, { isActive: boolean; steps: string[] }> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<TypeKey | null>(null);
+  // Le serveur ne connaît pas les routes d'avis (module non déployé / non enregistré)
+  const [backendMissing, setBackendMissing] = useState(false);
 
   const load = async () => {
     try {
@@ -41,7 +43,11 @@ export default function CircuitsPage() {
         LEAVE: { ...(c.circuits.LEAVE ?? { isActive: false, steps: [] }), steps: [...(c.circuits.LEAVE?.steps ?? [])] },
       });
     } catch (e: any) {
-      alert.error('Erreur', e?.message || 'Impossible de charger les circuits.');
+      if (e?.status === 404 && /^Cannot (GET|PUT|POST) /.test(String(e?.message || ''))) {
+        setBackendMissing(true);
+      } else {
+        alert.error('Erreur', e?.message || 'Impossible de charger les circuits.');
+      }
     } finally {
       setLoading(false);
     }
@@ -51,6 +57,28 @@ export default function CircuitsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (backendMissing) {
+    return (
+      <div className="max-w-2xl mx-auto py-10 space-y-4">
+        <button
+          onClick={() => router.back()}
+          className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors"
+        >
+          <ArrowLeft size={20} className="text-[var(--text-muted)]" />
+        </button>
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
+          <h1 className="text-lg font-bold text-[var(--text)] mb-2">Circuits de validation indisponibles</h1>
+          <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+            Le serveur ne connaît pas encore les routes <code>/approvals/…</code> : la partie « avis » du back-end n&apos;est
+            pas déployée ou le module n&apos;est pas enregistré. Les validations continuent de fonctionner comme avant.
+            Une fois le back-end à jour (module <code>ApprovalsModule</code> enregistré dans <code>app.module.ts</code>,
+            puis redéploiement), rechargez cette page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || !config || !draft) {
     return (
