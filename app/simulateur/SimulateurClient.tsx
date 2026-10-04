@@ -9,234 +9,25 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
-// 🇨🇬 MOTEUR DE CALCUL — 100% CLIENT-SIDE
-// Reproduit exactement la logique du backend konza
-// Source : Ordonnance n°2025-44 du 31 décembre 2025
-//          PaySpace Congo Annual Amendments 2026
+// 🇨🇬 MOTEUR DE CALCUL — copie fidèle du backend (lib/payroll-engine.ts)
+// Même résultat que « Simulateur de paie » de l'application : ITS 2026,
+// CNSS, parts fiscales, TOL, taxes configurables, indemnités non imposables.
 // ============================================================================
+import {
+  computeSimulation, calcFiscalParts, SMIG,
+  type EngineResult, type CustomTaxInput, type FiscalModeInput,
+} from '@/lib/payroll-engine';
+import { PayslipBreakdown } from '@/components/payroll/PayslipBreakdown';
 
-// ── Barèmes ─────────────────────────────────────────────────────────────────
-const ITS_BRACKETS_2026 = [
-  { min: 0,          max: 615_000,   rate: 0,    fixed: 1_200 },
-  { min: 615_000,    max: 1_500_000, rate: 0.10, fixed: 0     },
-  { min: 1_500_000,  max: 3_500_000, rate: 0.15, fixed: 0     },
-  { min: 3_500_000,  max: 5_000_000, rate: 0.20, fixed: 0     },
-  { min: 5_000_000,  max: Infinity,  rate: 0.30, fixed: 0     },
-];
+const WORK_DAYS = 26;
 
-const IRPP_BRACKETS_LEGACY = [
-  { min: 0,          max: 464_000,   rate: 0.01, fixed: 0 },
-  { min: 464_000,    max: 1_000_000, rate: 0.10, fixed: 0 },
-  { min: 1_000_000,  max: 3_000_000, rate: 0.25, fixed: 0 },
-  { min: 3_000_000,  max: Infinity,  rate: 0.40, fixed: 0 },
-];
-
-// ── Constantes ───────────────────────────────────────────────────────────────
-const CNSS_SAL_RATE        = 0.04;
-const CNSS_SAL_CEILING     = 1_200_000;
-const CNSS_PAT_PENSION     = 0.08;
-const CNSS_PAT_FAMILY      = 0.1003;
-const CNSS_PAT_ACCIDENT    = 0.0225;
-const CNSS_PAT_CEILING_LOW = 600_000;
-const TUS_DGI_RATE         = 0.02025;
-const TUS_CNSS_RATE        = 0.05475;
-const ABATTEMENT_RATE      = 0.20;
-const SMIG                 = 70_400;
-const WORK_DAYS            = 26;
-
-// ── Parts fiscales ───────────────────────────────────────────────────────────
-function calcFiscalParts(marital: string, children: number): number {
-  let parts = marital === 'MARRIED' ? 2.0 : 1.0;
-  if (marital === 'SINGLE' || marital === 'DIVORCED' || marital === 'WIDOWED') {
-    if (children >= 1) parts += 1.0;
-    if (children >= 2) parts += (children - 1) * 0.5;
-  } else {
-    parts += children * 0.5;
-  }
-  return Math.min(parts, 6.5);
-}
-
-// ── Barème progressif ────────────────────────────────────────────────────────
-function applyBrackets(base: number, brackets: typeof ITS_BRACKETS_2026): { total: number; details: Array<{label:string;amount:number}> } {
-  let total = 0;
-  const details: Array<{label:string;amount:number}> = [];
-  for (const b of brackets) {
-    if (base <= b.min) break;
-    const taxable = Math.min(base, b.max) - b.min;
-    if (b.fixed > 0 && base > b.min) {
-      total += b.fixed;
-      details.push({ label: `Tranche 1 (0–615 000) : forfait`, amount: b.fixed });
-    } else if (b.rate > 0) {
-      const amount = Math.round(taxable * b.rate);
-      total += amount;
-      const maxLabel = b.max === Infinity ? '∞' : (b.max / 1_000_000).toFixed(1).replace('.0','') + 'M';
-      details.push({ label: `Tranche ${(b.min/1_000).toFixed(0)}k–${maxLabel} (${(b.rate*100).toFixed(0)}%)`, amount });
-    }
-  }
-  return { total, details };
-}
-
-// ── Calcul ITS/IRPP ──────────────────────────────────────────────────────────
-interface ItsResult {
-  its: number;
-  abattement: number;
-  revenuNetImposable: number;
-  rniAnnuel: number;
-  fiscalParts: number;
-  revenuParPart: number;
-  effectiveRate: number;
-  mode: string;
-  details: Array<{label:string;amount:number}>;
-}
-
-function calcIts(
-  grossSalary: number,
-  cnss: number,
-  marital: string,
-  children: number,
-  mode: string,
-  forfaitRate: number,
-  subjectToIts: boolean,
-): ItsResult {
-  if (!subjectToIts || grossSalary <= 0) {
-    return { its: 0, abattement: 0, revenuNetImposable: 0, rniAnnuel: 0,
-      fiscalParts: 1, revenuParPart: 0, effectiveRate: 0, mode, details: [] };
-  }
-
-  if (mode === 'FORFAIT') {
-    const its = Math.ceil(grossSalary * forfaitRate);
-    return { its, abattement: 0, revenuNetImposable: grossSalary, rniAnnuel: grossSalary * 12,
-      fiscalParts: 1, revenuParPart: grossSalary * 12, effectiveRate: forfaitRate * 100, mode, details: [] };
-  }
-
-  const base        = grossSalary - cnss;
-  const abattement  = Math.round(base * ABATTEMENT_RATE);
-  const rni         = base - abattement;
-  const rniAnnuel   = rni * 12;
-
-  const fiscalParts = mode === 'ITS_2026' ? 1 : calcFiscalParts(marital, children);
-  const parPart     = rniAnnuel / fiscalParts;
-
-  const brackets    = mode === 'IRPP_LEGACY' ? IRPP_BRACKETS_LEGACY : ITS_BRACKETS_2026;
-  const { total: itsAnnuelParPart, details } = applyBrackets(parPart, brackets);
-
-  const itsAnnuel   = itsAnnuelParPart * fiscalParts;
-  const its         = Math.ceil(itsAnnuel / 12);
-  const effectiveRate = base > 0 ? parseFloat(((its / base) * 100).toFixed(2)) : 0;
-
-  return { its, abattement, revenuNetImposable: rni, rniAnnuel, fiscalParts, revenuParPart: parPart, effectiveRate, mode, details };
-}
-
-// ── Calcul CNSS ──────────────────────────────────────────────────────────────
-function calcCnss(gross: number, subjectToCnss: boolean) {
-  if (!subjectToCnss) return { sal: 0, pension: 0, family: 0, accident: 0 };
-  const basePension  = Math.min(gross, CNSS_SAL_CEILING);
-  const baseLow      = Math.min(gross, CNSS_PAT_CEILING_LOW);
-  return {
-    sal:      Math.round(basePension * CNSS_SAL_RATE),
-    pension:  Math.round(basePension * CNSS_PAT_PENSION),
-    family:   Math.round(baseLow     * CNSS_PAT_FAMILY),
-    accident: Math.round(baseLow     * CNSS_PAT_ACCIDENT),
-  };
-}
-
-// ── Calcul HS ────────────────────────────────────────────────────────────────
-function calcOt(base: number, workedDays: number, ot10: number, ot25: number, ot50: number, ot100: number) {
-  const hourly = base / (workedDays * 8);
-  return {
-    amount10:  Math.round(hourly * 1.10 * ot10),
-    amount25:  Math.round(hourly * 1.25 * ot25),
-    amount50:  Math.round(hourly * 1.50 * ot50),
-    amount100: Math.round(hourly * 2.00 * ot100),
-  };
-}
-
-// ── Taxes custom ─────────────────────────────────────────────────────────────
-interface CustomTax { localId: string; name: string; code: string; employeeRate: number; employerRate: number; fixedEmployee: number; fixedEmployer: number; hasCeiling: boolean; ceiling: number; baseType: string; }
-
-function calcCustomTax(tax: CustomTax, gross: number, rni: number) {
-  let base = tax.baseType === 'NET_IMPOSABLE' ? rni : gross;
-  if (tax.hasCeiling && tax.ceiling > 0) base = Math.min(base, tax.ceiling);
-  const empAmount = Math.round(base * tax.employeeRate) + tax.fixedEmployee;
-  const patAmount = Math.round(base * tax.employerRate) + tax.fixedEmployer;
-  return { empAmount, patAmount };
-}
-
-// ── Simulateur principal ──────────────────────────────────────────────────────
-interface SimInput {
-  baseSalary: number; workedDays: number; month: number; year: number;
-  ot10: number; ot25: number; ot50: number; ot100: number;
-  bonuses: ManualBonus[]; advances: ManualAdvance[];
-  subjectToCnss: boolean; subjectToIts: boolean;
-  marital: string; children: number; fiscalMode: string; forfaitRate: number;
-  customTaxes: CustomTax[];
-  firstName: string; lastName: string;
-}
-
-interface SimResult {
-  grossSalary: number; effectiveBase: number; absenceDeduction: number;
-  otAmount: { amount10:number; amount25:number; amount50:number; amount100:number };
-  bonuses: ManualBonus[];
-  cnss: { sal:number; pension:number; family:number; accident:number };
-  its: ItsResult;
-  tusDgi: number; tusCnss: number; tusTotal: number;
-  customTaxes: Array<{ tax: CustomTax; empAmount: number; patAmount: number }>;
-  totalAdvances: number; totalDeductions: number;
-  netSalary: number; totalEmployerCost: number;
-}
-
-function simulate(input: SimInput): SimResult {
-  const { baseSalary, workedDays, ot10, ot25, ot50, ot100, bonuses, advances,
-    subjectToCnss, subjectToIts, marital, children, fiscalMode, forfaitRate, customTaxes } = input;
-
-  // Base proratisée
-  const effectiveBase    = Math.round(baseSalary * (workedDays / WORK_DAYS));
-  const absenceDeduction = baseSalary - effectiveBase;
-
-  // HS
-  const otAmount = calcOt(effectiveBase, workedDays, ot10, ot25, ot50, ot100);
-  const totalOt  = otAmount.amount10 + otAmount.amount25 + otAmount.amount50 + otAmount.amount100;
-
-  // Primes
-  const totalBonuses = bonuses.reduce((s, b) => s + b.amount, 0);
-
-  // Brut
-  const grossSalary = effectiveBase + totalOt + totalBonuses;
-
-  // CNSS
-  const cnss = calcCnss(grossSalary, subjectToCnss);
-
-  // ITS
-  const its = calcIts(grossSalary, cnss.sal, marital, children, fiscalMode, forfaitRate, subjectToIts);
-
-  // TUS (patronal, sur brut total)
-  const tusDgi  = Math.round(grossSalary * TUS_DGI_RATE);
-  const tusCnss = Math.round(grossSalary * TUS_CNSS_RATE);
-  const tusTotal = tusDgi + tusCnss;
-
-  // Taxes custom
-  const customResults = customTaxes.map(tax => {
-    const { empAmount, patAmount } = calcCustomTax(tax, grossSalary, its.revenuNetImposable);
-    return { tax, empAmount, patAmount };
-  });
-  const totalCustomEmp = customResults.reduce((s, r) => s + r.empAmount, 0);
-  const totalCustomPat = customResults.reduce((s, r) => s + r.patAmount, 0);
-
-  // Avances
-  const totalAdvances = advances.reduce((s, a) => s + a.amount, 0);
-
-  // Totaux
-  const totalDeductions = cnss.sal + its.its + totalCustomEmp + totalAdvances;
-  const netSalary       = Math.max(0, grossSalary - totalDeductions);
-  const cnssPatTotal    = cnss.pension + cnss.family + cnss.accident;
-  const totalEmployerCost = grossSalary + cnssPatTotal + tusTotal + totalCustomPat;
-
-  return {
-    grossSalary, effectiveBase, absenceDeduction, otAmount, bonuses,
-    cnss, its, tusDgi, tusCnss, tusTotal, customTaxes: customResults,
-    totalAdvances, totalDeductions, netSalary, totalEmployerCost,
-  };
-}
+type CustomTax = CustomTaxInput & {
+  localId: string;
+  employeeRate: number; employerRate: number;
+  fixedEmployee: number; fixedEmployer: number;
+  hasCeiling: boolean; ceiling: number; baseType: string;
+  minSalaryThreshold?: number; thresholdType?: string;
+};
 
 // ============================================================================
 // 🎨 COMPOSANTS UI
@@ -247,8 +38,10 @@ const uid   = ()           => Math.random().toString(36).slice(2, 9);
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 type FiscalMode = 'ITS_2026' | 'IRPP_LEGACY' | 'FORFAIT';
+type SimResult = EngineResult;
 
 interface ManualBonus   { localId: string; label: string; amount: number; isTaxable: boolean; isCnss: boolean; }
+const bonusCategoryOf = (b: ManualBonus) => (!b.isTaxable ? 'NON_TAXABLE' : b.isCnss ? 'TAXABLE_CNSS' : 'TAXABLE_NO_CNSS');
 interface ManualAdvance { localId: string; label: string; amount: number; }
 
 const ResultRow = ({ label, sub, value, color = 'text-gray-700 dark:text-gray-200', bold = false }: {
@@ -333,6 +126,9 @@ export default function SimulateurPublicPage() {
   const [subjectToIts,   setSubjectToIts]   = useState(true);
   const [marital,        setMarital]        = useState('SINGLE');
   const [children,       setChildren]       = useState(0);
+  const [contractType,   setContractType]   = useState('CDI');
+  const [tolZone,        setTolZone]        = useState<'VILLE'|'PERIPHERIE'>('VILLE');
+  const [isResident,     setIsResident]     = useState(true);
 
   // Taxes custom (TOL, CAMU, etc.)
   const [customTaxes,    setCustomTaxes]    = useState<CustomTax[]>([]);
@@ -340,6 +136,7 @@ export default function SimulateurPublicPage() {
   const [newTax,         setNewTax]         = useState<Partial<CustomTax>>({
     name: '', code: '', employeeRate: 0, employerRate: 0,
     fixedEmployee: 0, fixedEmployer: 0, hasCeiling: false, ceiling: 0, baseType: 'GROSS',
+    minSalaryThreshold: 0, thresholdType: 'ELIGIBILITY',
   });
 
   // UI
@@ -360,45 +157,53 @@ export default function SimulateurPublicPage() {
   const handleSimulate = useCallback(() => {
     const base = Number(baseSalary);
     if (!base || base < 1) return;
-    const result = simulate({
-      baseSalary: base, workedDays, month, year,
-      ot10, ot25, ot50, ot100,
-      bonuses: bonuses.filter(b => b.label && b.amount > 0),
-      advances: advances.filter(a => a.amount > 0),
-      subjectToCnss, subjectToIts, marital, children,
-      fiscalMode, forfaitRate,
-      customTaxes,
-      firstName: firstName || 'Anonyme',
-      lastName,
+    const res = computeSimulation({
+      baseSalary: base, workedDays, workDays: WORK_DAYS, month, year,
+      overtimeHours10: ot10, overtimeHours25: ot25, overtimeHours50: ot50, overtimeHours100: ot100,
+      bonuses: bonuses.filter(b => b.label && b.amount > 0).map(b => ({
+        bonusType: b.label, amount: b.amount, isTaxable: b.isTaxable, isCnss: b.isCnss,
+        fiscalType: bonusCategoryOf(b),
+      })),
+      advances: advances.filter(a => a.amount > 0).map(a => ({ label: a.label, amount: a.amount })),
+      isSubjectToCnss: subjectToCnss, isSubjectToIrpp: subjectToIts,
+      maritalStatus: marital as any, numberOfChildren: children,
+      fiscalMode: fiscalMode as FiscalModeInput, forfaitItsRate: forfaitRate,
+      contractType, tolZone, isResident,
+      companyTaxes: customTaxes,
+      firstName: firstName || 'Anonyme', lastName,
     });
-    setResult(result);
+    setResult(res);
     setShowItsDetail(false);
     setTimeout(() => document.getElementById('sim-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
   }, [baseSalary, workedDays, month, year, ot10, ot25, ot50, ot100, bonuses, advances,
-      subjectToCnss, subjectToIts, marital, children, fiscalMode, forfaitRate, customTaxes, firstName, lastName]);
+      subjectToCnss, subjectToIts, marital, children, fiscalMode, forfaitRate, customTaxes,
+      contractType, tolZone, isResident, firstName, lastName]);
 
   const handleCopy = () => {
     if (!result) return;
     const name = [firstName, lastName].filter(Boolean).join(' ') || 'Anonyme';
+    const nonTax = result.bonuses.filter(b => b.fiscalType === 'NON_TAXABLE').reduce((s, b) => s + b.amount, 0);
     const lines = [
       `Simulation paie — ${name} — ${MONTHS[month-1]} ${year}`,
       '─'.repeat(55),
-      `Salaire brut          : ${fmt(result.grossSalary)} FCFA`,
-      `CNSS salarié (4%)     : −${fmt(result.cnss.sal)} FCFA`,
-      `ITS                   : −${fmt(result.its.its)} FCFA`,
-      result.totalAdvances > 0 ? `Avances               : −${fmt(result.totalAdvances)} FCFA` : null,
+      `Salaire brut imposable : ${fmt(result.grossSalary)} FCFA`,
+      `CNSS salarié (4%)      : −${fmt(result.cnssSalarial)} FCFA`,
+      `${result.isBncWorker ? 'BNC' : 'ITS'}                    : −${fmt(result.its)} FCFA`,
+      ...result.customTaxes.map(t => `${t.name} (${t.code}) : −${fmt(t.employeeAmount)} FCFA`),
+      result.totalAdvanceDeduction > 0 ? `Avances                : −${fmt(result.totalAdvanceDeduction)} FCFA` : null,
+      nonTax > 0 ? `Indemnités non imposables : +${fmt(nonTax)} FCFA` : null,
       '─'.repeat(55),
-      `NET À PAYER           : ${fmt(result.netSalary)} FCFA`,
+      `NET À PAYER            : ${fmt(result.netSalary)} FCFA`,
       '─'.repeat(55),
       `CHARGES PATRONALES`,
-      `  CNSS Pensions (8%)  : +${fmt(result.cnss.pension)} FCFA`,
-      `  CNSS Famille (10%)  : +${fmt(result.cnss.family)} FCFA`,
-      `  CNSS Accident (2%)  : +${fmt(result.cnss.accident)} FCFA`,
-      `  TUS DGI (2,025%)    : +${fmt(result.tusDgi)} FCFA`,
-      `  TUS CNSS (5,475%)   : +${fmt(result.tusCnss)} FCFA`,
-      result.customTaxes.map(r => `  ${r.tax.name} pat.    : +${fmt(r.patAmount)} FCFA`).join('\n'),
+      `  CNSS Pensions (8%)  : +${fmt(result.cnssEmployerPension)} FCFA`,
+      `  CNSS Famille (10,03%): +${fmt(result.cnssEmployerFamily)} FCFA`,
+      `  CNSS Accident (2,25%): +${fmt(result.cnssEmployerAccident)} FCFA`,
+      `  TUS DGI (2,025%)    : +${fmt(result.tusDgiAmount)} FCFA`,
+      `  TUS CNSS (5,475%)   : +${fmt(result.tusCnssAmount)} FCFA`,
+      ...result.customTaxes.filter(t => t.employerAmount > 0).map(t => `  ${t.name} pat.    : +${fmt(t.employerAmount)} FCFA`),
       '─'.repeat(55),
-      `COÛT TOTAL EMPLOYEUR  : ${fmt(result.totalEmployerCost)} FCFA`,
+      `COÛT TOTAL EMPLOYEUR   : ${fmt(result.totalEmployerCost)} FCFA`,
       '',
       'Simulé avec konza-rh.cg — Logiciel RH & Paie Congo-Brazzaville',
     ].filter(l => l !== null).join('\n');
@@ -407,15 +212,12 @@ export default function SimulateurPublicPage() {
 
   const addCustomTax = () => {
     if (!newTax.name || !newTax.code) return;
-    setCustomTaxes(t => [...t, { ...newTax as CustomTax, localId: uid() }]);
-    setNewTax({ name: '', code: '', employeeRate: 0, employerRate: 0, fixedEmployee: 0, fixedEmployer: 0, hasCeiling: false, ceiling: 0, baseType: 'GROSS' });
+    setCustomTaxes(t => [...t, { ...newTax as CustomTax, applicableContractTypes: ['CDI', 'CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'], localId: uid() }]);
+    setNewTax({ name: '', code: '', employeeRate: 0, employerRate: 0, fixedEmployee: 0, fixedEmployer: 0, hasCeiling: false, ceiling: 0, baseType: 'GROSS', minSalaryThreshold: 0, thresholdType: 'ELIGIBILITY' });
     setShowAddTax(false);
   };
 
   // Dérivés résultats
-  const cnssPatTotal    = result ? result.cnss.pension + result.cnss.family + result.cnss.accident : 0;
-  const totalCustomPat  = result ? result.customTaxes.reduce((s, r) => s + r.patAmount, 0) : 0;
-  const totalChargesEmp = result ? cnssPatTotal + result.tusTotal + totalCustomPat : 0;
   const isLegacy        = fiscalMode === 'IRPP_LEGACY';
   const isForfait       = fiscalMode === 'FORFAIT';
   const canSimulate     = Number(baseSalary) >= 1;
@@ -556,13 +358,52 @@ export default function SimulateurPublicPage() {
                 <h3 className="font-bold text-sm text-gray-900 dark:text-white flex-1 text-left">Fiscal & cotisations</h3>
                 <span className="text-[10px] text-gray-400 mr-1">
                   {fiscalMode === 'ITS_2026' ? 'ITS 2026' : fiscalMode === 'IRPP_LEGACY' ? 'IRPP Ancien' : `Forfait ${Math.round(forfaitRate*100)}%`}
-                  {isLegacy && ` · ${marital === 'MARRIED' ? 'Marié' : 'Célibataire'} · ${children} enf.`}
+                  {!isForfait && ` · ${marital === 'MARRIED' ? 'Marié' : 'Célibataire'} · ${children} enf.`}
                 </span>
                 {showFiscalPanel ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
               </button>
 
               {showFiscalPanel && (
                 <div className="mt-4 space-y-4">
+                  {/* Contrat / TOL / résidence */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Type de contrat</label>
+                      <select value={contractType} onChange={e => setContractType(e.target.value)}
+                        className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                        <option value="CDI">CDI</option>
+                        <option value="CDD">CDD</option>
+                        <option value="STAGE">Stage</option>
+                        <option value="INTERIM">Intérim</option>
+                        <option value="CONSULTANT">Consultant (BNC)</option>
+                        <option value="PRESTATAIRE">Prestataire (BNC)</option>
+                      </select>
+                    </div>
+                    {(contractType === 'CDI' || contractType === 'CDD') && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Zone TOL</label>
+                        <select value={tolZone} onChange={e => setTolZone(e.target.value as any)}
+                          className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                          <option value="VILLE">Ville — 5 000 F</option>
+                          <option value="PERIPHERIE">Périphérie — 1 000 F</option>
+                        </select>
+                      </div>
+                    )}
+                    {(contractType === 'CONSULTANT' || contractType === 'PRESTATAIRE') && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Résidence fiscale</label>
+                        <select value={isResident ? 'R' : 'N'} onChange={e => setIsResident(e.target.value === 'R')}
+                          className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                          <option value="R">Résident — BNC 10 %</option>
+                          <option value="N">Non-résident — BNC 20 %</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  {(contractType === 'CDI' || contractType === 'CDD') && (
+                    <p className="text-[10px] text-gray-400 -mt-2">La TOL est appliquée automatiquement aux CDI/CDD.</p>
+                  )}
+
                   {/* Toggle CNSS / ITS */}
                   <div className="grid grid-cols-2 gap-2">
                     {[
@@ -704,21 +545,18 @@ export default function SimulateurPublicPage() {
                         </button>
                       </div>
                       <div className="flex items-center gap-2 px-1">
-                        <span className="text-[10px] text-gray-400">Fiscal :</span>
-                        {(['ITS', 'CNSS'] as const).map(tag => {
-                          const active = tag === 'ITS' ? b.isTaxable : b.isCnss;
-                          const toggle = () => setBonuses(p => p.map(x => x.localId === b.localId
-                            ? { ...x, ...(tag === 'ITS' ? { isTaxable: !b.isTaxable } : { isCnss: !b.isCnss }) }
-                            : x));
-                          return (
-                            <button key={tag} onClick={toggle}
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all cursor-pointer select-none
-                                ${active ? tag === 'ITS' ? 'bg-cyan-100 text-cyan-700 border-cyan-300' : 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-gray-100 text-gray-400 border-gray-200 line-through opacity-60'}`}>
-                              {tag}
-                            </button>
-                          );
-                        })}
-                        {!b.isTaxable && !b.isCnss && <span className="text-[10px] text-amber-500 font-semibold">→ versée au net</span>}
+                        <span className="text-[10px] text-gray-400">Nature :</span>
+                        <select value={bonusCategoryOf(b)}
+                          onChange={e => {
+                            const v = e.target.value;
+                            setBonuses(p => p.map(x => x.localId === b.localId
+                              ? { ...x, isTaxable: v !== 'NON_TAXABLE', isCnss: v === 'TAXABLE_CNSS' } : x));
+                          }}
+                          className="flex-1 px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg text-[11px] bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                          <option value="TAXABLE_CNSS">Prime imposable + CNSS</option>
+                          <option value="TAXABLE_NO_CNSS">Prime imposable, sans CNSS</option>
+                          <option value="NON_TAXABLE">Indemnité non imposable (versée au net)</option>
+                        </select>
                       </div>
                     </div>
                   ))}
@@ -764,10 +602,10 @@ export default function SimulateurPublicPage() {
                 right={
                   <button onClick={() => setShowAddTax(v => !v)}
                     className="flex items-center gap-1 px-2.5 py-1 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 cursor-pointer">
-                    <Plus size={10} /> {showAddTax ? 'Annuler' : 'CAMU, TOL…'}
+                    <Plus size={10} /> {showAddTax ? 'Annuler' : 'Ajouter une taxe'}
                   </button>
                 } />
-              <p className="text-[10px] text-gray-400 mb-3">CAMU, TOL, taxe apprentissage, etc.</p>
+              <p className="text-[10px] text-gray-400 mb-3">Taxes propres à l'entreprise (ex. CAMU). La TOL est déjà incluse automatiquement pour les CDI/CDD.</p>
 
               {/* Taxes existantes */}
               {customTaxes.length > 0 && (
@@ -820,6 +658,38 @@ export default function SimulateurPublicPage() {
                         className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-mono bg-white dark:bg-gray-700 outline-none" />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-gray-400 mb-1">Base de calcul</label>
+                      <select value={newTax.baseType} onChange={e => setNewTax(p => ({...p, baseType: e.target.value}))}
+                        className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                        <option value="GROSS">Brut</option>
+                        <option value="TAXABLE">Brut − CNSS</option>
+                        <option value="NET_IMPOSABLE">Net imposable</option>
+                        <option value="FIXED">Montant fixe</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-400 mb-1">Montant fixe salarié (F)</label>
+                      <input type="number" min={0} value={newTax.fixedEmployee || ''} onChange={e => setNewTax(p => ({...p, fixedEmployee: Number(e.target.value)}))} placeholder="0"
+                        className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-mono bg-white dark:bg-gray-700 outline-none" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-gray-400 mb-1">Seuil de salaire (F)</label>
+                      <input type="number" min={0} value={newTax.minSalaryThreshold || ''} onChange={e => setNewTax(p => ({...p, minSalaryThreshold: Number(e.target.value)}))} placeholder="500 000"
+                        className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-mono bg-white dark:bg-gray-700 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-400 mb-1">Le seuil sert à…</label>
+                      <select value={newTax.thresholdType} onChange={e => setNewTax(p => ({...p, thresholdType: e.target.value}))}
+                        className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-xs bg-white dark:bg-gray-700 outline-none cursor-pointer">
+                        <option value="ELIGIBILITY">Déclencher la taxe</option>
+                        <option value="EXCESS_ONLY">Taxer l'excédent seulement</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-3">
                     <button onClick={() => setNewTax(p => ({...p, hasCeiling: !p.hasCeiling}))}
                       className={`w-9 h-5 rounded-full transition-all cursor-pointer relative ${newTax.hasCeiling ? 'bg-rose-500' : 'bg-gray-200 dark:bg-gray-700'}`}>
@@ -839,7 +709,7 @@ export default function SimulateurPublicPage() {
               )}
 
               {customTaxes.length === 0 && !showAddTax && (
-                <p className="text-xs text-gray-400 text-center py-2">Cliquez sur CAMU, TOL… pour ajouter</p>
+                <p className="text-xs text-gray-400 text-center py-2">Aucune taxe ajoutée</p>
               )}
             </Card>
 
@@ -889,219 +759,36 @@ export default function SimulateurPublicPage() {
                     {[firstName, lastName].filter(Boolean).join(' ') || 'Anonyme'}
                     {' · '}{MONTHS[month-1]} {year}
                     {' · '}{workedDays}/{WORK_DAYS} jours
-                    {result.its.fiscalParts > 1 && ` · ${result.its.fiscalParts} parts`}
+                    {result.irppDetails?.fiscalParts > 1 && ` · ${result.irppDetails.fiscalParts} parts`}
                   </p>
                 </div>
 
-                {/* RÉMUNÉRATIONS */}
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-                  <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/10">Rémunérations</p>
-                  <table className="w-full"><tbody>
-                    <ResultRow label="Salaire de base" value={`+${fmt(result.effectiveBase)} F`} color="text-emerald-600 dark:text-emerald-400" />
-                    {result.absenceDeduction > 0 && <ResultRow label={`Absences (${WORK_DAYS - workedDays}j)`} value={`−${fmt(result.absenceDeduction)} F`} color="text-orange-500" />}
-                    {result.otAmount.amount10  > 0 && <ResultRow label={`HS +10% (${ot10}h)`}  value={`+${fmt(result.otAmount.amount10)} F`}  color="text-amber-600" />}
-                    {result.otAmount.amount25  > 0 && <ResultRow label={`HS +25% (${ot25}h)`}  value={`+${fmt(result.otAmount.amount25)} F`}  color="text-amber-600" />}
-                    {result.otAmount.amount50  > 0 && <ResultRow label={`HS +50% (${ot50}h)`}  value={`+${fmt(result.otAmount.amount50)} F`}  color="text-amber-600" />}
-                    {result.otAmount.amount100 > 0 && <ResultRow label={`HS +100% (${ot100}h)`} value={`+${fmt(result.otAmount.amount100)} F`} color="text-amber-600" />}
-                    {result.bonuses.filter(b => b.label && b.amount > 0).map(b => (
-                      <tr key={b.localId} className="border-b border-gray-50 dark:border-gray-700/50">
-                        <td className="px-4 py-2.5 text-sm text-gray-500">
-                          {b.label}
-                          <span className="ml-2 inline-flex gap-1">
-                            {b.isTaxable && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-600 border border-cyan-200 font-bold">ITS</span>}
-                            {b.isCnss    && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-200 font-bold">CNSS</span>}
-                            {!b.isTaxable && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200 font-bold">Net</span>}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-right font-mono font-semibold text-sm text-cyan-600 dark:text-cyan-400">+{fmt(b.amount)} F</td>
-                      </tr>
-                    ))}
-                    <TotalRow label="Salaire brut" value={`${fmt(result.grossSalary)} F`} bg="bg-emerald-50 dark:bg-emerald-900/20" text="text-emerald-700 dark:text-emerald-400" />
-                  </tbody></table>
-                </div>
+                {/* DÉTAIL DU BULLETIN — même composant que l'application */}
+                <PayslipBreakdown result={result} defaultOpenEmployer />
 
-                {/* COTISATIONS SALARIALES */}
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
-                  <p className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-red-50/50 dark:bg-red-900/10">Cotisations & Retenues Salariales</p>
-                  <table className="w-full"><tbody>
-                    <ResultRow label="CNSS salariale (4%)" sub="Branche pension · plafond 1 200 000 FCFA"
-                      value={result.cnss.sal > 0 ? `−${fmt(result.cnss.sal)} F` : '0 F (Exonéré)'}
-                      color={result.cnss.sal > 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400'} />
-
-                    {/* ITS ligne cliquable */}
-                    <tr className="border-b border-gray-50 dark:border-gray-700/50">
-                      <td className="px-4 py-2.5">
-                        <button onClick={() => setShowItsDetail(d => !d)}
-                          className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors cursor-pointer text-sm">
-                          {isForfait ? `ITS Forfait ${Math.round(forfaitRate*100)}%` : isLegacy ? 'IRPP (barème legacy)' : 'ITS — barème 2026'}
-                          {showItsDetail ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        </button>
-                      </td>
-                      <td className={`px-4 py-2.5 text-right font-mono font-semibold text-sm ${result.its.its > 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-400'}`}>
-                        {result.its.its > 0 ? `−${fmt(result.its.its)} F` : '0 F (Exonéré)'}
-                      </td>
-                    </tr>
-
-                    {/* Détail ITS */}
+                {/* DÉTAIL ITS */}
+                {!result.isBncWorker && result.irppDetails?.fiscalParts && (
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+                    <button onClick={() => setShowItsDetail(d => !d)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer">
+                      <span>Détail du calcul {isForfait ? 'forfait' : isLegacy ? 'IRPP' : 'ITS'}</span>
+                      {showItsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
                     {showItsDetail && (
-                      <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-900/50">
-                        <td colSpan={2} className="px-4 py-3">
-                          <div className="text-xs text-gray-500 space-y-1.5">
-                            {!isForfait && <>
-                              <p>Abattement 20% : <span className="font-mono font-bold">−{fmt(result.its.abattement)} F</span></p>
-                              <p>Revenu net imposable (mensuel) : <span className="font-mono font-bold">{fmt(result.its.revenuNetImposable)} F</span></p>
-                              <p>RNI annualisé : <span className="font-mono font-bold">{fmt(result.its.rniAnnuel)} F</span></p>
-                              <p>Parts fiscales : <span className="font-bold">{result.its.fiscalParts}</span></p>
-                              <p>Revenu par part : <span className="font-mono font-bold">{fmt(result.its.revenuParPart)} F</span></p>
-                            </>}
-                            {result.its.details.length > 0 && (
-                              <div className="mt-2 space-y-0.5">
-                                <p className="font-semibold text-gray-600 dark:text-gray-300 mb-1">Décomposition barème :</p>
-                                {result.its.details.map((d, i) => (
-                                  <p key={i} className="flex justify-between">
-                                    <span>{d.label}</span>
-                                    <span className="font-mono font-bold">{fmt(d.amount)} F</span>
-                                  </p>
-                                ))}
-                              </div>
-                            )}
-                            <p>Taux effectif : <span className="font-bold">{result.its.effectiveRate}%</span></p>
-                            <p className={`font-semibold ${isForfait ? 'text-cyan-500' : isLegacy ? 'text-amber-500' : 'text-violet-500'}`}>
-                              Mode : {isForfait ? `Forfait ${Math.round(forfaitRate*100)}%` : isLegacy ? 'IRPP legacy (avant 2026)' : 'ITS 2026 · 1 200F/10%/15%/20%/30%'}
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-
-                    {/* Taxes custom salariales */}
-                    {result.customTaxes.filter(r => r.empAmount > 0).map(r => (
-                      <ResultRow key={r.tax.localId}
-                        label={`${r.tax.name} (${(r.tax.employeeRate*100).toFixed(2)}%)`}
-                        sub={`${r.tax.code} · salarié${r.tax.hasCeiling ? ` · plaf. ${fmt(r.tax.ceiling)} F` : ''}`}
-                        value={`−${fmt(r.empAmount)} F`}
-                        color="text-rose-500 dark:text-rose-400" />
-                    ))}
-
-                    {/* Avances */}
-                    {result.totalAdvances > 0 && (
-                      <ResultRow label="Avances & prêts" value={`−${fmt(result.totalAdvances)} F`} color="text-purple-500 dark:text-purple-400" />
-                    )}
-
-                    <TotalRow label="Total retenues salariales" value={`−${fmt(result.totalDeductions)} F`} bg="bg-red-50 dark:bg-red-900/20" text="text-red-700 dark:text-red-400" />
-                  </tbody></table>
-                </div>
-
-                {/* PART PATRONALE */}
-                <div className="bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800/50 rounded-2xl overflow-hidden">
-                  <button onClick={() => setShowEmpDetail(d => !d)}
-                    className="w-full flex items-center gap-2 px-4 py-3 border-b border-orange-100 dark:border-orange-900/30 bg-orange-50/70 dark:bg-orange-900/20 hover:bg-orange-100/50 transition-colors cursor-pointer text-left">
-                    <Building2 size={13} className="text-orange-500 shrink-0" />
-                    <p className="text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wider flex-1">Charges Sociales Patronales</p>
-                    <span className="font-mono font-black text-sm text-orange-600 dark:text-orange-400 mr-2">+{fmt(totalChargesEmp)} F</span>
-                    {showEmpDetail ? <ChevronUp size={14} className="text-orange-400" /> : <ChevronDown size={14} className="text-orange-400" />}
-                  </button>
-
-                  {showEmpDetail && (
-                    <table className="w-full"><tbody>
-                      <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-orange-50/30 dark:bg-orange-900/10">
-                        <td colSpan={2} className="px-4 pt-3 pb-1">
-                          <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">CNSS Patronale — Décret n°99-284</p>
-                        </td>
-                      </tr>
-                      <ResultRow label="Pensions / Vieillesse / Invalidité" sub="8,00% × min(brut, 1 200 000 FCFA)" value={`+${fmt(result.cnss.pension)} F`} color="text-orange-600 dark:text-orange-400" />
-                      <ResultRow label="Prestations Familiales" sub="10,03% × min(brut, 600 000 FCFA)" value={`+${fmt(result.cnss.family)} F`} color="text-orange-600 dark:text-orange-400" />
-                      <ResultRow label="Accidents du Travail" sub="2,25% × min(brut, 600 000 FCFA)" value={`+${fmt(result.cnss.accident)} F`} color="text-orange-600 dark:text-orange-400" />
-                      <tr className="border-b border-orange-200/50 dark:border-orange-800/30 bg-orange-50/50 dark:bg-orange-900/15">
-                        <td className="px-4 py-2 text-xs font-semibold text-orange-600 dark:text-orange-400">Sous-total CNSS patronale</td>
-                        <td className="px-4 py-2 text-right font-mono font-bold text-sm text-orange-600 dark:text-orange-400">+{fmt(cnssPatTotal)} F</td>
-                      </tr>
-
-                      <tr className="border-b border-gray-50 dark:border-gray-700/50 bg-amber-50/30 dark:bg-amber-900/10">
-                        <td colSpan={2} className="px-4 pt-3 pb-1">
-                          <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">TUS — Taxe Unique sur les Salaires (7,5%)</p>
-                        </td>
-                      </tr>
-                      <ResultRow label="TUS — Part DGI (2,025%)" sub={`${fmt(result.grossSalary)} F × 2,025% · versé DGI via eTax`} value={`+${fmt(result.tusDgi)} F`} color="text-amber-600 dark:text-amber-400" />
-                      <ResultRow label="TUS — Part CNSS (5,475%)" sub={`${fmt(result.grossSalary)} F × 5,475% · déclaration CNSS`} value={`+${fmt(result.tusCnss)} F`} color="text-amber-600 dark:text-amber-400" />
-                      <tr className="border-b border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-900/15">
-                        <td className="px-4 py-2 text-xs font-semibold text-amber-600 dark:text-amber-400">Sous-total TUS</td>
-                        <td className="px-4 py-2 text-right font-mono font-bold text-sm text-amber-600 dark:text-amber-400">+{fmt(result.tusTotal)} F</td>
-                      </tr>
-
-                      {/* Taxes custom patronales */}
-                      {result.customTaxes.filter(r => r.patAmount > 0).map(r => (
-                        <ResultRow key={r.tax.localId}
-                          label={`${r.tax.name} patronal (${(r.tax.employerRate*100).toFixed(2)}%)`}
-                          sub={`${r.tax.code}${r.tax.hasCeiling ? ` · plaf. ${fmt(r.tax.ceiling)} F` : ''}`}
-                          value={`+${fmt(r.patAmount)} F`}
-                          color="text-rose-600 dark:text-rose-400" />
-                      ))}
-
-                      <TotalRow label="Total charges patronales" value={`+${fmt(totalChargesEmp)} F`} bg="bg-orange-50 dark:bg-orange-900/20" text="text-orange-700 dark:text-orange-400" />
-                    </tbody></table>
-                  )}
-                </div>
-
-                {/* RÉCAP 3 COLONNES */}
-                <div className="grid grid-cols-3 gap-2.5">
-                  {[
-                    {
-                      title: 'Salarié', color: 'sky',
-                      rows: [
-                        { label: 'CNSS 4%', value: `−${fmt(result.cnss.sal)} F`, vc: 'text-red-500' },
-                        { label: 'ITS', value: `−${fmt(result.its.its)} F`, vc: 'text-red-500' },
-                        ...(result.totalAdvances > 0 ? [{ label: 'Avances', value: `−${fmt(result.totalAdvances)} F`, vc: 'text-purple-500' }] : []),
-                      ],
-                      total: `${fmt(result.totalDeductions)} F`,
-                    },
-                    {
-                      title: 'Employeur', color: 'orange',
-                      rows: [
-                        { label: 'CNSS pat.', value: `+${fmt(cnssPatTotal)} F`, vc: 'text-orange-500' },
-                        { label: 'TUS 7,5%', value: `+${fmt(result.tusTotal)} F`, vc: 'text-amber-500' },
-                        ...(totalCustomPat > 0 ? [{ label: 'Taxes perso.', value: `+${fmt(totalCustomPat)} F`, vc: 'text-rose-500' }] : []),
-                      ],
-                      total: `${fmt(totalChargesEmp)} F`,
-                    },
-                    {
-                      title: 'Récap', color: 'purple',
-                      rows: [
-                        { label: 'Brut', value: `${fmt(result.grossSalary)} F`, vc: 'text-emerald-600' },
-                        { label: 'Charges', value: `+${fmt(totalChargesEmp)} F`, vc: 'text-orange-500' },
-                      ],
-                      total: `${fmt(result.totalEmployerCost)} F`,
-                    },
-                  ].map(({ title, color, rows, total }) => (
-                    <div key={title} className={`bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-200 dark:border-${color}-800/50 rounded-xl p-3`}>
-                      <p className={`text-[9px] font-bold text-${color}-500 uppercase tracking-widest mb-2`}>{title}</p>
-                      <div className="space-y-1.5">
-                        {rows.map(r => (
-                          <div key={r.label} className="flex justify-between text-[10px]">
-                            <span className="text-gray-500">{r.label}</span>
-                            <span className={`font-mono font-bold ${r.vc}`}>{r.value}</span>
-                          </div>
+                      <div className="px-4 pb-4 text-xs text-gray-500 space-y-1.5">
+                        {!isForfait && <p>Base imposable (brut − CNSS) : <span className="font-mono font-bold">{fmt(result.irppDetails.baseImposable)} F</span></p>}
+                        {!isForfait && <p>Abattement {isLegacy ? '30 %' : '20 %'} : <span className="font-mono font-bold">−{fmt(result.irppDetails.abattement)} F</span></p>}
+                        {!isForfait && <p>Revenu net imposable : <span className="font-mono font-bold">{fmt(result.irppDetails.revenuNetImposable)} F</span></p>}
+                        <p>Parts fiscales : <span className="font-bold">{result.irppDetails.fiscalParts}</span></p>
+                        {!isForfait && result.irppDetails.revenuParPart != null && <p>Revenu annuel par part : <span className="font-mono font-bold">{fmt(result.irppDetails.revenuParPart)} F</span></p>}
+                        {Array.isArray(result.irppDetails.details) && result.irppDetails.details.map((d: any, i: number) => (
+                          <p key={i} className="pl-2">{d.tranche} · {d.taux}% sur {fmt(d.base)} F = <span className="font-mono font-bold">{fmt(d.montant)} F</span></p>
                         ))}
-                        <div className={`flex justify-between text-[10px] pt-1.5 border-t border-${color}-200 dark:border-${color}-700`}>
-                          <span className="font-bold text-gray-600 dark:text-gray-300">Total</span>
-                          <span className={`font-mono font-black text-${color}-600 dark:text-${color}-400`}>{total}</span>
-                        </div>
+                        <p>Taux effectif : <span className="font-bold">{result.irppDetails.effectiveRate}%</span></p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* NET / COÛT final */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-900 dark:bg-black rounded-2xl p-5">
-                    <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Net à payer</p>
-                    <p className="font-black font-mono text-2xl text-white">{fmt(result.netSalary)} <span className="text-sm font-normal text-gray-400">F</span></p>
+                    )}
                   </div>
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5">
-                    <p className="text-[9px] text-orange-200 uppercase tracking-widest mb-1">Coût total employeur</p>
-                    <p className="font-black font-mono text-2xl text-white">{fmt(result.totalEmployerCost)} <span className="text-sm font-normal text-orange-200">F</span></p>
-                  </div>
-                </div>
+                )}
 
                 {/* CTA konza */}
                 <div className="p-4 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/20 dark:to-indigo-900/20 rounded-2xl border border-violet-200 dark:border-violet-800">

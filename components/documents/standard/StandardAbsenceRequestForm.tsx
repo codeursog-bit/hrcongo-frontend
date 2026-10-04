@@ -12,6 +12,7 @@
 // ============================================================================
 
 import type { ReactNode } from 'react';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from '../docSignatures';
 
 interface StandardCompany {
   legalName: string;
@@ -49,6 +50,8 @@ export interface StandardAbsenceRequestFormData {
   endDate: string | Date;
   requestedAt?: string | Date;
   status: string;
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
 }
 
 const FONT = `'Baskerville Old Face', Baskerville, Garamond, Georgia, 'Times New Roman', serif`;
@@ -124,6 +127,9 @@ const Spacer = ({ h }: { h: number }) => (
 export default function StandardAbsenceRequestForm({ data, id }: { data: StandardAbsenceRequestFormData; id?: string }) {
   const companyName = data.company.tradeName || data.company.legalName || 'Entreprise';
   const validated = data.status === 'APPROVED';
+  const sigHier = sigFor(data.signatures, 'HIERARCHY_HEAD');
+  const sigHR = sigFor(data.signatures, 'HR');
+  const sigDG = sigFor(data.signatures, 'DG');
   const rejected = data.status === 'REJECTED';
 
   return (
@@ -321,17 +327,34 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
             <td className="std-abs-black">La Direction Générale</td>
           </tr>
           <tr>
-            <td style={{ height: 45 }} />
+            <td style={{ height: 45, verticalAlign: 'middle' }}>
+              <SigVisa sig={sigHier} height={28} align="center" />
+            </td>
             <td style={{ verticalAlign: 'middle' }}>
-              {validated && data.company.cachetUrl ? (
+              {validated && data.company.cachetUrl && !sigHR ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 32, objectFit: 'contain', margin: '0 auto' }} />
+              ) : sigHR ? (
+                <SigVisa
+                  sig={sigHR}
+                  height={28}
+                  align="center"
+                  extra={validated && data.company.cachetUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 30, objectFit: 'contain' }} />
+                  ) : undefined}
+                />
               ) : null}
             </td>
-            <td />
+            <td style={{ verticalAlign: 'middle' }}>
+              <SigVisa sig={sigDG} height={28} align="center" />
+            </td>
           </tr>
         </tbody>
       </table>
+
+      {/* ✅ LOT D — fonctions sans case sur ce modèle (comptable, chef d'équipe) */}
+      <OtherOpinions signatures={data.signatures} boxCodes={['HIERARCHY_HEAD', 'HR', 'DG']} fontSize={8.5} />
 
       {/* ── Pied de page ancré en bas de la feuille ── */}
       <div style={{ marginTop: 'auto' }}>

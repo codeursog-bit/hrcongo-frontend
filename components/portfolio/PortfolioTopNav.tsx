@@ -8,6 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ChevronRight, Moon, Sun, ChevronDown, User, LogOut, Mail, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/providers/ThemeProvider';
+import { PushMenuItem } from '@/components/PushNotificationBanner';
 
 const PAGE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord',
@@ -135,6 +136,8 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
                       <User size={16} />
                       Mon Profil
                     </button>
+                    {/* 🆕 Notifications téléphone (hors app) */}
+                    <PushMenuItem style={{ color: 'var(--text)' }} />
                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
                     <button
                       onClick={handleLogout}

@@ -8,6 +8,7 @@
 // ============================================================================
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useDocSignatures } from '@/hooks/useDocSignatures';
 import Link from 'next/link';
 import {
   Plus, Loader2, Clock, CheckCircle2, XCircle, Ban,
@@ -81,6 +82,8 @@ export default function MonEspaceAbsencesPage() {
   const totalPages = Math.max(1, Math.ceil(requests.length / PAGE_SIZE));
   const paginated   = useMemo(() => requests.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [requests, page]);
   const selected    = requests.find(r => r.id === selectedId) || null;
+  // ✅ LOT D — signatures personnelles des avis, pour les documents imprimables
+  const docSignatures = useDocSignatures('absence', selectedId);
 
   const handleCancel = async (id: string) => {
     setCancelling(id);
@@ -112,6 +115,7 @@ export default function MonEspaceAbsencesPage() {
     reviewedByName: selected.reviewedByUser?.email,
     reviewedAt: selected.reviewedAt,
     rejectionReason: selected.rejectionReason,
+    signatures: docSignatures,
   } : null;
 
   const isStandard = company?.documentTemplate === 'STANDARD';
@@ -134,6 +138,7 @@ export default function MonEspaceAbsencesPage() {
     endDate: selected.endDate,
     status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,
+    signatures: docSignatures,
   } : null;
 
   if (isLoading) {

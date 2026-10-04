@@ -24,6 +24,11 @@ import StandardLoanRequestForm from '@/components/documents/standard/StandardLoa
 import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printLoanDocument } from '@/lib/loan-print';
+// ✅ LOT B — circuit d'avis (inactif tant que l'admin n'a rien configuré)
+import ApprovalPanel from '@/components/approvals/ApprovalPanel';
+import { useApprovalDecision } from '@/hooks/useApprovalDecision';
+import { useDocSignatures } from '@/hooks/useDocSignatures';
+import type { ApprovalStateView } from '@/services/approvals';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
@@ -64,6 +69,14 @@ export default function ValidationsPage() {
   const [isExportingXlsx, setIsExportingXlsx] = useState(false);
   const [isPreparingPrint, setIsPreparingPrint] = useState(false);
 
+  // ✅ LOT B — décision via l'orchestrateur (identique à avant si aucun circuit n'est configuré)
+  const { decide, dialog: approvalDialog } = useApprovalDecision();
+  const [approvalState, setApprovalState] = useState<ApprovalStateView | null>(null);
+  const [panelKey, setPanelKey] = useState(0);
+  const awaitingOpinions =
+    !!approvalState?.pending &&
+    ['WAITING_OPINIONS', 'NEEDS_CONFIRMATION'].includes(approvalState.pending.state);
+
   const load = async () => {
     try {
       const [l, a, me]: any = await Promise.all([
@@ -78,6 +91,10 @@ export default function ValidationsPage() {
     try { const stored = localStorage.getItem('user'); if (stored) setUserRole(JSON.parse(stored).role || ''); } catch {}
     load();
   }, []);
+
+  useEffect(() => { setApprovalState(null); }, [selected?.item?.id]);
+  // ✅ LOT D — signatures personnelles des avis, pour les documents imprimables
+  const docSignatures = useDocSignatures(selected?.kind, selected?.item?.id);
 
   useEffect(() => {
     if (!selected) { setDocData(null); setOrcaHtml(null); return; }
@@ -145,12 +162,19 @@ export default function ValidationsPage() {
     if (isReject && !rejectionReason.trim()) { setRejectMode(true); return; }
     setIsProcessing(true);
     try {
-      if (selected.kind === 'loan') {
-        await api.patch(`/loans/${selected.item.id}/decision`, { decision, rejectionReason: isReject ? rejectionReason : undefined, recoverViaPayroll });
-      } else {
-        await api.patch(`/loans/advances/${selected.item.id}/decision`, { decision, rejectionReason: isReject ? rejectionReason : undefined, recoverViaPayroll });
-      }
+      // ✅ LOT B — orchestrateur : sans circuit actif, décision immédiate (comportement d'avant).
+      const out = await decide(selected.kind, selected.item.id, {
+        decision: isReject ? 'REJECT' : 'APPROVE',
+        rejectionReason: isReject ? rejectionReason : undefined,
+        recoverViaPayroll,
+      });
+      if (out.outcome === 'CANCELLED') return;
       await load();
+      if (out.outcome === 'WAITING') {
+        // On garde la fiche ouverte pour montrer « validée, en attente d'avis ».
+        setRejectMode(false); setRejectionReason(''); setPanelKey(k => k + 1);
+        return;
+      }
       setSelected(null); setRejectMode(false); setRejectionReason('');
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsProcessing(false); }
   };
@@ -175,6 +199,7 @@ export default function ValidationsPage() {
     docType: selected.kind === 'loan' ? (selected.item.type || 'ARGENT') : 'AVANCE',
     amount: selected.item.amount, monthlyRepayment: selected.item.monthlyRepayment, status: selected.item.status,
     startDate: selected.item.startDate, endDate: selected.item.endDate, createdAt: selected.item.createdAt,
+    signatures: docSignatures,
   } : null;
 
   const isStandard = docData?.company?.documentTemplate === 'STANDARD';
@@ -190,6 +215,7 @@ export default function ValidationsPage() {
     requestedAt: docData.createdAt,
     drhDecision: docData.drhDecision,
     dgDecision: docData.dgDecision,
+    signatures: docSignatures,
   } : null;
   const standardAdvanceData = docData && selected?.kind === 'advance' ? {
     reference,
@@ -202,6 +228,7 @@ export default function ValidationsPage() {
     reason: docData.reason,
     requestedAt: docData.createdAt,
     status: docData.status,
+    signatures: docSignatures,
   } : null;
 
   const handleDownloadOrcaXlsx = async () => {
@@ -390,6 +417,15 @@ export default function ValidationsPage() {
               {selected.item.rejectionReason && <Row label="Motif du refus" value={selected.item.rejectionReason} />}
             </div>
 
+            {/* ✅ LOT B — avis + historique (masqué si aucun circuit actif et rien à montrer) */}
+            <ApprovalPanel
+              kind={selected.kind}
+              requestId={selected.item.id}
+              refreshKey={panelKey}
+              onState={setApprovalState}
+              onChanged={() => { load(); }}
+            />
+
             {bucket(selected.item.status) === 'PENDING' && DRH_ROLES.includes(userRole) && (
               <div className="space-y-2 pt-3 border-t border-[var(--border)] mb-3">
                 {!rejectMode ? (
@@ -414,7 +450,7 @@ export default function ValidationsPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => handleDecision(selected.kind === 'loan' ? 'OUI' : 'APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider</button>
+                      {!awaitingOpinions && <button onClick={() => handleDecision(selected.kind === 'loan' ? 'OUI' : 'APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider</button>}
                       <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
                     </div>
                   </>
@@ -457,6 +493,8 @@ export default function ValidationsPage() {
           </div>
         </div>
       )}
+
+      {approvalDialog}
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {selected && docData && (

@@ -7,6 +7,7 @@
 // ============================================================================
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useDocSignatures } from '@/hooks/useDocSignatures';
 import Link from 'next/link';
 import {
   Plus, Loader2, Clock, CheckCircle2, XCircle, Ban, ArrowRight,
@@ -102,6 +103,8 @@ export default function MonEspacePretsAvancesPage() {
   const selected = items.find(i => i.id === selectedId) || null;
   const [docData, setDocData] = useState<any>(null);
   const [orcaHtml, setOrcaHtml] = useState<string | null>(null);
+  // ✅ LOT D — signatures personnelles des avis, pour les documents imprimables
+  const docSignatures = useDocSignatures(selected?.kind, selected?.id);
 
   useEffect(() => {
     if (!selected) { setDocData(null); setOrcaHtml(null); return; }
@@ -155,6 +158,7 @@ export default function MonEspacePretsAvancesPage() {
     drhDecision: selected.kind === 'loan' ? selected.data.drhDecision : undefined,
     dgDecision: selected.kind === 'loan' ? selected.data.dgDecision : undefined,
     chefDecision: selected.kind === 'advance' ? (['APPROVED', 'DEDUCTED', 'PAID'].includes(selected.data.status) ? 'OUI' : selected.data.status === 'REJECTED' ? 'NON' : null) : undefined,
+    signatures: docSignatures,
   } : null;
 
   const isStandard = docData?.company?.documentTemplate === 'STANDARD';
@@ -170,6 +174,7 @@ export default function MonEspacePretsAvancesPage() {
     requestedAt: docData.createdAt,
     drhDecision: docData.drhDecision,
     dgDecision: docData.dgDecision,
+    signatures: docSignatures,
   } : null;
   const standardAdvanceData = docData && selected?.kind === 'advance' ? {
     reference,
@@ -182,6 +187,7 @@ export default function MonEspacePretsAvancesPage() {
     reason: docData.reason,
     requestedAt: docData.createdAt,
     status: docData.status,
+    signatures: docSignatures,
   } : null;
 
   const handleDownloadPdf = async () => {

@@ -10,6 +10,7 @@
 'use client';
 
 import React from 'react';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from './documents/docSignatures';
 
 export interface AbsenceRequestPrintableData {
   reference?: string;               // ex: DEA-A1B2C3D4
@@ -39,6 +40,8 @@ export interface AbsenceRequestPrintableData {
   endDate: string | Date;
   workingDays: number | string;
   hasAttachment?: boolean;
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | string;
   requestedAt?: string | Date;
   reviewedByName?: string;
@@ -189,14 +192,26 @@ export default function AbsenceRequestPrintable({ data }: { data: AbsenceRequest
             <div style={{ fontWeight: 700, fontSize: 16, textDecoration: 'underline' }}>{col.label}</div>
             {/* ✅ Le cachet (cachetUrl, entreprise → paramètres/entreprise) remplace tout
                 texte d'identité du validateur — jamais son nom ni son email. */}
-            {col.stamp && data.company.cachetUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 100, objectFit: 'contain' }} />
-            ) : (
-              <div style={{ fontSize: 15, minHeight: 56 }}>
-                {col.name && <div style={{ fontWeight: 600 }}>{col.name}</div>}
-              </div>
-            )}
+            {(() => {
+              // ✅ LOT D — signature personnelle (Chef de service → supérieur hiérarchique ; RH → RH)
+              const code = col.label === 'Chef de service' ? 'HIERARCHY_HEAD' : col.label === 'Ressources Humaines' ? 'HR' : null;
+              const sig = code ? sigFor(data.signatures, code) : undefined;
+              if (col.stamp && data.company.cachetUrl) {
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={data.company.cachetUrl} alt="Cachet" style={{ height: sig ? 70 : 100, objectFit: 'contain' }} />
+                    {sig && <SigVisa sig={sig} height={36} align="center" nameSize={10} />}
+                  </div>
+                );
+              }
+              if (sig) return <SigVisa sig={sig} height={60} align="center" nameSize={11} />;
+              return (
+                <div style={{ fontSize: 15, minHeight: 56 }}>
+                  {col.name && <div style={{ fontWeight: 600 }}>{col.name}</div>}
+                </div>
+              );
+            })()}
             <div>
               {col.date && <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 3 }}>{col.date}</div>}
               <div style={{ fontWeight: 700, fontSize: 14 }}>Date et signature</div>
@@ -204,6 +219,9 @@ export default function AbsenceRequestPrintable({ data }: { data: AbsenceRequest
           </div>
         ))}
       </div>
+
+      {/* ✅ LOT D — fonctions sans case sur ce modèle (comptable, DG, chef d'équipe) */}
+      <OtherOpinions signatures={data.signatures} boxCodes={['HIERARCHY_HEAD', 'HR']} fontSize={11} color="#374151" />
 
       {/* ── PIED DE PAGE ──
           Texte libre défini par l'entreprise (paramètres → Pied de page des documents)

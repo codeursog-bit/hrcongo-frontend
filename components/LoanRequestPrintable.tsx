@@ -10,6 +10,7 @@
 // ============================================================================
 
 import React from 'react';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from './documents/docSignatures';
 
 interface CompanyInfo {
   legalName?: string; tradeName?: string; logo?: string | null;
@@ -39,6 +40,8 @@ export interface LoanRequestPrintableData {
   chefDecision?: 'OUI' | 'NON' | null; // pour AVANCE (1 seule case)
   chefName?: string;
   requestedAt?: string | Date;
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
 }
 
 const fmt = (d?: string | Date) => (d ? new Date(d).toLocaleDateString('fr-FR') : '.........................');
@@ -153,6 +156,10 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
               </>
             )}
             {data.chefName && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>{data.chefName}</p>}
+            {/* ✅ LOT D — signature personnelle du supérieur hiérarchique */}
+            {sigFor(data.signatures, 'HIERARCHY_HEAD') && (
+              <div style={{ marginTop: 8 }}><SigVisa sig={sigFor(data.signatures, 'HIERARCHY_HEAD')} height={48} nameSize={10} /></div>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 18 }}>
@@ -168,6 +175,10 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
                 </>
               )}
               {data.drhName && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>{data.drhName}</p>}
+              {/* ✅ LOT D — signature personnelle de la fonction RH */}
+              {sigFor(data.signatures, 'HR') && (
+                <div style={{ marginTop: 8 }}><SigVisa sig={sigFor(data.signatures, 'HR')} height={48} nameSize={10} /></div>
+              )}
             </div>
             <div style={{ flex: 1, border: '2px solid #1f2937', padding: '18px 22px', minHeight: 110 }}>
               <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Avis et signature Directeur Général</p>
@@ -181,9 +192,21 @@ export default function LoanRequestPrintable({ id, data }: { id: string; data: L
                 </>
               )}
               {data.dgName && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8 }}>{data.dgName}</p>}
+              {/* ✅ LOT D — signature personnelle de la Direction Générale */}
+              {sigFor(data.signatures, 'DG') && (
+                <div style={{ marginTop: 8 }}><SigVisa sig={sigFor(data.signatures, 'DG')} height={48} nameSize={10} /></div>
+              )}
             </div>
           </div>
         )}
+
+        {/* ✅ LOT D — fonctions sans case sur ce modèle (comptable, chef d'équipe…) */}
+        <OtherOpinions
+          signatures={data.signatures}
+          boxCodes={isDualApproval ? ['HR', 'DG'] : ['HIERARCHY_HEAD']}
+          fontSize={11}
+          color="#374151"
+        />
 
         <p style={{ fontSize: 11.5, color: '#6b7280', marginTop: 16 }}>P.S : Merci de joindre un justificatif ( Maladie ou autres )</p>
       </div>

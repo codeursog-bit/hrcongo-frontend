@@ -13,6 +13,8 @@ import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
+// ✅ LOT E — circuit d'avis (inactif tant que l'admin n'a rien configuré)
+import { useApprovalDecision } from '@/hooks/useApprovalDecision';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +71,8 @@ export default function LeaveManagementPage() {
   const [provision, setProvision]   = useState<ProvisionSummary | null>(null);
   const [isLoading, setIsLoading]   = useState(true);
   const [modalData, setModalData]   = useState<{ type: 'approve' | 'reject'; leave: LeaveRequest } | null>(null);
+  // ✅ LOT E — décision via l'orchestrateur (identique à avant si aucun circuit n'est configuré)
+  const { decide, dialog: approvalDialog } = useApprovalDecision();
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessing, setIsProcessing]       = useState(false);
   const [userRole, setUserRole]     = useState<string>('');
@@ -159,10 +163,18 @@ export default function LeaveManagementPage() {
     setIsProcessing(true);
     try {
       const status = modalData.type === 'approve' ? 'APPROVED' : 'REJECTED';
-      await api.patch(`/leaves/${modalData.leave.id}/status`, {
-        status,
+      // ✅ LOT E — orchestrateur : sans circuit actif, décision immédiate (comportement d'avant).
+      const out = await decide('leave', modalData.leave.id, {
+        decision: modalData.type === 'approve' ? 'APPROVE' : 'REJECT',
         rejectionReason: modalData.type === 'reject' ? rejectionReason : undefined,
       });
+      if (out.outcome === 'CANCELLED') return;
+      if (out.outcome === 'WAITING') {
+        // Validée « en attente d'avis » : la demande reste PENDING (ouvrir la fiche pour suivre les avis).
+        setModalData(null);
+        alert("Validation enregistrée : la demande sera finalisée dès que les avis attendus seront donnés. Ouvrez la demande pour suivre les avis.");
+        return;
+      }
       setLeaves(prev => prev.map(l => l.id === modalData.leave.id ? { ...l, status } : l));
       setModalData(null);
     } catch (e: any) {
@@ -647,6 +659,8 @@ export default function LeaveManagementPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {approvalDialog}
     </div>
   );
 }

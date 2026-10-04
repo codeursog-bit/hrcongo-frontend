@@ -14,6 +14,7 @@ import { PendingActions } from '@/components/pwa/PendingActions';
 import { ContractExpiryToast } from '@/components/contracts/ContractExpiryToast';
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/hooks/useAuth';
+import PushNotificationBanner from '@/components/PushNotificationBanner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   // ✅ FIX CRITIQUE : récupérer "loading" depuis useAuth
@@ -81,6 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <PendingActions />
       <ContractExpiryToast userRole={userRole ?? ''} />
      <DashboardShell>
+     <PushNotificationBanner />
      <OnboardingChecklist />
       {children}
      </DashboardShell>

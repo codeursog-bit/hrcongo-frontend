@@ -15,6 +15,7 @@ import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 
 import { FancySelect } from '@/components/ui/FancySelect';
+import { approvalsApi, ApprovalFunctionDef, UserFunctionItem } from '@/services/approvals';
 
 // --- Types ---
 
@@ -47,12 +48,26 @@ export default function UserManagementPage() {
   const router = useRouter();
   const alert = useAlert()
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   useEffect(() => {
     try {
       const stored = localStorage.getItem('user');
-      if (stored) setCurrentUserId(JSON.parse(stored)?.id || null);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setCurrentUserId(parsed?.id || null);
+        setCurrentUserRole(parsed?.role || null);
+      }
     } catch {}
   }, []);
+
+  // ✅ LOT A — fonctions de validation (avis) : seul l'admin les attribue.
+  //    Si l'endpoint n'est pas disponible (backend pas déployé, droits…), la
+  //    section reste simplement masquée : la page fonctionne comme avant.
+  const [functionsCatalog, setFunctionsCatalog] = useState<ApprovalFunctionDef[]>([]);
+  const [functionAssignments, setFunctionAssignments] = useState<Record<string, UserFunctionItem[]>>({});
+  const [functionsAvailable, setFunctionsAvailable] = useState(false);
+  const [editFunctions, setEditFunctions] = useState<Record<string, { enabled: boolean; canSign: boolean }>>({});
+  const canManageFunctions = currentUserRole === 'ADMIN' || currentUserRole === 'SUPER_ADMIN';
   
   // -- State --
   const [users, setUsers] = useState<User[]>([]);
@@ -92,6 +107,14 @@ export default function UserManagementPage() {
         ]);
         setUsers(usersData);
         setDepartments(deptsData);
+        try {
+          const fnData = await approvalsApi.listCompanyFunctions();
+          setFunctionsCatalog(fnData.catalog || []);
+          setFunctionAssignments(fnData.assignments || {});
+          setFunctionsAvailable(true);
+        } catch {
+          setFunctionsAvailable(false);
+        }
     } catch (e) {
         console.error("Failed to fetch data", e);
     } finally {
@@ -177,6 +200,9 @@ export default function UserManagementPage() {
         isActive: user.isActive,
         canRecordAttendanceForAll: user.canRecordAttendanceForAll || false
     });
+    const initialFns: Record<string, { enabled: boolean; canSign: boolean }> = {};
+    (functionAssignments[user.id] || []).forEach(f => { initialFns[f.code] = { enabled: true, canSign: f.canSign }; });
+    setEditFunctions(initialFns);
     setEditModal(true);
   };
 
@@ -185,6 +211,19 @@ export default function UserManagementPage() {
     setIsSaving(true);
     try {
         await api.patch(`/users/${editingUser.id}`, editForm);
+
+        // ✅ LOT A — enregistrement des fonctions (uniquement si modifiées)
+        if (canManageFunctions && functionsAvailable) {
+          const nextFns: UserFunctionItem[] = Object.entries(editFunctions)
+            .filter(([, v]) => v.enabled)
+            .map(([code, v]) => ({ code, canSign: v.canSign }));
+          const prevFns = functionAssignments[editingUser.id] || [];
+          const norm = (arr: UserFunctionItem[]) => JSON.stringify([...arr].sort((a, b) => a.code.localeCompare(b.code)));
+          if (norm(nextFns) !== norm(prevFns)) {
+            await approvalsApi.setUserFunctions(editingUser.id, nextFns);
+          }
+        }
+
         setEditModal(false);
         setEditingUser(null);
         alert.success('utilisateur', 'Utilisateur mis à jour !');
@@ -348,6 +387,14 @@ export default function UserManagementPage() {
                                 <Shield size={12} /> Secrétaire
                             </span>
                         )}
+                        {(functionAssignments[user.id] || []).map(f => {
+                            const def = functionsCatalog.find(c => c.code === f.code);
+                            return (
+                              <span key={f.code} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30" title={f.canSign ? 'Peut donner un avis et signer' : 'Peut donner un avis'}>
+                                <Shield size={12} /> {def?.label || f.code}{f.canSign ? ' · signe' : ''}
+                              </span>
+                            );
+                        })}
                         {!user.isActive && <span className="text-xs font-bold text-red-500 flex items-center gap-1"><Ban size={12}/> Désactivé</span>}
                      </div>
                      
@@ -369,7 +416,7 @@ export default function UserManagementPage() {
             >
                 <motion.div 
                     initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-                    className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full shadow-2xl border border-[var(--border)]"
+                    className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-[var(--border)]"
                 >
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold text-[var(--text)]">Modifier Utilisateur</h2>
@@ -439,6 +486,48 @@ export default function UserManagementPage() {
                                 </div>
                             </button>
                         </div>
+
+                        {canManageFunctions && functionsAvailable && functionsCatalog.length > 0 && editingUser.role !== 'SUPER_ADMIN' && (
+                        <div>
+                            <label className="block text-sm font-bold mb-1 text-[var(--text)]">Fonctions de validation (avis)</label>
+                            <p className="text-xs text-[var(--text-muted)] mb-3">
+                                Donne le droit de donner un avis sur les demandes, sans pouvoir approuver ou refuser (réservé à l'Admin et au Manager RH). La case « Peut signer » autorise l'enregistrement d'une signature personnelle.
+                            </p>
+                            <div className="space-y-2">
+                                {functionsCatalog.map(fn => {
+                                    const st = editFunctions[fn.code] || { enabled: false, canSign: false };
+                                    return (
+                                        <div key={fn.code} className={`rounded-xl border transition-all ${st.enabled ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-1 ring-emerald-500' : 'border-[var(--border)]'}`}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditFunctions(prev => ({ ...prev, [fn.code]: { enabled: !st.enabled, canSign: st.enabled ? false : st.canSign } }))}
+                                                className="w-full flex items-center justify-between p-3 text-left"
+                                            >
+                                                <div className="pr-4">
+                                                    <p className={`text-sm font-bold ${st.enabled ? 'text-emerald-700 dark:text-emerald-400' : 'text-[var(--text)]'}`}>{fn.label}</p>
+                                                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{fn.description}</p>
+                                                </div>
+                                                <div className={`shrink-0 w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${st.enabled ? 'bg-emerald-500 justify-end' : 'bg-[var(--border)] justify-start'}`}>
+                                                    <div className="w-5 h-5 rounded-full bg-white shadow" />
+                                                </div>
+                                            </button>
+                                            {st.enabled && (
+                                                <label className="flex items-center gap-2 px-3 pb-3 cursor-pointer select-none">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={st.canSign}
+                                                        onChange={(e) => setEditFunctions(prev => ({ ...prev, [fn.code]: { enabled: true, canSign: e.target.checked } }))}
+                                                        className="w-4 h-4 accent-emerald-500"
+                                                    />
+                                                    <span className="text-xs font-medium text-[var(--text)]">Peut signer (autorise l'upload de sa signature)</span>
+                                                </label>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        )}
 
                         <div>
                             <label className="block text-sm font-bold mb-2 text-[var(--text)]">Statut du compte</label>

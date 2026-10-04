@@ -8,6 +8,7 @@
 // ============================================================================
 
 import OrcaDocumentShell from './OrcaDocumentShell';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from '../docSignatures';
 
 type LeaveType = 'ANNUAL' | 'SICK' | 'MATERNITY' | 'PATERNITY' | 'UNPAID' | 'COMPENSATORY';
 type AbsenceType = 'MALADIE' | 'CONVENTIONNELLE' | 'EXCEPTIONNELLE';
@@ -39,6 +40,8 @@ interface OrcaLeaveAbsenceDocumentProps {
   reason?: string | null;
   status: RequestStatus;
   company: OrcaCompany;
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
 }
 
 // Libellés "type" affichés selon le modèle papier — dans l'ordre du formulaire
@@ -104,6 +107,7 @@ export default function OrcaLeaveAbsenceDocument({
   reason,
   status,
   company,
+  signatures,
 }: OrcaLeaveAbsenceDocumentProps) {
   const isConge = variant === 'CONGE';
   const typeOptions = isConge ? CONGE_TYPES : ABSENCE_TYPES;
@@ -190,9 +194,22 @@ export default function OrcaLeaveAbsenceDocument({
                 style={{ position: 'absolute', right: 6, bottom: 6, height: 82, opacity: 0.92 }}
               />
             )}
+            {/* ✅ LOT D — signature personnelle (Hiérarchie → supérieur hiérarchique ; RH → Ressources Humaines) */}
+            {(() => {
+              const code = label === 'Hiérarchie' ? 'HIERARCHY_HEAD' : label === 'Ressources Humaines' ? 'HR' : null;
+              const sig = code ? sigFor(signatures, code) : undefined;
+              return sig ? (
+                <div style={{ position: 'absolute', left: 10, bottom: 6 }}>
+                  <SigVisa sig={sig} height={44} nameSize={8} />
+                </div>
+              ) : null;
+            })()}
           </div>
         ))}
       </div>
+
+      {/* ✅ LOT D — fonctions sans case sur ce modèle (DG, comptable, chef d'équipe) */}
+      <OtherOpinions signatures={signatures} boxCodes={['HIERARCHY_HEAD', 'HR']} fontSize={9} color="#444" />
     </OrcaDocumentShell>
   );
 }

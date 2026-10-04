@@ -6,6 +6,7 @@
 // ============================================================================
 
 import OrcaDocumentShell from './OrcaDocumentShell';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from '../docSignatures';
 
 type AdvanceStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID' | 'DEDUCTED' | 'CANCELLED';
 
@@ -30,6 +31,8 @@ interface OrcaAdvanceDocumentProps {
   requestDate: string | Date;
   status: AdvanceStatus;
   company: OrcaCompany;
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
 }
 
 function fmtDate(d: string | Date) {
@@ -67,7 +70,7 @@ function FieldLine({ label, value, minWidth = 140 }: { label: string; value: str
 }
 
 export default function OrcaAdvanceDocument({
-  reference, id, employee, amount, reason, requestDate, status, company,
+  reference, id, employee, amount, reason, requestDate, status, company, signatures,
 }: OrcaAdvanceDocumentProps) {
   const validated = ['APPROVED', 'PAID', 'DEDUCTED'].includes(status);
 
@@ -114,8 +117,17 @@ export default function OrcaAdvanceDocument({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={company.cachetUrl} alt="Cachet et signature" style={{ position: 'absolute', right: 6, bottom: 6, height: 74, opacity: 0.92 }} />
           )}
+          {/* ✅ LOT D — signature personnelle du supérieur hiérarchique / chef de service */}
+          {sigFor(signatures, 'HIERARCHY_HEAD') && (
+            <div style={{ position: 'absolute', left: 10, bottom: 6 }}>
+              <SigVisa sig={sigFor(signatures, 'HIERARCHY_HEAD')} height={44} nameSize={8} />
+            </div>
+          )}
         </div>
       </div>
+
+      {/* ✅ LOT D — autres fonctions (RH, DG, comptable, chef d'équipe) : pas de case sur ce modèle */}
+      <OtherOpinions signatures={signatures} boxCodes={['HIERARCHY_HEAD']} fontSize={9} color="#444" />
     </OrcaDocumentShell>
   );
 }

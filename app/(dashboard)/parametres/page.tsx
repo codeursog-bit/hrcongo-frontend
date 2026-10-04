@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Settings, Wallet, Users, Lock, ChevronRight, Building2, Network, Gift, Receipt,Crown,Palette } from 'lucide-react';
+import { Settings, Wallet, Users, Lock, ChevronRight, Building2, Network, Gift, Receipt,Crown,Palette, ListChecks } from 'lucide-react';
 
 export default function ParametresPage() {
   const modules = [
@@ -47,6 +47,13 @@ export default function ParametresPage() {
       icon: Users,
       color: 'bg-amber-500',
       path: '/parametres/users',
+    },
+    {
+      title: 'Circuits de validation',
+      desc: 'Avis demandés avant la décision (prêts, avances).',
+      icon: ListChecks,
+      color: 'bg-emerald-500',
+      path: '/parametres/circuits',
     },
     {
   title: 'Abonnement',

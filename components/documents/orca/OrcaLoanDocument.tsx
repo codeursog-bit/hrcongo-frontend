@@ -6,6 +6,7 @@
 // ============================================================================
 
 import OrcaDocumentShell from './OrcaDocumentShell';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from '../docSignatures';
 
 type LoanType = 'ARGENT' | 'MARCHANDISE' | 'AUTRE';
 type LoanStatus = 'PENDING' | 'PENDING_DG' | 'ACTIVE' | 'PAID' | 'REJECTED' | 'CANCELLED';
@@ -36,6 +37,8 @@ interface OrcaLoanDocumentProps {
   drhDecision: ApprovalDecision;
   dgDecision: ApprovalDecision;
   company: OrcaCompany;
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
 }
 
 const TITLES: Record<LoanType, string> = {
@@ -88,7 +91,7 @@ function FieldLine({ label, value, minWidth = 140 }: { label: string; value: str
 
 export default function OrcaLoanDocument({
   reference, id, loanType, employee, amount, monthlyRepayment, startDate, endDate,
-  status, drhDecision, dgDecision, company,
+  status, drhDecision, dgDecision, company, signatures,
 }: OrcaLoanDocumentProps) {
   const amountLabel = loanType === 'MARCHANDISE' ? 'Montant total de la marchandise' : 'Montant du prêt demandé';
 
@@ -130,8 +133,14 @@ export default function OrcaLoanDocument({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={company.cachetUrl} alt="Cachet et signature DRH" style={{ position: 'absolute', right: 6, bottom: 6, height: 74, opacity: 0.92 }} />
           )}
+          {/* ✅ LOT D — signature personnelle de la fonction RH */}
+          {sigFor(signatures, 'HR') && (
+            <div style={{ position: 'absolute', left: 10, bottom: 6 }}>
+              <SigVisa sig={sigFor(signatures, 'HR')} height={44} nameSize={8} />
+            </div>
+          )}
         </div>
-        <div style={{ border: '1px solid #ccc', borderRadius: 4, padding: 10, minHeight: 100 }}>
+        <div style={{ border: '1px solid #ccc', borderRadius: 4, padding: 10, minHeight: 100, position: 'relative' }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', color: '#555', marginBottom: 6 }}>
             Avis et signature Directeur Général
           </div>
@@ -139,8 +148,17 @@ export default function OrcaLoanDocument({
             <div style={{ display: 'flex', alignItems: 'center' }}><Checkbox checked={dgDecision === 'OUI'} /> OUI</div>
             <div style={{ display: 'flex', alignItems: 'center' }}><Checkbox checked={dgDecision === 'NON'} /> NON</div>
           </div>
+          {/* ✅ LOT D — signature personnelle de la Direction Générale */}
+          {sigFor(signatures, 'DG') && (
+            <div style={{ position: 'absolute', left: 10, bottom: 6 }}>
+              <SigVisa sig={sigFor(signatures, 'DG')} height={44} nameSize={8} />
+            </div>
+          )}
         </div>
       </div>
+
+      {/* ✅ LOT D — fonctions sans case sur ce modèle (comptable, hiérarchie, chef d'équipe) */}
+      <OtherOpinions signatures={signatures} boxCodes={['HR', 'DG']} fontSize={9} color="#444" />
     </OrcaDocumentShell>
   );
 }

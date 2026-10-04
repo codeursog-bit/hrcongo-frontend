@@ -148,6 +148,38 @@ export function usePushNotifications() {
         // ✅ 5. Vérifier l'abonnement existant
         const sub = await reg.pushManager.getSubscription();
         setIsSubscribed(!!sub);
+
+        // ✅ 6. ACTIVATION PAR DÉFAUT : si le navigateur a déjà accordé la permission,
+        //    on (ré)enregistre l'appareil automatiquement, sans clic. Couvre : première
+        //    connexion après autorisation, changement de compte sur le même appareil,
+        //    abonnement perdu côté serveur. Une seule fois par session et par compte.
+        if (Notification.permission === 'granted') {
+          try {
+            const activeReg = await waitForActivation(reg);
+            let current = await activeReg.pushManager.getSubscription();
+            if (!current) {
+              const { publicKey } = await api.get('/notifications/push/vapid-key') as any;
+              if (publicKey) {
+                current = await activeReg.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: urlBase64ToArrayBuffer(publicKey),
+                });
+              }
+            }
+            if (current) {
+              let uid = '';
+              try { uid = JSON.parse(localStorage.getItem('user') || '{}').id || ''; } catch {}
+              const syncKey = `push-synced:${uid}:${current.endpoint}`;
+              if (!sessionStorage.getItem(syncKey)) {
+                await api.post('/notifications/push/subscribe', current.toJSON());
+                sessionStorage.setItem(syncKey, '1');
+              }
+              setIsSubscribed(true);
+            }
+          } catch (e) {
+            console.warn('[Push] Auto-sync:', e);
+          }
+        }
       } catch (err: any) {
         console.error('[Push] Erreur initialisation SW:', err);
         setSwError(err?.message || 'Erreur service worker');

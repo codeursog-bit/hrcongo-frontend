@@ -33,6 +33,11 @@ import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizati
 import LoansOverview from '@/components/loans/LoansOverview';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import CashPaymentModal from '@/components/loans/CashPaymentModal';
+// ✅ LOT B — circuit d'avis (inactif tant que l'admin n'a rien configuré)
+import ApprovalPanel from '@/components/approvals/ApprovalPanel';
+import { useApprovalDecision } from '@/hooks/useApprovalDecision';
+import { useDocSignatures } from '@/hooks/useDocSignatures';
+import type { ApprovalStateView } from '@/services/approvals';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const DG_ROLES  = ['ADMIN', 'SUPER_ADMIN'];
@@ -84,6 +89,21 @@ export default function LoansManagementPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [recoverViaPayroll, setRecoverViaPayroll] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // ✅ LOT B — décision via l'orchestrateur (identique à avant si aucun circuit n'est configuré)
+  const { decide, dialog: approvalDialog } = useApprovalDecision();
+  const [approvalState, setApprovalState] = useState<ApprovalStateView | null>(null);
+  const [panelKey, setPanelKey] = useState(0);
+  const awaitingOpinions =
+    !!approvalState?.pending &&
+    ['WAITING_OPINIONS', 'NEEDS_CONFIRMATION'].includes(approvalState.pending.state);
+  // Évite qu'un état d'avis d'une autre demande masque « Valider » le temps du chargement.
+  useEffect(() => { setApprovalState(null); }, [selectedLoanId, selectedAdvanceId]);
+  // ✅ LOT D — signatures personnelles des avis, pour les documents imprimables
+  const docSignatures = useDocSignatures(
+    tab === 'loans' ? 'loan' : tab === 'advances' ? 'advance' : null,
+    tab === 'loans' ? selectedLoanId : tab === 'advances' ? selectedAdvanceId : null,
+  );
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [printAuthModal, setPrintAuthModal] = useState<'loan' | 'advance' | null>(null);
   const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
@@ -176,9 +196,16 @@ export default function LoansManagementPage() {
     if (decision === 'NON' && !rejectionReason.trim()) { setRejectMode(true); return; }
     setIsProcessing(true);
     try {
-      await api.patch(`/loans/${selectedLoan.id}/decision`, { decision, rejectionReason: decision === 'NON' ? rejectionReason : undefined, recoverViaPayroll });
+      // ✅ LOT B — orchestrateur : sans circuit actif, décision immédiate (comportement d'avant).
+      const out = await decide('loan', selectedLoan.id, {
+        decision: decision === 'NON' ? 'REJECT' : 'APPROVE',
+        rejectionReason: decision === 'NON' ? rejectionReason : undefined,
+        recoverViaPayroll,
+      });
+      if (out.outcome === 'CANCELLED') return;
       await load();
       setRejectMode(false); setRejectionReason('');
+      if (out.outcome === 'WAITING') setPanelKey(k => k + 1);
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsProcessing(false); }
   };
 
@@ -275,9 +302,16 @@ export default function LoansManagementPage() {
     if (decision === 'REJECTED' && !rejectionReason.trim()) { setRejectMode(true); return; }
     setIsProcessing(true);
     try {
-      await api.patch(`/loans/advances/${selectedAdvance.id}/decision`, { decision, rejectionReason: decision === 'REJECTED' ? rejectionReason : undefined, recoverViaPayroll });
+      // ✅ LOT B — orchestrateur : sans circuit actif, décision immédiate (comportement d'avant).
+      const out = await decide('advance', selectedAdvance.id, {
+        decision: decision === 'REJECTED' ? 'REJECT' : 'APPROVE',
+        rejectionReason: decision === 'REJECTED' ? rejectionReason : undefined,
+        recoverViaPayroll,
+      });
+      if (out.outcome === 'CANCELLED') return;
       await load();
       setRejectMode(false); setRejectionReason('');
+      if (out.outcome === 'WAITING') setPanelKey(k => k + 1);
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsProcessing(false); }
   };
 
@@ -376,6 +410,7 @@ export default function LoansManagementPage() {
     status: printSource.status,
     drhDecision: selectedLoan?.drhDecision, dgDecision: selectedLoan?.dgDecision,
     chefDecision: tab === 'advances' ? (selectedAdvance?.status === 'APPROVED' || selectedAdvance?.status === 'DEDUCTED' || selectedAdvance?.status === 'PAID' ? 'OUI' : selectedAdvance?.status === 'REJECTED' ? 'NON' : null) : undefined,
+    signatures: docSignatures,
   } : null;
 
   const standardLoanData = docData && tab === 'loans' ? {
@@ -390,6 +425,7 @@ export default function LoansManagementPage() {
     requestedAt: docData.createdAt,
     drhDecision: docData.drhDecision,
     dgDecision: docData.dgDecision,
+    signatures: docSignatures,
   } : null;
 
   const standardAdvanceData = docData && tab === 'advances' ? {
@@ -403,6 +439,7 @@ export default function LoansManagementPage() {
     reason: docData.reason,
     requestedAt: docData.createdAt,
     status: docData.status,
+    signatures: docSignatures,
   } : null;
 
   const handleDownloadPdf = async () => {
@@ -715,6 +752,16 @@ export default function LoansManagementPage() {
                     <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl"><Info size={14} className="shrink-0 mt-0.5" /> {selectedLoan.rejectionReason}</div>
                   )}
 
+                  {/* ✅ LOT B — avis + historique (masqué si aucun circuit actif et rien à montrer) */}
+                  <ApprovalPanel
+                    key={`loan-${selectedLoan.id}`}
+                    kind="loan"
+                    requestId={selectedLoan.id}
+                    refreshKey={panelKey}
+                    onState={setApprovalState}
+                    onChanged={() => { load(); }}
+                  />
+
                   {/* Décision — PARALLÈLE : visible par DRH et DG en même temps, le premier présent tranche */}
                   {selectedLoan.status === 'PENDING' && DRH_ROLES.includes(userRole) && (
                     <div className="space-y-2 pt-2 border-t border-[var(--border)]">
@@ -743,7 +790,7 @@ export default function LoansManagementPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => handleLoanDecision('OUI')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider (OUI)</button>
+                            {!awaitingOpinions && <button onClick={() => handleLoanDecision('OUI')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Valider (OUI)</button>}
                             <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
                           </div>
                         </>
@@ -956,6 +1003,16 @@ export default function LoansManagementPage() {
 
                   {selectedAdvance.reason && <div className="text-sm"><p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p><p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3 rounded-xl">{selectedAdvance.reason}</p></div>}
 
+                  {/* ✅ LOT B — avis + historique (masqué si aucun circuit actif et rien à montrer) */}
+                  <ApprovalPanel
+                    key={`advance-${selectedAdvance.id}`}
+                    kind="advance"
+                    requestId={selectedAdvance.id}
+                    refreshKey={panelKey}
+                    onState={setApprovalState}
+                    onChanged={() => { load(); }}
+                  />
+
                   {selectedAdvance.status === 'PENDING' && DRH_ROLES.includes(userRole) && (
                     <div className="space-y-2 pt-2 border-t border-[var(--border)]">
                       {!rejectMode ? (
@@ -980,7 +1037,7 @@ export default function LoansManagementPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => handleAdvanceDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Approuver</button>
+                            {!awaitingOpinions && <button onClick={() => handleAdvanceDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2"><Check size={16} /> Approuver</button>}
                             <button onClick={() => setRejectMode(true)} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2"><X size={16} /> Refuser</button>
                           </div>
                         </>
@@ -1346,6 +1403,8 @@ export default function LoansManagementPage() {
           )}
         </div>
       )}
+
+      {approvalDialog}
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {tab === 'loans' && selectedLoan && docData && (

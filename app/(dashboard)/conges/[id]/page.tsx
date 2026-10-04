@@ -25,6 +25,11 @@ import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print'
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
 import StandardLeaveRequestForm from '@/components/documents/standard/StandardLeaveRequestForm';
+// ✅ LOT E — circuit d'avis + signatures personnelles (inactifs tant que l'admin n'a rien configuré)
+import ApprovalPanel from '@/components/approvals/ApprovalPanel';
+import { useApprovalDecision } from '@/hooks/useApprovalDecision';
+import { useDocSignatures } from '@/hooks/useDocSignatures';
+import type { ApprovalStateView } from '@/services/approvals';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -69,6 +74,16 @@ export default function LeaveDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // ✅ LOT E — décision via l'orchestrateur (identique à avant si aucun circuit n'est configuré)
+  const { decide, dialog: approvalDialog } = useApprovalDecision();
+  const [approvalState, setApprovalState] = useState<ApprovalStateView | null>(null);
+  const [panelKey, setPanelKey] = useState(0);
+  const awaitingOpinions =
+    !!approvalState?.pending &&
+    ['WAITING_OPINIONS', 'NEEDS_CONFIRMATION'].includes(approvalState.pending.state);
+  // Signatures personnelles des avis, pour les documents imprimables
+  const docSignatures = useDocSignatures('leave', id);
 
   const load = async () => {
     try {
@@ -155,15 +170,18 @@ export default function LeaveDetailPage() {
 
     setIsProcessing(true);
     try {
-      await api.patch(`/leaves/${leave.id}/status`, {
-        status,
+      // ✅ LOT E — orchestrateur : sans circuit actif, décision immédiate (comportement d'avant).
+      const out = await decide('leave', leave.id, {
+        decision: status === 'REJECTED' ? 'REJECT' : 'APPROVE',
         rejectionReason: status === 'REJECTED' ? rejectionReason : undefined,
         extraDaysGranted: status === 'APPROVED' && extraDaysGranted ? Number(extraDaysGranted) : undefined,
         resumptionNote: status === 'APPROVED' && resumptionNote ? resumptionNote : undefined,
       });
+      if (out.outcome === 'CANCELLED') return;
       await load();
       setRejectMode(false);
       setRejectionReason('');
+      if (out.outcome === 'WAITING') setPanelKey(k => k + 1);
     } catch (e: any) {
       alert(e?.message || 'Erreur lors de la mise à jour');
     } finally {
@@ -288,6 +306,7 @@ export default function LeaveDetailPage() {
           : (currentUserName || undefined)),
     reviewedAt: leave.approvedAt || leave.rejectedAt,
     rejectionReason: leave.rejectionReason,
+    signatures: docSignatures,
   };
 
   const letterData = {
@@ -347,6 +366,7 @@ export default function LeaveDetailPage() {
         reason={docData.reason}
         status={docData.status}
         company={docData.company}
+        signatures={docSignatures}
       />
     ) : isStandard ? (
       <StandardLeaveRequestForm
@@ -367,6 +387,7 @@ export default function LeaveDetailPage() {
           daysCount: leave.daysCount,
           status: leave.status,
           requestedAt: leave.requestedAt || leave.createdAt,
+          signatures: docSignatures,
         }}
       />
     ) : (
@@ -452,6 +473,16 @@ export default function LeaveDetailPage() {
               </div>
             )}
 
+            {/* ✅ LOT E — avis + historique (masqué si aucun circuit actif et rien à montrer) */}
+            <ApprovalPanel
+              key={`leave-${leave.id}`}
+              kind="leave"
+              requestId={leave.id}
+              refreshKey={panelKey}
+              onState={setApprovalState}
+              onChanged={() => { load(); }}
+            />
+
             {leave.status === 'PENDING' && canApprove && (
               <div className="pt-1 space-y-3 border-t border-[var(--border)]">
                 {!rejectMode ? (
@@ -480,9 +511,11 @@ export default function LeaveDetailPage() {
                       </div>
                     )}
                     <div className="flex gap-2 pt-2">
+                      {!awaitingOpinions && (
                       <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                         <Check size={16} /> Approuver
                       </button>
+                      )}
                       <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                         <X size={16} /> Refuser
                       </button>
@@ -688,6 +721,8 @@ export default function LeaveDetailPage() {
           {renderFormDocument(FORM_ID)}
         </div>
       )}
+
+      {approvalDialog}
 
       <PrintAuthorizationModal
         isOpen={showPrintAuthModal}

@@ -6,14 +6,16 @@
 // ============================================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
-  Target, Star, Calendar, Loader2, Plus, Check,
+  Star, Calendar, Loader2, Plus, Check,
   Send, ThumbsUp, Eye, BarChart3, Award,
   RefreshCw, ChevronDown, Search, MessageSquare,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import PerformanceNav from '@/components/performance/PerformanceNav';
+import { useBasePath } from '@/hooks/useBasePath';
 import { CreateReviewModal } from '@/components/performance/CreateReviewModal';
 import { ReviewDetailModal } from '@/components/performance/ReviewDetailModal';
 
@@ -23,8 +25,9 @@ interface Review {
   id: string;
   period: string;
   reviewType?: string;
+  cycleId?: string | null;
   date: string;
-  status: 'DRAFT' | 'SHARED' | 'ACKNOWLEDGED';
+  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED';
   rating?: number;
   overallScore?: number;
   feedback?: string;
@@ -63,7 +66,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const STATUS_CFG = {
   DRAFT:        { label: 'Brouillon',    bg: 'bg-gray-100 dark:bg-gray-700',          text: 'text-gray-500 dark:text-gray-300',         dot: 'bg-gray-400' },
-  SHARED:       { label: 'Soumise',      bg: 'bg-amber-100 dark:bg-amber-900/30',      text: 'text-amber-700 dark:text-amber-400',        dot: 'bg-amber-500' },
+  SUBMITTED:     { label: 'Soumise',      bg: 'bg-amber-100 dark:bg-amber-900/30',      text: 'text-amber-700 dark:text-amber-400',        dot: 'bg-amber-500' },
   ACKNOWLEDGED: { label: 'Réceptionnée', bg: 'bg-emerald-100 dark:bg-emerald-900/30',  text: 'text-emerald-700 dark:text-emerald-400',    dot: 'bg-emerald-500' },
 };
 
@@ -178,7 +181,7 @@ function ReviewCard({
           )}
 
           {/* Accuser réception */}
-          {review.status === 'SHARED' && (
+          {review.status === 'SUBMITTED' && (isHR || !isReviewer) && (
             <button
               onClick={() => onAcknowledge(review)}
               className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-400 hover:text-emerald-600 transition-colors"
@@ -207,6 +210,8 @@ function ReviewCard({
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 export default function PerformancePage() {
+  const router = useRouter();
+  const { bp } = useBasePath();
   const [reviews, setReviews]     = useState<Review[]>([]);
   const [stats, setStats]         = useState<Stats | null>(null);
   const [isLoading, setLoading]   = useState(true);
@@ -244,13 +249,22 @@ export default function PerformancePage() {
   const canCreate = currentUser && ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(currentUser.role);
   const isHR      = currentUser && ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(currentUser.role);
 
+  // Les évaluations de cycle s'ouvrent dans la fiche (mobile-first) ;
+  // les anciennes évaluations libres gardent la fenêtre de détail.
+  const openReview = (r: Review) => {
+    if (r.cycleId) router.push(bp(`/performance/fiche/${r.id}`));
+    else setViewReview(r);
+  };
+
   const handleSubmit = async (review: Review) => {
+    if (review.cycleId) { router.push(bp(`/performance/fiche/${review.id}`)); return; }
     if (!confirm(`Soumettre l'évaluation de ${review.employee?.firstName} ${review.employee?.lastName} ?\nL'employé sera notifié.`)) return;
     try { await api.patch(`/performance/reviews/${review.id}/submit`, {}); load(); }
     catch { alert('Erreur lors de la soumission'); }
   };
 
   const handleAcknowledge = async (review: Review) => {
+    if (review.cycleId) { router.push(bp(`/performance/fiche/${review.id}`)); return; }
     if (!confirm('Confirmer la réception de cette évaluation ?')) return;
     try { await api.patch(`/performance/reviews/${review.id}/acknowledge`, {}); load(); }
     catch { alert('Erreur lors de l\'accusé de réception'); }
@@ -264,11 +278,12 @@ export default function PerformancePage() {
   });
 
   const draftCount  = reviews.filter(r => r.status === 'DRAFT').length;
-  const sharedCount = reviews.filter(r => r.status === 'SHARED').length;
+  const sharedCount = reviews.filter(r => r.status === 'SUBMITTED').length;
   const ackCount    = reviews.filter(r => r.status === 'ACKNOWLEDGED').length;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
+      <PerformanceNav />
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -281,20 +296,13 @@ export default function PerformancePage() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={load}
             className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700 transition-colors"
           >
             <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
           </button>
-          <Link
-            href="/performance/objectifs"
-            className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2 text-gray-700 dark:text-gray-300"
-          >
-            <Target size={18} />
-            <span className="hidden sm:inline">Gérer les Objectifs</span>
-          </Link>
           {canCreate && (
             <button
               onClick={() => setCreateOpen(true)}
@@ -379,7 +387,7 @@ export default function PerformancePage() {
               >
                 <option value="ALL">Tous les statuts</option>
                 <option value="DRAFT">Brouillons</option>
-                <option value="SHARED">En attente</option>
+                <option value="SUBMITTED">En attente</option>
                 <option value="ACKNOWLEDGED">Réceptionnées</option>
               </select>
               <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -417,7 +425,7 @@ export default function PerformancePage() {
                     <ReviewCard
                       key={r.id}
                       review={r}
-                      onView={setViewReview}
+                      onView={openReview}
                       onSubmit={handleSubmit}
                       onAcknowledge={handleAcknowledge}
                       currentUserId={currentUser?.id}

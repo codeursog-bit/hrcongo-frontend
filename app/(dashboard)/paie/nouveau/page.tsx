@@ -1,5 +1,6 @@
 'use client';
 
+import { PayslipBreakdown } from '@/components/payroll/PayslipBreakdown';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -43,8 +44,12 @@ interface SimulationResult {
     id: string; bonusType: string; amount: number;
     source: string; details?: string;
     isTaxable?: boolean; isCnss?: boolean;
+    fiscalType?: 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE';
   }>;
   totalBonuses: number;
+  customTaxes?: any[];
+  isBncWorker?: boolean;
+  bncLabel?: string;
   adjustedBaseSalary: number;
   grossSalary: number;
   // ✅ Cotisations salariales — backend décide
@@ -500,151 +505,8 @@ export default function CreatePayrollPage() {
                   )}
                 </div>
 
-                <div className="p-5 space-y-1.5 text-sm">
-
-                  {/* Salaire de base */}
-                  <div className="flex justify-between py-2 border-b border-[var(--border)]">
-                    <span className="text-[var(--text-muted)]">Salaire de base</span>
-                    <span className="font-mono font-bold text-[var(--text)]">+{fmt(simulation.employee.effectiveBaseSalary ?? simulation.employee.baseSalary)} F</span>
-                  </div>
-
-                  {/* Absence */}
-                  {simulation.absenceDeduction > 0 && (
-                    <div className="flex justify-between py-1.5 text-amber-500">
-                      <span>Absence ({simulation.workDays - simulation.daysToPay}j)</span>
-                      <span className="font-mono">−{fmt(simulation.absenceDeduction)} F</span>
-                    </div>
-                  )}
-
-                  {/* ✅ Heures sup — montants calculés par le backend */}
-                  {simulation.overtime.amount10  > 0 && (
-                    <div className="flex justify-between py-1.5">
-                      <span className="text-[var(--text-muted)]">HS +{simulation.settings.overtimeRate10}% ({simulation.overtime.hours10}h)</span>
-                      <span className="font-mono font-bold text-amber-600">+{fmt(simulation.overtime.amount10)} F</span>
-                    </div>
-                  )}
-                  {simulation.overtime.amount25  > 0 && (
-                    <div className="flex justify-between py-1.5">
-                      <span className="text-[var(--text-muted)]">HS +{simulation.settings.overtimeRate25}% ({simulation.overtime.hours25}h)</span>
-                      <span className="font-mono font-bold text-amber-600">+{fmt(simulation.overtime.amount25)} F</span>
-                    </div>
-                  )}
-                  {simulation.overtime.amount50  > 0 && (
-                    <div className="flex justify-between py-1.5">
-                      <span className="text-[var(--text-muted)] flex items-center gap-1"><Moon size={10} className="text-amber-400" />HS +{simulation.settings.overtimeRate50}% ({simulation.overtime.hours50}h)</span>
-                      <span className="font-mono font-bold text-amber-600">+{fmt(simulation.overtime.amount50)} F</span>
-                    </div>
-                  )}
-                  {simulation.overtime.amount100 > 0 && (
-                    <div className="flex justify-between py-1.5">
-                      <span className="text-[var(--text-muted)] flex items-center gap-1"><Moon size={10} className="text-red-400" />HS +{simulation.settings.overtimeRate100}% ({simulation.overtime.hours100}h)</span>
-                      <span className="font-mono font-bold text-red-600">+{fmt(simulation.overtime.amount100)} F</span>
-                    </div>
-                  )}
-
-                  {/* ✅ Primes */}
-                  {simulation.totalBonuses > 0 && (
-                    <div className="py-1.5 border-b border-[var(--border)]">
-                      <div className="flex justify-between mb-1">
-                        <span className="text-[var(--text-muted)] flex items-center gap-1"><Gift size={11} className="text-emerald-500" />Primes</span>
-                        <span className="font-mono font-bold text-emerald-600">+{fmt(simulation.totalBonuses)} F</span>
-                      </div>
-                      {simulation.bonuses.map(b => (
-                        <div key={b.id} className="flex justify-between text-xs text-gray-400 pl-4 py-0.5">
-                          <span className="truncate flex-1 mr-2">{b.bonusType}</span>
-                          <span className="font-mono flex-shrink-0">+{fmt(b.amount)} F</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Brut */}
-                  <div className="flex justify-between py-2.5 bg-emerald-50 dark:bg-emerald-900/20 px-3 rounded-xl my-1">
-                    <span className="font-bold text-emerald-800 dark:text-emerald-200">Salaire Brut</span>
-                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300">{fmt(simulation.grossSalary)} F</span>
-                  </div>
-
-                  {/* ✅ CNSS — 0 si exempté */}
-                  <div className="flex justify-between py-1.5">
-                    <span className={simulation.employee.isSubjectToCnss ? 'text-red-500' : 'text-gray-400'}>
-                      CNSS ({simulation.settings.cnssSalarialRate}%)
-                    </span>
-                    <span className={`font-mono font-bold ${simulation.employee.isSubjectToCnss ? 'text-red-500' : 'text-gray-400'}`}>
-                      {simulation.employee.isSubjectToCnss ? `−${fmt(simulation.cnssSalarial)} F` : '0 F (Exempté)'}
-                    </span>
-                  </div>
-
-                  {/* ✅ ITS — 0 si exempté */}
-                  <div className="flex justify-between py-1.5">
-                    <span className={simulation.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'}>
-                      ITS / IRPP
-                    </span>
-                    <span className={`font-mono font-bold ${simulation.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'}`}>
-                      {simulation.employee.isSubjectToIrpp ? `−${fmt(simulation.its)} F` : '0 F (Exempté)'}
-                    </span>
-                  </div>
-
-                  {/* ✅ Prêts */}
-                  {simulation.totalLoanDeduction > 0 && (
-                    <div className="flex justify-between py-1.5">
-                      <span className="text-red-500 flex items-center gap-1"><CreditCard size={11} />Prêts ({simulation.loans.length})</span>
-                      <span className="font-mono font-bold text-red-500">−{fmt(simulation.totalLoanDeduction)} F</span>
-                    </div>
-                  )}
-
-                  {/* ✅ Avances */}
-                  {simulation.totalAdvanceDeduction > 0 && (
-                    <div className="flex justify-between py-1.5">
-                      <span className="text-red-500 flex items-center gap-1"><Wallet size={11} />Avances ({simulation.advances.length})</span>
-                      <span className="font-mono font-bold text-red-500">−{fmt(simulation.totalAdvanceDeduction)} F</span>
-                    </div>
-                  )}
-
-                  {/* NET À PAYER */}
-                  <div className="pt-4 border-t-2 border-dashed border-[var(--border)] mt-2">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Net à Payer</span>
-                      <div className="text-right">
-                        <span className="text-2xl font-black text-[var(--text)] font-mono tracking-tight">
-                          {fmt(simulation.netSalary)}
-                        </span>
-                        <span className="text-sm text-gray-400 ml-1.5">FCFA</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ✅ Coût employeur — dépliable */}
-                  <div className="mt-3 border border-amber-200 dark:border-amber-800/50 rounded-xl overflow-hidden">
-                    <button onClick={() => setShowEmployerCost(v => !v)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100/50 transition-colors cursor-pointer">
-                      <span className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
-                        <Building2 size={13} /> Coût Employeur
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-amber-600 dark:text-amber-400">
-                          +{fmt(simulation.totalEmployerCost)} F
-                        </span>
-                        {showEmployerCost ? <ChevronUp size={13} className="text-amber-400" /> : <ChevronDown size={13} className="text-amber-400" />}
-                      </div>
-                    </button>
-                    {showEmployerCost && (
-                      <div className="px-4 py-3 space-y-1.5 text-xs bg-[var(--surface)]">
-                        <div className="flex justify-between text-gray-500"><span>CNSS Pensions (8%)</span><span className="font-mono font-bold text-amber-500">+{fmt(simulation.cnssEmployerPension)} F</span></div>
-                        <div className="flex justify-between text-gray-500"><span>CNSS Famille (10,03%)</span><span className="font-mono font-bold text-amber-500">+{fmt(simulation.cnssEmployerFamily)} F</span></div>
-                        <div className="flex justify-between text-gray-500"><span>CNSS Accident (2,25%)</span><span className="font-mono font-bold text-amber-500">+{fmt(simulation.cnssEmployerAccident)} F</span></div>
-                        <div className="flex justify-between text-gray-500 pt-1 border-t border-amber-100 dark:border-amber-900/30">
-                          <span>Sous-total CNSS pat.</span>
-                          <span className="font-mono font-bold text-amber-500">+{fmt(cnssPatTotal)} F</span>
-                        </div>
-                        <div className="flex justify-between text-gray-500"><span>TUS DGI (4,13%)</span><span className="font-mono font-bold text-amber-500">+{fmt(simulation.tusDgiAmount)} F</span></div>
-                        <div className="flex justify-between text-gray-500"><span>TUS CNSS (3,38%)</span><span className="font-mono font-bold text-amber-500">+{fmt(simulation.tusCnssAmount)} F</span></div>
-                        <div className="flex justify-between font-bold pt-2 border-t border-amber-200 dark:border-amber-800 text-[var(--text)]">
-                          <span>Coût total</span>
-                          <span className="font-mono">{fmt(simulation.totalEmployerCost)} F</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                <div className="p-4">
+                  <PayslipBreakdown result={simulation} />
                 </div>
 
                 {/* Bouton confirmer → créer en BDD */}

@@ -21,7 +21,7 @@ interface Review {
   period: string;
   reviewType?: string;
   date: string;
-  status: 'DRAFT' | 'SHARED' | 'ACKNOWLEDGED';
+  status: 'DRAFT' | 'SUBMITTED' | 'ACKNOWLEDGED';
   rating?: number;
   overallScore?: number;
   feedback?: string;
@@ -57,7 +57,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const STATUS_CFG = {
   DRAFT:        { label: 'Brouillon',   color: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300' },
-  SHARED:       { label: 'Soumise',     color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' },
+  SUBMITTED:     { label: 'Soumise',     color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' },
   ACKNOWLEDGED: { label: 'Réceptionnée', color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' },
 };
 
@@ -130,7 +130,7 @@ export function ReviewDetailModal({
   const isReviewer  = review.reviewer?.id === currentUserId;
   const canEdit     = review.status === 'DRAFT' && (isReviewer || isHR);
   const canSubmit   = review.status === 'DRAFT' && (isReviewer || isHR);
-  const canAck      = review.status === 'SHARED';
+  const canAck      = review.status === 'SUBMITTED' && (isHR || !isReviewer);
   const cfg         = STATUS_CFG[review.status];
 
   const handleSave = async () => {
@@ -377,7 +377,7 @@ export function ReviewDetailModal({
                   </button>
                 )}
 
-                {/* Accuser réception — SHARED */}
+                {/* Accuser réception — SUBMITTED */}
                 {canAck && (
                   <button
                     onClick={() => { onAcknowledge(review); onClose(); }}

@@ -30,6 +30,7 @@
 // ============================================================================
 
 import type { ReactNode } from 'react';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from '../docSignatures';
 
 // Congo (République du) est la valeur par défaut du champ `country` en base
 // (@default("CG")) — les autres codes s'affichent tels quels si un client
@@ -52,6 +53,8 @@ interface StandardCompany {
 }
 
 export interface StandardLeaveRequestFormData {
+  // ✅ LOT E — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
   id?: string;
   /** Code d'en-tête du document (ex. "GLN-AMC-DRH-010"). Optionnel — à défaut,
    *  la référence de la demande elle-même est affichée (plus utile : elle
@@ -233,22 +236,42 @@ export default function StandardLeaveRequestForm({ data, id }: { data: StandardL
       <table style={{ ...tableStyle, marginTop: 10, fontSize: 12 }}>
         <tbody>
           <Row label="Le Salarié" value=" " h={44} />
-          <Row label="Le Responsable Hiérarchique" value=" " h={44} />
+          <Row
+            label="Le Responsable Hiérarchique"
+            h={44}
+            value={sigFor(data.signatures, 'HIERARCHY_HEAD') ? <SigVisa sig={sigFor(data.signatures, 'HIERARCHY_HEAD')} height={30} /> : ' '}
+          />
           <Row
             label="Les Ressources Humaines"
             h={44}
             value={
-              validated && data.company.cachetUrl ? (
+              validated && data.company.cachetUrl && !sigFor(data.signatures, 'HR') ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 36, objectFit: 'contain' }} />
+              ) : sigFor(data.signatures, 'HR') ? (
+                <SigVisa
+                  sig={sigFor(data.signatures, 'HR')}
+                  height={30}
+                  extra={validated && data.company.cachetUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={data.company.cachetUrl} alt="Cachet" style={{ height: 30, objectFit: 'contain' }} />
+                  ) : undefined}
+                />
               ) : (
                 ' '
               )
             }
           />
-          <Row label="Signature de la Direction Générale" value=" " h={44} />
+          <Row
+            label="Signature de la Direction Générale"
+            h={44}
+            value={sigFor(data.signatures, 'DG') ? <SigVisa sig={sigFor(data.signatures, 'DG')} height={30} /> : ' '}
+          />
         </tbody>
       </table>
+
+      {/* ✅ LOT E — fonctions sans case sur ce modèle (comptable, chef d'équipe) */}
+      <OtherOpinions signatures={data.signatures} boxCodes={['HIERARCHY_HEAD', 'HR', 'DG']} fontSize={8.5} />
 
       <p className="std-leave-black" style={{ margin: '18px 0 0', fontSize: 11.5, lineHeight: '17px' }}>
         Le présent formulaire, une fois complété et validé, est transmis au service des Ressources Humaines pour

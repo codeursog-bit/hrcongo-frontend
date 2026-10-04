@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
+import { PushMenuItem } from '@/components/PushNotificationBanner';
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -313,6 +314,9 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                       <User size={16} />
                       Mon Profil
                     </button>
+
+                    {/* 🆕 Notifications téléphone (hors app) */}
+                    <PushMenuItem />
 
                     <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
 

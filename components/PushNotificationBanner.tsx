@@ -285,7 +285,7 @@ export default function PushNotificationBanner({ userName }: { userName?: string
           <Check size={16} className="text-white" />
         </div>
         <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-          Notifications activées ! Vous serez alerté(e) pour vos pointages.
+          Notifications activées ! Vous serez prévenu(e) sur ce téléphone, même app fermée.
         </p>
       </div>
     );
@@ -330,10 +330,10 @@ export default function PushNotificationBanner({ userName }: { userName?: string
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-sky-900 dark:text-sky-100">
-          {userName ? `${userName}, activez` : 'Activez'} les rappels sur votre téléphone
+          {userName ? `${userName}, activez` : 'Activez'} les notifications sur votre téléphone
         </p>
         <p className="text-xs text-sky-700 dark:text-sky-300 mt-0.5 leading-relaxed">
-          Recevez des rappels bienveillants pour pointer votre entrée et sortie, même quand l'app est fermée.
+          Demandes à valider, réponses à vos demandes et rappels de pointage : recevez-les même quand l'app est fermée.
         </p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
@@ -426,6 +426,45 @@ export function PushToggleButton() {
         ? <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
         : isSubscribed ? <Bell size={16} className="fill-current" /> : <Bell size={16} />
       }
+      {isSubscribed ? 'Notifications activées' : 'Activer les notifications'}
+    </button>
+  );
+}
+
+// ─── Entrée de menu (navbar) : active/désactive les notifications de CET appareil ──
+export function PushMenuItem({
+  className = 'w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-slate-700 dark:text-slate-300',
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const { isSupported, isSubscribed, isLoading, permission, subscribe, unsubscribe } =
+    usePushNotifications();
+
+  if (!isSupported) return null;
+
+  if (permission === 'denied') {
+    return (
+      <div className={`${className} opacity-60 cursor-default`} style={style} title="Autorisez les notifications dans les réglages du navigateur">
+        <BellOff size={16} />
+        Notifications bloquées
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => (isSubscribed ? unsubscribe() : subscribe())}
+      disabled={isLoading}
+      className={`${className} disabled:opacity-50`}
+      style={style}
+      title={isSubscribed ? 'Cliquer pour désactiver sur cet appareil' : undefined}
+    >
+      {isLoading
+        ? <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+        : isSubscribed ? <Bell size={16} className="fill-current text-emerald-500" /> : <Bell size={16} />}
       {isSubscribed ? 'Notifications activées' : 'Activer les notifications'}
     </button>
   );

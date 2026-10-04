@@ -20,6 +20,7 @@
 // ============================================================================
 
 import type { ReactNode } from 'react';
+import { SigVisa, OtherOpinions, sigFor, type DocumentSignature } from '../docSignatures';
 
 interface StandardCompany {
   legalName: string;
@@ -55,6 +56,8 @@ export interface StandardAdvanceRequestFormData {
   reason?: string | null;
   requestedAt?: string | Date;
   status: string; // PENDING | APPROVED | REJECTED | PAID | DEDUCTED | CANCELLED
+  // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
+  signatures?: DocumentSignature[];
 }
 
 const FONT = `'Baskerville Old Face', Baskerville, Garamond, Georgia, 'Times New Roman', serif`;
@@ -163,9 +166,9 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
   ].filter(Boolean).join(', ');
 
   const approvers = [
-    { fn: 'Responsable direct', h: 33, fav: false, unf: false, cachet: false },
-    { fn: 'Direction des Ressources Humaines', h: 33, fav: validated, unf: rejected, cachet: true },
-    { fn: 'Direction Générale', h: 48, fav: false, unf: false, cachet: false },
+    { fn: 'Responsable direct', code: 'HIERARCHY_HEAD', h: 33, fav: false, unf: false, cachet: false },
+    { fn: 'Direction des Ressources Humaines', code: 'HR', h: 33, fav: validated, unf: rejected, cachet: true },
+    { fn: 'Direction Générale', code: 'DG', h: 48, fav: false, unf: false, cachet: false },
   ];
 
   return (
@@ -311,23 +314,40 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
         <tbody>
           {approvers.map((r) => {
             const showCachet = r.cachet && validated && !!data.company.cachetUrl;
+            // ✅ LOT D — signature personnelle de la fonction (si un avis signé existe)
+            const sig = sigFor(data.signatures, r.code);
+            const hasVisa = showCachet || !!sig;
+            const fav = r.cachet ? r.fav : sig ? sig.opinion === 'FAVORABLE' : r.fav;
+            const unf = r.cachet ? r.unf : sig ? sig.opinion === 'UNFAVORABLE' : r.unf;
             return (
               <tr key={r.fn} style={{ height: r.h }}>
                 <td className="std-adv-gray" style={cellBase}>{r.fn}</td>
-                <td className="std-adv-gray" style={showCachet ? { ...cellBase, padding: '3px 8px', verticalAlign: 'middle' } : cellBase}>
-                  {showCachet ? (
+                <td className="std-adv-gray" style={hasVisa ? { ...cellBase, padding: '3px 8px', verticalAlign: 'middle' } : cellBase}>
+                  {showCachet && !sig ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={data.company.cachetUrl as string} alt="Cachet" style={{ height: 26, objectFit: 'contain' }} />
+                  ) : hasVisa ? (
+                    <SigVisa
+                      sig={sig}
+                      height={20}
+                      extra={showCachet ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={data.company.cachetUrl as string} alt="Cachet" style={{ height: 22, objectFit: 'contain' }} />
+                      ) : undefined}
+                    />
                   ) : null}
                 </td>
                 <td style={cellBase}>
-                  <Decision favorable={r.fav} unfavorable={r.unf} />
+                  <Decision favorable={fav} unfavorable={unf} />
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+
+      {/* ✅ LOT D — fonctions sans case sur ce modèle (comptable, chef d'équipe…) */}
+      <OtherOpinions signatures={data.signatures} boxCodes={['HIERARCHY_HEAD', 'HR', 'DG']} fontSize={9} />
 
       <Spacer h={48} />
       <div className="std-adv-body" style={{ fontSize: 12.5, lineHeight: '16px' }}>

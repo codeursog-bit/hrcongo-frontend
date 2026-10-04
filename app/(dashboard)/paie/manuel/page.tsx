@@ -1,5 +1,6 @@
 'use client';
 
+import { PayslipBreakdown } from '@/components/payroll/PayslipBreakdown';
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -101,7 +102,8 @@ interface SimResult {
   month: number; year: number; daysToPay: number; workDays: number;
   absenceDeduction: number;
   overtime: { hours10: number; amount10: number; hours25: number; amount25: number; hours50: number; amount50: number; hours100: number; amount100: number; total: number };
-  bonuses: Array<{ bonusType: string; amount: number; isCnss?: boolean; isTaxable?: boolean }>;
+  bonuses: Array<{ bonusType: string; amount: number; isCnss?: boolean; isTaxable?: boolean; fiscalType?: 'TAXABLE_CNSS' | 'TAXABLE_NO_CNSS' | 'NON_TAXABLE' }>;
+  customTaxes?: any[]; manualDeductionTotal?: number; isBncWorker?: boolean; bncLabel?: string;
   adjustedBaseSalary: number; grossSalary: number;
   cnssSalarial: number; its: number; totalDeductions: number; netSalary: number;
   cnssEmployerPension: number; cnssEmployerFamily: number; cnssEmployerAccident: number;
@@ -1714,66 +1716,8 @@ export default function ManuelPayrollPage() {
                   </div>
                 </div>
 
-                <div className="px-5 py-4 space-y-0.5">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Gains</p>
-                  <BLine label="Salaire de base ajusté" value={`+${fmt(sim.adjustedBaseSalary)} F`} cls="text-gray-800 dark:text-gray-100" />
-                  {sim.overtime.amount10  > 0 && <BLine label={`HS +${sim.settings.overtimeRate10}% (${sim.overtime.hours10}h)`}   value={`+${fmt(sim.overtime.amount10)} F`}  cls="text-amber-500" sm />}
-                  {sim.overtime.amount25  > 0 && <BLine label={`HS +${sim.settings.overtimeRate25}% (${sim.overtime.hours25}h)`}   value={`+${fmt(sim.overtime.amount25)} F`}  cls="text-amber-500" sm />}
-                  {sim.overtime.amount50  > 0 && <BLine label={`HS +${sim.settings.overtimeRate50}% (${sim.overtime.hours50}h)`}   value={`+${fmt(sim.overtime.amount50)} F`}  cls="text-amber-500"  sm />}
-                  {sim.overtime.amount100 > 0 && <BLine label={`HS +${sim.settings.overtimeRate100}% (${sim.overtime.hours100}h)`} value={`+${fmt(sim.overtime.amount100)} F`} cls="text-red-500"   sm />}
-                  {sim.bonuses?.map((b, i) => <BLine key={i} label={b.bonusType} value={`+${fmt(b.amount)} F`} cls="text-emerald-600 dark:text-emerald-400" sm />)}
-
-                  <div className="flex justify-between items-center py-2 bg-emerald-50 dark:bg-emerald-900/20 px-3 rounded-xl mt-2">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-200">Salaire brut</span>
-                    <span className="font-mono font-black text-emerald-700 dark:text-emerald-300">{fmt(sim.grossSalary)} F</span>
-                  </div>
-
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pt-3 mb-2">Retenues légales</p>
-                  <BLine label={`CNSS (${sim.settings.cnssSalarialRate}%)`}
-                    value={sim.employee.isSubjectToCnss ? `−${fmt(sim.cnssSalarial)} F` : '0 F (exempté)'}
-                    cls={sim.employee.isSubjectToCnss ? 'text-red-500' : 'text-gray-400'} />
-                  <BLine label="ITS / IRPP"
-                    value={sim.employee.isSubjectToIrpp ? `−${fmt(sim.its)} F` : '0 F (exempté)'}
-                    cls={sim.employee.isSubjectToIrpp ? 'text-red-500' : 'text-gray-400'} />
-                  {sim.totalLoanDeduction    > 0 && <BLine label="Prêts"   value={`−${fmt(sim.totalLoanDeduction)} F`}    cls="text-red-500" sm />}
-                  {sim.totalAdvanceDeduction > 0 && <BLine label="Avances" value={`−${fmt(sim.totalAdvanceDeduction)} F`} cls="text-red-500" sm />}
-                  {(sim as any).manualDeductionTotal > 0 && <BLine label="Autres retenues" value={`−${fmt((sim as any).manualDeductionTotal)} F`} cls="text-red-500" sm />}
-
-                  <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-end">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Net à payer</span>
-                      <div className="text-right leading-none">
-                        <span className="text-[26px] font-black text-gray-900 dark:text-white font-mono tracking-tight">{fmt(sim.netSalary)}</span>
-                        <span className="text-sm text-gray-400 ml-1">FCFA</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 border border-amber-200 dark:border-amber-800/40 rounded-xl overflow-hidden">
-                    <button onClick={() => setShowEmpCost(v => !v)}
-                      className="w-full flex items-center justify-between px-4 py-2.5 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100/50 transition-colors">
-                      <span className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400">
-                        <Building2 size={12} /> Coût employeur
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-black text-sm text-amber-600 dark:text-amber-400">+{fmt(sim.totalEmployerCost)} F</span>
-                        {showEmpCost ? <ChevronUp size={12} className="text-amber-400"/> : <ChevronDown size={12} className="text-amber-400"/>}
-                      </div>
-                    </button>
-                    <AnimatePresence>
-                      {showEmpCost && (
-                        <motion.div initial={{ height:0 }} animate={{ height:'auto' }} exit={{ height:0 }} className="overflow-hidden">
-                          <div className="px-4 py-3 bg-[var(--surface)] space-y-0.5">
-                            <BLine label="CNSS Pensions (8%)"    value={`+${fmt(sim.cnssEmployerPension)} F`}  cls="text-amber-500" sm />
-                            <BLine label="CNSS Famille (10,03%)" value={`+${fmt(sim.cnssEmployerFamily)} F`}   cls="text-amber-500" sm />
-                            <BLine label="CNSS Accident (2,25%)" value={`+${fmt(sim.cnssEmployerAccident)} F`} cls="text-amber-500" sm />
-                            <BLine label="TUS DGI (2,025%)"      value={`+${fmt(sim.tusDgiAmount)} F`}         cls="text-amber-500"  sm />
-                            <BLine label="TUS CNSS (5,475%)"     value={`+${fmt(sim.tusCnssAmount)} F`}        cls="text-amber-500"  sm />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                <div className="p-4">
+                  <PayslipBreakdown result={sim} />
                 </div>
 
                 <div className="px-5 pb-5">

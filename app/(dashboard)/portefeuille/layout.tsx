@@ -13,6 +13,7 @@ import { usePathname } from 'next/navigation';
 import PortfolioSidebar from '@/components/portfolio/PortfolioSidebar';
 import PortfolioTopNav from '@/components/portfolio/PortfolioTopNav';
 import { api } from '@/services/api';
+import PushNotificationBanner from '@/components/PushNotificationBanner';
 
 interface StoredUser {
   firstName?: string;
@@ -66,6 +67,7 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
           onMenuClick={() => setSidebarOpen(true)}
         />
         <main className="p-4 sm:p-6 lg:p-8">
+          <PushNotificationBanner />
           {children}
         </main>
       </div>

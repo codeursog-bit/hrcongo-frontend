@@ -9,7 +9,7 @@ import {
   FileText, Settings, LogOut, Hexagon, Briefcase, Target,
   GraduationCap, Flag, Monitor, Fingerprint, FolderHeart,
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit, Ticket,
-  ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox
+  ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox, PenTool, MessageSquare
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
 import Image from 'next/image';
@@ -108,6 +108,13 @@ const navItems: NavItem[] = [
     allowedRoles: ['MANAGER'],
   },
   {
+    id: 'performance_manager',
+    label: 'Performance Équipe',
+    icon: Target,
+    path: '/performance',
+    allowedRoles: ['MANAGER'],
+  },
+  {
     id: 'pointage_gps_manager',
     label: 'Ma Pointeuse GPS',
     icon: ScanLine,
@@ -147,6 +154,13 @@ const navItems: NavItem[] = [
     label: 'Ma Paie',
     icon: Wallet,
     path: '/ma-paie',
+    allowedRoles: ['MANAGER'],
+  },
+  {
+    id: 'ma_performance_manager',
+    label: 'Ma Performance',
+    icon: Target,
+    path: '/performance/mon-espace',
     allowedRoles: ['MANAGER'],
   },
   {
@@ -208,6 +222,13 @@ const navItems: NavItem[] = [
     allowedRoles: ['EMPLOYEE'],
   },
   {
+    id: 'ma_performance',
+    label: 'Ma Performance',
+    icon: Target,
+    path: '/performance/mon-espace',
+    allowedRoles: ['EMPLOYEE'],
+  },
+  {
     id: 'mon_profil',
     label: 'Mon Profil',
     icon: UserCircle,
@@ -235,6 +256,13 @@ const navItems: NavItem[] = [
     icon: GraduationCap,
     path: '/formation',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+  },
+  {
+    id: 'performance',
+    label: 'Performance',
+    icon: Target,
+    path: '/performance',
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
   {
     id: 'rapports',
@@ -272,6 +300,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   // 🆕 Permission "secrétaire" : pointage manuel pour tout le monde
   const [hasAttendanceAllPermission, setHasAttendanceAllPermission] = useState(false);
+  // ✅ LOT A — droit de signer accordé par l'admin (fonction de validation)
+  const [canSignPersonally, setCanSignPersonally] = useState(false);
+  // ✅ LOT B — l'entrée "Avis à donner" n'apparaît que pour les titulaires d'une fonction
+  const [hasApprovalFunction, setHasApprovalFunction] = useState(false);
 
   const isWhiteLabel = !!(brandName || brandLogo);
   const accentColor = brandColor || '#10B981';
@@ -291,6 +323,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         setHasAttendanceAllPermission(!!parsed.canRecordAttendanceForAll); // 🆕
       } catch (e) { console.error('Session sync error', e); }
     }
+  }, []);
+
+  // ✅ LOT A — l'entrée "Ma signature" n'apparaît que si l'admin a accordé le droit de signer.
+  // Échec silencieux (ex. backend pas encore déployé) → le menu reste identique à avant.
+  useEffect(() => {
+    if (!localStorage.getItem('user')) return;
+    api.get<{ canSign?: boolean; functions?: unknown[] }>('/approvals/me')
+      .then((me) => {
+        setCanSignPersonally(!!me?.canSign);
+        setHasApprovalFunction((me?.functions?.length ?? 0) > 0);
+      })
+      .catch(() => {});
   }, []);
 
   // Compteur de demandes en attente (absences, permissions, congés) pour Admin/HR_MANAGER
@@ -337,6 +381,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isActive = (itemPath: string) => {
     const full = buildPath(itemPath);
     if (full === '/presences') return pathname === full;
+    // Manager : « Performance Équipe » (/performance) ne doit pas rester allumé sur sa page « Ma Performance »
+    if (full.endsWith('/performance') && user?.role === 'MANAGER' && pathname.startsWith(full + '/mon-espace')) return false;
     return pathname === full || pathname.startsWith(full + '/');
   };
 
@@ -374,6 +420,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
           },
         ]
       : [];
+
+  // ✅ LOT A — "Ma signature" : visible quel que soit le rôle, si le droit est accordé.
+  const approvalExtraItems: NavItem[] = [
+    ...(hasApprovalFunction
+      ? [
+          {
+            id: 'avis',
+            label: 'Avis à donner',
+            icon: MessageSquare,
+            path: '/avis',
+            allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+          } as NavItem,
+        ]
+      : []),
+    ...(canSignPersonally
+    ? [
+        {
+          id: 'ma_signature',
+          label: 'Ma signature',
+          icon: PenTool,
+          path: '/ma-signature',
+          allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+        } as NavItem,
+      ]
+    : []),
+  ];
 
   return (
     <>
@@ -449,15 +521,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               employes: 'Gestion RH', paie: 'Gestion RH', loans: 'Gestion RH', conges: 'Gestion RH',
               presences_equipe_admin: 'Gestion RH', pointage_manuel_admin: 'Gestion RH',
               presences_equipe_secretary: 'Gestion RH', pointage_manuel_secretary: 'Gestion RH',
-              mon_equipe: 'Mon équipe', conges_manager: 'Mon équipe', presences_equipe_manager: 'Mon équipe', pointage_manuel_manager: 'Mon équipe',
-              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace',
-              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace',
-              recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
+              mon_equipe: 'Mon équipe', performance_manager: 'Mon équipe', conges_manager: 'Mon équipe', presences_equipe_manager: 'Mon équipe', pointage_manuel_manager: 'Mon équipe',
+              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace', ma_performance_manager: 'Mon espace',
+              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace', ma_performance: 'Mon espace',
+              ma_signature: 'Mon espace', avis: 'Mon espace',
+              recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 
             const items = [
               ...navItems.filter(item => user && item.allowedRoles.includes(user.role)),
               ...secretaryExtraItems,
+              ...approvalExtraItems,
             ];
 
             let lastCategory: string | null = null;

@@ -28,6 +28,11 @@ import AbsenceSubNav from '@/components/AbsenceSubNav';
 import AbsencesOverview from '@/components/absences/AbsencesOverview';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
+// ✅ LOT C — circuit d'avis (inactif tant que l'admin n'a rien configuré)
+import ApprovalPanel from '@/components/approvals/ApprovalPanel';
+import { useApprovalDecision } from '@/hooks/useApprovalDecision';
+import { useDocSignatures } from '@/hooks/useDocSignatures';
+import type { ApprovalStateView } from '@/services/approvals';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -64,6 +69,18 @@ export default function AbsenceManagementPage() {
   const [isTogglingPrintAuth, setIsTogglingPrintAuth] = useState(false);
   const [docData, setDocData] = useState<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // ✅ LOT C — décision via l'orchestrateur (identique à avant si aucun circuit n'est configuré)
+  const { decide, dialog: approvalDialog } = useApprovalDecision();
+  const [approvalState, setApprovalState] = useState<ApprovalStateView | null>(null);
+  const [panelKey, setPanelKey] = useState(0);
+  const awaitingOpinions =
+    !!approvalState?.pending &&
+    ['WAITING_OPINIONS', 'NEEDS_CONFIRMATION'].includes(approvalState.pending.state);
+  // Évite qu'un état d'avis d'une autre demande masque « Valider » le temps du chargement.
+  useEffect(() => { setApprovalState(null); }, [selectedId]);
+  // ✅ LOT D — signatures personnelles des avis, pour les documents imprimables
+  const docSignatures = useDocSignatures('absence', selectedId);
 
   useEffect(() => {
     try {
@@ -129,10 +146,19 @@ export default function AbsenceManagementPage() {
 
     setIsProcessing(true);
     try {
-      await api.patch(`/absence-requests/${selected.id}/status`, {
-        status,
+      // ✅ LOT C — orchestrateur : sans circuit actif, décision immédiate (comportement d'avant).
+      const out = await decide('absence', selected.id, {
+        decision: status === 'REJECTED' ? 'REJECT' : 'APPROVE',
         rejectionReason: status === 'REJECTED' ? rejectionReason : undefined,
       });
+      if (out.outcome === 'CANCELLED') return;
+      if (out.outcome === 'WAITING') {
+        // Validée « en attente d'avis » : la demande reste PENDING, on affiche l'état.
+        setRejectMode(false);
+        setRejectionReason('');
+        setPanelKey(k => k + 1);
+        return;
+      }
       setRequests(prev => prev.map(r => r.id === selected.id ? { ...r, status, rejectionReason } : r));
       setRejectMode(false);
       setRejectionReason('');
@@ -203,6 +229,7 @@ export default function AbsenceManagementPage() {
     reviewedByName: selected.reviewedByUser?.email,
     reviewedAt: selected.reviewedAt,
     rejectionReason: selected.rejectionReason,
+    signatures: docSignatures,
   } : null;
 
   const isStandard = docData?.company?.documentTemplate === 'STANDARD';
@@ -216,6 +243,7 @@ export default function AbsenceManagementPage() {
     endDate: docData.endDate,
     status: docData.status,
     requestedAt: selected?.requestedAt || selected?.createdAt,
+    signatures: docSignatures,
   } : null;
 
   if (isLoading) {
@@ -394,13 +422,28 @@ export default function AbsenceManagementPage() {
                     </div>
                   )}
 
+                  {/* ✅ LOT C — avis + historique (masqué si aucun circuit actif et rien à montrer) */}
+                  <ApprovalPanel
+                    key={`absence-${selected.id}`}
+                    kind="absence"
+                    requestId={selected.id}
+                    refreshKey={panelKey}
+                    onState={setApprovalState}
+                    onChanged={() => {
+                      // Une finalisation / annulation a pu changer le statut : on recharge la liste.
+                      api.get('/absence-requests').then((reqs: any) => { if (Array.isArray(reqs)) setRequests(reqs); }).catch(() => {});
+                    }}
+                  />
+
                   {selected.status === 'PENDING' && canApprove && (
                     <div className="pt-2 space-y-3">
                       {!rejectMode ? (
                         <div className="flex gap-2">
+                          {!awaitingOpinions && (
                           <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                             <Check size={16} /> Valider
                           </button>
+                          )}
                           <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                             <X size={16} /> Refuser
                           </button>
@@ -505,6 +548,7 @@ export default function AbsenceManagementPage() {
                         reason={docData.reason}
                         status={docData.status}
                         company={docData.company}
+                        signatures={docSignatures}
                       />
                     ) : isStandard ? (
                       standardAbsenceData && <StandardAbsenceRequestForm id="absence-print-root" data={standardAbsenceData as any} />
@@ -519,6 +563,8 @@ export default function AbsenceManagementPage() {
         </div>
       </div>
       )}
+
+      {approvalDialog}
 
       <PrintAuthorizationModal
         isOpen={showPrintAuthModal}
