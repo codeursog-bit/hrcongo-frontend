@@ -7,10 +7,10 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Loader2, Rocket, Lock, X, Search, ChevronRight, AlertTriangle,
+  ArrowLeft, Loader2, Rocket, Lock, Trash2, X, Search, ChevronRight, AlertTriangle,
   CheckCircle2, Users, RefreshCw, Info,
 } from 'lucide-react';
 import { api } from '@/services/api';
@@ -21,13 +21,12 @@ import { HR_ROLES, MANAGE_ROLES, getStoredUser, fmtDate, STATUS_LABEL, scoreTone
 interface CycleDetail {
   cycle: {
     id: string; name: string; type: string; startDate: string; endDate: string;
-    status: 'OPEN' | 'CLOSED'; objectivesWeight: number; selfAssessmentEnabled: boolean;
+    status: 'OPEN' | 'CLOSED'; objectivesWeight: number;
     launchedAt?: string | null; template?: { id: string; name: string } | null;
   };
-  progress: { total: number; draft: number; selfAssessed: number; submitted: number; acknowledged: number };
+  progress: { total: number; draft: number; submitted: number; acknowledged: number };
   reviews: Array<{
     id: string; status: ReviewStatus; overallScore: number | string | null; verdict: string | null;
-    selfSubmittedAt?: string | null;
     employee: { id: string; firstName: string; lastName: string; position?: string; photoUrl?: string | null; department?: { name: string } | null };
     reviewer?: { id: string; firstName: string; lastName: string } | null;
   }>;
@@ -168,6 +167,7 @@ export default function CycleDetailPage() {
   const params = useParams();
   const id = params?.id as string;
   const { bp } = useBasePath();
+  const router = useRouter();
 
   const [data, setData] = useState<CycleDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -199,6 +199,22 @@ export default function CycleDetailPage() {
     catch (e: any) { alert(e?.message || 'Clôture impossible'); }
   };
 
+  const removeCycle = async () => {
+    if (!data) return;
+    const transmitted = data.progress.submitted + data.progress.acknowledged;
+    const base = `Supprimer le cycle « ${data.cycle.name} » ?\nSes ${data.progress.draft} évaluation(s) en brouillon seront supprimées (les objectifs sont conservés).`;
+    if (!confirm(base)) return;
+    let withReviews = false;
+    if (transmitted > 0) {
+      if (!confirm(`⚠ ${transmitted} évaluation(s) ont déjà été transmises aux employés.\nElles seront aussi supprimées définitivement, avec les niveaux de compétence qu'elles ont enregistrés.\n\nConfirmer la suppression complète ?`)) return;
+      withReviews = true;
+    }
+    try {
+      await api.delete(`/performance/cycles/${id}${withReviews ? '?withReviews=true' : ''}`);
+      router.push(bp('/performance/cycles'));
+    } catch (e: any) { alert(e?.message || 'Suppression impossible'); }
+  };
+
   if (loading && !data) return <div className="flex justify-center py-32"><Loader2 className="animate-spin text-purple-600" size={32} /></div>;
   if (error || !data) {
     return (
@@ -217,10 +233,9 @@ export default function CycleDetailPage() {
 
   const tiles = [
     { label: 'Fiches', value: progress.total, cls: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' },
-    { label: 'Brouillons', value: progress.draft, cls: 'bg-gray-100 dark:bg-gray-700 text-gray-500' },
-    ...(cycle.selfAssessmentEnabled ? [{ label: 'Auto-évaluées', value: progress.selfAssessed, cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' }] : []),
-    { label: 'Soumises', value: progress.submitted, cls: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' },
-    { label: 'Réceptionnées', value: progress.acknowledged, cls: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' },
+    { label: 'À noter', value: progress.draft, cls: 'bg-gray-100 dark:bg-gray-700 text-gray-500' },
+    { label: 'Envoyées aux employés', value: progress.submitted, cls: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' },
+    { label: 'Lues par les employés', value: progress.acknowledged, cls: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' },
   ];
 
   return (
@@ -241,6 +256,12 @@ export default function CycleDetailPage() {
           <button onClick={load} aria-label="Actualiser" className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
+          {isHR && (
+            <button onClick={removeCycle}
+              className="px-4 py-2.5 rounded-xl border border-red-200 dark:border-red-900/50 font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 text-sm">
+              <Trash2 size={16} /> <span className="hidden sm:inline">Supprimer</span>
+            </button>
+          )}
           {cycle.status === 'OPEN' && (
             <>
               {isHR && (
@@ -262,7 +283,7 @@ export default function CycleDetailPage() {
       </div>
 
       {/* Avancement */}
-      <div className={`grid gap-3 sm:gap-4 ${tiles.length === 5 ? 'grid-cols-2 md:grid-cols-5' : 'grid-cols-2 md:grid-cols-4'}`}>
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
         {tiles.map(t => (
           <div key={t.label} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 sm:p-5 shadow-sm">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${t.cls}`}><Users size={16} /></div>
@@ -314,11 +335,6 @@ export default function CycleDetailPage() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                       {[r.employee.position, r.employee.department?.name].filter(Boolean).join(' · ')}
                     </p>
-                    {cycle.selfAssessmentEnabled && r.status === 'DRAFT' && (
-                      <p className={`text-xs mt-0.5 ${r.selfSubmittedAt ? 'text-blue-600' : 'text-gray-400'}`}>
-                        {r.selfSubmittedAt ? 'Auto-évaluation reçue' : 'Auto-évaluation en attente'}
-                      </p>
-                    )}
                   </div>
                   {score > 0 && (
                     <span className={`px-2.5 py-1 rounded-lg text-sm font-bold shrink-0 ${scoreTone(score)}`}>{score.toFixed(1)}</span>

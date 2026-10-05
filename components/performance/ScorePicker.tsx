@@ -21,7 +21,7 @@ interface Props {
   onChange?: (v: number) => void;
   disabled?: boolean;
   levels?: Record<string, string>;
-  /** Auto-évaluation de l'employé affichée en repère (lecture seule) */
+  /** Repère facultatif (lecture seule) */
   hint?: number | null;
   hintLabel?: string;
 }

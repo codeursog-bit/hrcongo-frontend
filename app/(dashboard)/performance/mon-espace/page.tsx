@@ -26,7 +26,6 @@ import { CareerData, PlansData } from '@/components/performance/career-types';
 
 interface MeData {
   employeeId: string | null;
-  pendingSelfAssessments: Array<{ id: string; period: string; cycle?: { name: string; endDate: string } | null }>;
   reviews: Array<{
     id: string; period: string; date: string; status: ReviewStatus;
     overallScore: number | string | null; verdict: string | null;
@@ -147,7 +146,7 @@ export default function MyPerformancePage() {
   }
 
   const toAck = data.reviews.filter(r => r.status === 'SUBMITTED');
-  const nothingToDo = data.pendingSelfAssessments.length === 0 && toAck.length === 0;
+  const nothingToDo = toAck.length === 0;
 
   return (
     <div className="max-w-4xl mx-auto pb-20 space-y-6 sm:space-y-8">
@@ -156,8 +155,8 @@ export default function MyPerformancePage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Mon espace performance</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">Vos objectifs, vos évaluations et ce qu'il vous reste à faire</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Ma performance</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">Ici : ce que vous devez faire, vos objectifs et vos évaluations.</p>
         </div>
         <button onClick={load} aria-label="Actualiser"
           className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700 transition-colors shrink-0">
@@ -170,24 +169,9 @@ export default function MyPerformancePage() {
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">À faire</h2>
         {nothingToDo && (
           <div className={`${cardCls} p-5 flex items-center gap-3 text-emerald-700 dark:text-emerald-400`}>
-            <CheckCircle2 size={20} /> <span className="text-sm font-medium">Rien en attente pour le moment.</span>
+            <CheckCircle2 size={20} /> <span className="text-sm font-medium">Rien à faire pour le moment. Tout est à jour 👍</span>
           </div>
         )}
-        {data.pendingSelfAssessments.map(p => (
-          <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Link href={bp(`/performance/fiche/${p.id}`)}
-              className={`${cardCls} p-4 sm:p-5 flex items-center gap-4 border-l-4 !border-l-purple-500 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors`}>
-              <div className="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center shrink-0"><ClipboardCheck size={20} /></div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 dark:text-white">Remplir mon auto-évaluation</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                  {p.cycle?.name ?? p.period}{p.cycle?.endDate ? ` · avant le ${fmtDate(p.cycle.endDate)}` : ''}
-                </p>
-              </div>
-              <ChevronRight size={18} className="text-gray-400 shrink-0" />
-            </Link>
-          </motion.div>
-        ))}
         {toAck.map(r => (
           <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Link href={bp(`/performance/fiche/${r.id}`)}
@@ -205,10 +189,10 @@ export default function MyPerformancePage() {
 
       {/* Objectifs en cours */}
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><Target size={18} className="text-purple-600" /> Mes objectifs en cours</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2"><Target size={18} className="text-purple-600" /> Mes objectifs</h2>
         {data.goals.length === 0 ? (
           <div className={`${cardCls} p-8 text-center text-sm text-gray-500`}>
-            Aucun objectif en cours. Ils apparaîtront ici dès que votre responsable aura finalisé votre évaluation.
+            Aucun objectif pour le moment. Votre responsable vous en fixera lors de votre évaluation.
           </div>
         ) : (
           <div className="grid gap-3">

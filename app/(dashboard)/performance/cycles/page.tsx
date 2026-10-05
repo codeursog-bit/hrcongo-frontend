@@ -19,7 +19,7 @@ import { HR_ROLES, getStoredUser, fmtDate } from '@/components/performance/sheet
 
 interface Cycle {
   id: string; name: string; type: string; startDate: string; endDate: string;
-  status: 'OPEN' | 'CLOSED'; objectivesWeight: number; selfAssessmentEnabled: boolean;
+  status: 'OPEN' | 'CLOSED'; objectivesWeight: number;
   launchedAt?: string | null;
   _count?: { reviews: number };
   template?: { id: string; name: string } | null;
@@ -53,7 +53,6 @@ function CreateCycleModal({ open, onClose, onCreated }: { open: boolean; onClose
   const [start, setStart] = useState(q.start);
   const [end, setEnd] = useState(q.end);
   const [objW, setObjW] = useState(80);
-  const [self, setSelf] = useState(false);
   const [templateId, setTemplateId] = useState('');
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; jobTitle?: string | null }>>([]);
   const [saving, setSaving] = useState(false);
@@ -71,7 +70,7 @@ function CreateCycleModal({ open, onClose, onCreated }: { open: boolean; onClose
     try {
       await api.post('/performance/cycles', {
         name, type, startDate: start, endDate: end,
-        objectivesWeight: objW, selfAssessmentEnabled: self,
+        objectivesWeight: objW,
         templateId: templateId || null,
       });
       onCreated(); onClose();
@@ -88,13 +87,13 @@ function CreateCycleModal({ open, onClose, onCreated }: { open: boolean; onClose
             onClick={e => e.stopPropagation()}
             className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg shadow-2xl border border-gray-100 dark:border-gray-700 max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Nouveau cycle d'évaluation</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Nouvelle campagne d'évaluation</h2>
               <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><X size={18} /></button>
             </div>
 
             <div className="p-5 space-y-4 overflow-y-auto">
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nom du cycle</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nom de la campagne</label>
                 <input className={`${inputCls} mt-1`} value={name} onChange={e => setName(e.target.value)} placeholder="ex : T4 2026" />
               </div>
               <div>
@@ -123,33 +122,22 @@ function CreateCycleModal({ open, onClose, onCreated }: { open: boolean; onClose
 
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Part des objectifs dans la note</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Comment calculer la note finale ?</label>
                   <span className="text-sm font-bold text-purple-600">{objW} % / {100 - objW} %</span>
                 </div>
                 <input type="range" min={0} max={100} step={5} value={objW} onChange={e => setObjW(Number(e.target.value))}
                   className="w-full h-3 mt-2 accent-purple-600" />
-                <p className="text-xs text-gray-400 mt-1">Objectifs {objW} % · facteurs de succès {100 - objW} %</p>
+                <p className="text-xs text-gray-500 mt-1">{objW} % de la note = objectifs atteints · {100 - objW} % = critères de la grille (qualité du travail, comportement…)</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Modèle de critères par défaut</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Grille de notation</label>
                 <select className={`${inputCls} mt-1`} value={templateId} onChange={e => setTemplateId(e.target.value)}>
-                  <option value="">Facteurs de succès (5 × 20 %)</option>
+                  <option value="">Grille standard (5 critères)</option>
                   {templates.map(t => <option key={t.id} value={t.id}>{t.name}{t.jobTitle ? ` — ${t.jobTitle}` : ''}</option>)}
                 </select>
-                <p className="text-xs text-gray-400 mt-1">Un modèle dont le poste correspond à celui d'un employé est utilisé en priorité pour lui.</p>
+                <p className="text-xs text-gray-500 mt-1">Si vous avez créé une grille pour un poste précis (ex : chauffeur), elle est utilisée automatiquement pour les employés de ce poste.</p>
               </div>
-
-              <button type="button" onClick={() => setSelf(!self)}
-                className="w-full flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-600 text-left">
-                <span>
-                  <span className="block text-sm font-bold text-gray-900 dark:text-white">Auto-évaluation de l'employé</span>
-                  <span className="block text-xs text-gray-500">L'employé se note avant son responsable</span>
-                </span>
-                <span className={`w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 ${self ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                  <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${self ? 'translate-x-5' : ''}`} />
-                </span>
-              </button>
 
               {error && <p className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 rounded-xl p-3">{error}</p>}
             </div>
@@ -201,7 +189,7 @@ export default function CyclesPage() {
             <ArrowLeft size={14} /> Performance
           </Link>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Campagnes d'évaluation</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">Lancez une campagne : une fiche est préparée pour chaque employé</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">Une campagne prépare automatiquement une évaluation pour chaque employé</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={load} aria-label="Actualiser" className="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-gray-700">
@@ -209,12 +197,12 @@ export default function CyclesPage() {
           </button>
           <Link href={bp('/performance/modeles')}
             className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 text-sm">
-            <Layers size={16} /> <span className="hidden sm:inline">Modèles</span>
+            <Layers size={16} /> <span className="hidden sm:inline">Grilles</span>
           </Link>
           {isHR && (
             <button onClick={() => setCreateOpen(true)}
               className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2">
-              <Plus size={20} /> Nouveau cycle
+              <Plus size={20} /> Nouvelle campagne
             </button>
           )}
         </div>
@@ -231,8 +219,9 @@ export default function CyclesPage() {
       ) : cycles.length === 0 && !error ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-10 text-center">
           <Calendar className="mx-auto text-gray-300 mb-3" size={36} />
-          <p className="font-bold text-gray-900 dark:text-white">Aucun cycle pour le moment</p>
-          <p className="text-sm text-gray-500 mt-1">{isHR ? 'Créez votre premier cycle (ex : le trimestre en cours).' : "La RH n'a pas encore lancé de campagne."}</p>
+          <p className="font-bold text-gray-900 dark:text-white">Aucune campagne pour le moment</p>
+          <p className="text-sm text-gray-500 mt-1">{isHR ? 'Créez votre première campagne : par exemple le trimestre en cours. Ensuite, cliquez sur « Lancer ».' : "La RH n'a pas encore créé de campagne."}</p>
+          {isHR && <button onClick={() => setCreateOpen(true)} className="mt-4 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 inline-flex items-center gap-2 min-h-[48px]"><Plus size={18} /> Créer la première campagne</button>}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -257,7 +246,7 @@ export default function CyclesPage() {
                   <p className="flex items-center gap-2"><Users size={14} /> {c._count?.reviews ?? 0} fiche(s){!c.launchedAt && ' · pas encore lancé'}</p>
                 </div>
                 <div className="mt-4 flex items-center justify-between text-xs">
-                  <span className="text-gray-400">Objectifs {c.objectivesWeight} % · Facteurs {100 - c.objectivesWeight} %{c.selfAssessmentEnabled ? ' · Auto-éval.' : ''}</span>
+                  <span className="text-gray-400">Note = {c.objectivesWeight} % objectifs + {100 - c.objectivesWeight} % critères</span>
                   <ChevronRight size={16} className="text-gray-400" />
                 </div>
               </Link>

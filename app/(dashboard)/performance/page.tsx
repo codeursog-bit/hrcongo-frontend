@@ -10,11 +10,13 @@ import { useRouter } from 'next/navigation';
 import {
   Star, Calendar, Loader2, Plus, Check,
   Send, ThumbsUp, Eye, BarChart3, Award,
-  RefreshCw, ChevronDown, Search, MessageSquare,
+  RefreshCw, ChevronDown, Search, MessageSquare, Trash2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
+import PerformanceStart from '@/components/performance/PerformanceStart';
+import { MANAGE_ROLES } from '@/components/performance/sheet-types';
 import { useBasePath } from '@/hooks/useBasePath';
 import { CreateReviewModal } from '@/components/performance/CreateReviewModal';
 import { ReviewDetailModal } from '@/components/performance/ReviewDetailModal';
@@ -104,10 +106,10 @@ function Avatar({ emp }: { emp: Review['employee'] }) {
 // ─── Carte review ─────────────────────────────────────────────────────────────
 
 function ReviewCard({
-  review, onView, onSubmit, onAcknowledge, currentUserId, isHR,
+  review, onView, onSubmit, onAcknowledge, onDelete, currentUserId, isHR,
 }: {
   review: Review; onView: (r: Review) => void;
-  onSubmit: (r: Review) => void; onAcknowledge: (r: Review) => void;
+  onSubmit: (r: Review) => void; onAcknowledge: (r: Review) => void; onDelete: (r: Review) => void;
   currentUserId?: string; isHR: boolean;
 }) {
   const score      = getScore(review);
@@ -180,6 +182,17 @@ function ReviewCard({
             </button>
           )}
 
+          {/* Supprimer : brouillon → RH ou responsable ; déjà transmise → RH seule */}
+          {(isHR || (isReviewer && review.status === 'DRAFT')) && (
+            <button
+              onClick={() => onDelete(review)}
+              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-600 transition-colors"
+              title="Supprimer l'évaluation"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
+
           {/* Accuser réception */}
           {review.status === 'SUBMITTED' && (isHR || !isReviewer) && (
             <button
@@ -228,6 +241,8 @@ export default function PerformancePage() {
       const stored = localStorage.getItem('user');
       const user   = stored ? JSON.parse(stored) : null;
       if (user) setCurrentUser(user);
+      // Un employé n'a qu'une page : « Ma performance » (il ne note personne)
+      if (user?.role && !MANAGE_ROLES.includes(user.role)) router.replace(bp('/performance/mon-espace'));
 
       const [revs, statsData] = await Promise.all([
         api.get<Review[]>('/performance/reviews'),
@@ -263,6 +278,16 @@ export default function PerformancePage() {
     catch { alert('Erreur lors de la soumission'); }
   };
 
+  const handleDelete = async (review: Review) => {
+    const who = `${review.employee?.firstName} ${review.employee?.lastName}`;
+    const msg = review.status === 'DRAFT'
+      ? `Supprimer le brouillon d'évaluation de ${who} (${review.period}) ?`
+      : `⚠ Cette évaluation a déjà été transmise à ${who}.\nLa supprimer l'efface définitivement.\n\nConfirmer ?`;
+    if (!confirm(msg)) return;
+    try { await api.delete(`/performance/reviews/${review.id}`); load(); }
+    catch (e: any) { alert(e?.message || 'Suppression impossible'); }
+  };
+
   const handleAcknowledge = async (review: Review) => {
     if (review.cycleId) { router.push(bp(`/performance/fiche/${review.id}`)); return; }
     if (!confirm('Confirmer la réception de cette évaluation ?')) return;
@@ -285,14 +310,16 @@ export default function PerformancePage() {
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">
       <PerformanceNav />
 
+      <PerformanceStart reviews={reviews} />
+
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Performance</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Évaluations</h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Suivi des évaluations et feedback
+            À noter, à envoyer, déjà lues
             {sharedCount > 0 && (
-              <span className="ml-2 text-amber-600 font-medium">· {sharedCount} en attente de réception</span>
+              <span className="ml-2 text-amber-600 font-medium">· {sharedCount} à lire par l'employé</span>
             )}
           </p>
         </div>
@@ -428,6 +455,7 @@ export default function PerformancePage() {
                       onView={openReview}
                       onSubmit={handleSubmit}
                       onAcknowledge={handleAcknowledge}
+                      onDelete={handleDelete}
                       currentUserId={currentUser?.id}
                       isHR={isHR}
                     />

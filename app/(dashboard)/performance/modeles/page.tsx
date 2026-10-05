@@ -94,18 +94,18 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
         onClick={e => e.stopPropagation()}
         className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 max-h-[94vh] flex flex-col">
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{template ? 'Modifier le modèle' : 'Nouveau modèle'}</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">{template ? 'Modifier la grille' : 'Nouvelle grille'}</h2>
           <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><X size={18} /></button>
         </div>
 
         <div className="p-5 space-y-6 overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nom du modèle</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nom de la grille</label>
               <input className={`${inputCls} mt-1`} value={name} onChange={e => setName(e.target.value)} placeholder="ex : Chauffeur" />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Poste concerné</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Pour quel poste ? <span className="text-xs font-normal text-gray-400">(facultatif)</span></label>
               <input className={`${inputCls} mt-1`} list="template-positions" value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="Choisissez un poste existant" />
               <datalist id="template-positions">{positions.map(p => <option key={p} value={p} />)}</datalist>
               <p className="text-xs text-gray-400 mt-1">Doit être écrit comme dans la fiche employé : c'est ce qui rattache le modèle aux bons employés.</p>
@@ -115,7 +115,7 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
           {/* Critères */}
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-bold text-gray-900 dark:text-white">Facteurs de succès</h3>
+              <div><h3 className="font-bold text-gray-900 dark:text-white">Critères de notation</h3><p className="text-xs text-gray-400">Ce sur quoi on note. « % » = l'importance du critère (le total doit faire 100 %).</p></div>
               <div className="flex items-center gap-2">
                 <TotalChip items={criteria} />
                 <button type="button" onClick={() => rebalance('c')} className="text-xs font-bold text-purple-600 hover:underline">Répartir</button>
@@ -146,8 +146,8 @@ function TemplateEditor({ template, positions, onClose, onSaved }: { template: T
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <h3 className="font-bold text-gray-900 dark:text-white">Objectifs proposés <span className="text-xs font-normal text-gray-400">(facultatif)</span></h3>
-                <p className="text-xs text-gray-400">Utilisés au lancement d'un cycle pour un employé qui n'a pas encore d'objectifs.</p>
+                <h3 className="font-bold text-gray-900 dark:text-white">Objectifs de départ <span className="text-xs font-normal text-gray-400">(facultatif)</span></h3>
+                <p className="text-xs text-gray-400">Donnés automatiquement à un employé de ce poste qui n'a encore aucun objectif.</p>
               </div>
               {objectives.length > 0 && (
                 <div className="flex items-center gap-2 shrink-0">
@@ -231,7 +231,7 @@ export default function TemplatesPage() {
   }, [load]);
 
   const remove = async (t: Template) => {
-    if (!confirm(`Supprimer le modèle « ${t.name} » ?\nLes fiches déjà créées ne sont pas modifiées.`)) return;
+    if (!confirm(`Supprimer la grille « ${t.name} » ?\nLes évaluations déjà créées ne sont pas modifiées.`)) return;
     try { await api.delete(`/performance/templates/${t.id}`); load(); }
     catch (e: any) { alert(e?.message || 'Suppression impossible'); }
   };
@@ -244,13 +244,13 @@ export default function TemplatesPage() {
           <Link href={bp('/performance/cycles')} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 mb-2">
             <ArrowLeft size={14} /> Campagnes
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Modèles de fiche</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">Critères et objectifs types par poste, réutilisés à chaque cycle</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Grilles de notation</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">La liste des critères sur lesquels on note. Créez-en une par poste : elle est utilisée automatiquement.</p>
         </div>
         {isHR && (
           <button onClick={() => setEditing('new')}
             className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2">
-            <Plus size={20} /> Nouveau modèle
+            <Plus size={20} /> Nouvelle grille
           </button>
         )}
       </div>
@@ -268,8 +268,8 @@ export default function TemplatesPage() {
           {data.custom.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-10 text-center">
               <Layers className="mx-auto text-gray-300 mb-3" size={36} />
-              <p className="font-bold text-gray-900 dark:text-white">Aucun modèle personnalisé</p>
-              <p className="text-sm text-gray-500 mt-1">Sans modèle, la grille « Facteurs de succès (5 × 20 %) » est utilisée pour tous les postes.</p>
+              <p className="font-bold text-gray-900 dark:text-white">Vous n'avez pas encore créé de grille</p>
+              <p className="text-sm text-gray-500 mt-1">Pas de souci : une grille standard est utilisée pour tout le monde tant que vous n'en créez pas.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -310,7 +310,7 @@ export default function TemplatesPage() {
           )}
 
           <div className="space-y-3">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Grilles intégrées (lecture seule)</h2>
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Grilles déjà prêtes (non modifiables)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {data.builtin.map(b => (
                 <div key={b.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">

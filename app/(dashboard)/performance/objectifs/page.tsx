@@ -214,11 +214,11 @@ function CreateModal({ employees, onClose, onDone }: {
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2"><TrendingUp size={15} /> Résultats clés</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2"><TrendingUp size={15} /> Comment mesurer la réussite ?</p>
             {krs.map((k, i) => (
               <div key={i} className="flex items-start gap-2">
                 <div className="flex-1 min-w-0 space-y-1.5">
-                  <input className={inputCls} value={k.title} onChange={e => setKr(i, { title: e.target.value })} placeholder="Résultat mesurable" />
+                  <input className={inputCls} value={k.title} onChange={e => setKr(i, { title: e.target.value })} placeholder="ex : 95 % des livraisons à l'heure" />
                   <div className="grid grid-cols-2 gap-2">
                     <input type="number" min={1} inputMode="decimal" className={inputCls} value={k.target} onChange={e => setKr(i, { target: e.target.value })} placeholder="Cible" />
                     <input className={inputCls} value={k.unit} onChange={e => setKr(i, { unit: e.target.value })} placeholder="Unité (%, ventes…)" />
@@ -233,7 +233,7 @@ function CreateModal({ employees, onClose, onDone }: {
             {krs.length < 5 && (
               <button type="button" onClick={() => setKrs(prev => [...prev, { title: '', target: '100', unit: '' }])}
                 className="w-full py-2.5 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 text-gray-500 hover:border-purple-400 hover:text-purple-600 font-bold text-sm flex items-center justify-center gap-2">
-                <Plus size={16} /> Ajouter un résultat clé
+                <Plus size={16} /> Ajouter une mesure
               </button>
             )}
           </div>
@@ -296,15 +296,24 @@ export default function ObjectivesPage() {
 
   const done = goals.filter(g => g.progress >= 100).length;
 
+  const removeGoal = async (g: Goal) => {
+    const msg = g.evaluatedInReview
+      ? `Supprimer l'objectif « ${g.title} » ?\nIl est rattaché à l'évaluation « ${g.evaluatedInReview.period} » (brouillon) : il sera retiré de la fiche.`
+      : `Supprimer l'objectif « ${g.title} » ?`;
+    if (!confirm(msg)) return;
+    try { await api.delete(`/performance/goals/${g.id}`); setExpanded(null); load(); }
+    catch (e: any) { alert(e?.message || 'Suppression impossible'); }
+  };
+
   return (
     <div className="max-w-[1200px] mx-auto pb-20 space-y-6 sm:space-y-8">
       <PerformanceNav />
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Objectifs (OKR)</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{canCreate ? 'Objectifs' : 'Mes objectifs'}</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-            Alignement et suivi{goals.length > 0 && ` · ${goals.length} objectif${goals.length > 1 ? 's' : ''}, ${done} atteint${done > 1 ? 's' : ''}`}
+            {canCreate ? 'Ce que chaque personne doit atteindre' : 'Mettez à jour votre avancement'}{goals.length > 0 && ` · ${goals.length} objectif${goals.length > 1 ? 's' : ''}, ${done} atteint${done > 1 ? 's' : ''}`}
           </p>
         </div>
         {canCreate && (
@@ -336,7 +345,10 @@ export default function ObjectivesPage() {
         <div className={`${cardCls} p-12 text-center`}>
           <Target size={40} className="mx-auto text-gray-300 mb-3" />
           <p className="font-bold text-gray-900 dark:text-white">{goals.length === 0 ? 'Aucun objectif défini' : 'Aucun résultat'}</p>
-          <p className="text-sm text-gray-500 mt-1">{goals.length === 0 ? (canCreate ? 'Fixez des objectifs clairs à vos équipes.' : "Votre responsable n'a pas encore fixé d'objectif.") : 'Modifiez la recherche ou le filtre.'}</p>
+          <p className="text-sm text-gray-500 mt-1">{goals.length === 0 ? (canCreate ? 'Commencez par en créer un : choisissez la personne, écrivez l\'objectif et la date limite.' : "Votre responsable n'a pas encore fixé d'objectif.") : 'Modifiez la recherche ou le filtre.'}</p>
+          {goals.length === 0 && canCreate && (
+            <button onClick={() => setCreating(true)} className="mt-4 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-500/20 inline-flex items-center gap-2 min-h-[48px]"><Plus size={18} /> Créer le premier objectif</button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -385,11 +397,19 @@ export default function ObjectivesPage() {
                             {g.support && <p className="text-gray-600 dark:text-gray-300 break-words"><b className="text-gray-900 dark:text-white">Support :</b> {g.support}</p>}
                           </div>
                         )}
+                        {canCreate && (
+                          <div className="flex justify-end">
+                            <button type="button" onClick={() => removeGoal(g)}
+                              className="px-3 py-2 rounded-lg text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 min-h-[40px]">
+                              <Trash2 size={15} /> Supprimer cet objectif
+                            </button>
+                          </div>
+                        )}
                         {g.keyResults.length > 0 ? (
                           <div className="space-y-5">
-                            <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2"><TrendingUp size={13} /> Résultats clés</h4>
+                            <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider flex items-center gap-2"><TrendingUp size={13} /> Avancement</h4>
                             {g.keyResults.map(kr => <KeyResultRow key={kr.id} kr={kr} onSaved={load} />)}
-                            <p className="text-xs text-gray-400 flex items-center gap-1.5"><Check size={12} /> La progression de l'objectif se calcule à partir des résultats clés.</p>
+                            <p className="text-xs text-gray-400 flex items-center gap-1.5"><Check size={12} /> Le pourcentage de l'objectif se calcule tout seul à partir de ces mesures.</p>
                           </div>
                         ) : (
                           <ProgressSlider goal={g} onSaved={load} />

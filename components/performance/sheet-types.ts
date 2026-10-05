@@ -28,12 +28,6 @@ export interface SheetCriterion {
   comment?: string;
 }
 
-export interface SelfAssessment {
-  goals: Array<{ goalId: string; score?: number; comment?: string }>;
-  criteria: Array<{ id: string; score?: number; comment?: string }>;
-  comment?: string;
-}
-
 export interface Sheet {
   review: {
     id: string;
@@ -48,7 +42,7 @@ export interface Sheet {
     reviewer?: { id: string; firstName: string; lastName: string };
     cycle: {
       id: string; name: string; status: 'OPEN' | 'CLOSED';
-      objectivesWeight: number; selfAssessmentEnabled: boolean;
+      objectivesWeight: number;
     } | null;
     objectivesScore: number | null;
     competenciesScore: number | null;
@@ -59,21 +53,19 @@ export interface Sheet {
     feedback: string | null;
     employeeComment: string | null;
     employeeCommentAt: string | null;
-    selfSubmittedAt: string | null;
     submittedAt: string | null;
     acknowledgedAt: string | null;
   };
   goals: SheetGoal[];
   criteria: SheetCriterion[];
   nextGoals: SheetGoal[];
-  selfAssessment: SelfAssessment | null;
   scoreLevels: Record<string, string>;
   permissions: {
     isSelf: boolean;
     canEdit: boolean;
     canSubmit: boolean;
-    canSelfAssess: boolean;
     canAcknowledge: boolean;
+    canDelete?: boolean;
   };
 }
 
@@ -107,3 +99,12 @@ export function getStoredUser(): { role?: string; id?: string } | null {
 
 export const HR_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'CABINET_ADMIN', 'CABINET_GESTIONNAIRE'];
 export const MANAGE_ROLES = [...HR_ROLES, 'MANAGER'];
+
+/** Libellé clair d'un total d'importance : dit ce qu'il manque ou ce qui dépasse */
+export function weightsMessage(label: string, total: number): string {
+  const diff = Math.round((100 - total) * 100) / 100;
+  if (Math.abs(diff) < 0.011) return `${label} : 100 %`;
+  return diff > 0
+    ? `${label} : ${total} % — il manque ${diff} % pour arriver à 100 %`
+    : `${label} : ${total} % — ça dépasse de ${Math.abs(diff)} %`;
+}
