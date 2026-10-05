@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/services/api';
+import { isWorkDay } from '@/lib/work-days';
 
 interface MonthlyViewProps {
   data: any;
@@ -68,9 +69,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
 
   const isWorkingDay = (day: number): boolean => {
     const dayDate = new Date(date.getFullYear(), date.getMonth(), day);
-    const dayOfWeek = dayDate.getDay();
-    const normalizedDay = dayOfWeek === 0 ? 7 : dayOfWeek;
-    return workDays.includes(normalizedDay);
+    return isWorkDay(workDays, dayDate.getDay()); // 🕐 0 = dimanche (ou 7 lu comme 0)
   };
 
   const getStatus = (empId: string, day: number) => {

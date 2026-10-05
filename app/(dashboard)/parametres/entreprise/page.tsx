@@ -133,7 +133,7 @@ const DAYS_OF_WEEK = [
   { value: 1, label: 'Lundi' }, { value: 2, label: 'Mardi' },
   { value: 3, label: 'Mercredi' }, { value: 4, label: 'Jeudi' },
   { value: 5, label: 'Vendredi' }, { value: 6, label: 'Samedi' },
-  { value: 7, label: 'Dimanche' },
+  { value: 0, label: 'Dimanche' }, // 🕐 dimanche = 0 (même convention que Paramètres → Paie et le serveur)
 ];
 
 // ─── TYPE ONGLETS ─────────────────────────────────────────────────────────────
@@ -294,7 +294,7 @@ export default function CompanySettingsPage() {
             lateToleranceMinutes: settings.lateToleranceMinutes ?? 0,
             workDaysPerMonth:     settings.workDaysPerMonth     ?? 26,
             workHoursPerDay:      settings.workHoursPerDay      ?? 8,
-            workDays:             settings.workDays             || [1, 2, 3, 4, 5],
+            workDays:             Array.from(new Set(((settings.workDays as number[]) || [1, 2, 3, 4, 5]).map((d: number) => (d === 7 ? 0 : d)))).sort((a, b) => a - b),
             fiscalMode:           settings.fiscalMode           ?? 'AUTO',
             forfaitItsRate:       settings.forfaitItsRate       ?? 0.08,
           });
@@ -319,7 +319,7 @@ export default function CompanySettingsPage() {
     setPayrollData(prev => {
       const workDays = prev.workDays.includes(day)
         ? prev.workDays.filter(d => d !== day)
-        : [...prev.workDays, day].sort();
+        : [...prev.workDays, day].sort((a, b) => a - b);
       return { ...prev, workDays };
     });
   };
@@ -1716,7 +1716,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
                       <Users size={20} className="text-amber-500" /> Jours de Travail
                     </h3>
-                    <button onClick={() => setPayrollData(p => ({ ...p, workDays: [1, 2, 3, 4, 5, 6, 7] }))}
+                    <button onClick={() => setPayrollData(p => ({ ...p, workDays: [1, 2, 3, 4, 5, 6, 0] }))}
                       className="text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-800 hover:bg-amber-100 font-bold">
                       Tout sélectionner
                     </button>
