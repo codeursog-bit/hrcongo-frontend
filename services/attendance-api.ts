@@ -383,6 +383,7 @@ export const attendanceApi = {
     employeeId: string;
     latitude?: number;
     longitude?: number;
+    accuracy?: number;
     notes?: string;
   }): Promise<AttendanceRecord> => {
     return api.post<AttendanceRecord>('/attendance/check-in', data);
@@ -395,6 +396,7 @@ export const attendanceApi = {
     employeeId: string;
     latitude?: number;
     longitude?: number;
+    accuracy?: number;
   }): Promise<AttendanceRecord> => {
     return api.post<AttendanceRecord>('/attendance/check-out', data);
   },

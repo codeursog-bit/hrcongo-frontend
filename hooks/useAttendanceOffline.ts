@@ -102,6 +102,7 @@ export function useAttendanceOffline() {
     type?: 'CHECK_IN' | 'CHECK_OUT';
     latitude?: number;
     longitude?: number;
+    accuracy?: number;
     notes?: string;
   }) => {
     setIsSubmitting(true);
@@ -133,6 +134,7 @@ export function useAttendanceOffline() {
           employeeId: data.employeeId,
           latitude: data.latitude,
           longitude: data.longitude,
+          accuracy: data.accuracy,
           notes: data.notes,
         });
 

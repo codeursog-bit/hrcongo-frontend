@@ -440,6 +440,8 @@ export default function AttendanceCheckInPage() {
     const freshPos = await captureFreshPosition();
     const sendLat = freshPos ? freshPos.coords.latitude  : (geoState.latitude  || undefined);
     const sendLng = freshPos ? freshPos.coords.longitude : (geoState.longitude || undefined);
+    // Précision annoncée par l'appareil : le serveur s'en sert pour la marge de tolérance GPS
+    const sendAccuracy = freshPos ? Math.round(freshPos.coords.accuracy) : (geoState.accuracy ?? undefined);
     if (freshPos) handlePositionSuccessRef.current?.(freshPos); // le badge reste synchronisé avec ce qui est envoyé
 
     let scanOutcome: 'success' | 'error' = 'success';
@@ -450,6 +452,7 @@ export default function AttendanceCheckInPage() {
           employeeId,
           latitude:  sendLat,
           longitude: sendLng,
+          accuracy:  sendAccuracy,
         });
 
         if (result.success) {
@@ -508,6 +511,7 @@ export default function AttendanceCheckInPage() {
           employeeId,
           latitude:  sendLat,
           longitude: sendLng,
+          accuracy:  sendAccuracy,
         });
         setStatus('completed');
         setShowConfetti(true);
@@ -560,7 +564,8 @@ export default function AttendanceCheckInPage() {
       const pos = await captureFreshPosition();
       const lat = pos ? pos.coords.latitude  : (geoState.latitude  || undefined);
       const lng = pos ? pos.coords.longitude : (geoState.longitude || undefined);
-      const r = await breakApi.end(lat, lng);
+      const acc = pos ? Math.round(pos.coords.accuracy) : (geoState.accuracy ?? undefined);
+      const r = await breakApi.end(lat, lng, acc);
       addNotification({ type: 'CHECK_IN', title: 'Bon retour !', message: r?.message || 'Reprise enregistrée.' });
       await loadBreak();
     } catch (e: any) {

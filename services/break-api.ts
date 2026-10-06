@@ -30,8 +30,8 @@ export interface BreakStatus {
 export const breakApi = {
   status: () => api.get<BreakStatus>('/attendance-break/status'),
   start:  () => api.post<BreakStatus>('/attendance-break/start', {}),
-  end:    (latitude?: number, longitude?: number) =>
-    api.post<{ success: boolean; message: string; lateMinutes: number }>('/attendance-break/end', { latitude, longitude }),
+  end:    (latitude?: number, longitude?: number, accuracy?: number) =>
+    api.post<{ success: boolean; message: string; lateMinutes: number }>('/attendance-break/end', { latitude, longitude, accuracy }),
   // Admin / RH — justification obligatoire
   correct: (attendanceId: string, endedAt: string, reason: string) =>
     api.patch<{ success: boolean }>(`/attendance-break/${attendanceId}`, { endedAt, reason }),

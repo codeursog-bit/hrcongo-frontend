@@ -19,6 +19,7 @@ import { EchelonSuggestionsPanel } from '@/components/settings/EchelonSuggestion
 import { ConventionPicker } from '@/components/conventions/ConventionPicker'; // 🆕
 import { getConventionCatalogEntry } from '@/lib/conventions/conventions-catalog'; // 🆕
 import GeofenceRadiusPreview, { computeMetersOffset } from '@/components/GeofenceRadiusPreview'; // 🆕
+import TrustedIpsPanel from '@/components/settings/TrustedIpsPanel'; // 🆕
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ interface CompanySettings {
   latitude:              number;
   longitude:             number;
   allowedRadius:         number;
+  gpsToleranceMeters:    number; // 🆕 marge GPS max (m), 0 = stricte
   appliesCnssEmployer:   boolean;
   appliesSeniorityLeaveBonus: boolean;
   echelonReminderEnabled?: boolean; // 🆕 Rappels de changement d'échelon (OFF par défaut)
@@ -102,7 +104,7 @@ const DEFAULT_COMPANY: CompanySettings = {
   address: '', city: '', phone: '', email: '',
   bankName: '', bankAccount: '', bankRib: '',
   primaryColor: '#0EA5E9', secondaryColor: '#10B981',
-  latitude: 0, longitude: 0, allowedRadius: 100,
+  latitude: 0, longitude: 0, allowedRadius: 100, gpsToleranceMeters: 0,
   appliesCnssEmployer: true,
   appliesSeniorityLeaveBonus: true,
   echelonReminderEnabled: false, // 🆕 OFF par défaut — aucun rappel tant que le RH ne l'active pas
@@ -255,6 +257,7 @@ export default function CompanySettingsPage() {
             latitude:             company.latitude            || 0,
             longitude:            company.longitude           || 0,
             allowedRadius:        company.allowedRadius       || 100,
+            gpsToleranceMeters:   company.gpsToleranceMeters      ?? 0,
             appliesCnssEmployer:  company.appliesCnssEmployer ?? true,
             appliesSeniorityLeaveBonus: company.appliesSeniorityLeaveBonus ?? true,
             echelonReminderEnabled: company.echelonReminderEnabled ?? false, // 🆕
@@ -1671,6 +1674,23 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     </div>
                   )}
                 </div>
+                {/* 🆕 Marge de précision GPS */}
+                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6">
+                  <h3 className="font-bold text-[var(--text)] mb-1 flex items-center gap-2">
+                    <Navigation size={18} className="text-emerald-500" /> Marge de précision GPS (mètres)
+                  </h3>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">
+                    Le GPS d'un téléphone se trompe de 10 à 50 m, surtout en intérieur ou à l'étage.
+                    Avec une marge, un employé est accepté si la zone d'incertitude de son GPS touche le rayon.
+                    Distance maximale acceptée = rayon + marge. 0 = strict.
+                  </p>
+                  <input type="number" min={0} max={200} value={companyData.gpsToleranceMeters ?? 0}
+                    onChange={e => handleCompanyChange('gpsToleranceMeters', Math.max(0, Math.min(200, parseFloat(e.target.value) || 0)))}
+                    className="w-full md:w-48 p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)]" />
+                </div>
+
+                {/* 🆕 IP de confiance (wifi de l'entreprise) */}
+                <TrustedIpsPanel companyId={companyId} />
               </motion.div>
             )}
 
