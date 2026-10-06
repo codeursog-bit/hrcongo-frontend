@@ -46,6 +46,9 @@ interface AttendanceSummary {
   avatar: string;
   department: string;
   daysPresent: number;
+  daysWorked?: number;            // 🆕 jours où l'employé a réellement pointé
+  daysWorkedOnRest?: number;      // dont jours de repos / fériés travaillés
+  daysWorkedDuringLeave?: number; // dont jours pointés pendant un congé
   daysLate: number;
   daysRemote: number;
   daysOnLeave: number;
@@ -217,6 +220,8 @@ export default function AttendanceResumePage() {
         'Matricule':            r.matricule,
         'Département':          r.department,
         'Jours présents':       r.daysPresent,
+        'Jours travaillés (pointés)': r.daysWorked ?? (r.daysPresent + r.daysLate + r.daysRemote),
+        'Dont repos/férié travaillés': r.daysWorkedOnRest ?? 0,
         'Retards':              r.daysLate,
         'Télétravail':          r.daysRemote,
         'Congés':               r.daysOnLeave,
@@ -288,13 +293,15 @@ export default function AttendanceResumePage() {
     if (!data) return null;
     return data.reduce((acc, r) => ({
       daysPresent:       acc.daysPresent + r.daysPresent,
+      daysWorked:        acc.daysWorked + (r.daysWorked ?? (r.daysPresent + r.daysLate + r.daysRemote)),
+      daysWorkedOnRest:  acc.daysWorkedOnRest + (r.daysWorkedOnRest ?? 0),
       daysLate:          acc.daysLate + r.daysLate,
       daysRemote:        acc.daysRemote + r.daysRemote,
       daysOnLeave:       acc.daysOnLeave + r.daysOnLeave,
       daysAbsentUnpaid:  acc.daysAbsentUnpaid + r.daysAbsentUnpaid,
       daysAbsentPaid:    acc.daysAbsentPaid + r.daysAbsentPaid,
       workingDays:       acc.workingDays + r.daysPresent + r.daysLate + r.daysRemote + r.daysAbsentUnpaid + r.daysAbsentPaid,
-    }), { daysPresent: 0, daysLate: 0, daysRemote: 0, daysOnLeave: 0, daysAbsentUnpaid: 0, daysAbsentPaid: 0, workingDays: 0 });
+    }), { daysPresent: 0, daysWorked: 0, daysWorkedOnRest: 0, daysLate: 0, daysRemote: 0, daysOnLeave: 0, daysAbsentUnpaid: 0, daysAbsentPaid: 0, workingDays: 0 });
   }, [data]);
 
   const tauxPresenceGlobal = totals && totals.workingDays > 0
@@ -482,8 +489,13 @@ export default function AttendanceResumePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">{canManage ? 'Employés Traités' : 'Jours Présents'}</p>
-                <h3 className="text-2xl font-bold text-[var(--text)]">{canManage ? data.length : (totals?.daysPresent || 0)}</h3>
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase mb-1">{canManage ? 'Employés Traités' : 'Jours travaillés'}</p>
+                <h3 className="text-2xl font-bold text-[var(--text)]">{canManage ? data.length : (totals?.daysWorked || 0)}</h3>
+                {!canManage && (
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                    Jours où vous avez pointé{(totals?.daysWorkedOnRest || 0) > 0 ? ` (dont ${totals?.daysWorkedOnRest} de repos ou férié)` : ''}
+                  </p>
+                )}
               </div>
               <div className="w-12 h-12 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl flex items-center justify-center">
                 <Users size={24} />
@@ -627,7 +639,14 @@ export default function AttendanceResumePage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center font-medium">{row.daysPresent}</td>
+                        <td className="px-6 py-4 text-center font-medium">
+                          {row.daysPresent}
+                          {(row.daysWorkedOnRest ?? 0) > 0 && (
+                            <span className="block text-[10px] font-semibold text-amber-600" title="Pointés un jour de repos ou férié (hors jours présents)">
+                              +{row.daysWorkedOnRest} repos/férié
+                            </span>
+                          )}
+                        </td>
                         <td className={`px-6 py-4 text-center font-bold ${row.daysLate > 2 ? 'text-amber-500' : 'text-[var(--text-muted)]'}`}>{row.daysLate}</td>
                         <td className="px-6 py-4 text-center font-medium text-[var(--text-muted)]">
                           {row.daysAbsentUnpaid + row.daysAbsentPaid}

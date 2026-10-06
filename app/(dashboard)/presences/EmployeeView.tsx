@@ -1,24 +1,57 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { api } from '@/services/api';
 import { Clock, CalendarIcon, AlertTriangle, Umbrella, CheckCircle } from 'lucide-react';
 
 interface EmployeeViewProps {
   myAttendances: any[];
   date: Date;
+  employeeId?: string; // 🆕 pour retrouver MA ligne dans le rapport mensuel
 }
 
-export default function EmployeeView({ myAttendances, date }: EmployeeViewProps) {
-  
-  // Filtrer pour afficher PRESENT, LATE et ON_LEAVE
-  const displayedAttendances = myAttendances
-    .filter(att => att.status === 'PRESENT' || att.status === 'LATE' || att.status === 'ON_LEAVE')
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export default function EmployeeView({ myAttendances, date, employeeId }: EmployeeViewProps) {
+
+  // 🆕 Même source que la page Résumé (rapport mensuel) : compteurs et jours de congé fiables,
+  // y compris un pointage fait un jour de repos / férié / pendant un congé.
+  const [report, setReport] = useState<any | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: any = await api.get(`/attendance/report?month=${date.getMonth() + 1}&year=${date.getFullYear()}`);
+        const items: any[] = Array.isArray(res) ? res : [];
+        const mine = (employeeId && items.find((i) => i.employeeId === employeeId)) || (items.length === 1 ? items[0] : null);
+        if (!cancelled) setReport(mine);
+      } catch { if (!cancelled) setReport(null); }
+    })();
+    return () => { cancelled = true; };
+  }, [date, employeeId]);
+
+  const detailByDate = useMemo(
+    () => new Map<string, any>((report?.details ?? []).map((d: any) => [d.date, d])),
+    [report],
+  );
+
+  // Jours où j'ai vraiment pointé (quel que soit le statut du calendrier) + jours de congé sans pointage
+  const punchRows = myAttendances.filter((att: any) => att.checkIn);
+  const punchDates = new Set(punchRows.map((a: any) => a.date));
+  const leaveRows = (report?.details ?? [])
+    .filter((d: any) => d.status === 'LEAVE' && !punchDates.has(d.date))
+    .map((d: any) => ({ date: d.date, status: 'LEAVE', leaveType: d.leaveType }));
+  const displayedAttendances = [...punchRows, ...leaveRows]
+    .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Compteurs : rapport mensuel si disponible, sinon repli sur les pointages chargés
+  const daysWorked = report?.daysWorked ?? punchRows.length;
+  const daysLate = report?.daysLate ?? punchRows.filter((a: any) => a.status === 'LATE').length;
+  const hoursTotal = report?.totalHours ?? punchRows.reduce((acc: number, a: any) => acc + (Number(a.totalHours) || 0), 0);
+  const daysLeave = report?.daysOnLeave ?? leaveRows.length;
 
   // Fonction pour obtenir l'icône selon le statut
   const getStatusIcon = (status: string) => {
     switch(status) {
       case 'LATE':
         return <AlertTriangle size={24} />;
-      case 'ON_LEAVE':
+      case 'LEAVE':
         return <Umbrella size={24} />;
       default:
         return <CheckCircle size={24} />;
@@ -34,7 +67,7 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
           label: 'Arrivée tardive',
           textColor: 'text-amber-600 dark:text-amber-400'
         };
-      case 'ON_LEAVE':
+      case 'LEAVE':
         return {
           bg: 'bg-[var(--surface-2)] text-[var(--text-muted)]',
           label: 'En congé',
@@ -78,11 +111,14 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
                     <p className={`text-sm font-bold ${styles.textColor}`}>
                       {styles.label}
                     </p>
+                    {detailByDate.get(att.date)?.note && (
+                      <p className="text-[11px] font-semibold text-amber-600">{detailByDate.get(att.date).note}</p>
+                    )}
                   </div>
                 </div>
                 
                 {/* Afficher les heures seulement si ce n'est pas un congé */}
-                {att.status !== 'ON_LEAVE' ? (
+                {att.status !== 'LEAVE' ? (
                   <div className="text-right text-sm bg-[var(--surface-2)] p-3 rounded-lg">
                     <div className="flex justify-between gap-4 mb-1">
                       <span className="text-[var(--text-muted)]">Arrivée:</span>
@@ -109,8 +145,8 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
                     )}
                     {Number((att as any).extraHoursInfo) > 0 && (
                       <div className="flex justify-between gap-4 text-sky-600">
-                        <span>Heures en plus:</span>
-                        <span className="font-mono font-bold" title="À titre informatif, non comptées dans la paie">
+                        <span>Au-delà de l&apos;horaire:</span>
+                        <span className="font-mono font-bold" title="Information : ces heures ne sont pas comptées dans la paie">
                           +{parseFloat(Number((att as any).extraHoursInfo).toFixed(2))}h (info)
                         </span>
                       </div>
@@ -143,36 +179,51 @@ export default function EmployeeView({ myAttendances, date }: EmployeeViewProps)
           <h3 className="font-bold text-lg mb-4 opacity-90">Résumé Mensuel</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-              <span>Jours Présents</span>
-              <span className="font-bold text-2xl">
-                {myAttendances.filter(a => a.status === 'PRESENT').length}
+              <span>
+                Jours travaillés
+                {(report?.daysWorkedOnRest ?? 0) > 0 && (
+                  <span className="block text-[11px] text-white/70 font-normal">dont {report.daysWorkedOnRest} jour(s) de repos / férié</span>
+                )}
               </span>
+              <span className="font-bold text-2xl">{daysWorked}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-amber-300/30 backdrop-blur-sm">
               <span className="flex items-center gap-2">
                 <AlertTriangle size={16} className="text-amber-200"/> Retards
               </span>
-              <span className="font-bold text-2xl text-amber-100">
-                {myAttendances.filter(a => a.status === 'LATE').length}
-              </span>
+              <span className="font-bold text-2xl text-amber-100">{daysLate}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-              <span>Heures Totales</span>
-              <span className="font-bold text-2xl">
-                {myAttendances
-                  .filter(a => a.status !== 'ON_LEAVE')
-                  .reduce((acc, curr) => acc + (Number(curr.totalHours) || 0), 0)
-                  .toFixed(2)}h
-              </span>
+              <span>Heures travaillées</span>
+              <span className="font-bold text-2xl">{parseFloat(Number(hoursTotal).toFixed(2))}h</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm">
               <span className="flex items-center gap-2">
-                <Umbrella size={16} className="text-white/70"/> Congés pris
+                <Umbrella size={16} className="text-white/70"/>
+                <span>
+                  Congés pris
+                  {(report?.daysWorkedDuringLeave ?? 0) > 0 && (
+                    <span className="block text-[11px] text-white/70 font-normal">+ {report.daysWorkedDuringLeave} jour(s) travaillé(s) pendant le congé</span>
+                  )}
+                </span>
               </span>
-              <span className="font-bold text-2xl text-white">
-                {myAttendances.filter(a => a.status === 'ON_LEAVE').length}
-              </span>
+              <span className="font-bold text-2xl text-white">{daysLeave}</span>
             </div>
+            {((report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)) > 0 && (
+              <div className="flex justify-between items-center p-3 bg-white/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                <span>
+                  Absences
+                  {(report?.daysAbsentUnpaid ?? 0) > 0 && (
+                    <span className="block text-[11px] text-white/70 font-normal">dont {report.daysAbsentUnpaid} non justifiée(s)</span>
+                  )}
+                </span>
+                <span className="font-bold text-2xl text-white">{(report?.daysAbsentUnpaid ?? 0) + (report?.daysAbsentPaid ?? 0)}</span>
+              </div>
+            )}
+            <p className="text-[11px] text-white/70 leading-relaxed pt-1">
+              « Jours travaillés » = les jours où vous avez pointé, y compris un jour de repos, un jour férié ou un jour de congé.
+              Les congés pris sont les jours de congé sans pointage.
+            </p>
           </div>
         </div>
       </div>

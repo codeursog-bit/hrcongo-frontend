@@ -20,6 +20,7 @@ import { PUNCH_METHOD_LABEL, summaryPunchMethod } from '@/lib/punch-method';
 import BreakCorrectionModal from '@/components/BreakCorrectionModal';
 import DailyAttendanceReportPrintable from '@/components/DailyAttendanceReportPrintable';
 import { printReport, downloadReportPDF } from '@/lib/report-print';
+import { isWorkDay } from '@/lib/work-days';
 
 interface DailyViewProps {
   selectedDate: Date;
@@ -174,10 +175,9 @@ export default function DailyView({
     const dateStr = selectedDate.toISOString().split('T')[0];
     const dailyData: any[] = [];
 
-    const selectedDayOfWeek = selectedDate.getDay() === 0 ? 7 : selectedDate.getDay();
-    const isWorkingDay = companySettings.workDays.includes(selectedDayOfWeek);
-
-    if (!isWorkingDay) return [];
+    // 🕐 Selon la CONFIGURATION de l'entreprise (0 = dimanche). Un jour non travaillé n'efface plus
+    // les pointages : un employé qui a pointé ce jour-là doit apparaître.
+    const isWorkingDay = isWorkDay(companySettings.workDays, selectedDate.getDay());
 
     const now = new Date();
     const absenceThreshold = new Date(selectedDate);
@@ -191,9 +191,20 @@ export default function DailyView({
       const empDayStatuses = data.dayStatuses[empIndex] || [];
       const dayStatus = empDayStatuses.find((ds: any) => ds.date === dateStr);
 
-      if (!dayStatus || dayStatus.status === 'FUTURE' || dayStatus.status === 'HOLIDAY') return;
-      if (isBeforeWorkTime && dayStatus.status === 'ABSENT_UNPAID') return;
-      if (dayStatus.status === 'OFF_DAY') return;
+      if (!dayStatus || dayStatus.status === 'FUTURE') return;
+      const worked = !!dayStatus.checkIn; // vrai pointage ce jour-là
+      if (!worked) {
+        // pas de pointage : on n'affiche que les jours travaillés normaux
+        if (!isWorkingDay) return;
+        if (dayStatus.status === 'HOLIDAY' || dayStatus.status === 'OFF_DAY') return;
+        if (isBeforeWorkTime && dayStatus.status === 'ABSENT_UNPAID') return;
+      }
+      // Pointé un jour de repos / férié / pendant un congé : présent, avec une mention
+      const restTag: string | null = !worked ? null
+        : dayStatus.status === 'HOLIDAY' ? 'Jour férié travaillé'
+        : dayStatus.status === 'OFF_DAY' ? 'Jour de repos travaillé'
+        : dayStatus.leaveType ? 'Pointé pendant son congé'
+        : null;
 
       // ✅ FIX : dayStatus ne porte pas l'id réel du pointage (le backend ne
       // l'expose pas dans dayStatuses). On va donc chercher le vrai
@@ -215,11 +226,24 @@ export default function DailyView({
         rowKey: `${emp.id}-${dateStr}`,
         employee: emp,
         date: dateStr,
-        status: dayStatus.status,
+        status: worked && (dayStatus.status === 'HOLIDAY' || dayStatus.status === 'OFF_DAY') ? 'PRESENT' : dayStatus.status,
+        restTag,
         checkIn: dayStatus.checkIn,
         checkOut: dayStatus.checkOut,
         totalHours: dayStatus.totalHours,
         overtime50: dayStatus.overtime50,
+        // 🆕 Champs du VRAI pointage (dayStatus ne les porte pas) : sans eux, Méthode, Site, Pause
+        // et « heures en plus » restaient toujours vides dans la liste et le panneau de détail.
+        checkInMethod: realAtt?.checkInMethod ?? null,
+        checkOutMethod: realAtt?.checkOutMethod ?? null,
+        checkInSource: realAtt?.checkInSource ?? null,
+        checkOutSource: realAtt?.checkOutSource ?? null,
+        checkInSiteName: realAtt?.checkInSiteName ?? null,
+        checkOutSiteName: realAtt?.checkOutSiteName ?? null,
+        checkInDistance: realAtt?.checkInDistance ?? null,
+        pause: realAtt?.pause ?? null,
+        breakMinutes: realAtt?.breakMinutes ?? 0,
+        extraHoursInfo: realAtt?.extraHoursInfo ?? null,
       });
     });
 
@@ -264,8 +288,7 @@ export default function DailyView({
   const dailyStats = calculateDailyStats();
   const filteredAttendances = getFilteredAttendances();
 
-  const selectedDayOfWeek = selectedDate.getDay() === 0 ? 7 : selectedDate.getDay();
-  const isWorkingDay = companySettings.workDays.includes(selectedDayOfWeek);
+  const isWorkingDay = isWorkDay(companySettings.workDays, selectedDate.getDay());
 
   const now = new Date();
   const dateStr = selectedDate.toISOString().split('T')[0];
@@ -346,7 +369,7 @@ export default function DailyView({
         </div>
       </div>
 
-      {!isWorkingDay && (
+      {!isWorkingDay && filteredAttendances.length === 0 && (
         <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-4 flex items-center gap-3">
           <Calendar size={24} className="text-emerald-500" />
           <p className="text-sm text-[var(--text-muted)]">
@@ -505,6 +528,9 @@ export default function DailyView({
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(att.status)}`}>
                         {getStatusLabel(att.status)}
                       </span>
+                      {(att as any).restTag && (
+                        <span className="block mt-1 text-[10px] font-semibold text-amber-600">{(att as any).restTag}</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm font-mono text-[var(--text)]">{formatTime(att.checkIn)}</td>
                     <td className="px-6 py-4 text-sm text-[var(--text-muted)]">
