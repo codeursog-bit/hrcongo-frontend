@@ -13,6 +13,8 @@
 // ============================================================================
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useBasePath } from '@/hooks/useBasePath';
 import {
   Loader2, Users, AlertTriangle, TrendingUp, CalendarClock, ListChecks,
   Percent, ChevronLeft, ChevronRight, Stethoscope, FileCheck2, FileX2, Trophy,
@@ -39,7 +41,7 @@ type LeaderboardKey = 'maladie' | 'conventionnelle' | 'exceptionnelle' | 'injust
 
 
 
-export default function AbsencesEmployePage() {
+function AbsencesEmployeContent() {
   const now = new Date();
   const [tab, setTab] = useState<Tab>('dashboard');
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -952,4 +954,31 @@ function ErrorBlock() {
 }
 function EmptyLine() {
   return <p className="text-xs text-[var(--text-muted)] py-2">Aucune donnée pour cette période.</p>;
+}
+
+// 🔒 « Suivi des absences » : réservé à l'admin / RH. Un employé (ou manager) est renvoyé vers
+// « Mes absences », même s'il tape l'adresse à la main. (Le serveur refuse aussi : 403.)
+const TRACKING_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
+
+export default function AbsencesEmployePage() {
+  const router = useRouter();
+  const { bp } = useBasePath();
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let role = '';
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) role = JSON.parse(stored).role || '';
+    } catch {}
+    const ok = TRACKING_ROLES.includes(role);
+    setAllowed(ok);
+    if (!ok) router.replace(bp('/presences/absences/mon-espace'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (allowed !== true) {
+    return <div className="p-10 text-center text-sm text-[var(--text-muted)]">Chargement…</div>;
+  }
+  return <AbsencesEmployeContent />;
 }

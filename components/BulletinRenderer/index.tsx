@@ -225,6 +225,12 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
   // ── Cumuls annuels ─────────────────────────────────────────────────────────
   // Tous les champs viennent du backend (somme réelle Jan → mois actuel)
   // Le front ne calcule RIEN — il lit et affiche.
+  // ✅ À la demande du client (bulletin par défaut uniquement) : la colonne
+  // "Congés annuels" / Droits / Pris / Solde reste visible telle quelle
+  // (en-têtes intacts, structure/largeurs inchangées) — seules les VALEURS
+  // chiffrées sont masquées. Repasser à true pour réafficher les chiffres.
+  const SHOW_CONGES_VALUES = false;
+
   // Congés annuels — depuis ytd si disponibles
   // ✅ Congés depuis LeaveBalance (via ytd.droitsConge) — noms corrects
   const congesDroits  = nv(ytd.droitsConge ?? (payroll as any).congesDroits ?? 0);
@@ -787,9 +793,9 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
               <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{fmtD(ytdNetImp)}</td>
               <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{fmtD(ytdChargesSal)}</td>
               <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{fmtD(ytdCnssEmp)}</td>
-              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{congesDroits > 0 ? fmtD(congesDroits) : ''}</td>
-              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{congesPris   > 0 ? fmtD(congesPris)   : ''}</td>
-              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD, borderRight:BD })}>{congesSolde > 0 ? fmtD(congesSolde) : ''}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{SHOW_CONGES_VALUES && congesDroits > 0 ? fmtD(congesDroits) : ''}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD })}>{SHOW_CONGES_VALUES && congesPris   > 0 ? fmtD(congesPris)   : ''}</td>
+              <td style={tdR({ fontWeight:700, fontSize:12, borderLeft:BD, borderRight:BD })}>{SHOW_CONGES_VALUES && congesSolde > 0 ? fmtD(congesSolde) : ''}</td>
             </tr>
           </tbody>
         </table>

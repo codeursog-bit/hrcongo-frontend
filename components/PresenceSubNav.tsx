@@ -29,15 +29,22 @@ export default function PresenceSubNav({ userRole, canRecordAttendanceForAll = f
   const pathname = usePathname();
 
   const canManage = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(userRole);
+  // 🆕 Mêmes rôles que AbsenceSubNav / PermissionsSubNav : un employé (ou un manager) ne voit
+  // pas les écrans de gestion/suivi, il est envoyé directement vers « son espace ».
+  const canAdminAbsences = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
   const canManualPointage = canManage || canRecordAttendanceForAll; // 🆕 secrétaire : pointage manuel uniquement, pas les shifts
 
   const links = [
     { href: '/presences',                  label: 'Vue d\u2019ensemble', icon: LayoutGrid },
     { href: '/presences/pointage',         label: 'Ma pointeuse',       icon: Fingerprint },
     ...(canManualPointage ? [{ href: '/presences/pointage-manuel', label: 'Pointage manuel', icon: KeyRound }] : []),
-    { href: '/presences/absences',         label: 'Demande d\u2019absence', icon: FileText },
-    { href: '/presences/absences/suivi',   label: 'Suivi des absences', icon: CalendarDays },
-    { href: '/presences/permissions',      label: 'Permissions',        icon: Ticket },
+    canAdminAbsences
+      ? { href: '/presences/absences',            label: 'Demande d\u2019absence', icon: FileText }
+      : { href: '/presences/absences/mon-espace', label: 'Mes absences',           icon: FileText },
+    ...(canAdminAbsences ? [{ href: '/presences/absences/suivi', label: 'Suivi des absences', icon: CalendarDays }] : []),
+    canAdminAbsences
+      ? { href: '/presences/permissions',            label: 'Permissions',      icon: Ticket }
+      : { href: '/presences/permissions/mon-espace', label: 'Mes permissions',  icon: Ticket },
     ...(canManage ? [{ href: '/presences/shifts', label: 'Shifts', icon: CalendarClock }] : []),
     ...(canManage ? [{ href: '/presences/tablettes', label: 'Tablettes', icon: Tablet }] : []),
     ...(['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole) ? [{ href: '/presences/ecrans', label: 'Écrans QR', icon: MonitorSmartphone }] : []),

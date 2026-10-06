@@ -26,9 +26,10 @@ type Props = {
   requests: any[];
   onSelectEmployee: (emp: any) => void;
   onGoToRequest: (id: string) => void;
+  canSeeTracking?: boolean; // 🔒 carte « Suivi des absences » : admin / RH uniquement (défaut : oui)
 };
 
-export default function AbsencesOverview({ requests, onSelectEmployee, onGoToRequest }: Props) {
+export default function AbsencesOverview({ requests, onSelectEmployee, onGoToRequest, canSeeTracking = true }: Props) {
   const { bp } = useBasePath();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -165,12 +166,14 @@ export default function AbsencesOverview({ requests, onSelectEmployee, onGoToReq
 
       {/* ══════════════════ NAVIGATION ══════════════════ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {canSeeTracking && (
         <Link href={bp('/presences/absences/suivi')} className="group relative overflow-hidden rounded-2xl p-5 bg-emerald-500 text-white hover:bg-emerald-600 transition-colors">
           <LineChartIcon className="absolute -right-3 -bottom-3 opacity-20 group-hover:scale-110 transition-transform" size={110} />
           <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Suivi</p>
           <p className="text-lg font-bold mb-1">Suivi des absences →</p>
           <p className="text-xs opacity-80">Qui s'absente le plus, par employé, avec historique complet</p>
         </Link>
+        )}
         <button onClick={() => onGoToRequest('')} className="text-left group relative overflow-hidden rounded-2xl p-5 bg-amber-500 text-white hover:bg-amber-600 transition-colors">
           <ListChecks className="absolute -right-3 -bottom-3 opacity-20 group-hover:scale-110 transition-transform" size={110} />
           <p className="text-xs font-bold uppercase tracking-wider opacity-80 mb-1">Décisions</p>

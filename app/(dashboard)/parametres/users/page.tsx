@@ -210,7 +210,19 @@ export default function UserManagementPage() {
     if (!editingUser) return;
     setIsSaving(true);
     try {
-        await api.patch(`/users/${editingUser.id}`, editForm);
+        // ✅ On n'envoie au backend QUE les champs réellement modifiés.
+        // Avant : role / isActive / canRecordAttendanceForAll partaient toujours ensemble ;
+        // sur son propre compte le backend refuse ces champs (403) et l'attribution
+        // des fonctions (DG, comptable…) juste après n'était jamais exécutée.
+        const changedFields: Record<string, unknown> = {};
+        if (editForm.role !== editingUser.role) changedFields.role = editForm.role;
+        if (editForm.isActive !== editingUser.isActive) changedFields.isActive = editForm.isActive;
+        if (editForm.canRecordAttendanceForAll !== (editingUser.canRecordAttendanceForAll || false)) {
+          changedFields.canRecordAttendanceForAll = editForm.canRecordAttendanceForAll;
+        }
+        if (Object.keys(changedFields).length > 0) {
+          await api.patch(`/users/${editingUser.id}`, changedFields);
+        }
 
         // ✅ LOT A — enregistrement des fonctions (uniquement si modifiées)
         if (canManageFunctions && functionsAvailable) {

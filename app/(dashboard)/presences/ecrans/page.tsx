@@ -10,7 +10,7 @@
 // ============================================================================
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  MonitorSmartphone, Plus, Loader2, Trash2, ShieldCheck, Building2, Layers, KeyRound, Search, Pencil, Check, X, RefreshCw,
+  MonitorSmartphone, Plus, Loader2, Trash2, ShieldCheck, Building2, Layers, KeyRound, Search, Pencil, Check, X, RefreshCw, Copy, ExternalLink, Share2,
 } from 'lucide-react';
 import PresenceSubNav from '@/components/PresenceSubNav';
 import { useNotification } from '@/components/providers/NotificationProvider';
@@ -43,6 +43,31 @@ export default function EcransPage() {
   const [scope, setScope] = useState<ScreenScope>('COMPANY');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+
+  // 🆕 Lien public de la page tablette : à copier / ouvrir / partager (personne ne tape /ecran à la main)
+  const [publicUrl, setPublicUrl] = useState('/ecran');
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { setPublicUrl(`${window.location.origin}/ecran`); }, []);
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+    } catch {
+      // Repli (navigateur sans accès au presse-papiers, page non sécurisée…)
+      const ta = document.createElement('textarea');
+      ta.value = publicUrl;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch { /* rien de plus à tenter */ }
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const shareLink = async () => {
+    try { await (navigator as any).share({ title: 'Écran de pointage Konza RH', url: publicUrl }); } catch { /* annulé */ }
+  };
 
   useEffect(() => {
     try {
@@ -157,6 +182,34 @@ export default function EcransPage() {
           Ouvrez <code className="px-1.5 py-0.5 rounded bg-[var(--surface-2)]">/ecran</code> sur la tablette, puis saisissez ici le code qu&apos;elle affiche.
           Les employés pointent ensuite en scannant le QR depuis « Ma pointeuse ».
         </p>
+      </div>
+
+      {/* 🆕 Lien public de l'écran (à ouvrir sur la tablette) */}
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:items-center">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase text-[var(--text-muted)]">Lien public de l&apos;écran</p>
+          <p className="font-mono text-sm text-[var(--text)] truncate mt-0.5" title={publicUrl}>{publicUrl}</p>
+          <p className="text-[11px] text-[var(--text-muted)] mt-1">
+            À ouvrir sur la tablette (dans son navigateur). Elle affiche un code : saisissez-le ci-dessous pour l&apos;approuver.
+            Sans votre approbation, aucun QR ne s&apos;affiche.
+          </p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button type="button" onClick={copyLink}
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand)] text-white font-semibold px-4 py-2.5 text-sm">
+            {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? 'Lien copié' : 'Copier le lien'}
+          </button>
+          <a href={publicUrl} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] text-[var(--text)] font-semibold px-4 py-2.5 text-sm hover:bg-[var(--surface-2)]">
+            <ExternalLink size={16} /> Ouvrir
+          </a>
+          {typeof navigator !== 'undefined' && (navigator as any).share && (
+            <button type="button" onClick={shareLink} aria-label="Partager le lien"
+              className="inline-flex items-center rounded-xl border border-[var(--border)] text-[var(--text)] px-3 py-2.5 hover:bg-[var(--surface-2)]">
+              <Share2 size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Approbation */}
