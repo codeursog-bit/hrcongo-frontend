@@ -104,7 +104,7 @@ const DEFAULT_COMPANY: CompanySettings = {
   address: '', city: '', phone: '', email: '',
   bankName: '', bankAccount: '', bankRib: '',
   primaryColor: '#0EA5E9', secondaryColor: '#10B981',
-  latitude: 0, longitude: 0, allowedRadius: 100, gpsToleranceMeters: 0,
+  latitude: 0, longitude: 0, allowedRadius: 100, gpsToleranceMeters: 30,
   appliesCnssEmployer: true,
   appliesSeniorityLeaveBonus: true,
   echelonReminderEnabled: false, // 🆕 OFF par défaut — aucun rappel tant que le RH ne l'active pas
@@ -1447,6 +1447,13 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                           <AlertTriangle size={12} className="text-amber-500 shrink-0" />
                           Les employés ne pourront pointer que dans ce rayon.
                         </p>
+                        {companyData.allowedRadius > 0 && companyData.allowedRadius < 30 && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                            <AlertTriangle size={12} className="shrink-0" />
+                            Rayon très serré : le GPS d'un téléphone se trompe souvent de 15 à 50 m. Conseillé : 30 m minimum
+                            (ou gardez la marge GPS ci-dessous activée).
+                          </p>
+                        )}
                         {/* ✅ Incertitude GPS rendue explicite, comme demandé */}
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                           <AlertTriangle size={12} className="shrink-0" />
@@ -1683,6 +1690,31 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     Le GPS d'un téléphone se trompe de 10 à 50 m, surtout en intérieur ou à l'étage.
                     Avec une marge, un employé est accepté si la zone d'incertitude de son GPS touche le rayon.
                     Distance maximale acceptée = rayon + marge. 0 = strict.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {[
+                      { label: 'Strict', value: 0, hint: 'aucune marge' },
+                      { label: 'Standard', value: 30, hint: 'conseillé' },
+                      { label: 'Souple', value: 60, hint: 'GPS difficile / intérieur' },
+                    ].map(p => {
+                      const active = (companyData.gpsToleranceMeters ?? 0) === p.value;
+                      return (
+                        <button key={p.label} type="button"
+                          onClick={() => handleCompanyChange('gpsToleranceMeters', p.value)}
+                          className={`px-3 py-2 rounded-xl border text-sm font-bold transition-colors ${
+                            active
+                              ? 'bg-emerald-500 text-white border-emerald-500'
+                              : 'bg-[var(--surface-2)] text-[var(--text)] border-[var(--border)] hover:border-emerald-500'
+                          }`}>
+                          {p.label} · {p.value} m
+                          <span className={`block text-[10px] font-normal ${active ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>{p.hint}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-[var(--text-muted)] mb-2">
+                    Si le GPS du téléphone est trop flou (précision pire que le double de la marge, soit {Math.round((companyData.gpsToleranceMeters ?? 0) * 2)} m),
+                    la marge n'est pas appliquée : l'employé doit alors être dans le rayon exact ou connecté au wifi de l'entreprise (IP de confiance).
                   </p>
                   <input type="number" min={0} max={200} value={companyData.gpsToleranceMeters ?? 0}
                     onChange={e => handleCompanyChange('gpsToleranceMeters', Math.max(0, Math.min(200, parseFloat(e.target.value) || 0)))}

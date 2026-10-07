@@ -701,10 +701,10 @@ export default function ManuelPayrollPage() {
   useEffect(() => {
     if (!selectedEmp || !empDetail) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(runSim, 700);
+    debounceRef.current = setTimeout(runSim, 450);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [primes, indemnites, selectedEmp, empDetail, month, year, workedDays, ot10, ot25, ot50, ot100]);
+  }, [primes, indemnites, retenues, selectedEmp, empDetail, month, year, workedDays, ot10, ot25, ot50, ot100]);
 
   const runSim = async () => {
     if (!selectedEmp || !empDetail) return;
@@ -947,6 +947,19 @@ export default function ManuelPayrollPage() {
   const totalLoans      = loans.reduce((s,r) => s+n(r.amount), 0);
   const totalAdvances   = advances.reduce((s,r) => s+n(r.amount), 0);
   const totalRetenues   = retenues.reduce((s,r) => s+n(r.amount), 0);
+  // ✅ Net en temps réel : les retenues libres sont appliquées tout de suite à
+  // l'aperçu (sans attendre le recalcul serveur) ; le serveur confirme ensuite.
+  const simLive: SimResult | null = sim
+    ? (() => {
+        const delta = totalRetenues - Number(sim.manualDeductionTotal ?? 0);
+        return {
+          ...sim,
+          manualDeductionTotal: totalRetenues,
+          totalDeductions: sim.totalDeductions + delta,
+          netSalary: sim.netSalary - delta,
+        };
+      })()
+    : null;
 
   const dbPrimeSugg = bonusTemplates.filter(t => t.isTaxable);
   const dbIndemSugg = bonusTemplates.filter(t => !t.isTaxable);
@@ -1717,7 +1730,7 @@ export default function ManuelPayrollPage() {
                 </div>
 
                 <div className="p-4">
-                  <PayslipBreakdown result={sim} />
+                  <PayslipBreakdown result={simLive ?? sim} />
                 </div>
 
                 <div className="px-5 pb-5">

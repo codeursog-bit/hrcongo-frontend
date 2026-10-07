@@ -345,6 +345,9 @@ export default function AttendanceCheckInPage() {
 
   // ── GPS Watch ─────────────────────────────────────────────────────────────
   const handlePositionSuccessRef = React.useRef<(pos: GeolocationPosition) => void>();
+  // 🆕 Dernières lectures GPS (≈15 s) : au clic on retient la MEILLEURE (précision la plus fine),
+  // pas la première venue — le 1er relevé d'un GPS est souvent le moins précis (surtout en intérieur).
+  const recentReadingsRef = React.useRef<GeolocationPosition[]>([]);
 
   useEffect(() => {
     // 🆕 Le GPS n'est lu qu'en mode GPS : en mode scan, la tablette fixe est la preuve
@@ -353,6 +356,10 @@ export default function AttendanceCheckInPage() {
 
     const handlePositionSuccess = (pos: GeolocationPosition) => {
       const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
+      recentReadingsRef.current = [
+        ...recentReadingsRef.current.filter(p => Date.now() - p.timestamp <= 15_000),
+        pos,
+      ].slice(-12);
       // La position sert uniquement à être envoyée au backend : la décision
       // (zone autorisée ou non) et le message viennent exclusivement du serveur.
       setGeoState({
@@ -408,18 +415,49 @@ export default function AttendanceCheckInPage() {
     };
   }, [companySettings, modeReady, mode]);
 
-  // ✅ Capture une position 100% fraîche, exactement à l'instant du clic sur
-  // "Pointer" — plutôt que de réutiliser la dernière valeur en mémoire
-  // (potentiellement vieille de quelques secondes à cause du sondage
-  // périodique). C'est CETTE position, capturée à l'instant T du clic, qui
-  // est envoyée au backend juste après.
+  // ✅ Capture la MEILLEURE position récente au moment du clic sur "Pointer".
+  //  - on regroupe les lectures des ~10 dernières secondes + celles qui arrivent pendant l'attente
+  //  - dès qu'une lecture est assez précise (≤ 15 m) on s'arrête, sinon on attend au plus ~6 s
+  //  - on garde la lecture à la précision la plus fine (latitude, longitude et précision de la
+  //    MÊME lecture, pour rester cohérent). Le serveur reste seul juge de la zone.
   const captureFreshPosition = (): Promise<GeolocationPosition | null> => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) { resolve(null); return; }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => resolve(pos),
-        () => resolve(null), // échec de capture → on retombera sur le dernier relevé connu
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+
+      const GOOD_ENOUGH_M = 15;   // précision jugée suffisante : inutile d'attendre plus
+      const MAX_WAIT_MS   = 6000; // attente maximale d'une meilleure lecture
+      const MAX_AGE_MS    = 10_000; // âge max d'une lecture récente réutilisable
+
+      const candidates: GeolocationPosition[] = recentReadingsRef.current
+        .filter(p => Date.now() - p.timestamp <= MAX_AGE_MS);
+
+      const best = (): GeolocationPosition | null =>
+        candidates.reduce<GeolocationPosition | null>(
+          (b, p) => (!b || p.coords.accuracy < b.coords.accuracy ? p : b), null);
+
+      // Déjà une lecture récente et précise → on part tout de suite (pointage plus rapide)
+      const already = best();
+      if (already && already.coords.accuracy <= GOOD_ENOUGH_M) { resolve(already); return; }
+
+      let done = false;
+      let watchId: number | null = null;
+      let timer: ReturnType<typeof setTimeout> | null = null;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (timer) clearTimeout(timer);
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        resolve(best()); // null → on retombera sur le dernier relevé connu
+      };
+
+      timer = setTimeout(finish, MAX_WAIT_MS);
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          candidates.push(pos);
+          if (pos.coords.accuracy <= GOOD_ENOUGH_M) finish();
+        },
+        (err) => { if (err.code === 1 && candidates.length === 0) finish(); }, // refus : inutile d'attendre
+        { enableHighAccuracy: true, timeout: MAX_WAIT_MS, maximumAge: 0 },
       );
     });
   };

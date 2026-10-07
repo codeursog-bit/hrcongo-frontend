@@ -97,6 +97,7 @@ export const SalaryRecap = ({
         params.set('previewTaxable', String(previewBonus.isTaxable ?? true));
         params.set('previewCnss', String(previewBonus.isCnss ?? true));
         if (previewBonus.fiscalType) params.set('previewFiscalType', previewBonus.fiscalType);
+        if (previewBonus.bonusType) params.set('previewLabel', previewBonus.bonusType);
       }
     }
     const qs = params.toString();
@@ -126,6 +127,7 @@ export const SalaryRecap = ({
   const defaultLabel = previewBonus ? 'Brut / net (avec cette prime)' : 'Brut / net';
   const deductions: DeductionLine[] = Array.isArray(result?.deductions) ? result.deductions : [];
   const nonTaxable = Number(result?.nonTaxableBonuses ?? 0);
+  const gains: { label: string; amount: number; category: string }[] = Array.isArray(result?.gains) ? result.gains : [];
 
   return (
     <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl">
@@ -153,7 +155,7 @@ export const SalaryRecap = ({
           </div>
 
           {/* ── Détail : indemnités + chaque retenue ───────────────────── */}
-          {(deductions.length > 0 || nonTaxable > 0) && (
+          {(deductions.length > 0 || nonTaxable > 0 || gains.length > 0) && (
             <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
               <button
                 type="button"
@@ -161,17 +163,28 @@ export const SalaryRecap = ({
                 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-200 hover:text-slate-700"
               >
                 <ChevronDown size={12} className={`transition-transform ${showDetail ? '' : '-rotate-90'}`} />
-                Détail des retenues
+                Détail gains et retenues
               </button>
 
               {showDetail && (
                 <ul className="mt-2 space-y-1 text-xs">
-                  {nonTaxable > 0 && (
-                    <li className="flex items-center justify-between text-teal-700 dark:text-teal-300">
-                      <span>Indemnités non imposables</span>
-                      <span className="font-mono">+ {fmt(nonTaxable)}</span>
+                  {/* Chaque prime / indemnité sur sa propre ligne (jamais regroupées) */}
+                  {gains.map((g, i) => (
+                    <li key={`gain-${i}`}
+                      className={`flex items-center justify-between ${
+                        g.category === 'NON_TAXABLE'
+                          ? 'text-teal-700 dark:text-teal-300'
+                          : 'text-slate-600 dark:text-slate-200'}`}>
+                      <span>
+                        {g.label}
+                        <span className="ml-1 text-[10px] text-slate-400 dark:text-slate-300">
+                          {g.category === 'NON_TAXABLE' ? '(indemnité, ajoutée au net)'
+                            : g.category === 'TAXABLE_NO_CNSS' ? '(imposable, hors CNSS)' : '(imposable + CNSS)'}
+                        </span>
+                      </span>
+                      <span className="font-mono">+ {fmt(g.amount)}</span>
                     </li>
-                  )}
+                  ))}
                   {deductions.map((d) => (
                     <li key={`${d.kind}-${d.code}`} className="flex items-center justify-between text-slate-600 dark:text-slate-200">
                       <span>
