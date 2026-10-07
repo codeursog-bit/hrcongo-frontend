@@ -107,6 +107,35 @@ function optOutKey(): string {
 }
 
 // ============================================================================
+// 🏷️ Nom lisible de l'appareil (ex. « Chrome · Android »), envoyé au serveur avec
+//    l'abonnement : le super admin voit enfin QUEL appareil est actif ou mort.
+// ============================================================================
+function getDeviceLabel(): string {
+  try {
+    const ua = navigator.userAgent;
+    const os =
+      /Android/i.test(ua) ? 'Android'
+      : /iPhone|iPad|iPod/i.test(ua) ? 'iOS'
+      : /Windows/i.test(ua) ? 'Windows'
+      : /Mac OS X/i.test(ua) ? 'macOS'
+      : /Linux/i.test(ua) ? 'Linux'
+      : 'Appareil';
+    const browser =
+      /Edg\//i.test(ua) ? 'Edge'
+      : /OPR\//i.test(ua) ? 'Opera'
+      : /SamsungBrowser/i.test(ua) ? 'Samsung Internet'
+      : /Firefox\//i.test(ua) ? 'Firefox'
+      : /Chrome\//i.test(ua) ? 'Chrome'
+      : /Safari\//i.test(ua) ? 'Safari'
+      : 'Navigateur';
+    const installed = window.matchMedia?.('(display-mode: standalone)').matches ? ' (app installée)' : '';
+    return `${browser} · ${os}${installed}`.slice(0, 80);
+  } catch {
+    return 'Appareil';
+  }
+}
+
+// ============================================================================
 // HOOK PRINCIPAL
 // ============================================================================
 export function usePushNotifications() {
@@ -210,7 +239,7 @@ export function usePushNotifications() {
               try { uid = JSON.parse(localStorage.getItem('user') || '{}').id || ''; } catch {}
               const syncKey = `push-synced:${uid}:${current.endpoint}`;
               if (!sessionStorage.getItem(syncKey)) {
-                await api.post('/notifications/push/subscribe', current.toJSON());
+                await api.post('/notifications/push/subscribe', { ...current.toJSON(), deviceLabel: getDeviceLabel() });
                 sessionStorage.setItem(syncKey, '1');
               }
               // true UNIQUEMENT si le POST ci-dessus a réussi (sinon on tombe dans le catch)
@@ -263,7 +292,7 @@ export function usePushNotifications() {
       });
 
       // ✅ Envoyer l'abonnement au backend
-      await api.post('/notifications/push/subscribe', subscription.toJSON());
+      await api.post('/notifications/push/subscribe', { ...subscription.toJSON(), deviceLabel: getDeviceLabel() });
       localStorage.removeItem(optOutKey()); // réactivation explicite → on lève l'opt-out
       setOptedOut(false);
       setIsSubscribed(true);
