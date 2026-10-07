@@ -162,9 +162,9 @@ export function usePushNotifications() {
 
         setRegistration(reg);
 
-        // ✅ 5. Vérifier l'abonnement existant
-        const sub = await reg.pushManager.getSubscription();
-        setIsSubscribed(!!sub);
+        // ✅ 5. (modifié) On NE déclare plus « abonné » d'après le seul navigateur :
+        //    un abonnement peut être mort (410) alors que getSubscription() le renvoie
+        //    encore. isSubscribed passe à true seulement après synchro serveur réussie (étape 6).
 
         // ✅ 6. ACTIVATION PAR DÉFAUT : si le navigateur a déjà accordé la permission,
         //    on (ré)enregistre l'appareil automatiquement, sans clic. Couvre : première
@@ -174,6 +174,28 @@ export function usePushNotifications() {
           try {
             const activeReg = await waitForActivation(reg);
             let current = await activeReg.pushManager.getSubscription();
+
+            // 🆕 Le serveur connaît-il encore cet appareil ? Sinon il l'a supprimé (410 =
+            //    abonnement mort) ou ne l'a jamais reçu. Réenvoyer le même endpoint ne
+            //    servirait à rien : on le détruit pour obtenir un endpoint NEUF.
+            if (current) {
+              try {
+                const st = await api.get(
+                  `/notifications/push/status?endpoint=${encodeURIComponent(current.endpoint)}`,
+                ) as any;
+                if (st && st.registered === false) {
+                  await current.unsubscribe();
+                  current = null;
+                  // l'ancienne clé de synchro ne vaut plus rien
+                  Object.keys(sessionStorage)
+                    .filter((k) => k.startsWith('push-synced:'))
+                    .forEach((k) => sessionStorage.removeItem(k));
+                }
+              } catch (e) {
+                console.warn('[Push] Vérif statut serveur:', e);
+              }
+            }
+
             if (!current) {
               const { publicKey } = await api.get('/notifications/push/vapid-key') as any;
               if (publicKey) {
@@ -191,6 +213,7 @@ export function usePushNotifications() {
                 await api.post('/notifications/push/subscribe', current.toJSON());
                 sessionStorage.setItem(syncKey, '1');
               }
+              // true UNIQUEMENT si le POST ci-dessus a réussi (sinon on tombe dans le catch)
               setIsSubscribed(true);
             }
           } catch (e) {
