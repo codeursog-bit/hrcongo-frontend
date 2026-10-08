@@ -9,7 +9,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2, MessageSquare, ChevronDown, ChevronUp, Inbox, Clock } from 'lucide-react';
-import { approvalsApi, InboxItem, ApprovalKind } from '@/services/approvals';
+import { InboxItem, ApprovalKind } from '@/services/approvals';
+import { api } from '@/services/api';
 import ApprovalPanel from '@/components/approvals/ApprovalPanel';
 
 const fmtDate = (d: string) =>
@@ -18,17 +19,25 @@ const kindOf = (t: InboxItem['requestType']): ApprovalKind =>
   t === 'LOAN' ? 'loan' : t === 'ADVANCE' ? 'advance' : t === 'LEAVE' ? 'leave' : 'absence';
 const labelOf = (t: InboxItem['requestType']) =>
   t === 'LOAN' ? 'Prêt' : t === 'ADVANCE' ? 'Avance' : t === 'LEAVE' ? 'Congé' : 'Absence';
-const keyOf = (i: InboxItem) => `${i.requestType}:${i.requestId}`;
+// Élément de la boîte « toutes entreprises » : la sienne + celles où l'admin lui a donné une fonction d'avis.
+type AvisItem = InboxItem & { companyId?: string; companyName?: string; external?: boolean };
+const keyOf = (i: AvisItem) => `${i.companyId ?? ''}:${i.requestType}:${i.requestId}`;
 
 export default function AvisPage() {
-  const [items, setItems] = useState<InboxItem[]>([]);
+  const [items, setItems] = useState<AvisItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await approvalsApi.getInbox();
+      let res: { items: AvisItem[] };
+      try {
+        res = await api.get<{ items: AvisItem[] }>('/approvals/inbox/all');
+      } catch {
+        // Backend pas encore à jour → boîte habituelle (sa propre entreprise).
+        res = await api.get<{ items: AvisItem[] }>('/approvals/inbox');
+      }
       setItems(res.items || []);
       setError(null);
     } catch (e: any) {
@@ -86,6 +95,11 @@ export default function AvisPage() {
                         {labelOf(it.requestType)}
                       </span>
                       <span className="text-sm font-bold text-[var(--text)] truncate">{it.employeeName}</span>
+                      {it.external && it.companyName && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300">
+                          {it.companyName}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-[var(--text)] mt-1">{it.detail}</p>
                     <p className="text-xs text-[var(--text-muted)] mt-0.5">
@@ -114,6 +128,7 @@ export default function AvisPage() {
                     <ApprovalPanel
                       kind={kindOf(it.requestType)}
                       requestId={it.requestId}
+                      companyId={it.external ? it.companyId : undefined}
                       onChanged={load}
                     />
                   </div>

@@ -14,6 +14,7 @@ import {
   Printer, Download, X, Banknote, Package, HelpCircle, Wallet, Lock, Eye,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AmendmentTrace, { RequestedHint } from '@/components/loans/AmendmentTrace';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { api } from '@/services/api';
 import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
@@ -356,7 +357,8 @@ export default function MonEspacePretsAvancesPage() {
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Montant</p><p className="font-bold text-[var(--text)]">{Number(selected.data.amount).toLocaleString('fr-FR')} FCFA</p></div>
+                    <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Montant</p><p className="font-bold text-[var(--text)]">{Number(selected.data.amount).toLocaleString('fr-FR')} FCFA</p><RequestedHint item={selected.data} /></div>
+                    <AmendmentTrace item={selected.data} audience="employee" />
                     {selected.kind === 'loan' && (
                       <div className="p-3 rounded-xl bg-[var(--surface-2)]"><p className="text-[11px] text-[var(--text-muted)]">Solde restant</p><p className="font-bold text-[var(--text)]">{Number(selected.data.remainingBalance).toLocaleString('fr-FR')} FCFA</p></div>
                     )}

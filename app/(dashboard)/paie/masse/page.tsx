@@ -98,6 +98,16 @@ export default function BatchPayrollPage() {
     });
   };
 
+  // ✅ "Appliquer à tous" : écrase la saisie de TOUS les employés (bornée 0…workDays)
+  const handleApplyAll = (value: string) => {
+    const n = Number(value.replace(',', '.'));
+    if (value.trim() === '' || !Number.isFinite(n)) return;
+    const v = String(Math.min(Math.max(0, n), workDays));
+    setDaysInput(Object.fromEntries(employees.map((e: any) => [e.id, v])));
+  };
+  // ✅ "Revenir au pointage" pour tous : supprime toute saisie manuelle
+  const handleResetAll = () => setDaysInput({});
+
   // Re-estimation (avec pause de 400 ms pour ne pas appeler le back à chaque frappe)
   useEffect(() => {
     if (selectedIds.length === 0) {
@@ -275,6 +285,8 @@ export default function BatchPayrollPage() {
               daysInput={daysInput}
               onDaysChange={handleDaysChange}
               onDaysReset={handleDaysReset}
+              onApplyAll={handleApplyAll}
+              onResetAll={handleResetAll}
               estimation={estimation}
               isLoadingEstimation={isLoadingEstimation} />
           )}

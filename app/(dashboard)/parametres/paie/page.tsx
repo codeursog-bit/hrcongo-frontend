@@ -61,6 +61,7 @@ interface PayrollSettings {
   workDaysPerMonth:        number;
   workHoursPerDay:         number;
   officialStartHour:       number;
+  officialStartMinute:     number;   // 🆕 minute de début (8h30)
   lateToleranceMinutes:    number;
   officialEndHour:         number;   // 🆕 fin de journée (fermeture auto + heures en plus)
   breakEnabled:            boolean;  // 🆕 pause
@@ -92,6 +93,7 @@ const DEFAULTS: PayrollSettings = {
   workDaysPerMonth:        26,
   workHoursPerDay:         8,
   officialStartHour:       8,
+  officialStartMinute:     0,
   lateToleranceMinutes:    0,
   officialEndHour:         17,
   breakEnabled:            false,
@@ -214,6 +216,7 @@ export default function PayrollSettingsPage() {
             workDaysPerMonth:        data.workDaysPerMonth        ?? 26,
             workHoursPerDay:         data.workHoursPerDay         ?? 8,
             officialStartHour:       data.officialStartHour       ?? 8,
+            officialStartMinute:     data.officialStartMinute     ?? 0,
             lateToleranceMinutes:    data.lateToleranceMinutes    ?? 0,
             officialEndHour:         data.officialEndHour         ?? 17,
             breakEnabled:            data.breakEnabled            ?? false,
@@ -335,7 +338,9 @@ const handleSave = async () => {
     );
   }
 
-  const lateThreshold = `${String(settings.officialStartHour).padStart(2, '0')}h${String(settings.lateToleranceMinutes).padStart(2, '0')}`;
+  // 🆕 seuil de retard = début (heure + minute) + tolérance
+  const lateTotalMin = settings.officialStartHour * 60 + settings.officialStartMinute + settings.lateToleranceMinutes;
+  const lateThreshold = `${String(Math.floor(lateTotalMin / 60) % 24).padStart(2, '0')}h${String(lateTotalMin % 60).padStart(2, '0')}`;
 
   return (
     <div className="max-w-5xl mx-auto pb-24 px-4">
@@ -815,14 +820,17 @@ const handleSave = async () => {
                 <div className="grid grid-cols-2 gap-4 mb-5">
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Heure de début officielle</label>
-                    <select value={settings.officialStartHour}
-                      onChange={e => set('officialStartHour', +e.target.value)}
-                      className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20"
-                    >
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <option key={i} value={i}>{String(i).padStart(2, '0')}h00</option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <input type="number" inputMode="numeric" min={0} max={23} aria-label="Heure de début"
+                        value={settings.officialStartHour}
+                        onChange={e => set('officialStartHour', Math.min(23, Math.max(0, parseInt(e.target.value) || 0)))}
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-center text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20" />
+                      <span className="font-bold text-[var(--text-muted)]">h</span>
+                      <input type="number" inputMode="numeric" min={0} max={59} aria-label="Minute de début"
+                        value={settings.officialStartMinute}
+                        onChange={e => set('officialStartMinute', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-center text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20" />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1.5">Tolérance retard (min)</label>

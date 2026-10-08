@@ -329,10 +329,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Échec silencieux (ex. backend pas encore déployé) → le menu reste identique à avant.
   useEffect(() => {
     if (!localStorage.getItem('user')) return;
-    api.get<{ canSign?: boolean; functions?: unknown[] }>('/approvals/me')
+    api.get<{ canSign?: boolean; functions?: unknown[]; externalCompanies?: unknown[] }>('/approvals/me')
       .then((me) => {
         setCanSignPersonally(!!me?.canSign);
-        setHasApprovalFunction((me?.functions?.length ?? 0) > 0);
+        setHasApprovalFunction((me?.functions?.length ?? 0) > 0 || (me?.externalCompanies?.length ?? 0) > 0);
       })
       .catch(() => {});
   }, []);
@@ -380,7 +380,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const isActive = (itemPath: string) => {
     const full = buildPath(itemPath);
-    if (full === '/presences') return pathname === full;
+    if (itemPath === '/presences') return pathname === full; // exact (marche aussi avec basePath)
     // Manager : « Performance Équipe » (/performance) ne doit pas rester allumé sur sa page « Ma Performance »
     if (full.endsWith('/performance') && user?.role === 'MANAGER' && pathname.startsWith(full + '/mon-espace')) return false;
     return pathname === full || pathname.startsWith(full + '/');
@@ -420,6 +420,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
           },
         ]
       : [];
+
+  // 🆕 Admin / RH : ils ont aussi leur propre fiche employé → « Ma Pointeuse » (+ « Avis à donner »
+  //    s'ils ont une fonction de validation) juste après le Tableau de bord.
+  const isAdminLike = !!user && ['ADMIN', 'HR_MANAGER'].includes(user.role);
+  const adminSelfItems: NavItem[] = isAdminLike
+    ? [
+        {
+          id: 'pointage_gps_admin',
+          label: 'Ma Pointeuse',
+          icon: ScanLine,
+          path: '/presences/pointage',
+          allowedRoles: ['ADMIN', 'HR_MANAGER'],
+        },
+        ...(hasApprovalFunction
+          ? [
+              {
+                id: 'avis',
+                label: 'Avis à donner',
+                icon: MessageSquare,
+                path: '/avis',
+                allowedRoles: ['ADMIN', 'HR_MANAGER'],
+              } as NavItem,
+            ]
+          : []),
+      ]
+    : [];
 
   // ✅ LOT A — "Ma signature" : visible quel que soit le rôle, si le droit est accordé.
   const approvalExtraItems: NavItem[] = [
@@ -524,15 +550,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               mon_equipe: 'Mon équipe', performance_manager: 'Mon équipe', conges_manager: 'Mon équipe', presences_equipe_manager: 'Mon équipe', pointage_manuel_manager: 'Mon équipe',
               pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace', ma_performance_manager: 'Mon espace',
               mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace', ma_performance: 'Mon espace',
-              ma_signature: 'Mon espace', avis: 'Mon espace',
+              ma_signature: 'Mon espace', avis: 'Mon espace', pointage_gps_admin: 'Mon espace',
               recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 
-            const items = [
-              ...navItems.filter(item => user && item.allowedRoles.includes(user.role)),
+            const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role));
+            // Admin/RH : « Avis à donner » est déjà placé sous le tableau de bord → pas de doublon en bas
+            const trailingExtras = [
               ...secretaryExtraItems,
-              ...approvalExtraItems,
+              ...approvalExtraItems.filter(i => !(isAdminLike && i.id === 'avis')),
             ];
+            const items = isAdminLike
+              ? [
+                  ...baseItems.filter(i => i.id === 'dashboard'),
+                  ...adminSelfItems,
+                  ...baseItems.filter(i => i.id !== 'dashboard'),
+                  ...trailingExtras,
+                ]
+              : [...baseItems, ...trailingExtras];
 
             let lastCategory: string | null = null;
 

@@ -9,7 +9,7 @@
 import React from 'react';
 import {
   Clock, LogIn, LogOut, Timer, Building2, Briefcase, Phone,
-  BadgeCheck, CalendarClock, StickyNote,
+  BadgeCheck, CalendarClock, StickyNote, MapPin, Wifi, ChevronDown,
 } from 'lucide-react';
 import SlideOver from './SlideOver';
 import { PUNCH_METHOD_LABEL } from '@/lib/punch-method';
@@ -24,6 +24,20 @@ const STATUS_CONFIG: Record<string, { label: string; badge: string }> = {
   LEAVE:         { label: 'Congé',             badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
   HOLIDAY:       { label: 'Férié',             badge: 'bg-[var(--surface-2)] text-[var(--text-muted)]' },
 };
+
+// 🆕 Trace de la décision de zone enregistrée avec le pointage (voir GeoTrace côté serveur)
+export interface GeoTrace {
+  basis: 'RADIUS' | 'TOLERANCE' | 'TRUSTED_IP';
+  distance: number;
+  radius: number;
+  accuracy: number | null;
+  tolerance: number | null;
+  site: string;
+  ip: string | null;
+  ipKind?: 'ADMIN' | 'LEARNED';
+  ipLabel?: string;
+  ipPeople?: number;
+}
 
 export interface EmployeeDayDetail {
   employee: {
@@ -41,6 +55,8 @@ export interface EmployeeDayDetail {
   checkOutMethod?: string | null;
   checkInSource?: string | null;
   checkOutSource?: string | null;
+  checkInGeo?: GeoTrace | null;
+  checkOutGeo?: GeoTrace | null;
 }
 
 export default function EmployeeDayDetailSidebar({
@@ -59,6 +75,53 @@ export default function EmployeeDayDetailSidebar({
         {method ? (PUNCH_METHOD_LABEL[method] || method) : 'Méthode non enregistrée'}
         {source ? ` · ${source}` : ''}
       </p>
+    );
+  };
+  // 🆕 Sur quoi la zone a été validée : distance, marge GPS ou wifi. Une ligne discrète, détails au clic.
+  const fmtDist = (m: number) => (m >= 1000 ? `${(m / 1000).toFixed(1).replace('.', ',')} km` : `${m} m`);
+  const geoLine = (time: string | undefined, geo?: GeoTrace | null) => {
+    if (!time || !geo) return null;
+    const label =
+      geo.basis === 'RADIUS' ? `Zone · distance ${fmtDist(geo.distance)}`
+      : geo.basis === 'TOLERANCE' ? `Zone · marge GPS (${fmtDist(geo.distance)})`
+      : `Zone · wifi ${geo.ipKind === 'LEARNED' ? 'appris' : 'de confiance'}`;
+    const rows: Array<[string, string]> = [
+      ['Raison',
+        geo.basis === 'RADIUS' ? 'Dans le rayon'
+        : geo.basis === 'TOLERANCE' ? 'Hors rayon, accepté grâce à la marge'
+        : 'GPS hors zone, accepté par le wifi'],
+      ['Site', geo.site],
+      ['Distance GPS', fmtDist(geo.distance)],
+      ['Rayon', fmtDist(geo.radius)],
+    ];
+    if (geo.accuracy != null) rows.push(['Précision GPS', `± ${geo.accuracy} m`]);
+    if (geo.basis === 'TOLERANCE' && geo.tolerance != null) {
+      rows.push(['Marge appliquée',
+        `${geo.tolerance} m : ${fmtDist(geo.distance)} − ${geo.tolerance} = ${fmtDist(Math.max(0, geo.distance - geo.tolerance))} ≤ ${fmtDist(geo.radius)}`]);
+    }
+    if (geo.basis === 'TRUSTED_IP') {
+      rows.push(['Wifi',
+        geo.ipKind === 'LEARNED'
+          ? `IP apprise (${geo.ipPeople ?? '?'} personnes, < 24 h)`
+          : `IP de confiance${geo.ipLabel ? ` « ${geo.ipLabel} »` : ''}`]);
+    }
+    if (geo.ip) rows.push(['IP vue', geo.ip]);
+    return (
+      <details className="mt-1.5 group">
+        <summary className="flex items-center gap-1 text-[11px] text-[var(--text-muted)] cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:text-[var(--text)]">
+          {geo.basis === 'TRUSTED_IP' ? <Wifi size={11} className="shrink-0" /> : <MapPin size={11} className="shrink-0" />}
+          <span>{label}</span>
+          <ChevronDown size={10} className="shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
+        <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-[11px] text-[var(--text-muted)]">
+          {rows.map(([k, v]) => (
+            <React.Fragment key={k}>
+              <dt className="opacity-70">{k}</dt>
+              <dd className={`text-[var(--text)] break-words ${k === 'IP vue' ? 'font-mono' : ''}`}>{v}</dd>
+            </React.Fragment>
+          ))}
+        </dl>
+      </details>
     );
   };
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -121,11 +184,13 @@ export default function EmployeeDayDetailSidebar({
           <div className="flex items-center gap-1.5 text-[var(--text-muted)] mb-1"><LogIn size={13} /><span className="text-[11px] font-bold uppercase tracking-wider">Entrée</span></div>
           <p className="text-lg font-bold font-mono text-[var(--text)]">{fmtTime(detail.checkIn)}</p>
           {methodLine(detail.checkIn, detail.checkInMethod, detail.checkInSource)}
+          {geoLine(detail.checkIn, detail.checkInGeo)}
         </div>
         <div className="p-3.5 rounded-xl border border-[var(--border)]">
           <div className="flex items-center gap-1.5 text-[var(--text-muted)] mb-1"><LogOut size={13} /><span className="text-[11px] font-bold uppercase tracking-wider">Sortie</span></div>
           <p className="text-lg font-bold font-mono text-[var(--text)]">{fmtTime(detail.checkOut)}</p>
           {methodLine(detail.checkOut, detail.checkOutMethod, detail.checkOutSource)}
+          {geoLine(detail.checkOut, detail.checkOutGeo)}
         </div>
         <div className="p-3.5 rounded-xl border border-[var(--border)]">
           <div className="flex items-center gap-1.5 text-[var(--text-muted)] mb-1"><Timer size={13} /><span className="text-[11px] font-bold uppercase tracking-wider">Durée</span></div>

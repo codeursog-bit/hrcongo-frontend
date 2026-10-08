@@ -26,6 +26,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import CashPaymentModal from '@/components/loans/CashPaymentModal';
 import EditDebtModal from '@/components/loans/EditDebtModal';
+import AmendmentTrace from '@/components/loans/AmendmentTrace';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER']; // peut enregistrer/supprimer un remboursement
 const FULL_ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN']; // peut modifier/supprimer un prêt ou une avance déjà validé(e)
@@ -239,7 +240,8 @@ export default function EmployeeDebtDetailPage() {
             const logs = logsByItem[key] ?? [];
             const isOpen = !!expanded[key];
             const canRepay = (r.kind === 'loan' && r.status === 'ACTIVE') || (r.kind === 'advance' && r.status === 'APPROVED');
-            const canEditThis = canEditDebt || (r.status === 'PENDING' && canManageRepayments);
+            // Modification : uniquement tant que la demande est en attente (protège l'employé et le RH)
+            const canEditThis = ['PENDING', 'PENDING_DG'].includes(r.status) && canManageRepayments;
             const canDeleteThis = canEditDebt || (['PENDING', 'REJECTED', 'CANCELLED'].includes(r.status) && canManageRepayments);
             const hasLogHistory = ['ACTIVE', 'PAID'].includes(r.status) || (r.kind === 'advance' && ['APPROVED', 'DEDUCTED', 'PAID'].includes(r.status));
 
@@ -257,6 +259,9 @@ export default function EmployeeDebtDetailPage() {
                       Reste : {fmt(Number(r.remainingBalance ?? r.amount))}
                       {r.rejectionReason ? ` · Refusé : ${r.rejectionReason}` : ''}
                     </p>
+                    {(r.requestedAmount != null || (r.amendments?.length ?? 0) > 0) && (
+                      <div className="mt-2"><AmendmentTrace item={r} /></div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>

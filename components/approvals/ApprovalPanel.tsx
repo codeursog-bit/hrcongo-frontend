@@ -17,6 +17,7 @@ import {
   Zap, Ban, UserX, X, AlertTriangle, BadgeCheck,
 } from 'lucide-react';
 import { approvalsApi, ApprovalKind, ApprovalStateView } from '@/services/approvals';
+import { api } from '@/services/api';
 
 interface Props {
   kind: ApprovalKind;
@@ -27,6 +28,9 @@ interface Props {
   onState?: (state: ApprovalStateView | null) => void;
   // Appelé après une action qui change la demande (finaliser, annuler, avis)
   onChanged?: () => void;
+  // ✅ Avis inter-entreprises : demande d'une AUTRE entreprise que celle de l'utilisateur
+  // (fonction d'avis donnée par l'admin multi-entreprises). Absent = comportement habituel.
+  companyId?: string;
 }
 
 const ACTIVE_PENDING = ['WAITING_OPINIONS', 'NEEDS_CONFIRMATION'];
@@ -34,7 +38,10 @@ const ACTIVE_PENDING = ['WAITING_OPINIONS', 'NEEDS_CONFIRMATION'];
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
 
-export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState, onChanged }: Props) {
+export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState, onChanged, companyId }: Props) {
+  // Si companyId est fourni, on appelle les routes avec ?companyId= ; sinon, service habituel.
+  const qs = companyId ? `?companyId=${encodeURIComponent(companyId)}` : '';
+  const base = `/approvals/requests/${kind}/${requestId}`;
   const [state, setState] = useState<ApprovalStateView | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<'finalize' | 'cancel' | null>(null);
@@ -48,7 +55,7 @@ export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState
 
   const load = useCallback(async () => {
     try {
-      const s = await approvalsApi.getState(kind, requestId);
+      const s: ApprovalStateView = companyId ? await api.get<ApprovalStateView>(`${base}/state${qs}`) : await approvalsApi.getState(kind, requestId);
       setState(s);
       onState?.(s);
     } catch {
@@ -59,7 +66,7 @@ export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, requestId]);
+  }, [kind, requestId, companyId]);
 
   useEffect(() => {
     setLoading(true);
@@ -85,7 +92,8 @@ export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState
     setBusy(which);
     setError(null);
     try {
-      if (which === 'finalize') await approvalsApi.finalize(kind, requestId);
+      if (companyId) await api.post(`${base}/${which === 'finalize' ? 'finalize' : 'cancel-pending'}${qs}`, {});
+      else if (which === 'finalize') await approvalsApi.finalize(kind, requestId);
       else await approvalsApi.cancelPending(kind, requestId);
       await load();
       onChanged?.();
@@ -101,11 +109,13 @@ export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState
     setSaving(true);
     setError(null);
     try {
-      await approvalsApi.giveOpinion(kind, requestId, {
+      const body = {
         functionCode: opinionFor.code,
         opinion,
         comment: comment.trim() || undefined,
-      });
+      };
+      if (companyId) await api.post(`${base}/opinions${qs}`, body);
+      else await approvalsApi.giveOpinion(kind, requestId, body);
       setOpinionFor(null);
       setComment('');
       setOpinion('FAVORABLE');

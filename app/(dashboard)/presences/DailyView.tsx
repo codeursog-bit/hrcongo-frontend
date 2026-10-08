@@ -241,6 +241,9 @@ export default function DailyView({
         checkInSiteName: realAtt?.checkInSiteName ?? null,
         checkOutSiteName: realAtt?.checkOutSiteName ?? null,
         checkInDistance: realAtt?.checkInDistance ?? null,
+        // 🆕 Sur quoi la zone a été validée (distance / marge GPS / wifi) — affiché dans le panneau de détail
+        checkInGeo: realAtt?.checkInGeo ?? null,
+        checkOutGeo: realAtt?.checkOutGeo ?? null,
         pause: realAtt?.pause ?? null,
         breakMinutes: realAtt?.breakMinutes ?? 0,
         extraHoursInfo: realAtt?.extraHoursInfo ?? null,

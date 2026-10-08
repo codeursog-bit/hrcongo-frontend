@@ -16,6 +16,7 @@ import { useAlert } from '@/components/providers/AlertProvider';
 
 import { FancySelect } from '@/components/ui/FancySelect';
 import { approvalsApi, ApprovalFunctionDef, UserFunctionItem } from '@/services/approvals';
+import ExternalFunctionsSection from '@/components/approvals/ExternalFunctionsSection';
 
 // --- Types ---
 
@@ -539,6 +540,10 @@ export default function UserManagementPage() {
                                 })}
                             </div>
                         </div>
+                        )}
+
+                        {canManageFunctions && editingUser.role !== 'SUPER_ADMIN' && (
+                            <ExternalFunctionsSection userId={editingUser.id} />
                         )}
 
                         <div>

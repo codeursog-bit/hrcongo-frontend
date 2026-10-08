@@ -22,6 +22,7 @@ import {
   CreditCard, Calendar, SlidersHorizontal
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AmendmentTrace, { RequestedHint } from '@/components/loans/AmendmentTrace';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
@@ -659,7 +660,7 @@ export default function LoansManagementPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[var(--text-muted)]">{l.type === 'ARGENT' ? 'Prêt argent' : l.type === 'MARCHANDISE' ? 'Marchandise' : 'Autre'}</td>
-                      <td className="px-4 py-3 font-semibold">{Number(l.amount).toLocaleString('fr-FR')} FCFA</td>
+                      <td className="px-4 py-3 font-semibold">{Number(l.amount).toLocaleString('fr-FR')} FCFA<RequestedHint item={l} /></td>
                       <td className="px-4 py-3 text-[var(--text-muted)]">{Number(l.monthlyRepayment).toLocaleString('fr-FR')} FCFA</td>
                       <td className={`px-4 py-3 font-semibold ${Number(l.remainingBalance) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{Number(l.remainingBalance).toLocaleString('fr-FR')} FCFA</td>
                       <td className="px-4 py-3">
@@ -722,6 +723,7 @@ export default function LoansManagementPage() {
                       tone="slate"
                     />
                   </div>
+                  <AmendmentTrace item={selectedLoan} />
                   {selectedLoan.attachmentUrl && (
                     <a href={selectedLoan.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-emerald-600 hover:underline">
                       <Paperclip size={14} /> Voir la pièce jointe
@@ -825,7 +827,7 @@ export default function LoansManagementPage() {
                   )}
 
                   <div className="flex gap-2 pt-2">
-                    {DRH_ROLES.includes(userRole) && (
+                    {DRH_ROLES.includes(userRole) && ['PENDING', 'PENDING_DG'].includes(selectedLoan.status) && (
                       <button onClick={openEditLoan} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</button>
                     )}
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedLoan.status === 'PENDING') && (
@@ -926,7 +928,7 @@ export default function LoansManagementPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 font-semibold">{Number(a.amount).toLocaleString('fr-FR')} FCFA</td>
+                      <td className="px-4 py-3 font-semibold">{Number(a.amount).toLocaleString('fr-FR')} FCFA<RequestedHint item={a} /></td>
                       <td className="px-4 py-3 text-[var(--text-muted)]">{MONTH_LABELS[a.deductMonth - 1]} {a.deductYear}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.cls}`}><span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} /> {cfg.label}</span>
@@ -983,6 +985,8 @@ export default function LoansManagementPage() {
                       tone="slate"
                     />
                   </div>
+
+                  <AmendmentTrace item={selectedAdvance} />
 
                   {Number(selectedAdvance.amount) > 0 && ['APPROVED', 'PAID', 'DEDUCTED'].includes(selectedAdvance.status) && (
                     <div>
@@ -1077,7 +1081,7 @@ export default function LoansManagementPage() {
                   )}
 
                   <div className="flex gap-2">
-                    {DRH_ROLES.includes(userRole) && (
+                    {DRH_ROLES.includes(userRole) && selectedAdvance.status === 'PENDING' && (
                       <button onClick={openEditAdvance} className="flex-1 py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] hover:bg-[var(--surface-2)] flex items-center justify-center gap-1.5"><Pencil size={13} /> Modifier</button>
                     )}
                     {(FULL_ADMIN_ROLES.includes(userRole) ? true : selectedAdvance.status === 'PENDING') && (
@@ -1447,14 +1451,23 @@ export default function LoansManagementPage() {
 
       {/* ── Modale de modification (RH/Admin) ──────────────────────────────── */}
       {editModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditModal(null)}>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setEditModal(null)}>
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-[var(--text)] mb-1">
               Modifier {editModal === 'loan' ? 'le prêt' : "l'avance"}
             </h3>
             <p className="text-xs text-[var(--text-muted)] mb-5">
-              Réservé RH/Admin — n'affecte pas les remboursements déjà enregistrés.
+              Réservé RH/Admin — le montant saisi devient le montant retenu (paie et cumuls). La demande initiale reste visible dans l'historique et le demandeur est prévenu.
             </p>
+            {(() => {
+              const cur: any = editModal === 'loan' ? selectedLoan : selectedAdvance;
+              const orig = cur?.requestedAmount ?? cur?.amount;
+              return orig != null ? (
+                <p className="text-xs mb-4 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/15 text-amber-700 dark:text-amber-300">
+                  Montant demandé à l'origine : <b>{Number(orig).toLocaleString('fr-FR')} FCFA</b>
+                </p>
+              ) : null;
+            })()}
 
             <div className="space-y-4">
               <div>

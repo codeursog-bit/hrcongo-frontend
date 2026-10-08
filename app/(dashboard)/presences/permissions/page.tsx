@@ -12,7 +12,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   ArrowRight, Printer, Download, Plus, Stethoscope, Briefcase,
-  HelpCircle, MapPin, History, LogOut, Info, LayoutDashboard, Ticket, Eye,
+  HelpCircle, MapPin, History, LogOut, Info, LayoutDashboard, Ticket, Eye, Trash2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -106,6 +106,26 @@ export default function PermissionsManagementPage() {
       setRejectionReason('');
     } catch (e: any) {
       alert(e?.message || 'Erreur lors de la mise à jour');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 🗑️ Suppression d'un ticket (Admin / RH) — confirmation + sélection du ticket suivant
+  const handleDelete = async () => {
+    if (!selected) return;
+    const who = `${selected.employee?.firstName ?? ''} ${selected.employee?.lastName ?? ''}`.trim();
+    if (!window.confirm(`Supprimer définitivement le ticket de ${who} ? Cette action est irréversible.`)) return;
+    setIsProcessing(true);
+    try {
+      await api.delete(`/permission-tickets/${selected.id}`);
+      const rest = tickets.filter(t => t.id !== selected.id);
+      setTickets(rest);
+      setSelectedId(rest[0]?.id ?? null);
+      setRejectMode(false);
+      setRejectionReason('');
+    } catch (e: any) {
+      alert(e?.message || 'Erreur lors de la suppression');
     } finally {
       setIsProcessing(false);
     }
@@ -339,6 +359,11 @@ export default function PermissionsManagementPage() {
                   <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                     <Eye size={16} /> Aperçu du ticket
                   </button>
+                  {canApprove && (
+                    <button onClick={handleDelete} disabled={isProcessing} className="w-full py-2.5 border border-red-200 dark:border-red-900/50 text-sm font-semibold rounded-xl text-red-600 flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-40">
+                      <Trash2 size={16} /> Supprimer ce ticket
+                    </button>
+                  )}
                 </div>
 
                 {/* Rendu réel hors-écran : nécessaire pour la capture d'impression navigateur */}

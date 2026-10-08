@@ -2,7 +2,7 @@
 // FILE: SelectionStep.tsx
 // ✅ Affiche l'estimation venant du back (via isLoadingEstimation prop)
 // ===========================
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Wallet, Loader2, RotateCcw } from 'lucide-react';
 
@@ -15,6 +15,8 @@ interface SelectionStepProps {
   daysInput: Record<string, string>;      // jours saisis à la main
   onDaysChange: (id: string, value: string) => void;
   onDaysReset: (id: string) => void;
+  onApplyAll: (value: string) => void;    // applique une valeur à tous les employés
+  onResetAll: () => void;                 // annule toute saisie manuelle
   estimation: {
     count: number;
     gross: number;
@@ -26,10 +28,13 @@ interface SelectionStepProps {
 
 export default function SelectionStep({
   employees, selectedIds, onSelectionChange,
-  workDays, autoDays, daysInput, onDaysChange, onDaysReset,
+  workDays, autoDays, daysInput, onDaysChange, onDaysReset, onApplyAll, onResetAll,
   estimation, isLoadingEstimation,
 }: SelectionStepProps) {
   const fmt = (val: number) => (val || 0).toLocaleString('fr-FR');
+  const [bulkDays, setBulkDays] = useState('');
+  const editedCount = Object.keys(daysInput).length;
+  const bulkValid = bulkDays.trim() !== '' && Number.isFinite(Number(bulkDays.replace(',', '.')));
 
   return (
     <motion.div
@@ -54,6 +59,45 @@ export default function SelectionStep({
             >
               {selectedIds.length === employees.length ? 'Tout désélectionner' : 'Tout sélectionner'}
             </button>
+          </div>
+
+          {/* Appliquer le même nombre de jours à tous (ex. pointeuse en panne) */}
+          <div className="flex flex-wrap items-center gap-2 mb-3 p-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]/50">
+            <span className="text-xs font-bold text-[var(--text)]">Jours travaillés pour tous :</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={workDays}
+              step={0.5}
+              value={bulkDays}
+              placeholder={String(workDays)}
+              onChange={e => {
+                const v = e.target.value;
+                const n = Number(v);
+                setBulkDays(v !== '' && n > workDays ? String(workDays) : (n < 0 ? '0' : v));
+              }}
+              onKeyDown={e => { if (e.key === 'Enter' && bulkValid) onApplyAll(bulkDays); }}
+              className="w-20 px-2 py-1 text-right font-mono text-xs font-bold rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <span className="text-xs text-gray-400">j</span>
+            <button
+              type="button"
+              disabled={!bulkValid}
+              onClick={() => onApplyAll(bulkDays)}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Appliquer à tous
+            </button>
+            {editedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => { onResetAll(); setBulkDays(''); }}
+                className="ml-auto flex items-center gap-1 text-xs font-bold text-amber-500 hover:text-amber-600"
+              >
+                <RotateCcw size={12} /> Revenir au pointage ({editedCount})
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto border border-[var(--border)] rounded-2xl bg-[var(--surface-2)]/50 p-2 space-y-1 max-h-[400px]">

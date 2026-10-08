@@ -73,6 +73,7 @@ interface CompanySite {
 
 interface PayrollSettings {
   officialStartHour:    number;
+  officialStartMinute:  number;
   lateToleranceMinutes: number;
   workDaysPerMonth:     number;
   workHoursPerDay:      number;
@@ -123,6 +124,7 @@ const DEFAULT_COMPANY: CompanySettings = {
 
 const DEFAULT_PAYROLL: PayrollSettings = {
   officialStartHour:    8,
+  officialStartMinute:  0,
   lateToleranceMinutes: 0,
   workDaysPerMonth:     26,
   workHoursPerDay:      8,
@@ -294,6 +296,7 @@ export default function CompanySettingsPage() {
         if (settings) {
           setPayrollData({
             officialStartHour:    settings.officialStartHour    ?? 8,
+            officialStartMinute:  settings.officialStartMinute  ?? 0,
             lateToleranceMinutes: settings.lateToleranceMinutes ?? 0,
             workDaysPerMonth:     settings.workDaysPerMonth     ?? 26,
             workHoursPerDay:      settings.workHoursPerDay      ?? 8,
@@ -553,11 +556,11 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
   };
 
   const calculateLateTime = () => {
-    const total = payrollData.officialStartHour * 60 + payrollData.lateToleranceMinutes;
+    const total = payrollData.officialStartHour * 60 + payrollData.officialStartMinute + payrollData.lateToleranceMinutes;
     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
   };
   const calculateNextMinute = () => {
-    const total = payrollData.officialStartHour * 60 + payrollData.lateToleranceMinutes + 1;
+    const total = payrollData.officialStartHour * 60 + payrollData.officialStartMinute + payrollData.lateToleranceMinutes + 1;
     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
   };
 
@@ -1739,13 +1742,20 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Heure de début</label>
-                      <select value={payrollData.officialStartHour}
-                        onChange={e => handlePayrollChange('officialStartHour', parseInt(e.target.value))}
-                        className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-[var(--text)]">
-                        {Array.from({ length: 15 }, (_, i) => i + 6).map(h => (
-                          <option key={h} value={h}>{String(h).padStart(2, '0')}:00</option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <input type="number" inputMode="numeric" min={0} max={23} aria-label="Heure de début"
+                          value={payrollData.officialStartHour}
+                          onChange={e => handlePayrollChange('officialStartHour', Math.min(23, Math.max(0, parseInt(e.target.value) || 0)))}
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-center text-[var(--text)]" />
+                        <span className="font-bold text-[var(--text-muted)]">h</span>
+                        <input type="number" inputMode="numeric" min={0} max={59} aria-label="Minute de début"
+                          value={payrollData.officialStartMinute}
+                          onChange={e => handlePayrollChange('officialStartMinute', Math.min(59, Math.max(0, parseInt(e.target.value) || 0)))}
+                          className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-lg font-semibold text-center text-[var(--text)]" />
+                      </div>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
+                        Ex. 8 h et 30 pour 08h30. Le rappel « avant le début » suit cette heure exacte.
+                      </p>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-1">Tolérance (minutes)</label>
