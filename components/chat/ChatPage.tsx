@@ -122,12 +122,59 @@ function RoleBadge({ role }: { role: ChatRole }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ${m.cls}`}>{m.label}</span>;
 }
 
+// ─── Hauteur : la messagerie remplit EXACTEMENT l'espace visible ─────────────
+// Avant : calc(100dvh - 8.5rem) en dur → trop court sur mobile (grand vide sous
+// la zone de saisie) et faux dès que la barre du navigateur / le clavier bouge.
+// Ici on mesure : haut du bloc (dans la zone scrollable du dashboard) → bas de
+// l'écran visible (visualViewport = tient compte du clavier). Sur mobile le bloc
+// est plein écran (sans marge basse) ; dès `sm` on garde la carte arrondie.
+function useFillHeight(ref: React.RefObject<HTMLElement | null>) {
+  const [height, setHeight] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const scroller = (el.closest('main') as HTMLElement | null) ?? null;
+
+    const measure = () => {
+      const vv = window.visualViewport;
+      const viewportH = vv?.height ?? window.innerHeight;
+      const viewportTop = vv?.offsetTop ?? 0;
+      // position du bloc dans la page, indépendante du scroll courant de <main>
+      const top = el.getBoundingClientRect().top + (scroller?.scrollTop ?? 0);
+      const isPhone = window.matchMedia('(max-width: 639px)').matches;
+      const bottomGap = isPhone
+        ? 0
+        : scroller
+          ? parseFloat(getComputedStyle(scroller).paddingBottom) || 0
+          : 0;
+      const next = Math.floor(viewportH + viewportTop - top - bottomGap);
+      setHeight(Math.max(320, next));
+    };
+
+    measure();
+    const vv = window.visualViewport;
+    window.addEventListener('resize', measure);
+    window.addEventListener('orientationchange', measure);
+    vv?.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('orientationchange', measure);
+      vv?.removeEventListener('resize', measure);
+    };
+  }, [ref]);
+
+  return height;
+}
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default function ChatPage() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const { lastChange, setFocus, pokeActivity } = useChat();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const fillHeight = useFillHeight(rootRef);
 
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loadingList, setLoadingList] = useState(true);
@@ -402,8 +449,13 @@ export default function ChatPage() {
   // ─── Rendu ─────────────────────────────────────────────────────────────────
   return (
     <div
-      className="flex h-[calc(100dvh-8.5rem)] min-h-[460px] rounded-2xl overflow-hidden"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      ref={rootRef}
+      className="flex -mx-4 -mt-4 -mb-4 sm:mx-0 sm:mt-0 sm:mb-0 h-[calc(100dvh-5rem)] sm:h-[calc(100dvh-8.5rem)] overflow-hidden rounded-none sm:rounded-2xl border-y sm:border"
+      style={{
+        background: 'var(--surface)',
+        borderColor: 'var(--border)',
+        ...(fillHeight ? { height: fillHeight } : {}),
+      }}
     >
       {/* ───────────── Panneau gauche ───────────── */}
       <aside
@@ -444,7 +496,7 @@ export default function ChatPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={mode === 'contacts' ? 'Rechercher une personne…' : 'Rechercher une discussion…'}
               maxLength={60}
-              className="flex-1 bg-transparent outline-none text-sm min-w-0"
+              className="flex-1 bg-transparent outline-none text-base sm:text-sm min-w-0"
               style={{ color: 'var(--text)' }}
             />
             {search && (
@@ -548,17 +600,17 @@ export default function ChatPage() {
           </div>
         ) : (
           <>
-            <header className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+            <header className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
               <button
                 onClick={closeConversation}
-                className="md:hidden p-2 -ml-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+                className="md:hidden shrink-0 w-10 h-10 -ml-1 rounded-lg flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/5"
                 style={{ color: 'var(--text)' }}
                 aria-label="Retour"
               >
                 <ArrowLeft size={20} />
               </button>
               <Avatar id={other.id} name={other.name} photoUrl={other.photoUrl} size={40} />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{other.name}</div>
                 <div className="flex items-center gap-2 mt-0.5 min-w-0">
                   <RoleBadge role={other.role} />
@@ -568,7 +620,7 @@ export default function ChatPage() {
             </header>
 
             <div className="relative flex-1 min-h-0">
-              <div ref={scrollRef} onScroll={onScroll} className="absolute inset-0 overflow-y-auto custom-scrollbar px-4 py-4">
+              <div ref={scrollRef} onScroll={onScroll} className="absolute inset-0 overflow-y-auto overscroll-contain custom-scrollbar px-3 sm:px-4 py-3 sm:py-4">
                 {loadingThread && messages.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
                     <Loader2 className="animate-spin text-emerald-500" />
@@ -614,7 +666,7 @@ export default function ChatPage() {
                                 : <div className="w-7 shrink-0" />
                             )}
                             <div
-                              className={`max-w-[82%] sm:max-w-[70%] px-3.5 py-2 text-sm rounded-2xl ${m.mine ? 'rounded-br-md text-white' : 'rounded-bl-md'} ${m.status === 'sending' ? 'opacity-70' : ''}`}
+                              className={`max-w-[80%] sm:max-w-[70%] px-3.5 py-2 text-sm rounded-2xl ${m.mine ? 'rounded-br-md text-white' : 'rounded-bl-md'} ${m.status === 'sending' ? 'opacity-70' : ''}`}
                               style={m.mine ? { background: m.status === 'failed' ? '#EF4444' : '#10B981' } : { background: 'var(--surface-2)', color: 'var(--text)' }}
                             >
                               <div className="whitespace-pre-wrap break-words">{m.body}</div>
@@ -655,7 +707,10 @@ export default function ChatPage() {
               </div>
             )}
 
-            <footer className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
+            <footer
+              className="shrink-0 px-3 pt-2.5 sm:p-3"
+              style={{ borderTop: '1px solid var(--border)', paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+            >
               <div className="flex items-end gap-2">
                 <textarea
                   ref={textareaRef}
@@ -665,7 +720,7 @@ export default function ChatPage() {
                   rows={1}
                   maxLength={MAX_MESSAGE_LENGTH}
                   placeholder="Écrire un message…"
-                  className="flex-1 resize-none rounded-xl px-3.5 py-2.5 text-sm outline-none max-h-[140px]"
+                  className="flex-1 min-w-0 resize-none rounded-xl px-3.5 py-2.5 text-base sm:text-sm outline-none max-h-[120px] sm:max-h-[140px]"
                   style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
                 />
                 <button
