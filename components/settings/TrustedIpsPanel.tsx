@@ -9,7 +9,7 @@ import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 
 interface TrustedIp { id: string; label: string; ip: string; isActive: boolean }
-// IP apprise automatiquement (≥ quorum personnes différentes ont pointé au GPS depuis cette IP < 24 h)
+// IP apprise automatiquement (≥ quorum personnes différentes ont pointé au GPS depuis cette IP sur la fenêtre d'apprentissage)
 interface LearnedIp { ip: string; people: number; lastSeenAt: string; blocked: boolean; active: boolean; quorum: number }
 
 const fmtIp = (ip: string) => ip.replace('::/64', '… (réseau IPv6)');
@@ -17,17 +17,22 @@ const fmtAgo = (iso: string) => {
   const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
   if (min < 1) return "à l'instant";
   if (min < 60) return `il y a ${min} min`;
-  return `il y a ${Math.round(min / 60)} h`;
+  const h = Math.round(min / 60);
+  return h < 48 ? `il y a ${h} h` : `il y a ${Math.round(h / 24)} j`;
 };
 
 export default function TrustedIpsPanel({ companyId }: { companyId: string | null }) {
   const alert = useAlert();
   const [items, setItems] = useState<TrustedIp[]>([]);
   const [learned, setLearned] = useState<LearnedIp[]>([]);
-  const [myIp, setMyIp] = useState<{ ip: string | null; usable: boolean; recognized?: boolean; via?: 'ADMIN' | 'LEARNED' | null } | null>(null);
+  const [myIp, setMyIp] = useState<{ ip: string | null; usable: boolean; recognized?: boolean; via?: 'ADMIN' | 'LEARNED' | null; learnQuorum?: number; learnWindowHours?: number } | null>(null);
   const [label, setLabel] = useState('');
   const [manualIp, setManualIp] = useState('');
   const [busy, setBusy] = useState(false);
+  // 🆕 règles d'apprentissage lues sur le serveur (plus de valeurs codées en dur : 5 personnes / 72 h aujourd'hui)
+  const learnQuorum = myIp?.learnQuorum ?? learned[0]?.quorum ?? 5;
+  const learnWindowH = myIp?.learnWindowHours ?? 72;
+  const learnWindowLabel = learnWindowH >= 48 && learnWindowH % 24 === 0 ? `${learnWindowH / 24} jours` : `${learnWindowH} h`;
 
   const load = useCallback(async () => {
     if (!companyId) return;
@@ -101,8 +106,8 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
         Plusieurs wifi sur la même connexion internet ont la même IP : une seule entrée suffit.
         Sans effet en données mobiles (4G).
         <br />
-        <strong>Automatique :</strong> si l'IP de votre box change, elle est apprise toute seule dès que 3 personnes
-        différentes ont pointé avec succès au GPS depuis cette même IP (valable 24 h, renouvelée à chaque pointage).
+        <strong>Automatique :</strong> si l'IP de votre box change, elle est apprise toute seule dès que {learnQuorum} personnes
+        différentes ont pointé avec succès au GPS depuis cette même IP (valable {learnWindowLabel}, renouvelée à chaque pointage).
       </p>
 
       <div className="flex flex-col md:flex-row gap-2 mb-2">
@@ -130,7 +135,7 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
         ) : (
           <p className="text-xs text-[var(--text-muted)] mb-4">
             Cette connexion n'est pas encore reconnue. Si vous êtes sur le wifi du site, cliquez « Ajouter » pour l'enregistrer
-            (utile surtout si l'IP de la box a changé après un redémarrage) — sinon elle sera apprise toute seule après 3 pointages GPS réussis.
+            (utile surtout si l'IP de la box a changé après un redémarrage) — sinon elle sera apprise toute seule après {learnQuorum} pointages GPS réussis de personnes différentes.
             Rien d'obligatoire.
           </p>
         )
@@ -145,7 +150,7 @@ export default function TrustedIpsPanel({ companyId }: { companyId: string | nul
       {/* 🆕 IP apprises automatiquement */}
       <div className="mb-5">
         <h4 className="text-sm font-bold text-[var(--text)] mb-2 flex items-center gap-2">
-          <Sparkles size={15} className="text-amber-500" /> IP apprises automatiquement (24 dernières heures)
+          <Sparkles size={15} className="text-amber-500" /> IP apprises automatiquement (fenêtre : {learnWindowLabel})
         </h4>
         {learned.length === 0 ? (
           <p className="text-xs text-[var(--text-muted)]">Aucune pour l'instant — elles apparaissent après des pointages GPS réussis.</p>

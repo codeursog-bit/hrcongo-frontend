@@ -102,7 +102,7 @@ export default function EmployeeDayDetailSidebar({
     if (geo.basis === 'TRUSTED_IP') {
       rows.push(['Wifi',
         geo.ipKind === 'LEARNED'
-          ? `IP apprise (${geo.ipPeople ?? '?'} personnes, < 24 h)`
+          ? `IP apprise (${geo.ipPeople ?? '?'} personnes différentes)`
           : `IP de confiance${geo.ipLabel ? ` « ${geo.ipLabel} »` : ''}`]);
     }
     if (geo.ip) rows.push(['IP vue', geo.ip]);
