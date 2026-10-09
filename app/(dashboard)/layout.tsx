@@ -15,6 +15,7 @@ import { ContractExpiryToast } from '@/components/contracts/ContractExpiryToast'
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/hooks/useAuth';
 import PushNotificationBanner from '@/components/PushNotificationBanner';
+import GeoWarmup from '@/components/GeoWarmup'; // 🆕 préchauffe le GPS à l'ouverture de l'app (pointage plus rapide)
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   // ✅ FIX CRITIQUE : récupérer "loading" depuis useAuth
@@ -78,6 +79,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <PWAProvider apiClient={attendanceApi}>
       <OfflineBanner />
+      <GeoWarmup />
       <InstallPrompt />
       <PendingActions />
       <ContractExpiryToast userRole={userRole ?? ''} />

@@ -9,11 +9,13 @@ import {
   FileText, Settings, LogOut, Hexagon, Briefcase, Target,
   GraduationCap, Flag, Monitor, Fingerprint, FolderHeart,
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit, Ticket,
-  ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox, PenTool, MessageSquare
+  ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox, PenTool, MessageSquare,
+  MessageCircle, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
 import Image from 'next/image';
 import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
+import { useChatUnread } from '@/components/chat/ChatProvider';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -31,6 +33,15 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
     path: '/dashboard',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+  },
+
+  // ─── Messagerie interne ─────────────────────────────────────────────────────
+  {
+    id: 'messages',
+    label: 'Messages',
+    icon: MessageCircle,
+    path: '/messages',
+    allowedRoles: ['ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
   },
 
   // ─── Section Admin / RH ─────────────────────────────────────────────────────
@@ -297,6 +308,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // alors sur l'avatar à initiales généré ci-dessous, comportement inchangé.
   const employeePhotoUrl = useMyEmployeePhoto();
   const [isAutreOpen, setIsAutreOpen] = useState(false);
+  const unreadChat = useChatUnread();
+  // 🆕 Sidebar réductible (desktop) — préférence mémorisée dans le navigateur
+  const [collapsed, setCollapsed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [animate, setAnimate] = useState(false); // évite l'animation au 1er affichage
+  const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null);
+  const mini = collapsed && isDesktop; // en mobile, le tiroir reste toujours déployé
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   // 🆕 Permission "secrétaire" : pointage manuel pour tout le monde
   const [hasAttendanceAllPermission, setHasAttendanceAllPermission] = useState(false);
@@ -307,6 +325,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const isWhiteLabel = !!(brandName || brandLogo);
   const accentColor = brandColor || '#10B981';
+
+  useEffect(() => {
+    try { setCollapsed(localStorage.getItem('sidebar_collapsed') === '1'); } catch { /* stockage indisponible */ }
+    const mq = window.matchMedia('(min-width: 768px)');
+    const sync = () => setIsDesktop(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    const raf = requestAnimationFrame(() => setAnimate(true));
+    return () => { mq.removeEventListener('change', sync); cancelAnimationFrame(raf); };
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem('sidebar_collapsed', next ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+    setTip(null);
+  };
+
+  // Raccourci clavier : Ctrl/Cmd + B (ignoré pendant la saisie de texte)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'b' || window.innerWidth < 768) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      e.preventDefault();
+      toggleCollapsed();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // Info-bulle en position fixe (l'aside a overflow-hidden + transform : un tooltip absolu serait coupé)
+  const showTip = (e: React.MouseEvent<HTMLElement>, label: string) => {
+    if (!mini) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setTip({ label, top: r.top + r.height / 2, left: r.right + 10 });
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -479,12 +536,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden print:hidden" onClick={onClose} />
       )}
 
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] flex flex-col overflow-hidden transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
         <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: isWhiteLabel ? `linear-gradient(to right, transparent, ${accentColor}, transparent)` : 'linear-gradient(to right, transparent, #10B981, transparent)' }} />
 
         {/* Logo Section */}
-        <div className="px-6 pt-5 pb-2">
-          {isWhiteLabel ? (
+        <div className={mini ? 'px-3 pt-5 pb-2 flex flex-col items-center gap-3' : 'px-6 pt-5 pb-2 relative'}>
+          {mini ? (
+            <Link
+              href="/dashboard"
+              aria-label="Tableau de bord"
+              className="flex items-center justify-center rounded-xl shrink-0"
+              style={{ width: 40, height: 40, background: isWhiteLabel ? `${accentColor}22` : 'var(--brand-soft)', border: `1.5px solid ${isWhiteLabel ? `${accentColor}50` : '#10B98150'}` }}
+            >
+              {isWhiteLabel && brandLogo ? (
+                <img src={brandLogo} alt={brandName ?? 'Cabinet'} style={{ width: 24, height: 24, objectFit: 'contain' }} />
+              ) : (
+                <span className="text-sm font-black" style={{ color: isWhiteLabel ? accentColor : '#10B981' }}>
+                  {isWhiteLabel ? (brandName ?? 'C').slice(0, 2).toUpperCase() : 'K'}
+                </span>
+              )}
+            </Link>
+          ) : isWhiteLabel ? (
             <div className="flex flex-col items-start">
               <div className="flex items-center gap-3">
                 {brandLogo ? (
@@ -511,11 +583,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </Link>
           )}
+          <button
+            onClick={toggleCollapsed}
+            onMouseEnter={(e) => showTip(e, 'Déployer le menu (Ctrl+B)')}
+            onMouseLeave={() => setTip(null)}
+            aria-label={collapsed ? 'Déployer le menu' : 'Réduire le menu'}
+            aria-expanded={!collapsed}
+            className={`hidden md:flex items-center justify-center rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${mini ? 'w-10 h-8' : 'absolute top-4 right-3 w-8 h-8'}`}
+            style={{ color: 'var(--text-muted)' }}
+            title={mini ? undefined : 'Réduire le menu (Ctrl+B)'}
+          >
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
         </div>
 
         {/* User Profile Card */}
-        <div className="px-4 pb-4 pt-2">
-          <div className="rounded-xl p-3 flex items-center gap-3 transition-colors group" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+        <div className={mini ? 'px-3 pb-3 pt-1' : 'px-4 pb-4 pt-2'}>
+          <div className={`rounded-xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <div className="relative shrink-0">
               {user ? (
                 <img src={employeePhotoUrl || user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-lg object-cover" />
@@ -523,7 +607,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="w-9 h-9 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
               )}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className={mini ? 'hidden' : 'flex-1 min-w-0'}>
               {user ? (
                 <>
                   <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{user.name}</h3>
@@ -539,7 +623,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-0.5 custom-scrollbar">
+        <nav className={`flex-1 ${mini ? 'px-2' : 'px-3'} pb-4 overflow-y-auto overflow-x-hidden space-y-0.5 custom-scrollbar`}>
           {(() => {
             // 🆕 Regroupement visuel des menus par thème — purement d'affichage,
             //    ne touche ni à la liste filtrée par rôle ni aux permissions.
@@ -554,7 +638,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 
-            const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role));
+            const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role) && !(item.id === 'messages' && basePath));
             // Admin/RH : « Avis à donner » est déjà placé sous le tableau de bord → pas de doublon en bas
             const trailingExtras = [
               ...secretaryExtraItems,
@@ -562,9 +646,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ];
             const items = isAdminLike
               ? [
-                  ...baseItems.filter(i => i.id === 'dashboard'),
+                  ...baseItems.filter(i => i.id === 'dashboard' || i.id === 'messages'),
                   ...adminSelfItems,
-                  ...baseItems.filter(i => i.id !== 'dashboard'),
+                  ...baseItems.filter(i => i.id !== 'dashboard' && i.id !== 'messages'),
                   ...trailingExtras,
                 ]
               : [...baseItems, ...trailingExtras];
@@ -580,15 +664,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               return (
                 <React.Fragment key={item.id}>
-                  {showLabel && (
+                  {showLabel && (mini ? (
+                    <div className="mx-3 my-2 h-px" style={{ background: 'var(--border)' }} />
+                  ) : (
                     <div className="px-4 pt-4 pb-1.5 first:pt-1">
                       <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{category}</span>
                     </div>
-                  )}
+                  ))}
                   <Link
                     href={fullPath}
-                    onClick={() => { if (window.innerWidth < 768) onClose(); }}
-                    className="relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 group"
+                    onClick={() => { setTip(null); if (window.innerWidth < 768) onClose(); }}
+                    onMouseEnter={(e) => showTip(e, item.label)}
+                    onMouseLeave={() => setTip(null)}
+                    aria-label={mini ? item.label : undefined}
+                    className={`relative w-full flex items-center ${mini ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 group`}
                     style={{
                       color: active ? (isWhiteLabel ? accentColor : 'var(--text)') : 'var(--text-muted)',
                       background: active ? (isWhiteLabel ? `${accentColor}14` : 'var(--brand-soft)') : 'transparent',
@@ -598,7 +687,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: isWhiteLabel ? accentColor : '#10B981' }} />
                     )}
                     <item.icon size={18} className="transition-transform duration-200 group-hover:scale-105" style={active && isWhiteLabel ? { color: accentColor } : {}} />
-                    <span>{item.label}</span>
+                    {!mini && <span className="flex-1 truncate">{item.label}</span>}
+                    {item.id === 'messages' && unreadChat > 0 && (
+                      mini ? (
+                        <span className="absolute top-1.5 right-2.5 w-3 h-3 rounded-full bg-emerald-500" style={{ border: '2px solid var(--surface)' }} />
+                      ) : (
+                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">
+                          {unreadChat > 99 ? '99+' : unreadChat}
+                        </span>
+                      )
+                    )}
                   </Link>
                 </React.Fragment>
               );
@@ -608,18 +706,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {showAutreMenu && (
             <div className="pt-3">
               <button
-                onClick={() => setIsAutreOpen(!isAutreOpen)}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                onClick={() => {
+                  if (mini) {
+                    // en mode réduit : on déploie le menu puis on ouvre « Autre »
+                    setCollapsed(false);
+                    try { localStorage.setItem('sidebar_collapsed', '0'); } catch { /* ignore */ }
+                    setIsAutreOpen(true);
+                    setTip(null);
+                  } else setIsAutreOpen(!isAutreOpen);
+                }}
+                onMouseEnter={(e) => showTip(e, 'Autre')}
+                onMouseLeave={() => setTip(null)}
+                aria-label={mini ? 'Autre' : undefined}
+                className={`relative w-full flex items-center ${mini ? 'justify-center' : 'justify-between px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors`}
                 style={{ color: 'var(--text-muted)' }}
               >
                 <div className="flex items-center gap-3">
                   <Hexagon size={18} />
-                  <span>Autre</span>
+                  {!mini && <span>Autre</span>}
                 </div>
-                {isAutreOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {!mini && (isAutreOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                {mini && pendingRequestsCount > 0 && (
+                  <span className="absolute top-1.5 right-2.5 w-2.5 h-2.5 rounded-full bg-red-500" />
+                )}
               </button>
 
-              {isAutreOpen && (
+              {isAutreOpen && !mini && (
                 <div className="mt-0.5 ml-[26px] pl-3 space-y-0.5" style={{ borderLeft: '1px solid var(--border)' }}>
                   {autreItems.map((sub) => {
                     const subActive = pathname === sub.path;
@@ -648,13 +760,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Logout */}
-        <div className="p-4" style={{ borderTop: '1px solid var(--border)' }}>
-          <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all group">
+        <div className={mini ? 'p-2' : 'p-4'} style={{ borderTop: '1px solid var(--border)' }}>
+          <button onClick={handleLogout} onMouseEnter={(e) => showTip(e, 'Déconnexion')} onMouseLeave={() => setTip(null)} aria-label="Déconnexion" className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all group">
             <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span>Déconnexion</span>
+            {!mini && <span>Déconnexion</span>}
           </button>
         </div>
       </aside>
+
+      {mini && tip && (
+        <div
+          className="fixed z-[60] -translate-y-1/2 px-2.5 py-1.5 rounded-md text-xs font-semibold pointer-events-none shadow-lg whitespace-nowrap print:hidden"
+          style={{ top: tip.top, left: tip.left, background: 'var(--text)', color: 'var(--bg)' }}
+          role="tooltip"
+        >
+          {tip.label}
+        </div>
+      )}
     </>
   );
 };

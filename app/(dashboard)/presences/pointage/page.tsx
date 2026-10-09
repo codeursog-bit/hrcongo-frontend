@@ -26,6 +26,8 @@ import { api } from '@/services/api';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import { useAttendanceOffline } from '@/hooks/useAttendanceOffline';
 import { useBasePath } from '@/hooks/useBasePath';
+import { captureAdaptivePosition } from '@/hooks/geoCapture'; // 🆕 trouve seul la bonne précision, le plus vite possible
+import { markGpsPunchUser, getWarmReadings } from '@/hooks/geoWarmup'; // 🆕 préchauffage du GPS à l'ouverture de l'app
 import PresenceSubNav from '@/components/PresenceSubNav';
 import QrPunchModal from '@/components/pointage/QrPunchModal';
 import { employeeQrApi, PunchResult, PunchMode } from '@/services/display-screen-api';
@@ -226,6 +228,7 @@ export default function AttendanceCheckInPage() {
   const [employeeName, setEmployeeName] = useState('');
   const [userRole, setUserRole]         = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [gpsProgress, setGpsProgress] = useState<{ acc: number | null } | null>(null); // 🆕 recherche du signal en cours
   const [showConfetti, setShowConfetti] = useState(false);
   const [history, setHistory]           = useState<any[]>([]);
 
@@ -353,13 +356,17 @@ export default function AttendanceCheckInPage() {
     // 🆕 Le GPS n'est lu qu'en mode GPS : en mode scan, la tablette fixe est la preuve
     // de présence (le GPS « saute » parfois) → aucune permission ni relevé inutile.
     if (!companySettings || !modeReady || mode !== 'GPS') return;
+    markGpsPunchUser(); // 🆕 aux prochaines ouvertures de l'app, le GPS sera préchauffé (voir GeoWarmup)
 
     const handlePositionSuccess = (pos: GeolocationPosition) => {
-      const { latitude: uLat, longitude: uLng, accuracy } = pos.coords;
       recentReadingsRef.current = [
         ...recentReadingsRef.current.filter(p => Date.now() - p.timestamp <= 15_000),
         pos,
       ].slice(-12);
+      // 🆕 Le badge et la valeur de repli montrent la MEILLEURE lecture récente (≤ 15 s), pas la dernière
+      // venue : sinon une lecture réseau floue arrivée après une bonne faisait « remonter » l'imprécision.
+      const bestRecent = recentReadingsRef.current.reduce((b, p) => (p.coords.accuracy < b.coords.accuracy ? p : b));
+      const { latitude: uLat, longitude: uLng, accuracy } = bestRecent.coords;
       // La position sert uniquement à être envoyée au backend : la décision
       // (zone autorisée ou non) et le message viennent exclusivement du serveur.
       setGeoState({
@@ -415,52 +422,16 @@ export default function AttendanceCheckInPage() {
     };
   }, [companySettings, modeReady, mode]);
 
-  // ✅ Capture la MEILLEURE position récente au moment du clic sur "Pointer".
-  //  - on regroupe les lectures des ~10 dernières secondes + celles qui arrivent pendant l'attente
-  //  - dès qu'une lecture est assez précise (≤ 15 m) on s'arrête, sinon on attend au plus ~6 s
-  //  - on garde la lecture à la précision la plus fine (latitude, longitude et précision de la
-  //    MÊME lecture, pour rester cohérent). Le serveur reste seul juge de la zone.
-  const captureFreshPosition = (): Promise<GeolocationPosition | null> => {
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) { resolve(null); return; }
-
-      const GOOD_ENOUGH_M = 15;   // précision jugée suffisante : inutile d'attendre plus
-      const MAX_WAIT_MS   = 6000; // attente maximale d'une meilleure lecture
-      const MAX_AGE_MS    = 10_000; // âge max d'une lecture récente réutilisable
-
-      const candidates: GeolocationPosition[] = recentReadingsRef.current
-        .filter(p => Date.now() - p.timestamp <= MAX_AGE_MS);
-
-      const best = (): GeolocationPosition | null =>
-        candidates.reduce<GeolocationPosition | null>(
-          (b, p) => (!b || p.coords.accuracy < b.coords.accuracy ? p : b), null);
-
-      // Déjà une lecture récente et précise → on part tout de suite (pointage plus rapide)
-      const already = best();
-      if (already && already.coords.accuracy <= GOOD_ENOUGH_M) { resolve(already); return; }
-
-      let done = false;
-      let watchId: number | null = null;
-      let timer: ReturnType<typeof setTimeout> | null = null;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        if (timer) clearTimeout(timer);
-        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-        resolve(best()); // null → on retombera sur le dernier relevé connu
-      };
-
-      timer = setTimeout(finish, MAX_WAIT_MS);
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          candidates.push(pos);
-          if (pos.coords.accuracy <= GOOD_ENOUGH_M) finish();
-        },
-        (err) => { if (err.code === 1 && candidates.length === 0) finish(); }, // refus : inutile d'attendre
-        { enableHighAccuracy: true, timeout: MAX_WAIT_MS, maximumAge: 0 },
-      );
-    });
-  };
+  // ✅ Capture la position au moment du clic sur "Pointer" ET trouve toute seule la bonne précision :
+  //  - elle part des lectures déjà reçues (page + préchauffage GPS) → souvent prête instantanément ;
+  //  - sinon elle écoute le GPS et s'arrête DÈS QUE c'est suffisant, avec un seuil qui s'assouplit :
+  //    ≤ 25 m tout de suite · ≤ 60 m après 6 s · ≤ 100 m après 12 s · sinon la meilleure lecture à 20 s ;
+  //  - latitude, longitude et précision viennent de la MÊME lecture. Le serveur reste seul juge de la zone.
+  const captureFreshPosition = (): Promise<GeolocationPosition | null> =>
+    captureAdaptivePosition({
+      seed: [...recentReadingsRef.current, ...getWarmReadings(15_000)],
+      onProgress: (acc) => setGpsProgress({ acc: acc != null ? Math.round(acc) : null }),
+    }).finally(() => setGpsProgress(null));
 
   // ── Action check-in / check-out ───────────────────────────────────────────
   const handleAction = async () => {
@@ -653,10 +624,23 @@ export default function AttendanceCheckInPage() {
         ? { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30', icon: <Wifi size={12} />, text: 'Hors ligne — scan indisponible' }
         : { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <ScanLine size={12} />, text: 'Pointage par scan' };
     }
+    // 🆕 pendant le pointage : l'app cherche seule le bon signal, l'employé n'a rien à surveiller
+    if (isProcessing && gpsProgress) {
+      return {
+        color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
+        icon: <Loader2 className="animate-spin" size={12} />,
+        text: gpsProgress.acc != null ? `Recherche du signal GPS… ±${gpsProgress.acc} m` : 'Recherche du signal GPS…',
+      };
+    }
     if (geoState.loading)         return { color: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',            icon: <Loader2 className="animate-spin" size={12} />, text: 'Recherche GPS...' };
     if (geoState.error)           return { color: 'bg-red-500/15 text-red-500 border-red-500/30',              icon: <Ban size={12} />,    text: 'GPS Inactif' };
     if (isOffline)                return { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30',    icon: <Wifi size={12} />,   text: 'Mode Hors Ligne' };
-    return { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <MapPin size={12} />, text: 'GPS actif' };
+    // 🆕 la précision annoncée par l'appareil est affichée : on voit tout de suite si le GPS est flou
+    const accM = geoState.accuracy != null ? Math.round(geoState.accuracy) : null;
+    if (accM != null && accM > 100) {
+      return { color: 'bg-amber-500/15 text-amber-500 border-amber-500/30', icon: <MapPin size={12} />, text: `GPS imprécis ±${accM} m` };
+    }
+    return { color: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30', icon: <MapPin size={12} />, text: accM != null ? `GPS actif ±${accM} m` : 'GPS actif' };
   };
 
   const badge = getGpsBadge();
@@ -742,6 +726,17 @@ export default function AttendanceCheckInPage() {
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-left">
               <div className="flex items-center gap-2 text-red-500 font-bold mb-1"><AlertTriangle size={18} /> Erreur GPS</div>
               <p className="text-xs text-red-500">{geoState.error}</p>
+            </div>
+          )}
+
+          {/* 🆕 GPS flou : on dit pourquoi et quoi faire AVANT que l'employé tente de pointer */}
+          {!scanMode && !geoState.error && !geoState.loading && geoState.accuracy != null && geoState.accuracy > 100 && status === 'idle' && (
+            <div className="mb-6 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {geoState.accuracy > 500
+                  ? <>Votre téléphone partage une position approximative (±{Math.round(geoState.accuracy)} m). Activez la localisation « précise » pour ce navigateur, puis réessayez.</>
+                  : <>Signal GPS faible (±{Math.round(geoState.accuracy)} m). Connectez-vous au wifi de l'entreprise, sortez à découvert ou approchez-vous d'une fenêtre : le pointage cherche tout seul le meilleur signal.</>}
+              </p>
             </div>
           )}
 

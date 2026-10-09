@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
+import { ChatProvider } from '@/components/chat/ChatProvider';
 import { TopNav } from './TopNav';
 import { authService } from '@/lib/services/authService';
 
@@ -68,6 +69,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
   if (!isAuthorized) return null;
 
   return (
+    <ChatProvider>
     <div className="flex h-screen font-sans overflow-hidden relative" style={{ background: 'var(--bg)', color: 'var(--text)' }}>
       <Sidebar
         isOpen={sidebarOpen}
@@ -86,5 +88,6 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         </main>
       </div>
     </div>
+    </ChatProvider>
   );
 };

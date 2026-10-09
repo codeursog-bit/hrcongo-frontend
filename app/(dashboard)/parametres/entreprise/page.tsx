@@ -20,6 +20,7 @@ import { ConventionPicker } from '@/components/conventions/ConventionPicker'; //
 import { getConventionCatalogEntry } from '@/lib/conventions/conventions-catalog'; // 🆕
 import GeofenceRadiusPreview, { computeMetersOffset } from '@/components/GeofenceRadiusPreview'; // 🆕
 import TrustedIpsPanel from '@/components/settings/TrustedIpsPanel'; // 🆕
+import { captureBestPosition } from '@/hooks/geoCapture'; // 🆕 mesure GPS fiable (meilleure lecture / moyenne)
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -330,20 +331,48 @@ export default function CompanySettingsPage() {
     });
   };
 
-  const getCurrentLocation = () => {
+  // 🆕 Mesure du CENTRE du site. Avant : une seule lecture GPS (la première, souvent une position
+  // réseau décalée de centaines de mètres, ou la position IP d'un ordinateur) était enregistrée
+  // telle quelle → tous les employés, même sur place, paraissaient à 800 m. Maintenant : on écoute le
+  // GPS jusqu'à 30 s, on moyenne les meilleures lectures, et on REFUSE d'enregistrer si c'est trop flou.
+  const [locating, setLocating] = useState<string | null>(null);
+  const measureSitePosition = async (apply: (lat: number, lng: number) => void) => {
     if (!navigator.geolocation) {
       alert.error('Navigateur non compatible', "La géolocalisation n'est pas supportée.");
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCompanyData(prev => ({ ...prev, latitude: pos.coords.latitude, longitude: pos.coords.longitude }));
-        alert.success('Position récupérée', 'Coordonnées GPS enregistrées.');
-      },
-      (err) => alert.error('Géolocalisation impossible', err.message),
-      { enableHighAccuracy: true }
+    if (locating) return;
+    setLocating('Mesure en cours…');
+    const { fix, denied } = await captureBestPosition({
+      maxWaitMs: 30_000, goodEnoughM: 12, average: true,
+      onProgress: (acc, n) => setLocating(`Mesure… ±${Math.round(acc)} m (${n})`),
+    });
+    setLocating(null);
+    if (!fix) {
+      alert.error(
+        denied ? 'Localisation refusée' : 'Position introuvable',
+        denied ? 'Autorisez la localisation « précise » pour ce site, puis réessayez.'
+               : "Impossible d'obtenir une position. Réessayez à l'extérieur.",
+      );
+      return;
+    }
+    const acc = Math.round(fix.accuracy);
+    if (acc > 100) {
+      alert.error(
+        'Position trop imprécise',
+        `±${acc} m : position NON enregistrée. Mesurez depuis un téléphone, à l'extérieur, avec la localisation « précise » activée (pas depuis un ordinateur).`,
+      );
+      return;
+    }
+    apply(fix.latitude, fix.longitude);
+    alert.success(
+      `Position enregistrée (±${acc} m)`,
+      acc > 30 ? "Précision moyenne : refaites la mesure à l'extérieur pour plus de fiabilité." : 'Coordonnées GPS enregistrées.',
     );
   };
+
+  const getCurrentLocation = () =>
+    measureSitePosition((lat, lng) => setCompanyData(prev => ({ ...prev, latitude: lat, longitude: lng })));
   
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
@@ -443,13 +472,8 @@ const handleCachetDelete = async () => {
 const cancelCachetSelection = () => { setCachetFile(null); setCachetPreview(currentCachet); };
 
   // ── Multi-sites handlers ────────────────────────────────────────────────────
-  const getSiteCurrentLocation = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      pos => setSiteForm(f => ({ ...f, latitude: pos.coords.latitude, longitude: pos.coords.longitude })),
-      ()  => alert.error('GPS', 'Impossible de récupérer la position.'),
-    );
-  };
+  const getSiteCurrentLocation = () =>
+    measureSitePosition((lat, lng) => setSiteForm(f => ({ ...f, latitude: lat, longitude: lng })));
 
   const handleSaveSite = async () => {
     setSiteError(null);
@@ -1422,9 +1446,9 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                     <h3 className="font-bold text-[var(--text)] flex items-center gap-2">
                       <Navigation size={20} className="text-emerald-500" /> Géolocalisation du Site
                     </h3>
-                    <button onClick={getCurrentLocation}
+                    <button onClick={getCurrentLocation} disabled={!!locating}
                       className="text-xs bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800 hover:bg-emerald-100 font-bold flex items-center gap-1">
-                      <MapPin size={12} /> Ma position
+                      {locating ? <Loader2 size={12} className="animate-spin" /> : <MapPin size={12} />} {locating ?? 'Ma position'}
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1566,9 +1590,10 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
                       <div className="mt-4">
                         <button
                           onClick={getSiteCurrentLocation}
+                          disabled={!!locating}
                           className="w-full p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors"
                         >
-                          <MapPin size={16} /> Utiliser ma position GPS
+                          {locating ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />} {locating ?? 'Utiliser ma position GPS'}
                         </button>
                       </div>
                     </div>

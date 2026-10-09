@@ -91,12 +91,15 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || 'Konza RH';
+  // 💬 Messagerie : tag "chat-<conversationId>" → un nouveau message remplace le précédent de la même conversation
+  const isChat = typeof data.tag === 'string' && data.tag.startsWith('chat-');
   const options = {
     body: data.body || '',
     icon: data.icon || '/icons/icon-192x192.png',
     badge: data.badge || '/icons/badge-72x72.png',
     tag: data.tag || 'konza-notif',
     requireInteraction: !!data.requireInteraction,
+    renotify: isChat, // re-sonne quand un message remplace le précédent (valide car un tag est défini)
     actions: Array.isArray(data.actions) ? data.actions : [],
     data: {
       url: data.url || '/',
@@ -114,7 +117,17 @@ self.addEventListener('push', (event) => {
     return fetch(data.ackUrl, { method: 'POST', mode: 'no-cors', keepalive: true }).catch(() => {});
   };
 
-  event.waitUntil(self.registration.showNotification(title, options).then(confirmDisplayed));
+  event.waitUntil(
+    (async () => {
+      // 💬 Si l'app est ouverte et visible, le message arrive déjà à l'écran (poll) → pas de notification en double.
+      if (isChat) {
+        const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        if (wins.some((c) => c.visibilityState === 'visible')) return;
+      }
+      await self.registration.showNotification(title, options);
+      await confirmDisplayed();
+    })(),
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
