@@ -15,6 +15,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Bell, BellRing, BellOff, AlertTriangle, RefreshCw, Loader2,
   Search, Smartphone, ShieldAlert, CheckCircle2, Inbox, XCircle, Eye, EyeOff,
+  Send, History, Clock,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
 import { api } from '@/services/api';
@@ -37,6 +38,243 @@ const STATUS_META: Record<'active' | 'enabled_no_device' | 'disabled', { label: 
   disabled:           { label: 'Désactivé',          cls: 'text-gray-500 bg-gray-800 border-gray-700',               icon: BellOff },
 };
 
+
+// ─── 🆕 ÉTAT D'UN APPAREIL ─────────────────────────────────────────────────────────────────────────
+const DEVICE_STATE: Record<string, { label: string; cls: string }> = {
+  ACTIVE:   { label: 'Actif',      cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  DISABLED: { label: 'Désactivé',  cls: 'text-gray-400 bg-gray-800 border-gray-700' },
+  EXPIRED:  { label: 'Expiré',     cls: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+};
+
+const EVENT_META: Record<string, { label: string; cls: string }> = {
+  ENABLED:     { label: 'Nouvel appareil activé',     cls: 'text-emerald-400' },
+  REACTIVATED: { label: 'Appareil connu réactivé',    cls: 'text-sky-400' },
+  DISABLED:    { label: 'Désactivé par l\'utilisateur', cls: 'text-gray-400' },
+  EXPIRED:     { label: 'Abonnement expiré (404/410)', cls: 'text-amber-400' },
+  MOVED:       { label: 'Appareil repris par un autre compte', cls: 'text-purple-400' },
+};
+
+function DeviceHistory({ userId }: { userId: string }) {
+  const [events, setEvents] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try { setEvents(await api.get(`/admin/push/devices/${userId}/events`) as any[]); }
+    catch { setEvents([]); }
+    finally { setLoading(false); }
+  };
+
+  if (events === null) {
+    return (
+      <button onClick={load} disabled={loading}
+        className="mt-3 text-xs text-gray-400 hover:text-white flex items-center gap-1.5 disabled:opacity-50">
+        {loading ? <Loader2 size={12} className="animate-spin" /> : <History size={12} />} Voir l&apos;historique
+      </button>
+    );
+  }
+  if (events.length === 0) return <p className="mt-3 text-xs text-gray-700">Aucun événement enregistré.</p>;
+  return (
+    <div className="mt-3 space-y-1">
+      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Historique</p>
+      {events.map((e) => {
+        const m = EVENT_META[e.type] ?? { label: e.type, cls: 'text-gray-400' };
+        return (
+          <p key={e.id} className="text-xs flex flex-wrap items-center gap-x-2">
+            <span className="text-gray-600 w-[104px] shrink-0">{fmtDateTime(e.createdAt)}</span>
+            <span className={m.cls}>{m.label}</span>
+            <span className="text-gray-500">{e.label || 'Appareil'}{e.deviceRef ? ` · #${e.deviceRef}` : ''}</span>
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── 🆕 ONGLET « ENVOI » : rappel de pointage immédiat, sans passer par le cron ────────────────────
+function BroadcastTab() {
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [companyId, setCompanyId] = useState('');
+  const [onlyNotPunched, setOnlyNotPunched] = useState(true);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [preview, setPreview] = useState<number | null>(null);
+  const [job, setJob] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const running = job?.status === 'RUNNING';
+
+  const loadHistory = async () => {
+    try { setHistory(await api.get('/admin/push/broadcasts') as any[]); } catch { /* non bloquant */ }
+  };
+
+  useEffect(() => {
+    loadHistory();
+    adminService.getCompanies().then((r: any) => {
+      const list = Array.isArray(r) ? r : (r?.companies ?? r?.data ?? []);
+      setCompanies(list);
+    }).catch(() => {});
+  }, []);
+
+  // Aperçu : combien de personnes recevraient l'envoi avec ces réglages
+  useEffect(() => {
+    let cancelled = false;
+    setPreview(null);
+    const t = setTimeout(async () => {
+      try {
+        const qs = new URLSearchParams({ onlyNotPunched: String(onlyNotPunched) });
+        if (companyId) qs.set('companyId', companyId);
+        const r: any = await api.get(`/admin/push/broadcast/preview?${qs.toString()}`);
+        if (!cancelled) setPreview(r?.total ?? 0);
+      } catch { if (!cancelled) setPreview(null); }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [companyId, onlyNotPunched]);
+
+  // Suivi de la progression (toutes les 2 s tant que l'envoi tourne)
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(async () => {
+      try {
+        const j: any = await api.get(`/admin/push/broadcast/${job.id}`);
+        if (j) setJob(j);
+        if (j && j.status !== 'RUNNING') loadHistory();
+      } catch { /* on réessaie au prochain tour */ }
+    }, 2000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line
+  }, [running, job?.id]);
+
+  const send = async () => {
+    const who = companyId
+      ? (companies.find((c) => c.id === companyId)?.tradeName || companies.find((c) => c.id === companyId)?.legalName || 'cette entreprise')
+      : 'TOUTES les entreprises';
+    const n = preview != null ? `${preview} personne(s)` : 'les destinataires';
+    if (!window.confirm(`Envoyer le rappel maintenant à ${n} (${who}) ?`)) return;
+    setStarting(true); setError(null);
+    try {
+      const j: any = await api.post('/admin/push/broadcast', {
+        companyId: companyId || undefined, onlyNotPunched,
+        title: title.trim() || undefined, body: body.trim() || undefined,
+      });
+      setJob(j);
+      loadHistory();
+    } catch (e: any) {
+      setError(e?.message || "Impossible de lancer l'envoi.");
+    } finally { setStarting(false); }
+  };
+
+  const sel = 'w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-gray-600';
+  const pct = job && job.total > 0 ? Math.min(100, Math.round((job.processed / job.total) * 100)) : 0;
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-white flex items-center gap-2"><Send size={16} className="text-red-500" /> Rappel de pointage immédiat</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            Part à l&apos;instant du clic, par le serveur : aucune dépendance au cron ni à un navigateur ouvert.
+            Un seul envoi à la fois ; l&apos;envoi se fait par petits lots pour ménager le serveur.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="text-xs text-gray-400 space-y-1">
+            <span>Entreprise</span>
+            <select className={sel} value={companyId} onChange={(e) => setCompanyId(e.target.value)} disabled={running}>
+              <option value="">Toutes les entreprises</option>
+              {companies.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.tradeName || c.legalName}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2.5 text-sm text-gray-300 sm:mt-6 cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 accent-red-600" checked={onlyNotPunched}
+              onChange={(e) => setOnlyNotPunched(e.target.checked)} disabled={running} />
+            Seulement ceux qui n&apos;ont pas encore pointé aujourd&apos;hui
+          </label>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="text-xs text-gray-400 space-y-1">
+            <span>Titre (facultatif)</span>
+            <input className={sel} value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)}
+              placeholder="⏰ Rappel de pointage" disabled={running} />
+          </label>
+          <label className="text-xs text-gray-400 space-y-1">
+            <span>Message (facultatif)</span>
+            <input className={sel} value={body} maxLength={300} onChange={(e) => setBody(e.target.value)}
+              placeholder="N'oubliez pas de pointer votre présence." disabled={running} />
+          </label>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-gray-400">
+            Destinataires : <span className="font-bold text-white">{preview == null ? '…' : preview}</span>
+            <span className="text-gray-600"> (appareil actif requis)</span>
+          </p>
+          <button onClick={send} disabled={starting || running || preview === 0}
+            className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold disabled:opacity-40 flex items-center gap-2">
+            {starting || running ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+            {running ? 'Envoi en cours…' : 'Envoyer maintenant'}
+          </button>
+        </div>
+
+        {error && <p className="text-xs rounded-xl border px-3 py-2 text-red-300 bg-red-500/10 border-red-500/20">{error}</p>}
+      </div>
+
+      {job && (
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-white">
+              {job.status === 'RUNNING' ? 'Envoi en cours' : job.status === 'DONE' ? 'Envoi terminé' : 'Envoi interrompu'}
+            </p>
+            <span className="text-xs text-gray-500">{job.processed} / {job.total}</span>
+          </div>
+          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div className={`h-full transition-all ${job.status === 'FAILED' ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${job.status === 'DONE' ? 100 : pct}%` }} />
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div><p className="text-xl font-black text-emerald-400">{job.sent}</p><p className="text-[11px] text-gray-500">Envoyés</p></div>
+            <div><p className="text-xl font-black text-red-400">{job.failed}</p><p className="text-[11px] text-gray-500">Échecs</p></div>
+            <div><p className="text-xl font-black text-amber-400">{job.noDevice}</p><p className="text-[11px] text-gray-500">Sans appareil</p></div>
+          </div>
+          {job.error && <p className="text-xs text-red-400">{job.error}</p>}
+        </div>
+      )}
+
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        <p className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide border-b border-gray-800 flex items-center gap-1.5">
+          <Clock size={12} /> Derniers envois
+        </p>
+        {history.length === 0 ? (
+          <p className="text-sm text-gray-600 text-center py-8">Aucun envoi pour le moment</p>
+        ) : (
+          <div className="divide-y divide-gray-800">
+            {history.map((h) => (
+              <div key={h.id} className="px-5 py-3 flex items-center justify-between gap-4 text-xs">
+                <div className="min-w-0">
+                  <p className="text-gray-300 truncate">{h.title}</p>
+                  <p className="text-gray-600">
+                    {fmtDateTime(h.createdAt)} · {h.companyId ? 'Une entreprise' : 'Toutes les entreprises'}{h.onlyNotPunched ? ' · non pointés' : ''}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className={h.status === 'DONE' ? 'text-emerald-400' : h.status === 'RUNNING' ? 'text-sky-400' : 'text-red-400'}>
+                    {h.status === 'DONE' ? 'Terminé' : h.status === 'RUNNING' ? 'En cours' : 'Interrompu'}
+                  </p>
+                  <p className="text-gray-600">{h.sent} envoyé(s) · {h.failed} échec(s) · {h.noDevice} sans appareil</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── 🆕 ONGLET « RÉCEPTIONS » : qui a reçu chaque notification, dans l'app et hors app ───────────
 const PUSH_META: Record<string, { label: string; cls: string }> = {
@@ -218,7 +456,7 @@ export default function PushNotificationsPage() {
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [tab, setTab] = useState<'subs' | 'receipts'>('subs'); // 🆕
+  const [tab, setTab] = useState<'subs' | 'receipts' | 'broadcast'>('subs'); // 🆕
 
   const load = async () => {
     setLoading(true);
@@ -270,7 +508,7 @@ export default function PushNotificationsPage() {
 
       {/* 🆕 Onglets */}
       <div className="flex gap-1 p-1 bg-gray-900 border border-gray-800 rounded-xl w-fit">
-        {([['subs', 'Abonnements'], ['receipts', 'Réceptions']] as const).map(([k, label]) => (
+        {([['subs', 'Appareils'], ['receipts', 'Réceptions'], ['broadcast', 'Envoi']] as const).map(([k, label]) => (
           <button key={k} onClick={() => setTab(k)}
             className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${tab === k ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}>
             {label}
@@ -279,6 +517,7 @@ export default function PushNotificationsPage() {
       </div>
 
       {tab === 'receipts' && <ReceiptsTab />}
+      {tab === 'broadcast' && <BroadcastTab />}
 
       {/* Alerte VAPID — cause n°1 d'un push qui ne part jamais, pour PERSONNE */}
       {tab === 'subs' && data && !data.vapidConfigured && (
@@ -375,21 +614,36 @@ export default function PushNotificationsPage() {
                       )}
                       {u.devices.length > 0 ? (
                         <div className="space-y-1.5">
-                          {u.devices.map((d: any) => (
-                            <div key={d.id} className="flex items-center justify-between text-xs bg-gray-900 border border-gray-800 rounded-lg px-3 py-2">
-                              <span className="text-gray-300 flex items-center gap-2">
-                                <CheckCircle2 size={12} className="text-emerald-500" />
-                                {d.label || 'Appareil sans nom'}
-                              </span>
-                              <span className="text-gray-600">
-                                utilisé {fmtRelative(d.lastUsedAt)} · ajouté {fmtRelative(d.createdAt)}
-                              </span>
-                            </div>
-                          ))}
+                          {u.devices.map((d: any) => {
+                            const st = DEVICE_STATE[d.state] ?? DEVICE_STATE.ACTIVE;
+                            return (
+                              <div key={d.id} className="text-xs bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 space-y-1">
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-gray-300 flex items-center gap-2 min-w-0">
+                                    <Smartphone size={12} className={d.state === 'ACTIVE' ? 'text-emerald-500' : 'text-gray-600'} />
+                                    <span className="truncate">{d.label || 'Appareil sans nom'}</span>
+                                    {d.deviceRef
+                                      ? <span className="text-gray-600 shrink-0">#{d.deviceRef}</span>
+                                      : <span className="text-gray-700 shrink-0" title="Ancien enregistrement, avant l'identifiant d'appareil">ancien</span>}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${st.cls}`}>{st.label}</span>
+                                </div>
+                                <p className="text-gray-600">
+                                  activé {fmtRelative(d.enabledAt)}
+                                  {d.disabledAt ? ` · ${d.state === 'EXPIRED' ? 'expiré' : 'désactivé'} ${fmtRelative(d.disabledAt)}` : ''}
+                                  {' · '}dernier envoi réussi {fmtRelative(d.lastSuccessAt)}
+                                </p>
+                                {d.lastError && d.lastFailureAt && (
+                                  <p className="text-red-400/80">échec {fmtRelative(d.lastFailureAt)} : {d.lastError}</p>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         <p className="text-xs text-gray-700">Aucun appareil enregistré.</p>
                       )}
+                      <DeviceHistory userId={u.id} />
                     </div>
                   )}
                 </div>

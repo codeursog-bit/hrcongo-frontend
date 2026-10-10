@@ -207,4 +207,15 @@ export const adminService = {
 
   cleanupErrors: (days = 30) =>
     adminFetch<any>(`/admin/errors/cleanup?days=${days}`, 'DELETE'),
+
+  // ── Suivi du serveur + purge sécurisée ────────────────────────────────────
+  getServerOverview:    () => adminFetch<any>('/admin/server/overview'),
+  getServerHistory:     (hours = 24) => adminFetch<any>(`/admin/server/history?hours=${hours}`),
+  getServerTables:      () => adminFetch<any>('/admin/server/tables'),
+  getServerSlowQueries: () => adminFetch<any>('/admin/server/slow-queries'),
+  getPurgeTargets:      () => adminFetch<any>('/admin/server/purge/targets'),
+  previewPurge: (items: { key: string; days: number }[]) =>
+    adminFetch<any>('/admin/server/purge/preview', 'POST', { items }),
+  executePurge: (items: { key: string; days: number; expectedCount?: number }[], confirmText?: string) =>
+    adminFetch<any>('/admin/server/purge/execute', 'POST', { items, confirm: true, confirmText }),
 };

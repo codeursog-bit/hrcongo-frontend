@@ -107,6 +107,32 @@ function optOutKey(): string {
 }
 
 // ============================================================================
+// 🆔 IDENTIFIANT STABLE DE L'APPAREIL
+//    Généré une fois, gardé dans le navigateur, envoyé à chaque activation. Le serveur
+//    s'en sert pour reconnaître CE téléphone même quand le navigateur lui donne une
+//    nouvelle adresse push (après désactivation/réactivation) : une ligne par appareil,
+//    jamais de doublons. Effacer les données du site / réinstaller l'app = nouvel appareil.
+//    (Un navigateur n'a pas le droit de lire l'IMEI ou l'adresse MAC du téléphone.)
+// ============================================================================
+const DEVICE_ID_KEY = 'konza-device-id';
+
+function getDeviceId(): string {
+  try {
+    let id = localStorage.getItem(DEVICE_ID_KEY);
+    if (id && /^[A-Za-z0-9_-]{8,64}$/.test(id)) return id;
+    id =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `d${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+    localStorage.setItem(DEVICE_ID_KEY, id);
+    return id;
+  } catch {
+    // stockage indisponible (navigation privée stricte) : identifiant de session
+    return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+  }
+}
+
+// ============================================================================
 // 🏷️ Nom lisible de l'appareil (ex. « Chrome · Android »), envoyé au serveur avec
 //    l'abonnement : le super admin voit enfin QUEL appareil est actif ou mort.
 // ============================================================================
@@ -239,7 +265,7 @@ export function usePushNotifications() {
               try { uid = JSON.parse(localStorage.getItem('user') || '{}').id || ''; } catch {}
               const syncKey = `push-synced:${uid}:${current.endpoint}`;
               if (!sessionStorage.getItem(syncKey)) {
-                await api.post('/notifications/push/subscribe', { ...current.toJSON(), deviceLabel: getDeviceLabel() });
+                await api.post('/notifications/push/subscribe', { ...current.toJSON(), deviceLabel: getDeviceLabel(), deviceId: getDeviceId() });
                 sessionStorage.setItem(syncKey, '1');
               }
               // true UNIQUEMENT si le POST ci-dessus a réussi (sinon on tombe dans le catch)
@@ -292,7 +318,7 @@ export function usePushNotifications() {
       });
 
       // ✅ Envoyer l'abonnement au backend
-      await api.post('/notifications/push/subscribe', { ...subscription.toJSON(), deviceLabel: getDeviceLabel() });
+      await api.post('/notifications/push/subscribe', { ...subscription.toJSON(), deviceLabel: getDeviceLabel(), deviceId: getDeviceId() });
       localStorage.removeItem(optOutKey()); // réactivation explicite → on lève l'opt-out
       setOptedOut(false);
       setIsSubscribed(true);
@@ -330,9 +356,11 @@ export function usePushNotifications() {
       const sub = await registration.pushManager.getSubscription();
       const endpoint = sub?.endpoint; // capturé avant unsubscribe() côté navigateur
       if (sub) await sub.unsubscribe();
-      // On cible cet appareil précisément — les autres appareils de ce
-      // compte (s'il y en a) restent abonnés.
-      await api.delete('/notifications/push/unsubscribe', { data: { endpoint } });
+      // On cible cet appareil précisément — les autres appareils de ce compte restent abonnés.
+      // 🐛 CORRIGÉ : `api.delete(url, body)` envoie son 2e argument TEL QUEL comme corps.
+      // L'ancien `{ data: { endpoint } }` (syntaxe axios) arrivait enveloppé côté serveur,
+      // qui ne trouvait aucun endpoint et retirait TOUS les appareils du compte.
+      await api.delete('/notifications/push/unsubscribe', { endpoint, deviceId: getDeviceId() });
       setIsSubscribed(false);
       return true;
     } catch (err) {
