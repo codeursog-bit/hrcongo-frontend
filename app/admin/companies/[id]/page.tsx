@@ -8,11 +8,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Building2, Mail, Phone, MapPin, Calendar,
-  Users, CreditCard, Activity, Ban, PlayCircle, Archive,
+  ArrowLeft, Mail, Phone, MapPin,
+  CreditCard, Ban, PlayCircle, Archive,
   ArchiveRestore, Pencil, Loader2, X, AlertTriangle,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
+import { CompanyInsightsPanel, CompanyInsightsData } from '@/components/admin/companies/CompanyInsights';
 
 const PLANS = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
 
@@ -134,6 +135,23 @@ export default function CompanyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
+  // 🆕 détail enrichi (personnel réel, fonctionnalités, consommation, santé…)
+  const [insights, setInsights] = useState<CompanyInsightsData | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(true);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+
+  const loadInsights = async () => {
+    try {
+      setInsightsLoading(true);
+      setInsightsError(null);
+      setInsights(await adminService.getCompanyInsights(companyId));
+    } catch (err: any) {
+      setInsightsError(err?.message || 'Erreur de chargement');
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
   const [modal, setModal] = useState<null | 'edit' | 'archive' | 'suspend-sub' | 'plan' | 'period'>(null);
   const [planChoice, setPlanChoice] = useState('PRO');
   const [periodStart, setPeriodStart] = useState('');
@@ -155,7 +173,10 @@ export default function CompanyDetailsPage() {
   };
 
   useEffect(() => {
-    if (companyId) loadCompanyDetails();
+    if (companyId) {
+      loadCompanyDetails();
+      loadInsights();
+    }
   }, [companyId]);
 
   const runAction = async (fn: () => Promise<any>) => {
@@ -163,6 +184,7 @@ export default function CompanyDetailsPage() {
     try {
       await fn();
       await loadCompanyDetails();
+      loadInsights();
       setModal(null);
     } catch (err: any) {
       alert(err.message || 'Erreur');
@@ -385,62 +407,49 @@ export default function CompanyDetailsPage() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-sky-500" />
-                <span className="text-xs text-gray-500 uppercase">Utilisateurs</span>
-              </div>
-              <div className="text-2xl font-bold text-white">
-                {company.users?.length || 0}
-              </div>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <Building2 className="w-4 h-4 text-green-500" />
-                <span className="text-xs text-gray-500 uppercase">Employés</span>
-              </div>
-              <div className="text-2xl font-bold text-white">
-                {company.employees?.length || 0}
-              </div>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="w-4 h-4 text-orange-500" />
-                <span className="text-xs text-gray-500 uppercase">Bulletins</span>
-              </div>
-              <div className="text-2xl font-bold text-white">{company.stats?.payrolls ?? 0}</div>
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl">
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-purple-500" />
-                <span className="text-xs text-gray-500 uppercase">Congés</span>
-              </div>
-              <div className="text-2xl font-bold text-white">{company.stats?.leaves ?? 0}</div>
-            </div>
-          </div>
-
-          {/* Compte créé */}
+          {/* Informations (dynamiques) */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h3 className="font-bold text-white mb-4">Informations</h3>
-            <div className="flex gap-4">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-              <div className="flex-1">
-                <div className="text-sm text-white">Compte créé</div>
-                <div className="text-xs text-gray-500">
-                  {new Date(company.createdAt).toLocaleDateString('fr-FR')}
+            <div className="space-y-3 text-sm">
+              <div>
+                <div className="text-xs text-gray-500 uppercase">Compte créé</div>
+                <div className="text-white">{new Date(company.createdAt).toLocaleDateString('fr-FR')}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 uppercase">Dernière activité</div>
+                <div className="text-white">
+                  {insights?.health.lastActivityAt
+                    ? new Date(insights.health.lastActivityAt).toLocaleDateString('fr-FR')
+                    : insightsLoading ? '…' : 'Aucune'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 uppercase">Dernière connexion d’un utilisateur</div>
+                <div className="text-white">
+                  {insights?.accounts?.lastLoginAt
+                    ? new Date(insights.accounts.lastLoginAt).toLocaleDateString('fr-FR')
+                    : insightsLoading ? '…' : 'Jamais'}
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Détail enrichi : personnel, fonctionnalités, consommation, limites, santé, paiements */}
+          <CompanyInsightsPanel
+            insights={insights}
+            loading={insightsLoading}
+            error={insightsError}
+            onRetry={loadInsights}
+            fallback={{
+              users: company.users?.length || 0,
+              employees: company.employees?.length || 0,
+              payrolls: company.stats?.payrolls ?? 0,
+            }}
+          />
         </div>
       </div>
 

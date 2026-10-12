@@ -11,6 +11,8 @@ interface SelectionStepProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
   workDays: number;                       // jours théoriques du mois (borne max)
+  month: string;                          // période affichée dans l'estimation
+  year: number;
   autoDays: Record<string, number>;       // jours calculés depuis les présences
   daysInput: Record<string, string>;      // jours saisis à la main
   onDaysChange: (id: string, value: string) => void;
@@ -22,13 +24,16 @@ interface SelectionStepProps {
     gross: number;
     net: number;
     cost: number;
+    bonuses?: number;      // total primes/indemnités (imposables ou non)
+    deductions?: number;   // total retenues (CNSS, ITS, taxes, prêts, avances, retenues diverses)
+    failed?: number;       // employés dont le calcul a échoué
   };
   isLoadingEstimation?: boolean; // ✅ Nouveau prop
 }
 
 export default function SelectionStep({
   employees, selectedIds, onSelectionChange,
-  workDays, autoDays, daysInput, onDaysChange, onDaysReset, onApplyAll, onResetAll,
+  workDays, month, year, autoDays, daysInput, onDaysChange, onDaysReset, onApplyAll, onResetAll,
   estimation, isLoadingEstimation,
 }: SelectionStepProps) {
   const fmt = (val: number) => (val || 0).toLocaleString('fr-FR');
@@ -184,6 +189,7 @@ export default function SelectionStep({
               <span className="text-sm font-bold uppercase tracking-wider">Estimation</span>
               {isLoadingEstimation && <Loader2 size={14} className="animate-spin ml-auto text-emerald-400" />}
             </div>
+            <p className="text-xs text-gray-400 -mt-4 mb-5">Période : <span className="font-bold text-white">{month} {year}</span></p>
 
             <div className={`space-y-4 mb-8 transition-opacity ${isLoadingEstimation ? 'opacity-40' : 'opacity-100'}`}>
               <div className="flex justify-between items-center text-sm">
@@ -193,6 +199,14 @@ export default function SelectionStep({
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Total Brut</span>
                 <span className="font-mono font-bold">{fmt(estimation.gross)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-400">dont primes / indemnités</span>
+                <span className="font-mono font-bold">{fmt(estimation.bonuses || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-400">Total retenues</span>
+                <span className="font-mono font-bold text-red-400">- {fmt(estimation.deductions || 0)}</span>
               </div>
               <div className="h-px bg-white/10 w-full" />
               <div className="flex justify-between items-center text-sm">
@@ -207,6 +221,11 @@ export default function SelectionStep({
               </div>
             </div>
 
+            {!!estimation.failed && (
+              <p className="text-xs text-center text-amber-400 mb-2">
+                {estimation.failed} employé(s) non calculé(s) — voir le détail à l'étape suivante.
+              </p>
+            )}
             {isLoadingEstimation && (
               <p className="text-xs text-center text-gray-500">
                 Calcul en cours depuis le serveur...

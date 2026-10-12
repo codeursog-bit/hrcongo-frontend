@@ -5,7 +5,8 @@ import {
   Search, Plus, Monitor, Car, HardHat, Smartphone,
   CheckCircle2, AlertCircle, User,
   Laptop, X, Loader2, Tag, Armchair, Zap, RefreshCw,
-  MoreVertical, Wrench, Archive, CheckCheck, UserCheck
+  MoreVertical, Wrench, Archive, CheckCheck, UserCheck,
+  Pencil, Trash2, Shirt, KeyRound, Package, UtensilsCrossed, Stethoscope
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -40,15 +41,23 @@ const CATEGORY_SUGGESTIONS = [
   { value: 'PHONE',            label: 'Mobile / Téléphone',icon: Smartphone },
   { value: 'FURNITURE',        label: 'Mobilier',          icon: Armchair },
   { value: 'OFFICE_EQUIPMENT', label: 'Équipement bureau', icon: Monitor },
+  { value: 'TOOLS',            label: 'Outillage & machines', icon: Wrench },
+  { value: 'UNIFORM',          label: 'Uniformes & vêtements', icon: Shirt },
+  { value: 'KEYS_BADGES',      label: 'Clés & badges',     icon: KeyRound },
+  { value: 'SUPPLIES',         label: 'Fournitures',       icon: Package },
+  { value: 'KITCHEN',          label: 'Cuisine & restauration', icon: UtensilsCrossed },
+  { value: 'MEDICAL',          label: 'Médical & santé',   icon: Stethoscope },
 ];
 
-const FILTER_CATEGORIES = [
-  { id: 'All',              label: 'Tout' },
-  { id: 'COMPUTER',         label: 'Tech & IT' },
-  { id: 'VEHICLE',          label: 'Flotte Auto' },
-  { id: 'EPI',              label: 'Sécurité' },
-  { id: 'PHONE',            label: 'Mobiles' },
-];
+// La catégorie est libre : ces suggestions ne sont qu'un point de départ. Les
+// catégories saisies par l'entreprise s'y ajoutent automatiquement.
+const findSuggestion = (raw: string) => {
+  const r = (raw || '').trim().toLowerCase();
+  return r ? CATEGORY_SUGGESTIONS.find(c => c.value.toLowerCase() === r || c.label.toLowerCase() === r) : undefined;
+};
+const categoryLabel = (cat: string) => findSuggestion(cat)?.label ?? (cat || '').trim();
+// Clé stable : "Informatique" et "COMPUTER" désignent la même catégorie.
+const categoryKey = (cat: string) => findSuggestion(cat)?.value ?? (cat || '').trim();
 
 // ── Statuts disponibles pour changer via le menu ──────────────────────────────
 const STATUS_ACTIONS: { status: AssetStatus; label: string; icon: React.ElementType; color: string }[] = [
@@ -58,80 +67,75 @@ const STATUS_ACTIONS: { status: AssetStatus; label: string; icon: React.ElementT
 ];
 
 // ── CategoryInput ─────────────────────────────────────────────────────────────
-const CategoryInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+// Champ libre : on peut taper n'importe quelle catégorie. Les suggestions (les
+// catégories de l'entreprise d'abord, puis les modèles) s'affichent en dessous,
+// dans une zone qui défile — pas de menu flottant qui se fait couper.
+const CategoryInput = ({
+  value, onChange, existing,
+}: { value: string; onChange: (v: string) => void; existing: string[] }) => {
+  const q = value.trim().toLowerCase();
 
-  const filtered = CATEGORY_SUGGESTIONS.filter(c =>
-    value.length === 0 ||
-    c.label.toLowerCase().includes(value.toLowerCase()) ||
-    c.value.toLowerCase().includes(value.toLowerCase())
-  );
+  const options = React.useMemo(() => {
+    const seen = new Set<string>();
+    const list: { label: string; icon: React.ElementType; mine: boolean }[] = [];
+    // 1) catégories déjà utilisées par l'entreprise
+    existing.forEach(cat => {
+      const key = categoryKey(cat).toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      list.push({ label: categoryLabel(cat), icon: findSuggestion(cat)?.icon ?? Tag, mine: true });
+    });
+    // 2) modèles proposés
+    CATEGORY_SUGGESTIONS.forEach(c => {
+      const key = c.value.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+      list.push({ label: c.label, icon: c.icon, mine: false });
+    });
+    return q ? list.filter(o => o.label.toLowerCase().includes(q)) : list;
+  }, [existing, q]);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setShow(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const isExact = options.some(o => o.label.toLowerCase() === q);
 
   return (
-    <div ref={ref} className="relative">
+    <div className="col-span-2">
       <label className="block text-xs font-bold text-[var(--text-muted)] uppercase mb-2 ml-1">Catégorie</label>
       <div className="relative">
-        <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] z-10" />
+        <Tag size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
         <input
           type="text"
           value={value}
-          onChange={e => { onChange(e.target.value); setShow(true); }}
-          onFocus={() => setShow(true)}
-          placeholder="Ex: Informatique, EPI…"
+          onChange={e => onChange(e.target.value)}
+          placeholder="Choisissez ou tapez votre propre catégorie…"
           className="w-full pl-9 pr-3 py-3.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-[var(--text)] outline-none focus:border-emerald-500/70 focus:ring-1 focus:ring-emerald-500/50 transition-colors placeholder:text-[var(--text-muted)] text-sm"
         />
       </div>
 
-      <AnimatePresence>
-        {show && filtered.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            // ✅ z-[200] pour passer AU-DESSUS des boutons du modal
-            // ✅ bg solide dark ET light
-            className="absolute top-full left-0 right-0 mt-1 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-[200] overflow-hidden"
-          >
-            {value && !CATEGORY_SUGGESTIONS.some(c => c.label.toLowerCase() === value.toLowerCase()) && (
-              <button
-                type="button"
-                onClick={() => setShow(false)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left border-b border-[var(--border)]"
-              >
-                <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
-                  <Plus size={14} />
-                </div>
-                <div>
-                  <p className="text-sm text-[var(--text)] font-bold">"{value}"</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">Catégorie personnalisée</p>
-                </div>
-              </button>
-            )}
-            {filtered.map(cat => (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => { onChange(cat.value); setShow(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left"
-              >
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                  <cat.icon size={14} />
-                </div>
-                <span className="text-sm text-[var(--text)]">{cat.label}</span>
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {q && !isExact && (
+        <p className="mt-2 ml-1 text-xs text-amber-500 flex items-center gap-1.5">
+          <Plus size={12} /> Nouvelle catégorie : « {value.trim()} » sera créée à l'enregistrement.
+        </p>
+      )}
+
+      {options.length > 0 && (
+        <div className="mt-2 max-h-32 overflow-y-auto overscroll-contain pr-1 flex flex-wrap gap-2">
+          {options.map(o => (
+            <button
+              key={o.label}
+              type="button"
+              onClick={() => onChange(o.label)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors
+                ${o.label.toLowerCase() === q
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : o.mine
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                    : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--border)]'}`}
+            >
+              <o.icon size={12} /> {o.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -142,11 +146,15 @@ const AssetActionsMenu = ({
   onStatusChange,
   onAssign,
   onUnassign,
+  onEdit,
+  onDelete,
 }: {
   asset: Asset;
   onStatusChange: (id: string, status: AssetStatus) => void;
   onAssign: () => void;
   onUnassign: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -180,6 +188,15 @@ const AssetActionsMenu = ({
             // ✅ Fond solide, z élevé, ombre forte
             className="absolute right-0 top-8 w-52 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl z-[100] overflow-hidden py-1"
           >
+            {/* Modifier */}
+            <button
+              onClick={() => { setOpen(false); onEdit(); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--surface-2)] transition-colors text-left"
+            >
+              <Pencil size={15} className="text-sky-500" />
+              <span className="text-sm text-[var(--text)]">Modifier</span>
+            </button>
+
             {/* Assigner / désassigner */}
             {asset.status === 'AVAILABLE' && (
               <button
@@ -216,6 +233,16 @@ const AssetActionsMenu = ({
                 <span className="text-sm text-[var(--text)]">{action.label}</span>
               </button>
             ))}
+
+            {/* Supprimer */}
+            <div className="border-t border-[var(--border)] my-1" />
+            <button
+              onClick={() => { setOpen(false); onDelete(); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors text-left"
+            >
+              <Trash2 size={15} className="text-red-500" />
+              <span className="text-sm text-red-500">Supprimer</span>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -233,12 +260,41 @@ export default function AssetsPage() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [assignAsset, setAssignAsset] = useState<Asset | null>(null);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [deleteAsset, setDeleteAsset] = useState<Asset | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const [newAsset, setNewAsset] = useState({
+  const emptyForm = () => ({
     name: '', serialNumber: '', category: '', condition: 'NEW',
     purchaseValue: '',
     purchaseDate: new Date().toISOString().split('T')[0],
   });
+  const [newAsset, setNewAsset] = useState(emptyForm());
+
+  const openCreate = () => {
+    setEditingAsset(null);
+    setNewAsset(emptyForm());
+    setShowCreateModal(true);
+  };
+
+  const openEdit = (asset: Asset) => {
+    setEditingAsset(asset);
+    setNewAsset({
+      name: asset.name,
+      serialNumber: asset.serialNumber || '',
+      category: categoryLabel(asset.category),
+      condition: 'NEW',
+      purchaseValue: String(asset.purchasePrice ?? asset.purchaseValue ?? ''),
+      purchaseDate: asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    });
+    setShowCreateModal(true);
+  };
+
+  const closeForm = () => {
+    setShowCreateModal(false);
+    setEditingAsset(null);
+    setNewAsset(emptyForm());
+  };
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -265,25 +321,47 @@ export default function AssetsPage() {
   }, []);
 
   const handleCreateAsset = async () => {
-    if (!newAsset.name || !newAsset.category) return;
+    if (!newAsset.name.trim() || !newAsset.category.trim()) return;
     setIsCreating(true);
     try {
       const payload = {
-        name: newAsset.name,
+        name: newAsset.name.trim(),
         serialNumber: newAsset.serialNumber || undefined,
-        category: newAsset.category,
-        condition: newAsset.condition,
+        // "Informatique" saisi à la main → même code que la suggestion
+        category: categoryKey(newAsset.category),
         purchaseValue: newAsset.purchaseValue !== '' ? Number(newAsset.purchaseValue) : 0,
         purchaseDate: new Date(newAsset.purchaseDate).toISOString(),
       };
-      const created = await api.post<Asset>('/assets', payload);
-      setAssets(prev => [created, ...prev]);
-      setShowCreateModal(false);
-      setNewAsset({ name: '', serialNumber: '', category: '', condition: 'NEW', purchaseValue: '', purchaseDate: new Date().toISOString().split('T')[0] });
+      if (editingAsset) {
+        const updated = await api.patch<Asset>(`/assets/${editingAsset.id}`, {
+          ...payload,
+          serialNumber: newAsset.serialNumber, // chaîne vide autorisée = effacer le n° de série
+        });
+        setAssets(prev => prev.map(a => a.id === editingAsset.id ? { ...a, ...updated } : a));
+      } else {
+        const created = await api.post<Asset>('/assets', { ...payload, condition: newAsset.condition });
+        setAssets(prev => [created, ...prev]);
+      }
+      closeForm();
     } catch (e: any) {
-      alert(e?.message || 'Erreur lors de la création.');
+      alert(e?.message || (editingAsset ? 'Erreur lors de la modification.' : 'Erreur lors de la création.'));
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDeleteAsset = async () => {
+    if (!deleteAsset) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`/assets/${deleteAsset.id}`);
+      setAssets(prev => prev.filter(a => a.id !== deleteAsset.id));
+      setDeleteAsset(null);
+    } catch (e: any) {
+      alert(e?.message || 'Erreur lors de la suppression.');
+      setDeleteAsset(null);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -320,22 +398,38 @@ export default function AssetsPage() {
     }
   };
 
+  // Filtres = catégories réellement présentes dans le parc (plus de liste figée)
+  const categoryChips = React.useMemo(() => {
+    const counts = new Map<string, { label: string; n: number }>();
+    assets.forEach(a => {
+      const key = categoryKey(a.category);
+      if (!key) return;
+      const cur = counts.get(key);
+      if (cur) cur.n += 1; else counts.set(key, { label: categoryLabel(a.category), n: 1 });
+    });
+    return Array.from(counts.entries())
+      .map(([id, v]) => ({ id, label: v.label, n: v.n }))
+      .sort((x, y) => y.n - x.n || x.label.localeCompare(y.label));
+  }, [assets]);
+
+  const existingCategories = React.useMemo(() => assets.map(a => a.category).filter(Boolean), [assets]);
+
+  // Si la dernière carte d'une catégorie disparaît, on revient sur "Tout"
+  const effectiveCategory = activeCategory === 'All' || categoryChips.some(c => c.id === activeCategory) ? activeCategory : 'All';
+
   const filteredAssets = assets.filter(a => {
-    const matchCat = activeCategory === 'All' || a.category === activeCategory;
+    const matchCat = effectiveCategory === 'All' || categoryKey(a.category) === effectiveCategory;
     const matchSearch = a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         a.serialNumber?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch;
   });
 
   const getCategoryIcon = (cat: string) => {
-    const found = CATEGORY_SUGGESTIONS.find(c => c.value === cat);
-    return found ? <found.icon size={22} /> : <Monitor size={22} />;
+    const found = findSuggestion(cat);
+    return found ? <found.icon size={22} /> : <Tag size={22} />;
   };
 
-  const getCategoryLabel = (cat: string) => {
-    const found = CATEGORY_SUGGESTIONS.find(c => c.value === cat);
-    return found ? found.label : cat;
-  };
+  const getCategoryLabel = (cat: string) => categoryLabel(cat);
 
   const getStatusStyle = (status: AssetStatus) => {
     switch (status) {
@@ -378,7 +472,7 @@ export default function AssetsPage() {
           </div>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={openCreate}
           className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg hover:shadow-emerald-500/30 transition-colors flex items-center gap-2 group"
         >
           <Plus size={20} className="group-hover:rotate-90 transition-transform" /> Nouvelle Dotation
@@ -407,18 +501,18 @@ export default function AssetsPage() {
       </div>
 
       {/* ── CONTENU PRINCIPAL ── */}
-      <div className="bg-[var(--surface)] backdrop-blur-xl rounded-[28px] border border-[var(--border)] overflow-hidden min-h-[500px] relative z-10 shadow-sm">
+      <div className="bg-[var(--surface)] backdrop-blur-xl rounded-[28px] border border-[var(--border)] min-h-[500px] relative z-10 shadow-sm">
 
         {/* Toolbar */}
         <div className="p-5 border-b border-[var(--border)] flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-            {FILTER_CATEGORIES.map(cat => (
+            {[{ id: 'All', label: 'Tout', n: assets.length }, ...categoryChips].map(cat => (
               <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap border transition-colors
-                  ${activeCategory === cat.id
+                  ${effectiveCategory === cat.id
                     ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20'
                     : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--border)]'}`}>
-                {cat.label}
+                {cat.label} <span className="opacity-60 font-semibold">({cat.n})</span>
               </button>
             ))}
           </div>
@@ -474,6 +568,8 @@ export default function AssetsPage() {
                           onStatusChange={handleStatusChange}
                           onAssign={() => setAssignAsset(asset)}
                           onUnassign={() => handleUnassign(asset)}
+                          onEdit={() => openEdit(asset)}
+                          onDelete={() => setDeleteAsset(asset)}
                         />
                       </div>
                     </div>
@@ -535,14 +631,14 @@ export default function AssetsPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
             <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-              className={`${modalBg} ${modalBorder} rounded-2xl p-7 max-w-lg w-full shadow-2xl relative overflow-visible`}>
+              className={`${modalBg} ${modalBorder} rounded-2xl p-7 max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl relative`}>
 
               <div className="flex justify-between items-center mb-7">
                 <h3 className="text-xl font-bold text-[var(--text)] flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500"><Plus size={18} /></div>
-                  Nouveau Matériel
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">{editingAsset ? <Pencil size={18} /> : <Plus size={18} />}</div>
+                  {editingAsset ? 'Modifier le matériel' : 'Nouveau Matériel'}
                 </h3>
-                <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
+                <button onClick={closeForm} className="p-2 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">
                   <X size={18} />
                 </button>
               </div>
@@ -568,9 +664,8 @@ export default function AssetsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {/* ✅ CategoryInput avec z-[200] pour passer au-dessus des boutons */}
-                  <CategoryInput value={newAsset.category} onChange={v => setNewAsset({ ...newAsset, category: v })} />
-                  <div>
+                  <CategoryInput value={newAsset.category} onChange={v => setNewAsset({ ...newAsset, category: v })} existing={existingCategories} />
+                  <div className="col-span-2">
                     <label className={labelCls}>Valeur (FCFA)</label>
                     <input type="number" value={newAsset.purchaseValue}
                       onChange={e => setNewAsset({ ...newAsset, purchaseValue: e.target.value })}
@@ -580,13 +675,47 @@ export default function AssetsPage() {
               </div>
 
               <div className="flex gap-3 mt-7">
-                <button onClick={() => setShowCreateModal(false)}
+                <button onClick={closeForm}
                   className="flex-1 py-3.5 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
                   Annuler
                 </button>
-                <button onClick={handleCreateAsset} disabled={isCreating || !newAsset.name || !newAsset.category}
+                <button onClick={handleCreateAsset} disabled={isCreating || !newAsset.name.trim() || !newAsset.category.trim()}
                   className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">
-                  {isCreating && <Loader2 className="animate-spin" size={18} />} Créer
+                  {isCreating && <Loader2 className="animate-spin" size={18} />} {editingAsset ? 'Enregistrer' : 'Créer'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── MODAL SUPPRIMER ── */}
+      <AnimatePresence>
+        {deleteAsset && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
+            <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
+              className={`${modalBg} ${modalBorder} rounded-2xl p-7 max-w-md w-full shadow-2xl`}>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center shrink-0"><Trash2 size={22} /></div>
+                <h3 className="text-xl font-bold text-[var(--text)]">Supprimer ce matériel ?</h3>
+              </div>
+              <p className="text-sm text-[var(--text-muted)]">
+                <span className="font-bold text-[var(--text)]">« {deleteAsset.name} »</span> sera supprimé définitivement du parc.
+              </p>
+              {deleteAsset.status === 'IN_USE' && (
+                <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm">
+                  Ce matériel est attribué{deleteAsset.employee ? ` à ${deleteAsset.employee.firstName} ${deleteAsset.employee.lastName}` : ''}. Retirez-le d'abord (menu ⋯ → « Retirer ») avant de le supprimer.
+                </div>
+              )}
+              <div className="flex gap-3 mt-7">
+                <button onClick={() => setDeleteAsset(null)} disabled={isDeleting}
+                  className="flex-1 py-3.5 border border-[var(--border)] rounded-xl font-bold text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-colors">
+                  Annuler
+                </button>
+                <button onClick={handleDeleteAsset} disabled={isDeleting || deleteAsset.status === 'IN_USE'}
+                  className="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isDeleting ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />} Supprimer
                 </button>
               </div>
             </motion.div>

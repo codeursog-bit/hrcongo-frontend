@@ -18,7 +18,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutGrid, ClipboardList, Plus, UserCircle, Wallet, CalendarDays, HandCoins, Plane, CalendarRange, AreaChart,
+  LayoutGrid, ClipboardList, Plus, UserCircle, Wallet, CalendarDays, HandCoins, Plane, CalendarRange, AreaChart, History, BarChart3,
 } from 'lucide-react';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -41,6 +41,8 @@ export default function CongeSubNav({ userRole }: CongeSubNavProps) {
     ...(canManage ? [{ href: '/conges/planning',   label: 'Suivi de congé', icon: Plane }] : []),
     ...(canManage ? [{ href: '/conges/calendrier', label: 'Calendrier',     icon: CalendarDays }] : []),
     ...(canManage ? [{ href: '/conges/soldes',     label: 'Soldes',         icon: Wallet }] : []),
+    ...(canManage ? [{ href: '/conges/historique', label: 'Historique',     icon: History }] : []),
+    ...(canManage ? [{ href: '/conges/diagrammes', label: 'Diagrammes',     icon: BarChart3 }] : []),
     ...(isHR ? [{ href: '/conges/provision', label: 'Provision', icon: HandCoins }] : [])
     
   ];

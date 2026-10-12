@@ -48,7 +48,7 @@ export default function SuiviDettesPage() {
   const availableYears = useMemo(() => {
     const set = new Set<number>([now.getFullYear()]);
     loans.forEach(r => set.add(new Date(r.startDate ?? r.createdAt).getFullYear()));
-    advances.forEach(r => set.add(r.deductYear ?? new Date(r.createdAt).getFullYear()));
+    advances.forEach(r => set.add(r.year ?? r.deductYear ?? new Date(r.createdAt).getFullYear()));
     return Array.from(set).sort((a, b) => b - a);
   }, [loans, advances]);
 
@@ -119,7 +119,7 @@ export default function SuiviDettesPage() {
     });
     advances.forEach(a => {
       if (!matchesCommon(a) || (typeFilter && typeFilter !== 'AVANCE') || !['APPROVED', 'DEDUCTED', 'PAID'].includes(a.status)) return;
-      if (inPeriodDate(a.createdAt)) {
+      if (inPeriodDate(a.month && a.year ? new Date(a.year, a.month - 1, 1) : a.createdAt)) {
         const row = touch(a.employee, a.employeeId);
         row.givenInPeriod += Number(a.amount);
         row.types.add('AVANCE');

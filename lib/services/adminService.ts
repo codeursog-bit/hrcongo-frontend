@@ -65,6 +65,7 @@ export const adminService = {
     return adminFetch<any>(`/admin/companies?${p}`);
   },
   getCompanyDetails: (id: string)      => adminFetch<any>(`/admin/companies/${id}`),
+  getCompanyInsights: (id: string)     => adminFetch<any>(`/admin/companies/${id}/insights`),
 
   updateCompany: (id: string, data: { legalName?: string; tradeName?: string; email?: string; phone?: string; address?: string; city?: string; website?: string }) =>
     adminFetch<any>(`/admin/companies/${id}`, 'PATCH', data),
@@ -214,6 +215,9 @@ export const adminService = {
   getServerTables:      () => adminFetch<any>('/admin/server/tables'),
   getServerSlowQueries: () => adminFetch<any>('/admin/server/slow-queries'),
   getPurgeTargets:      () => adminFetch<any>('/admin/server/purge/targets'),
+  // ── Signaux réels pour l'en-tête et le menu latéral ───────────────────────
+  getAdminAlerts: () => adminFetch<any>('/admin/server/alerts'),
+  getAdminFeed:   (limit = 8) => adminFetch<any>(`/admin/server/feed?limit=${limit}`),
   previewPurge: (items: { key: string; days: number }[]) =>
     adminFetch<any>('/admin/server/purge/preview', 'POST', { items }),
   executePurge: (items: { key: string; days: number; expectedCount?: number }[], confirmText?: string) =>

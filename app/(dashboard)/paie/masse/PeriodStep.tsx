@@ -36,7 +36,7 @@ export default function PeriodStep({ month, year, workDays, onMonthChange, onYea
             onChange={e => onMonthChange(e.target.value)} 
             className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl font-bold text-lg focus:ring-2 focus:ring-emerald-500/20 outline-none"
           >
-            {MONTHS.map(m => <option key={m}>{m}</option>)}
+            {MONTHS.map(m => <option key={m} value={m} className="bg-[var(--surface)] text-[var(--text)]">{m}</option>)}
           </select>
         </div>
         <div className="space-y-2">
@@ -46,9 +46,7 @@ export default function PeriodStep({ month, year, workDays, onMonthChange, onYea
             onChange={e => onYearChange(Number(e.target.value))} 
             className="w-full p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-2xl font-bold text-lg focus:ring-2 focus:ring-emerald-500/20 outline-none"
           >
-            <option>2024</option>
-            <option>2025</option>
-            <option>2026</option>
+            {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y} value={y} className="bg-[var(--surface)] text-[var(--text)]">{y}</option>)}
           </select>
         </div>
         <div className="col-span-2 space-y-2">

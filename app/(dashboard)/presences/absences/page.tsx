@@ -123,8 +123,13 @@ export default function AbsenceManagementPage() {
   const pendingCount = requests.filter(r => r.status === 'PENDING').length;
   const selected = requests.find(r => r.id === selectedId) || null;
 
+  // 🆕 Motif « Autre » : la RH doit trancher payé / non payé avant de valider.
+  const [paidDecision, setPaidDecision] = useState<boolean | null>(null);
+  useEffect(() => { setPaidDecision(null); }, [selectedId]);
+
   const handleDecision = async (status: 'APPROVED' | 'REJECTED') => {
     if (!selected) return;
+    if (status === 'APPROVED' && selected.subType === 'AUTRE' && paidDecision === null) return;
     if (status === 'REJECTED' && !rejectionReason.trim()) { setRejectMode(true); return; }
 
     setIsProcessing(true);
@@ -132,8 +137,11 @@ export default function AbsenceManagementPage() {
       await api.patch(`/absence-requests/${selected.id}/status`, {
         status,
         rejectionReason: status === 'REJECTED' ? rejectionReason : undefined,
+        isPaid: status === 'APPROVED' && selected.subType === 'AUTRE' ? paidDecision! : undefined,
       });
-      setRequests(prev => prev.map(r => r.id === selected.id ? { ...r, status, rejectionReason } : r));
+      setRequests(prev => prev.map(r => r.id === selected.id
+        ? { ...r, status, rejectionReason, ...(status === 'APPROVED' && selected.subType === 'AUTRE' ? { isPaid: paidDecision } : {}) }
+        : r));
       setRejectMode(false);
       setRejectionReason('');
     } catch (e: any) {
@@ -212,6 +220,7 @@ export default function AbsenceManagementPage() {
     employee: docData.employee,
     catalog: docData.catalog || [],
     motifKey: docData.motifKey,
+    otherReason: docData.otherReason,
     startDate: docData.startDate,
     endDate: docData.endDate,
     status: docData.status,
@@ -375,8 +384,30 @@ export default function AbsenceManagementPage() {
 
                   <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
                     <Wallet size={14} className="text-[var(--text-muted)]" />
-                    {selected.isPaid ? 'Absence payée demandée' : 'Absence non-payée demandée'}
+                    {selected.subType === 'AUTRE' && selected.status === 'PENDING'
+                      ? 'Motif « Autre » — paiement à définir par la RH'
+                      : selected.subType === 'AUTRE'
+                        ? (selected.isPaid ? 'Absence payée (décision RH)' : 'Absence non payée (décision RH)')
+                        : selected.isPaid ? 'Absence payée demandée' : 'Absence non-payée demandée'}
                   </div>
+
+                  {selected.status === 'PENDING' && canApprove && selected.subType === 'AUTRE' && (
+                    <div className="p-3.5 rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10 space-y-2">
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-300">Cette période sera-t-elle payée ? (obligatoire pour valider)</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([[true, 'Payée'], [false, 'Non payée']] as const).map(([v, l]) => (
+                          <button
+                            key={String(v)}
+                            type="button"
+                            onClick={() => setPaidDecision(v)}
+                            className={`py-2 rounded-lg text-sm font-semibold border-2 ${paidDecision === v ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)] bg-[var(--surface)]'}`}
+                          >
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {selected.attachmentUrl && (
                     <a href={selected.attachmentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-emerald-600 hover:underline">
@@ -399,7 +430,7 @@ export default function AbsenceManagementPage() {
                     <div className="pt-2 space-y-3">
                       {!rejectMode ? (
                         <div className="flex gap-2">
-                          <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
+                          <button onClick={() => handleDecision('APPROVED')} disabled={isProcessing || (selected.subType === 'AUTRE' && paidDecision === null)} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2">
                             <Check size={16} /> Valider
                           </button>
                           <button onClick={() => setRejectMode(true)} disabled={isProcessing} className="flex-1 py-3 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-bold rounded-xl flex items-center justify-center gap-2">

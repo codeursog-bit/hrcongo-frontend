@@ -1002,7 +1002,7 @@ export default function ManuelPayrollPage() {
                 <SLabel>Année</SLabel>
                 <select value={year} onChange={e => setYear(Number(e.target.value))}
                   className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
-                  {[2023,2024,2025,2026,2027].map(y => <option key={y}>{y}</option>)}
+                  {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y}>{y}</option>)}
                 </select>
               </div>
             </div>

@@ -9,6 +9,18 @@ import { authService }                 from '@/lib/services/authService';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// ─── « il y a 5 min » à partir d'une date ISO ────────────────────────────────
+function timeAgo(iso: string): string {
+  const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return 'à l’instant';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `il y a ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `il y a ${h} h`;
+  const d = Math.floor(h / 24);
+  return `il y a ${d} j`;
+}
+
 // ─── Vérifie le cookie HttpOnly via /auth/verify + refresh si besoin ─────────
 async function verifyCookie(): Promise<boolean> {
   try {
@@ -46,6 +58,11 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const router    = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [headerStats,  setHeaderStats]  = useState<any>(null);
+  // 🆕 signaux réels (alertes + flux) et tiroir du menu sur petit écran
+  const [alerts,     setAlerts]     = useState<any>(null);
+  const [feed,       setFeed]       = useState<Array<{ id: string; type: 'success' | 'critical' | 'info'; message: string; at: string }>>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [menuOpen,   setMenuOpen]   = useState(false);
 
   const publicPages = ['/admin/login', '/admin/register'];
   const isPublicPage = publicPages.includes(pathname);
@@ -96,8 +113,30 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isAuthorized && !isPublicPage) {
       loadHeaderStats();
+      loadSignals();
+      // Alertes + flux toutes les 60 s (onglet visible) ; chiffres de l'en-tête toutes les 5 min
+      const signals = setInterval(() => { if (!document.hidden) loadSignals(); }, 60_000);
+      const stats   = setInterval(() => { if (!document.hidden) loadHeaderStats(); }, 300_000);
+      return () => { clearInterval(signals); clearInterval(stats); };
     }
   }, [isAuthorized, isPublicPage]);
+
+  // Le tiroir se ferme à chaque changement de page
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
+  const loadSignals = async () => {
+    setRefreshing(true);
+    try {
+      const [a, f]: any[] = await Promise.all([
+        adminService.getAdminAlerts().catch(() => null),
+        adminService.getAdminFeed(8).catch(() => null),
+      ]);
+      if (a) setAlerts(a);
+      if (Array.isArray(f)) setFeed(f);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const loadHeaderStats = async () => {
     try {
@@ -131,9 +170,16 @@ export const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="h-screen bg-[#0B0F19] flex flex-col">
-      <Header stats={headerStats} />
+      <Header stats={headerStats} alerts={alerts} onMenuClick={() => setMenuOpen(true)} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar recentActivity={[]} />
+        <Sidebar
+          recentActivity={feed.map((f) => ({ id: f.id, type: f.type, message: f.message, time: timeAgo(f.at) }))}
+          alerts={alerts}
+          onRefresh={() => { loadSignals(); loadHeaderStats(); }}
+          refreshing={refreshing}
+          mobileOpen={menuOpen}
+          onMobileClose={() => setMenuOpen(false)}
+        />
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 scroll-smooth custom-scrollbar relative">
           <div className="max-w-[1600px] mx-auto min-h-full pb-10">
             {children}

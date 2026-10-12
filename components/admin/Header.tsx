@@ -5,7 +5,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, ShieldAlert, ShieldCheck, Menu } from 'lucide-react';
 import { authService } from '@/lib/services/authService';
 
 interface HeaderProps {
@@ -15,9 +16,13 @@ interface HeaderProps {
     totalMRR?: number;
     growth?: number;
   };
+  /** Niveau d'alerte réel (null = pas encore chargé) */
+  alerts?: { level: 'OK' | 'WARNING' | 'CRITICAL'; count: number } | null;
+  /** Ouvre le menu (tiroir) sur les écrans étroits */
+  onMenuClick?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ stats }) => {
+export const Header: React.FC<HeaderProps> = ({ stats, alerts = null, onMenuClick }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -58,6 +63,14 @@ export const Header: React.FC<HeaderProps> = ({ stats }) => {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         {/* Title Area */}
         <div className="flex items-center gap-4 w-full md:w-auto">
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="Ouvrir le menu"
+            className="xl:hidden p-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <div className="bg-brand-red p-2 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.5)]">
              <ShieldAlert className="text-white w-6 h-6" />
           </div>
@@ -103,15 +116,38 @@ export const Header: React.FC<HeaderProps> = ({ stats }) => {
 
         {/* User & Alerts */}
         <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-          <button className="hidden md:flex items-center gap-2 bg-red-900/30 text-red-400 px-3 py-1.5 rounded-full border border-red-900/50 hover:bg-red-900/50 transition-colors text-sm font-medium animate-pulse">
-            <ShieldAlert className="w-4 h-4" />
-            System Alert
-          </button>
-          
-          <div className="relative">
-             <Bell className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
-             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-gray-900"></span>
-          </div>
+          {/* État réel du système : n'apparaît en rouge clignotant que s'il y a une alerte critique */}
+          {alerts && (
+            <Link
+              href="/admin/serveur"
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors ${
+                alerts.level === 'CRITICAL'
+                  ? 'bg-red-900/30 text-red-400 border-red-900/50 hover:bg-red-900/50 animate-pulse'
+                  : alerts.level === 'WARNING'
+                  ? 'bg-orange-900/30 text-orange-300 border-orange-900/50 hover:bg-orange-900/50'
+                  : 'bg-green-900/20 text-green-400 border-green-900/40 hover:bg-green-900/30'
+              }`}
+            >
+              {alerts.level === 'OK' ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+              {alerts.level === 'CRITICAL'
+                ? `System Alert · ${alerts.count}`
+                : alerts.level === 'WARNING'
+                ? `${alerts.count} alerte${alerts.count > 1 ? 's' : ''}`
+                : 'Système OK'}
+            </Link>
+          )}
+
+          {/* Cloche : pastille uniquement s'il y a de vraies alertes */}
+          <Link href="/admin/serveur" aria-label="Alertes" className="relative">
+            <Bell className="w-5 h-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
+            {alerts && alerts.count > 0 && (
+              <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full border-2 border-gray-900 text-[9px] font-bold flex items-center justify-center text-white ${
+                alerts.level === 'CRITICAL' ? 'bg-red-500' : 'bg-orange-500'
+              }`}>
+                {alerts.count}
+              </span>
+            )}
+          </Link>
 
           <div className="flex items-center gap-3 pl-4 border-l border-gray-800">
             <div className="text-right hidden sm:block">

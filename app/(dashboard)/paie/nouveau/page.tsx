@@ -274,7 +274,7 @@ export default function CreatePayrollPage() {
                 <label className="text-xs font-bold text-gray-500 uppercase block mb-1.5">Année</label>
                 <select value={year} onChange={e => { setYear(Number(e.target.value)); setOvertimeEdited(false); }}
                   className="w-full p-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl font-bold text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 outline-none cursor-pointer">
-                  {[2024,2025,2026,2027].map(y => <option key={y}>{y}</option>)}
+                  {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y => <option key={y}>{y}</option>)}
                 </select>
               </div>
             </div>

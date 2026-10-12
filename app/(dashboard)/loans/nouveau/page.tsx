@@ -158,6 +158,10 @@ export default function NouvellePretAvancePage() {
     return d.toISOString().slice(0, 10);
   }, [startDate, durationMonths]);
 
+  // Date de la demande d'une avance (réutilise `startDate`, vide/invalide → mois courant côté serveur)
+  const requestDateObj = new Date(startDate);
+  const requestDateValid = !!startDate && !isNaN(requestDateObj.getTime());
+
   const canSubmit = !!amount && Number(amount) > 0 && reason.trim().length >= 3
     && (isAdvance || (!!durationMonthsInput && Number(durationMonthsInput) > 0))
     && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
@@ -172,6 +176,9 @@ export default function NouvellePretAvancePage() {
           employeeId: onBehalf ? selectedEmployeeId : undefined,
           amount: Number(amount),
           deductMonth, deductYear,
+          // Période de la demande (choisie par l'utilisateur) : date de
+          // référence de l'avance dans le profil/relevé/suivi de l'employé.
+          ...(requestDateValid && { month: requestDateObj.getMonth() + 1, year: requestDateObj.getFullYear() }),
           reason: reason.trim(),
           ...(isFinance && onBehalf && { recoverViaPayroll }),
         });
@@ -380,10 +387,15 @@ export default function NouvellePretAvancePage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de la demande</label>
+                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  <p className="text-xs text-[var(--text-muted)] mt-1">L&apos;avance apparaît dans le profil et le relevé de l&apos;employé à partir de ce mois.</p>
+                </div>
                 <div>
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Mois de déduction</label>
                   <select value={deductMonth} onChange={e => setDeductMonth(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm">
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>{m}</option>)}
+                    {['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'].map((n, i) => <option key={n} value={i + 1}>{n}</option>)}
                   </select>
                 </div>
                 <div>

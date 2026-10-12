@@ -16,12 +16,20 @@ import { Loader2, ArrowLeft, Printer, Pencil } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
+import { debtRefDate } from '@/lib/debt-dates';
 
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Prêt marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 
-type Mouvement = { date: string; motif: string; ref: string; montant: number; remboursement: number };
+// Un remboursement se date par sa PÉRIODE (mois/année choisis à la saisie), pas
+// par le jour où il a été tapé : un remboursement "janvier" saisi en octobre
+// doit apparaître en janvier. On le place en fin de mois pour qu'il passe après
+// les prêts du même mois dans l'ordre chronologique, et on affiche le mois seul.
+const periodDate = (log: any) => new Date(log.year, log.month, 0, 23, 59, 59).toISOString();
+const fmtMonth = (d: string) => { const s = new Date(d).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }); return s.charAt(0).toUpperCase() + s.slice(1); };
+
+type Mouvement = { date: string; motif: string; ref: string; montant: number; remboursement: number; periode?: boolean };
 
 export default function ReleveEmployeeDetailPage() {
   const { employeeId } = useParams<{ employeeId: string }>();
@@ -64,16 +72,16 @@ export default function ReleveEmployeeDetailPage() {
             // n'existe pas du tout sur ce modèle, donc ça retombait toujours
             // sur le 1er du mois (approximatif) au lieu de l'heure précise du
             // remboursement.
-            rows.push({ date: log.recordedAt || `${log.year}-${String(log.month).padStart(2, '0')}-01`, motif: 'Remboursement prêt', ref: '', montant: 0, remboursement: Number(log.amount) });
+            rows.push({ date: periodDate(log), motif: 'Remboursement prêt', ref: '', montant: 0, remboursement: Number(log.amount), periode: true });
           });
         });
 
         myAdvances.forEach((x: any) => {
-          rows.push({ date: x.createdAt, motif: 'Avance sur salaire', ref: x.reference || '', montant: Number(x.amount), remboursement: 0 });
+          rows.push({ date: debtRefDate(x, 'advance').toISOString(), motif: 'Avance sur salaire', ref: x.reference || '', montant: Number(x.amount), remboursement: 0 });
         });
         relevantAdvances.forEach((x: any, i: number) => {
           (advanceHistories[i] || []).forEach((log: any) => {
-            rows.push({ date: log.recordedAt || `${log.year}-${String(log.month).padStart(2, '0')}-01`, motif: 'Remboursement avance', ref: '', montant: 0, remboursement: Number(log.amount) });
+            rows.push({ date: periodDate(log), motif: 'Remboursement avance', ref: '', montant: 0, remboursement: Number(log.amount), periode: true });
           });
         });
 
@@ -156,7 +164,7 @@ export default function ReleveEmployeeDetailPage() {
               <tr><td colSpan={4} className="text-center py-10 text-[var(--text-muted)]">Aucun mouvement pour cet employé.</td></tr>
             ) : mouvements.map((m, i) => (
               <tr key={i}>
-                <td className="px-4 py-2.5 text-[var(--text-muted)] whitespace-nowrap">{fmtDate(m.date)}</td>
+                <td className="px-4 py-2.5 text-[var(--text-muted)] whitespace-nowrap">{m.periode ? fmtMonth(m.date) : fmtDate(m.date)}</td>
                 <td className="px-4 py-2.5 text-[var(--text)]">{m.motif}</td>
                 <td className="px-4 py-2.5 text-right text-[var(--text)]">{m.montant ? fmt(m.montant) : '—'}</td>
                 <td className="px-4 py-2.5 text-right text-emerald-600">{m.remboursement ? fmt(m.remboursement) : '—'}</td>

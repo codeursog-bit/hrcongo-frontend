@@ -10,7 +10,7 @@ import {
   GraduationCap, Flag, Monitor, Fingerprint, FolderHeart,
   UserCircle, Users2, HandCoins, ScanLine, ClipboardEdit, Ticket,
   ChevronDown, ChevronUp, FileCheck, History, UserMinus, AlertCircle, BookOpen, Inbox, PenTool, MessageSquare,
-  MessageCircle, PanelLeftClose, PanelLeftOpen
+  MessageCircle, PanelLeftClose, PanelLeftOpen, ShieldCheck
 } from 'lucide-react';
 import { NavItem, UserProfile, UserRole } from '../../types';
 import Image from 'next/image';
@@ -42,6 +42,14 @@ const navItems: NavItem[] = [
     icon: MessageCircle,
     path: '/messages',
     allowedRoles: ['ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+  },
+  // Demandes (absences, permissions, congés) — juste après Messages, réservé Admin / RH
+  {
+    id: 'demandes',
+    label: 'Demandes',
+    icon: Inbox,
+    path: '/demandes',
+    allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'],
   },
 
   // ─── Section Admin / RH ─────────────────────────────────────────────────────
@@ -444,13 +452,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   // ─── Menu "Autre" Items ─────────────────────────────────────────────────────
-  const autreItems = [
+  // scoped: true → le lien reste dans le portail cabinet (basePath) quand il existe
+  const autreItems: { label: string; path: string; icon: React.ElementType; scoped?: boolean }[] = [
     { label: 'Planning des Shifts', path: '/presences/shifts', icon: Clock },
     { label: 'Déclaration CNSS', path: '/cnss-declaration', icon: FileCheck },
     { label: 'Contrats', path: '/contrats', icon: History },
     { label: 'Documents admnistratifs', path: '/documents', icon: FileCheck },
     { label: 'Salaires Impayés', path: '/paie/impayes', icon: AlertCircle }, 
-    { label: 'Demandes', path: '/demandes', icon: Inbox },
+    { label: 'Audit', path: '/audit', icon: ShieldCheck, scoped: true },
   ];
 
   const showAutreMenu = user && ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(user.role);
@@ -646,9 +655,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ];
             const items = isAdminLike
               ? [
-                  ...baseItems.filter(i => i.id === 'dashboard' || i.id === 'messages'),
+                  ...baseItems.filter(i => i.id === 'dashboard' || i.id === 'messages' || i.id === 'demandes'),
                   ...adminSelfItems,
-                  ...baseItems.filter(i => i.id !== 'dashboard' && i.id !== 'messages'),
+                  ...baseItems.filter(i => i.id !== 'dashboard' && i.id !== 'messages' && i.id !== 'demandes'),
                   ...trailingExtras,
                 ]
               : [...baseItems, ...trailingExtras];
@@ -688,6 +697,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     )}
                     <item.icon size={18} className="transition-transform duration-200 group-hover:scale-105" style={active && isWhiteLabel ? { color: accentColor } : {}} />
                     {!mini && <span className="flex-1 truncate">{item.label}</span>}
+                    {item.id === 'demandes' && pendingRequestsCount > 0 && (
+                      mini ? (
+                        <span className="absolute top-1.5 right-2.5 w-3 h-3 rounded-full bg-red-500" style={{ border: '2px solid var(--surface)' }} />
+                      ) : (
+                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
+                          {pendingRequestsCount > 99 ? '99+' : pendingRequestsCount}
+                        </span>
+                      )
+                    )}
                     {item.id === 'messages' && unreadChat > 0 && (
                       mini ? (
                         <span className="absolute top-1.5 right-2.5 w-3 h-3 rounded-full bg-emerald-500" style={{ border: '2px solid var(--surface)' }} />
@@ -726,30 +744,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {!mini && <span>Autre</span>}
                 </div>
                 {!mini && (isAutreOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-                {mini && pendingRequestsCount > 0 && (
-                  <span className="absolute top-1.5 right-2.5 w-2.5 h-2.5 rounded-full bg-red-500" />
-                )}
               </button>
 
               {isAutreOpen && !mini && (
                 <div className="mt-0.5 ml-[26px] pl-3 space-y-0.5" style={{ borderLeft: '1px solid var(--border)' }}>
                   {autreItems.map((sub) => {
-                    const subActive = pathname === sub.path;
+                    const subHref = sub.scoped ? buildPath(sub.path) : sub.path;
+                    const subActive = pathname === subHref;
                     return (
                       <Link
                         key={sub.path}
-                        href={sub.path}
+                        href={subHref}
                         className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative"
                         style={{ color: subActive ? '#10B981' : 'var(--text-muted)', background: subActive ? 'var(--brand-soft)' : 'transparent' }}
                       >
                         <sub.icon size={14} />
                         {sub.label}
-                        {sub.path === '/demandes' && pendingRequestsCount > 0 && (
-                          <span className="relative flex h-2 w-2 ml-auto">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                          </span>
-                        )}
                       </Link>
                     );
                   })}

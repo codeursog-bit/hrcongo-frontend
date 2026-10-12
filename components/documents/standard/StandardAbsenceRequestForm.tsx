@@ -46,6 +46,8 @@ export interface StandardAbsenceRequestFormData {
   };
   catalog: StandardAbsenceMotifRow[];
   motifKey?: string | null;
+  // 🆕 Motif « Autre » saisi librement (hors catalogue) — coche la ligne « Autre » et l'affiche
+  otherReason?: string | null;
   startDate: string | Date;
   endDate: string | Date;
   requestedAt?: string | Date;
@@ -265,6 +267,18 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
               </td>
             </tr>
           ))}
+          {/* 🆕 Ligne « Autre » — motif non prévu par la convention, durée/paiement décidés par la RH */}
+          <tr>
+            <td className="std-abs-gray" style={cell}>
+              Autre (précisez){data.otherReason ? <> : <strong className="std-abs-black">{data.otherReason}</strong></> : ' : ………………………………'}
+            </td>
+            <td className="std-abs-light" style={{ ...cell, whiteSpace: 'nowrap' }}>
+              Durée et paiement<br />décidés par la RH
+            </td>
+            <td style={{ ...cell, padding: '8px 4px 4px', textAlign: 'center' }}>
+              <Checkbox checked={!!data.otherReason} />
+            </td>
+          </tr>
         </tbody>
       </table>
 

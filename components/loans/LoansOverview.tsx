@@ -67,7 +67,7 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
   // approximation de son décaissement réel. Utilisé PARTOUT dans ce fichier
   // (KPI du mois, tableau des demandes, graphe mensuel, années disponibles)
   // pour que toutes les vues restent cohérentes entre elles.
-  const refDate = (r: any) => new Date(r.kind === 'loan' ? (r.startDate ?? r.createdAt) : r.createdAt);
+  const refDate = (r: any) => r.kind === 'loan' ? new Date(r.startDate ?? r.createdAt) : (r.month && r.year ? new Date(r.year, r.month - 1, 1) : new Date(r.createdAt));
 
   const departments = useMemo(() => {
     const set = new Set<string>();

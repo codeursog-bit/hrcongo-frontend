@@ -83,6 +83,11 @@ export default function NouvelleAbsencePage() {
   const isStandard = company?.documentTemplate === 'STANDARD';
   const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
   const [selectedMotifKey, setSelectedMotifKey] = useState('');
+  // 🆕 Motif « Autre » : hors catalogue, motif saisi librement ; la RH tranche payé / non payé.
+  const OTHER_KEY = '__AUTRE__';
+  const isOther = isStandard && selectedMotifKey === OTHER_KEY;
+  // Choix payé / non payé — réservé au RH qui crée la demande pour un employé (null = pas encore choisi)
+  const [paidChoice, setPaidChoice] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!isStandard) return;
@@ -135,7 +140,10 @@ export default function NouvelleAbsencePage() {
   // On pré-remplit le nombre de jours et la date de reprise ; l'employé peut
   // ensuite changer le nombre de jours ou saisir sa date de reprise à la main.
   useEffect(() => {
-    if (!isStandard || !selectedMotif) return;
+    if (!isStandard || !selectedMotif) {
+      if (isOther) { setDesiredDays(''); setReturnCalc(null); }
+      return;
+    }
     setDesiredDays(String(selectedMotif.days));
     setReturnCalc(null);
     if (startDate && selectedTargetEmployee?.id) handleCalculateReturn(selectedMotif.days);
@@ -194,7 +202,10 @@ export default function NouvelleAbsencePage() {
 
   const workingDays = coverage?.workingDays ?? 0;
 
-  const canSubmit = isStandard
+  const canSubmit = isOther
+    ? reason.trim().length >= 3 && !!startDate && !!returnDate && workingDays > 0
+      && (!onBehalf || (!!selectedEmployeeId && paidChoice !== null)) && !isSubmitting
+    : isStandard
     ? !!selectedMotifKey && !!startDate && !!returnDate && workingDays > 0 && (!onBehalf || !!selectedEmployeeId) && !isSubmitting
     : type && subType && startDate && returnDate && reason.trim().length >= 3 && workingDays > 0
       && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
@@ -204,7 +215,18 @@ export default function NouvelleAbsencePage() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await api.post('/absence-requests', isStandard ? {
+      await api.post('/absence-requests', isOther ? {
+        // Motif « Autre » : hors catalogue — la RH décidera si la période est payée
+        // (isPaid n'est envoyé que par un RH qui crée la demande pour un employé).
+        employeeId: onBehalf ? selectedEmployeeId : undefined,
+        type: 'EXCEPTIONNELLE',
+        subType: 'AUTRE',
+        startDate,
+        returnDate,
+        reason: reason.trim(),
+        isPaid: onBehalf ? paidChoice! : undefined,
+        attachmentUrl: uploadedUrl || undefined,
+      } : isStandard ? {
         employeeId: onBehalf ? selectedEmployeeId : undefined,
         motifKey: selectedMotifKey,
         startDate,
@@ -249,7 +271,8 @@ export default function NouvelleAbsencePage() {
       position: selectedTargetEmployee?.position,
     },
     catalog: motifCatalog,
-    motifKey: selectedMotifKey || undefined,
+    motifKey: isOther ? undefined : (selectedMotifKey || undefined),
+    otherReason: isOther ? (reason.trim() || '…') : undefined,
     startDate: startDate || new Date(),
     endDate: lastAbsenceDate || startDate || new Date(),
     status: 'PENDING',
@@ -351,7 +374,15 @@ export default function NouvelleAbsencePage() {
   );
 
   // Ce que le système va faire : jours justifiés vs jours au-delà du droit
-  const coverageBox = coverage && returnDate ? (
+  const coverageBox = coverage && returnDate && isOther ? (
+    <div className="flex items-start gap-2 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg">
+      <Info size={14} className="mt-0.5 shrink-0" />
+      <span>
+        Reprise le <strong>{fmt(returnDate)}</strong> — <strong>{coverage.workingDays} jour{coverage.workingDays > 1 ? 's' : ''} ouvrable{coverage.workingDays > 1 ? 's' : ''}</strong> demandé{coverage.workingDays > 1 ? 's' : ''}.
+        Ce motif n&apos;est pas prévu par la convention : les RH décideront si cette période est payée ou non.
+      </span>
+    </div>
+  ) : coverage && returnDate ? (
     <div className="space-y-2">
       <div className="flex items-start gap-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg">
         <Info size={14} className="mt-0.5 shrink-0" />
@@ -389,7 +420,7 @@ export default function NouvelleAbsencePage() {
           <button onClick={() => router.push(bp(onBehalf ? '/presences/absences' : '/presences/absences/mon-espace'))} className="px-5 py-2.5 bg-[var(--text)] text-[var(--bg)] rounded-xl font-semibold text-sm">
             {onBehalf ? 'Voir les demandes' : 'Voir mes demandes'}
           </button>
-          <button onClick={() => { setIsDone(false); setStartDate(''); setReturnDate(''); setCoverage(null); setReturnCalc(null); setReason(''); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
+          <button onClick={() => { setIsDone(false); setStartDate(''); setReturnDate(''); setCoverage(null); setReturnCalc(null); setReason(''); setPaidChoice(null); }} className="px-5 py-2.5 border border-[var(--border)] rounded-xl font-semibold text-sm text-[var(--text-muted)]">
             Nouvelle demande
           </button>
         </div>
@@ -484,10 +515,32 @@ export default function NouvelleAbsencePage() {
                       <span className="text-xs text-[var(--text-muted)] shrink-0 ml-2">{m.days} j.</span>
                     </button>
                   ))}
+                  {/* 🆕 Autre — motif non prévu par la convention */}
+                  <button
+                    onClick={() => setSelectedMotifKey(OTHER_KEY)}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl border-2 border-dashed flex items-center justify-between transition-all ${
+                      isOther ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+                    }`}
+                  >
+                    <span className="text-sm font-medium text-[var(--text)]">Autre (motif non listé)</span>
+                    <span className="text-xs text-[var(--text-muted)] shrink-0 ml-2">à préciser</span>
+                  </button>
                 </div>
               </div>
 
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-4">
+                {isOther && (
+                  <div>
+                    <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Votre motif</label>
+                    <textarea
+                      value={reason}
+                      onChange={e => setReason(e.target.value)}
+                      rows={3}
+                      placeholder="Précisez le motif de votre absence…"
+                      className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm resize-none"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
                   <div className="relative">
@@ -495,26 +548,56 @@ export default function NouvelleAbsencePage() {
                     <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
                 </div>
-                {selectedMotif && startDate && (
+                {(selectedMotif || isOther) && startDate && (
                   <>
                     {calcBox}
                     {returnInput}
                     {coverageBox}
                   </>
                 )}
-                <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
-                  <div className="flex items-center gap-2">
-                    <Wallet size={16} className="text-[var(--text-muted)]" />
-                    <span className="text-sm font-medium text-[var(--text)]">Absence payée souhaitée</span>
-                  </div>
-                  <button
-                    onClick={() => setIsPaid(!isPaid)}
-                    className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
-                  >
-                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${isPaid ? 'left-5' : 'left-0.5'}`} />
-                  </button>
-                </div>
-                <p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
+                {isOther ? (
+                  onBehalf ? (
+                    <div className="p-3.5 rounded-xl border border-[var(--border)] space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Wallet size={16} className="text-[var(--text-muted)]" />
+                        <span className="text-sm font-medium text-[var(--text)]">Cette période est-elle payée ?</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([[true, 'Payée'], [false, 'Non payée']] as const).map(([v, l]) => (
+                          <button
+                            key={String(v)}
+                            type="button"
+                            onClick={() => setPaidChoice(v)}
+                            className={`py-2 rounded-lg text-sm font-semibold border-2 ${paidChoice === v ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
+                          >
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 text-sm bg-[var(--surface-2)] text-[var(--text-muted)] px-3.5 py-3 rounded-xl">
+                      <Wallet size={16} className="mt-0.5 shrink-0" />
+                      <span>Les RH décideront si cette absence est payée ou non à la validation de votre demande.</span>
+                    </div>
+                  )
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)]">
+                      <div className="flex items-center gap-2">
+                        <Wallet size={16} className="text-[var(--text-muted)]" />
+                        <span className="text-sm font-medium text-[var(--text)]">Absence payée souhaitée</span>
+                      </div>
+                      <button
+                        onClick={() => setIsPaid(!isPaid)}
+                        className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${isPaid ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+                      >
+                        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${isPaid ? 'left-5' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[var(--text-muted)] -mt-2">Le statut définitif (payé / non-payé) est tranché par les RH à la validation.</p>
+                  </>
+                )}
                 <div>
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Justificatif (optionnel)</label>
                   <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">

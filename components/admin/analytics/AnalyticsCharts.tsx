@@ -94,14 +94,15 @@ interface FeatureBarChartProps {
 }
 
 export const FeatureBarChart: React.FC<FeatureBarChartProps> = ({ data = [] }) => {
-  // Mock data si vide (car pas de système de tracking de features pour l'instant)
-  const displayData = data.length > 0 ? data : [
-    { name: 'Payroll', value: 95 },
-    { name: 'Employees', value: 89 },
-    { name: 'Reports', value: 72 },
-    { name: 'Leaves', value: 68 },
-    { name: 'Documents', value: 29 },
-  ];
+  // Données réelles uniquement (adoption calculée par le back) : jamais de valeurs de secours inventées
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[250px] w-full text-gray-500 text-sm">
+        Aucune donnée d’adoption
+      </div>
+    );
+  }
+  const displayData = data;
 
   return (
     <div className="h-[250px] w-full">
@@ -124,15 +125,15 @@ interface LatencyChartProps {
 }
 
 export const LatencyChart: React.FC<LatencyChartProps> = ({ data = [] }) => {
-  // Mock data si vide
-  const displayData = data.length > 0 ? data : [
-    { time: '00:00', value: 120 },
-    { time: '04:00', value: 95 },
-    { time: '08:00', value: 180 },
-    { time: '12:00', value: 150 },
-    { time: '16:00', value: 200 },
-    { time: '20:00', value: 110 },
-  ];
+  // Données réelles uniquement : jamais de valeurs de secours inventées
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[150px] w-full text-gray-500 text-sm">
+        Aucune donnée de latence
+      </div>
+    );
+  }
+  const displayData = data;
 
   return (
     <div className="h-[150px] w-full">

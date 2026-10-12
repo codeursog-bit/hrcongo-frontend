@@ -131,7 +131,7 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
                   </div>
                   <p className="text-xs text-[var(--text-muted)]">{new Date(l.createdAt).toLocaleDateString('fr-FR')} · reste {Number(l.remainingBalance).toLocaleString('fr-FR')} FCFA</p>
                 </button>
-                {canManage && l.status === 'ACTIVE' && onCashRepayment && (
+                {canManage && l.status === 'ACTIVE' && Number(l.remainingBalance) > 0 && onCashRepayment && (
                   <button onClick={() => onCashRepayment(l.id, Number(l.remainingBalance))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                     💵 Enregistrer un remboursement en espèces
                   </button>
@@ -153,9 +153,9 @@ export default function EmployeeLoanHistorySidebar({ open, onClose, data, canMan
                     <p className="text-sm font-semibold text-[var(--text)]">{Number(a.amount).toLocaleString('fr-FR')} FCFA</p>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)]">{new Date(a.createdAt).toLocaleDateString('fr-FR')} · déduction {a.deductMonth}/{a.deductYear}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{MONTHS_FR[(a.month ?? new Date(a.createdAt).getMonth() + 1) - 1]} {a.year ?? new Date(a.createdAt).getFullYear()} · déduction {a.deductMonth}/{a.deductYear}</p>
                 </button>
-                {canManage && a.status === 'APPROVED' && onAdvanceCashRepayment && (
+                {canManage && a.status === 'APPROVED' && Number(a.remainingBalance ?? a.amount) > 0 && onAdvanceCashRepayment && (
                   <button onClick={() => onAdvanceCashRepayment(a.id, Number(a.remainingBalance ?? a.amount))} className="mt-2 w-full text-xs font-semibold py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                     💵 Enregistrer un remboursement en espèces
                   </button>

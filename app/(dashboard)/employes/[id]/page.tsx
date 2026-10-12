@@ -8,7 +8,7 @@ import {
   CheckCircle, Mail, Phone, MapPin, Building2, User, Download, 
   AlertCircle, Printer, Eye, EyeOff,
   Briefcase, BadgeCheck, X,
-  Laptop, Plus, Loader2, Shield, Award,
+  Laptop, Plus, Loader2, Shield, Award, Smartphone, Monitor, Package,
   BookOpen, Hash, CreditCard, ChevronRight,
   Gift, TrendingUp, Star, CalendarDays,
   HeartPulse, Users, GraduationCap, Car, Languages, Shirt, AlertTriangle, UserCheck,
@@ -223,6 +223,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
 
   const [tabData, setTabData] = useState<any>(null);
   const [tabLoading, setTabLoading] = useState(false);
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
   // 🆕 Primes de l'employé — pour le récap "Salaire contractuel" (brut/net
   // basé sur le salaire de base + primes mensuelles récurrentes uniquement,
@@ -309,6 +310,27 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       alert(err?.message || "Erreur lors de la mise à jour de l'accès");
     } finally {
       setIsTogglingSelfService(false);
+    }
+  };
+
+  // ✅ Téléchargement d'un document de l'onglet "Documents" : le backend renvoie
+  // une URL signée ({ url, fileName }). On ouvre d'abord l'onglet (synchrone,
+  // pour ne pas être bloqué par le navigateur) puis on lui donne l'URL.
+  const handleDownloadDoc = async (doc: any) => {
+    if (downloadingDocId) return;
+    setDownloadingDocId(doc.id);
+    const win = window.open('', '_blank');
+    try {
+      const res = await api.get<{ url: string; fileName?: string }>(`/documents/${doc.id}/download`);
+      if (!res?.url) throw new Error('URL manquante');
+      if (win) win.location.href = res.url;
+      else window.location.href = res.url;
+    } catch (err) {
+      win?.close();
+      console.error('Erreur téléchargement document', err);
+      alert('Impossible de télécharger ce document pour le moment.');
+    } finally {
+      setDownloadingDocId(null);
     }
   };
 
@@ -986,7 +1008,15 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <p className="font-bold truncate text-[var(--text)]">{doc.name}</p>
                 <p className="text-xs text-[var(--text-muted)]">{doc.type}</p>
               </div>
-              <button className="text-[var(--text-muted)] hover:text-emerald-500 transition-colors"><Download size={18} /></button>
+              <button
+                type="button"
+                onClick={() => handleDownloadDoc(doc)}
+                disabled={downloadingDocId === doc.id}
+                title="Télécharger"
+                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors disabled:opacity-60"
+              >
+                {downloadingDocId === doc.id ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+              </button>
             </div>
           ))}
         </div>
@@ -997,7 +1027,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       return (
         <div className="space-y-3">
           {tabData.map((p: any) => (
-            <Link href={bp(`/paie/bulletins/${p.id}`)} key={p.id}>
+            <Link href={bp(`/paie/${p.id}`)} key={p.id}>
               <div className="flex justify-between items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl hover:bg-[var(--surface-2)] hover:border-emerald-200 dark:hover:border-emerald-800 transition-all cursor-pointer group">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-lg shadow-emerald-500/20">
@@ -1050,17 +1080,70 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     }
 
     if (activeTab === 'materiel') {
+      const ASSET_STATUS: Record<string, { label: string; cls: string }> = {
+        IN_USE:      { label: 'En service',   cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' },
+        AVAILABLE:   { label: 'Disponible',   cls: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800' },
+        MAINTENANCE: { label: 'Maintenance',  cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800' },
+        RETIRED:     { label: 'Réformé',      cls: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]' },
+      };
+      const assetIcon = (category?: string) => {
+        const c = (category || '').toLowerCase();
+        if (/(phone|t[ée]l[ée]phone|mobile|tablette)/.test(c)) return Smartphone;
+        if (/(ordinateur|laptop|portable|\bpc\b)/.test(c)) return Laptop;
+        if (/([ée]cran|moniteur|monitor)/.test(c)) return Monitor;
+        if (/(v[ée]hicule|voiture|moto|auto)/.test(c)) return Car;
+        return Package;
+      };
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {tabData.map((a: any) => (
-            <div key={a.id} className="p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] flex items-center gap-4">
-              <div className="p-3 bg-[var(--surface-2)] rounded-lg"><Laptop size={20} className="text-[var(--text-muted)]" /></div>
-              <div>
-                <p className="font-bold text-[var(--text)]">{a.name}</p>
-                <p className="text-xs text-[var(--text-muted)] font-mono">{a.serialNumber}</p>
-              </div>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[var(--text)]">Matériel attribué</h3>
+              <p className="text-sm text-[var(--text-muted)]">Équipements actuellement confiés à cet employé.</p>
             </div>
-          ))}
+            <span className="px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-sm font-bold border border-emerald-200 dark:border-emerald-800">
+              {tabData.length} équipement{tabData.length > 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {tabData.map((a: any) => {
+              const Icon = assetIcon(a.category);
+              const st = ASSET_STATUS[a.status] || ASSET_STATUS.IN_USE;
+              return (
+                <div key={a.id} className="group relative overflow-hidden p-5 border border-[var(--border)] rounded-2xl bg-[var(--surface)] hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-200 dark:hover:border-emerald-800 transition-all">
+                  <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                  <div className="relative flex items-start gap-4">
+                    <div className="w-14 h-14 shrink-0 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                      <Icon size={26} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-lg text-[var(--text)] truncate">{a.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                        {a.category && <span className="px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-muted)] text-xs font-semibold">{a.category}</span>}
+                        <span className={`px-2 py-0.5 rounded-full border text-xs font-semibold ${st.cls}`}>{st.label}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <dl className="relative mt-4 pt-4 border-t border-[var(--border)] grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <dt className="text-[var(--text-muted)] uppercase tracking-wide font-semibold mb-0.5">N° de série</dt>
+                      <dd className="font-mono text-[var(--text)] truncate">{a.serialNumber || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[var(--text-muted)] uppercase tracking-wide font-semibold mb-0.5">État</dt>
+                      <dd className="text-[var(--text)] truncate">{a.condition || '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[var(--text-muted)] uppercase tracking-wide font-semibold mb-0.5">Acquis le</dt>
+                      <dd className="text-[var(--text)]">{a.purchaseDate ? new Date(a.purchaseDate).toLocaleDateString('fr-FR') : '—'}</dd>
+                    </div>
+                  </dl>
+                </div>
+              );
+            })}
+          </div>
         </div>
       );
     }

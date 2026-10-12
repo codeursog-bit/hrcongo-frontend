@@ -25,8 +25,10 @@ export default function BatchPayrollPage() {
   const [settings, setSettings]       = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const [month, setMonth]       = useState('Février');
-  const [year, setYear]         = useState(2026);
+  // ✅ Période par défaut = mois/année en cours (avant : 'Février' 2026 figé →
+  // les primes/retenues d'un autre mois n'apparaissaient pas dans l'estimation)
+  const [month, setMonth]       = useState(MONTHS[new Date().getMonth()]);
+  const [year, setYear]         = useState(new Date().getFullYear());
   const [workDays, setWorkDays] = useState(26);
 
   // ✅ Jours travaillés par employé.
@@ -37,7 +39,7 @@ export default function BatchPayrollPage() {
   const estimationReq = useRef(0);
 
   // ✅ Estimation venant du back — JAMAIS calculée localement
-  const [estimation, setEstimation]            = useState({ gross: 0, cost: 0, net: 0, count: 0 });
+  const [estimation, setEstimation]            = useState<any>({ gross: 0, cost: 0, net: 0, count: 0, bonuses: 0, deductions: 0, failed: 0 });
   const [isLoadingEstimation, setIsLoadingEst] = useState(false);
 
   const [isProcessing, setIsProcessing]           = useState(false);
@@ -111,7 +113,7 @@ export default function BatchPayrollPage() {
   // Re-estimation (avec pause de 400 ms pour ne pas appeler le back à chaque frappe)
   useEffect(() => {
     if (selectedIds.length === 0) {
-      setEstimation({ gross: 0, cost: 0, net: 0, count: 0 });
+      setEstimation({ gross: 0, cost: 0, net: 0, count: 0, bonuses: 0, deductions: 0, failed: 0 });
       return;
     }
     const t = setTimeout(fetchEstimation, 400);
@@ -139,6 +141,9 @@ export default function BatchPayrollPage() {
           gross: s.totalGross        || 0,
           net:   s.totalNet          || 0,
           cost:  s.totalEmployerCost || 0,
+          bonuses:    s.totalBonuses    || 0,
+          deductions: s.totalDeductions || 0,
+          failed:     s.failedCount     || 0,
         });
       }
       // Jours "auto" (présences) : on ne mémorise que pour les employés non modifiés
@@ -156,7 +161,7 @@ export default function BatchPayrollPage() {
       }
     } catch {
       if (reqId !== estimationReq.current) return;
-      setEstimation({ gross: 0, cost: 0, net: 0, count: selectedIds.length });
+      setEstimation({ gross: 0, cost: 0, net: 0, count: selectedIds.length, bonuses: 0, deductions: 0, failed: 0 });
     } finally {
       if (reqId === estimationReq.current) setIsLoadingEst(false);
     }
@@ -281,6 +286,8 @@ export default function BatchPayrollPage() {
             <SelectionStep employees={employees} selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               workDays={workDays}
+              month={month}
+              year={year}
               autoDays={autoDays}
               daysInput={daysInput}
               onDaysChange={handleDaysChange}

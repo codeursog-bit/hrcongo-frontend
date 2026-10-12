@@ -20,7 +20,7 @@ type Level = 'CRITICAL' | 'WARNING' | 'INFO';
 interface Finding { key: string; level: Level; title: string; detail: string; action?: string; evidence?: any }
 interface Metrics {
   at: string;
-  machine: { cpuLoad1: number; cpuCores: number; loadPct: number; memTotalMb: number; memUsedMb: number; memPct: number; diskTotalGb: number | null; diskUsedGb: number | null; diskPct: number | null };
+  machine: { cpuLoad1: number; cpuCores: number; cpuPct?: number | null; loadPct: number; memTotalMb: number; memUsedMb: number; memPct: number; diskTotalGb: number | null; diskUsedGb: number | null; diskPct: number | null };
   container: { memMb: number | null; memLimitMb: number | null };
   app: { rssMb: number; heapUsedMb: number; heapTotalMb: number; cpuPct: number; eventLoopMeanMs: number; eventLoopMaxMs: number; uptimeSec: number; nodeVersion: string };
   db: { ok: boolean; sizeMb: number | null; connections: number | null; maxConnections: number | null; cacheHitPct: number | null; latencyMs: number | null };
@@ -309,10 +309,15 @@ export default function ServeurPage() {
                 )}
               </Card>
 
-              <Card title="Charge processeur" icon={Cpu} accent="text-amber-400">
-                <p className="text-2xl font-bold text-white">{m.machine.loadPct} %</p>
-                <p className="text-xs text-gray-500">charge {m.machine.cpuLoad1} sur {m.machine.cpuCores} cœur(s)</p>
-                <Bar pct={m.machine.loadPct} />
+              <Card title="Processeur" icon={Cpu} accent="text-amber-400">
+                <p className="text-2xl font-bold text-white">{(m.machine.cpuPct ?? m.machine.loadPct)} %</p>
+                <p className="text-xs text-gray-500">
+                  {m.machine.cpuPct != null ? 'utilisé (comme la console Hetzner)' : 'charge moyenne'}
+                </p>
+                <Bar pct={m.machine.cpuPct ?? m.machine.loadPct} />
+                <p className="text-[11px] text-gray-500 mt-2">
+                  Charge moyenne : {m.machine.cpuLoad1} sur {m.machine.cpuCores} cœur(s) — elle compte aussi les processus qui attendent le disque.
+                </p>
               </Card>
 
               <Card title="Back (API)" icon={Activity} accent="text-emerald-400">
@@ -408,7 +413,7 @@ export default function ServeurPage() {
           ) : (
             <>
               {[
-                { title: 'Machine (%)', lines: [['diskPct', 'Disque', '#a855f7'], ['memPct', 'Mémoire', '#38bdf8'], ['loadPct', 'Charge CPU', '#f59e0b']], unit: '%' },
+                { title: 'Machine (%)', lines: [['diskPct', 'Disque', '#a855f7'], ['memPct', 'Mémoire', '#38bdf8'], ['cpuPct', 'CPU utilisé', '#f59e0b'], ['loadPct', 'Charge moyenne', '#78716c']], unit: '%' },
                 { title: 'Back (Mo)', lines: [['rssMb', 'Mémoire (RSS)', '#34d399'], ['heapUsedMb', 'Heap utilisé', '#a3e635']], unit: ' Mo' },
                 { title: 'Back — CPU et retard de boucle', lines: [['appCpuPct', 'CPU (% d’un cœur)', '#f87171'], ['eventLoopMeanMs', 'Retard boucle (ms)', '#fb923c']], unit: '' },
                 { title: 'Base de données', lines: [['dbConnections', 'Connexions', '#60a5fa'], ['dbLatencyMs', 'Réponse (ms)', '#f472b6']], unit: '' },
@@ -550,7 +555,7 @@ export default function ServeurPage() {
                     <div className="flex items-center gap-4 shrink-0 text-xs">
                       <div className="text-right text-gray-500 w-28">
                         <p>{t.eligibleAtDefault == null ? '—' : fmtN(t.eligibleAtDefault)} concernée(s)</p>
-                        <p className="text-[10px] text-gray-600">≈ {fmtN(t.totalRowsEstimate)} au total</p>
+                        <p className="text-[10px] text-gray-600">table entière : {fmtN(t.totalRowsEstimate)} lignes</p>
                       </div>
                       <div>
                         <label className="block text-[9px] uppercase tracking-wider text-gray-600 mb-1">Plus vieux que</label>

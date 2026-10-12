@@ -58,7 +58,7 @@ export default function EmployeeDebtDetailPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [userRole, setUserRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [payModal, setPayModal] = useState<{ kind: 'loan' | 'advance'; id: string; remaining: number } | null>(null);
+  const [payModal, setPayModal] = useState<{ kind: 'loan' | 'advance'; id: string; remaining: number; total?: number } | null>(null);
   const [editItem, setEditItem] = useState<{ kind: 'loan' | 'advance'; id: string; amount: number; monthlyRepayment?: number; deductMonth?: number; deductYear?: number; reason?: string } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -132,7 +132,7 @@ export default function EmployeeDebtDetailPage() {
       // avance n'a pas de date de départ distincte : createdAt reste la
       // meilleure approximation de son décaissement réel.
       const emprunte = history.filter(r => {
-        const d = new Date(r.kind === 'loan' ? (r.startDate ?? r.createdAt) : r.createdAt);
+        const d = r.kind === 'loan' ? new Date(r.startDate ?? r.createdAt) : (r.month && r.year ? new Date(r.year, r.month - 1, 1) : new Date(r.createdAt));
         return d.getFullYear() === m.year && d.getMonth() + 1 === m.month;
       }).reduce((s, r) => s + Number(r.amount), 0);
       const rembourse = allLogs.filter((log: any) => log.year === m.year && log.month === m.month).reduce((s: number, log: any) => s + Number(log.amount), 0);
@@ -140,14 +140,14 @@ export default function EmployeeDebtDetailPage() {
     });
   }, [history, logsByItem]);
 
-  const handlePay = async (amount: number) => {
+  const handlePay = async (amount: number, period: { month: number; year: number }) => {
     if (!payModal) return;
     try {
       const path = payModal.kind === 'loan' ? `/loans/${payModal.id}/cash-repayment` : `/loans/advances/${payModal.id}/cash-repayment`;
-      await api.post(path, { amount });
-      setPayModal(null);
+      await api.post(path, { amount, month: period.month, year: period.year });
       await load();
-    } catch (e: any) { alert(e?.message || 'Erreur'); }
+      return true; // le modal joue son animation de succès puis se ferme seul
+    } catch (e: any) { alert(e?.message || 'Erreur'); return false; }
   };
 
   const handleSaveEdit = async (id: string, kind: 'loan' | 'advance', data: any) => {
@@ -239,7 +239,7 @@ export default function EmployeeDebtDetailPage() {
             const key = `${r.kind}-${r.id}`;
             const logs = logsByItem[key] ?? [];
             const isOpen = !!expanded[key];
-            const canRepay = (r.kind === 'loan' && r.status === 'ACTIVE') || (r.kind === 'advance' && r.status === 'APPROVED');
+            const canRepay = ((r.kind === 'loan' && r.status === 'ACTIVE') || (r.kind === 'advance' && r.status === 'APPROVED')) && Number(r.remainingBalance ?? r.amount) > 0; // 🔒 bloqué dès que tout est remboursé
             // Modification : uniquement tant que la demande est en attente (protège l'employé et le RH)
             const canEditThis = ['PENDING', 'PENDING_DG'].includes(r.status) && canManageRepayments;
             const canDeleteThis = canEditDebt || (['PENDING', 'REJECTED', 'CANCELLED'].includes(r.status) && canManageRepayments);
@@ -266,7 +266,7 @@ export default function EmployeeDebtDetailPage() {
                   <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
                     {canRepay && (
-                      <button onClick={() => setPayModal({ kind: r.kind, id: r.id, remaining: Number(r.remainingBalance ?? r.amount) })} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
+                      <button onClick={() => setPayModal({ kind: r.kind, id: r.id, remaining: Number(r.remainingBalance ?? r.amount), total: Number(r.amount) })} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5">
                         <WalletIcon size={13} /> Confirmer un remboursement
                       </button>
                     )}
@@ -318,6 +318,7 @@ export default function EmployeeDebtDetailPage() {
         open={!!payModal}
         onClose={() => setPayModal(null)}
         remaining={payModal?.remaining ?? 0}
+        total={payModal?.total}
         onConfirm={handlePay}
       />
 

@@ -25,6 +25,11 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import { authService } from '@/lib/services/authService';
+import { Lock } from 'lucide-react';
+
+// Page réservée à l'Admin et au RH (même périmètre que l'entrée de menu)
+const VIEW_ROLES = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'];
 
 // 2 teintes seulement : ambre = interruption non planifiée, émeraude = demande planifiée / financière
 const TYPE_META: Record<'absence' | 'permission' | 'leave' | 'loan', { label: string; icon: any; tint: 'amber' | 'emerald'; href: string }> = {
@@ -44,6 +49,7 @@ const LOAN_PENDING_STATUSES = ['PENDING', 'PENDING_DG'];
 
 export default function DemandesHubPage() {
   const { bp } = useBasePath();
+  const [role, setRole] = useState<string | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [absences, setAbsences] = useState<any[]>([]);
   const [permissions, setPermissions] = useState<any[]>([]);
@@ -51,7 +57,10 @@ export default function DemandesHubPage() {
   const [loans, setLoans] = useState<any[]>([]);
   const [advances, setAdvances] = useState<any[]>([]);
 
+  useEffect(() => { setRole(authService.getCurrentUser()?.role ?? null); }, []);
+
   useEffect(() => {
+    if (!role || !VIEW_ROLES.includes(role)) return; // pas de chargement pour un rôle non autorisé
     (async () => {
       try {
         const [a, p, l, ln, ad]: any = await Promise.all([
@@ -72,7 +81,7 @@ export default function DemandesHubPage() {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [role]);
 
   const pendingAbsences = absences.filter(a => a.status === 'PENDING').length;
   const pendingPermissions = permissions.filter(p => p.status === 'PENDING').length;
@@ -94,6 +103,17 @@ export default function DemandesHubPage() {
   }, [absences, permissions, leaves, loans, advances]);
 
   const SUB_ICON: Record<string, any> = { MALADIE: Stethoscope, URGENCE: Stethoscope, MISSION: Briefcase, CONVENTIONNELLE: FileText, EXCEPTIONNELLE: HelpCircle, LOAN: HandCoins, ADVANCE: HandCoins };
+
+  if (role === undefined) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (!role || !VIEW_ROLES.includes(role)) {
+    return (
+      <div className="max-w-xl mx-auto py-24 text-center">
+        <Lock className="w-8 h-8 mx-auto mb-3 text-[var(--text-muted)]" />
+        <p className="text-sm font-semibold text-[var(--text)]">Accès réservé</p>
+        <p className="text-xs text-[var(--text-muted)] mt-1">Les demandes sont réservées aux administrateurs et aux responsables RH.</p>
+      </div>
+    );
+  }
 
   if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
 

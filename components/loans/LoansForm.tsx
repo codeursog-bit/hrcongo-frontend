@@ -37,6 +37,9 @@ interface AdvanceData {
     amount: number;
     deductMonth: number;
     deductYear: number;
+    /** Période de la demande (optionnelle, défaut = mois courant) : date de référence dans le profil/suivi de l'employé */
+    month?: number;
+    year?: number;
     reason: string;
 }
 
@@ -361,9 +364,13 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
         const { name, value } = e.target;
         setFormData((prev: any) => ({
             ...prev,
-            [name]: ['amount', 'monthlyRepayment', 'deductMonth', 'deductYear'].includes(name)
-                ? parseFloat(value) || 0
-                : value,
+            // month/year (période de la demande) sont optionnels : vide → undefined
+            // (et non 0, que le DTO rejetterait).
+            [name]: ['month', 'year'].includes(name)
+                ? (parseFloat(value) || undefined)
+                : ['amount', 'monthlyRepayment', 'deductMonth', 'deductYear'].includes(name)
+                    ? parseFloat(value) || 0
+                    : value,
         }));
     }, []);
 
@@ -396,6 +403,9 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
             if (!deductMonth || deductMonth < 1 || deductMonth > 12 || !deductYear || deductYear < 2024) {
                 errors.push("Mois ou année de déduction invalide.");
             }
+            const { month: reqMonth, year: reqYear } = data as AdvanceData;
+            if (reqMonth && (reqMonth < 1 || reqMonth > 12)) errors.push("Mois de la demande invalide (1 à 12).");
+            if (reqYear && reqYear < 2000) errors.push("Année de la demande invalide.");
             // ⚠️ Validation métier (50% salaire) → backend uniquement
         }
 
@@ -564,6 +574,8 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                         >
                             <Input icon={Calendar} label="Mois de Déduction (1-12)" name="deductMonth" type="number" value={formData.deductMonth || ''} onChange={handleChange} min={1} max={12} placeholder="Ex: 10 (Octobre)" required />
                             <Input icon={Clock} label="Année de Déduction" name="deductYear" type="number" value={formData.deductYear || ''} onChange={handleChange} min={new Date().getFullYear()} placeholder="Ex: 2026" required />
+                            <Input icon={Calendar} label="Mois de la demande (1-12) — optionnel" name="month" type="number" value={formData.month || ''} onChange={handleChange} min={1} max={12} placeholder={`Par défaut : ${new Date().getMonth() + 1}`} />
+                            <Input icon={Clock} label="Année de la demande — optionnel" name="year" type="number" value={formData.year || ''} onChange={handleChange} min={2000} placeholder={`Par défaut : ${new Date().getFullYear()}`} />
                         </motion.div>
                     )}
                 </AnimatePresence>

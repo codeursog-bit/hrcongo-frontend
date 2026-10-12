@@ -257,16 +257,16 @@ export default function CnssDeclarationPage() {
             <div className="relative">
               <select value={month} onChange={e=>setMonth(Number(e.target.value))}
                 className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
-                {MONTHS.map((m,i)=><option key={i} value={i+1}>{m}</option>)}
+                {MONTHS.map((m,i)=><option key={i} value={i+1} className="bg-[var(--surface)] text-[var(--text)]">{m}</option>)}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
             </div>
             <div className="relative">
               <select value={year} onChange={e=>setYear(Number(e.target.value))}
                 className="pl-3 pr-8 py-2 text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
-                {[2023,2024,2025,2026].map(y=><option key={y} value={y}>{y}</option>)}
+                {Array.from(new Set([...Array.from({ length: 7 }, (_, i) => Math.max(2020, new Date().getFullYear() - 5) + i), year])).sort((a, b) => a - b).map(y=><option key={y} value={y} className="bg-[var(--surface)] text-[var(--text)]">{y}</option>)}
               </select>
-              <ChevronDown className="absolute right-2 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"/>
             </div>
             <button onClick={loadRecap}
               className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors">

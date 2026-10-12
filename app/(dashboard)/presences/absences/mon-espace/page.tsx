@@ -247,7 +247,11 @@ export default function MonEspaceAbsencesPage() {
 
                     <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
                       <Wallet size={14} className="text-[var(--text-muted)]" />
-                      {selected.isPaid ? 'Absence payée demandée' : 'Absence non-payée demandée'}
+                      {selected.subType === 'AUTRE' && selected.status === 'PENDING'
+                        ? 'Motif « Autre » — paiement à définir par la RH'
+                        : selected.subType === 'AUTRE'
+                          ? (selected.isPaid ? 'Absence payée (décision RH)' : 'Absence non payée (décision RH)')
+                          : selected.isPaid ? 'Absence payée demandée' : 'Absence non-payée demandée'}
                     </div>
 
                     {selected.attachmentUrl && (

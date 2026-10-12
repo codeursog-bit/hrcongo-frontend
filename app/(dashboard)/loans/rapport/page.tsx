@@ -8,6 +8,7 @@
 //    l'app (pas ceux du fichier Excel).
 // ============================================================================
 
+import { debtRefDate } from '@/lib/debt-dates';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Loader2, Users2, Banknote, PiggyBank, TrendingUp } from 'lucide-react';
 import {
@@ -62,7 +63,7 @@ export default function LoansReportPage() {
   // dans le mois réellement choisi. Une avance n'a pas de date de départ
   // distincte : createdAt reste la meilleure approximation de son
   // décaissement réel.
-  const refDate = (r: any) => new Date(r.requestType === 'AVANCE' ? r.createdAt : (r.startDate ?? r.createdAt));
+  const refDate = (r: any) => debtRefDate(r, r.requestType === 'AVANCE' ? 'advance' : 'loan');
 
   const availableYears = useMemo(() => {
     const set = new Set<number>([now.getFullYear()]);

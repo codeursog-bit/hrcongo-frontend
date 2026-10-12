@@ -220,21 +220,21 @@ export default function LoansManagementPage() {
     try { await api.patch(`/loans/${id}/cancel`, {}); await load(); } catch (e: any) { alert(e?.message || 'Erreur'); }
   };
 
-  const [payModal, setPayModal] = useState<{ kind: 'loan' | 'advance'; id: string; remaining: number } | null>(null);
+  const [payModal, setPayModal] = useState<{ kind: 'loan' | 'advance'; id: string; remaining: number; total?: number } | null>(null);
   const handleCashRepayment = (loanId: string, remainingBalance: number) => {
-    setPayModal({ kind: 'loan', id: loanId, remaining: remainingBalance });
+    setPayModal({ kind: 'loan', id: loanId, remaining: remainingBalance, total: Number(loans.find((x: any) => x.id === loanId)?.amount) || undefined });
   };
   const handleAdvanceCashRepayment = (advanceId: string, remainingBalance: number) => {
-    setPayModal({ kind: 'advance', id: advanceId, remaining: remainingBalance });
+    setPayModal({ kind: 'advance', id: advanceId, remaining: remainingBalance, total: Number(advances.find((x: any) => x.id === advanceId)?.amount) || undefined });
   };
-  const confirmCashRepayment = async (amount: number) => {
+  const confirmCashRepayment = async (amount: number, period: { month: number; year: number }) => {
     if (!payModal) return;
     try {
       const path = payModal.kind === 'loan' ? `/loans/${payModal.id}/cash-repayment` : `/loans/advances/${payModal.id}/cash-repayment`;
-      await api.post(path, { amount });
-      setPayModal(null);
+      await api.post(path, { amount, month: period.month, year: period.year });
       await load();
-    } catch (e: any) { alert(e?.message || 'Erreur'); }
+      return true; // le modal joue son animation de succès puis se ferme seul
+    } catch (e: any) { alert(e?.message || 'Erreur'); return false; }
   };
 
   // ── Modification (RH/Admin uniquement — le backend l'impose déjà via
@@ -667,7 +667,7 @@ export default function LoansManagementPage() {
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.cls}`}><span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} /> {cfg.label}</span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {l.status === 'ACTIVE' && DRH_ROLES.includes(userRole) && (
+                        {l.status === 'ACTIVE' && Number(l.remainingBalance) > 0 && DRH_ROLES.includes(userRole) && (
                           <button onClick={(e) => { e.stopPropagation(); handleCashRepayment(l.id, Number(l.remainingBalance)); }} className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white transition-colors whitespace-nowrap">
                             <Wallet size={11} /> Rembourser
                           </button>
@@ -802,7 +802,7 @@ export default function LoansManagementPage() {
                     </div>
                   )}
 
-                  {selectedLoan.status === 'ACTIVE' && DRH_ROLES.includes(userRole) && (
+                  {selectedLoan.status === 'ACTIVE' && Number(selectedLoan.remainingBalance) > 0 && DRH_ROLES.includes(userRole) && (
                     <button onClick={() => handleCashRepayment(selectedLoan.id, Number(selectedLoan.remainingBalance))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
                       <Wallet size={16} /> Confirmer un remboursement
                     </button>
@@ -934,7 +934,7 @@ export default function LoansManagementPage() {
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${cfg.cls}`}><span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} /> {cfg.label}</span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {a.status === 'APPROVED' && DRH_ROLES.includes(userRole) && (
+                        {a.status === 'APPROVED' && Number(a.remainingBalance ?? a.amount) > 0 && DRH_ROLES.includes(userRole) && (
                           <button onClick={(e) => { e.stopPropagation(); handleAdvanceCashRepayment(a.id, Number(a.remainingBalance ?? a.amount)); }} className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white transition-colors whitespace-nowrap">
                             <Wallet size={11} /> Rembourser
                           </button>
@@ -1051,7 +1051,7 @@ export default function LoansManagementPage() {
                     </div>
                   )}
 
-                  {selectedAdvance.status === 'APPROVED' && DRH_ROLES.includes(userRole) && (
+                  {selectedAdvance.status === 'APPROVED' && Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount) > 0 && DRH_ROLES.includes(userRole) && (
                     <div className="space-y-2">
                       <button onClick={() => handleAdvanceCashRepayment(selectedAdvance.id, Number(selectedAdvance.remainingBalance ?? selectedAdvance.amount))} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/30">
                         <Wallet size={16} /> Confirmer un remboursement
@@ -1435,6 +1435,7 @@ export default function LoansManagementPage() {
         open={!!payModal}
         onClose={() => setPayModal(null)}
         remaining={payModal?.remaining ?? 0}
+        total={payModal?.total}
         onConfirm={confirmCashRepayment}
       />
 

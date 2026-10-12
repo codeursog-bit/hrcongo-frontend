@@ -15,6 +15,7 @@ import { Loader2, Search, ChevronRight, Wallet, Banknote, PiggyBank, TrendingDow
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
+import { debtRefDate } from '@/lib/debt-dates';
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
@@ -45,7 +46,7 @@ export default function ReleveRecapPage() {
   const availableYears = useMemo(() => {
     const set = new Set<number>([now.getFullYear()]);
     loans.forEach(r => set.add(new Date(r.startDate ?? r.createdAt).getFullYear()));
-    advances.forEach(r => set.add(new Date(r.createdAt).getFullYear()));
+    advances.forEach(r => set.add(debtRefDate(r, 'advance').getFullYear()));
     return Array.from(set).sort((a, b) => b - a);
   }, [loans, advances]);
 
@@ -75,7 +76,8 @@ export default function ReleveRecapPage() {
     const latestLogDate = (logs?: any[]) => {
       if (!logs || logs.length === 0) return null;
       return logs.reduce((latest: string | null, log: any) => {
-        const d = log.recordedAt ?? new Date(log.year, log.month - 1, 1).toISOString();
+        // Période du remboursement (mois/année saisis), pas la date de saisie.
+        const d = new Date(log.year, log.month, 0, 23, 59, 59).toISOString();
         return !latest || new Date(d) > new Date(latest) ? d : latest;
       }, null as string | null);
     };
@@ -106,8 +108,8 @@ export default function ReleveRecapPage() {
       row.totalDu += Number(a.amount);
       row.totalRembourse += Number(a.amount) - Number(a.remainingBalance ?? a.amount);
       row.nbDettes += 1;
-      touchDate(row, latestLogDate(a.repaymentLogs) ?? a.createdAt);
-      if (inPeriodDate(a.createdAt)) row.givenInPeriod += Number(a.amount);
+      touchDate(row, latestLogDate(a.repaymentLogs) ?? debtRefDate(a, 'advance').toISOString());
+      if (inPeriodDate(debtRefDate(a, 'advance').toISOString())) row.givenInPeriod += Number(a.amount);
       (a.repaymentLogs ?? []).forEach((log: any) => { if (inPeriodLog(log)) row.paidInPeriod += Number(log.amount); });
     });
     const nameQuery = nameFilter.trim().toLowerCase();
@@ -207,7 +209,7 @@ export default function ReleveRecapPage() {
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-[var(--text-muted)]">{r.employee?.department?.name || '—'}</td>
-                <td className="px-4 py-3 text-[var(--text-muted)]">{r.dernierMouvement ? new Date(r.dernierMouvement).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
+                <td className="px-4 py-3 text-[var(--text-muted)]">{r.dernierMouvement ? new Date(r.dernierMouvement).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) : '—'}</td>
                 <td className="px-4 py-3 text-right text-[var(--text-muted)]">{r.givenInPeriod > 0 ? fmt(r.givenInPeriod) : '—'}</td>
                 <td className="px-4 py-3 text-right text-emerald-600">{r.paidInPeriod > 0 ? fmt(r.paidInPeriod) : '—'}</td>
                 <td className="px-4 py-3 text-right text-[var(--text-muted)]">{fmt(r.totalDu)}</td>

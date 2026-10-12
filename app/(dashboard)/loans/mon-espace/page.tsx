@@ -6,6 +6,7 @@
 //    avec pagination, cohérent avec les autres modules (absences, permissions).
 // ============================================================================
 
+import { debtRefDate } from '@/lib/debt-dates';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
 import Link from 'next/link';
@@ -267,7 +268,7 @@ export default function MonEspacePretsAvancesPage() {
     }
     const allLogs = Object.values(historyByLoan).flat();
     return months.map(m => {
-      const emprunte = items.filter(i => { const d = new Date(i.data.createdAt); return d.getFullYear() === m.year && d.getMonth() + 1 === m.month; }).reduce((s, i) => s + Number(i.data.amount), 0);
+      const emprunte = items.filter(i => { const d = debtRefDate(i.data, i.kind); return d.getFullYear() === m.year && d.getMonth() + 1 === m.month; }).reduce((s, i) => s + Number(i.data.amount), 0);
       const rembourse = allLogs.filter((log: any) => log.year === m.year && log.month === m.month).reduce((s: number, log: any) => s + Number(log.amount), 0);
       return { mois: m.label, Emprunté: Math.round(emprunte), Remboursé: Math.round(rembourse) };
     });
@@ -325,7 +326,7 @@ export default function MonEspacePretsAvancesPage() {
                     <Icon size={14} className="text-[var(--text-muted)]" />
                     <p className="font-semibold text-sm text-[var(--text)]">{isLoan ? `Prêt ${item.data.type.toLowerCase()}` : 'Avance sur salaire'}</p>
                   </div>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">{Number(item.data.amount).toLocaleString('fr-FR')} FCFA · {new Date(item.data.createdAt).toLocaleDateString('fr-FR')}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">{Number(item.data.amount).toLocaleString('fr-FR')} FCFA · {debtRefDate(item.data, item.kind).toLocaleDateString('fr-FR')}</p>
                   <span className={`inline-flex items-center gap-1 mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${cfg.cls}`}><StatusIcon size={10} /> {cfg.label}</span>
                 </button>
               );
@@ -463,7 +464,7 @@ export default function MonEspacePretsAvancesPage() {
                   <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-[var(--text)]">
-                        {new Date(item.data.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {isLoan ? `Prêt ${item.data.type?.toLowerCase()}` : 'Avance sur salaire'} · {Number(item.data.amount).toLocaleString('fr-FR')} FCFA
+                        {debtRefDate(item.data, item.kind).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {isLoan ? `Prêt ${item.data.type?.toLowerCase()}` : 'Avance sur salaire'} · {Number(item.data.amount).toLocaleString('fr-FR')} FCFA
                       </p>
                       {item.data.reason && <p className="text-xs text-[var(--text-muted)] mt-0.5">{item.data.reason}</p>}
                     </div>

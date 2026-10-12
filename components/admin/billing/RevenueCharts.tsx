@@ -42,10 +42,6 @@ export const RevenueCharts: React.FC<RevenueChartsProps> = ({
             <h3 className="text-lg font-bold text-white">Revenue Trends</h3>
             <p className="text-xs text-gray-500">Last 12 months MRR evolution</p>
           </div>
-          <div className="flex gap-2">
-             <button className="px-3 py-1 bg-gray-800 text-xs text-white rounded border border-gray-700">Total</button>
-             <button className="px-3 py-1 text-xs text-gray-500 hover:text-white rounded border border-transparent hover:bg-gray-800">By Plan</button>
-          </div>
         </div>
         
         <div className="h-[250px] w-full">
