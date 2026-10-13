@@ -24,13 +24,15 @@ import React, {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { authService } from '@/lib/services/authService';
-import { CHAT_ROLES, chatApi } from '@/services/chat-api';
+import { CHAT_ROLES, ChatReceipt, chatApi } from '@/services/chat-api';
 
 export type ChatFocus = 'off' | 'list' | 'conversation';
 
 export interface ChatChange {
   tick: number;
   conversationIds: string[];
+  /** accusés (reçu / lu) modifiés depuis le dernier poll */
+  receipts: ChatReceipt[];
 }
 
 interface ChatContextValue {
@@ -54,7 +56,7 @@ const noop = () => {};
 const DEFAULT: ChatContextValue = {
   enabled: false,
   unreadTotal: 0,
-  lastChange: { tick: 0, conversationIds: [] },
+  lastChange: { tick: 0, conversationIds: [], receipts: [] },
   setFocus: noop,
   pokeActivity: noop,
   pollNow: noop,
@@ -126,6 +128,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           setLastChange({
             tick: tickRef.current,
             conversationIds: (res.conversations ?? []).map((c) => c.id),
+            receipts: res.receipts ?? [],
           });
         }
       } catch (e: any) {

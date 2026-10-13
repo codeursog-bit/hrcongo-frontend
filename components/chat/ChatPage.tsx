@@ -17,10 +17,10 @@ import React, {
 } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
-  ArrowDown, ArrowLeft, Loader2, MessageCircle, PenSquare, RotateCcw, Search, SendHorizontal, X,
+  ArrowDown, ArrowLeft, Check, CheckCheck, Loader2, MessageCircle, PenSquare, RotateCcw, Search, SendHorizontal, X,
 } from 'lucide-react';
 import {
-  ChatContact, ChatConversation, ChatMessage, ChatRole, MAX_MESSAGE_LENGTH, chatApi,
+  ChatContact, ChatConversation, ChatMessage, ChatPeer, ChatRole, MAX_MESSAGE_LENGTH, chatApi,
 } from '@/services/chat-api';
 import { useChat } from './ChatProvider';
 
@@ -83,6 +83,39 @@ const uuid = () =>
       });
 
 /** confirmés triés par seq, puis messages en cours d'envoi dans leur ordre d'arrivée */
+// ─── Accusés façon WhatsApp : ✓ envoyé · ✓✓ reçu · ✓✓ lu ─────────────────────
+type Receipt = 'sent' | 'delivered' | 'read';
+const NO_PEER: ChatPeer = { deliveredAt: null, readAt: null };
+
+/** Fusionne deux états d'accusés : on ne recule jamais (un message lu ne redevient pas « reçu »). */
+function mergePeer(a: ChatPeer, b: ChatPeer): ChatPeer {
+  const max = (x: string | null, y: string | null) => (x && y ? (Date.parse(x) >= Date.parse(y) ? x : y) : x ?? y);
+  const next = { deliveredAt: max(a.deliveredAt, b.deliveredAt), readAt: max(a.readAt, b.readAt) };
+  return next.deliveredAt === a.deliveredAt && next.readAt === a.readAt ? a : next; // même objet = pas de re-rendu
+}
+
+function receiptOf(createdAt: string, peer: ChatPeer): Receipt {
+  const t = Date.parse(createdAt);
+  if (peer.readAt && Date.parse(peer.readAt) >= t) return 'read';
+  if (peer.deliveredAt && Date.parse(peer.deliveredAt) >= t) return 'delivered';
+  return 'sent';
+}
+
+function Ticks({ status, onBubble = false }: { status: Receipt; onBubble?: boolean }) {
+  const label = status === 'read' ? 'Lu' : status === 'delivered' ? 'Reçu' : 'Envoyé';
+  // Sur la bulle verte : blanc translucide (envoyé / reçu) → blanc plein + gras (lu).
+  // Dans la liste (fond clair/sombre) : gris (envoyé / reçu) → vert (lu).
+  const color = onBubble
+    ? status === 'read' ? '#FFFFFF' : 'rgba(255,255,255,0.6)'
+    : status === 'read' ? '#10B981' : 'var(--text-muted)';
+  const Icon = status === 'sent' ? Check : CheckCheck;
+  return (
+    <span title={label} aria-label={label} className="inline-flex shrink-0">
+      <Icon size={onBubble ? 14 : 13} strokeWidth={status === 'read' ? 3 : 2.25} style={{ color }} />
+    </span>
+  );
+}
+
 function normalize(list: ChatMessage[]): ChatMessage[] {
   const seen = new Set<string>();
   const uniq = list.filter((m) => (seen.has(m.id) ? false : (seen.add(m.id), true)));
@@ -193,6 +226,7 @@ export default function ChatPage() {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [unseen, setUnseen] = useState(false);
+  const [peer, setPeer] = useState<ChatPeer>(NO_PEER); // accusés de l'autre personne (conversation ouverte)
 
   const activeIdRef = useRef<string | null>(activeId);
   const conversationsRef = useRef<ChatConversation[]>([]);
@@ -252,6 +286,7 @@ export default function ChatPage() {
   useEffect(() => {
     activeIdRef.current = activeId;
     setMessages([]);
+    setPeer(NO_PEER);
     setHasMore(false);
     setUnseen(false);
     if (activeId) setError(null); // à la fermeture (ex. 404) on garde le message affiché
@@ -266,6 +301,7 @@ export default function ChatPage() {
       .then((res) => {
         if (cancelled) return;
         setMessages(normalize(res.messages));
+        if (res.peer) setPeer((p) => mergePeer(p, res.peer!));
         setHasMore(res.hasMore);
         lastSeqRef.current = res.messages.reduce((m, x) => Math.max(m, x.seq), 0);
         void chatApi.markRead(activeId).then(() => markReadLocal(activeId)).catch(() => {});
@@ -287,7 +323,9 @@ export default function ChatPage() {
   const fetchDelta = useCallback(async (id: string) => {
     try {
       const res = await chatApi.messages(id, { after: lastSeqRef.current, limit: 100 });
-      if (activeIdRef.current !== id || !res.messages.length) return;
+      if (activeIdRef.current !== id) return;
+      if (res.peer) setPeer((p) => mergePeer(p, res.peer!));
+      if (!res.messages.length) return;
       lastSeqRef.current = res.messages.reduce((m, x) => Math.max(m, x.seq), lastSeqRef.current);
       setMessages((prev) => normalize([...prev, ...res.messages]));
       if (res.messages.some((m) => !m.mine)) {
@@ -302,6 +340,9 @@ export default function ChatPage() {
     void loadConversations();
     const id = activeIdRef.current;
     if (id && lastChange.conversationIds.includes(id)) void fetchDelta(id);
+    // Accusés (reçu / lu) envoyés par le poll : on les applique à la conversation ouverte, sans requête en plus
+    const rc = id ? lastChange.receipts.find((r) => r.conversationId === id) : undefined;
+    if (rc) setPeer((p) => mergePeer(p, rc));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastChange.tick]);
 
@@ -384,7 +425,7 @@ export default function ChatPage() {
       setConversations((prev) => {
         const cur = prev.find((c) => c.id === conversationId);
         const updated: ChatConversation | null = cur
-          ? { ...cur, lastMessageAt: now, lastPreview: body.replace(/\s+/g, ' ').slice(0, 80), lastFromMe: true, unreadCount: 0 }
+          ? { ...cur, lastMessageAt: now, lastPreview: body.replace(/\s+/g, ' ').slice(0, 80), lastFromMe: true, lastStatus: 'sent', unreadCount: 0 }
           : null;
         return updated ? [updated, ...prev.filter((c) => c.id !== conversationId)] : prev;
       });
@@ -536,7 +577,7 @@ export default function ChatPage() {
                     </div>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
                       <span className={`text-xs truncate ${c.unreadCount ? 'font-semibold' : ''}`} style={{ color: c.unreadCount ? 'var(--text)' : 'var(--text-muted)' }}>
-                        {c.lastFromMe ? 'Vous : ' : ''}{c.lastPreview}
+                        {c.lastFromMe && <span className="inline-flex align-middle mr-1"><Ticks status={c.lastStatus ?? 'sent'} /></span>}{c.lastFromMe ? 'Vous : ' : ''}{c.lastPreview}
                       </span>
                       {c.unreadCount > 0 && (
                         <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">
@@ -670,7 +711,7 @@ export default function ChatPage() {
                               style={m.mine ? { background: m.status === 'failed' ? '#EF4444' : '#10B981' } : { background: 'var(--surface-2)', color: 'var(--text)' }}
                             >
                               <div className="whitespace-pre-wrap break-words">{m.body}</div>
-                              <div className={`flex items-center justify-end gap-2 mt-1 text-[10px] ${m.mine ? 'text-white/80' : ''}`} style={m.mine ? undefined : { color: 'var(--text-muted)' }}>
+                              <div className={`flex items-center justify-end gap-1.5 mt-1 text-[10px] ${m.mine ? 'text-white/80' : ''}`} style={m.mine ? undefined : { color: 'var(--text-muted)' }}>
                                 {m.status === 'failed' ? (
                                   <button onClick={() => retry(m)} className="inline-flex items-center gap-1 font-bold underline">
                                     <RotateCcw size={10} /> Échec — réessayer
@@ -678,7 +719,10 @@ export default function ChatPage() {
                                 ) : m.status === 'sending' ? (
                                   <span>Envoi…</span>
                                 ) : (
-                                  <span>{timeOf(m.createdAt)}</span>
+                                  <>
+                                    <span>{timeOf(m.createdAt)}</span>
+                                    {m.mine && <Ticks status={receiptOf(m.createdAt, peer)} onBubble />}
+                                  </>
                                 )}
                               </div>
                             </div>

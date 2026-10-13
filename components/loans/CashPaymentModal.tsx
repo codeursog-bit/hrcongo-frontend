@@ -47,6 +47,7 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
   const [isPaying, setIsPaying] = useState(false);
   const [success, setSuccess] = useState(false);
   const [settled, setSettled] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const today = new Date();
   const curM = today.getMonth() + 1;
@@ -56,7 +57,7 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
 
   useEffect(() => {
     if (!open) return;
-    setAmount(''); setSuccess(false); setSettled(false); setIsPaying(false);
+    setAmount(''); setSuccess(false); setSettled(false); setIsPaying(false); setError(null);
     const d = new Date(); setMonth(d.getMonth() + 1); setYear(d.getFullYear());
   }, [open]);
 
@@ -71,15 +72,14 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
   const numeric = Number(amount.replace(/[^\d]/g, '')) || 0;
   const fullyPaid = remaining <= 0; // 🔒 dette soldée : plus aucune saisie
   const overRemaining = numeric > remaining;
-  const periodInFuture = year * 12 + month > curY * 12 + curM;
-  const valid = numeric > 0 && !overRemaining && !periodInFuture && !fullyPaid;
+  const valid = numeric > 0 && !overRemaining && !fullyPaid;
 
   const afterPayment = Math.max(0, remaining - (overRemaining ? 0 : numeric));
   const paidBefore = total ? Math.max(0, total - remaining) : 0;
   const pctBefore = total ? Math.min(100, (paidBefore / total) * 100) : 0;
   const pctNew = total ? Math.min(100 - pctBefore, ((overRemaining ? 0 : numeric) / total) * 100) : 0;
 
-  const years = useMemo(() => [curY, curY - 1, curY - 2, curY - 3], [curY]);
+  const years = useMemo(() => [curY + 1, curY, curY - 1, curY - 2, curY - 3], [curY]);
   const lastMonth = curM === 1 ? { month: 12, year: curY - 1 } : { month: curM - 1, year: curY };
   const isThisMonth = month === curM && year === curY;
   const isLastMonth = month === lastMonth.month && year === lastMonth.year;
@@ -93,12 +93,16 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
   const handleConfirm = async () => {
     if (!valid || isPaying) return;
     setIsPaying(true);
+    setError(null);
     try {
       const res = await onConfirm(numeric, { month, year });
       if (res === false) return; // échec déjà signalé par l'appelant
       setSettled(numeric >= remaining);
       setSuccess(true);
       setTimeout(onClose, 1500);
+    } catch (e: any) {
+      // L'erreur (envoyée par le serveur) s'affiche DANS le modal, pas dans une alerte du navigateur
+      setError(e?.message || "Impossible d'enregistrer ce remboursement.");
     } finally { setIsPaying(false); }
   };
 
@@ -277,18 +281,19 @@ export default function CashPaymentModal({ open, onClose, remaining, total, onCo
                             {years.map(y => <option key={y} value={y}>{y}</option>)}
                           </select>
                         </div>
-                        <AnimatePresence>
-                          {periodInFuture ? (
-                            <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-1.5 text-xs font-medium text-red-600">
-                              Une période future n&apos;est pas possible.
-                            </motion.p>
-                          ) : (
-                            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1.5 text-[11px] text-[var(--text-muted)]">
-                              Ce remboursement sera comptabilisé sur {MONTHS_LONG[month - 1].toLowerCase()} {year} (relevé, suivi et paie).
-                            </motion.p>
-                          )}
-                        </AnimatePresence>
+                        <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
+                          Ce remboursement sera comptabilisé sur {MONTHS_LONG[month - 1].toLowerCase()} {year} (relevé, suivi et paie).
+                        </p>
                       </div>
+
+                      <AnimatePresence>
+                        {error && (
+                          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            className="mt-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-500/10 dark:border-red-500/30 px-3 py-2.5 text-xs font-medium text-red-700 dark:text-red-300">
+                            {error}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* Action */}
                       <motion.button

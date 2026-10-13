@@ -18,6 +18,7 @@ import {
   Send, History, Clock,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
+import { CompanySelect } from '@/components/admin/CompanySelect';
 import { api } from '@/services/api';
 
 type StatusFilter = 'all' | 'active' | 'enabled_no_device' | 'disabled';
@@ -103,6 +104,13 @@ function BroadcastTab() {
   const [history, setHistory] = useState<any[]>([]);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Options du sélecteur d'entreprise (nom commercial, sinon raison sociale), triées A→Z
+  const companyOptions = useMemo(
+    () => companies
+      .map((c: any) => ({ id: c.id as string, name: (c.tradeName || c.legalName || 'Entreprise sans nom') as string }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+    [companies],
+  );
 
   const running = job?.status === 'RUNNING';
 
@@ -166,7 +174,7 @@ function BroadcastTab() {
     } finally { setStarting(false); }
   };
 
-  const sel = 'w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-gray-600';
+  const sel = 'w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-gray-600 [&>option]:bg-gray-900 [&>option]:text-gray-200';
   const pct = job && job.total > 0 ? Math.min(100, Math.round((job.processed / job.total) * 100)) : 0;
 
   return (
@@ -181,15 +189,15 @@ function BroadcastTab() {
         </div>
 
         <div className="grid sm:grid-cols-2 gap-3">
-          <label className="text-xs text-gray-400 space-y-1">
-            <span>Entreprise</span>
-            <select className={sel} value={companyId} onChange={(e) => setCompanyId(e.target.value)} disabled={running}>
-              <option value="">Toutes les entreprises</option>
-              {companies.map((c: any) => (
-                <option key={c.id} value={c.id}>{c.tradeName || c.legalName}</option>
-              ))}
-            </select>
-          </label>
+          <div className="text-xs text-gray-400 space-y-1">
+            <span className="block">Entreprise</span>
+            <CompanySelect
+              value={companyId}
+              onChange={setCompanyId}
+              options={companyOptions}
+              disabled={running}
+            />
+          </div>
           <label className="flex items-center gap-2.5 text-sm text-gray-300 sm:mt-6 cursor-pointer">
             <input type="checkbox" className="w-4 h-4 accent-red-600" checked={onlyNotPunched}
               onChange={(e) => setOnlyNotPunched(e.target.checked)} disabled={running} />
@@ -333,7 +341,7 @@ function ReceiptsTab() {
   useEffect(() => { const t = setTimeout(() => { setPage(1); load(); }, 400); return () => clearTimeout(t); /* eslint-disable-next-line */ }, [search]);
 
   const st = data?.stats;
-  const sel = 'bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none';
+  const sel = 'bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none [&>option]:bg-gray-900 [&>option]:text-gray-200';
 
   return (
     <div className="space-y-5">

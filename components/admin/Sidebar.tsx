@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // hors de la zone défilante et les derniers menus étaient coupés.
   const content = (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar" style={{ scrollbarWidth: 'thin', scrollbarColor: '#4B5563 transparent' }}>
 
         {/* Navigation Menu */}
         <div className="p-4 border-b border-gray-800">

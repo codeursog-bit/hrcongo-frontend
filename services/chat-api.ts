@@ -19,7 +19,18 @@ export interface ChatConversation {
   lastMessageAt: string | null;
   lastPreview: string | null;
   lastFromMe: boolean;
+  /** État du dernier message s'il est de moi (✓ envoyé, ✓✓ reçu, ✓✓ lu) */
+  lastStatus?: 'sent' | 'delivered' | 'read';
   unreadCount: number;
+}
+
+/** Accusés de l'autre personne : le client en déduit l'état de chacun de MES messages. */
+export interface ChatPeer {
+  deliveredAt: string | null;
+  readAt: string | null;
+}
+export interface ChatReceipt extends ChatPeer {
+  conversationId: string;
 }
 
 export interface ChatMessage {
@@ -39,6 +50,7 @@ export interface ChatPoll {
   serverTime: string;
   unreadTotal?: number;
   conversations?: { id: string; unreadCount: number }[];
+  receipts?: ChatReceipt[];
 }
 
 export const CHAT_ROLES: ChatRole[] = ['ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'];
@@ -58,7 +70,7 @@ export const chatApi = {
   open: (userId: string) =>
     api.post<{ id: string; other: ChatContact }>('/chat/conversations', { userId }),
   messages: (id: string, p: { before?: number; after?: number; limit?: number } = {}) =>
-    api.get<{ messages: ChatMessage[]; hasMore: boolean }>(
+    api.get<{ messages: ChatMessage[]; hasMore: boolean; peer?: ChatPeer }>(
       `/chat/conversations/${id}/messages${qs(p)}`,
     ),
   send: (id: string, body: string, clientId: string) =>

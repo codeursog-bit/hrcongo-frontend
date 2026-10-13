@@ -17,6 +17,9 @@ import BulletinBatchPrintHidden from '@/components/BulletinBatchPrintHidden';
 import { printBulletinBatch } from '@/lib/bulletin-print';
 import { usePayrollData } from '@/hooks/usePayrollData';
 import { useBasePath } from '@/hooks/useBasePath';
+import PayrollAuditBanner from '@/components/audit/PayrollAuditBanner';
+import AuditBlockedModal from '@/components/audit/AuditBlockedModal';
+import { auditBlockedOf, type AuditBlocked } from '@/services/audit-engine';
 
 type PayrollStatus = 'Draft' | 'Validated' | 'Paid' | 'Cancelled';
 
@@ -78,6 +81,8 @@ export default function PayrollPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { entries, isLoading, stats, refetch, setEntries } = usePayrollData(selectedMonth, selectedYear);
+  const [auditBlocked, setAuditBlocked] = useState<AuditBlocked | null>(null);
+  const [auditRefresh, setAuditRefresh] = useState(0);
 
   // ── CHANGEMENT STATUT ────────────────────────────────────────────────────
   const handleStatusChange = async (id: string, newStatus: string) => {
@@ -100,7 +105,10 @@ export default function PayrollPage() {
       }
       setEntries(prev => prev.map(e => e.id === id ? { ...e, status: frontendStatus as PayrollStatus } : e));
     } catch (e: any) {
-      alert(`❌ ${e.message || 'Impossible de mettre à jour le statut'}`);
+      const b = auditBlockedOf(e);
+      if (b) setAuditBlocked(b);
+      else alert(`❌ ${e.message || 'Impossible de mettre à jour le statut'}`);
+      setAuditRefresh(k => k + 1);
       refetch();
     } finally {
       setActionLoadingId(null);
@@ -137,6 +145,7 @@ export default function PayrollPage() {
 
     setIsBatchActionLoading(true);
     let successCount = 0, failCount = 0;
+    let blockedForModal: AuditBlocked | null = null;
     for (const id of selectedIds) {
       try {
         if (action === 'CANCELLED') {
@@ -147,9 +156,16 @@ export default function PayrollPage() {
           await api.patch(`/payrolls/${id}`, { status: action });
         }
         successCount++;
-      } catch { failCount++; }
+      } catch (e: any) {
+        failCount++;
+        // 🛡️ Refus du contrôle de paie : on garde le premier refus pour l'afficher
+        const b = auditBlockedOf(e);
+        if (b && !blockedForModal) blockedForModal = b;
+      }
     }
     alert(`✅ ${successCount} réussis, ❌ ${failCount} échecs`);
+    if (blockedForModal) setAuditBlocked(blockedForModal);
+    setAuditRefresh(k => k + 1);
     setSelectedIds([]);
     refetch();
     setIsBatchActionLoading(false);
@@ -229,6 +245,8 @@ export default function PayrollPage() {
       </div>
 
       {/* ── STATS ── */}
+      <PayrollAuditBanner month={Math.max(1, MONTHS.indexOf(selectedMonth) + 1)} year={selectedYear} refreshKey={auditRefresh} />
+
       <PayrollStatsCards
         totalGross={stats.totalGross}
         totalCharges={stats.totalCharges}
@@ -419,6 +437,16 @@ export default function PayrollPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {auditBlocked && (
+        <AuditBlockedModal
+          blocked={auditBlocked}
+          month={Math.max(1, MONTHS.indexOf(selectedMonth) + 1)}
+          year={selectedYear}
+          onClose={() => setAuditBlocked(null)}
+          onRetry={() => { setAuditBlocked(null); refetch(); }}
+        />
+      )}
     </div>
   );
 }

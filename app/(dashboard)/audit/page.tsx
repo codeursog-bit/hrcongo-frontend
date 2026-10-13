@@ -7,9 +7,10 @@
 // Tout ce que renvoie GET /audit-trail/events et /audit-trail/verify est affiché.
 // ============================================================================
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   ShieldCheck, ShieldAlert, ShieldX, Loader2, ChevronLeft, ChevronRight, X, RefreshCw,
-  ScrollText, Fingerprint, Copy, Check, Lock, ClipboardCheck,
+  ScrollText, Fingerprint, Copy, Check, Lock, ClipboardCheck, Wallet, FileText, Settings,
 } from 'lucide-react';
 import {
   auditTrailService, type AuditEvent, type AuditListResponse, type AuditSeverity, type ChainVerification,
@@ -39,7 +40,7 @@ const field = 'px-3 py-2 text-sm rounded-xl border border-[var(--border)] bg-[va
 const lbl = 'block text-xs font-semibold text-[var(--text-muted)] mb-1';
 
 export default function AuditPage() {
-  const { companyId, isPme } = useBasePath();
+  const { bp, companyId, isPme } = useBasePath();
   const [role, setRole] = useState<string | null | undefined>(undefined);
   const [tab, setTab] = useState<'journal' | 'controles' | 'integrite'>('journal');
   const [initPeriod, setInitPeriod] = useState<{ month?: number; year?: number }>({});
@@ -50,14 +51,27 @@ export default function AuditPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => { setRole(authService.getCurrentUser()?.role ?? null); }, []);
-  // Arrivée depuis la page Paie ou la fenêtre de refus : ?tab=controles&month=7&year=2026
-  useEffect(() => {
+  // Onglet + période lus dans l'URL (?tab=controles&month=7&year=2026) : lien partageable,
+  // bouton « retour » du navigateur fonctionnel, arrivée depuis la Paie ou la fenêtre de refus.
+  const readUrl = useCallback(() => {
     const q = new URLSearchParams(window.location.search);
     const t = q.get('tab');
-    if (t === 'controles' || t === 'integrite') setTab(t);
+    setTab(t === 'controles' || t === 'integrite' ? t : 'journal');
     const m = Number(q.get('month')), y = Number(q.get('year'));
     if (m >= 1 && m <= 12 && y >= 2020) setInitPeriod({ month: m, year: y });
   }, []);
+  useEffect(() => {
+    readUrl();
+    window.addEventListener('popstate', readUrl);
+    return () => window.removeEventListener('popstate', readUrl);
+  }, [readUrl]);
+  const goTab = (k: 'journal' | 'controles' | 'integrite') => {
+    setTab(k);
+    const q = new URLSearchParams(window.location.search);
+    if (k === 'journal') q.delete('tab'); else q.set('tab', k);
+    const qs = q.toString();
+    window.history.pushState(null, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`);
+  };
   const scopedCompany = isPme ? companyId : undefined;
 
   const load = useCallback(async () => {
@@ -107,9 +121,18 @@ export default function AuditPage() {
         </p>
       </div>
 
+      <div className="flex flex-wrap gap-2 text-xs font-semibold">
+        {([['/paie', 'Paie', Wallet], ['/contrats', 'Contrats', FileText], ['/parametres/securite', 'Sécurité & connexions', Settings]] as const).map(([href, text, Icon]) => (
+          <Link key={href} href={href === '/parametres/securite' ? href : bp(href)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text-muted)] hover:text-[var(--text)]">
+            <Icon className="w-3.5 h-3.5" /> {text}
+          </Link>
+        ))}
+      </div>
+
       <div className="flex gap-1 p-1 rounded-xl bg-[var(--surface-2)] w-fit">
         {([['journal', 'Journal', ScrollText], ['controles', 'Contrôles de paie', ClipboardCheck], ['integrite', 'Intégrité', Fingerprint]] as const).map(([k, text, Icon]) => (
-          <button key={k} type="button" onClick={() => setTab(k)}
+          <button key={k} type="button" onClick={() => goTab(k)}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${tab === k ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
             <Icon className="w-4 h-4" /> {text}
           </button>

@@ -15,6 +15,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import AuditBlockedModal from '@/components/audit/AuditBlockedModal';
+import { auditBlockedOf, type AuditBlocked } from '@/services/audit-engine';
 import BulletinDisplay from '@/components/BulletinDisplay';
 import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bulletin-print';
 
@@ -85,6 +87,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
   const [userRole, setUserRole]     = useState<string | null>(null);
   const [isLoading, setIsLoading]   = useState(true);
   const [isBusy, setIsBusy]         = useState(false);
+  const [auditBlocked, setAuditBlocked] = useState<AuditBlocked | null>(null);
   const [showEmployer, setShowEmployer] = useState(false);
   const [confirm, setConfirm]       = useState<keyof typeof CONFIRM_CONFIG | null>(null);
   const [bonuses, setBonuses]       = useState<any[]>([]);
@@ -124,7 +127,10 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
       setData(updated);
       setConfirm(null);
     } catch (e: any) {
-      alert(`Erreur : ${e.response?.data?.message || e.message}`);
+      // 🛡️ Validation refusée par le contrôle de paie (422 AUDIT_BLOCKED)
+      const blocked = auditBlockedOf(e);
+      if (blocked) { setConfirm(null); setAuditBlocked(blocked); }
+      else alert(`Erreur : ${e.response?.data?.message || e.message}`);
     } finally { setIsBusy(false); }
   };
 
@@ -371,6 +377,16 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             </div>
           </div>
         </div>
+
+        {auditBlocked && (
+          <AuditBlockedModal
+            blocked={auditBlocked}
+            month={data.month}
+            year={data.year}
+            onClose={() => setAuditBlocked(null)}
+            onRetry={() => { setAuditBlocked(null); setConfirm('validate'); }}
+          />
+        )}
 
         {/* ── MODAL CONFIRMATION ── */}
         <AnimatePresence>

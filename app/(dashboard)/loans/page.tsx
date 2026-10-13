@@ -234,7 +234,7 @@ export default function LoansManagementPage() {
       await api.post(path, { amount, month: period.month, year: period.year });
       await load();
       return true; // le modal joue son animation de succès puis se ferme seul
-    } catch (e: any) { alert(e?.message || 'Erreur'); return false; }
+    } catch (e: any) { throw new Error(e?.message || 'Erreur lors de l\'enregistrement'); } // affiché dans le modal
   };
 
   // ── Modification (RH/Admin uniquement — le backend l'impose déjà via
