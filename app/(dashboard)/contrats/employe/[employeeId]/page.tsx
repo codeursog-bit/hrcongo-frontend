@@ -22,6 +22,7 @@ import {
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import ContractChainPanel from '@/components/contracts/ContractChainPanel';
 
 interface GeneratedContract {
   id: string;
@@ -171,6 +172,11 @@ export default function EmployeeContractPage() {
           <ContractCard contract={latest} featured />
         </div>
       )}
+
+      {/* Traçabilité : contrat initial → renouvellement(s) → conversion CDI, dates de fin et de reprise */}
+      <div id="tracabilite" className="scroll-mt-20">
+        <ContractChainPanel employeeId={employeeId} />
+      </div>
 
       {/* Historique */}
       <div>

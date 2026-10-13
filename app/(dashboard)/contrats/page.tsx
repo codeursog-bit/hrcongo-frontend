@@ -7,7 +7,7 @@ import {
   Loader2, Search, RefreshCw, RotateCcw, TrendingUp, AlertCircle,
   XCircle, UserX, Shield, Calculator, ArrowLeft, Gavel,
   Infinity, CalendarDays, GraduationCap, Briefcase, Handshake,
-  RefreshCcw, Check, Info, FileSignature,
+  RefreshCcw, Check, Info, FileSignature, History,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { differenceInDays } from 'date-fns';
@@ -583,12 +583,20 @@ export default function ContratsPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {canRenew && (
-                        <button onClick={() => setRenewModal(emp)}
+                        <button
+                          // CDD : renouvellement via la chaîne de contrats (contrôles légaux + historique tracé)
+                          onClick={() => emp.contractType === 'CDD'
+                            ? router.push(bp(`/contrats/employe/${emp.id}?renouveler=1`))
+                            : setRenewModal(emp)}
                           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-sm transition-colors">
                           <RotateCcw className="w-3 h-3" />
                           {emp.contractType === 'CDD' ? 'Renouveler / CDI' : 'Renouveler'}
                         </button>
                       )}
+                      <a href={bp(`/contrats/employe/${emp.id}#tracabilite`)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] text-[var(--text)] transition-colors">
+                        <History className="w-3 h-3" /> Historique
+                      </a>
                       <a href={bp(`/contrats/employe/${emp.id}`)}
                         className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
                         <ChevronRight className="w-4 h-4" />
