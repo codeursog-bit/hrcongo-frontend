@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // --- Types ---
 
@@ -197,7 +197,7 @@ export default function OnboardingPage() {
             
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
                {isLoading ? (
-                   <div className="flex justify-center p-10"><Loader2 className="animate-spin text-teal-500"/></div>
+                   <KonzaLoader variant="section" />
                ) : filteredProcesses.length === 0 ? (
                    <div className="text-center p-10 text-gray-400 text-sm">Aucun processus en cours.</div>
                ) : (

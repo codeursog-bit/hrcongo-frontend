@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface AnalysisResult {
@@ -333,8 +334,7 @@ export default function EmployeeImportPage() {
                     {/* Loading */}
                     {isLoading && (
                       <div className="flex items-center justify-center gap-3 py-4">
-                        <Loader2 className="animate-spin text-emerald-500" size={20} />
-                        <span className="text-sm text-[var(--text-muted)] font-medium">Analyse du fichier…</span>
+                        <KonzaLoader variant="inline" label="Analyse du fichier…" />
                       </div>
                     )}
 

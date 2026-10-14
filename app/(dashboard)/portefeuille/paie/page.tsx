@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -544,7 +545,7 @@ function MassPayrollTab({ companies }: { companies: PortfolioCompany[] }) {
               {block.expanded && (
                 <div className="px-4 pb-3 pl-11 space-y-1 max-h-64 overflow-y-auto">
                   {block.loading ? (
-                    <p className="text-xs py-2 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}><Loader2 size={12} className="animate-spin" /> Chargement…</p>
+                    <KonzaLoader variant="inline" />
                   ) : block.employees.length === 0 ? (
                     <p className="text-xs py-2" style={{ color: 'var(--text-muted)' }}>Aucun employé actif</p>
                   ) : block.employees.map(emp => (

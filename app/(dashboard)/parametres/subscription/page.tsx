@@ -19,6 +19,7 @@ import { usePlans } from '@/hooks/useSubscription';
 import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
 import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
 import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Subscription {
@@ -249,9 +250,7 @@ export default function SubscriptionPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-gray-400" size={28} />
-        </div>
+        <KonzaLoader variant="section" />
       ) : (
         <>
           {/* Plan actuel */}

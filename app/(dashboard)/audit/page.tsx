@@ -21,6 +21,7 @@ import AuditEventCard from '@/components/audit/AuditEventCard';
 import PayrollControlsTab from '@/components/audit/PayrollControlsTab';
 import ActivityPanel from '@/components/audit/charts/ActivityPanel';
 import { ACTION_LABEL, ENTITY_LABEL, VERIFY_REASON_LABEL } from '@/lib/audit-labels';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const VIEW_ROLES = ['ADMIN', 'HR_MANAGER', 'CABINET_ADMIN', 'SUPER_ADMIN'];
 const VERIFY_ROLES = ['ADMIN', 'SUPER_ADMIN'];
@@ -99,7 +100,7 @@ export default function AuditPage() {
 
   const setF = (patch: Partial<Filters>) => { setFilters(f => ({ ...f, ...patch })); setPage(1); };
 
-  if (role === undefined) return <div className="flex justify-center py-24"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>;
+  if (role === undefined) return <KonzaLoader variant="page" />;
   if (!role || !VIEW_ROLES.includes(role)) {
     return (
       <div className="max-w-xl mx-auto py-24 text-center">
@@ -211,7 +212,7 @@ export default function AuditPage() {
           {error && <p className="text-sm text-red-600 dark:text-red-400 flex items-start gap-2"><ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" /> {error}</p>}
 
           {loading && !res ? (
-            <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>
+            <KonzaLoader variant="section" />
           ) : res && res.data.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[var(--border)] p-12 text-center text-sm text-[var(--text-muted)]">
               <ShieldCheck className="w-8 h-8 mx-auto mb-3 opacity-50" />

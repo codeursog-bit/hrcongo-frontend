@@ -9,12 +9,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
 import { useBasePath } from '@/hooks/useBasePath';
 import { CompetencyGaps } from '@/components/performance/CompetencyGaps';
 import { EmployeeCompetencies } from '@/components/performance/competency-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 export default function EmployeeCompetenciesPage() {
   const params = useParams();
@@ -34,7 +35,7 @@ export default function EmployeeCompetenciesPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) return <div className="flex justify-center py-32"><Loader2 className="animate-spin text-purple-600" size={32} /></div>;
+  if (loading) return <KonzaLoader variant="page" />;
   if (error || !data) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-4">

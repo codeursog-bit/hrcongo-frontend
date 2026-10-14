@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ============================================================================
 // 📝 TYPES
@@ -476,9 +477,7 @@ function SuccessContent() {
 export default function SuccessPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 dark:from-slate-900 dark:to-slate-800">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
-      </div>
+      <KonzaLoader variant="page" />
     }>
       <SuccessContent />
     </Suspense>

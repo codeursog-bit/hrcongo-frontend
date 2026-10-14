@@ -26,6 +26,7 @@ import StandardLoanRequestForm from '@/components/documents/standard/StandardLoa
 import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const NATURE_LABEL: Record<string, string> = { SOCIAL: 'Prêt social', SCOLARITE: 'Prêt scolarité', LOGEMENT: 'Prêt logement', EXCEPTIONNEL: 'Prêt exceptionnel', AUTRE: 'Autre' };
 const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
@@ -261,9 +262,15 @@ export default function MonEspacePretsAvancesPage() {
   const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
   const trendData = useMemo(() => {
     const months: { key: string; label: string; year: number; month: number }[] = [];
-    const ref = new Date();
+    // Fenêtre de 12 mois qui se termine au mois le plus récent (aujourd'hui ou
+    // dernier mouvement programmé/remboursé) — plus figée sur la date du jour.
+    const now0 = new Date();
+    let latest = now0.getFullYear() * 12 + now0.getMonth();
+    items.forEach(i => { const d = debtRefDate(i.data, i.kind); latest = Math.max(latest, d.getFullYear() * 12 + d.getMonth()); });
+    Object.values(historyByLoan).flat().forEach((log: any) => { latest = Math.max(latest, log.year * 12 + (log.month - 1)); });
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+      const idx = latest - i;
+      const d = new Date(Math.floor(idx / 12), idx % 12, 1);
       months.push({ key: `${d.getFullYear()}-${d.getMonth() + 1}`, label: `${MONTHS_FR[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, year: d.getFullYear(), month: d.getMonth() + 1 });
     }
     const allLogs = Object.values(historyByLoan).flat();
@@ -274,7 +281,7 @@ export default function MonEspacePretsAvancesPage() {
     });
   }, [items, historyByLoan]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
@@ -435,7 +442,7 @@ export default function MonEspacePretsAvancesPage() {
           </div>
 
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de mes dettes (12 derniers mois)</p>
+            <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de mes dettes (12 mois)</p>
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />

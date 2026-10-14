@@ -12,11 +12,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Printer, Pencil } from 'lucide-react';
+import { ArrowLeft, Printer, Pencil } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import { debtRefDate } from '@/lib/debt-dates';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Prêt marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
@@ -98,7 +99,7 @@ export default function ReleveEmployeeDetailPage() {
     return { totalMontant, totalRemb, solde: totalMontant - totalRemb };
   }, [mouvements]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 

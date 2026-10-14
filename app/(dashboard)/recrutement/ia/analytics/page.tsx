@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Users, Target, BarChart3, GitCompare, TrendingUp, Award, Info,
-  PieChart as PieChartIcon, AlertTriangle, ArrowLeft, Loader2, BrainCircuit,
+  PieChart as PieChartIcon, AlertTriangle, ArrowLeft, BrainCircuit,
   CheckCircle2, XCircle, Clock, Sparkles
 } from 'lucide-react';
 import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { api } from '@/services/api';
 import Link from 'next/link';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface AIStats {
   total: number;
@@ -92,9 +93,7 @@ export default function AnalyticsAIPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

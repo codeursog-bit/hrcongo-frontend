@@ -23,6 +23,7 @@ import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import ContractChainPanel from '@/components/contracts/ContractChainPanel';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface GeneratedContract {
   id: string;
@@ -106,7 +107,7 @@ export default function EmployeeContractPage() {
   }, [employeeId]);
 
   if (loading) {
-    return <div className="flex justify-center py-24"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>;
+    return <KonzaLoader variant="page" />;
   }
 
   if (!employee) {

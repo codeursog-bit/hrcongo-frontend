@@ -16,7 +16,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBasePath } from '@/hooks/useBasePath';
 import {
-  Loader2, Users, AlertTriangle, TrendingUp, CalendarClock, ListChecks,
+  Users, AlertTriangle, TrendingUp, CalendarClock, ListChecks,
   Percent, ChevronLeft, ChevronRight, Stethoscope, FileCheck2, FileX2, Trophy,
 } from 'lucide-react';
 import {
@@ -28,6 +28,7 @@ import SlideOver from '@/components/SlideOver';
 import { colorFor, LEADERBOARD_LABELS, LEGEND_FAMILY_ORDER, FAMILY_LABEL, SHORT_CODE } from '@/components/absences/absenceColors';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav'; 
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUIN', 'JUIL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
 const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -947,7 +948,7 @@ function KpiCard({ icon: Icon, label, value, sub, tone, small }: { icon: any; la
 }
 
 function LoadingBlock() {
-  return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
+  return <KonzaLoader variant="page" />;
 }
 function ErrorBlock() {
   return <div className="text-center py-20 text-[var(--text-muted)] text-sm">Impossible de charger ces données pour le moment.</div>;

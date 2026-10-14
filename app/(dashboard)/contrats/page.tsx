@@ -12,6 +12,7 @@ import {
 import { api } from '@/services/api';
 import { differenceInDays } from 'date-fns';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ContractEmployee {
@@ -422,7 +423,7 @@ export default function ContratsPage() {
       {/* ═══ ONGLET ESSAIS ══════════════════════════════════════════════════ */}
       {tab === 'essais' && (
         <div className="space-y-3">
-          {trialsLoading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>}
+          {trialsLoading && <KonzaLoader variant="section" />}
           {!trialsLoading && trials.length === 0 && (
             <div className="text-center py-16 text-[var(--text-muted)] text-sm">
               <Shield className="w-10 h-10 text-[var(--text-muted)] opacity-60 mx-auto mb-3" />
@@ -537,7 +538,7 @@ export default function ContratsPage() {
       {/* ═══ LISTES ACTIFS / EXPIRANT / TERMINES ═══════════════════════════ */}
       {tab !== 'essais' && tab !== 'bnc' && (
         <>
-          {loading && <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>}
+          {loading && <KonzaLoader variant="section" />}
           {!loading && currentList.length === 0 && (
             <div className="text-center py-16 text-[var(--text-muted)] text-sm">Aucun contrat trouvé</div>
           )}

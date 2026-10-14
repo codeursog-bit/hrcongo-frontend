@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
 import { MANAGE_ROLES, getStoredUser, fmtDate } from '@/components/performance/sheet-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface KeyResult { id: string; title: string; targetValue: number | string; currentValue: number | string; unit?: string | null }
 interface Goal {
@@ -340,7 +341,7 @@ export default function ObjectivesPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-purple-600" size={32} /></div>
+        <KonzaLoader variant="section" />
       ) : shown.length === 0 ? (
         <div className={`${cardCls} p-12 text-center`}>
           <Target size={40} className="mx-auto text-gray-300 mb-3" />

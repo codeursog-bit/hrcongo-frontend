@@ -8,7 +8,8 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { X, Loader2, CalendarCheck, Briefcase, Clock, Plane, ExternalLink } from 'lucide-react';
+import { X, CalendarCheck, Briefcase, Clock, Plane, ExternalLink } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -77,7 +78,7 @@ export default function EmployeeDepartureDrawer({ employeeId, onClose }: Props) 
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>
+          <KonzaLoader variant="section" />
         ) : error || !emp ? (
           <p className="p-6 text-sm text-red-500">{error || 'Fiche introuvable.'}</p>
         ) : (

@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowDown, ArrowUp, Loader2, ListChecks, Plus, Trash2, UserX, Save, Info } from 'lucide-react';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { approvalsApi, CircuitsConfig, ApprovalKind } from '@/services/approvals';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type TypeKey = 'LOAN' | 'ADVANCE' | 'ABSENCE' | 'LEAVE';
 const TYPES: { key: TypeKey; kind: ApprovalKind; title: string; desc: string }[] = [
@@ -82,9 +83,7 @@ export default function CircuitsPage() {
 
   if (loading || !config || !draft) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

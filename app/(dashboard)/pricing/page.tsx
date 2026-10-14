@@ -17,6 +17,7 @@ import {
   Rocket, Building2, Star, X, Phone, ChevronDown, Loader2, Crown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ============================================================================
 // 📝 TYPES
@@ -87,9 +88,7 @@ function PricingContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 
@@ -382,9 +381,7 @@ function PricingContent() {
 export default function PricingPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
-      </div>
+      <KonzaLoader variant="page" />
     }>
       <PricingContent />
     </Suspense>

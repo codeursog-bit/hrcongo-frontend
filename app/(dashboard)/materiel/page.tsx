@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type AssetStatus = 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'RETIRED';
@@ -525,10 +526,7 @@ export default function AssetsPage() {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <Loader2 className="animate-spin text-emerald-500" size={40} />
-            <p className="mt-3 text-emerald-500 font-bold text-xs tracking-widest animate-pulse">CHARGEMENT</p>
-          </div>
+          <KonzaLoader variant="section" />
         ) : filteredAssets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-[var(--text-muted)]">
             <Search size={40} className="mb-3 opacity-30" />

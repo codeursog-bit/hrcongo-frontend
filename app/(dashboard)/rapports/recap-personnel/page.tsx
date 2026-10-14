@@ -10,6 +10,7 @@ import {
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types (miroir de payroll-recap.service.ts côté backend) ───────────────
 
@@ -286,9 +287,7 @@ export default function RecapPersonnelPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" />
-        </div>
+        <KonzaLoader variant="section" />
       ) : !current || rows.length === 0 ? (
         <div className="bg-[var(--surface)] rounded-2xl p-12 border border-[var(--border)] text-center text-[var(--text-muted)]">
           Aucun bulletin trouvé pour cette période.

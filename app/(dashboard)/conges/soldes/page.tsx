@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -283,9 +284,7 @@ export default function LeaveBalancesAdminPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-500" size={32} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 
@@ -647,9 +646,7 @@ export default function LeaveBalancesAdminPage() {
               </div>
 
               {isLoadingHistory ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 size={24} className="animate-spin text-emerald-500" />
-                </div>
+                <KonzaLoader variant="section" />
               ) : !history?.history?.length ? (
                 <p className="text-sm text-[var(--text-muted)] text-center py-16">Aucun congé enregistré pour cet employé.</p>
               ) : (

@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CompanyTaxBase = 'GROSS' | 'TAXABLE' | 'NET_IMPOSABLE' | 'FIXED';
@@ -361,9 +362,7 @@ export default function TaxesPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="animate-spin text-emerald-500" size={28} />
-          </div>
+          <KonzaLoader variant="section" />
         ) : taxes.length === 0 ? (
           <div className="text-center py-14 bg-[var(--surface)] rounded-2xl border border-dashed border-[var(--border)]">
             <Receipt size={36} className="mx-auto text-[var(--text-muted)] mb-3" />

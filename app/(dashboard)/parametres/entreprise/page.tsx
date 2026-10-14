@@ -15,6 +15,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { EchelonSuggestionsPanel } from '@/components/settings/EchelonSuggestionsPanel'; // 🆕
 import { ConventionPicker } from '@/components/conventions/ConventionPicker'; // 🆕
 import { getConventionCatalogEntry } from '@/lib/conventions/conventions-catalog'; // 🆕
@@ -620,9 +621,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
   // ── Chargement initial ───────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="animate-spin text-emerald-500" size={48} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

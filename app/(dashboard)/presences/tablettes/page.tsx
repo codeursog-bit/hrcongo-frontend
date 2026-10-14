@@ -18,6 +18,7 @@ import { api } from '@/services/api';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import PresenceSubNav from '@/components/PresenceSubNav';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const BADGE_SCAN_REGION_ID = 'admin-badge-scan-region';
 // Mêmes formats que la tablette : QR codes ET codes-barres classiques
@@ -432,9 +433,7 @@ export default function TablettesPage() {
   // ── États de garde ─────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-500" size={32} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

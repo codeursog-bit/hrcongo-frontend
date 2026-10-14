@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
   Briefcase, Users, MessageSquare, Clock, Plus, Search, 
-  MapPin, ChevronRight, BarChart3, Loader2,
-  Share2, Copy, ExternalLink, X, Check, Globe, TrendingUp, 
+  MapPin, ChevronRight, BarChart3, Share2, Copy, ExternalLink, X, Check, Globe, TrendingUp, 
   Trash2, Edit, BrainCircuit, User, Zap, Palette
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { ModeSelectionModal } from './ModeSelectionModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface JobOffer {
   id: string;
@@ -190,10 +190,7 @@ export default function RecruitmentPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32">
-            <Loader2 className="animate-spin text-emerald-500" size={48}/>
-            <p className="mt-4 text-emerald-500 font-bold text-sm">CHARGEMENT</p>
-          </div>
+          <KonzaLoader variant="section" />
         ) : (
           <div className="divide-y divide-[var(--border)]">
             {jobs.map((job, index) => {

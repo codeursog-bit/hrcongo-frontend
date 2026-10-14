@@ -16,6 +16,7 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { invalidateMyEmployeePhotoCache } from '@/hooks/useMyEmployeePhoto';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ============================================================================
 // Types
@@ -330,9 +331,7 @@ export default function MonProfilPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
   if (!authUser) return null;

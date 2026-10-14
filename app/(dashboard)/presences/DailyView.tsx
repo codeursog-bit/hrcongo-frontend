@@ -21,6 +21,7 @@ import BreakCorrectionModal from '@/components/BreakCorrectionModal';
 import DailyAttendanceReportPrintable from '@/components/DailyAttendanceReportPrintable';
 import { printReport, downloadReportPDF } from '@/lib/report-print';
 import { isWorkDay } from '@/lib/work-days';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface DailyViewProps {
   selectedDate: Date;
@@ -313,9 +314,7 @@ export default function DailyView({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

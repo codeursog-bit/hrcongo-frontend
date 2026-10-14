@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { ChatProvider } from '@/components/chat/ChatProvider';
 import { TopNav } from './TopNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { authService } from '@/lib/services/authService';
 
 interface DashboardShellProps {
@@ -60,9 +61,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 
   if (isAuthorized === null) {
     return (
-      <div className="h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div style={{ color: 'var(--text)' }}>Vérification...</div>
-      </div>
+      <KonzaLoader variant="screen" logoSrc={brandLogo} label="Vérification…" />
     );
   }
 

@@ -134,9 +134,16 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
         .flatMap(l => l.repaymentLogs ?? [])
         .filter((log: any) => log.year === year && log.month === monthNum)
         .reduce((s: number, log: any) => s + Number(log.amount ?? 0), 0);
-      const rembourseAdvances = advances
-        .filter(a => ['DEDUCTED', 'PAID'].includes(a.status) && a.deductYear === year && a.deductMonth === monthNum)
-        .reduce((s, a) => s + Number(a.amount ?? 0), 0);
+      // ✅ Avances : on lit leurs logs de remboursement (période saisie — espèces
+      // ou paie), comme pour les prêts. Les anciennes avances déduites sans aucun
+      // log retombent sur leur mois de déduction.
+      const rembourseAdvances = advances.reduce((s, a) => {
+        const logs = a.repaymentLogs ?? [];
+        if (logs.length > 0) {
+          return s + logs.filter((log: any) => log.year === year && log.month === monthNum).reduce((t: number, log: any) => t + Number(log.amount ?? 0), 0);
+        }
+        return ['DEDUCTED', 'PAID'].includes(a.status) && a.deductYear === year && a.deductMonth === monthNum ? s + Number(a.amount ?? 0) : s;
+      }, 0);
 
       return { mois: label, Emprunté: Math.round(emprunte), Remboursé: Math.round(rembourseLoans + rembourseAdvances) };
     });
@@ -145,8 +152,9 @@ export default function LoansOverview({ loans, advances, onSelectEmployee, onGoT
   const availableYears = useMemo(() => {
     const set = new Set<number>([now.getFullYear()]);
     allRequests.forEach(r => set.add(refDate(r).getFullYear()));
+    [...loans, ...advances].forEach(r => (r.repaymentLogs ?? []).forEach((log: any) => set.add(log.year)));
     return Array.from(set).sort((a, b) => b - a);
-  }, [allRequests, now]);
+  }, [allRequests, loans, advances, now]);
 
   // ── Répartition par type (montant) ─────────────────────────────────────
   const byType = useMemo(() => {

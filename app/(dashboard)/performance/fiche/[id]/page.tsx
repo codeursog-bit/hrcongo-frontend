@@ -27,6 +27,7 @@ import { ScorePicker } from '@/components/performance/ScorePicker';
 import {
   Sheet, SheetGoal, SheetCriterion, STATUS_LABEL, fmtDate, sumWeights, weightsMessage,
 } from '@/components/performance/sheet-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Tab = 'objectifs' | 'criteres' | 'suivants' | 'synthese';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -207,7 +208,7 @@ export default function EvaluationSheetPage() {
   };
 
   // ─── États de chargement ─────────────────────────────────────────────────
-  if (loading) return <div className="flex items-center justify-center py-32"><Loader2 className="animate-spin text-purple-600" size={32} /></div>;
+  if (loading) return <KonzaLoader variant="page" />;
   if (loadError || !sheet) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-4">

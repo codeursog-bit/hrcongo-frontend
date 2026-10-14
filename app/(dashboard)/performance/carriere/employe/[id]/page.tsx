@@ -18,6 +18,7 @@ import { CareerTimeline } from '@/components/performance/CareerTimeline';
 import { DevelopmentPlans } from '@/components/performance/DevelopmentPlans';
 import { ProposalModal } from '@/components/performance/ProposalModal';
 import { CareerData, EVENT_TYPES, PlansData } from '@/components/performance/career-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Tab = 'parcours' | 'plan';
 
@@ -127,7 +128,7 @@ export default function EmployeeCareerPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) return <div className="flex justify-center py-32"><Loader2 className="animate-spin text-purple-600" size={32} /></div>;
+  if (loading) return <KonzaLoader variant="page" />;
   if (error || !career?.employee) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-4">

@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '@/services/api';
 import { 
-    CreditCard, Clock, CheckCircle, XCircle, List, ArrowDown, ArrowUp, Loader2, 
-    Calendar, User, Wallet 
+    CreditCard, Clock, CheckCircle, XCircle, List, ArrowDown, ArrowUp, Calendar, User, Wallet 
 } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { motion } from 'framer-motion';
 
 // --- Types de données pour la liste ---
@@ -80,9 +80,7 @@ export const LoansList = ({ refreshKey }: { refreshKey: number }) => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-20">
-                <Loader2 className="animate-spin text-emerald-500" size={48} />
-            </div>
+            <KonzaLoader variant="section" />
         );
     }
 

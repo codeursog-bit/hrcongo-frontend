@@ -14,9 +14,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Bell, CheckCircle2, Clock, AlertTriangle,
-  Info, Calendar, Loader2, CalendarDays, ShieldAlert,
+  Info, Calendar, CalendarDays, ShieldAlert,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // Rôles qui voient les alertes contrat
 const HR_ROLES = ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN'];
@@ -242,9 +243,7 @@ export default function NotificationsPage() {
 
       {/* LISTE */}
       {isLoading ? (
-        <div className="flex justify-center p-20">
-          <Loader2 className="animate-spin text-emerald-500" size={48} />
-        </div>
+        <KonzaLoader variant="section" />
       ) : filtered.length === 0 ? (
         <div className="text-center p-20 text-[var(--text-muted)] bg-[var(--surface)] rounded-2xl border border-dashed border-[var(--border)]">
           <Bell size={48} className="mx-auto mb-4 opacity-20" />

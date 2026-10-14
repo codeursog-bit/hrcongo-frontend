@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, PenTool, Trash2, Upload, ShieldCheck, Lock } from 'lucide-react';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { approvalsApi, MyApprovalContext } from '@/services/approvals';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -98,9 +99,7 @@ export default function MaSignaturePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

@@ -13,7 +13,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, Search, Download, ChevronLeft, ChevronRight, Users, Plane,
+  Search, Download, ChevronLeft, ChevronRight, Users, Plane,
   CalendarCheck, Clock, CheckCircle2, XCircle, Hourglass, BarChart3, ArrowRight,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ import {
   MONTHS, LEAVE_TYPE_LABELS, STATUS_LABELS, STATUS_BADGE, PHASE_LABELS, PHASE_BADGE,
   fmtDate, fmtDateTime, fmtDays, initials, downloadCsv,
 } from '@/lib/leave-history-utils';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Tab = 'departures' | 'requests';
 type PeriodMode = 'month' | 'year' | 'custom' | 'all';
@@ -76,6 +77,8 @@ export default function LeaveHistoryPage() {
 
   // Données
   const [data, setData] = useState<any>(null);
+  // Onglet auquel appartiennent les données affichées (évite d'afficher les chiffres d'un onglet dans l'autre)
+  const [dataTab, setDataTab] = useState<Tab | null>(null);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -121,10 +124,12 @@ export default function LeaveHistoryPage() {
       const endpoint = tab === 'departures' ? 'departure-history' : 'requests-history';
       const res = await api.get<any>(`/leaves/${endpoint}?${queryString}`);
       setData(res);
+      setDataTab(tab);
       setPage(1);
     } catch (e: any) {
       setError(e?.message || 'Impossible de charger l\u2019historique.');
       setData(null);
+      setDataTab(null);
     } finally {
       setLoading(false);
     }
@@ -132,7 +137,8 @@ export default function LeaveHistoryPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const rows: any[] = data?.rows ?? [];
+  const view = dataTab === tab ? data : null;
+  const rows: any[] = view?.rows ?? [];
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -297,52 +303,52 @@ export default function LeaveHistoryPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>
+        <KonzaLoader variant="section" />
       ) : error ? (
         <div className="bg-red-50 dark:bg-red-900/10 text-red-600 rounded-2xl p-5 text-sm">{error}</div>
       ) : (
         <>
           {/* KPI */}
-          {tab === 'departures' && data?.stats && (
+          {tab === 'departures' && view?.stats?.byType && (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <StatCard icon={Plane} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={data.stats.count} label="Départs sur la période" />
-                <StatCard icon={Users} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={data.stats.uniqueEmployees} label="Employés concernés" />
-                <StatCard icon={CalendarCheck} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={fmtDays(data.stats.totalDays)} label="Jours de congé cumulés" />
-                <StatCard icon={Clock} tone="bg-violet-100 dark:bg-violet-900/30 text-violet-600" value={fmtDays(data.stats.averageDays)} label="Durée moyenne" />
-                <StatCard icon={Plane} tone="bg-sky-100 dark:bg-sky-900/30 text-sky-600" value={data.stats.inProgress} label="Actuellement en congé" />
+                <StatCard icon={Plane} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={view.stats.count} label="Départs sur la période" />
+                <StatCard icon={Users} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={view.stats.uniqueEmployees} label="Employés concernés" />
+                <StatCard icon={CalendarCheck} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={fmtDays(view.stats.totalDays)} label="Jours de congé cumulés" />
+                <StatCard icon={Clock} tone="bg-violet-100 dark:bg-violet-900/30 text-violet-600" value={fmtDays(view.stats.averageDays)} label="Durée moyenne" />
+                <StatCard icon={Plane} tone="bg-sky-100 dark:bg-sky-900/30 text-sky-600" value={view.stats.inProgress} label="Actuellement en congé" />
               </div>
 
-              {data.stats.count > 0 && (
+              {view.stats.count > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
                     <p className="text-sm font-bold text-[var(--text)] mb-4">Par type de congé</p>
-                    <TypeDonut data={data.stats.byType.map((t: any) => ({ type: t.type, value: t.totalDays }))} />
+                    <TypeDonut data={view.stats.byType.map((t: any) => ({ type: t.type, value: t.totalDays }))} />
                   </div>
                   <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
                     <p className="text-sm font-bold text-[var(--text)] mb-4">Jours de congé par département</p>
-                    <HorizontalBars data={data.stats.byDepartment.slice(0, 6).map((d: any) => ({ name: d.name, value: d.totalDays }))} />
+                    <HorizontalBars data={view.stats.byDepartment.slice(0, 6).map((d: any) => ({ name: d.name, value: d.totalDays }))} />
                   </div>
                 </div>
               )}
             </>
           )}
 
-          {tab === 'requests' && data?.stats && (
+          {tab === 'requests' && view?.stats?.byStatus && (
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-              <StatCard icon={CalendarCheck} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={data.stats.total} label="Demandes" />
-              <StatCard icon={CheckCircle2} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={data.stats.byStatus.APPROVED} label="Approuvées" />
-              <StatCard icon={XCircle} tone="bg-red-100 dark:bg-red-900/30 text-red-600" value={data.stats.byStatus.REJECTED} label="Refusées" />
-              <StatCard icon={Hourglass} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={data.stats.byStatus.PENDING} label="En attente" />
+              <StatCard icon={CalendarCheck} tone="bg-blue-100 dark:bg-blue-900/30 text-blue-600" value={view.stats.total} label="Demandes" />
+              <StatCard icon={CheckCircle2} tone="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" value={view.stats.byStatus.APPROVED} label="Approuvées" />
+              <StatCard icon={XCircle} tone="bg-red-100 dark:bg-red-900/30 text-red-600" value={view.stats.byStatus.REJECTED} label="Refusées" />
+              <StatCard icon={Hourglass} tone="bg-amber-100 dark:bg-amber-900/30 text-amber-600" value={view.stats.byStatus.PENDING} label="En attente" />
               <StatCard
                 icon={Clock} tone="bg-violet-100 dark:bg-violet-900/30 text-violet-600"
-                value={data.stats.averageProcessingDays !== null ? fmtDays(data.stats.averageProcessingDays) : '—'}
-                label={data.stats.approvalRate !== null ? `Délai moyen · ${data.stats.approvalRate} % d’acceptation` : 'Délai moyen de réponse'}
+                value={view.stats.averageProcessingDays !== null ? fmtDays(view.stats.averageProcessingDays) : '—'}
+                label={view.stats.approvalRate !== null ? `Délai moyen · ${view.stats.approvalRate} % d’acceptation` : 'Délai moyen de réponse'}
               />
             </div>
           )}
 
-          {data?.truncated && (
+          {view?.truncated && (
             <p className="text-xs text-amber-600">Résultats limités aux 2 000 plus récents — affinez la période pour tout voir.</p>
           )}
 

@@ -10,6 +10,7 @@ import {
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -145,12 +146,7 @@ function DetailCandidatManualContent({ id }: { id: string }) {
   // ── LOADING ──
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="animate-spin text-emerald-500 mx-auto" size={36} />
-          <p className="text-[var(--text-muted)] mt-3 text-sm">Chargement du candidat…</p>
-        </div>
-      </div>
+      <KonzaLoader variant="page" label="Chargement du candidat…" />
     );
   }
 

@@ -23,6 +23,7 @@ import PermissionsSubNav from '@/components/PermissionsSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket, downloadTicketPDF } from '@/lib/ticket-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -139,7 +140,7 @@ export default function MonEspacePermissionsPage() {
     });
   }, [tickets]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">

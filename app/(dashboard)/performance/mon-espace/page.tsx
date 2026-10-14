@@ -23,6 +23,7 @@ import { EmployeeCompetencies } from '@/components/performance/competency-types'
 import { CareerTimeline } from '@/components/performance/CareerTimeline';
 import { DevelopmentPlans } from '@/components/performance/DevelopmentPlans';
 import { CareerData, PlansData } from '@/components/performance/career-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface MeData {
   employeeId: string | null;
@@ -128,7 +129,7 @@ export default function MyPerformancePage() {
   useEffect(() => { load(); }, [load]);
 
   if (loading && !data) {
-    return <div className="flex items-center justify-center py-32"><Loader2 className="animate-spin text-purple-600" size={32} /></div>;
+    return <KonzaLoader variant="page" />;
   }
 
   if (error || !data) {

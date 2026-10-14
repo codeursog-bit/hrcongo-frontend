@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  ArrowLeft, Loader2, Calendar, CheckCircle, Clock, 
+  ArrowLeft, Calendar, CheckCircle, Clock, 
   TrendingUp, Users, Award, AlertCircle, XCircle,
 
   ClipboardList, LayoutDashboard,UsersRound,
@@ -17,6 +17,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
 
@@ -53,9 +54,7 @@ export default function LeaveAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-[var(--brand)]" size={48}/>
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

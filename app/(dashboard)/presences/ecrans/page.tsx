@@ -16,6 +16,7 @@ import PresenceSubNav from '@/components/PresenceSubNav';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import { api } from '@/services/api';
 import { adminScreensApi, employeeQrApi, secretError, AdminScreen, ScreenScope, SecretListItem } from '@/services/display-screen-api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const STATUS_STYLE: Record<string, string> = {
   APPROVED: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
@@ -246,7 +247,7 @@ export default function EcransPage() {
       {/* Liste */}
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
         <div className="px-5 py-3 border-b border-[var(--border)] font-bold text-[var(--text)] flex items-center gap-2"><ShieldCheck size={18} /> Écrans appairés</div>
-        {loading ? <div className="p-10 grid place-items-center"><Loader2 className="animate-spin text-[var(--text-muted)]" /></div>
+        {loading ? <KonzaLoader variant="section" />
           : screens.length === 0 ? <p className="p-8 text-center text-[var(--text-muted)]">Aucun écran pour le moment.</p>
           : <ul className="divide-y divide-[var(--border)]">
               {screens.map((s) => (
@@ -332,7 +333,7 @@ export default function EcransPage() {
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{enrolled.length}</span>
           </h3>
           {enrolledLoading ? (
-            <div className="py-6 grid place-items-center"><Loader2 className="animate-spin text-[var(--text-muted)]" /></div>
+            <KonzaLoader variant="inline" />
           ) : enrolled.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">Aucun employé n&apos;a encore de code secret.</p>
           ) : (

@@ -23,6 +23,7 @@ import StandardAbsenceRequestForm from '@/components/documents/standard/Standard
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -142,7 +143,7 @@ export default function MonEspaceAbsencesPage() {
   } : null;
 
   if (isLoading) {
-    return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+    return <KonzaLoader variant="page" />;
   }
 
   return (

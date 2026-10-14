@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -435,9 +436,7 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
 
   // ── États de chargement ───────────────────────────────────────────────────────
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-emerald-500" size={32} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   if (notFound) return (

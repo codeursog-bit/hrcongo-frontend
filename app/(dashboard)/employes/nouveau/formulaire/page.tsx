@@ -16,6 +16,7 @@ import { Step2Family } from '@/components/employees/create/Step2Family';
 import { Step3Contract } from '@/components/employees/create/Step3Contract';
 import { Step4Validation } from '@/components/employees/create/Step4Validation';
 import { Step5Additional } from '@/components/employees/create/Step5Additional';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Steps config ──────────────────────────────────────────────────────────────
 const STEPS = [
@@ -833,9 +834,7 @@ function CreateEmployeeFormInner() {
 export default function CreateEmployeePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-500" size={32} />
-      </div>
+      <KonzaLoader variant="page" />
     }>
       <CreateEmployeeFormInner />
     </Suspense>

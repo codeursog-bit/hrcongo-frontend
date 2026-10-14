@@ -9,7 +9,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, ChevronLeft, ChevronRight, Printer, Users, Plane, Hourglass, CalendarCheck,
+  ChevronLeft, ChevronRight, Printer, Users, Plane, Hourglass, CalendarCheck,
   History, Lightbulb,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -17,19 +17,20 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
 import {
-  LeaveGantt, AbsenceCurve, MonthlyStackedBars, TypeDonut, HorizontalBars, TypeLegend,
+  LeaveGantt, AbsenceCurve, PhaseLegend, PeoplePerMonthBars, MonthlyStackedBars, TypeDonut, HorizontalBars, TypeLegend,
   type VisualLeave,
 } from '@/components/leave-history/LeaveCharts';
 import {
   MONTHS, LEAVE_TYPE_LABELS, fmtDate, fmtDays, dayOfYear, daysInYear,
 } from '@/lib/leave-history-utils';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const ZOOMS = [
-  { key: 'year', label: 'Année', months: [0, 12] },
-  { key: 'q1', label: 'T1', months: [0, 3] },
-  { key: 'q2', label: 'T2', months: [3, 6] },
-  { key: 'q3', label: 'T3', months: [6, 9] },
-  { key: 'q4', label: 'T4', months: [9, 12] },
+  { key: 'year', label: 'Toute l’année', months: [0, 12] },
+  { key: 'q1', label: 'Janv. – Mars', months: [0, 3] },
+  { key: 'q2', label: 'Avr. – Juin', months: [3, 6] },
+  { key: 'q3', label: 'Juil. – Sept.', months: [6, 9] },
+  { key: 'q4', label: 'Oct. – Déc.', months: [9, 12] },
 ] as const;
 
 function Kpi({ icon: Icon, tone, value, label, hint }: { icon: any; tone: string; value: React.ReactNode; label: string; hint?: string }) {
@@ -197,7 +198,7 @@ export default function LeaveDiagramsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>
+        <KonzaLoader variant="section" />
       ) : error ? (
         <div className="bg-red-50 dark:bg-red-900/10 text-red-600 rounded-2xl p-5 text-sm">{error}</div>
       ) : (
@@ -234,8 +235,8 @@ export default function LeaveDiagramsPage() {
 
           {/* Gantt */}
           <Panel
-            title="Qui part, et quand ?"
-            subtitle="Une ligne par employé, une barre par congé. Le trait rouge indique aujourd’hui."
+            title="Qui part en congé, et quand ?"
+            subtitle="Chaque ligne est un employé. Chaque barre est un congé : elle commence le jour du départ et finit le jour de la reprise. Sous chaque nom, vous voyez où il en est (déjà revenu, en congé, ou prochain départ)."
           >
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
               <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl">
@@ -254,22 +255,30 @@ export default function LeaveDiagramsPage() {
                 Afficher les demandes en attente
               </label>
             </div>
-            <div className="mb-3"><TypeLegend types={usedTypes} /></div>
+            <div className="mb-3"><PhaseLegend /></div>
             <div className="max-h-[560px] overflow-y-auto print:max-h-none">
               <LeaveGantt leaves={ganttLeaves} year={year} rangeStart={rangeStart} rangeEnd={rangeEnd} />
             </div>
           </Panel>
 
-          {/* Courbe d'absences */}
+          {/* Courbe explicite : absents jour après jour */}
           <Panel
             title="Combien de personnes sont absentes chaque jour ?"
-            subtitle="Plus la courbe monte, plus l’équipe est réduite. Au-dessus du trait orange, l’organisation du travail peut être tendue."
+            subtitle="La courbe vous montre, jour après jour, combien de collègues sont en congé en même temps."
           >
             <AbsenceCurve leaves={approved} year={year} headcount={headcount} />
           </Panel>
 
+          {/* Personnes absentes par mois */}
+          <Panel
+            title="Et mois par mois ?"
+            subtitle="Chaque colonne compte les personnes qui ont au moins un jour de congé dans le mois. Passez la souris sur une colonne pour voir les noms."
+          >
+            <PeoplePerMonthBars leaves={approved} year={year} headcount={headcount} />
+          </Panel>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Panel title="Charge par mois" subtitle="Jours de congé par mois, par type." className="lg:col-span-2">
+            <Panel title="Nombre de jours de congé par mois" subtitle="Chaque couleur correspond à un type de congé (voir la légende)." className="lg:col-span-2">
               <MonthlyStackedBars leaves={approved} year={year} />
               <div className="mt-4"><TypeLegend types={usedTypes} /></div>
             </Panel>

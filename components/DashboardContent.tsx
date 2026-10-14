@@ -145,11 +145,16 @@ export const DashboardContent = () => {
               remainingLeaves = computeFallbackLeaveBalance(employeeProfile, approvedLeaves);
             }
 
+            // 🆕 Même source que « Mon espace » → un seul chiffre partout dans l'app
+            const leaveEx = await api.get<any>('/leaves/me/balance-explained').catch(() => null);
+            if (leaveEx?.totals) remainingLeaves = leaveEx.totals.remaining;
+
             const debtKpis = computeDebtKpis(loans, advancesList);
             const presenceRateMonth = computeMonthlyPresenceRate(dayStatuses);
 
             setMyStats({
               pendingLeaves,
+              leaveEx,
               remainingLeaves: Number(remainingLeaves).toFixed(1),
               checkIn: todayStatus?.checkIn,
               checkOut: todayStatus?.checkOut,
@@ -192,11 +197,16 @@ export const DashboardContent = () => {
             lastSalaryMonth  = new Date(0, sorted[0].month - 1).toLocaleString('fr-FR', { month: 'long' });
           }
           const todayStatus = attendance.find((a: any) => a.employeeId === employeeProfile.id);
-          const debtKpis = computeDebtKpis(loans, advancesList);
+          // 🆕 Même source que « Mon espace » → un seul chiffre partout dans l'app
+            const leaveEx = await api.get<any>('/leaves/me/balance-explained').catch(() => null);
+            if (leaveEx?.totals) remainingLeaves = leaveEx.totals.remaining;
+
+            const debtKpis = computeDebtKpis(loans, advancesList);
           const presenceRateMonth = computeMonthlyPresenceRate(dayStatuses);
 
           setMyStats({
             pendingLeaves,
+            leaveEx,
             remainingLeaves: Number(remainingLeaves).toFixed(1),
             checkIn: todayStatus?.checkIn,
             checkOut: todayStatus?.checkOut,
@@ -570,22 +580,71 @@ export const DashboardContent = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <Panel>
-              <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Solde de congés</h3>
-              <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Sur {annualQuota} jours annuels</p>
-              <div className="h-[180px] relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={[{ value: remaining }, { value: used }]} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
-                      <Cell fill="#10B981" />
-                      <Cell fill="var(--surface-2)" fillOpacity={1} />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{remaining}</span>
-                  <span className="text-[11px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>jours restants</span>
-                </div>
-              </div>
+              {myStats.leaveEx ? (() => {
+                const ex = myStats.leaveEx;
+                const R = 62, C = 2 * Math.PI * R;
+                const pct = Math.min(1, ex.base.acquired / ex.base.max);
+                const nb = (n: number) => (Math.round(n * 10) / 10).toString().replace('.', ',');
+                const fmt = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+                const nd = ex.nextDeparture;
+                return (
+                  <>
+                    <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Mon solde de congés</h3>
+                    <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>Jours de base acquis, sur {ex.base.max} par an</p>
+                    <div className="relative w-40 h-40 mx-auto">
+                      <svg viewBox="0 0 150 150" className="w-full h-full -rotate-90">
+                        <circle cx="75" cy="75" r={R} fill="none" stroke="var(--surface-2)" strokeWidth="13" />
+                        <circle cx="75" cy="75" r={R} fill="none" stroke="#10B981" strokeWidth="13" strokeLinecap="round"
+                          strokeDasharray={C} strokeDashoffset={C * (1 - pct)} />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-extrabold" style={{ color: 'var(--text)' }}>{nb(ex.base.acquired)}</span>
+                        <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>sur {ex.base.max} jours</span>
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-1.5 text-sm">
+                      <div className="flex justify-between"><span style={{ color: 'var(--text-muted)' }}>Il me reste</span><strong className="text-emerald-600 dark:text-emerald-400">{nb(ex.totals.remaining)} j</strong></div>
+                      <div className="flex justify-between"><span style={{ color: 'var(--text-muted)' }}>Déjà pris</span><strong style={{ color: 'var(--text)' }}>{nb(ex.totals.taken)} j</strong></div>
+                      {ex.seniority.days > 0 && (
+                        <div className="flex justify-between"><span style={{ color: 'var(--text-muted)' }}>Ancienneté</span><strong style={{ color: 'var(--text)' }}>+ {nb(ex.seniority.days)} j</strong></div>
+                      )}
+                    </div>
+                    {nd && (nd.kind === 'PLANNED' || nd.kind === 'PROBABLE' || nd.kind === 'IN_PROGRESS' || nd.kind === 'NOT_YET') && (
+                      <div className="mt-3 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--surface-2)', color: 'var(--text)' }}>
+                        {nd.kind === 'IN_PROGRESS' && <>Vous êtes en congé jusqu'au <strong>{fmt(nd.endDate)}</strong>.</>}
+                        {nd.kind === 'PLANNED' && <>Prochain congé {nd.status === 'APPROVED' ? 'validé' : 'demandé'} : <strong>{fmt(nd.startDate)}</strong>.</>}
+                        {nd.kind === 'PROBABLE' && <>Départ probable : <strong>{nd.reason === 'AVAILABLE_NOW' ? 'dès maintenant' : fmt(nd.startDate)}</strong>.</>}
+                        {nd.kind === 'NOT_YET' && <>Premier congé possible dès le <strong>{fmt(nd.startDate)}</strong>.</>}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => router.push('/conges/mon-espace')}
+                      className="mt-3 w-full text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center justify-center gap-1"
+                    >
+                      Comprendre mon solde <ArrowRight size={12} />
+                    </button>
+                  </>
+                );
+              })() : (
+                <>
+                  <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Solde de congés</h3>
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>Sur {annualQuota} jours annuels</p>
+                  <div className="h-[180px] relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={[{ value: remaining }, { value: used }]} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
+                          <Cell fill="#10B981" />
+                          <Cell fill="var(--surface-2)" fillOpacity={1} />
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{remaining}</span>
+                      <span className="text-[11px] uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>jours restants</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </Panel>
           </motion.div>
 

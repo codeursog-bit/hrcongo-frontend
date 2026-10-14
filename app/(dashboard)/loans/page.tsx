@@ -39,6 +39,7 @@ import ApprovalPanel from '@/components/approvals/ApprovalPanel';
 import { useApprovalDecision } from '@/hooks/useApprovalDecision';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
 import type { ApprovalStateView } from '@/services/approvals';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const DG_ROLES  = ['ADMIN', 'SUPER_ADMIN'];
@@ -546,7 +547,7 @@ export default function LoansManagementPage() {
     finally { setIsExportingXlsx(false); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-24 space-y-6">

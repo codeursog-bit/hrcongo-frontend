@@ -35,6 +35,49 @@ export interface VisualLeave {
 const MONTH_STARTS = (year: number) =>
   Array.from({ length: 12 }, (_, m) => dayOfYear(new Date(Date.UTC(year, m, 1))));
 
+// ─── Légende des situations (Gantt) ──────────────────────────────────────────
+
+export const PHASE_COLORS: Record<string, string> = {
+  COMPLETED: '#94a3b8',   // déjà pris
+  IN_PROGRESS: '#2563eb', // en congé en ce moment
+  UPCOMING: '#10b981',    // prévu, validé
+  PENDING: '#f59e0b',     // demandé, pas encore validé
+};
+
+export function PhaseLegend() {
+  const items: [string, string, boolean][] = [
+    ['COMPLETED', 'Déjà pris', false],
+    ['IN_PROGRESS', 'En congé en ce moment', false],
+    ['UPCOMING', 'À venir (validé)', false],
+    ['PENDING', 'Demandé, pas encore validé', true],
+  ];
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+      {items.map(([k, label, hatched]) => (
+        <span key={k} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+          <span
+            className="w-4 h-2.5 rounded-sm"
+            style={{
+              background: hatched
+                ? `repeating-linear-gradient(45deg, ${PHASE_COLORS[k]}88, ${PHASE_COLORS[k]}88 3px, ${PHASE_COLORS[k]}33 3px, ${PHASE_COLORS[k]}33 6px)`
+                : PHASE_COLORS[k],
+              border: hatched ? `1px dashed ${PHASE_COLORS[k]}` : 'none',
+            }}
+          />
+          {label}
+        </span>
+      ))}
+      <span className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+        <span className="w-px h-3 bg-red-500" /> Aujourd&apos;hui
+      </span>
+    </div>
+  );
+}
+
+const PHASE_LABEL: Record<string, string> = { COMPLETED: 'déjà pris', IN_PROGRESS: 'en cours', UPCOMING: 'à venir', PENDING: 'en attente' };
+const shortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
 // ─── Légende des types ───────────────────────────────────────────────────────
 
 export function TypeLegend({ types }: { types: string[] }) {
@@ -83,10 +126,21 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
       cur.leaves.push(l);
       byEmp.set(l.employeeId, cur);
     }
-    const emps: { id: string; name: string; dept: string; leaves: VisualLeave[] }[] = Array.from(byEmp.entries()).map(([id, v]) => ({ id, ...v }));
+    // Phrase simple sous le nom : où en est cette personne ?
+    const summarize = (ls: VisualLeave[]) => {
+      const inProg = ls.find(l => l.phase === 'IN_PROGRESS');
+      if (inProg) return `En congé jusqu'au ${shortDate(inProg.endDate)}`;
+      const up = ls.filter(l => l.phase === 'UPCOMING').sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+      if (up) return `Part le ${shortDate(up.startDate)}`;
+      const pend = ls.find(l => l.phase === 'PENDING');
+      if (pend) return `Demande du ${shortDate(pend.startDate)} en attente`;
+      const done = ls.filter(l => l.phase === 'COMPLETED').sort((a, b) => b.endDate.localeCompare(a.endDate))[0];
+      return done ? `Revenu le ${shortDate(done.endDate)}` : '';
+    };
+    const emps: { id: string; name: string; dept: string; leaves: VisualLeave[]; summary: string }[] =
+      Array.from(byEmp.entries()).map(([id, v]) => ({ id, ...v, summary: summarize(v.leaves) }));
     if (!groupByDepartment) return [{ dept: '', emps: emps.sort((a, b) => a.name.localeCompare(b.name)) }];
-    type EmpRow = { id: string; name: string; dept: string; leaves: VisualLeave[] };
-    const byDept = new Map<string, EmpRow[]>();
+    const byDept = new Map<string, any[]>();
     for (const e of emps) byDept.set(e.dept, [...(byDept.get(e.dept) ?? []), e]);
     return Array.from(byDept.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -107,7 +161,7 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
         <div style={{ minWidth: 760 }}>
           {/* En-tête des mois */}
           <div className="flex">
-            <div className="w-44 shrink-0" />
+            <div className="w-48 shrink-0" />
             <div className="relative flex-1 h-7 border-b border-[var(--border)]">
               {visibleMonths.map(({ m, start }) => (
                 <span
@@ -130,10 +184,11 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
               )}
               {g.emps.map(emp => (
                 <div key={emp.id} className="flex items-center border-b border-[var(--border)]/60 hover:bg-[var(--surface-2)]/50">
-                  <div className="w-44 shrink-0 px-2 py-2 text-xs font-medium text-[var(--text)] truncate" title={emp.name}>
-                    {emp.name}
+                  <div className="w-48 shrink-0 px-2 py-1.5 min-w-0" title={emp.name}>
+                    <p className="text-xs font-semibold text-[var(--text)] truncate">{emp.name}</p>
+                    <p className="text-[10px] text-[var(--text-muted)] truncate">{emp.summary}</p>
                   </div>
-                  <div className="relative flex-1 h-8">
+                  <div className="relative flex-1 h-10">
                     {/* lignes de mois */}
                     {visibleMonths.map(({ m, start }) => (
                       <div key={m} className="absolute top-0 bottom-0 border-l border-[var(--border)]/50" style={{ left: `${pct(start)}%` }} />
@@ -141,17 +196,18 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
                     {showToday && (
                       <div className="absolute top-0 bottom-0 w-px bg-red-500 z-10" style={{ left: `${pct(todayIdx)}%` }} />
                     )}
-                    {emp.leaves.map(l => {
+                    {emp.leaves.map((l: VisualLeave) => {
                       const s = Math.max(dayOfYear(l.startDate), rangeStart);
                       const e = Math.min(dayOfYear(l.endDate) + 1, rangeEnd);
-                      const color = LEAVE_TYPE_COLORS[l.type] || '#94a3b8';
+                      const color = PHASE_COLORS[l.phase] || '#94a3b8';
                       const pending = l.status === 'PENDING';
+                      const widthPct = pct(e) - pct(s);
                       return (
                         <div
                           key={l.id}
                           onMouseEnter={() => setHover(l)}
                           onMouseLeave={() => setHover(null)}
-                          className="absolute top-1.5 h-5 rounded-md cursor-default"
+                          className="absolute top-2 h-6 rounded-md cursor-default flex items-center justify-center overflow-hidden"
                           style={{
                             left: `${pct(s)}%`,
                             width: `${Math.max(pct(e) - pct(s), 0.6)}%`,
@@ -159,9 +215,14 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
                               ? `repeating-linear-gradient(45deg, ${color}55, ${color}55 4px, ${color}22 4px, ${color}22 8px)`
                               : color,
                             border: pending ? `1px dashed ${color}` : 'none',
-                            opacity: l.phase === 'COMPLETED' ? 0.55 : 1,
                           }}
-                        />
+                        >
+                          {widthPct > 9 && (
+                            <span className="text-[10px] font-semibold text-white whitespace-nowrap px-1 drop-shadow-sm">
+                              {shortDate(l.startDate)} → {shortDate(l.endDate)}
+                            </span>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -177,96 +238,175 @@ export function LeaveGantt({ leaves, year, rangeStart, rangeEnd, groupByDepartme
         {hover ? (
           <span>
             <strong className="text-[var(--text)]">{hover.employeeName}</strong> — {LEAVE_TYPE_LABELS[hover.type] || hover.type}
-            {' · '}du {fmtDate(hover.startDate)} au {fmtDate(hover.endDate)} ({fmtDays(hover.daysCount)})
+            {' · '}{PHASE_LABEL[hover.phase]}{' · '}du {fmtDate(hover.startDate)} au {fmtDate(hover.endDate)} ({fmtDays(hover.daysCount)})
             {hover.status === 'PENDING' ? ' · en attente de validation' : ''}
           </span>
         ) : (
-          <span>Passez la souris sur une barre pour voir le détail. Barres hachurées = demande pas encore validée. Trait rouge = aujourd&apos;hui.</span>
+          <span>Passez la souris sur une barre pour voir le détail du congé.</span>
         )}
       </div>
     </div>
   );
 }
 
-// ─── 2) Courbe : nombre de personnes absentes chaque jour ────────────────────
+// ─── 2) Courbe explicite : combien de personnes sont absentes, jour après jour ──
 
 interface CurveProps {
-  leaves: VisualLeave[]; // uniquement APPROVED à passer ici
+  leaves: VisualLeave[]; // uniquement APPROVED
   year: number;
   headcount: number;
-  alertPercent?: number; // seuil d'alerte (défaut 20 %)
 }
 
-export function AbsenceCurve({ leaves, year, headcount, alertPercent = 20 }: CurveProps) {
+export function AbsenceCurve({ leaves, year, headcount }: CurveProps) {
   const total = daysInYear(year);
+  const dateOf = (d: number) => new Date(Date.UTC(year, 0, 1 + d));
+  const fmtD = (d: number) => dateOf(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
 
-  const { counts, peak, peakDay } = useMemo(() => {
-    // Un employé absent un jour donné compte une fois (même s'il a 2 congés qui se chevauchent).
-    const perDay: Set<string>[] = Array.from({ length: total }, () => new Set<string>());
+  const { counts, names, peak, peakDay, periods } = useMemo(() => {
+    const perDay: Map<string, string>[] = Array.from({ length: total }, () => new Map<string, string>());
     for (const l of leaves) {
-      const s = Math.max(dayOfYear(l.startDate), 0);
-      const e = Math.min(dayOfYear(l.endDate), total - 1);
-      for (let d = s; d <= e; d++) perDay[d].add(l.employeeId);
+      const s0 = Math.max(dayOfYear(l.startDate), 0);
+      const e0 = Math.min(dayOfYear(l.endDate), total - 1);
+      for (let d = s0; d <= e0; d++) perDay[d].set(l.employeeId, l.employeeName);
     }
-    const counts = perDay.map(s => s.size);
+    const counts = perDay.map(m => m.size);
     let peak = 0, peakDay = 0;
     counts.forEach((c, i) => { if (c > peak) { peak = c; peakDay = i; } });
-    return { counts, peak, peakDay };
+
+    // Périodes les plus chargées : jours consécutifs avec au moins 70 % du pic
+    const limit = peak <= 1 ? 1 : Math.max(2, Math.ceil(peak * 0.7));
+    const periods: { start: number; end: number; max: number; people: string[] }[] = [];
+    let cur: { start: number; end: number; max: number; people: Map<string, string> } | null = null;
+    for (let d = 0; d < total; d++) {
+      if (counts[d] >= limit && peak > 0) {
+        if (!cur) cur = { start: d, end: d, max: counts[d], people: new Map() };
+        cur.end = d;
+        cur.max = Math.max(cur.max, counts[d]);
+        perDay[d].forEach((n, id) => cur!.people.set(id, n));
+      } else if (cur) {
+        periods.push({ ...cur, people: Array.from(cur.people.values()) });
+        cur = null;
+      }
+    }
+    if (cur) periods.push({ ...cur, people: Array.from(cur.people.values()) });
+    periods.sort((a, b) => b.max - a.max || (b.end - b.start) - (a.end - a.start));
+    return { counts, names: perDay, peak, peakDay, periods: periods.slice(0, 3) };
   }, [leaves, total]);
 
-  const W = 1000, H = 220, PL = 34, PB = 24, PT = 12, PR = 8;
-  const yMax = Math.max(peak, Math.ceil((headcount * alertPercent) / 100), 1) + 1;
+  const W = 1000, H = 260, PL = 44, PB = 28, PT = 28, PR = 12;
+  const yMax = Math.max(peak + 1, 3);
   const x = (d: number) => PL + (d / (total - 1)) * (W - PL - PR);
   const y = (v: number) => PT + (1 - v / yMax) * (H - PT - PB);
 
-  const path = counts.map((c, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(c).toFixed(1)}`).join(' ');
+  // Courbe en marches : le nombre ne change qu'aux départs / retours
+  let path = '';
+  counts.forEach((c, i) => { path += `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(c).toFixed(1)} `; });
   const area = `${path} L${x(total - 1)},${y(0)} L${x(0)},${y(0)} Z`;
-  const threshold = (headcount * alertPercent) / 100;
   const monthStarts = MONTH_STARTS(year);
   const todayIdx = dayOfYear(new Date());
   const showToday = new Date().getUTCFullYear() === year;
-
-  const peakDate = new Date(Date.UTC(year, 0, 1 + peakDay));
-  const ticks = Array.from(new Set([0, Math.ceil(yMax / 2), yMax - 1]));
+  const todayCount = showToday ? counts[Math.min(Math.max(todayIdx, 0), total - 1)] : 0;
+  const ticks = Array.from({ length: yMax + 1 }, (_, i) => i).filter(i => yMax <= 8 || i % 2 === 0);
+  const badge = ['①', '②', '③'];
 
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Nombre de personnes absentes par jour">
+      <p className="text-sm text-[var(--text-muted)] mb-3">
+        <strong className="text-[var(--text)]">Comment lire ce graphique :</strong> la courbe monte quand des collègues partent en congé,
+        et redescend quand ils reviennent. Plus elle est haute, moins l&apos;équipe est au complet ce jour-là.
+      </p>
+
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Nombre de personnes absentes chaque jour">
+        {/* grille + axe vertical */}
         {ticks.map(t => (
           <g key={t}>
             <line x1={PL} x2={W - PR} y1={y(t)} y2={y(t)} stroke="var(--border)" strokeWidth="1" />
-            <text x={PL - 6} y={y(t) + 3} textAnchor="end" fontSize="10" fill="var(--text-muted)">{t}</text>
+            <text x={PL - 8} y={y(t) + 4} textAnchor="end" fontSize="12" fill="var(--text-muted)">{t}</text>
           </g>
         ))}
-        {monthStarts.map((s, m) => (
-          <text key={m} x={x(s) + 2} y={H - 6} fontSize="10" fill="var(--text-muted)">{MONTHS_SHORT[m]}</text>
+        <text x={12} y={PT - 12} fontSize="12" fontWeight="600" fill="var(--text-muted)">Personnes absentes</text>
+
+        {/* périodes les plus chargées */}
+        {periods.map((p, i) => (
+          <g key={i}>
+            <rect x={x(p.start)} y={PT} width={Math.max(x(p.end) - x(p.start), 3)} height={H - PT - PB} fill="#f59e0b" fillOpacity="0.14" />
+            <text x={(x(p.start) + x(p.end)) / 2} y={PT + 14} textAnchor="middle" fontSize="15" fontWeight="700" fill="#b45309">{badge[i]}</text>
+          </g>
         ))}
-        {headcount > 0 && (
+
+        {/* mois */}
+        {monthStarts.map((s0, m) => (
+          <g key={m}>
+            <line x1={x(s0)} x2={x(s0)} y1={H - PB} y2={H - PB + 4} stroke="var(--border)" />
+            <text x={x(s0) + 3} y={H - 8} fontSize="12" fill="var(--text-muted)">{MONTHS_SHORT[m]}</text>
+          </g>
+        ))}
+
+        <path d={area} fill="#10b981" fillOpacity="0.22" />
+        <path d={path} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" />
+
+        {/* aujourd'hui */}
+        {showToday && (
           <g>
-            <line x1={PL} x2={W - PR} y1={y(threshold)} y2={y(threshold)} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="6 4" />
-            <text x={W - PR} y={y(threshold) - 4} textAnchor="end" fontSize="10" fill="#d97706">
-              Seuil d&apos;alerte {alertPercent} % de l&apos;effectif
+            <line x1={x(todayIdx)} x2={x(todayIdx)} y1={PT} y2={H - PB} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4 3" />
+            <rect x={Math.min(x(todayIdx) - 38, W - 90)} y={H - PB - 22} width="76" height="18" rx="9" fill="#ef4444" />
+            <text x={Math.min(x(todayIdx), W - 52)} y={H - PB - 9} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">Aujourd&apos;hui</text>
+          </g>
+        )}
+
+        {/* pic */}
+        {peak > 0 && (
+          <g>
+            <circle cx={x(peakDay)} cy={y(peak)} r="6" fill="#ef4444" stroke="#fff" strokeWidth="2" />
+            <text
+              x={Math.min(Math.max(x(peakDay), PL + 70), W - 90)}
+              y={y(peak) - 12}
+              textAnchor="middle" fontSize="13" fontWeight="700" fill="#dc2626"
+            >
+              Pic : {peak} absent{peak > 1 ? 's' : ''}
             </text>
           </g>
         )}
-        <path d={area} fill="#10b981" fillOpacity="0.18" />
-        <path d={path} fill="none" stroke="#10b981" strokeWidth="2" strokeLinejoin="round" />
-        {showToday && <line x1={x(todayIdx)} x2={x(todayIdx)} y1={PT} y2={H - PB} stroke="#ef4444" strokeWidth="1.5" />}
-        {peak > 0 && (
-          <g>
-            <circle cx={x(peakDay)} cy={y(peak)} r="4.5" fill="#ef4444" />
-          </g>
-        )}
       </svg>
-      <p className="text-xs text-[var(--text-muted)] mt-2">
-        {peak > 0 ? (
-          <>
-            Pic d&apos;absence : <strong className="text-[var(--text)]">{peak} personne{peak > 1 ? 's' : ''}</strong> en même temps, autour du{' '}
-            <strong className="text-[var(--text)]">{peakDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', timeZone: 'UTC' })}</strong>
-            {headcount > 0 && <> ({Math.round((peak / headcount) * 100)} % de l&apos;effectif)</>}.
-          </>
-        ) : 'Aucune absence approuvée sur cette année.'}
-      </p>
+
+      {/* Ce que dit la courbe, en phrases */}
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--text)] space-y-1.5">
+          {showToday && (
+            <p>
+              <span className="text-red-500 font-bold">●</span> Aujourd&apos;hui : <strong>{todayCount === 0 ? 'personne' : `${todayCount} personne${todayCount > 1 ? 's' : ''}`}</strong> en congé
+              {headcount > 0 && todayCount > 0 && <> sur {headcount} ({Math.round((todayCount / headcount) * 100)} % de l&apos;effectif)</>}.
+            </p>
+          )}
+          {peak > 0 ? (
+            <p>
+              <span className="text-red-500 font-bold">●</span> Le jour le plus chargé est le <strong>{fmtD(peakDay)}</strong> :{' '}
+              <strong>{peak} personne{peak > 1 ? 's' : ''}</strong> absente{peak > 1 ? 's' : ''} en même temps
+              {names[peakDay].size > 0 && <> ({Array.from(names[peakDay].values()).join(', ')})</>}.
+            </p>
+          ) : (
+            <p>Aucun congé approuvé sur cette année.</p>
+          )}
+        </div>
+
+        {periods.length > 0 && (
+          <div className="rounded-xl bg-amber-50/70 dark:bg-amber-900/10 border border-amber-200/70 dark:border-amber-800/60 p-4">
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300 mb-2">Les périodes où l&apos;équipe est la plus réduite</p>
+            <ul className="space-y-2 text-sm text-[var(--text)]">
+              {periods.map((p, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="font-bold text-amber-700 dark:text-amber-300">{badge[i]}</span>
+                  <span>
+                    {p.start === p.end ? <>Le <strong>{fmtD(p.start)}</strong></> : <>Du <strong>{fmtD(p.start)}</strong> au <strong>{fmtD(p.end)}</strong></>}
+                    {' '}: jusqu&apos;à <strong>{p.max}</strong> absent{p.max > 1 ? 's' : ''}
+                    <span className="block text-xs text-[var(--text-muted)]">{p.people.slice(0, 6).join(', ')}{p.people.length > 6 ? '…' : ''}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -380,6 +520,57 @@ export function HorizontalBars({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ─── 6) Simple : combien de personnes sont absentes, mois par mois ───────────
+
+export function PeoplePerMonthBars({ leaves, year, headcount }: { leaves: VisualLeave[]; year: number; headcount: number }) {
+  const months = useMemo(() => {
+    const res = Array.from({ length: 12 }, () => new Map<string, string>()); // employeeId -> nom
+    for (const l of leaves) {
+      const s = new Date(l.startDate), e = new Date(l.endDate);
+      for (let m = 0; m < 12; m++) {
+        const mStart = Date.UTC(year, m, 1), mEnd = Date.UTC(year, m + 1, 0);
+        if (s.getTime() <= mEnd && e.getTime() >= mStart) res[m].set(l.employeeId, l.employeeName);
+      }
+    }
+    return res.map(mp => Array.from(mp.values()));
+  }, [leaves, year]);
+
+  const now = new Date();
+  const currentMonth = now.getUTCFullYear() === year ? now.getUTCMonth() : now.getUTCFullYear() > year ? 12 : -1;
+  const max = Math.max(...months.map(m => m.length), 1);
+
+  return (
+    <div>
+      <div className="flex items-end gap-1.5 sm:gap-2 h-52">
+        {months.map((names, m) => {
+          const isNow = m === currentMonth;
+          const isPast = currentMonth === 12 || (currentMonth >= 0 && m < currentMonth);
+          return (
+            <div key={m} className="flex-1 flex flex-col items-center justify-end h-full gap-1" title={names.length ? names.join(', ') : 'Personne'}>
+              <span className="text-xs font-bold text-[var(--text)]">{names.length || ''}</span>
+              <div
+                className="w-full rounded-t-lg transition-all"
+                style={{
+                  height: `${(names.length / max) * 78}%`,
+                  minHeight: names.length ? 6 : 0,
+                  background: isNow ? '#059669' : isPast ? '#94a3b8' : '#6ee7b7',
+                }}
+              />
+              <span className={`text-[10px] sm:text-xs font-semibold ${isNow ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>{MONTHS_SHORT[m]}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[11px] text-[var(--text-muted)]">
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#94a3b8' }} />Mois passés</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#059669' }} />Mois en cours</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm" style={{ background: '#6ee7b7' }} />Mois à venir</span>
+        {headcount > 0 && <span className="ml-auto">Effectif total : {headcount} personnes</span>}
+      </div>
     </div>
   );
 }

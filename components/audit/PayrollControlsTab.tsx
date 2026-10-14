@@ -11,6 +11,7 @@ import {
   Loader2, RefreshCw, Play, ShieldCheck, ShieldAlert, ChevronLeft, ChevronRight, Lock, Eye, Bot, User,
   ChevronDown, ChevronRight as ChevronR, Info, Gauge, ListChecks,
 } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import {
   auditEngineService, type AuditSummary, type CheckpointView, type Finding, type FindingsResponse,
   type FindingStatus, type RulesCatalog, type RunSummary,
@@ -141,7 +142,7 @@ export default function PayrollControlsTab({
       {error && <p className="text-sm text-red-600 dark:text-red-400 flex items-start gap-2"><ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" /> {error}</p>}
 
       {!summary ? (
-        <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>
+        <KonzaLoader variant="section" />
       ) : (
         <>
           {/* Synthèse */}
@@ -231,7 +232,7 @@ export default function PayrollControlsTab({
                 </label>
               </div>
 
-              {loading && !res ? <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-[var(--brand)] animate-spin" /></div>
+              {loading && !res ? <KonzaLoader variant="section" />
                 : res && res.data.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-[var(--border)] p-10 text-center text-sm text-[var(--text-muted)]">
                     <ShieldCheck className="w-8 h-8 mx-auto mb-3 opacity-50" /> Aucun écart pour ces filtres.

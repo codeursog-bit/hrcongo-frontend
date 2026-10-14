@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users, Wallet, Clock, Calendar, AlertCircle, CheckCircle,
-  TrendingUp, TrendingDown, Loader2, Shield,
+  TrendingUp, TrendingDown, Shield,
   FileText, ChevronRight, BadgeCheck,
   Receipt, Landmark, FileX, FilePlus, AlertTriangle,
   LayoutDashboard, ClipboardList, DollarSign,
@@ -17,6 +17,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const C = { sky:'#0EA5E9', emerald:'#10B981', amber:'#F59E0B', rose:'#EF4444', violet:'#8B5CF6' };
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -100,9 +101,7 @@ export default function RapportsPage() {
   },[month,year]);
 
   if(isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-[var(--brand)]" size={36}/>
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   const masseBrute   = Number(overview?.payrollTotal||0);
@@ -152,7 +151,7 @@ export default function RapportsPage() {
       <div>
         <SectionTitle>Déclaration CNSS — {monthLabel} · Taux officiels cnss.cg</SectionTitle>
         {cnssLoad ? (
-          <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-[var(--brand)]" size={28}/></div>
+          <KonzaLoader variant="section" />
         ) : !cnssTotal ? (
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-8 text-center text-[var(--text-muted)]">
             <Landmark size={36} className="mx-auto mb-3 opacity-30"/>

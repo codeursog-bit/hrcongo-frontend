@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Network, Users, Trash2, Edit2, Loader2, Save, X } from
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface Department {
   id: string;
@@ -131,7 +132,7 @@ export default function DepartmentsPage() {
 
       {/* Grid */}
       {isLoading ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={48} /></div>
+        <KonzaLoader variant="section" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            {departments.map((dept) => (

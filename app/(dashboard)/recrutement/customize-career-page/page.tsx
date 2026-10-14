@@ -10,6 +10,7 @@ import {
 import { api } from '@/services/api';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface CareerPageSettings {
   careerPageBanner: string | null;
@@ -306,9 +307,7 @@ export default function CustomizeCareerPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

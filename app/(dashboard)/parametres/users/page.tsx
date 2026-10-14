@@ -17,6 +17,7 @@ import { useAlert } from '@/components/providers/AlertProvider';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { approvalsApi, ApprovalFunctionDef, UserFunctionItem } from '@/services/approvals';
 import ExternalFunctionsSection from '@/components/approvals/ExternalFunctionsSection';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // --- Types ---
 
@@ -280,7 +281,7 @@ export default function UserManagementPage() {
     });
   }, [users, searchQuery, roleFilter]);
 
-  if (isLoading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={48} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1600px] mx-auto pb-20 space-y-8">

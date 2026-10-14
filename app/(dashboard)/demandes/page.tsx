@@ -20,13 +20,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
-  Loader2, FileText, Ticket, Calendar, ArrowRight, Clock,
+  FileText, Ticket, Calendar, ArrowRight, Clock,
   Stethoscope, Briefcase, HelpCircle, Umbrella, HandCoins,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { authService } from '@/lib/services/authService';
 import { Lock } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // Page réservée à l'Admin et au RH (même périmètre que l'entrée de menu)
 const VIEW_ROLES = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'];
@@ -104,7 +105,7 @@ export default function DemandesHubPage() {
 
   const SUB_ICON: Record<string, any> = { MALADIE: Stethoscope, URGENCE: Stethoscope, MISSION: Briefcase, CONVENTIONNELLE: FileText, EXCEPTIONNELLE: HelpCircle, LOAN: HandCoins, ADVANCE: HandCoins };
 
-  if (role === undefined) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (role === undefined) return <KonzaLoader variant="page" />;
   if (!role || !VIEW_ROLES.includes(role)) {
     return (
       <div className="max-w-xl mx-auto py-24 text-center">
@@ -115,7 +116,7 @@ export default function DemandesHubPage() {
     );
   }
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1400px] mx-auto pb-24 space-y-6">

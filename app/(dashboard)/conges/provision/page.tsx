@@ -5,13 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, AlertTriangle, AlertCircle, CheckCircle2,
-  Loader2, TrendingUp, Users, Wallet, Calendar,
+  TrendingUp, Users, Wallet, Calendar,
   ChevronRight, Info, RefreshCw, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -143,9 +144,7 @@ export default function LeaveProvisionPage() {
   // ─── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-500" size={32} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

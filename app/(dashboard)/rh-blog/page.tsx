@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '@/lib/services/authService';
 import { blogApi, BlogPostSummary, BlogCategory, BlogQuota } from '@/services/blog-api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const CAN_POST = ['HR_MANAGER', 'ADMIN', 'CABINET_ADMIN'];
 
@@ -372,9 +373,7 @@ export default function RhBlogPage() {
 
       {/* Contenu */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 size={28} className="animate-spin text-cyan-500"/>
-        </div>
+        <KonzaLoader variant="section" />
       ) : !apiError && posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <BookOpen size={40} className="text-slate-600 mb-4"/>

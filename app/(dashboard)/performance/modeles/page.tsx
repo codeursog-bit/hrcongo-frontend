@@ -18,6 +18,7 @@ import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
 import { useBasePath } from '@/hooks/useBasePath';
 import { HR_ROLES, getStoredUser, sumWeights } from '@/components/performance/sheet-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface Criterion { id?: string; label: string; description?: string; weight: number }
 interface Objective { title: string; kpi?: string | null; weight: number }
@@ -262,7 +263,7 @@ export default function TemplatesPage() {
       )}
 
       {loading && !data ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-purple-600" size={28} /></div>
+        <KonzaLoader variant="section" />
       ) : data && (
         <>
           {data.custom.length === 0 ? (

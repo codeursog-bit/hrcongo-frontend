@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, Users, UserPlus, TrendingDown, TrendingUp, Clock, 
-  Calendar, Loader2, Building2, Award, Target, AlertCircle, ClipboardList, LayoutDashboard,UsersRound,
+  Calendar, Building2, Award, Target, AlertCircle, ClipboardList, LayoutDashboard,UsersRound,
   UmbrellaOff,BookOpen, DollarSign, Hourglass, AlertTriangle, CheckCircle2, Activity, LogOut, UserCircle, BarChart3,
   Globe, Briefcase, SlidersHorizontal, ChevronDown, ChevronUp,
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import {
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import SlideOver from '@/components/SlideOver'; // 🆕 panneau détail nationalité
 import EffectifMonthlyList from '@/components/reports/EffectifMonthlyList'; // 🆕 liste mensuelle séparée
 import { FancySelect } from '@/components/ui/FancySelect'; // 🆕 filtres du rapport
@@ -188,9 +189,7 @@ export default function EmployeeAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-[var(--brand)]" size={48}/>
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 
@@ -989,9 +988,7 @@ export default function EmployeeAnalyticsPage() {
         subtitle={`${nationalityEmployees.length} employé${nationalityEmployees.length > 1 ? 's' : ''}`}
       >
         {nationalityLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 size={24} className="animate-spin text-[var(--brand)]" />
-          </div>
+          <KonzaLoader variant="section" />
         ) : nationalityEmployees.length === 0 ? (
           <p className="text-sm text-[var(--text-muted)] text-center py-12">Aucun employé trouvé pour cette nationalité.</p>
         ) : (

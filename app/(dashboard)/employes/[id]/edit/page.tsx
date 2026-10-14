@@ -26,6 +26,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import { NATIONALITY_OPTIONS } from '@/lib/nationalities';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { ImageUploader } from '@/components/employees/ImageUploader';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const REQUIRES_END_DATE = ['CDD', 'STAGE', 'INTERIM', 'CONSULTANT', 'PRESTATAIRE'];
 
@@ -382,9 +383,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const bncNet     = montantHT - bncMontant;
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-emerald-500" size={40} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   return (

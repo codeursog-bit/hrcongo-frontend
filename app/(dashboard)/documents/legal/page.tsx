@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type DocCategory = 'contrats' | 'disciplinaire' | 'admin' | 'social';
 
@@ -220,9 +221,7 @@ export default function LegalLibraryPage() {
                         Employé concerné *
                       </label>
                       {isLoadingEmployees ? (
-                        <div className="p-4 text-center text-sm text-gray-400">
-                          <Loader2 size={16} className="animate-spin inline mr-2" /> Chargement...
-                        </div>
+                        <KonzaLoader variant="inline" />
                       ) : (
                         <select
                           value={selectedEmp}

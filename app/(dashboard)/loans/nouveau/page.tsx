@@ -19,6 +19,7 @@ import LoanRequestPrintable from '@/components/LoanRequestPrintable';
 import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
 import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type ReqType = 'ARGENT' | 'MARCHANDISE' | 'AVANCE' | 'AUTRE';
 
@@ -337,7 +338,7 @@ export default function NouvellePretAvancePage() {
                 {onBehalf ? `Dette actuelle de ${targetEmployee?.firstName || 'cet employé'}` : 'Ma dette actuelle'}
               </label>
               {isLoadingDebt && onBehalf ? (
-                <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]"><Loader2 size={14} className="animate-spin" /> Chargement…</div>
+                <KonzaLoader variant="inline" />
               ) : existingDebt > 0 ? (
                 <p className="text-lg font-bold text-amber-600">{existingDebt.toLocaleString('fr-FR')} FCFA <span className="text-xs font-normal text-[var(--text-muted)]">déjà dus (prêts/avances en cours)</span></p>
               ) : (

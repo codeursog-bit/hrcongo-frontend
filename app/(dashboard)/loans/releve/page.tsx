@@ -11,11 +11,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Search, ChevronRight, Wallet, Banknote, PiggyBank, TrendingDown, Users2 } from 'lucide-react';
+import { Search, ChevronRight, Wallet, Banknote, PiggyBank, TrendingDown, Users2 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import { debtRefDate } from '@/lib/debt-dates';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR') + ' FCFA';
@@ -47,6 +48,7 @@ export default function ReleveRecapPage() {
     const set = new Set<number>([now.getFullYear()]);
     loans.forEach(r => set.add(new Date(r.startDate ?? r.createdAt).getFullYear()));
     advances.forEach(r => set.add(debtRefDate(r, 'advance').getFullYear()));
+    [...loans, ...advances].forEach(r => (r.repaymentLogs ?? []).forEach((log: any) => set.add(log.year)));
     return Array.from(set).sort((a, b) => b - a);
   }, [loans, advances]);
 
@@ -128,7 +130,7 @@ export default function ReleveRecapPage() {
     nbEmployes: rows.length,
   }), [rows]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   const initials = (emp: any) => `${emp?.firstName?.[0] ?? ''}${emp?.lastName?.[0] ?? ''}`;
 

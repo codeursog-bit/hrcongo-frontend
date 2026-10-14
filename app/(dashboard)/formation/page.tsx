@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -879,7 +880,7 @@ export default function FormationPage() {
       {activeView === 'dashboard' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {loadingDash ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={36} /></div>
+            <KonzaLoader variant="section" />
           ) : dashboard ? (
             <>
               {/* KPIs */}
@@ -1053,7 +1054,7 @@ export default function FormationPage() {
 
           {/* Grille */}
           {loadingCourses ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={36}/></div>
+            <KonzaLoader variant="section" />
           ) : (() => {
             const CATALOG_PAGE_SIZE = 10;
             const pagedCourses = filteredCourses.slice(0, dashPage * CATALOG_PAGE_SIZE);
@@ -1093,7 +1094,7 @@ export default function FormationPage() {
       {activeView === 'my-learning' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
           {loadingMine ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={36}/></div>
+            <KonzaLoader variant="section" />
           ) : myTrainings ? (
             <>
               {/* Passeport compétences */}
@@ -1225,7 +1226,7 @@ export default function FormationPage() {
           </div>
 
           {loadingRequests ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={36}/></div>
+            <KonzaLoader variant="section" />
           ) : requests.length === 0 ? (
             <div className="text-center py-20 text-slate-400">
               <ClipboardList size={40} className="mx-auto mb-3 opacity-20"/>
@@ -1327,7 +1328,7 @@ export default function FormationPage() {
           </div>
 
           {loadingPfa ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-emerald-500" size={36}/></div>
+            <KonzaLoader variant="section" />
           ) : pfa ? (
             <>
               {/* Résumé global */}
@@ -1981,7 +1982,7 @@ export default function FormationPage() {
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Choisir l'employé *</label>
                 {loadingEmployees ? (
-                  <div className="flex items-center justify-center py-8"><Loader2 size={24} className="animate-spin text-emerald-500"/></div>
+                  <KonzaLoader variant="section" />
                 ) : (
                   <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                     {employees.length === 0 ? (

@@ -8,7 +8,7 @@
 // ============================================================================
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Loader2, Users2 } from 'lucide-react';
+import { Users2 } from 'lucide-react';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
@@ -16,6 +16,7 @@ import {
 import { api } from '@/services/api';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -102,7 +103,7 @@ export default function PermissionsReportPage() {
     return Array.from(map.values()).sort((a, b) => b.nombre - a.nombre).slice(0, 20);
   }, [monthTickets, tickets, top20Mode, year]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">

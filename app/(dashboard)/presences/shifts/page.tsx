@@ -13,6 +13,7 @@ import {
   Download, Building2, Sunset, Info, UserCheck, UserX, Repeat,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface WorkShift {
@@ -521,9 +522,7 @@ function EmployeeShiftView({ assignments, employees, shifts, loading }: {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 size={28} className="animate-spin text-emerald-500" />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 
@@ -910,9 +909,7 @@ export default function ShiftsPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="animate-spin text-emerald-500" />
-        </div>
+        <KonzaLoader variant="section" />
       ) : activeTab === 'shifts' ? (
         <div className="space-y-6">
           {shifts.length === 0 ? (

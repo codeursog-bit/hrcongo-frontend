@@ -13,6 +13,7 @@ import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ✅ CONGO : 26j/an = 2.1667j/mois (pas 2.5)
 const CONGO_MONTHLY_RATE = (26 / 12).toFixed(2); // "2.17"
@@ -367,8 +368,7 @@ export default function NewLeaveRequestPage() {
           {/* Sélection employé */}
           {isLoadingEmployees ? (
             <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center gap-3">
-              <Loader2 className="animate-spin text-[var(--text-muted)]" size={20} />
-              <span className="text-sm text-[var(--text-muted)]">Chargement...</span>
+              <KonzaLoader variant="inline" />
             </div>
           ) : loadError && showEmployeeSelect ? (
             <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 text-amber-700 dark:text-amber-300 text-sm">{loadError}</div>

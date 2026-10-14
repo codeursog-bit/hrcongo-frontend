@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
-  Fingerprint, FileText, Loader2, Activity, BarChart3, 
+  Fingerprint, FileText, Activity, BarChart3, 
   CalendarIcon, Edit3, User, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { api } from '@/services/api';
@@ -15,6 +15,7 @@ import CorrectionsView from './CorrectionsView';
 import EmployeeView from './EmployeeView';
 import PresenceSubNav from '@/components/PresenceSubNav';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type TabType = 'monthly' | 'daily' | 'weekly' | 'corrections' | 'myview';
 
@@ -133,9 +134,7 @@ export default function AttendancePage() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen pb-20 flex justify-center items-center">
-        <Loader2 className="animate-spin text-emerald-500" size={48}/>
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 
@@ -175,7 +174,7 @@ export default function AttendancePage() {
 
         {isLoading ? (
           <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] flex justify-center items-center min-h-[600px]">
-            <Loader2 className="animate-spin text-emerald-500" size={48}/>
+            <KonzaLoader variant="section" />
           </div>
         ) : (
           <EmployeeView myAttendances={myAttendances} date={date} />
@@ -242,7 +241,7 @@ export default function AttendancePage() {
 
       {isLoading ? (
         <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] flex justify-center items-center min-h-[600px]">
-          <Loader2 className="animate-spin text-emerald-500" size={48}/>
+          <KonzaLoader variant="section" />
         </div>
       ) : (
         <>

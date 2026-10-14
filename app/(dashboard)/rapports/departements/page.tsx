@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Loader2, Building2, ClipboardList, LayoutDashboard, UsersRound,
+  ArrowLeft, Building2, ClipboardList, LayoutDashboard, UsersRound,
   UmbrellaOff, BookOpen, DollarSign, AlertTriangle, Clock, UserX, LogOut,
   Wallet, TrendingUp, Users, UserCircle, BarChart3,
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const COLORS = ['#0EA5E9', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#6366F1'];
 
@@ -64,9 +65,7 @@ export default function DepartmentTraceabilityPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-[var(--brand)]" size={48} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

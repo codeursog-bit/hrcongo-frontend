@@ -10,7 +10,8 @@ import React, { useEffect, useState } from 'react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
-import { Loader2, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { auditTrailService, type AuditStats } from '@/services/audit-trail';
 import { ACTION_LABEL, CHART_COLORS as C, ENTITY_LABEL, MONTHS_SHORT_FR } from '@/lib/audit-labels';
 
@@ -75,7 +76,7 @@ export default function ActivityPanel({ companyId }: { companyId?: string }) {
       </div>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {!stats && !error && <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 text-[var(--brand)] animate-spin" /></div>}
+      {!stats && !error && <KonzaLoader variant="section" />}
 
       {stats && (
         <>

@@ -32,6 +32,7 @@ import PresenceSubNav from '@/components/PresenceSubNav';
 import QrPunchModal from '@/components/pointage/QrPunchModal';
 import { employeeQrApi, PunchResult, PunchMode } from '@/services/display-screen-api';
 import { breakApi, BreakStatus } from '@/services/break-api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 // ─── Types ────────────────────────────────────────────────────────────────────
 type PageStatus = 'loading' | 'idle' | 'working' | 'completed' | 'error';
 type OvertimeStatus =
@@ -753,7 +754,7 @@ export default function AttendanceCheckInPage() {
 
           {/* États */}
           {status === 'loading' && (
-            <div className="py-10"><Loader2 className="animate-spin mx-auto text-emerald-500" size={32} /></div>
+            <KonzaLoader variant="section" />
           )}
 
           {status === 'idle' && (

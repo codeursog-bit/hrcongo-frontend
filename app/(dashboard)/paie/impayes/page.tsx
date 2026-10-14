@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   AlertTriangle, Banknote, Users, Clock, CheckCircle2,
-  ChevronDown, Loader2, XCircle, ShieldAlert, RefreshCw,
+  ChevronDown, XCircle, ShieldAlert, RefreshCw,
   AlertCircle, Calendar, TrendingDown, Bell, FileWarning,
   FileX, CreditCard, Info, ChevronRight, Building2,
   ArrowRight,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS_FR    = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
@@ -231,12 +232,7 @@ export default function UnpaidSalaryPage() {
   const byLevel      = (l: AlertLevel) => (data?.employees ?? []).filter(e => e.alertLevel === l).length;
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-3">
-        <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        <p className="text-sm text-gray-500">Analyse des salaires en cours…</p>
-      </div>
-    </div>
+    <KonzaLoader variant="page" label="Analyse des salaires en cours…" />
   );
 
   return (
@@ -623,7 +619,7 @@ export default function UnpaidSalaryPage() {
                       <div className="px-4 pt-3">
                         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Historique des paiements</p>
                         {tlLoading === emp.employeeId && (
-                          <div className="flex justify-center py-3"><Loader2 className="w-5 h-5 text-gray-400 animate-spin" /></div>
+                          <KonzaLoader variant="inline" />
                         )}
                         {tlErr && (
                           <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">

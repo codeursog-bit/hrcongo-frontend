@@ -16,9 +16,10 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, Users, AlertTriangle, TrendingUp, CalendarClock, ListChecks,
+  Users, AlertTriangle, TrendingUp, CalendarClock, ListChecks,
   Percent, ChevronLeft, ChevronRight, Stethoscope, FileCheck2, FileX2,
 } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend as RLegend,
@@ -733,7 +734,7 @@ function KpiCard({ icon: Icon, label, value, sub, tone }: { icon: any; label: st
 }
 
 function LoadingBlock() {
-  return <div className="flex justify-center py-20"><Loader2 className="animate-spin text-sky-500" size={32} /></div>;
+  return <KonzaLoader variant="section" />;
 }
 function ErrorBlock() {
   return <div className="text-center py-20 text-gray-400 text-sm">Impossible de charger ces données pour le moment.</div>;

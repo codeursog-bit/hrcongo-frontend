@@ -17,6 +17,7 @@ import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
 import { useBasePath } from '@/hooks/useBasePath';
 import { HR_ROLES, MANAGE_ROLES, getStoredUser, fmtDate, STATUS_LABEL, scoreTone, ReviewStatus } from '@/components/performance/sheet-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface CycleDetail {
   cycle: {
@@ -215,7 +216,7 @@ export default function CycleDetailPage() {
     } catch (e: any) { alert(e?.message || 'Suppression impossible'); }
   };
 
-  if (loading && !data) return <div className="flex justify-center py-32"><Loader2 className="animate-spin text-purple-600" size={32} /></div>;
+  if (loading && !data) return <KonzaLoader variant="page" />;
   if (error || !data) {
     return (
       <div className="max-w-xl mx-auto py-20 text-center space-y-4">

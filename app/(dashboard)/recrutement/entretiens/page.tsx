@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -284,12 +285,7 @@ function EntretiensContent() {
   // ── LOADING ──
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="animate-spin text-emerald-500 mx-auto" size={36} />
-          <p className="text-gray-500 mt-3 text-sm">Chargement des entretiens…</p>
-        </div>
-      </div>
+      <KonzaLoader variant="page" label="Chargement des entretiens…" />
     );
   }
 

@@ -15,7 +15,8 @@
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
-import { CalendarRange, Loader2, Users, Wallet, PiggyBank, Building2, TrendingUp, TrendingDown } from 'lucide-react';
+import { CalendarRange, Users, Wallet, PiggyBank, Building2, TrendingUp, TrendingDown } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
@@ -185,9 +186,7 @@ export default function YearlyEvolutionPanel({ companyId }: { companyId?: string
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="animate-spin text-sky-500" size={32} />
-        </div>
+        <KonzaLoader variant="section" />
       ) : !data || data.years.length === 0 ? (
         <div className="py-12 text-center text-gray-400 text-sm">
           Aucune donnée de paie sur cette plage d&apos;années.

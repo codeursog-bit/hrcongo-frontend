@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type ContractKind = 'CONTRAT_TRAVAIL' | 'PRESTATION_SERVICES' | 'CONSULTANT' | 'STAGE';
@@ -988,7 +989,7 @@ function Row({ label, value, bold, muted, highlight }: { label: string; value: n
 
 export default function GenerateContractPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center py-24"><Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" /></div>}>
+    <Suspense fallback={<KonzaLoader variant="page" />}>
       <GenerateContractInner />
     </Suspense>
   );

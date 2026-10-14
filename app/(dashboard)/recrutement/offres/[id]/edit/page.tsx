@@ -6,6 +6,7 @@ import { ArrowLeft, Briefcase, MapPin, DollarSign, Save, Loader2, Building2, Upl
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import Image from 'next/image';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface Department {
   id: string;
@@ -189,9 +190,7 @@ export default function EditJobOfferPage({ params }: { params: { id: string } })
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-500" size={32}/>
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

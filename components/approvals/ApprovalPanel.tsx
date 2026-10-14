@@ -97,6 +97,8 @@ export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState
       else await approvalsApi.cancelPending(kind, requestId);
       await load();
       onChanged?.();
+      // 🔔 Met à jour tout de suite la pastille « Avis à donner » de la Sidebar
+      window.dispatchEvent(new Event('konza:avis-changed'));
     } catch (e: any) {
       setError(e?.message || 'Action impossible');
     } finally {
@@ -121,6 +123,8 @@ export default function ApprovalPanel({ kind, requestId, refreshKey = 0, onState
       setOpinion('FAVORABLE');
       await load();
       onChanged?.();
+      // 🔔 Met à jour tout de suite la pastille « Avis à donner » de la Sidebar
+      window.dispatchEvent(new Event('konza:avis-changed'));
     } catch (e: any) {
       setError(e?.message || "Impossible d'enregistrer l'avis");
     } finally {

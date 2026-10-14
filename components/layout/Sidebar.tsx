@@ -16,6 +16,7 @@ import { NavItem, UserProfile, UserRole } from '../../types';
 import Image from 'next/image';
 import { useMyEmployeePhoto } from '@/hooks/useMyEmployeePhoto';
 import { useChatUnread } from '@/components/chat/ChatProvider';
+import { KonzaMark } from '@/components/ui/KonzaMark';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,6 +26,47 @@ interface SidebarProps {
   brandColor?: string | null;
   basePath?: string;
 }
+
+// 🔔 Avis en attente = taille de la boîte « Avis à donner » (toutes entreprises confondues).
+// Échec silencieux → aucune alerte, le menu reste normal.
+const AVIS_PENDING_ENDPOINT = '/approvals/inbox/all';
+
+const readCount = (res: any): number => {
+  if (typeof res === 'number') return res;
+  if (Array.isArray(res)) return res.length;
+  if (Array.isArray(res?.items)) return res.items.length;
+  const n = res?.total ?? res?.count ?? res?.pending ?? res?.pendingCount ?? 0;
+  return Number.isFinite(Number(n)) ? Number(n) : 0;
+};
+
+type AlertTone = 'red' | 'emerald' | 'amber';
+const ALERT_TONES: Record<AlertTone, { solid: string; text: string; tint: string; ring: string }> = {
+  red:     { solid: '#EF4444', text: '#DC2626', tint: 'rgba(239,68,68,0.10)',  ring: 'rgba(239,68,68,0.28)' },
+  emerald: { solid: '#10B981', text: '#059669', tint: 'rgba(16,185,129,0.10)', ring: 'rgba(16,185,129,0.28)' },
+  amber:   { solid: '#F59E0B', text: '#D97706', tint: 'rgba(245,158,11,0.12)', ring: 'rgba(245,158,11,0.32)' },
+};
+
+// Pastille d'alerte clignotante (compteur + halo qui pulse). Respecte prefers-reduced-motion.
+const AlertBadge: React.FC<{ count: number; tone: AlertTone; mini: boolean }> = ({ count, tone, mini }) => {
+  const t = ALERT_TONES[tone];
+  const label = count > 99 ? '99+' : String(count);
+  if (mini) {
+    return (
+      <span className="absolute top-1 right-1.5 flex w-3 h-3" aria-hidden="true">
+        <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping motion-reduce:animate-none" style={{ background: t.solid }} />
+        <span className="relative inline-flex w-3 h-3 rounded-full" style={{ background: t.solid, border: '2px solid var(--surface)' }} />
+      </span>
+    );
+  }
+  return (
+    <span className="relative flex shrink-0">
+      <span className="absolute inset-0 rounded-full opacity-60 animate-ping motion-reduce:animate-none" style={{ background: t.solid }} />
+      <span className="relative min-w-[22px] h-[22px] px-1.5 rounded-full text-white text-[11px] font-bold flex items-center justify-center shadow-sm" style={{ background: t.solid }}>
+        {label}
+      </span>
+    </span>
+  );
+};
 
 const navItems: NavItem[] = [
   {
@@ -176,13 +218,6 @@ const navItems: NavItem[] = [
     allowedRoles: ['MANAGER'],
   },
   {
-    id: 'ma_performance_manager',
-    label: 'Ma Performance',
-    icon: Target,
-    path: '/performance/mon-espace',
-    allowedRoles: ['MANAGER'],
-  },
-  {
     id: 'mon_profil_manager',
     label: 'Mon Profil',
     icon: UserCircle,
@@ -241,13 +276,6 @@ const navItems: NavItem[] = [
     allowedRoles: ['EMPLOYEE'],
   },
   {
-    id: 'ma_performance',
-    label: 'Ma Performance',
-    icon: Target,
-    path: '/performance/mon-espace',
-    allowedRoles: ['EMPLOYEE'],
-  },
-  {
     id: 'mon_profil',
     label: 'Mon Profil',
     icon: UserCircle,
@@ -275,6 +303,20 @@ const navItems: NavItem[] = [
     icon: GraduationCap,
     path: '/formation',
     allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+  },
+  {
+    id: 'ma_performance_manager',
+    label: 'Ma Performance',
+    icon: Target,
+    path: '/performance/mon-espace',
+    allowedRoles: ['MANAGER'],
+  },
+  {
+    id: 'ma_performance',
+    label: 'Ma Performance',
+    icon: Target,
+    path: '/performance/mon-espace',
+    allowedRoles: ['EMPLOYEE'],
   },
   {
     id: 'performance',
@@ -324,6 +366,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [tip, setTip] = useState<{ label: string; top: number; left: number } | null>(null);
   const mini = collapsed && isDesktop; // en mobile, le tiroir reste toujours déployé
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  // 🔔 Avis en attente de MON avis (fonction de validation)
+  const [pendingAvisCount, setPendingAvisCount] = useState(0);
+  const lastRefreshRef = React.useRef(0);
   // 🆕 Permission "secrétaire" : pointage manuel pour tout le monde
   const [hasAttendanceAllPermission, setHasAttendanceAllPermission] = useState(false);
   // ✅ LOT A — droit de signer accordé par l'admin (fonction de validation)
@@ -402,18 +447,51 @@ export const Sidebar: React.FC<SidebarProps> = ({
       .catch(() => {});
   }, []);
 
-  // Compteur de demandes en attente (absences, permissions, congés) pour Admin/HR_MANAGER
+  // Compteurs d'alerte : demandes en attente (Admin/RH) + avis à donner (titulaires d'une fonction).
+  // Rafraîchis à chaque navigation, toutes les 60 s et au retour sur l'onglet.
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (!stored) return;
     let parsedUser: any;
     try { parsedUser = JSON.parse(stored); } catch { return; }
-    if (!['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(parsedUser.role)) return;
+    const canSeeRequests = ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'].includes(parsedUser.role);
+    let cancelled = false;
 
-    api.get('/dashboard/pending-requests-count')
-      .then((counts: any) => setPendingRequestsCount(counts?.total || 0))
-      .catch(() => {});
-  }, []);
+    const refresh = (force?: boolean | Event) => {
+      // Anti-spam : pas plus d'un rafraîchissement toutes les 15 s (sauf évènement explicite)
+      const now = Date.now();
+      if (force !== true && now - lastRefreshRef.current < 15000) return;
+      lastRefreshRef.current = now;
+
+      if (canSeeRequests) {
+        api.get('/dashboard/pending-requests-count')
+          .then((counts: any) => { if (!cancelled) setPendingRequestsCount(counts?.total || 0); })
+          .catch(() => {});
+      }
+      if (hasApprovalFunction) {
+        api.get(AVIS_PENDING_ENDPOINT)
+          .then((res: any) => { if (!cancelled) setPendingAvisCount(readCount(res)); })
+          .catch(() => {});
+      } else {
+        setPendingAvisCount(0);
+      }
+    };
+
+    // Un avis vient d'être donné / une validation finalisée → compteur à jour tout de suite
+    const onAvisChanged = () => refresh(true);
+
+    refresh(true);
+    const timer = setInterval(() => refresh(), 60000);
+    const onFocus = () => refresh();
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('konza:avis-changed', onAvisChanged);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('konza:avis-changed', onAvisChanged);
+    };
+  }, [pathname, hasApprovalFunction]);
 
   const handleLogout = async () => {
     // Le cookie HttpOnly est révoqué côté serveur via /auth/logout
@@ -487,8 +565,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ]
       : [];
 
-  // 🆕 Admin / RH : ils ont aussi leur propre fiche employé → « Ma Pointeuse » (+ « Avis à donner »
-  //    s'ils ont une fonction de validation) juste après le Tableau de bord.
+  // 🆕 Admin / RH : ils ont aussi leur propre fiche employé → « Ma Pointeuse ».
   const isAdminLike = !!user && ['ADMIN', 'HR_MANAGER'].includes(user.role);
   const adminSelfItems: NavItem[] = isAdminLike
     ? [
@@ -499,33 +576,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
           path: '/presences/pointage',
           allowedRoles: ['ADMIN', 'HR_MANAGER'],
         },
-        ...(hasApprovalFunction
-          ? [
-              {
-                id: 'avis',
-                label: 'Avis à donner',
-                icon: MessageSquare,
-                path: '/avis',
-                allowedRoles: ['ADMIN', 'HR_MANAGER'],
-              } as NavItem,
-            ]
-          : []),
+        {
+          id: 'mon_profil_admin',
+          label: 'Mon Profil',
+          icon: UserCircle,
+          path: '/mon-profil',
+          allowedRoles: ['ADMIN', 'HR_MANAGER'],
+        },
       ]
     : [];
 
   // ✅ LOT A — "Ma signature" : visible quel que soit le rôle, si le droit est accordé.
+  // 🆕 « Avis à donner » : pour TOUS les titulaires d'une fonction d'avis, placé juste après
+  //    Demandes / Messages (jamais dans « Mon espace »).
+  const avisItem: NavItem | null = hasApprovalFunction
+    ? {
+        id: 'avis',
+        label: 'Avis à donner',
+        icon: MessageSquare,
+        path: '/avis',
+        allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
+      }
+    : null;
+
   const approvalExtraItems: NavItem[] = [
-    ...(hasApprovalFunction
-      ? [
-          {
-            id: 'avis',
-            label: 'Avis à donner',
-            icon: MessageSquare,
-            path: '/avis',
-            allowedRoles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'MANAGER', 'EMPLOYEE'],
-          } as NavItem,
-        ]
-      : []),
     ...(canSignPersonally
     ? [
         {
@@ -545,7 +619,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden print:hidden" onClick={onClose} />
       )}
 
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', borderRight: '1px solid var(--border)' }}>
+      <style>{`
+        @keyframes konza-wiggle { 0%,84%,100% { transform: rotate(0); } 87% { transform: rotate(-14deg); } 91% { transform: rotate(12deg); } 95% { transform: rotate(-7deg); } }
+        .konza-wiggle { animation: konza-wiggle 3.2s ease-in-out infinite; transform-origin: 50% 10%; }
+        @media (prefers-reduced-motion: reduce) { .konza-wiggle { animation: none; } }
+      `}</style>
+
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[272px] ${collapsed ? 'md:w-[76px]' : 'md:w-[272px]'} shrink-0 flex flex-col overflow-hidden rounded-r-[28px] md:rounded-[28px] md:m-3 md:mr-0 shadow-[0_12px_40px_-14px_rgba(15,23,42,0.22)] dark:shadow-[0_12px_40px_-14px_rgba(0,0,0,0.65)] transform ${animate ? 'transition-[width,transform] duration-300 ease-out' : ''} ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} print:hidden`} style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <div className="absolute top-0 left-0 right-0 h-px opacity-0 dark:opacity-70" style={{ background: isWhiteLabel ? `linear-gradient(to right, transparent, ${accentColor}, transparent)` : 'linear-gradient(to right, transparent, #10B981, transparent)' }} />
 
         {/* Logo Section */}
@@ -554,15 +634,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Link
               href="/dashboard"
               aria-label="Tableau de bord"
-              className="flex items-center justify-center rounded-xl shrink-0"
-              style={{ width: 40, height: 40, background: isWhiteLabel ? `${accentColor}22` : 'var(--brand-soft)', border: `1.5px solid ${isWhiteLabel ? `${accentColor}50` : '#10B98150'}` }}
+              className="flex items-center justify-center rounded-2xl shrink-0"
+              style={{ width: 44, height: 44, background: isWhiteLabel ? `${accentColor}22` : 'var(--brand-soft)', border: `1.5px solid ${isWhiteLabel ? `${accentColor}50` : 'var(--border)'}` }}
             >
               {isWhiteLabel && brandLogo ? (
                 <img src={brandLogo} alt={brandName ?? 'Cabinet'} style={{ width: 24, height: 24, objectFit: 'contain' }} />
               ) : (
-                <span className="text-sm font-black" style={{ color: isWhiteLabel ? accentColor : '#10B981' }}>
-                  {isWhiteLabel ? (brandName ?? 'C').slice(0, 2).toUpperCase() : 'K'}
-                </span>
+                isWhiteLabel ? (
+                  <span className="text-sm font-black" style={{ color: accentColor }}>
+                    {(brandName ?? 'C').slice(0, 2).toUpperCase()}
+                  </span>
+                ) : (
+                  <KonzaMark size={28} />
+                )
               )}
             </Link>
           ) : isWhiteLabel ? (
@@ -598,7 +682,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onMouseLeave={() => setTip(null)}
             aria-label={collapsed ? 'Déployer le menu' : 'Réduire le menu'}
             aria-expanded={!collapsed}
-            className={`hidden md:flex items-center justify-center rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${mini ? 'w-10 h-8' : 'absolute top-4 right-3 w-8 h-8'}`}
+            className={`hidden md:flex items-center justify-center rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${mini ? 'w-10 h-8' : 'absolute top-4 right-3 w-8 h-8'}`}
             style={{ color: 'var(--text-muted)' }}
             title={mini ? undefined : 'Réduire le menu (Ctrl+B)'}
           >
@@ -608,12 +692,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Profile Card */}
         <div className={mini ? 'px-3 pb-3 pt-1' : 'px-4 pb-4 pt-2'}>
-          <div className={`rounded-xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
+          <div className={`rounded-2xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <div className="relative shrink-0">
               {user ? (
-                <img src={employeePhotoUrl || user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-lg object-cover" />
+                <img src={employeePhotoUrl || user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-xl object-cover" />
               ) : (
-                <div className="w-9 h-9 rounded-lg animate-pulse" style={{ background: 'var(--border)' }} />
+                <div className="w-9 h-9 rounded-xl animate-pulse" style={{ background: 'var(--border)' }} />
               )}
             </div>
             <div className={mini ? 'hidden' : 'flex-1 min-w-0'}>
@@ -641,31 +725,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
               presences_equipe_admin: 'Gestion RH', pointage_manuel_admin: 'Gestion RH',
               presences_equipe_secretary: 'Gestion RH', pointage_manuel_secretary: 'Gestion RH',
               mon_equipe: 'Mon équipe', performance_manager: 'Mon équipe', conges_manager: 'Mon équipe', presences_equipe_manager: 'Mon équipe', pointage_manuel_manager: 'Mon équipe',
-              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace', ma_performance_manager: 'Mon espace',
-              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace', ma_performance: 'Mon espace',
-              ma_signature: 'Mon espace', avis: 'Mon espace', pointage_gps_admin: 'Mon espace',
+              pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace', ma_performance_manager: 'Organisation',
+              mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace', ma_performance: 'Organisation',
+              ma_signature: 'Mon espace', pointage_gps_admin: 'Mon espace', mon_profil_admin: 'Mon espace',
               recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 
             const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role) && !(item.id === 'messages' && basePath));
-            // Admin/RH : « Avis à donner » est déjà placé sous le tableau de bord → pas de doublon en bas
-            const trailingExtras = [
-              ...secretaryExtraItems,
-              ...approvalExtraItems.filter(i => !(isAdminLike && i.id === 'avis')),
-            ];
-            const items = isAdminLike
+            const trailingExtras = [...secretaryExtraItems, ...approvalExtraItems];
+            const TOP_IDS = ['dashboard', 'messages', 'demandes'];
+            const flat: NavItem[] = isAdminLike
               ? [
-                  ...baseItems.filter(i => i.id === 'dashboard' || i.id === 'messages' || i.id === 'demandes'),
+                  ...baseItems.filter(i => TOP_IDS.includes(i.id)),
                   ...adminSelfItems,
-                  ...baseItems.filter(i => i.id !== 'dashboard' && i.id !== 'messages' && i.id !== 'demandes'),
+                  ...baseItems.filter(i => !TOP_IDS.includes(i.id)),
                   ...trailingExtras,
                 ]
               : [...baseItems, ...trailingExtras];
+
+            // 🆕 Chaque thème est regroupé en un seul bloc (ex. Ma Performance avec Formation
+            //    dans « Organisation », Ma signature dans « Mon espace »). Ordre des blocs selon le rôle.
+            const GROUP_ORDER = isAdminLike
+              ? ['Mon espace', 'Gestion RH', 'Organisation']
+              : user?.role === 'MANAGER'
+                ? ['Mon équipe', 'Mon espace', 'Organisation']
+                : ['Mon espace', 'Gestion RH', 'Organisation'];
+            const rank = (id: string) => {
+              if (TOP_IDS.includes(id)) return -1;
+              const idx = GROUP_ORDER.indexOf(CATEGORY[id]);
+              return idx >= 0 ? idx : GROUP_ORDER.length;
+            };
+            const ordered: NavItem[] = [...flat].sort((x, y) => rank(x.id) - rank(y.id));
+
+            // 🆕 « Avis à donner » : juste après Demandes, sinon Messages, sinon Tableau de bord
+            const items: NavItem[] = [...ordered];
+            if (avisItem) {
+              const anchor = ['demandes', 'messages', 'dashboard']
+                .map(id => ordered.findIndex(i => i.id === id))
+                .find(idx => idx >= 0) ?? -1;
+              items.splice(anchor + 1, 0, avisItem);
+            }
+
+            // 🔔 Alertes clignotantes (Demandes / Messages / Avis)
+            const alertFor = (id: string): { count: number; tone: AlertTone } | null => {
+              if (id === 'demandes' && pendingRequestsCount > 0) return { count: pendingRequestsCount, tone: 'red' };
+              if (id === 'messages' && unreadChat > 0) return { count: unreadChat, tone: 'emerald' };
+              if (id === 'avis' && pendingAvisCount > 0) return { count: pendingAvisCount, tone: 'amber' };
+              return null;
+            };
 
             let lastCategory: string | null = null;
 
             return items.map(item => {
               const active = isActive(item.path);
+              const alert = alertFor(item.id);
+              const tone = alert ? ALERT_TONES[alert.tone] : null;
               const fullPath = buildPath(item.path);
               const category = CATEGORY[item.id] || null;
               const showLabel = category && category !== lastCategory;
@@ -683,38 +797,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Link
                     href={fullPath}
                     onClick={() => { setTip(null); if (window.innerWidth < 768) onClose(); }}
-                    onMouseEnter={(e) => showTip(e, item.label)}
+                    onMouseEnter={(e) => showTip(e, alert ? `${item.label} (${alert.count})` : item.label)}
                     onMouseLeave={() => setTip(null)}
                     aria-label={mini ? item.label : undefined}
-                    className={`relative w-full flex items-center ${mini ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 group`}
+                    className={`relative w-full flex items-center ${mini ? 'justify-center px-0' : 'gap-3 px-3'} py-2.5 rounded-xl text-sm ${alert && !active ? 'font-semibold' : 'font-medium'} transition-all duration-200 group ${active ? '' : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.06]'}`}
                     style={{
-                      color: active ? (isWhiteLabel ? accentColor : 'var(--text)') : 'var(--text-muted)',
-                      background: active ? (isWhiteLabel ? `${accentColor}14` : 'var(--brand-soft)') : 'transparent',
+                      color: active ? (isWhiteLabel ? accentColor : 'var(--text)') : tone ? tone.text : 'var(--text-muted)',
+                      background: active ? (isWhiteLabel ? `${accentColor}14` : 'var(--brand-soft)') : tone ? tone.tint : 'transparent',
+                      boxShadow: active
+                        ? `inset 0 0 0 1px ${isWhiteLabel ? `${accentColor}26` : 'rgba(16,185,129,0.18)'}`
+                        : tone ? `inset 0 0 0 1px ${tone.ring}` : 'none',
                     }}
                   >
                     {active && (
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: isWhiteLabel ? accentColor : '#10B981' }} />
                     )}
-                    <item.icon size={18} className="transition-transform duration-200 group-hover:scale-105" style={active && isWhiteLabel ? { color: accentColor } : {}} />
+                    <item.icon
+                      size={18}
+                      className={`transition-transform duration-200 group-hover:scale-105 ${alert && !active ? 'konza-wiggle' : ''}`}
+                      style={active && isWhiteLabel ? { color: accentColor } : {}}
+                    />
                     {!mini && <span className="flex-1 truncate">{item.label}</span>}
-                    {item.id === 'demandes' && pendingRequestsCount > 0 && (
-                      mini ? (
-                        <span className="absolute top-1.5 right-2.5 w-3 h-3 rounded-full bg-red-500" style={{ border: '2px solid var(--surface)' }} />
-                      ) : (
-                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center">
-                          {pendingRequestsCount > 99 ? '99+' : pendingRequestsCount}
-                        </span>
-                      )
-                    )}
-                    {item.id === 'messages' && unreadChat > 0 && (
-                      mini ? (
-                        <span className="absolute top-1.5 right-2.5 w-3 h-3 rounded-full bg-emerald-500" style={{ border: '2px solid var(--surface)' }} />
-                      ) : (
-                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">
-                          {unreadChat > 99 ? '99+' : unreadChat}
-                        </span>
-                      )
-                    )}
+                    {alert && <AlertBadge count={alert.count} tone={alert.tone} mini={mini} />}
                   </Link>
                 </React.Fragment>
               );
@@ -736,7 +840,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onMouseEnter={(e) => showTip(e, 'Autre')}
                 onMouseLeave={() => setTip(null)}
                 aria-label={mini ? 'Autre' : undefined}
-                className={`relative w-full flex items-center ${mini ? 'justify-center' : 'justify-between px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors`}
+                className={`relative w-full flex items-center ${mini ? 'justify-center' : 'justify-between px-3'} py-2.5 rounded-xl text-sm font-medium transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]`}
                 style={{ color: 'var(--text-muted)' }}
               >
                 <div className="flex items-center gap-3">
@@ -755,7 +859,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <Link
                         key={sub.path}
                         href={subHref}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors relative"
+                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-colors relative"
                         style={{ color: subActive ? '#10B981' : 'var(--text-muted)', background: subActive ? 'var(--brand-soft)' : 'transparent' }}
                       >
                         <sub.icon size={14} />
@@ -771,7 +875,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Logout */}
         <div className={mini ? 'p-2' : 'p-4'} style={{ borderTop: '1px solid var(--border)' }}>
-          <button onClick={handleLogout} onMouseEnter={(e) => showTip(e, 'Déconnexion')} onMouseLeave={() => setTip(null)} aria-label="Déconnexion" className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all group">
+          <button onClick={handleLogout} onMouseEnter={(e) => showTip(e, 'Déconnexion')} onMouseLeave={() => setTip(null)} aria-label="Déconnexion" className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all group">
             <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
             {!mini && <span>Déconnexion</span>}
           </button>
@@ -780,7 +884,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {mini && tip && (
         <div
-          className="fixed z-[60] -translate-y-1/2 px-2.5 py-1.5 rounded-md text-xs font-semibold pointer-events-none shadow-lg whitespace-nowrap print:hidden"
+          className="fixed z-[60] -translate-y-1/2 px-3 py-1.5 rounded-xl text-xs font-semibold pointer-events-none shadow-lg whitespace-nowrap print:hidden"
           style={{ top: tip.top, left: tip.left, background: 'var(--text)', color: 'var(--bg)' }}
           role="tooltip"
         >

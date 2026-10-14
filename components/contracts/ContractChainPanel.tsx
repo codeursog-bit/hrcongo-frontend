@@ -9,9 +9,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Loader2, RotateCcw, Infinity as InfinityIcon, History, Link2, Calendar, Wallet, Briefcase,
+  RotateCcw, Infinity as InfinityIcon, History, Link2, Calendar, Wallet, Briefcase,
   FileSignature, UserCheck, Clock, CheckCircle2, ShieldAlert, Scale, FlaskConical, Layers, Info,
 } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import {
   contractChainService, type ChainRules, type ContractChain, type ContractLink, type RuleViolation,
 } from '@/services/contract-chain';
@@ -139,7 +140,7 @@ export default function ContractChainPanel({ employeeId }: { employeeId: string 
   }, [chains, canWrite]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!chains) {
-    return <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-[var(--brand)] animate-spin" /></div>;
+    return <KonzaLoader variant="section" />;
   }
 
   const sorted = [...chains].sort((a, b) => Number(b.current) - Number(a.current)

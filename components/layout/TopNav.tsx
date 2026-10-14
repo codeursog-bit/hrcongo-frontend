@@ -140,12 +140,12 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 print:hidden">
-      <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+    <header className="sticky top-0 z-40 print:hidden px-3 sm:px-4 pt-3">
+      <div className="px-4 sm:px-6 py-3 flex items-center justify-between rounded-2xl shadow-[0_8px_30px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_8px_30px_-14px_rgba(0,0,0,0.6)]" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
 
         {/* Left: Menu & Breadcrumbs */}
         <div className="flex items-center gap-4">
-          <button onClick={onMenuClick} className="p-2 -ml-2 md:hidden rounded-lg" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={onMenuClick} className="p-2 -ml-2 md:hidden rounded-xl" style={{ color: 'var(--text-muted)' }}>
             <Menu size={22} />
           </button>
 
@@ -164,7 +164,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-12 py-2 rounded-lg text-sm transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+              className="block w-full pl-10 pr-12 py-2 rounded-full text-sm transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
               style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
               placeholder="Rechercher (Cmd+K)"
             />
@@ -174,7 +174,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
           
-          <button onClick={toggleTheme} className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={toggleTheme} className="p-2 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/10" style={{ color: 'var(--text-muted)' }}>
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
@@ -182,7 +182,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
           <div className="relative" ref={notifRef}>
             <button 
               onClick={() => setShowNotifs(!showNotifs)}
-              className={`p-2 rounded-lg transition-colors ${showNotifs ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+              className={`p-2 rounded-xl transition-colors ${showNotifs ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
               style={!showNotifs ? { color: 'var(--text-muted)' } : {}}
             >
               <div className="relative">
@@ -199,7 +199,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="fixed left-3 right-3 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-full mt-0 sm:mt-3 w-auto sm:w-96 rounded-xl shadow-lg overflow-hidden z-50 origin-top sm:origin-top-right"
+                  className="fixed left-3 right-3 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-full mt-0 sm:mt-3 w-auto sm:w-96 rounded-2xl shadow-xl overflow-hidden z-50 origin-top sm:origin-top-right"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                 >
                   <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
@@ -247,7 +247,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                   <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
                     <button
                       onClick={() => { router.push('/notifications'); setShowNotifs(false); }}
-                      className="w-full py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+                      className="w-full py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
                     >
                       Voir tout l'historique
                     </button>
@@ -263,13 +263,13 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
           <div className="relative" ref={profileRef}>
             <button 
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className={`flex items-center gap-3 pl-2 pr-1 py-1 rounded-lg transition-colors ${showProfileMenu ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+              className={`flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl transition-colors ${showProfileMenu ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
             >
               <div className="hidden sm:block text-right mr-1">
                 <p className="text-sm font-bold text-slate-800 dark:text-white">{user?.firstName} {user?.lastName}</p>
                 <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">En ligne</p>
               </div>
-              <img src={employeePhotoUrl || avatar || 'https://via.placeholder.com/100'} className="h-9 w-9 rounded-lg object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm" />
+              <img src={employeePhotoUrl || avatar || 'https://via.placeholder.com/100'} className="h-9 w-9 rounded-xl object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm" />
               <ChevronDown size={14} className={`text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 
@@ -279,7 +279,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-3 w-64 rounded-xl shadow-lg overflow-hidden z-50 origin-top-right p-2"
+                  className="absolute right-0 top-full mt-3 w-64 rounded-2xl shadow-xl overflow-hidden z-50 origin-top-right p-2"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                 >
                   {/* Header profil */}
@@ -299,7 +299,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                     {user?.manageMultipleCompanies && (
                       <button
                         onClick={() => { router.push('/portefeuille/dashboard'); setShowProfileMenu(false); }}
-                        className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-3 text-emerald-600 dark:text-emerald-400 font-bold"
+                        className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center gap-3 text-emerald-600 dark:text-emerald-400 font-bold"
                       >
                         <Layers size={16} />
                         Mon portefeuille
@@ -309,7 +309,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
                     {/* ✅ Route mise à jour : /mon-profil */}
                     <button
                       onClick={() => { router.push('/mon-profil'); setShowProfileMenu(false); }}
-                      className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-slate-700 dark:text-slate-300"
+                      className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-slate-700 dark:text-slate-300"
                     >
                       <User size={16} />
                       Mon Profil
@@ -322,7 +322,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
 
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 font-bold"
+                      className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 font-bold"
                     >
                       <LogOut size={16} />
                       Déconnexion

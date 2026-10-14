@@ -9,11 +9,12 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Filter, Users2, ChevronRight, Ticket, CheckCircle2, Clock } from 'lucide-react';
+import { Filter, Users2, ChevronRight, Ticket, CheckCircle2, Clock } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
@@ -75,7 +76,7 @@ export default function PermissionsSuiviPage() {
     pending: inPeriod.filter(t => t.status === 'PENDING').length,
   }), [byEmployee, inPeriod]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">

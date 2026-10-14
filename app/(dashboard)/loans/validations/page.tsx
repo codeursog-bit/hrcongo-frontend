@@ -29,6 +29,7 @@ import ApprovalPanel from '@/components/approvals/ApprovalPanel';
 import { useApprovalDecision } from '@/hooks/useApprovalDecision';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
 import type { ApprovalStateView } from '@/services/approvals';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { ARGENT: 'Prêt argent', MARCHANDISE: 'Marchandise', AUTRE: 'Autre prêt', AVANCE: 'Avance sur salaire' };
@@ -259,7 +260,7 @@ export default function ValidationsPage() {
     } catch (e: any) { alert(e?.message || 'Erreur'); } finally { setIsPreparingPrint(false); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">

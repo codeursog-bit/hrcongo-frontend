@@ -11,6 +11,7 @@ import { attendanceApi } from '@/services/attendance-api';
 import { useNotification } from '@/components/providers/NotificationProvider';
 import PresenceSubNav from '@/components/PresenceSubNav';
  import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface Employee {
   id: string;
@@ -216,12 +217,7 @@ export default function PointageManuelPage() {
   // ========================================
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-        <div className="text-center">
-          <Loader2 className="animate-spin text-emerald-500 mx-auto mb-4" size={48}/>
-          <p className="text-[var(--text-muted)]">Vérification des accès...</p>
-        </div>
-      </div>
+      <KonzaLoader variant="page" label="Vérification des accès…" />
     );
   }
 

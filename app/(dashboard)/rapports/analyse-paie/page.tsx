@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, Calendar, Download, Printer, DollarSign, Wallet, 
-  Shield, TrendingUp, TrendingDown, Users, Building2, Loader2,
-  ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle,
+  Shield, TrendingUp, TrendingDown, Users, Building2, ArrowUpRight, ArrowDownRight, AlertCircle, CheckCircle,
 
   ClipboardList, LayoutDashboard,UsersRound,
   UmbrellaOff,BookOpen,UserCircle,BarChart3
@@ -19,6 +18,7 @@ import { api } from '@/services/api';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 
 const COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669', '#D97706'];
@@ -76,9 +76,7 @@ export default function PayrollAnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-[var(--brand)]" size={48} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

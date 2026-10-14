@@ -28,6 +28,7 @@ import AbsenceSubNav from '@/components/AbsenceSubNav';
 import AbsencesOverview from '@/components/absences/AbsencesOverview';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -228,7 +229,7 @@ export default function AbsenceManagementPage() {
   } : null;
 
   if (isLoading) {
-    return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+    return <KonzaLoader variant="page" />;
   }
 
   return (

@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import EmployeeSelector from './components/EmployeeSelector';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ============================================================================
 // ✅ Interface 100% alignée avec ce que le backend retourne
@@ -230,9 +231,7 @@ export default function CreatePayrollPage() {
   };
 
   if (isLoadingEmployees) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-emerald-500" size={32} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   const cnssPatTotal = simulation ? (simulation.cnssEmployerPension + simulation.cnssEmployerFamily + simulation.cnssEmployerAccident) : 0;

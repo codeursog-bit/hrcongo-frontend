@@ -16,6 +16,7 @@ import { api } from '@/services/api';
 import CongeSubNav from '@/components/CongeSubNav';
 import LeavePlanningPrintable from '@/components/LeavePlanningPrintable';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
@@ -155,7 +156,7 @@ export default function LeavePlanningPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>
+        <KonzaLoader variant="section" />
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

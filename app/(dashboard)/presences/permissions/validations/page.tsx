@@ -9,7 +9,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, Check, X, Clock, CheckCircle2, XCircle, Ban, Filter, Users2,
+  Check, X, Clock, CheckCircle2, XCircle, Ban, Filter, Users2,
   Eye, Printer, Stethoscope, Briefcase, HelpCircle, LayoutGrid, List, Info, MapPin,
 } from 'lucide-react';
 import {
@@ -21,6 +21,7 @@ import PermissionsSubNav from '@/components/PermissionsSubNav';
 import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket } from '@/lib/ticket-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
@@ -121,7 +122,7 @@ export default function PermissionsValidationsPage() {
     status: selected.status, reviewedByName: selected.reviewedByUser?.email, reviewedAt: selected.reviewedAt, rejectionReason: selected.rejectionReason,
   } : null;
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">

@@ -13,6 +13,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface DeptMovement {
   name: string;
@@ -132,9 +133,7 @@ export default function MouvementsEffectifsPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-[var(--text-muted)]">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" /> Chargement...
-        </div>
+        <KonzaLoader variant="section" />
       ) : error ? (
         <div className="text-red-600 text-sm py-8">{error}</div>
       ) : !data || data.departments.length === 0 ? (

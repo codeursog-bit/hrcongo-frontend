@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Star, Calendar, Loader2, Plus, Check,
+  Star, Calendar, Plus, Check,
   Send, ThumbsUp, Eye, BarChart3, Award,
   RefreshCw, ChevronDown, Search, MessageSquare, Trash2,
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import { MANAGE_ROLES } from '@/components/performance/sheet-types';
 import { useBasePath } from '@/hooks/useBasePath';
 import { CreateReviewModal } from '@/components/performance/CreateReviewModal';
 import { ReviewDetailModal } from '@/components/performance/ReviewDetailModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -429,9 +430,7 @@ export default function PerformancePage() {
             </div>
 
             {isLoading ? (
-              <div className="p-20 flex justify-center">
-                <Loader2 className="animate-spin text-purple-500" size={40} />
-              </div>
+              <KonzaLoader variant="section" />
             ) : filtered.length === 0 ? (
               <div className="p-20 text-center flex flex-col items-center text-gray-400">
                 <Star size={48} className="opacity-20 mb-4" />

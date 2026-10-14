@@ -10,6 +10,7 @@ import {
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types (miroir de das1-declaration.service.ts côté backend — l'API et
 // les noms de route restent "das1" côté backend, seul l'affichage change) ─
@@ -199,9 +200,7 @@ export default function BulletinAnnuelPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="w-6 h-6 text-[var(--brand)] animate-spin" />
-        </div>
+        <KonzaLoader variant="section" />
       ) : declaration && bulletins.length > 0 ? (
         <>
           {/* ── Carte entreprise ──────────────────────────────────────── */}

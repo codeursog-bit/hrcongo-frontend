@@ -19,6 +19,7 @@ import AuditBlockedModal from '@/components/audit/AuditBlockedModal';
 import { auditBlockedOf, type AuditBlocked } from '@/services/audit-engine';
 import BulletinDisplay from '@/components/BulletinDisplay';
 import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bulletin-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface PayrollData {
   employee?: {
@@ -139,9 +140,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
   const isDraft = data?.status === 'DRAFT';
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-emerald-500" size={32} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   if (!data) return (

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface JournalEntry {
@@ -299,9 +300,7 @@ export default function AccountingPage() {
 
             <div className="overflow-x-auto">
               {isLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="animate-spin text-emerald-500" size={36} />
-                </div>
+                <KonzaLoader variant="section" />
               ) : entries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-gray-400">
                   <Receipt size={40} className="mb-3 opacity-30" />

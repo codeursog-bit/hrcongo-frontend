@@ -6,7 +6,8 @@
 // et affiche les 5 graphiques. Fenêtre au choix : 6, 12 ou 24 mois.
 // ============================================================================
 import React, { useEffect, useState } from 'react';
-import { Loader2, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { auditEngineService, type AuditSummary, type RuleDef, type TrendResponse } from '@/services/audit-engine';
 import { TrendCharts } from './TrendCharts';
 
@@ -42,7 +43,7 @@ export default function TrendSection({
         </div>
       </div>
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {!data && !error && <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-[var(--brand)] animate-spin" /></div>}
+      {!data && !error && <KonzaLoader variant="section" />}
       {data && <TrendCharts months={data.months} topRules={data.topRules} open={open} rulesByCode={rulesByCode} />}
     </section>
   );

@@ -26,6 +26,7 @@ import { api } from '@/services/api';
 import DepartmentDetailSidebar, { DepartmentDetail } from '@/components/DepartmentDetailSidebar';
 import WeeklyAttendanceReportPrintable from '@/components/WeeklyAttendanceReportPrintable';
 import { printReport, downloadReportPDF } from '@/lib/report-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface WeeklyViewProps {
   userRole: string;
@@ -258,7 +259,7 @@ export default function WeeklyView({ userRole, userDepartment, date, canRecordAt
   if (isLoading) {
     return (
       <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] flex justify-center items-center min-h-[600px]">
-        <Loader2 className="animate-spin text-emerald-500" size={48} />
+        <KonzaLoader variant="section" />
       </div>
     );
   }

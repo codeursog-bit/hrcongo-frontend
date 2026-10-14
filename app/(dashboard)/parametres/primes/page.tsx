@@ -11,6 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -659,10 +660,7 @@ export default function CataloguePrimesPage() {
 
       {/* Liste */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-20 gap-3">
-          <Loader2 className="animate-spin text-emerald-500" size={28} />
-          <span className="text-[var(--text-muted)]">Chargement...</span>
-        </div>
+        <KonzaLoader variant="section" />
       ) : templates.length === 0 ? (
         <div className="glass-panel rounded-2xl p-16 text-center border border-dashed border-[var(--border)]">
           <div className="w-20 h-20 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-5">

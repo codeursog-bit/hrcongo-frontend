@@ -17,6 +17,7 @@ import {
 import { api } from '@/services/api';
 import BulletinDisplay from '@/components/BulletinDisplay';
 import { printBulletin, downloadBulletinPDF, getBulletinRootId } from '@/lib/bulletin-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 export default function MyPayrollsPage() {
   const router = useRouter();
@@ -104,9 +105,7 @@ export default function MyPayrollsPage() {
 
       {/* Contenu */}
       {isLoading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-emerald-500" size={48} />
-        </div>
+        <KonzaLoader variant="section" />
 
       ) : payrolls.length === 0 ? (
         <div className="bg-[var(--surface)] rounded-2xl p-10 text-center border border-[var(--border)] shadow-sm">

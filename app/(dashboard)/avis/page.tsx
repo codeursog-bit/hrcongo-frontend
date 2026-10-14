@@ -8,10 +8,11 @@
 // ============================================================================
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Loader2, MessageSquare, ChevronDown, ChevronUp, Inbox, Clock } from 'lucide-react';
+import { MessageSquare, ChevronDown, ChevronUp, Inbox, Clock } from 'lucide-react';
 import { InboxItem, ApprovalKind } from '@/services/approvals';
 import { api } from '@/services/api';
 import ApprovalPanel from '@/components/approvals/ApprovalPanel';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -53,9 +54,7 @@ export default function AvisPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

@@ -9,6 +9,7 @@ import {
   ChevronRight, Info, CheckCircle2, Hash, Globe,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS = [
   'Janvier','Février','Mars','Avril','Mai','Juin',
@@ -325,7 +326,7 @@ export default function CnssDeclarationPage() {
       ════════════════════════════════════════════════════════════════ */}
       {tab==='dnms' && (
         <div className="space-y-6">
-          {loading && <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin"/></div>}
+          {loading && <KonzaLoader variant="section" />}
           {error && !loading && (
             <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
               <XCircle className="w-5 h-5 text-red-500 flex-shrink-0"/>

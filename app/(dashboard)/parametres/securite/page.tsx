@@ -12,6 +12,7 @@ import {
   AlertCircle, CheckCircle,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface AuditLog {
@@ -502,10 +503,7 @@ export default function SecuritePage() {
           {/* Table */}
           <div className="bg-[#0f1623] rounded-2xl border border-white/[0.07] overflow-hidden">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 size={26} className="animate-spin text-emerald-500"/>
-                <p className="text-xs text-slate-700">Chargement des événements…</p>
-              </div>
+              <KonzaLoader variant="section" label="Chargement des événements…" />
             ) : logs.length===0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-slate-700">
                 <FileText size={32} className="mb-2 opacity-20"/>

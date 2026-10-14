@@ -21,6 +21,7 @@ import { HR_ROLES, getStoredUser, fmtDate } from '@/components/performance/sheet
 import { ProposalModal } from '@/components/performance/ProposalModal';
 import { PROPOSAL_STATUS, PROPOSAL_TYPE_LABEL, Proposal, PromotionStatus } from '@/components/performance/career-types';
 import { TeamOverview } from '@/components/performance/competency-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Tab = 'proposals' | 'team';
 
@@ -199,7 +200,7 @@ export default function CareerHubPage() {
       </div>
 
       {loading && !team ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-purple-600" size={28} /></div>
+        <KonzaLoader variant="section" />
       ) : tab === 'proposals' ? (
         <div className="space-y-4">
           <div className="flex gap-2">

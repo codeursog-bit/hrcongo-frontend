@@ -18,6 +18,7 @@ import { differenceInDays } from 'date-fns';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { SalaryRecap } from '@/components/employees/SalaryRecap';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type TabType = 'info' | 'docs' | 'paie' | 'conges' | 'materiel';
 
@@ -408,9 +409,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   };
 
   if (isLoading || !employee) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-emerald-500" size={32} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   const renderTabContent = () => {
@@ -990,7 +989,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       );
     }
 
-    if (tabLoading) return <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-emerald-500" size={32} /></div>;
+    if (tabLoading) return <KonzaLoader variant="page" />;
     if (!tabData || tabData.length === 0) return (
       <div className="py-20 text-center">
         <AlertCircle size={28} className="text-[var(--text-muted)] mx-auto mb-3" />

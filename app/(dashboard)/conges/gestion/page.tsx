@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -331,7 +332,7 @@ export default function GestionCongesPage() {
       {/* Liste */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         {isLoading ? (
-          <div className="flex justify-center py-16"><Loader2 className="animate-spin text-emerald-500" size={28} /></div>
+          <KonzaLoader variant="section" />
         ) : !overview?.events.length ? (
           <div className="text-center py-16 text-[var(--text-muted)] text-sm">Aucune demande sur cette période avec ces filtres.</div>
         ) : (
@@ -424,7 +425,7 @@ export default function GestionCongesPage() {
               </div>
 
               {isLoadingHistory ? (
-                <div className="flex justify-center py-16"><Loader2 className="animate-spin text-emerald-500" size={24} /></div>
+                <KonzaLoader variant="section" />
               ) : history ? (
                 <>
                   <div className="mb-6">

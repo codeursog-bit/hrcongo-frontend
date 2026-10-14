@@ -20,6 +20,7 @@ import { HR_ROLES, getStoredUser } from '@/components/performance/sheet-types';
 import {
   CATEGORY_CLS, CATEGORY_LABEL, CompetencyCategory, CompetencyItem, JobProfileItem, TeamOverview,
 } from '@/components/performance/competency-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type Tab = 'team' | 'referentiel' | 'postes';
 
@@ -322,7 +323,7 @@ export default function CompetencesPage() {
       </div>
 
       {loading && !team ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-purple-600" size={28} /></div>
+        <KonzaLoader variant="section" />
       ) : (
         <AnimatePresence mode="wait">
           <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">

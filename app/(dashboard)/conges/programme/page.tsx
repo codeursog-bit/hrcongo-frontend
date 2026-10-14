@@ -20,6 +20,7 @@ import { api } from '@/services/api';
 import CongeSubNav from '@/components/CongeSubNav';
 import LeavePlanningPrintable from '@/components/LeavePlanningPrintable';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 /** Affichage propre d'un nombre de jours (évite les artefacts de virgule
  * flottante type "28.799999999999997j") — arrondi entier, jamais de décimale
@@ -431,7 +432,7 @@ export default function ProgrammeCongesPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>
+        <KonzaLoader variant="section" />
       ) : (
         <>
           {/* Mini-dashboard — repris de /planning, sans aucun montant */}

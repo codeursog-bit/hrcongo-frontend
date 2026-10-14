@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Loader2, Calendar, Users, ChevronDown, ChevronUp, Briefcase, Globe } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { api } from '@/services/api';
 
 /**
@@ -161,9 +162,7 @@ export default function EffectifMonthlyList({
 
           {/* Liste */}
           {loading && employees.length === 0 ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 size={22} className="animate-spin text-sky-500" />
-            </div>
+            <KonzaLoader variant="section" />
           ) : employees.length === 0 ? (
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-10">
               {debouncedSearch

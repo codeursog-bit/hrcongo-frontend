@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, TrendingUp, TrendingDown, Users, Wallet, Building2, 
   Clock, Calendar, AlertCircle, CheckCircle, Download, Printer,
-  DollarSign, Shield, FileBarChart, Award, Target, Loader2,
-  ArrowUpRight, ArrowDownRight, Info, Zap, ClipboardList, LayoutDashboard,UsersRound,
+  DollarSign, Shield, FileBarChart, Award, Target, ArrowUpRight, ArrowDownRight, Info, Zap, ClipboardList, LayoutDashboard,UsersRound,
   UmbrellaOff,BookOpen,UserCircle,BarChart3
 
 } from 'lucide-react';
@@ -19,6 +18,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import RapportsSubNav from '@/components/RapportsSubNav';
 import YearlyEvolutionPanel from '@/components/YearlyEvolutionPanel';
 import PeriodSelector, { PeriodValue } from '@/components/PeriodSelector';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 const COLORS = {
   primary: '#10B981',
   success: '#10B981',
@@ -102,10 +102,7 @@ export default function CompleteHRReport() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-[var(--brand)] mb-4" size={48} />
-        <p className="text-[var(--text-muted)]">Génération du rapport en cours...</p>
-      </div>
+      <KonzaLoader variant="page" label="Génération du rapport en cours…" />
     );
   }
 

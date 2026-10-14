@@ -16,7 +16,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Loader2, ArrowLeft, Banknote, Wallet, PiggyBank, TrendingUp, Clock,
-  CheckCircle2, XCircle, Ban, Wallet as WalletIcon, Pencil, Trash2, ChevronDown, ChevronUp,
+  CheckCircle2, XCircle, Ban, Wallet as WalletIcon, Pencil, Trash2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -27,6 +27,7 @@ import FinanceSubNav from '@/components/FinanceSubNav';
 import CashPaymentModal from '@/components/loans/CashPaymentModal';
 import EditDebtModal from '@/components/loans/EditDebtModal';
 import AmendmentTrace from '@/components/loans/AmendmentTrace';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const DRH_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER']; // peut enregistrer/supprimer un remboursement
 const FULL_ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN']; // peut modifier/supprimer un prêt ou une avance déjà validé(e)
@@ -115,11 +116,25 @@ export default function EmployeeDebtDetailPage() {
   }, [loans, advances]);
 
   // ── Courbe d'évolution : emprunté vs remboursé, 12 derniers mois ────────
+  // ✅ Fenêtre GLISSANTE de 12 mois (plus figée sur "aujourd'hui") : elle se
+  // termine au mois le plus récent entre aujourd'hui et le dernier mouvement
+  // (prêt programmé ou remboursement daté plus tard), puis les flèches
+  // permettent de reculer/avancer. Un prêt de novembre ou un remboursement
+  // saisi pour le mois prochain apparaît donc sur la courbe.
+  const [trendShift, setTrendShift] = useState(0); // décalage en mois (négatif = passé)
   const trendData = useMemo(() => {
     const months: { key: string; label: string; year: number; month: number }[] = [];
-    const ref = new Date();
+    const now0 = new Date();
+    let latest = now0.getFullYear() * 12 + now0.getMonth();
+    history.forEach(r => {
+      const d = r.kind === 'loan' ? new Date(r.startDate ?? r.createdAt) : (r.month && r.year ? new Date(r.year, r.month - 1, 1) : new Date(r.createdAt));
+      latest = Math.max(latest, d.getFullYear() * 12 + d.getMonth());
+    });
+    Object.values(logsByItem).flat().forEach((log: any) => { latest = Math.max(latest, log.year * 12 + (log.month - 1)); });
+    const endIdx = latest + trendShift;
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+      const idx = endIdx - i;
+      const d = new Date(Math.floor(idx / 12), idx % 12, 1);
       months.push({ key: `${d.getFullYear()}-${d.getMonth() + 1}`, label: `${MONTHS_FR[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`, year: d.getFullYear(), month: d.getMonth() + 1 });
     }
     const allLogs = Object.values(logsByItem).flat();
@@ -138,7 +153,7 @@ export default function EmployeeDebtDetailPage() {
       const rembourse = allLogs.filter((log: any) => log.year === m.year && log.month === m.month).reduce((s: number, log: any) => s + Number(log.amount), 0);
       return { mois: m.label, Emprunté: Math.round(emprunte), Remboursé: Math.round(rembourse) };
     });
-  }, [history, logsByItem]);
+  }, [history, logsByItem, trendShift]);
 
   const handlePay = async (amount: number, period: { month: number; year: number }) => {
     if (!payModal) return;
@@ -179,7 +194,7 @@ export default function EmployeeDebtDetailPage() {
     finally { setBusyId(null); }
   };
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   const initials = `${employee?.firstName?.[0] ?? ''}${employee?.lastName?.[0] ?? ''}`;
 
@@ -211,7 +226,15 @@ export default function EmployeeDebtDetailPage() {
 
       {/* ══════════════════ COURBE D'ÉVOLUTION ══════════════════ */}
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
-        <p className="text-sm font-bold text-[var(--text)] mb-4">Évolution de la dette (12 derniers mois)</p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-bold text-[var(--text)]">
+            Évolution de la dette <span className="font-normal text-[var(--text-muted)]">· {trendData[0]?.mois} → {trendData[trendData.length - 1]?.mois}</span>
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setTrendShift(s => s - 6)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]" aria-label="Mois précédents"><ChevronLeft size={16} /></button>
+            <button onClick={() => setTrendShift(s => s + 6)} className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]" aria-label="Mois suivants"><ChevronRight size={16} /></button>
+          </div>
+        </div>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={trendData}>
             <CartesianGrid strokeDasharray="3 3" opacity={0.2} />

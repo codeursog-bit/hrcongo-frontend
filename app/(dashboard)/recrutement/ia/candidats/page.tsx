@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BrainCircuit, Award, TrendingUp, Clock, XCircle, Zap,
-  ArrowLeft, Loader2, AlertTriangle, Eye, Target, BarChart3, Calendar,
+  ArrowLeft, AlertTriangle, Eye, Target, BarChart3, Calendar,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import Link from 'next/link';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
 import { JobFilterSelect } from '@/components/JobFilterSelect';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -137,15 +138,7 @@ function KanbanIAContent() {
   // ── LOADING ──
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 animate-pulse rounded-full" />
-            <Loader2 className="animate-spin text-emerald-500 relative z-10" size={48} />
-          </div>
-          <p className="text-[var(--text-muted)] mt-6 font-medium">Chargement du pipeline IA...</p>
-        </div>
-      </div>
+      <KonzaLoader variant="page" label="Chargement du pipeline IA…" />
     );
   }
 

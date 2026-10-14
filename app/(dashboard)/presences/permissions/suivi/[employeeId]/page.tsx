@@ -10,11 +10,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Loader2, ArrowLeft, Ticket, CheckCircle2, Clock, XCircle, Ban } from 'lucide-react';
+import { ArrowLeft, Ticket, CheckCircle2, Clock, XCircle, Ban } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import PermissionsSubNav from '@/components/PermissionsSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
 
@@ -69,7 +70,7 @@ export default function EmployeePermissionsDetailPage() {
     rejected: filtered.filter(t => t.status === 'REJECTED').length,
   }), [filtered]);
 
-  if (isLoading) return <div className="flex justify-center py-24"><Loader2 className="animate-spin text-emerald-500" size={40} /></div>;
+  if (isLoading) return <KonzaLoader variant="page" />;
 
   return (
     <div className="max-w-[1500px] mx-auto pb-24 space-y-6">

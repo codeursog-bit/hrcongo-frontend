@@ -6,10 +6,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle} from 'lucide-react';
 import { authService } from '@/lib/services/authService';
 import { blogApi, BlogPost, BlogCategory } from '@/services/blog-api';
 import { BlogEditor, BlogEditorForm } from '@/components/blog/BlogEditor';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const CAN_POST = ['HR_MANAGER', 'ADMIN', 'CABINET_ADMIN'];
 
@@ -57,9 +58,7 @@ export default function RhBlogEditPage() {
   }, [slug, user]);
 
   if (loading) return (
-    <div className="flex items-center justify-center py-24">
-      <Loader2 size={28} className="animate-spin text-cyan-500"/>
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   if (notFound) return (

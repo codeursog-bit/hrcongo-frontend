@@ -16,6 +16,7 @@ import { api } from '@/services/api';
 import PerformanceNav from '@/components/performance/PerformanceNav';
 import { useBasePath } from '@/hooks/useBasePath';
 import { HR_ROLES, getStoredUser, fmtDate } from '@/components/performance/sheet-types';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 interface Cycle {
   id: string; name: string; type: string; startDate: string; endDate: string;
@@ -215,7 +216,7 @@ export default function CyclesPage() {
       )}
 
       {loading && cycles.length === 0 ? (
-        <div className="flex justify-center py-20"><Loader2 className="animate-spin text-purple-600" size={28} /></div>
+        <KonzaLoader variant="section" />
       ) : cycles.length === 0 && !error ? (
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-10 text-center">
           <Calendar className="mx-auto text-gray-300 mb-3" size={36} />

@@ -16,6 +16,7 @@ import { api } from '@/services/api';
 import { UploadDocumentModal } from '@/components/documents/UploadDocumentModal';
 import { DocumentViewerModal } from '@/components/documents/DocumentViewerModal';
 import { RejectDocumentModal } from '@/components/documents/RejectDocumentModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -464,10 +465,7 @@ export default function DocumentsPage() {
         {/* ── Tableau ─────────────────────────────────────────────────────── */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
           {loading ? (
-            <div className="py-24 text-center">
-              <div className="w-10 h-10 border-2 border-sky-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-gray-400 text-sm">Chargement des documents...</p>
-            </div>
+            <KonzaLoader variant="section" label="Chargement des documents…" />
           ) : filtered.length === 0 ? (
             <div className="py-24 text-center">
               <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700 rounded-2xl flex items-center justify-center mx-auto mb-4">

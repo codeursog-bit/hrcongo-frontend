@@ -9,6 +9,7 @@ import PeriodStep from './PeriodStep';
 import SelectionStep from './SelectionStep';
 import ProcessingStep from './ProcessingStep';
 import SuccessModal from './SuccessModal';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 const MONTHS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
@@ -250,9 +251,7 @@ export default function BatchPayrollPage() {
   };
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-emerald-500" size={32} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   return (

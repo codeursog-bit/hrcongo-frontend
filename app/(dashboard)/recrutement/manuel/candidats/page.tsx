@@ -4,13 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Loader2, User, Briefcase,
+  ArrowLeft, User, Briefcase,
   CheckCircle2, XCircle, Eye, Calendar,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { ToastProvider, useToast } from '@/components/ui/useToast';
 import { JobFilterSelect } from '@/components/JobFilterSelect';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -144,12 +145,7 @@ function KanbanManualContent() {
   // ── LOADING ──
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <Loader2 className="animate-spin text-emerald-500 mx-auto" size={40} />
-          <p className="text-[var(--text-muted)] mt-3 text-sm">Chargement du pipeline...</p>
-        </div>
-      </div>
+      <KonzaLoader variant="page" label="Chargement du pipeline…" />
     );
   }
 

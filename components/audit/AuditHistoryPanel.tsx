@@ -5,7 +5,8 @@
 // Historique d'audit d'UN objet (contrat, employé…) — du plus récent au plus ancien.
 // ============================================================================
 import React, { useEffect, useState } from 'react';
-import { Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ShieldCheck, AlertCircle } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { auditTrailService, type AuditEvent } from '@/services/audit-trail';
 import AuditEventCard from './AuditEventCard';
 
@@ -32,7 +33,7 @@ export default function AuditHistoryPanel({
     );
   }
   if (!events) {
-    return <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 text-[var(--brand)] animate-spin" /></div>;
+    return <KonzaLoader variant="section" />;
   }
   if (events.length === 0) {
     return (

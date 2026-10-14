@@ -22,6 +22,7 @@ import { useAlert } from '@/components/providers/AlertProvider';
 import type { BonusTemplate } from '@/app/(dashboard)/parametres/primes/page';
 import { useBasePath } from '@/hooks/useBasePath';
 import { SalaryRecap } from '@/components/employees/SalaryRecap';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 
@@ -421,9 +422,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
   const getMonthLabel = (m?: number) => MONTHS.find(x => x.value === m)?.label || '';
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin text-amber-500" size={40} />
-    </div>
+    <KonzaLoader variant="page" />
   );
 
   // ── Rendu ─────────────────────────────────────────────────────────────────

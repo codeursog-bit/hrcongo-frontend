@@ -19,6 +19,7 @@ import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
 import type { BonusTemplate } from '@/app/(dashboard)/parametres/primes/page';
 import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -331,8 +332,7 @@ export default function AssignPrimePage() {
                 onMouseDown={e => e.preventDefault()}>
                 {loadingEmps ? (
                   <div className="flex items-center justify-center py-8 gap-3">
-                    <Loader2 className="animate-spin text-emerald-500" size={20} />
-                    <span className="text-[var(--text-muted)] text-sm">Chargement...</span>
+                    <KonzaLoader variant="inline" />
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="py-8 text-center text-[var(--text-muted)] text-sm">Aucun employé trouvé</div>
@@ -410,10 +410,7 @@ export default function AssignPrimePage() {
             </div>
 
             {loadingData ? (
-              <div className="flex items-center justify-center py-16 gap-3">
-                <Loader2 className="animate-spin text-emerald-500" size={28} />
-                <span className="text-[var(--text-muted)]">Chargement...</span>
-              </div>
+              <KonzaLoader variant="section" />
             ) : (
               <>
                 {/* Primes manuelles */}

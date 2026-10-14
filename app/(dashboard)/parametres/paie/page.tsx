@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/services/api';
  import { useBasePath } from '@/hooks/useBasePath';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TabId = 'cnss' | 'overtime' | 'nightshift' | 'its' | 'calendar' | 'conges';
@@ -332,9 +333,7 @@ const handleSave = async () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-500" size={40} />
-      </div>
+      <KonzaLoader variant="page" />
     );
   }
 

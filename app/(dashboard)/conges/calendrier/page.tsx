@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ChevronLeft, ChevronRight, ArrowLeft, Loader2,
-  Umbrella, Stethoscope, Baby, User, Ban, Star, Info
+  ChevronLeft, ChevronRight, ArrowLeft, Umbrella, Stethoscope, Baby, User, Ban, Star, Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import CongeSubNav from '@/components/CongeSubNav';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 type LeaveType = 'ANNUAL' | 'SICK' | 'MATERNITY' | 'PATERNITY' | 'UNPAID' | 'SPECIAL';
 
@@ -234,9 +234,7 @@ export default function CalendarPage() {
         <div className="xl:col-span-3 bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
 
           {isLoading ? (
-            <div className="flex justify-center items-center h-[500px]">
-              <Loader2 className="animate-spin text-emerald-500" size={32} />
-            </div>
+            <KonzaLoader variant="section" />
           ) : (
             <>
               {/* Jours de semaine */}
