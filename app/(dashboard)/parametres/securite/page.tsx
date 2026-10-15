@@ -201,7 +201,7 @@ export default function SecuritePage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Sécurité du compte</h1>
-            <p className="text-xs text-slate-600 mt-0.5">2FA TOTP · Journal d'audit complet · Traçabilité</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">2FA TOTP · Journal d'audit complet · Traçabilité</p>
           </div>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function SecuritePage() {
               <div className="grid grid-cols-2 gap-2">
                 {backup.map((c,i)=>(
                   <div key={i} className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.07] rounded-lg px-3 py-2.5">
-                    <span className="text-[10px] text-slate-700 font-mono w-4 shrink-0">{i+1}.</span>
+                    <span className="text-[10px] text-slate-700 dark:text-slate-200 font-mono w-4 shrink-0">{i+1}.</span>
                     <code className="font-mono text-sm font-bold text-white tracking-widest">{c}</code>
                   </div>
                 ))}
@@ -373,7 +373,7 @@ export default function SecuritePage() {
                       onChange={e=>setDisPwd(e.target.value)} placeholder="Confirmez votre mot de passe"
                       className="w-full px-4 py-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] text-white text-sm outline-none focus:border-red-400/30 pr-10 transition-colors"/>
                     <button onClick={()=>setShowPwd(v=>!v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-400 hover:text-slate-400">
                       {showPwd?<EyeOff size={14}/>:<Eye size={14}/>}
                     </button>
                   </div>
@@ -413,10 +413,10 @@ export default function SecuritePage() {
                 <div key={i} className="bg-[#0f1623] rounded-2xl border border-white/[0.07] p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <s.I size={14} className={s.c}/>
-                    <span className="text-[11px] text-slate-600 font-medium">{s.l}</span>
+                    <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">{s.l}</span>
                   </div>
                   <p className={`text-2xl font-black ${s.c} truncate`}>{s.v}</p>
-                  {s.sub && <p className="text-[10px] text-slate-700 mt-1 truncate">{s.sub}</p>}
+                  {s.sub && <p className="text-[10px] text-slate-700 dark:text-slate-200 mt-1 truncate">{s.sub}</p>}
                 </div>
               ))}
             </div>
@@ -425,13 +425,13 @@ export default function SecuritePage() {
           {/* Graphique top actions */}
           {stats && stats.byAction.length>0 && (
             <div className="bg-[#0f1623] rounded-2xl border border-white/[0.07] p-5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-4">Répartition des actions — 7 jours</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-4">Répartition des actions — 7 jours</p>
               <div className="space-y-2.5">
                 {stats.byAction.slice(0,7).map((a,i)=>{
                   const pct = Math.round((a.count/(stats.byAction[0]?.count||1))*100);
                   return (
                     <div key={i} className="flex items-center gap-3">
-                      <span className="text-[10px] font-mono text-slate-700 w-3 text-right">{i+1}</span>
+                      <span className="text-[10px] font-mono text-slate-700 dark:text-slate-200 w-3 text-right">{i+1}</span>
                       <span className="text-xs text-slate-500 w-48 truncate">{a.action.replace(/_/g,' ')}</span>
                       <div className="flex-1 bg-white/[0.03] rounded-full h-1.5">
                         <div className="h-full rounded-full bg-emerald-500/70 transition-all duration-700"
@@ -451,7 +451,7 @@ export default function SecuritePage() {
               <div className="flex items-center gap-3">
                 <p className="text-sm font-semibold text-white">
                   {meta?.total.toLocaleString('fr-FR')??'—'}
-                  <span className="text-slate-600 font-normal text-xs ml-1.5">événements</span>
+                  <span className="text-slate-600 dark:text-slate-400 font-normal text-xs ml-1.5">événements</span>
                 </p>
                 {fltCount>0 && (
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
@@ -466,7 +466,7 @@ export default function SecuritePage() {
                   <Filter size={11}/> Filtres
                 </button>
                 <button onClick={()=>{setPage(1);loadLogs();loadStats();}} disabled={loading}
-                  className="p-1.5 rounded-lg border border-white/[0.08] text-slate-600 hover:text-slate-400 transition-colors disabled:opacity-40">
+                  className="p-1.5 rounded-lg border border-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-400 transition-colors disabled:opacity-40">
                   <RefreshCw size={13} className={loading?'animate-spin':''}/>
                 </button>
               </div>
@@ -482,14 +482,14 @@ export default function SecuritePage() {
                   {k:'to',l:'Jusqu\'à',ph:'',type:'date'},
                 ].map(f=>(
                   <div key={f.k}>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-700 mb-1.5">{f.l}</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-200 mb-1.5">{f.l}</label>
                     <div className="relative">
                       <input type={f.type??'text'} value={(flt as any)[f.k]} placeholder={f.ph}
                         onChange={e=>{setFlt(p=>({...p,[f.k]:e.target.value}));setPage(1);}}
                         className="w-full px-3 py-2 pr-7 rounded-lg border border-white/[0.07] bg-white/[0.02] text-xs text-white placeholder:text-slate-700 outline-none focus:border-emerald-500/40 transition-colors"/>
                       {(flt as any)[f.k] && (
                         <button onClick={()=>setFlt(p=>({...p,[f.k]:''}))}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-700 hover:text-slate-500">
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-700 dark:text-slate-200 hover:text-slate-500">
                           <XCircle size={11}/>
                         </button>
                       )}
@@ -505,7 +505,7 @@ export default function SecuritePage() {
             {loading ? (
               <KonzaLoader variant="section" label="Chargement des événements…" />
             ) : logs.length===0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-slate-700">
+              <div className="flex flex-col items-center justify-center py-20 text-slate-700 dark:text-slate-200">
                 <FileText size={32} className="mb-2 opacity-20"/>
                 <p className="text-sm">Aucun événement pour ces critères</p>
                 {fltCount>0 && (
@@ -553,28 +553,28 @@ export default function SecuritePage() {
                             <p className="text-xs text-slate-400 truncate mb-1.5">{log.description}</p>
                             <div className="flex items-center gap-3 flex-wrap">
                               {log.user && (
-                                <span className="flex items-center gap-1 text-[11px] text-slate-600">
+                                <span className="flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400">
                                   <UserIcon size={10}/>
                                   {log.user.firstName} {log.user.lastName}
-                                  <span className={`ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded border ${ROLE_BADGE[log.user.role]??'bg-white/5 text-slate-600 border-white/10'}`}>
+                                  <span className={`ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded border ${ROLE_BADGE[log.user.role]??'bg-white/5 text-slate-600 dark:text-slate-400 border-white/10'}`}>
                                     {log.user.role}
                                   </span>
                                 </span>
                               )}
                               {log.metadata?.ip && (
-                                <span className="flex items-center gap-1 text-[11px] text-slate-700">
+                                <span className="flex items-center gap-1 text-[11px] text-slate-700 dark:text-slate-200">
                                   <Globe size={10}/> {log.metadata.ip}
                                 </span>
                               )}
                               {log.metadata?.duration && (
-                                <span className="text-[11px] text-slate-700 font-mono">{log.metadata.duration}ms</span>
+                                <span className="text-[11px] text-slate-700 dark:text-slate-200 font-mono">{log.metadata.duration}ms</span>
                               )}
                             </div>
                           </div>
 
                           {/* Date */}
                           <div className="text-right shrink-0">
-                            <p className="text-[10px] font-mono text-slate-700 whitespace-nowrap">{fmtShort(log.createdAt)}</p>
+                            <p className="text-[10px] font-mono text-slate-700 dark:text-slate-200 whitespace-nowrap">{fmtShort(log.createdAt)}</p>
                           </div>
                         </div>
 
@@ -586,7 +586,7 @@ export default function SecuritePage() {
                                 <Info size={12} className="text-emerald-400"/> Détail complet
                               </p>
                               <button onClick={()=>setDetail(null)}
-                                className="text-[11px] text-slate-700 hover:text-slate-500">fermer ×</button>
+                                className="text-[11px] text-slate-700 dark:text-slate-200 hover:text-slate-500">fermer ×</button>
                             </div>
 
                             {/* Grille infos */}
@@ -602,7 +602,7 @@ export default function SecuritePage() {
                                 {l:'Entité ID',    v:log.entityId??'—',     mono:true},
                               ].map((f,i)=>(
                                 <div key={i} className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3">
-                                  <p className="text-[9px] text-slate-700 uppercase tracking-wider mb-1">{f.l}</p>
+                                  <p className="text-[9px] text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">{f.l}</p>
                                   <p className={`text-slate-400 truncate ${f.mono?'font-mono text-[10px]':'text-xs font-medium'}`}>{f.v}</p>
                                 </div>
                               ))}
@@ -616,9 +616,9 @@ export default function SecuritePage() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-white">{log.user.firstName} {log.user.lastName}</p>
-                                  <p className="text-xs text-slate-600 truncate">{log.user.email}</p>
+                                  <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{log.user.email}</p>
                                 </div>
-                                <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-md border ${ROLE_BADGE[log.user.role]??'bg-white/5 text-slate-600 border-white/10'}`}>
+                                <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-md border ${ROLE_BADGE[log.user.role]??'bg-white/5 text-slate-600 dark:text-slate-400 border-white/10'}`}>
                                   {log.user.role}
                                 </span>
                               </div>
@@ -627,7 +627,7 @@ export default function SecuritePage() {
                             {/* Body sanitizé */}
                             {log.metadata?.body && Object.keys(log.metadata.body).length>0 && (
                               <div className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-3">
-                                <p className="text-[9px] text-slate-700 uppercase tracking-wider mb-2">Corps de la requête (champs sensibles masqués)</p>
+                                <p className="text-[9px] text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-2">Corps de la requête (champs sensibles masqués)</p>
                                 <pre className="text-[11px] font-mono text-slate-500 overflow-auto max-h-32 leading-loose">
                                   {JSON.stringify(log.metadata.body,null,2)}
                                 </pre>
@@ -651,7 +651,7 @@ export default function SecuritePage() {
                 {/* Pagination */}
                 {meta && meta.totalPages>1 && (
                   <div className="px-5 py-3 border-t border-white/[0.05] flex items-center justify-between">
-                    <span className="text-[11px] font-mono text-slate-700">
+                    <span className="text-[11px] font-mono text-slate-700 dark:text-slate-200">
                       Page {meta.page}/{meta.totalPages} · {meta.total.toLocaleString('fr-FR')} événements
                     </span>
                     <div className="flex gap-2">

@@ -299,7 +299,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
 
             {(!isSubjectToCnss || !isSubjectToIrpp) && (
               <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 rounded-2xl p-4">
-                <p className="font-bold text-amber-800 text-sm flex items-center gap-2 mb-2"><AlertCircle size={14}/> Exemptions actives</p>
+                <p className="font-bold text-amber-800 dark:text-amber-400 text-sm flex items-center gap-2 mb-2"><AlertCircle size={14}/> Exemptions actives</p>
                 {!isSubjectToCnss && <p className="text-xs text-amber-600">• CNSS : exempté</p>}
                 {!isSubjectToIrpp && <p className="text-xs text-amber-600">• ITS : exempté</p>}
               </div>

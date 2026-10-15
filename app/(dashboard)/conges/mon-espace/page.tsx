@@ -23,6 +23,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import CongeSubNav from '@/components/CongeSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import ContactAdminButton from '@/components/chat/ContactAdminButton';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -627,6 +628,13 @@ export default function MonEspaceCongesPage() {
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border flex items-center gap-1 ${st.badge}`}>
                       <StIcon size={11} /> {st.label}
                     </span>
+                    {/* 💬 En attente / refusé : contacter l'administration pour s'expliquer */}
+                    <ContactAdminButton
+                      variant="compact"
+                      status={leave.status}
+                      decidedByUserId={leave.rejectedBy}
+                      requestLabel={`ma demande de congé du ${fmtDate(leave.startDate)} au ${fmtDate(leave.endDate)}`}
+                    />
                     {['PENDING', 'APPROVED'].includes(leave.status) && (
                       <button
                         onClick={() => handleCancel(leave.id)}

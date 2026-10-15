@@ -5,8 +5,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Building2, Users, UserCheck, FileClock, ArrowRight, Plus, Radio,
-  Calendar, FileText, HandCoins, CheckCircle,
+  Building2, Users, UserCheck, FileClock, ArrowRight, Plus,
+  Calendar, FileText, HandCoins, CheckCircle, Clock,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -15,6 +15,7 @@ import {
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { StatCard } from '@/components/ui/StatCard';
 import { api } from '@/services/api';
+import { DAY_MS, isPendingStatus, timeAgo } from '@/components/portfolio/requests';
 
 interface EmployeesByCompany { companyId: string; name: string; count: number; }
 interface RecentActivityItem {
@@ -62,7 +63,49 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: 'Refusée', CANCELLED: 'Annulée', ACTIVE: 'Active', PAID: 'Payée', DEDUCTED: 'Déduite',
 };
 
+const STATUS_BADGE: Record<string, string> = {
+  PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  PENDING_DG: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  ACTIVE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  PAID: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  DEDUCTED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+};
+
 const PIE_COLORS = ['#F43F5E', '#6366F1', '#F59E0B'];
+
+// Ligne d'une demande dans « Demandes récentes »
+function ActivityRow({ act, pending }: { act: RecentActivityItem; pending: boolean }) {
+  const meta = ACTIVITY_ICON[act.type] ?? ACTIVITY_ICON.leave;
+  return (
+    <Link
+      href="/portefeuille/demandes"
+      className="flex items-center gap-4 p-3 -mx-3 rounded-xl transition-colors hover:bg-[var(--surface-2)]"
+    >
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${meta.color}`}>{meta.icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{act.label}</p>
+        <p className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap" style={{ color: 'var(--text-muted)' }}>
+          <span className="inline-flex items-center gap-1"><Building2 size={11} /> {act.company}</span>
+          <span>·</span>
+          <span className="inline-flex items-center gap-1"><Clock size={11} /> {timeAgo(act.date)}</span>
+        </p>
+      </div>
+      {pending ? (
+        <span className="relative inline-flex shrink-0">
+          <span className="absolute inset-0 rounded-full bg-red-500 opacity-50 animate-ping motion-reduce:animate-none" />
+          <span className="relative inline-flex rounded-full bg-red-500 text-white text-[11px] font-bold px-2.5 py-1">À traiter</span>
+        </span>
+      ) : (
+        <span className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 ${STATUS_BADGE[act.status] ?? STATUS_BADGE.CANCELLED}`}>
+          {STATUS_LABEL[act.status] ?? act.status}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export default function PortfolioDashboardPage() {
   const [stats, setStats] = useState<PortfolioStats>(EMPTY_STATS);
@@ -82,6 +125,15 @@ export default function PortfolioDashboardPage() {
   const attendanceRate = s.attendance.totalEmployees > 0
     ? Math.round((s.attendance.presentToday / s.attendance.totalEmployees) * 100)
     : 0;
+
+  // Demandes récentes : en attente = toujours visibles ; traitées = 24 h puis elles disparaissent
+  const nowMs = Date.now();
+  const pendingActs = s.recentActivity.filter(a => isPendingStatus(a.status));
+  const handledActs = s.recentActivity.filter(a => {
+    if (isPendingStatus(a.status)) return false;
+    const ts = Date.parse(a.date);
+    return !Number.isNaN(ts) && nowMs - ts < DAY_MS;
+  });
 
   const pendingPieData = [
     { name: 'Congés', value: s.pendingRequests.leaves },
@@ -116,6 +168,24 @@ export default function PortfolioDashboardPage() {
             Ajouter <ArrowRight size={14} />
           </Link>
         </div>
+      )}
+
+      {totalPending > 0 && (
+        <Link
+          href="/portefeuille/demandes"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 transition-colors hover:bg-red-100 dark:hover:bg-red-900/30"
+        >
+          <p className="text-sm font-bold text-red-700 dark:text-red-400 flex items-center gap-3">
+            <span className="relative flex w-3 h-3 shrink-0">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping motion-reduce:animate-none" />
+              <span className="relative inline-flex w-3 h-3 rounded-full bg-red-500" />
+            </span>
+            {totalPending} demande{totalPending > 1 ? 's' : ''} en attente dans vos entreprises
+          </p>
+          <span className="text-sm font-bold text-red-600 dark:text-red-400 whitespace-nowrap flex items-center gap-1">
+            Traiter maintenant <ArrowRight size={14} />
+          </span>
+        </Link>
       )}
 
       {/* ── INDICATEURS ── */}
@@ -177,37 +247,42 @@ export default function PortfolioDashboardPage() {
         </Panel>
       </div>
 
-      {/* ── ACTIVITÉ RÉCENTE ── */}
+      {/* ── DEMANDES RÉCENTES ── */}
       <Panel>
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 bg-red-500/10 rounded-lg text-red-500 animate-pulse"><Radio size={18} /></div>
-          <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>Activité récente</h3>
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-red-500/10 rounded-lg text-red-500"><FileClock size={18} /></div>
+            <div>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>Demandes récentes</h3>
+              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                En attente jusqu&apos;à décision · traitées visibles 24 h
+              </p>
+            </div>
+          </div>
+          <Link href="/portefeuille/demandes" className="text-sm font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap flex items-center gap-1">
+            Tout voir <ArrowRight size={14} />
+          </Link>
         </div>
-        {s.recentActivity.length === 0 ? (
+
+        {pendingActs.length === 0 && handledActs.length === 0 ? (
           <div className="text-center py-10" style={{ color: 'var(--text-muted)' }}>
-            <FileClock size={32} className="mx-auto mb-2 opacity-20" />
-            <p className="text-sm">Aucune activité récente pour le moment.</p>
+            <CheckCircle size={32} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">Rien à signaler : aucune demande en attente ni traitée ces dernières 24 h.</p>
           </div>
         ) : (
           <div className="space-y-5">
-            {s.recentActivity.map((act, i) => {
-              const meta = ACTIVITY_ICON[act.type] ?? ACTIVITY_ICON.leave;
-              return (
-                <div key={i} className="flex gap-4 relative">
-                  {i !== s.recentActivity.length - 1 && (
-                    <div className="absolute left-[15px] top-8 bottom-[-20px] w-0.5" style={{ background: 'var(--border)' }} />
-                  )}
-                  <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${meta.color}`}>{meta.icon}</div>
-                  <div>
-                    <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{act.label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {act.company} · {STATUS_LABEL[act.status] ?? act.status}
-                    </p>
-                    <p className="text-[10px] mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>{new Date(act.date).toLocaleString('fr-FR')}</p>
-                  </div>
-                </div>
-              );
-            })}
+            {pendingActs.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide mb-1 text-red-500">À traiter · {pendingActs.length}</p>
+                <div>{pendingActs.map((a, i) => <ActivityRow key={`p${i}`} act={a} pending />)}</div>
+              </div>
+            )}
+            {handledActs.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Traitées · 24 h</p>
+                <div>{handledActs.map((a, i) => <ActivityRow key={`h${i}`} act={a} pending={false} />)}</div>
+              </div>
+            )}
           </div>
         )}
       </Panel>

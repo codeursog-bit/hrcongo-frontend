@@ -18,6 +18,7 @@
 // ============================================================================
 
 import { createContext, useContext, useState } from 'react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { useConventionGuard, ConventionStatus, PredefinedConvention } from '@/hooks/useConventionGuard';
 
 // ─── Contexte — expose le statut aux enfants sans prop drilling ───────────────
@@ -241,15 +242,7 @@ function ConventionBadge({ code, name }: { code: string; name: string }) {
 
 function ConventionLoading() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#0a0e1a', color: '#475569',
-      fontSize: 14, gap: 10,
-    }}>
-      <span>⏳</span>
-      Vérification de la convention collective…
-    </div>
+    <KonzaLoader variant="screen" tone="dark" background="#0a0e1a" label="Vérification de la convention collective…" />
   );
 }
 

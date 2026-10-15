@@ -10,7 +10,8 @@
 // ============================================================================
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { CheckCircle2, LogOut, AlertTriangle, Loader2, X, ScanLine, ShieldX } from 'lucide-react';
+import { CheckCircle2, LogOut, AlertTriangle, X, ScanLine, ShieldX } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { employeeQrApi, PunchResult } from '@/services/display-screen-api';
 
 const REGION_ID = 'employee-qr-region';
@@ -109,9 +110,7 @@ export default function QrPunchModal({ onClose, onDone }: Props) {
           )}
 
           {phase === 'sending' && (
-            <div className="py-16 flex flex-col items-center gap-3 text-[var(--text-muted)]">
-              <Loader2 className="animate-spin" size={32} /> Vérification du pointage…
-            </div>
+            <KonzaLoader variant="section" label="Vérification du pointage…" />
           )}
 
           {phase === 'confirm' && result && (

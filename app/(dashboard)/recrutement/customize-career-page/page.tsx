@@ -79,7 +79,7 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
               {logo ? (
                 <Image src={logo} alt="Logo" width={48} height={48} className="object-contain" />
               ) : (
-                <Building2 size={18} className="text-slate-600" />
+                <Building2 size={18} className="text-slate-600 dark:text-slate-400" />
               )}
             </div>
             <div className="pb-3 flex-1">
@@ -124,7 +124,7 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
                       {j.salary && <><span>·</span><span style={{ color: colors.accent }}>{j.salary}</span></>}
                     </div>
                   </div>
-                  <ChevronRight size={12} className="text-slate-700 shrink-0" />
+                  <ChevronRight size={12} className="text-slate-700 dark:text-slate-200 shrink-0" />
                 </div>
               ))}
             </div>
@@ -162,7 +162,7 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
                       </div>
                     ))}
                     {settings.careerPageValues.length > 4 && (
-                      <p className="text-slate-600 text-[9px] col-span-2 text-center">
+                      <p className="text-slate-600 dark:text-slate-400 text-[9px] col-span-2 text-center">
                         +{settings.careerPageValues.length - 4} autres valeurs
                       </p>
                     )}
@@ -185,8 +185,8 @@ function CompanyPreview({ settings, bannerPreview, companyName }: {
               )}
 
               {!settings.careerPageAbout && !settings.careerPageValues?.length && !settings.careerPagePhotos?.length && (
-                <div className="text-center py-8 text-slate-600 text-[10px]">
-                  <Building2 size={20} className="mx-auto mb-2 text-slate-800" />
+                <div className="text-center py-8 text-slate-600 dark:text-slate-400 text-[10px]">
+                  <Building2 size={20} className="mx-auto mb-2 text-slate-800 dark:text-slate-100" />
                   Remplissez les champs pour voir la preview
                 </div>
               )}
@@ -580,7 +580,7 @@ export default function CustomizeCareerPage() {
                   bannerPreview={bannerPreview}
                   companyName={companyName}
                 />
-                <p className="text-center text-[10px] text-slate-700 mt-3">
+                <p className="text-center text-[10px] text-slate-700 dark:text-slate-200 mt-3">
                   Ce que voient les candidats sur rhkonza.com/companies/…
                 </p>
               </div>

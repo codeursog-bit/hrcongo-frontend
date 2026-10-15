@@ -45,19 +45,19 @@ export function PendingActions() {
       {/* Modal détails */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden shadow-2xl animate-slide-up">
+          <div className="bg-white dark:bg-[var(--surface)] border border-transparent dark:border-white/10 rounded-t-2xl sm:rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden shadow-2xl animate-slide-up text-slate-900 dark:text-slate-100">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-gray-200 dark:border-white/10">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-lg">Actions en attente</h3>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200"
                 >
                   <XCircle className="h-5 w-5" />
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                 {pendingCount} action{pendingCount > 1 ? 's' : ''} sera{pendingCount > 1 ? 'ont' : ''} synchronisée{pendingCount > 1 ? 's' : ''} automatiquement
               </p>
             </div>
@@ -65,7 +65,7 @@ export function PendingActions() {
             {/* Liste */}
             <div className="overflow-y-auto max-h-96 p-4 space-y-3">
               {pendingItems.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-slate-400">
                   <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Aucune action en attente</p>
                 </div>
@@ -73,7 +73,7 @@ export function PendingActions() {
                 pendingItems.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                    className="bg-gray-50 dark:bg-white/[0.04] rounded-lg p-3 border border-gray-200 dark:border-white/10"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -84,7 +84,7 @@ export function PendingActions() {
                           </span>
                         </div>
                         
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
                           {new Date(item.timestamp).toLocaleString('fr-FR', {
                             day: '2-digit',
                             month: '2-digit',
@@ -119,8 +119,8 @@ export function PendingActions() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="p-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03]">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
                 {isSyncing ? (
                   <>
                     <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />

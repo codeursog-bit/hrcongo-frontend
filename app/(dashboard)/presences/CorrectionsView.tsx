@@ -383,7 +383,7 @@ function OvertimeApprovalModal({
                 {['Heures non autorisées à l\'avance', 'Travail non confirmé', 'Erreur de déclaration'].map(r => (
                   <button key={r} onClick={() => setRejectReason(r)}
                     className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 text-left transition-all ${
-                      rejectReason === r ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700' : 'border-[var(--border)] text-[var(--text-muted)]'
+                      rejectReason === r ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'
                     }`}
                   >{r}</button>
                 ))}

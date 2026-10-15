@@ -145,3 +145,50 @@ input:-webkit-autofill:active {
   caret-color: #ffffff;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* ============================================================================
+   GRAPHIQUES (Recharts) — lisibilité en mode sombre
+   Recharts écrit par défaut des gris foncés (#666 pour les textes d'axes, #ccc pour la
+   grille et le survol) et beaucoup de pages codent en dur des couleurs pensées pour le
+   mode clair (#64748b, #e2e8f0…). Sur fond sombre → illisible.
+   Ces règles corrigent TOUS les graphiques d'un coup, sans toucher aux pages.
+   Le mode clair n'est pas modifié.
+   ============================================================================ */
+.dark .recharts-wrapper .recharts-cartesian-axis-tick-value,
+.dark .recharts-wrapper .recharts-cartesian-axis-tick text,
+.dark .recharts-wrapper .recharts-polar-angle-axis-tick-value,
+.dark .recharts-wrapper .recharts-polar-radius-axis-tick-value,
+.dark .recharts-wrapper .recharts-label,
+.dark .recharts-wrapper .recharts-cartesian-axis-label text {
+  fill: #AEB4C0 !important;
+}
+.dark .recharts-wrapper .recharts-pie-label-text,
+.dark .recharts-wrapper .recharts-label-list text:not([fill="#fff"]):not([fill="#FFFFFF"]):not([fill="white"]) {
+  fill: var(--text) !important;
+}
+.dark .recharts-wrapper .recharts-cartesian-grid line,
+.dark .recharts-wrapper .recharts-polar-grid-concentric-polygon,
+.dark .recharts-wrapper .recharts-polar-grid-angle line {
+  stroke: rgba(255, 255, 255, 0.10) !important;
+}
+.dark .recharts-wrapper .recharts-cartesian-axis-line,
+.dark .recharts-wrapper .recharts-cartesian-axis-tick-line {
+  stroke: rgba(255, 255, 255, 0.18) !important;
+}
+.dark .recharts-wrapper .recharts-legend-item-text,
+.dark .recharts-legend-wrapper .recharts-legend-item-text {
+  color: var(--text) !important;
+}
+.dark .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--surface) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+.dark .recharts-tooltip-wrapper .recharts-tooltip-label {
+  color: var(--text) !important;
+}
+.dark .recharts-wrapper .recharts-rectangle.recharts-tooltip-cursor {
+  fill: rgba(255, 255, 255, 0.06) !important;
+}
+.dark .recharts-wrapper .recharts-curve.recharts-tooltip-cursor {
+  stroke: rgba(255, 255, 255, 0.30) !important;
+}

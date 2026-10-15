@@ -99,7 +99,7 @@ function Crd({ t, s, ch }: { t: string; s?: string; ch: React.ReactNode }) {
     <div className="bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-xl">
       <div className="mb-4">
         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t}</p>
-        {s && <p className="text-xs text-slate-600 mt-0.5">{s}</p>}
+        {s && <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{s}</p>}
       </div>
       {ch}
     </div>
@@ -148,7 +148,7 @@ function Stp({ s }: { s: 1 | 2 | 3 }) {
           }`}>
             {s > x.n ? '✓' : x.n}
           </div>
-          <span className={`text-xs font-medium hidden sm:block ${s === x.n ? 'text-emerald-400' : 'text-slate-600'}`}>
+          <span className={`text-xs font-medium hidden sm:block ${s === x.n ? 'text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
             {x.l}
           </span>
         </div>
@@ -177,7 +177,7 @@ function RuptureTypeSelector({ value, onChange }: { value: string; onChange: (v:
         const items = RT.filter(r => r.g === g);
         return (
           <div key={g} className="mb-4 last:mb-0">
-            <p className="text-xs text-slate-600 font-semibold uppercase tracking-wider mb-2">{g}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider mb-2">{g}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {items.map(r => (
                 <button
@@ -190,7 +190,7 @@ function RuptureTypeSelector({ value, onChange }: { value: string; onChange: (v:
                   }`}
                 >
                   {r.l}
-                  {!r.hasIndem && <span className="block text-xs font-normal text-slate-600 mt-0.5">Pas d'indem. lic.</span>}
+                  {!r.hasIndem && <span className="block text-xs font-normal text-slate-600 dark:text-slate-400 mt-0.5">Pas d'indem. lic.</span>}
                 </button>
               ))}
             </div>
@@ -223,7 +223,7 @@ function MigrationPanel({
         <div className="flex items-center gap-2">
           <span className="text-amber-400 text-xs">⚠️</span>
           <span className="text-xs font-bold text-amber-400">Données avant Konza</span>
-          <span className="text-xs text-slate-600">— Optionnel, améliore la précision</span>
+          <span className="text-xs text-slate-600 dark:text-slate-400">— Optionnel, améliore la précision</span>
         </div>
         <span className="text-xs text-slate-500">{showMig ? '▲' : '▼'}</span>
       </button>
@@ -241,7 +241,7 @@ function MigrationPanel({
                 placeholder="Ex: 12"
                 className={inp}
               />
-              <p className="text-xs text-slate-700 mt-1">Jours restants quand vous avez migré vers Konza</p>
+              <p className="text-xs text-slate-700 dark:text-slate-200 mt-1">Jours restants quand vous avez migré vers Konza</p>
             </div>
             <div>
               <Fl l="Indemnités antérieures (FCFA)" />
@@ -252,14 +252,14 @@ function MigrationPanel({
                 placeholder="Ex: 500000"
                 className={inp}
               />
-              <p className="text-xs text-slate-700 mt-1">Indemnités déjà versées lors d'une rupture antérieure</p>
+              <p className="text-xs text-slate-700 dark:text-slate-200 mt-1">Indemnités déjà versées lors d'une rupture antérieure</p>
             </div>
           </div>
 
           {/* Historique salaires */}
           <div>
             <Fl l="Salaires manquants (si Konza a moins de 12 bulletins)" />
-            <p className="text-xs text-slate-600 mb-2">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">
               Laissez vide pour utiliser le salaire actuel ({fmt(emp.baseSalary)} FCFA) sur les mois manquants
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -267,7 +267,7 @@ function MigrationPanel({
                 const existing = migrationData.salairesHistoriques?.find(s => s.mois === i + 1);
                 return (
                   <div key={i}>
-                    <p className="text-xs text-slate-600 mb-1">Mois -{i + 1}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Mois -{i + 1}</p>
                     <input
                       type="number" min={0}
                       value={existing?.brutTotal ?? ''}
@@ -591,7 +591,7 @@ export default function ContractRupturePage() {
             {histLoad
               ? <div className="flex justify-center py-12"><Sp /></div>
               : hist.length === 0
-              ? <div className="text-center py-12 text-slate-600 text-sm">Aucune rupture enregistrée</div>
+              ? <div className="text-center py-12 text-slate-600 dark:text-slate-400 text-sm">Aucune rupture enregistrée</div>
               : (
                 <div className="space-y-2">
                   {hist.map((r: any) => (
@@ -629,7 +629,7 @@ export default function ContractRupturePage() {
                 {empLoad
                   ? <div className="flex justify-center py-6"><Sp /></div>
                   : filtered.length === 0
-                  ? <p className="text-center py-8 text-slate-600 text-xs">{employees.length === 0 ? 'Aucun employé actif trouvé' : 'Aucun résultat'}</p>
+                  ? <p className="text-center py-8 text-slate-600 dark:text-slate-400 text-xs">{employees.length === 0 ? 'Aucun employé actif trouvé' : 'Aucun résultat'}</p>
                   : (
                     <div className="space-y-1.5 max-h-[400px] overflow-y-auto no-scrollbar">
                       {filtered.map(e => {
@@ -648,7 +648,7 @@ export default function ContractRupturePage() {
                               <div className="min-w-0">
                                 <p className="text-sm font-bold truncate">{e.firstName} {e.lastName}</p>
                                 <p className="text-xs text-slate-500 mt-0.5 truncate">{e.employeeNumber} · {e.position}</p>
-                                {e.department && <p className="text-xs text-slate-600">{e.department.name}</p>}
+                                {e.department && <p className="text-xs text-slate-600 dark:text-slate-400">{e.department.name}</p>}
                               </div>
                               <Bdg c={e.contractType} v="i" />
                             </div>
@@ -792,7 +792,7 @@ export default function ContractRupturePage() {
                           <div className="flex items-center gap-2">
                             <span className="text-emerald-400 font-bold">{fmt(a.montant)} FCFA</span>
                             <button onClick={() => setForm(f => ({ ...f, autresSommes: f.autresSommes.filter((_, j) => j !== i) }))}
-                              className="text-slate-600 hover:text-red-400 transition-colors">×</button>
+                              className="text-slate-600 dark:text-slate-400 hover:text-red-400 transition-colors">×</button>
                           </div>
                         </div>
                       ))}
@@ -854,14 +854,14 @@ export default function ContractRupturePage() {
                 <p className="text-xl font-black tracking-tight">{emp?.firstName} {emp?.lastName}</p>
                 <p className="text-xs text-slate-500 mt-1">{emp?.employeeNumber} · {emp?.position} · {emp?.contractType}</p>
                 {/* Avg12 info */}
-                <p className="text-xs text-slate-600 mt-1">{calc.avg12.detail}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{calc.avg12.detail}</p>
               </div>
               <div className="sm:text-right shrink-0">
                 <p className="text-xs text-slate-500 mb-0.5">Ancienneté</p>
                 <p className="text-2xl font-black text-emerald-400">
                   {calc.anciennete.annees} ans {calc.anciennete.mois} mois
                 </p>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-slate-600 dark:text-slate-400">
                   {fmtD(emp?.hireDate)} → {fmtD(calc.dateFinEffective)}
                 </p>
               </div>
@@ -879,7 +879,7 @@ export default function ContractRupturePage() {
                     <AlerteBadge niveau={a.niveau} />
                     <div className="flex-1">
                       <span>{a.message}</span>
-                      {a.article && <span className="text-slate-600 ml-1">({a.article})</span>}
+                      {a.article && <span className="text-slate-600 dark:text-slate-400 ml-1">({a.article})</span>}
                     </div>
                   </div>
                 ))}
@@ -895,12 +895,12 @@ export default function ContractRupturePage() {
                     <div key={i} className="flex items-center justify-between gap-3 p-3 bg-slate-800/40 rounded-xl border border-white/5">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-200 leading-snug">{r.l}</p>
-                        {r.sub && <p className="text-xs text-slate-600 mt-0.5 truncate">{r.sub}</p>}
+                        {r.sub && <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 truncate">{r.sub}</p>}
                         {r.tag && <Bdg c={r.tag} v={r.tv} />}
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold">{fmt(r.v)}</p>
-                        <p className="text-xs text-slate-600">FCFA</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">FCFA</p>
                       </div>
                     </div>
                   ))}
@@ -909,7 +909,7 @@ export default function ContractRupturePage() {
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
                     <div className="p-3 bg-slate-800/60 rounded-xl">
                       <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Brut imposable</p>
-                      <p className="text-lg font-bold">{fmt(calc.fiscalite.brutImposableITS)} <span className="text-xs text-slate-600">FCFA</span></p>
+                      <p className="text-lg font-bold">{fmt(calc.fiscalite.brutImposableITS)} <span className="text-xs text-slate-600 dark:text-slate-400">FCFA</span></p>
                       {calc.fiscalite.its > 0 && (
                         <p className="text-xs text-red-400 mt-0.5">ITS −{fmt(calc.fiscalite.its)} FCFA</p>
                       )}
@@ -920,11 +920,11 @@ export default function ContractRupturePage() {
                     <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
                       <p className="text-xs text-emerald-500 uppercase tracking-wider font-bold mb-1">Total NET</p>
                       <p className="text-xl font-black text-emerald-400">
-                        {fmt(calc.totaux.netAPayer)} <span className="text-xs text-emerald-700">FCFA</span>
+                        {fmt(calc.totaux.netAPayer)} <span className="text-xs text-emerald-700 dark:text-emerald-400">FCFA</span>
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-700 text-right">
+                  <p className="text-xs text-slate-700 dark:text-slate-200 text-right">
                     Brut total : {fmt(bt)} · Exonéré ITS : {fmt(calc.fiscalite.exoLicenciement)} FCFA
                   </p>
                 </div>
@@ -978,17 +978,17 @@ export default function ContractRupturePage() {
                     <div className="space-y-2">
                       {calc.checklist.slice(0, 5).map(item => (
                         <div key={item.id} className="flex items-start gap-2 text-xs">
-                          <span className={item.obligatoire ? 'text-emerald-400' : 'text-slate-600'}>
+                          <span className={item.obligatoire ? 'text-emerald-400' : 'text-slate-600 dark:text-slate-400'}>
                             {item.obligatoire ? '●' : '○'}
                           </span>
                           <div>
                             <p className={`font-semibold ${item.obligatoire ? 'text-slate-300' : 'text-slate-500'}`}>{item.etape}</p>
-                            {item.articleRef && <p className="text-slate-700">{item.articleRef}</p>}
+                            {item.articleRef && <p className="text-slate-700 dark:text-slate-200">{item.articleRef}</p>}
                           </div>
                         </div>
                       ))}
                       {calc.checklist.length > 5 && (
-                        <p className="text-xs text-slate-600">+{calc.checklist.length - 5} étapes supplémentaires</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">+{calc.checklist.length - 5} étapes supplémentaires</p>
                       )}
                     </div>
                   } />
@@ -997,9 +997,9 @@ export default function ContractRupturePage() {
                 <Link href="/pse" className="flex items-center justify-between p-4 bg-slate-900/60 border border-white/10 hover:border-red-500/30 rounded-xl transition-all group">
                   <div>
                     <p className="text-xs font-bold text-slate-400 group-hover:text-red-300">Plan de Sauvegarde de l&apos;Emploi</p>
-                    <p className="text-xs text-slate-600">Art. 39 CT Congo · PSE</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Art. 39 CT Congo · PSE</p>
                   </div>
-                  <svg className="w-4 h-4 text-slate-700 group-hover:text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-slate-700 dark:text-slate-200 group-hover:text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M9 18l6-6-6-6" />
                   </svg>
                 </Link>
@@ -1023,8 +1023,8 @@ export default function ContractRupturePage() {
                       }`}
                     >
                       <p className="text-xs font-bold text-slate-200 mb-0.5">{d.l}</p>
-                      <p className="text-xs text-slate-600">{d.s}</p>
-                      {!rid && <p className="text-xs text-slate-700 mt-0.5">Après confirmation</p>}
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{d.s}</p>
+                      {!rid && <p className="text-xs text-slate-700 dark:text-slate-200 mt-0.5">Après confirmation</p>}
                     </button>
                   ))}
                 </div>
@@ -1070,7 +1070,7 @@ export default function ContractRupturePage() {
               >
                 {confirmLoad ? <><Sp /><span>Enregistrement...</span></> : 'Confirmer et clôturer le contrat'}
               </button>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 Met à jour le statut de l&apos;employé et enregistre la rupture.
               </p>
             </div>
@@ -1088,7 +1088,7 @@ export default function ContractRupturePage() {
             <h2 className="text-xl font-black mb-2">Contrat clôturé</h2>
             <p className="text-slate-400 text-sm mb-6">
               Rupture de <strong className="text-slate-200">{emp?.firstName} {emp?.lastName}</strong> enregistrée.
-              {rid && <span className="block text-xs text-slate-600 mt-1">{rid}</span>}
+              {rid && <span className="block text-xs text-slate-600 dark:text-slate-400 mt-1">{rid}</span>}
             </p>
             <div className="grid grid-cols-2 gap-2 mb-6 text-left">
               {[
@@ -1098,7 +1098,7 @@ export default function ContractRupturePage() {
                 { l: 'Motif',      v: ri?.l ?? '—',                                c: 'text-slate-300'  },
               ].map(({ l, v, c }) => (
                 <div key={l} className="bg-slate-800/60 border border-white/10 rounded-xl p-3">
-                  <p className="text-xs text-slate-600 uppercase tracking-wider mb-0.5">{l}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-0.5">{l}</p>
                   <p className={`text-sm font-bold ${c} leading-snug`}>{v}</p>
                 </div>
               ))}

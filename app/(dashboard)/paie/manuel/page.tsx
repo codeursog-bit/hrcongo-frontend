@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -1744,7 +1745,7 @@ export default function ManuelPayrollPage() {
               <motion.div key="empty" initial={{ opacity:0 }} animate={{ opacity:1 }}
                 className="bg-gray-50 dark:bg-gray-800/50 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center p-8">
                 {simLoading
-                  ? <><Loader2 size={32} className="animate-spin mb-3 text-emerald-500"/><p className="text-sm font-medium text-gray-600 dark:text-gray-300">Calcul en cours…</p></>
+                  ? <KonzaLoader variant="section" label="Calcul en cours…" className="!py-0" />
                   : simError
                   ? <><AlertCircle size={32} className="mb-3 text-red-400"/><p className="text-sm font-medium text-red-500 max-w-[200px]">{simError}</p></>
                   : <><Calculator size={36} className="mb-3 text-gray-300 dark:text-gray-600"/><p className="text-sm font-semibold text-gray-500 dark:text-gray-400">{!selectedEmp?'Sélectionnez un employé':!empDetail?'Chargement…':'Le bulletin se calcule automatiquement'}</p><p className="text-xs text-gray-400 mt-1">Mis à jour en temps réel</p></>

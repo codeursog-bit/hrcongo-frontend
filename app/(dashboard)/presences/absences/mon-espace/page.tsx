@@ -24,6 +24,7 @@ import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-pr
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import ContactAdminButton from '@/components/chat/ContactAdminButton';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -277,6 +278,13 @@ export default function MonEspaceAbsencesPage() {
                         Traitée le {new Date(selected.reviewedAt).toLocaleDateString('fr-FR')}
                       </p>
                     )}
+
+                    {/* 💬 En attente / refusée : l'employé peut contacter l'administration pour s'expliquer */}
+                    <ContactAdminButton
+                      status={selected.status}
+                      decidedByUserId={selected.reviewedBy}
+                      requestLabel={`ma demande d'absence (${(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.EXCEPTIONNELLE).label.toLowerCase()}) du ${new Date(selected.startDate).toLocaleDateString('fr-FR')} au ${new Date(selected.endDate).toLocaleDateString('fr-FR')}`}
+                    />
 
                     <div className="flex gap-2 pt-2">
                       {selected.status === 'APPROVED' && !selected.printAuthorized ? (

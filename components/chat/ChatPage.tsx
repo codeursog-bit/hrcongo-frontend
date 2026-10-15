@@ -211,7 +211,8 @@ export default function ChatPage() {
 
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loadingList, setLoadingList] = useState(true);
-  const [mode, setMode] = useState<'chats' | 'contacts'>('chats');
+  // 🆕 ?new=1 (lien « Contacter l'administration ») : on arrive directement sur la liste des contacts
+  const [mode, setMode] = useState<'chats' | 'contacts'>(params.get('new') === '1' ? 'contacts' : 'chats');
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [contacts, setContacts] = useState<ChatContact[]>([]);
@@ -223,7 +224,8 @@ export default function ChatPage() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  const [draft, setDraft] = useState('');
+  // 🆕 ?draft=… (lien « Contacter l'administration ») : message pré-rempli, jamais envoyé automatiquement
+  const [draft, setDraft] = useState(() => (params.get('draft') ?? '').slice(0, MAX_MESSAGE_LENGTH));
   const [error, setError] = useState<string | null>(null);
   const [unseen, setUnseen] = useState(false);
   const [peer, setPeer] = useState<ChatPeer>(NO_PEER); // accusés de l'autre personne (conversation ouverte)
@@ -259,6 +261,28 @@ export default function ChatPage() {
     }
   }, []);
   useEffect(() => { void loadConversations(); }, [loadConversations]);
+
+  // ── Lien « Contacter l'administration » (ContactAdminButton) ───────────────
+  // ?draft=… / ?new=1 sont lus à l'ouverture (états initiaux ci-dessus) puis retirés
+  // de l'URL pour ne pas se rejouer au rafraîchissement ; ?c=… est conservé.
+  const draftFromLinkRef = useRef(!!params.get('draft'));
+  useEffect(() => {
+    if (!params.get('draft') && !params.get('new')) return;
+    const c = params.get('c');
+    router.replace(c ? `${pathname}?c=${c}` : pathname, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Message pré-rempli : une seule fois, dès que la zone de saisie est affichée
+  // (conversation ouverte) → hauteur du champ ajustée, curseur placé en fin de texte.
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (!el || !draftFromLinkRef.current || !draft) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+    draftFromLinkRef.current = false;
+  }, [activeId, loadingThread, draft]);
 
   // ── Recherche (anti-rebond) ────────────────────────────────────────────────
   useEffect(() => {

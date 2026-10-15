@@ -31,6 +31,7 @@ import { useApprovalDecision } from '@/hooks/useApprovalDecision';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
 import type { ApprovalStateView } from '@/services/approvals';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import ContactAdminButton from '@/components/chat/ContactAdminButton';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -54,6 +55,7 @@ export default function LeaveDetailPage() {
   const [docData, setDocData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState('');
+  const [myEmployeeId, setMyEmployeeId] = useState<string | null>(null);
   const [currentUserName, setCurrentUserName] = useState('');
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -122,6 +124,14 @@ export default function LeaveDetailPage() {
     if (id) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Le bouton « Contacter l'administration » n'est montré qu'au demandeur lui-même :
+  // un manager peut consulter les congés de son équipe sans en être l'auteur.
+  useEffect(() => {
+    api.get<any>('/employees/me')
+      .then((emp) => setMyEmployeeId(emp?.id ?? null))
+      .catch(() => setMyEmployeeId(null));
+  }, []);
 
   // ✅ CORRECTIF (bug trouvé) : "jours restants" (base, 26j) et "jours
   // supplémentaires" (ancienneté) sont DEUX nombres distincts sur la
@@ -472,6 +482,15 @@ export default function LeaveDetailPage() {
               <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">
                 <Info size={14} className="shrink-0 mt-0.5" /> {leave.rejectionReason}
               </div>
+            )}
+
+            {/* 💬 Demandeur uniquement : en attente / refusé → contacter l'administration pour s'expliquer */}
+            {!!myEmployeeId && leave.employeeId === myEmployeeId && (
+              <ContactAdminButton
+                status={leave.status}
+                decidedByUserId={leave.rejectedBy}
+                requestLabel={`ma demande de congé du ${new Date(leave.startDate).toLocaleDateString('fr-FR', { timeZone: 'UTC' })} au ${new Date(leave.endDate).toLocaleDateString('fr-FR', { timeZone: 'UTC' })}`}
+              />
             )}
 
             {/* ✅ LOT E — avis + historique (masqué si aucun circuit actif et rien à montrer) */}

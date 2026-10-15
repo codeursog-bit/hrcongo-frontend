@@ -172,7 +172,7 @@ export default function SelectionStep({
                       </div>
                     );
                   })()}
-                  <span className="font-mono text-xs font-bold text-gray-600">
+                  <span className="font-mono text-xs font-bold text-gray-600 dark:text-slate-400">
                     {Number(emp.baseSalary || 0).toLocaleString()} F
                   </span>
                 </div>

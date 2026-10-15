@@ -9,8 +9,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Star, User, Calendar, MessageSquare,
-  ChevronDown, Check, Loader2, Sparkles, ChevronRight,
+  ChevronDown, Check, Sparkles, ChevronRight,
 } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 
@@ -475,10 +476,7 @@ export function CreateReviewModal({ isOpen, onClose, onSuccess, preselectedEmplo
 
             {/* ── Submitting ─────────────────────────────────────────────── */}
             {step === 'submitting' && (
-              <div className="py-16 text-center">
-                <Loader2 size={36} className="animate-spin text-purple-600 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">Enregistrement en cours...</p>
-              </div>
+              <KonzaLoader variant="section" label="Enregistrement en cours…" />
             )}
 
             {/* ── Succès ─────────────────────────────────────────────────── */}

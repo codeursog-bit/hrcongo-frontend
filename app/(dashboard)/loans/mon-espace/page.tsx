@@ -27,6 +27,7 @@ import StandardAdvanceRequestForm from '@/components/documents/standard/Standard
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import ContactAdminButton from '@/components/chat/ContactAdminButton';
 
 const NATURE_LABEL: Record<string, string> = { SOCIAL: 'Prêt social', SCOLARITE: 'Prêt scolarité', LOGEMENT: 'Prêt logement', EXCEPTIONNEL: 'Prêt exceptionnel', AUTRE: 'Autre' };
 const LOAN_STATUS_CFG: Record<string, { label: string; cls: string; icon: any }> = {
@@ -378,6 +379,16 @@ export default function MonEspacePretsAvancesPage() {
                     {selected.data.status === 'REJECTED' && selected.data.rejectionReason && (
                       <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">Motif du refus : {selected.data.rejectionReason}</div>
                     )}
+
+                    {/* 💬 En attente / refusé : l'employé peut contacter l'administration pour s'expliquer.
+                        Qui a refusé : prêt → drhDecidedBy (approvedBy n'est rempli que pour un accord) ; avance → rejectedBy. */}
+                    <ContactAdminButton
+                      status={selected.data.status}
+                      decidedByUserId={selected.kind === 'loan' ? (selected.data.drhDecidedBy ?? selected.data.dgDecidedBy) : selected.data.rejectedBy}
+                      requestLabel={selected.kind === 'loan'
+                        ? `ma demande de prêt de ${Number(selected.data.amount).toLocaleString('fr-FR')} FCFA`
+                        : `ma demande d'avance sur salaire de ${Number(selected.data.amount).toLocaleString('fr-FR')} FCFA`}
+                    />
 
                     <div className="flex gap-2 pt-1 flex-wrap">
                       {['PENDING', 'PENDING_DG'].includes(selected.data.status) && (

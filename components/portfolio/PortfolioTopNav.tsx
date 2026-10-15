@@ -1,17 +1,27 @@
 'use client';
 
 // components/portfolio/PortfolioTopNav.tsx
-// Équivalent simplifié de components/layout/TopNav.tsx pour l'espace portefeuille.
+// Top bar de l'espace portefeuille.
+// ✅ Même représentation que components/layout/TopNav.tsx : carte flottante arrondie,
+//    fil d'Ariane, champ de recherche, thème, notifications (cloche + liste),
+//    menu profil. Les notifications sont celles de l'entreprise active (comme le dashboard).
 
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronRight, Moon, Sun, ChevronDown, User, LogOut, Mail, Menu } from 'lucide-react';
+import {
+  Search, Bell, Menu, ChevronRight, ChevronDown, Moon, Sun, CheckCircle2,
+  Clock, AlertTriangle, Info, LogOut, User, Mail,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/components/providers/ThemeProvider';
+import { api } from '@/services/api';
 import { PushMenuItem } from '@/components/PushNotificationBanner';
 
 const PAGE_LABELS: Record<string, string> = {
   dashboard: 'Tableau de bord',
+  demandes: 'Demandes',
+  avis: 'Avis à donner',
+  messages: 'Messages',
   'mes-entreprises': 'Mes entreprises',
   employes: 'Employés',
   paie: 'Paie',
@@ -28,7 +38,7 @@ interface PortfolioTopNavProps {
   userName?: string;
   userEmail?: string;
   /** Photo de la fiche employé, si l'admin multi-comptes en a une (sinon
-   *  fallback sur les initiales, comportement inchangé). */
+   *  avatar généré à partir du nom, comme dans le dashboard). */
   userPhotoUrl?: string;
   onMenuClick?: () => void;
 }
@@ -37,24 +47,83 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+
+  const [showNotifs, setShowNotifs] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
+  const fetchNotifications = async () => {
+    try {
+      const data = await api.get<any[]>('/notifications?limit=5');
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.read).length);
+    } catch (e) { console.error('Error fetching notifications', e); }
+  };
+
   useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+
     const handleClickOutside = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setShowProfileMenu(false);
-      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifs(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfileMenu(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
+
+  const markAllRead = async () => {
+    try {
+      await api.patch('/notifications/read-all', {});
+      setUnreadCount(0);
+      setNotifications([]);
+    } catch { /* silencieux */ }
+  };
+
+  // Lire une notification la supprime (même comportement que le dashboard)
+  const handleNotifClick = async (n: any) => {
+    if (n.link) {
+      router.push(n.link);
+      setShowNotifs(false);
+    }
+    try {
+      await api.patch(`/notifications/${n.id}/read`, {});
+      setNotifications(prev => prev.filter(x => x.id !== n.id));
+      if (!n.read) setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch { /* silencieux */ }
+  };
+
+  const markOneRead = async (n: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await api.patch(`/notifications/${n.id}/read`, {});
+      setNotifications(prev => prev.filter(x => x.id !== n.id));
+      if (!n.read) setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch { /* silencieux */ }
+  };
+
+  const getNotifIcon = (type: string) => {
+    switch (type) {
+      case 'CHECK_IN': return <Clock size={16} className="text-emerald-500" />;
+      case 'ALERT':    return <AlertTriangle size={16} className="text-red-500" />;
+      case 'LEAVE':    return <Info size={16} className="text-emerald-500" />;
+      default:         return <Info size={16} className="text-gray-500" />;
+    }
+  };
 
   const segments = (pathname ?? '').split('/').filter(Boolean); // ['portefeuille', 'paie', 'liste']
   const current = segments[segments.length - 1];
   const title = PAGE_LABELS[current] ?? 'Mon portefeuille';
 
-  const initials = (userName || userEmail || 'MO').slice(0, 2).toUpperCase();
+  const avatarSrc = userPhotoUrl
+    || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail || 'Mon compte')}&background=random&color=fff`;
 
   const handleLogout = async () => {
     try {
@@ -63,49 +132,142 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
       });
     } catch { /* silencieux */ } finally {
       localStorage.removeItem('user');
+      localStorage.removeItem('notifications_muted_until');
       router.replace('/auth/login');
     }
   };
 
   return (
-    <header className="sticky top-0 z-40 print:hidden">
-      <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between" style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="flex items-center gap-3">
-          <button onClick={onMenuClick} className="p-2 -ml-2 md:hidden rounded-lg" style={{ color: 'var(--text-muted)' }}>
+    <header className="sticky top-0 z-40 print:hidden px-3 sm:px-4 pt-3">
+      <div className="px-4 sm:px-6 py-3 flex items-center justify-between rounded-2xl shadow-[0_8px_30px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_8px_30px_-14px_rgba(0,0,0,0.6)]" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+
+        {/* Gauche : menu & fil d'Ariane */}
+        <div className="flex items-center gap-4">
+          <button onClick={onMenuClick} className="p-2 -ml-2 md:hidden rounded-xl" style={{ color: 'var(--text-muted)' }}>
             <Menu size={22} />
           </button>
-          <span className="hidden sm:inline" style={{ color: 'var(--text-muted)' }}>Portefeuille</span>
-          <ChevronRight size={14} className="mx-1 hidden sm:inline" style={{ color: 'var(--text-muted)' }} />
-          <span className="font-bold" style={{ color: 'var(--text)' }}>{title}</span>
+
+          <nav className="hidden sm:flex items-center text-sm font-medium">
+            <span style={{ color: 'var(--text-muted)' }}>Portefeuille</span>
+            <ChevronRight size={14} className="mx-2" style={{ color: 'var(--text-muted)' }} />
+            <span className="font-bold" style={{ color: 'var(--text)' }}>{title}</span>
+          </nav>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-            style={{ color: 'var(--text-muted)' }}
-          >
+        {/* Centre : recherche (même champ que le dashboard) */}
+        <div className="hidden md:flex flex-1 max-w-md mx-8">
+          <div className="relative w-full group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-slate-400 group-focus-within:text-emerald-500" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-12 py-2 rounded-full text-sm transition-all focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50"
+              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              placeholder="Rechercher (Cmd+K)"
+            />
+          </div>
+        </div>
+
+        {/* Droite : actions */}
+        <div className="flex items-center gap-3">
+
+          <button onClick={toggleTheme} className="p-2 rounded-xl transition-colors hover:bg-black/5 dark:hover:bg-white/10" style={{ color: 'var(--text-muted)' }}>
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
-          <div className="h-8 w-px bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block" />
+          {/* Notifications */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setShowNotifs(!showNotifs)}
+              className={`p-2 rounded-xl transition-colors ${showNotifs ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+              style={!showNotifs ? { color: 'var(--text-muted)' } : {}}
+            >
+              <div className="relative">
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"></span>
+                )}
+              </div>
+            </button>
 
+            <AnimatePresence>
+              {showNotifs && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="fixed left-3 right-3 top-20 sm:absolute sm:left-auto sm:right-0 sm:top-full mt-0 sm:mt-3 w-auto sm:w-96 rounded-2xl shadow-xl overflow-hidden z-50 origin-top sm:origin-top-right"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                >
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                    <h3 className="font-bold text-slate-900 dark:text-white">Notifications</h3>
+                    <button
+                      onClick={markAllRead}
+                      disabled={unreadCount === 0}
+                      className={`text-xs font-bold ${unreadCount === 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-emerald-500 hover:text-emerald-600'}`}
+                    >
+                      Tout marquer lu
+                    </button>
+                  </div>
+
+                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {notifications.length === 0 ? (
+                      <div className="p-8 text-center text-slate-400">
+                        <Bell size={32} className="mx-auto mb-2 opacity-20" />
+                        <p className="text-sm">Aucune notification.</p>
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div key={n.id} onClick={() => handleNotifClick(n)} className={`group p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${!n.read ? 'bg-emerald-50/30 dark:bg-emerald-900/10' : ''}`}>
+                          <div className="flex gap-3">
+                            <div className="mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                              {getNotifIcon(n.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{n.title}</p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{n.message}</p>
+                              <p className="text-[10px] text-slate-400 mt-2">{new Date(n.createdAt).toLocaleString('fr-FR')}</p>
+                            </div>
+                            <button
+                              onClick={(e) => markOneRead(n, e)}
+                              title="Marquer cette notification comme lue"
+                              className="shrink-0 self-start p-1.5 rounded-lg text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <CheckCircle2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                    <button
+                      onClick={() => { router.push('/notifications'); setShowNotifs(false); }}
+                      className="w-full py-2 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+                    >
+                      Voir tout l&apos;historique
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="h-8 w-px bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block"></div>
+
+          {/* Menu profil */}
           <div className="relative" ref={profileRef}>
             <button
-              onClick={() => setShowProfileMenu(s => !s)}
-              className={`flex items-center gap-2.5 pl-2 pr-1 py-1 rounded-lg transition-colors ${showProfileMenu ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className={`flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl transition-colors ${showProfileMenu ? 'bg-black/5 dark:bg-white/10' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
             >
               <div className="hidden sm:block text-right mr-1">
-                <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{userName ?? 'Mon compte'}</p>
-                <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">Portefeuille</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-white">{userName ?? 'Mon compte'}</p>
+                <p className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">En ligne</p>
               </div>
-              {userPhotoUrl ? (
-                <img src={userPhotoUrl} alt={userName ?? 'Photo de profil'} className="w-9 h-9 rounded-lg object-cover shrink-0" />
-              ) : (
-                <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  {initials}
-                </div>
-              )}
+              <img src={avatarSrc} alt={userName ?? 'Photo de profil'} className="h-9 w-9 rounded-xl object-cover ring-2 ring-white dark:ring-slate-800 shadow-sm" />
               <ChevronDown size={14} className={`text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 
@@ -115,33 +277,39 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-3 w-64 rounded-xl shadow-lg overflow-hidden z-50 origin-top-right p-2"
+                  className="absolute right-0 top-full mt-3 w-64 rounded-2xl shadow-xl overflow-hidden z-50 origin-top-right p-2"
                   style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                 >
                   <div className="p-3 border-b border-slate-100 dark:border-slate-700 mb-2">
-                    <p className="font-bold" style={{ color: 'var(--text)' }}>{userName ?? 'Mon compte'}</p>
+                    <p className="font-bold text-slate-900 dark:text-white">{userName ?? 'Mon compte'}</p>
                     {userEmail && (
-                      <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 dark:text-slate-400">
                         <Mail size={12} />
                         <span className="truncate">{userEmail}</span>
                       </div>
                     )}
+                    <div className="flex items-center gap-2 mt-1 text-xs text-emerald-500 font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Actif
+                    </div>
                   </div>
+
                   <div className="space-y-1">
                     <button
                       onClick={() => { router.push('/mon-profil'); setShowProfileMenu(false); }}
-                      className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3"
-                      style={{ color: 'var(--text)' }}
+                      className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 text-slate-700 dark:text-slate-300"
                     >
                       <User size={16} />
                       Mon Profil
                     </button>
-                    {/* 🆕 Notifications téléphone (hors app) */}
-                    <PushMenuItem style={{ color: 'var(--text)' }} />
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+
+                    {/* Notifications téléphone (hors app) */}
+                    <PushMenuItem />
+
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 font-bold"
+                      className="w-full text-left px-3 py-2 text-sm rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 font-bold"
                     >
                       <LogOut size={16} />
                       Déconnexion
@@ -151,6 +319,7 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
               )}
             </AnimatePresence>
           </div>
+
         </div>
       </div>
     </header>

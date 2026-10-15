@@ -260,9 +260,9 @@ export default function UnpaidSalaryPage() {
         <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl">
           <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-sm text-red-700">Erreur de chargement</p>
+            <p className="font-semibold text-sm text-red-700 dark:text-red-400">Erreur de chargement</p>
             <p className="text-xs text-red-600 mt-0.5">{error}</p>
-            <button onClick={() => loadDashboard(true)} className="mt-2 text-xs font-semibold text-red-700 underline">Réessayer</button>
+            <button onClick={() => loadDashboard(true)} className="mt-2 text-xs font-semibold text-red-700 dark:text-red-400 underline">Réessayer</button>
           </div>
         </div>
       )}
@@ -291,7 +291,7 @@ export default function UnpaidSalaryPage() {
         <div className="flex items-center gap-3 p-5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl">
           <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
           <div>
-            <p className="font-semibold text-emerald-700">Tous les salaires sont à jour ✅</p>
+            <p className="font-semibold text-emerald-700 dark:text-emerald-400">Tous les salaires sont à jour ✅</p>
             <p className="text-sm text-emerald-600">Aucun retard ni paiement imminent détecté.</p>
           </div>
         </div>

@@ -481,7 +481,7 @@ export default function PerformancePage() {
                 {stats.topEmployees.map((t, i) => (
                   <div key={t.employeeId} className="flex items-center gap-3">
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold
-                      ${i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-500' : 'bg-orange-50 text-orange-600'}`}>
+                      ${i === 0 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : i === 1 ? 'bg-gray-100 dark:bg-gray-700 text-gray-500' : 'bg-orange-50 text-orange-600'}`}>
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">

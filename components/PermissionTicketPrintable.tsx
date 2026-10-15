@@ -31,6 +31,8 @@ export interface PermissionTicketData {
   departureTime: string | Date;
   expectedReturnTime: string | Date;
   actualReturnTime?: string | Date | null;
+  /** Nom de l'admin / RH qui a validé le retour */
+  returnConfirmedByName?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | string;
   reviewedByName?: string;
   reviewedAt?: string | Date;
@@ -156,7 +158,10 @@ export default function PermissionTicketPrintable({ id, data }: { id: string; da
 
       {data.actualReturnTime && (
         <div style={{ textAlign: 'center', marginTop: 8, padding: '5px 0', border: '2px solid #000', borderRadius: 4 }}>
-          <p style={{ fontSize: 9, color: '#000', margin: 0, fontWeight: 800 }}>RETOUR EFFECTUÉ À {fmtTime(data.actualReturnTime)}</p>
+          <p style={{ fontSize: 9, color: '#000', margin: 0, fontWeight: 800 }}>RETOUR VALIDÉ À {fmtTime(data.actualReturnTime)}</p>
+          {data.returnConfirmedByName && (
+            <p style={{ fontSize: 8.5, color: '#000', margin: '2px 0 0', fontWeight: 600 }}>par {data.returnConfirmedByName}</p>
+          )}
         </div>
       )}
 

@@ -713,7 +713,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                   <div className="grid grid-cols-3 gap-3">
                     {[{ value: 'MOBILE_MONEY', label: 'Mobile Money', icon: Smartphone }, { value: 'BANK_TRANSFER', label: 'Virement', icon: Building2 }, { value: 'CASH', label: 'Espèces', icon: CreditCard }].map(({ value, label, icon: Icon }) => (
                       <button key={value} type="button" onClick={() => handleSelect('paymentMethod', value)}
-                        className={`p-4 rounded-xl border text-center transition-all ${formData.paymentMethod === value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'}`}>
+                        className={`p-4 rounded-xl border text-center transition-all ${formData.paymentMethod === value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'}`}>
                         <Icon className="mx-auto mb-1.5" size={20} /><div className="text-xs font-bold">{label}</div>
                       </button>
                     ))}
@@ -781,7 +781,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     {(!formData.isSubjectToIrpp || !formData.isSubjectToCnss) && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
                         className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl">
-                        <label className="block text-xs font-bold text-amber-700 uppercase mb-2 flex items-center gap-1"><AlertCircle size={12} /> Raison de l'exemption</label>
+                        <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 uppercase mb-2 flex items-center gap-1"><AlertCircle size={12} /> Raison de l'exemption</label>
                         <select value={formData.taxExemptionReason} onChange={(e) => handleSelect('taxExemptionReason', e.target.value)}
                           className="w-full p-3 bg-[var(--surface)] border border-amber-300 dark:border-amber-700 rounded-lg text-sm font-medium text-[var(--text)] focus:border-amber-500 outline-none">
                           <option value="">Sélectionner une raison...</option>

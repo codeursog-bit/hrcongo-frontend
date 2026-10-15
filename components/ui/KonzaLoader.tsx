@@ -11,6 +11,8 @@
 //   variant="inline"  → petite ligne « Chargement… » dans un formulaire
 //
 // logoSrc : logo à afficher à la place du K (portail cabinet en marque blanche).
+// tone="dark" : écrans à fond sombre fixe (ex. portail cabinet) → K clair + texte clair,
+//               quel que soit le thème de l'app. background : couleur de fond (variant "screen").
 // Les spinners DANS les boutons (Enregistrer…) restent des petits Loader2.
 // ============================================================================
 
@@ -24,6 +26,8 @@ interface KonzaLoaderProps {
   /** Texte sous le logo. `null` = aucun texte. Défaut : « Chargement… » */
   label?: string | null;
   logoSrc?: string | null;
+  tone?: 'auto' | 'dark';
+  background?: string;
   className?: string;
 }
 
@@ -48,17 +52,18 @@ const CSS = `
 }
 `;
 
-export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', label, logoSrc, className = '' }) => {
+export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', label, logoSrc, tone = 'auto', background, className = '' }) => {
   const s = SIZES[variant];
   const text = label === undefined ? 'Chargement…' : label;
   const inline = variant === 'inline';
+  const dark = tone === 'dark';
 
   return (
     <div
       role="status"
       aria-live="polite"
       className={`flex items-center justify-center ${inline ? 'flex-row gap-3' : 'flex-col gap-5'} ${s.wrap} ${className}`}
-      style={variant === 'screen' ? { background: 'var(--bg)' } : undefined}
+      style={variant === 'screen' ? { background: background ?? (dark ? '#0d1117' : 'var(--bg)') } : undefined}
     >
       <style>{CSS}</style>
 
@@ -75,7 +80,7 @@ export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', labe
           {logoSrc ? (
             <img src={logoSrc} alt="" style={{ width: s.mark * 1.15, height: s.mark * 1.15, objectFit: 'contain' }} />
           ) : (
-            <KonzaMark size={s.mark} />
+            <KonzaMark size={s.mark} forceDark={dark} />
           )}
         </span>
       </div>
@@ -83,7 +88,7 @@ export const KonzaLoader: React.FC<KonzaLoaderProps> = ({ variant = 'page', labe
       {text ? (
         <p
           className={`konza-loader-text font-semibold tracking-wide ${inline ? 'text-xs' : 'text-sm'}`}
-          style={{ color: 'var(--text-muted)' }}
+          style={{ color: dark ? '#94A3B8' : 'var(--text-muted)' }}
         >
           {text}
         </p>

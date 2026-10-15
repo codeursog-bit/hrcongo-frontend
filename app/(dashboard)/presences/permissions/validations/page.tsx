@@ -10,7 +10,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Check, X, Clock, CheckCircle2, XCircle, Ban, Filter, Users2,
-  Eye, Printer, Stethoscope, Briefcase, HelpCircle, LayoutGrid, List, Info, MapPin,
+  Eye, Printer, Stethoscope, Briefcase, HelpCircle, LayoutGrid, List, Info, MapPin, PencilLine, Hourglass,
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -22,6 +22,11 @@ import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket } from '@/lib/ticket-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import PermissionTimeline from '@/components/permissions/PermissionTimeline';
+import PermissionReturnSummary from '@/components/permissions/PermissionReturnSummary';
+import ReturnValidationPanel from '@/components/permissions/ReturnValidationPanel';
+import EditTimesModal from '@/components/permissions/EditTimesModal';
+import { effectiveDeparture, returnState, isReturnPending, fmtTime, personName } from '@/lib/permission-return';
 
 const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 const TYPE_LABEL: Record<string, string> = { URGENCE: 'Urgence', MISSION: 'Mission', AUTRE: 'Autre' };
@@ -50,6 +55,13 @@ export default function PermissionsValidationsPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showEditTimes, setShowEditTimes] = useState(false);
+
+  // Retour validé / refusé / heures corrigées : on fusionne la réponse dans la liste ET dans le ticket ouvert
+  const handleTicketUpdated = (updated: any) => {
+    setTickets(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t));
+    setSelected((prev: any) => prev && prev.id === updated.id ? { ...prev, ...updated } : prev);
+  };
 
   const load = async () => {
     try {
@@ -66,8 +78,10 @@ export default function PermissionsValidationsPage() {
 
   const departments = useMemo(() => Array.from(new Set(tickets.map(t => t.employee?.department?.name).filter(Boolean))).sort(), [tickets]);
 
+  const pendingReturns = useMemo(() => tickets.filter(t => t.status === 'APPROVED' && isReturnPending(t)).length, [tickets]);
+
   const filtered = useMemo(() => tickets.filter(t =>
-    (!statusFilter || t.status === statusFilter) &&
+    (!statusFilter || (statusFilter === 'RETURN_PENDING' ? (t.status === 'APPROVED' && isReturnPending(t)) : t.status === statusFilter)) &&
     (!typeFilter || t.type === typeFilter) &&
     (!deptFilter || t.employee?.department?.name === deptFilter),
   ), [tickets, statusFilter, typeFilter, deptFilter]);
@@ -118,7 +132,8 @@ export default function PermissionsValidationsPage() {
     company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: { firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '', employeeNumber: selected.employee?.employeeNumber, department: selected.employee?.department?.name, position: selected.employee?.position },
     type: selected.type, missionType: selected.missionType, reason: selected.reason, destination: selected.destination,
-    departureTime: selected.departureTime, expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
+    departureTime: effectiveDeparture(selected), expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
+    returnConfirmedByName: selected.returnConfirmedByUser ? personName(selected.returnConfirmedByUser) : undefined,
     status: selected.status, reviewedByName: selected.reviewedByUser?.email, reviewedAt: selected.reviewedAt, rejectionReason: selected.rejectionReason,
   } : null;
 
@@ -154,6 +169,16 @@ export default function PermissionsValidationsPage() {
         </div>
       </div>
 
+      {pendingReturns > 0 && APPROVER_ROLES.includes(userRole) && (
+        <button onClick={() => setStatusFilter('RETURN_PENDING')} className="w-full text-left flex items-center gap-3 p-4 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 hover:shadow-sm transition-all">
+          <Hourglass size={18} className="text-amber-600 shrink-0" />
+          <div>
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-200">{pendingReturns} retour{pendingReturns > 1 ? 's' : ''} de permission à valider</p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-300/80">Des employés ont déclaré être de retour — cliquez pour les afficher.</p>
+          </div>
+        </button>
+      )}
+
       {/* ══════════════════ STATS ══════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
@@ -185,7 +210,7 @@ export default function PermissionsValidationsPage() {
       {/* ══════════════════ FILTRES + BASCULE VUE ══════════════════ */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
-          <FilterSelect icon={Filter} value={statusFilter} onChange={setStatusFilter} placeholder="Tous les statuts" options={[['PENDING', 'En attente'], ['APPROVED', 'Autorisés'], ['REJECTED', 'Refusés'], ['CANCELLED', 'Annulés']]} />
+          <FilterSelect icon={Filter} value={statusFilter} onChange={setStatusFilter} placeholder="Tous les statuts" options={[['PENDING', 'En attente'], ['RETURN_PENDING', 'Retour à valider'], ['APPROVED', 'Autorisés'], ['REJECTED', 'Refusés'], ['CANCELLED', 'Annulés']]} />
           <FilterSelect icon={Filter} value={typeFilter} onChange={setTypeFilter} placeholder="Tous les types" options={Object.entries(TYPE_LABEL)} />
           {departments.length > 0 && <FilterSelect icon={Users2} value={deptFilter} onChange={setDeptFilter} placeholder="Tous les départements" options={departments.map(d => [d, d] as [string, string])} />}
         </div>
@@ -213,6 +238,9 @@ export default function PermissionsValidationsPage() {
                 </div>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
               </div>
+              {t.status === 'APPROVED' && isReturnPending(t) && (
+                <p className="text-[11px] font-semibold text-amber-600 flex items-center gap-1 mb-2"><Hourglass size={11} /> Retour à valider · déclaré à {fmtTime(t.returnDeclaredAt)}</p>
+              )}
               <p className="text-xs text-[var(--text-muted)] mb-3">{TYPE_LABEL[t.type] ?? t.type} · {new Date(t.departureTime).toLocaleDateString('fr-FR')}</p>
               {isPending && APPROVER_ROLES.includes(userRole) ? (
                 <div className="flex gap-2">
@@ -243,6 +271,7 @@ export default function PermissionsValidationsPage() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-semibold text-[var(--text)] text-sm">{t.employee?.firstName} {t.employee?.lastName}</p>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${cfg.cls}`}><Icon size={10} /> {cfg.label}</span>
+                  {t.status === 'APPROVED' && isReturnPending(t) && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-amber-50 text-amber-700 border-amber-100 flex items-center gap-1 shrink-0"><Hourglass size={10} /> Retour à valider</span>}
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">{t.employee?.department?.name || '—'} · {TYPE_LABEL[t.type] ?? t.type} · {new Date(t.departureTime).toLocaleDateString('fr-FR')}</p>
               </div>
@@ -261,7 +290,7 @@ export default function PermissionsValidationsPage() {
       {/* ══════════════════ MODAL DÉTAIL + DÉCISION ══════════════════ */}
       {selected && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setSelected(null); setRejectMode(false); setRejectionReason(''); }}>
-          <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full p-5">
+          <div onClick={e => e.stopPropagation()} className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full p-5 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <p className="font-bold text-[var(--text)]">{selected.employee?.firstName} {selected.employee?.lastName}</p>
               <button onClick={() => setSelected(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]"><X size={20} /></button>
@@ -270,7 +299,7 @@ export default function PermissionsValidationsPage() {
             <div className="space-y-2 text-sm mb-4">
               <Row label="Type" value={TYPE_LABEL[selected.type] ?? selected.type} />
               <Row label="Département" value={selected.employee?.department?.name || '—'} />
-              <Row label="Sortie" value={new Date(selected.departureTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} />
+              <Row label={selected.actualDepartureTime ? 'Sortie (corrigée)' : 'Sortie'} value={new Date(effectiveDeparture(selected)).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} />
               <Row label="Retour prévu" value={new Date(selected.expectedReturnTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} />
               {selected.destination && <Row label="Destination" value={selected.destination} />}
               <Row label="Statut" value={(STATUS_CFG[selected.status] ?? STATUS_CFG.PENDING).label} />
@@ -297,6 +326,23 @@ export default function PermissionsValidationsPage() {
               </div>
             )}
 
+            {/* 🔙 Retour : déclaré par l'employé → validé par Admin / RH */}
+            <div className="space-y-3 mb-3">
+              <PermissionReturnSummary ticket={selected} audience="admin" />
+              {selected.status === 'APPROVED' && isReturnPending(selected) && APPROVER_ROLES.includes(userRole) && (
+                <ReturnValidationPanel key={`${selected.id}-${selected.returnDeclaredAt}`} ticket={selected} onUpdated={handleTicketUpdated} />
+              )}
+              {selected.status === 'APPROVED' && APPROVER_ROLES.includes(userRole) && (
+                <button onClick={() => setShowEditTimes(true)} className="w-full py-2 border border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-1.5 hover:bg-[var(--surface-2)]">
+                  <PencilLine size={13} /> Modifier les heures de sortie / retour
+                </button>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-[var(--border)] mb-3">
+              <PermissionTimeline ticketId={selected.id} refreshKey={`${selected.status}|${returnState(selected)}|${selected.actualReturnTime ?? ''}|${selected.actualDepartureTime ?? ''}`} />
+            </div>
+
             <button onClick={() => setShowPreviewModal(true)} className="w-full py-2 border border-dashed border-[var(--border)] text-xs font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)] mb-2">
               <Eye size={14} /> Aperçu du ticket
             </button>
@@ -311,6 +357,8 @@ export default function PermissionsValidationsPage() {
           </div>
         </div>
       )}
+
+      <EditTimesModal open={showEditTimes} onClose={() => setShowEditTimes(false)} ticket={selected} onUpdated={handleTicketUpdated} />
 
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {printData && <PermissionTicketPrintable id="perm-val-doc-preview" data={printData as any} />}

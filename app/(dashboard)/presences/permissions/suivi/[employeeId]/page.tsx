@@ -128,9 +128,9 @@ export default function EmployeePermissionsDetailPage() {
                           {t.reason || '—'}
                           {t.status === 'REJECTED' && t.rejectionReason && <p className="text-xs text-red-500 mt-0.5">Refus : {t.rejectionReason}</p>}
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{fmtDateTime(t.departureTime)}</td>
+                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{fmtDateTime(t.actualDepartureTime || t.departureTime)}</td>
                         <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{fmtDateTime(t.expectedReturnTime)}</td>
-                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{fmtDateTime(t.actualReturnTime)}</td>
+                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{t.actualReturnTime ? fmtDateTime(t.actualReturnTime) : t.status === 'APPROVED' && t.returnStatus === 'PENDING_VALIDATION' ? <span className="text-amber-600">À valider</span> : '—'}</td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-semibold ${cfg.cls}`}>
                             <Icon size={12} /> {cfg.label}

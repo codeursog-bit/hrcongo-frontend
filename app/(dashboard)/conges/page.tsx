@@ -530,7 +530,7 @@ export default function LeaveManagementPage() {
                           </td>
                           <td className="px-6 py-4 text-center">
                             {leave.status === 'APPROVED' && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-100">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-100">
                                 <CheckCircle2 size={13} /> Validé
                               </span>
                             )}

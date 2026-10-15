@@ -173,7 +173,7 @@ const InputRow = ({ row, onChangeLabel, onChangeBase, onChangeRate, onRemove, pl
     </div>
     <input type="number" value={row.rate} step="0.01" onChange={e => onChangeRate(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Taux"
       className="w-full px-2 py-2 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-mono text-center text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/30" />
-    <div className={`px-2 py-2 rounded-xl text-sm font-black font-mono text-right tabular-nums border transition-colors ${row.amount > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700' : 'bg-gray-50 dark:bg-gray-900/30 border-gray-100 dark:border-gray-700/50 text-gray-300'}`}>
+    <div className={`px-2 py-2 rounded-xl text-sm font-black font-mono text-right tabular-nums border transition-colors ${row.amount > 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' : 'bg-gray-50 dark:bg-gray-900/30 border-gray-100 dark:border-gray-700/50 text-gray-300'}`}>
       {row.amount > 0 ? row.amount.toLocaleString('fr-FR') : '—'}
     </div>
     <button onClick={onRemove} className="p-1.5 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
@@ -757,7 +757,7 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
               <motion.div key="empty" initial={{ opacity:0 }} animate={{ opacity:1 }}
                 className="bg-[var(--surface-2)] border-2 border-dashed border-[var(--border)] rounded-2xl min-h-[260px] flex flex-col items-center justify-center text-center p-8">
                 {simLoading
-                  ? <><Loader2 size={32} className="animate-spin mb-3 text-emerald-500"/><p className="text-sm font-medium text-gray-600 dark:text-gray-300">Calcul en cours…</p></>
+                  ? <KonzaLoader variant="section" label="Calcul en cours…" className="!py-0" />
                   : simError
                   ? <><AlertCircle size={32} className="mb-3 text-red-400"/><p className="text-sm font-medium text-red-500 max-w-[200px]">{simError}</p></>
                   : <><Calculator size={36} className="mb-3 text-gray-300 dark:text-gray-600"/><p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Chargement du bulletin…</p></>

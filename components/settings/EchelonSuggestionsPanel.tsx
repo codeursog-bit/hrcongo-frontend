@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle2, XCircle, Loader2, TrendingUp, ListChecks } from 'lucide-react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
 import { useAlert } from '@/components/providers/AlertProvider';
@@ -105,9 +106,7 @@ export function EchelonSuggestionsPanel() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-        <Loader2 size={16} className="animate-spin" /> Chargement des suggestions…
-      </div>
+      <KonzaLoader variant="section" label="Chargement des suggestions…" />
     );
   }
 
@@ -212,7 +211,7 @@ function ConfirmDialog({ title, message, onCancel, onConfirm }: {
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">{message}</p>
         <div className="flex justify-end gap-2">
           <button onClick={onCancel}
-            className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg">
+            className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-slate-400 hover:bg-gray-100 rounded-lg">
             Annuler
           </button>
           <button onClick={onConfirm}

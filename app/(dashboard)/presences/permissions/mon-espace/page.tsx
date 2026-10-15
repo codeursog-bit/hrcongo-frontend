@@ -24,6 +24,10 @@ import PermissionTicketPrintable from '@/components/PermissionTicketPrintable';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket, downloadTicketPDF } from '@/lib/ticket-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import ContactAdminButton from '@/components/chat/ContactAdminButton';
+import PermissionTimeline from '@/components/permissions/PermissionTimeline';
+import PermissionReturnSummary from '@/components/permissions/PermissionReturnSummary';
+import { effectiveDeparture, returnState, fmtTime, personName } from '@/lib/permission-return';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -93,8 +97,9 @@ export default function MonEspacePermissionsPage() {
   const handleMarkReturn = async (id: string) => {
     setBusy(id);
     try {
+      // L'employé DÉCLARE son retour : l'heure est notée, la validation revient à l'admin / RH
       const updated: any = await api.patch(`/permission-tickets/${id}/return`, {});
-      setTickets(prev => prev.map(t => t.id === id ? { ...t, actualReturnTime: updated.actualReturnTime } : t));
+      setTickets(prev => prev.map(t => t.id === id ? { ...t, ...updated } : t));
     } catch (e: any) { alert(e?.message || "Erreur lors de l'enregistrement du retour"); }
     finally { setBusy(null); }
   };
@@ -107,7 +112,8 @@ export default function MonEspacePermissionsPage() {
     company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: { firstName: employee?.firstName || '', lastName: employee?.lastName || '', employeeNumber: employee?.employeeNumber, department: employee?.department?.name },
     type: selected.type, missionType: selected.missionType, reason: selected.reason, destination: selected.destination,
-    departureTime: selected.departureTime, expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
+    departureTime: effectiveDeparture(selected), expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
+    returnConfirmedByName: selected.returnConfirmedByUser ? personName(selected.returnConfirmedByUser) : undefined,
     status: selected.status, reviewedByName: selected.reviewedByUser?.email, reviewedAt: selected.reviewedAt, rejectionReason: selected.rejectionReason,
   } : null;
 
@@ -199,6 +205,9 @@ export default function MonEspacePermissionsPage() {
                     <span className="font-mono">{new Date(t.expectedReturnTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <span className={`inline-block mt-2 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
+                  {t.status === 'APPROVED' && returnState(t) === 'PENDING_VALIDATION' && (
+                    <span className="inline-block mt-2 ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800">Retour à valider</span>
+                  )}
                 </button>
               );
             })}
@@ -233,10 +242,14 @@ export default function MonEspacePermissionsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-sm bg-[var(--surface-2)] px-3.5 py-2.5 rounded-xl">
                       <Clock size={14} className="text-[var(--text-muted)]" />
-                      <span className="font-mono text-xs">{new Date(selected.departureTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="font-mono text-xs">{new Date(effectiveDeparture(selected)).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                       <ArrowRight size={12} className="text-[var(--text-muted)]" />
                       <span className="font-mono text-xs">{new Date(selected.expectedReturnTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-[10px] text-[var(--text-muted)]">(retour prévu)</span>
                     </div>
+
+                    {/* 🔙 État du retour : déclaré → validé par l'admin / RH */}
+                    <PermissionReturnSummary ticket={selected} audience="employee" />
 
                     <div className="text-sm">
                       <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
@@ -247,13 +260,20 @@ export default function MonEspacePermissionsPage() {
                       <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">Motif du refus : {selected.rejectionReason}</div>
                     )}
 
+                    {/* 💬 En attente / refusée : l'employé peut contacter l'administration pour s'expliquer */}
+                    <ContactAdminButton
+                      status={selected.status}
+                      decidedByUserId={selected.reviewedBy}
+                      requestLabel={`ma demande de permission (${(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).label.toLowerCase()}) du ${new Date(selected.departureTime).toLocaleDateString('fr-FR')}`}
+                    />
+
                     <div className="flex gap-2 pt-1 flex-wrap">
                       {selected.status === 'PENDING' && (
                         <button onClick={() => handleCancel(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 border border-[var(--border)] hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 hover:text-red-600 text-[var(--text-muted)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />} Annuler
                         </button>
                       )}
-                      {selected.status === 'APPROVED' && !selected.actualReturnTime && (
+                      {selected.status === 'APPROVED' && returnState(selected) === 'NOT_RETURNED' && (
                         <button onClick={() => handleMarkReturn(selected.id)} disabled={busy === selected.id} className="flex-1 py-2.5 bg-[var(--text)] text-[var(--bg)] text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                           {busy === selected.id ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />} Je suis de retour
                         </button>
@@ -273,6 +293,12 @@ export default function MonEspacePermissionsPage() {
                     <button onClick={() => setShowPreviewModal(true)} className="w-full py-2.5 border border-dashed border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
                       <Eye size={16} /> Aperçu du ticket
                     </button>
+                  </div>
+                </div>
+
+                <div className="px-6 pb-6">
+                  <div className="border-t border-[var(--border)] pt-5">
+                    <PermissionTimeline ticketId={selected.id} refreshKey={`${selected.status}|${returnState(selected)}|${selected.actualReturnTime ?? ''}|${selected.actualDepartureTime ?? ''}`} />
                   </div>
                 </div>
 
@@ -332,6 +358,12 @@ export default function MonEspacePermissionsPage() {
                           {new Date(t.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })} · {tCfg.label}
                         </p>
                         {t.reason && <p className="text-xs text-[var(--text-muted)] mt-0.5">{t.reason}</p>}
+                        {t.status === 'APPROVED' && returnState(t) === 'CONFIRMED' && (
+                          <p className="text-xs text-emerald-600 dark:text-emerald-300 mt-0.5">Sorti de {fmtTime(effectiveDeparture(t))} à {fmtTime(t.actualReturnTime)}</p>
+                        )}
+                        {t.status === 'APPROVED' && returnState(t) === 'PENDING_VALIDATION' && (
+                          <p className="text-xs text-amber-600 dark:text-amber-300 mt-0.5">Retour déclaré à {fmtTime(t.returnDeclaredAt)} — en attente de validation</p>
+                        )}
                       </div>
                     </div>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${sCfg.badge}`}>{sCfg.label}</span>

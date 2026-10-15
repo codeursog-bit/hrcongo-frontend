@@ -6,6 +6,7 @@
 // ============================================================================
 
 import React from 'react';
+import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
 // ─── Tokens ──────────────────────────────────────────────────────────────────
 export const C = {
@@ -809,17 +810,13 @@ export function ProgressBar({ value, max, color }: { value: number; max: number;
 // ─── Loading Screen ───────────────────────────────────────────────────────────
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: C.pageBg }}>
-      <Ico.Loader size={28} />
-    </div>
+    <KonzaLoader variant="screen" tone="dark" background={C.pageBg} />
   );
 }
 
 // ─── Loading inline ───────────────────────────────────────────────────────────
 export function LoadingInline() {
   return (
-    <div className="flex items-center justify-center py-20">
-      <Ico.Loader size={24} />
-    </div>
+    <KonzaLoader variant="section" tone="dark" />
   );
 }

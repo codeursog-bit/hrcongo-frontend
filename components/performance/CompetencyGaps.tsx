@@ -130,7 +130,7 @@ function Row({ row, mode, employeeId, onChanged, pendingLevel, onLevel }: {
                     </div>
                     <button type="button" disabled={busy === c.id || done.has(c.id)} onClick={() => enroll(c.id)}
                       className={`px-3 py-2 rounded-lg text-xs font-bold shrink-0 flex items-center gap-1.5 min-h-[40px] ${done.has(c.id)
-                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                         : 'bg-purple-600 hover:bg-purple-700 text-white'} disabled:opacity-70`}>
                       {busy === c.id ? <Loader2 size={12} className="animate-spin" /> : done.has(c.id) ? <Check size={12} /> : null}
                       {done.has(c.id) ? 'Inscrit' : mode === 'self' ? "M'inscrire" : 'Affecter'}

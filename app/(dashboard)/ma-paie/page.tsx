@@ -11,8 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  FileText, Download, Calendar, Loader2,
-  ArrowLeft, Eye, Clock, X, Printer,
+  FileText, Download, Calendar, ArrowLeft, Eye, Clock, X, Printer,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import BulletinDisplay from '@/components/BulletinDisplay';
@@ -386,7 +385,7 @@ export default function MyPayrollsPage() {
                       position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.7)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
                     }}>
-                      <Loader2 className="animate-spin text-emerald-500" size={32} />
+                      <KonzaLoader variant="section" label={null} className="!py-0" />
                     </div>
                   )}
                   <BulletinDisplay payroll={viewing} />

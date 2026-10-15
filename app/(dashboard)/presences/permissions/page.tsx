@@ -12,7 +12,7 @@ import Link from 'next/link';
 import {
   Loader2, Search, Check, X, Clock, CheckCircle2, XCircle, Ban,
   ArrowRight, Printer, Download, Plus, Stethoscope, Briefcase,
-  HelpCircle, MapPin, History, LogOut, Info, LayoutDashboard, Ticket, Eye, Trash2,
+  HelpCircle, MapPin, History, LogOut, Info, LayoutDashboard, Ticket, Eye, Trash2, PencilLine,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '@/services/api';
@@ -25,6 +25,11 @@ import PermissionsOverview from '@/components/permissions/PermissionsOverview';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printTicket, downloadTicketPDF } from '@/lib/ticket-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import PermissionTimeline from '@/components/permissions/PermissionTimeline';
+import PermissionReturnSummary from '@/components/permissions/PermissionReturnSummary';
+import ReturnValidationPanel from '@/components/permissions/ReturnValidationPanel';
+import EditTimesModal from '@/components/permissions/EditTimesModal';
+import { effectiveDeparture, returnState, isReturnPending, needsAdminAction, fmtTime, personName } from '@/lib/permission-return';
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
@@ -57,6 +62,11 @@ export default function PermissionsManagementPage() {
   const [historyEmployee, setHistoryEmployee] = useState<EmployeeTicketHistoryData | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showEditTimes, setShowEditTimes] = useState(false);
+
+  // Fusionne la réponse de l'API (ticket mis à jour) dans la liste sans perdre les relations déjà chargées
+  const mergeTicket = (updated: any) =>
+    setTickets(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t));
 
   useEffect(() => {
     try {
@@ -72,8 +82,12 @@ export default function PermissionsManagementPage() {
         ]);
         setTickets(tix || []);
         setCompany(me?.company ?? null);
-        const firstPending = (tix || []).find((t: any) => t.status === 'PENDING');
-        setSelectedId(firstPending?.id ?? tix?.[0]?.id ?? null);
+        const firstPending = (tix || []).find((t: any) => needsAdminAction(t));
+        // 🔔 Lien de notification « retour à valider » : /presences/permissions?ticket=<id>
+        const wanted = new URLSearchParams(window.location.search).get('ticket');
+        const target = wanted ? (tix || []).find((t: any) => t.id === wanted) : null;
+        if (target) { setTab('tickets'); setFilter('ALL'); }
+        setSelectedId(target?.id ?? firstPending?.id ?? tix?.[0]?.id ?? null);
       } catch (e) {
         console.error('Erreur chargement tickets de permission', e);
       } finally {
@@ -85,7 +99,7 @@ export default function PermissionsManagementPage() {
   const canApprove = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
 
   const filtered = useMemo(() => {
-    let list = filter === 'PENDING' ? tickets.filter(t => t.status === 'PENDING') : tickets;
+    let list = filter === 'PENDING' ? tickets.filter(t => needsAdminAction(t)) : tickets;
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(t => `${t.employee?.firstName} ${t.employee?.lastName}`.toLowerCase().includes(q));
@@ -93,7 +107,7 @@ export default function PermissionsManagementPage() {
     return list;
   }, [tickets, filter, search]);
 
-  const pendingCount = tickets.filter(t => t.status === 'PENDING').length;
+  const pendingCount = tickets.filter(t => needsAdminAction(t)).length;
   const selected = tickets.find(t => t.id === selectedId) || null;
 
   const handleDecision = async (status: 'APPROVED' | 'REJECTED') => {
@@ -136,8 +150,9 @@ export default function PermissionsManagementPage() {
     if (!selected) return;
     setIsProcessing(true);
     try {
+      // Admin / RH : retour enregistré et validé directement (traçé dans l'historique)
       const updated: any = await api.patch(`/permission-tickets/${selected.id}/return`, {});
-      setTickets(prev => prev.map(t => t.id === selected.id ? { ...t, actualReturnTime: updated.actualReturnTime } : t));
+      mergeTicket(updated);
     } catch (e: any) {
       alert(e?.message || "Erreur lors de l'enregistrement du retour");
     } finally {
@@ -161,7 +176,8 @@ export default function PermissionsManagementPage() {
     company: { legalName: company?.legalName, tradeName: company?.tradeName, logo: company?.logo, rccmNumber: company?.rccmNumber, taxNumber: company?.taxNumber, address: company?.address, phone: company?.phone },
     employee: { firstName: selected.employee?.firstName || '', lastName: selected.employee?.lastName || '', employeeNumber: selected.employee?.employeeNumber, department: selected.employee?.department?.name, position: selected.employee?.position },
     type: selected.type, missionType: selected.missionType, reason: selected.reason, destination: selected.destination,
-    departureTime: selected.departureTime, expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
+    departureTime: effectiveDeparture(selected), expectedReturnTime: selected.expectedReturnTime, actualReturnTime: selected.actualReturnTime,
+    returnConfirmedByName: selected.returnConfirmedByUser ? personName(selected.returnConfirmedByUser) : undefined,
     status: selected.status, reviewedByName: selected.reviewedByUser?.email, reviewedAt: selected.reviewedAt, rejectionReason: selected.rejectionReason,
   } : null;
 
@@ -259,6 +275,9 @@ export default function PermissionsManagementPage() {
                     </div>
                     <p className="text-xs text-[var(--text-muted)] truncate">{tCfg.label} · {new Date(t.departureTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
                     <span className={`inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${sCfg.badge}`}>{sCfg.label}</span>
+                    {t.status === 'APPROVED' && isReturnPending(t) && (
+                      <span className="inline-block mt-1.5 ml-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md border bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800">Retour à valider</span>
+                    )}
                   </div>
                 </div>
               );
@@ -296,9 +315,9 @@ export default function PermissionsManagementPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <DetailTile icon={(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).icon} label="Type" value={(TYPE_CONFIG[selected.type] ?? TYPE_CONFIG.AUTRE).label} tone="violet" />
-                    <DetailTile icon={Clock} label="Sortie" value={new Date(selected.departureTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} tone="sky" />
+                    <DetailTile icon={Clock} label={selected.actualDepartureTime ? 'Sortie (corrigée)' : 'Sortie'} value={new Date(effectiveDeparture(selected)).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} tone="sky" />
                     <DetailTile icon={ArrowRight} label="Retour prévu" value={new Date(selected.expectedReturnTime).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} tone="amber" />
-                    <DetailTile icon={LogOut} label="Retour effectif" value={selected.actualReturnTime ? new Date(selected.actualReturnTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—'} tone={selected.actualReturnTime ? 'emerald' : 'slate'} />
+                    <DetailTile icon={LogOut} label="Retour effectif" value={selected.actualReturnTime ? fmtTime(selected.actualReturnTime) : isReturnPending(selected) ? `${fmtTime(selected.returnDeclaredAt)} (à valider)` : '—'} tone={selected.actualReturnTime ? 'emerald' : isReturnPending(selected) ? 'amber' : 'slate'} />
                   </div>
 
                   {selected.destination && (
@@ -343,9 +362,25 @@ export default function PermissionsManagementPage() {
                     </div>
                   )}
 
-                  {selected.status === 'APPROVED' && !selected.actualReturnTime && (
+                  {/* 🔙 État du retour (déclaré → validé) */}
+                  <PermissionReturnSummary ticket={selected} audience="admin" />
+
+                  {/* ✅ L'employé a déclaré son retour : validation par Admin / RH uniquement */}
+                  {selected.status === 'APPROVED' && isReturnPending(selected) && canApprove && (
+                    <ReturnValidationPanel key={`${selected.id}-${selected.returnDeclaredAt}`} ticket={selected} onUpdated={mergeTicket} />
+                  )}
+
+                  {/* Admin / RH : enregistrer directement un retour (l'employé n'a pas pu le déclarer) */}
+                  {selected.status === 'APPROVED' && returnState(selected) === 'NOT_RETURNED' && canApprove && (
                     <button onClick={handleMarkReturn} disabled={isProcessing} className="w-full py-3 bg-[var(--text)] text-[var(--bg)] text-sm font-bold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50">
                       {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />} Marquer le retour
+                    </button>
+                  )}
+
+                  {/* ✏️ Imprévu : corriger les heures de sortie / retour (motif obligatoire, tracé) */}
+                  {selected.status === 'APPROVED' && canApprove && (
+                    <button onClick={() => setShowEditTimes(true)} className="w-full py-2.5 border border-[var(--border)] text-sm font-semibold rounded-xl text-[var(--text-muted)] flex items-center justify-center gap-2 hover:bg-[var(--surface-2)]">
+                      <PencilLine size={16} /> Modifier les heures de sortie / retour
                     </button>
                   )}
 
@@ -372,6 +407,12 @@ export default function PermissionsManagementPage() {
                   {printData && <PermissionTicketPrintable id={TICKET_ID} data={printData as any} />}
                 </div>
               </div>
+
+              <div className="px-6 pb-6">
+                <div className="border-t border-[var(--border)] pt-5">
+                  <PermissionTimeline ticketId={selected.id} refreshKey={`${selected.status}|${returnState(selected)}|${selected.actualReturnTime ?? ''}|${selected.actualDepartureTime ?? ''}`} />
+                </div>
+              </div>
             </motion.div>
           )}
         </div>
@@ -381,6 +422,8 @@ export default function PermissionsManagementPage() {
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {printData && <PermissionTicketPrintable id="permission-doc-preview" data={printData as any} />}
       </DocumentPreviewModal>
+
+      <EditTimesModal open={showEditTimes} onClose={() => setShowEditTimes(false)} ticket={selected} onUpdated={mergeTicket} />
 
       <EmployeeTicketHistorySidebar open={!!historyEmployee} onClose={() => setHistoryEmployee(null)} data={historyEmployee} />
     </div>

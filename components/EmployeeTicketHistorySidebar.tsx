@@ -23,7 +23,12 @@ export interface TicketHistoryItem {
   destination?: string | null;
   departureTime: string;
   expectedReturnTime: string;
+  /** Sortie effective si elle a été corrigée par l'admin / RH */
+  actualDepartureTime?: string | null;
+  /** Retour VALIDÉ par l'admin / RH */
   actualReturnTime?: string | null;
+  returnStatus?: 'NOT_RETURNED' | 'PENDING_VALIDATION' | 'CONFIRMED' | null;
+  returnDeclaredAt?: string | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | string;
   createdAt: string;
   rejectionReason?: string | null;
@@ -63,7 +68,7 @@ export default function EmployeeTicketHistorySidebar({
     const onTimeRate = withReturn.length > 0 ? Math.round((onTime / withReturn.length) * 100) : null;
 
     const totalMinutesOut = withReturn.reduce((sum, t) => {
-      const diff = new Date(t.actualReturnTime!).getTime() - new Date(t.departureTime).getTime();
+      const diff = new Date(t.actualReturnTime!).getTime() - new Date(t.actualDepartureTime || t.departureTime).getTime();
       return sum + Math.max(0, diff / 60000);
     }, 0);
     const avgMinutesOut = withReturn.length > 0 ? Math.round(totalMinutesOut / withReturn.length) : null;
@@ -157,7 +162,7 @@ export default function EmployeeTicketHistorySidebar({
                   <SIcon size={10} /> {sCfg.label}
                 </span>
               </div>
-              <p className="text-xs text-[var(--text-muted)] mb-1">{fmtDateTime(t.departureTime)} → {t.actualReturnTime ? fmtDateTime(t.actualReturnTime) : `prévu ${new Date(t.expectedReturnTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}</p>
+              <p className="text-xs text-[var(--text-muted)] mb-1">{fmtDateTime(t.actualDepartureTime || t.departureTime)} → {t.actualReturnTime ? fmtDateTime(t.actualReturnTime) : t.returnStatus === 'PENDING_VALIDATION' ? `déclaré ${new Date(t.returnDeclaredAt!).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} · à valider` : `prévu ${new Date(t.expectedReturnTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`}</p>
               <p className="text-xs text-[var(--text-muted)] line-clamp-2">{t.reason}</p>
               {late && (
                 <p className="text-[11px] text-amber-500 mt-1 flex items-center gap-1"><AlertTriangle size={11} /> Retour en retard</p>

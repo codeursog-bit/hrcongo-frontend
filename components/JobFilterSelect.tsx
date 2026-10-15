@@ -209,7 +209,7 @@ export function JobFilterSelect({
               {/* Liste des offres */}
               {filtered.length === 0 ? (
                 <div className="px-4 py-6 text-center">
-                  <p className={`text-xs ${isDark ? 'text-slate-600' : 'text-gray-400'}`}>
+                  <p className={`text-xs ${isDark ? 'text-slate-600 dark:text-slate-400' : 'text-gray-400'}`}>
                     Aucune offre trouvée
                   </p>
                 </div>
@@ -260,7 +260,7 @@ export function JobFilterSelect({
             {/* Footer si beaucoup d'offres */}
             {jobs.length > 4 && filtered.length > 0 && (
               <div className={`px-3 py-2 border-t text-center ${isDark ? 'border-white/5' : 'border-gray-100 dark:border-gray-800'}`}>
-                <p className={`text-[10px] ${isDark ? 'text-slate-600' : 'text-gray-400'}`}>
+                <p className={`text-[10px] ${isDark ? 'text-slate-600 dark:text-slate-400' : 'text-gray-400'}`}>
                   {filtered.length} offre{filtered.length > 1 ? 's' : ''} affichée{filtered.length > 1 ? 's' : ''}
                 </p>
               </div>

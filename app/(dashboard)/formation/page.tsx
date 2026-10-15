@@ -1499,7 +1499,7 @@ export default function FormationPage() {
                       </div>
                       <div className="p-3 bg-white/5 rounded-xl border-2 border-dashed border-white/10 text-center">
                         <p className="text-[9px] text-slate-400 font-mono">Feuille de présence — Référence</p>
-                        <p className="text-xs font-black text-slate-700 mt-1">{showCourseModal.id?.slice(0,8).toUpperCase()}</p>
+                        <p className="text-xs font-black text-slate-700 dark:text-slate-200 mt-1">{showCourseModal.id?.slice(0,8).toUpperCase()}</p>
                       </div>
                     </div>
                   </div>
