@@ -536,6 +536,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { label: 'Déclaration CNSS', path: '/cnss-declaration', icon: FileCheck },
     { label: 'Contrats', path: '/contrats', icon: History },
     { label: 'Documents admnistratifs', path: '/documents', icon: FileCheck },
+    { label: 'Journal de paie', path: '/rapports/journal-paie', icon: BookOpen },
     { label: 'Salaires Impayés', path: '/paie/impayes', icon: AlertCircle }, 
     { label: 'Audit', path: '/audit', icon: ShieldCheck, scoped: true },
   ];

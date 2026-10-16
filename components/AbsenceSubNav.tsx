@@ -2,48 +2,27 @@
 
 // ============================================================================
 // 📁 components/AbsenceSubNav.tsx
-// ✅ Sous-navigation propre au module Absences (Gestion, Suivi, Nouvelle
-//    demande, Mon espace) — même rôle que FinanceSubNav (Prêts) et
-//    PermissionsSubNav. À poser sur /presences/absences/*, à la place de
-//    PresenceSubNav (qui reste réservé au hub /presences).
+// ✅ Sous-navigation du module Absences — mêmes groupes que Permissions et
+//    Prêts (voir RequestModuleNav) : Pilotage · Analyse · Actions.
 // ============================================================================
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutGrid, CalendarDays, Plus, UserCircle } from 'lucide-react';
-import { useBasePath } from '@/hooks/useBasePath';
+import { LayoutGrid, CalendarDays, History, FileBarChart, Plus, UserCircle } from 'lucide-react';
+import RequestModuleNav, { NavLinkDef } from '@/components/RequestModuleNav';
 
 const MANAGE_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 export default function AbsenceSubNav({ userRole }: { userRole: string }) {
-  const { bp } = useBasePath();
-  const pathname = usePathname();
   const canManage = MANAGE_ROLES.includes(userRole);
-
-  const links = [
-    ...(canManage ? [{ href: '/presences/absences', label: 'Gestion', icon: LayoutGrid }] : []),
-    ...(canManage ? [{ href: '/presences/absences/suivi', label: 'Suivi', icon: CalendarDays }] : []),
-    { href: '/presences/absences/nouveau', label: 'Nouvelle demande', icon: Plus },
-    { href: '/presences/absences/mon-espace', label: 'Mon espace', icon: UserCircle },
+  const links: NavLinkDef[] = [
+    ...(canManage ? [
+      { href: '/presences/absences', label: 'Gestion', icon: LayoutGrid, group: 'pilot' as const },
+      { href: '/presences/absences/suivi', label: 'Suivi', icon: CalendarDays, group: 'pilot' as const },
+      { href: '/presences/absences/historique', label: 'Historique', icon: History, group: 'analysis' as const },
+      { href: '/presences/absences/rapport', label: 'Rapport', icon: FileBarChart, group: 'analysis' as const },
+    ] : []),
+    { href: '/presences/absences/nouveau', label: 'Nouvelle demande', icon: Plus, group: 'action' },
+    { href: '/presences/absences/mon-espace', label: 'Mon espace', icon: UserCircle, group: 'action' },
   ];
-
-  const isActive = (href: string) => {
-    const target = bp(href);
-    return pathname === target || (href === '/presences/absences' ? pathname === target : pathname?.startsWith(target));
-  };
-
-  return (
-    <div className="flex gap-1 bg-[var(--surface-2)] p-1 rounded-xl w-fit overflow-x-auto mb-1">
-      {links.map(l => {
-        const Icon = l.icon;
-        const active = isActive(l.href);
-        return (
-          <Link key={l.href} href={bp(l.href)} className={`px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap transition-all shrink-0 ${active ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text)]'}`}>
-            <Icon size={13} /> {l.label}
-          </Link>
-        );
-      })}
-    </div>
-  );
+  return <RequestModuleNav links={links} accent="emerald" />;
 }

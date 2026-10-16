@@ -15,6 +15,7 @@ import { ContractExpiryToast } from '@/components/contracts/ContractExpiryToast'
 import OnboardingChecklist from '@/components/onboarding/OnboardingChecklist';
 import { useAuth } from '@/hooks/useAuth';
 import PushNotificationBanner from '@/components/PushNotificationBanner';
+import RouteGuard from '@/components/RouteGuard'; // 🔒 accès aux pages selon le rôle
 import GeoWarmup from '@/components/GeoWarmup'; // 🆕 préchauffe le GPS à l'ouverture de l'app (pointage plus rapide)
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -86,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
      <DashboardShell>
      <PushNotificationBanner />
      <OnboardingChecklist />
-      {children}
+      <RouteGuard>{children}</RouteGuard>
      </DashboardShell>
     </PWAProvider>
   );

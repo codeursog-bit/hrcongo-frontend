@@ -18,6 +18,7 @@ import {
 import { api } from '@/services/api';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import LoansRequestsPanel from '@/components/request-reports/LoansRequestsPanel';
 
 const MONTHS_FR = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 const MONTHS_FULL = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -188,6 +189,8 @@ export default function LoansReportPage() {
           {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
+
+      <LoansRequestsPanel loans={loans} advances={advances} month={month} year={year} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* ══════════════════ COLONNE GAUCHE : légende + tableau ══════════════════ */}

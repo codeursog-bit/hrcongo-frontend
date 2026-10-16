@@ -87,6 +87,14 @@ interface EmployeeDetail {
   uniformSize?: string | null;
   shoeSize?: string | null;
   selfServiceEnabled?: boolean;
+  // 🆕 Fiche du personnel (PDF) — champs déjà renvoyés par GET /employees/:id
+  status?: string;
+  terminationDate?: string | null;
+  terminationReason?: string | null;
+  isSubjectToTus?: boolean | null;
+  leaves?: any[];
+  assets?: any[];
+  documents?: any[];
 }
 
 function getRoleFromStorage(): string {
@@ -212,7 +220,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [companyConvention, setCompanyConvention] = useState<string | null>(null);
-  const [companyInfo, setCompanyInfo] = useState<{ name?: string; logoUrl?: string | null; address?: string | null; rccmNumber?: string | null }>({});
+  const [companyInfo, setCompanyInfo] = useState<{ name?: string; logoUrl?: string | null; address?: string | null; rccmNumber?: string | null; phone?: string | null; email?: string | null }>({});
   const [isGeneratingFiche, setIsGeneratingFiche] = useState(false);
   const [isTogglingSelfService, setIsTogglingSelfService] = useState(false);
 
@@ -248,6 +256,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             logoUrl: company?.logo,
             address: company?.address ? `${company.address}${company?.city ? `, ${company.city}` : ''}` : undefined,
             rccmNumber: company?.rccmNumber,
+            phone: company?.phone,
+            email: company?.email,
           });
         } catch {}
         // 🆕 Primes — best-effort, ne bloque pas l'affichage de la fiche si ça échoue
@@ -339,9 +349,14 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     if (!employee) return;
     setIsGeneratingFiche(true);
     try {
-      const [{ pdf }, { FicheEmployePdf }] = await Promise.all([
+      const [{ pdf }, { FicheEmployePdf, prepareImageForPdf }] = await Promise.all([
         import('@react-pdf/renderer'),
         import('@/components/employees/FicheEmployePdf'),
+      ]);
+      // Photo + logo convertis en PNG/JPEG (react-pdf ne lit pas le WebP) ; null → initiales / nom
+      const [photoData, logoData] = await Promise.all([
+        prepareImageForPdf(employee.photoUrl, { format: 'jpeg', maxSize: 600 }),
+        prepareImageForPdf(companyInfo.logoUrl, { format: 'png', maxSize: 500 }),
       ]);
       const doc = (
         <FicheEmployePdf
@@ -349,12 +364,18 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             employeeNumber: employee.employeeNumber,
             firstName: employee.firstName,
             lastName: employee.lastName,
+            gender: employee.gender,
             dateOfBirth: employee.dateOfBirth,
             placeOfBirth: employee.placeOfBirth,
+            nationality: employee.nationality,
+            isResident: employee.isResident,
+            photoUrl: photoData,
             bloodType: employee.bloodType,
             pathology: employee.pathology,
             address: employee.address,
+            city: employee.city,
             phone: employee.phone,
+            secondaryPhone: employee.secondaryPhone,
             email: employee.email,
             fatherName: employee.fatherName,
             motherName: employee.motherName,
@@ -363,20 +384,45 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             position: employee.position,
             departmentName: employee.department?.name,
             educationLevel: employee.educationLevel,
+            professionalCategory: employee.professionalCategory,
+            echelon: employee.echelon,
+            contractType: employee.contractType,
+            hireDate: employee.hireDate,
+            contractEndDate: employee.contractEndDate,
+            status: employee.status,
+            terminationDate: employee.terminationDate,
+            terminationReason: employee.terminationReason,
+            trialStatus: employee.trialStatus,
+            trialPeriodDays: employee.trialPeriodDays,
+            trialEndDate: employee.trialEndDate,
+            trialConfirmedAt: employee.trialConfirmedAt,
             emergencyContactName: employee.emergencyContactName,
             emergencyContactRelation: employee.emergencyContactRelation,
             emergencyContactPhone: employee.emergencyContactPhone,
             hasDrivingLicense: employee.hasDrivingLicense,
             drivingLicenseNumber: employee.drivingLicenseNumber,
             foreignLanguages: employee.foreignLanguages,
-            bankAccountNumber: employee.bankAccountNumber,
-            cnssNumber: employee.cnssNumber,
-            nationalIdNumber: employee.nationalIdNumber,
             uniformSize: employee.uniformSize,
             shoeSize: employee.shoeSize,
-            hireDate: employee.hireDate,
+            nationalIdNumber: employee.nationalIdNumber,
+            cnssNumber: employee.cnssNumber,
+            taxNumber: employee.taxNumber,
+            niu: employee.niu,
+            baseSalary: employee.baseSalary,
+            paymentMethod: employee.paymentMethod,
+            bankName: employee.bankName,
+            bankAccountNumber: employee.bankAccountNumber,
+            mobileMoneyOperator: employee.mobileMoneyOperator,
+            mobileMoneyNumber: employee.mobileMoneyNumber,
+            isSubjectToIrpp: employee.isSubjectToIrpp,
+            isSubjectToCnss: employee.isSubjectToCnss,
+            isSubjectToTus: employee.isSubjectToTus,
+            taxExemptionReason: employee.taxExemptionReason,
+            tolZone: employee.tolZone,
+            assets: employee.assets,
+            documents: employee.documents,
           }}
-          company={companyInfo}
+          company={{ ...companyInfo, logoUrl: logoData }}
         />
       );
       const blob = await pdf(doc).toBlob();

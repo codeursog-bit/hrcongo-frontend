@@ -45,6 +45,7 @@ const NAV: NavEntry[] = [
   { id: 'messages', label: 'Messages', icon: MessageCircle, path: '/portefeuille/messages', alertKey: 'messages' },
   { id: 'entreprises', label: 'Mes entreprises', icon: Building2, path: '/portefeuille/mes-entreprises', category: 'Portefeuille' },
   { id: 'employes', label: 'Employés', icon: Users, path: '/portefeuille/employes', category: 'Gestion RH' },
+  { id: 'effectifs', label: 'Tableau de bord effectifs', icon: BarChart3, path: '/portefeuille/effectifs', category: 'Gestion RH' },
   { id: 'paie', label: 'Paie', icon: Wallet, path: '/portefeuille/paie', category: 'Gestion RH' },
   { id: 'prets', label: 'Prêts & Avances', icon: HandCoins, path: '/portefeuille/prets', category: 'Gestion RH' },
   { id: 'conges', label: 'Congés', icon: Calendar, path: '/portefeuille/conges', category: 'Gestion RH' },

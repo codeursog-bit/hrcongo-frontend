@@ -8,11 +8,11 @@ import {
   Eye, Pencil, Trash2,
   ChevronLeft, ChevronRight, Briefcase,
   BadgeCheck, Building2, X, Lock,FileText,
-  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon, Clock, Globe, ChevronDown,
+  Loader2, AlertCircle, Users, TrendingUp, TrendingDown, PieChart as PieChartIcon, Clock, Globe, ChevronDown, Download,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie, Legend, ReferenceLine,
+  PieChart, Pie, Legend, ReferenceLine, LabelList,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalLoader } from '@/components/ui/GlobalLoader';
@@ -20,6 +20,7 @@ import { api } from '@/services/api';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { useBasePath } from '@/hooks/useBasePath';
 import { NATIONALITIES } from '@/lib/nationalities'; // 🆕 filtre nationalité
+import { WorkforceDashboard } from '@/components/workforce/WorkforceDashboard'; // 🆕 tableau de bord + export Excel (modèle ORCA)
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -364,6 +365,17 @@ export default function EmployeeListPage() {
   </div>
 
   <div className="flex items-center gap-3">
+    {/* 🆕 Raccourci vers le tableau de bord + téléchargement Excel (modèle ORCA) */}
+    {!isManager && (
+      <button
+        type="button"
+        onClick={() => document.getElementById('wf-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        className="px-5 py-2.5 rounded-xl bg-[var(--surface)] text-[var(--text)] font-bold border border-[var(--border)] shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
+      >
+        <Download size={20} className="text-emerald-500" />
+        Excel effectif
+      </button>
+    )}
     {/* --- ✅ BOUTON GÉRER LES CONTRATS (Visible uniquement pour RH/Admin) --- */}
     {canCreate && (
       <Link 
@@ -623,11 +635,12 @@ export default function EmployeeListPage() {
                 <div style={{ height: Math.max(180, summary.byDepartment.length * 34) }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart layout="vertical" data={summary.byDepartment} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                       <XAxis type="number" hide allowDecimals={false} />
-                      <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                      <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
+                      <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                       <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byDepartment.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
                     </BarChart>
@@ -649,11 +662,12 @@ export default function EmployeeListPage() {
                 <div style={{ height: Math.max(180, summary.byContractType.length * 34) }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart layout="vertical" data={summary.byContractType} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                       <XAxis type="number" hide allowDecimals={false} />
-                      <YAxis dataKey="label" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                      <YAxis dataKey="label" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
+                      <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                       <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byContractType.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
                     </BarChart>
@@ -675,11 +689,12 @@ export default function EmployeeListPage() {
                 <div style={{ height: Math.max(180, summary.byNationality.length * 34), maxHeight: 340, overflowY: summary.byNationality.length > 10 ? 'auto' : 'visible' }}>
                   <ResponsiveContainer width="100%" height={Math.max(180, summary.byNationality.length * 34)}>
                     <BarChart layout="vertical" data={summary.byNationality} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                       <XAxis type="number" hide allowDecimals={false} />
-                      <YAxis dataKey="label" type="category" width={130} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                      <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                      <YAxis dataKey="label" type="category" width={130} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
+                      <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                       <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byNationality.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
                     </BarChart>
@@ -697,12 +712,12 @@ export default function EmployeeListPage() {
               <div style={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={summary.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={50} outerRadius={80} label>
+                    <Pie data={summary.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={50} outerRadius={80} label={{ fill: 'var(--text)', fontSize: 12, fontWeight: 700 }}>
                       <Cell fill="#10B981" />
                       <Cell fill="#F59E0B" />
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                    <Legend />
+                    <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                    <Legend formatter={(v: any) => <span style={{ color: 'var(--text)' }}>{v}</span>} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -721,11 +736,12 @@ export default function EmployeeListPage() {
                 <div style={{ height: Math.max(180, summary.byCategory.length * 30), maxHeight: 320, overflowY: summary.byCategory.length > 10 ? 'auto' : 'visible' }}>
                   <ResponsiveContainer width="100%" height={Math.max(180, summary.byCategory.length * 30)}>
                     <BarChart layout="vertical" data={summary.byCategory} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                       <XAxis type="number" hide allowDecimals={false} />
                       <YAxis dataKey="label" type="category" width={120} axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
-                      <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                      <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                       <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                        <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byCategory.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
                     </BarChart>
@@ -746,12 +762,12 @@ export default function EmployeeListPage() {
                   <div style={{ height: 240 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={pyramidData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11 }} />
-                        <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
+                        <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                         <ReferenceLine x={0} stroke="#9CA3AF" />
-                        <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                        <Legend />
+                        <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                        <Legend formatter={(v: any) => <span style={{ color: 'var(--text)' }}>{v}</span>} />
                         <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
                         <Bar dataKey="male" name="Hommes" fill="#10B981" radius={[0, 8, 8, 0]} />
                       </BarChart>
@@ -773,12 +789,12 @@ export default function EmployeeListPage() {
                   <div style={{ height: 240 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={seniorityData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11 }} />
-                        <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+                        <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
+                        <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                         <ReferenceLine x={0} stroke="#9CA3AF" />
-                        <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                        <Legend />
+                        <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
+                        <Legend formatter={(v: any) => <span style={{ color: 'var(--text)' }}>{v}</span>} />
                         <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
                         <Bar dataKey="male" name="Hommes" fill="#10B981" radius={[0, 8, 8, 0]} />
                       </BarChart>
@@ -789,6 +805,18 @@ export default function EmployeeListPage() {
             })()}
           </div>
           )}
+        </div>
+      )}
+
+      {/* 🆕 TABLEAU DE BORD EFFECTIF (modèle ORCA) — mêmes représentations que l'onglet dashboard du fichier Excel,
+          avec choix de période (mois / plage / année) et téléchargement de l'Excel dynamique */}
+      {!isManager && (
+        <div id="wf-dashboard">
+          <WorkforceDashboard
+            model="ORCA"
+            scope="COMPANY"
+            companyId={pmeCompanyId || undefined}
+          />
         </div>
       )}
     </div>

@@ -38,6 +38,7 @@ const PRIMARY = [
 
 const MORE = [
   { href: '/rapports/recap-personnel',     label: 'Récap. Personnel',    Icon: ReceiptText },
+  { href: '/rapports/journal-paie',        label: 'Journal de paie',      Icon: BookOpen },
   { href: '/rapports/mouvements-effectifs', label: 'Mouvements Effectif', Icon: ArrowRightLeft },
   { href: '/rapports/das-declaration',     label: 'DAS annuelle',        Icon: FileSpreadsheet },
   { href: '/rapports/recap-bulletins-annuel',     label: 'Récap Bulletin Annuel',     Icon: BookOpen },
