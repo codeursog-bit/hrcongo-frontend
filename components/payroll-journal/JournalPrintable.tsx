@@ -2,46 +2,71 @@
 
 // ============================================================================
 // 📁 components/payroll-journal/JournalPrintable.tsx
-// ✅ Journal de paie imprimable / PDF — A4 PAYSAGE (297 × 210 mm).
-//    - Chaque page = un bloc 297×210 mm avec son propre en-tête entreprise
-//      (logo, raison sociale, RCCM, CNSS, NIU, adresse, téléphone) et son pied.
-//    - Le tableau est découpé en pages : l'en-tête des colonnes est répété.
-//    - Dernière page : récapitulatif de la paie, détail des paies étrangères
-//      (si expatriés), indicateurs et blocs de signature.
-//    - `mono` = noir & blanc : uniquement des gris, du gras et des traits, donc
-//      lisible sur une imprimante noir & blanc ; sinon accent = couleur de
-//      l'entreprise.
-//    - Styles 100 % inline (le document est copié dans une iframe d'impression
-//      / capturé en image par lib/payroll-journal-pdf.ts).
-//    - Chaque page porte data-journal-page : utilisé par le PDF.
+// ✅ Journal de paie imprimable / PDF — A4 PAYSAGE (297 × 210 mm), rendu
+//    "feuille de comptabilité" IDENTIQUE à l'export Excel :
+//      bandeau titre bleu marine • bandeau KPI à liseré or • en-têtes colorés
+//      par groupe (mêmes couleurs que l'Excel) • grille fine • lignes zébrées
+//      • ligne TOTAL dorée à double filet • légende en pied de page.
+//    - Une page = un bloc 297×210 mm (data-journal-page) avec en-tête entreprise
+//      (logo, raison sociale, RCCM, CNSS, adresse) ; en-têtes de colonnes
+//      répétés sur chaque page.
+//    - Tableau en table-layout FIXE : largeurs calculées en mm → rien ne peut
+//      déborder de la page, quel que soit le nombre de colonnes (la taille de
+//      police s'adapte à la largeur disponible par colonne).
+//    - Dernière page : récapitulatif, détail des paies étrangères, signatures.
+//    - `mono` = noir & blanc : gris foncés distincts + gras + traits (lisible
+//      sur imprimante N&B) ; sinon couleurs de l'Excel.
+//    - Styles 100 % inline (copié dans l'iframe d'impression / capturé en PDF).
 // ============================================================================
 
 import React from 'react';
 import type { JournalRow, PayrollJournal } from '@/types/payroll-journal';
 import {
-  GROUP_LABEL, MONTHS_FR, buildJournalColumns, fmtMoney, groupSpans,
+  GROUP_COLOR, GROUP_COLOR_MONO, GROUP_LABEL, MONTHS_FR,
+  buildJournalColumns, fmtMoney, groupSpans,
 } from '@/lib/payroll-journal-columns';
 
-// Capacité (lignes d'employés) par page — volontairement prudente pour que
-// rien ne déborde, même avec des noms/fonctions longs.
-const ROWS_FIRST_PAGE = 12;
-const ROWS_NEXT_PAGE = 16;
+// Largeur utile d'une page A4 paysage avec 10 mm de marge de chaque côté
+const USABLE_MM = 277;
+const NO_MM = 7;
+const NAME_MM = 38;
 
-function paginate(rows: JournalRow[]): JournalRow[][] {
-  const pages: JournalRow[][] = [];
-  let i = 0;
-  let cap = ROWS_FIRST_PAGE;
-  while (i < rows.length) {
-    pages.push(rows.slice(i, i + cap));
-    i += cap;
-    cap = ROWS_NEXT_PAGE;
+// Hauteur disponible pour les LIGNES du tableau (mm), marge de sécurité incluse :
+//   page 1  = 193 − en-tête − bandeau KPI − en-têtes de colonnes − ligne TOTAL − pied
+//   suivantes = idem sans le bandeau KPI
+const BUDGET_FIRST_MM = 140;
+const BUDGET_NEXT_MM = 162;
+const TOTAL_ROW_MM = 8;
+
+/** Hauteur estimée d'une ligne (mm) : le nom peut passer sur 2-3 lignes selon sa longueur. */
+function estimateRowMm(r: JournalRow, fs: number): number {
+  const charMm = 0.159 * fs; // largeur moyenne d'un caractère gras
+  const perLine = Math.max(8, Math.floor((NAME_MM - 1.6) / charMm));
+  const label = r.employeeName + (r.isExpat ? `  [Expat ${r.foreign.map((f) => f.countryCode).join('/')}]` : '');
+  const nameLines = Math.max(1, Math.ceil(label.length / perLine));
+  const posLines = Math.max(1, Math.ceil((r.position || ' ').length / (perLine * 1.15)));
+  const lineMm = fs * 1.25 * 0.2646;
+  return 1.7 + (nameLines + posLines) * lineMm;
+}
+
+/** Découpe les employés en pages d'après la hauteur estimée (jamais de débordement). */
+function paginate(rows: JournalRow[], fs: number): JournalRow[][] {
+  const pages: JournalRow[][] = [[]];
+  let used = 0;
+  let budget = BUDGET_FIRST_MM;
+  for (const r of rows) {
+    const h = estimateRowMm(r, fs);
+    if (used + h > budget && pages[pages.length - 1].length > 0) {
+      pages.push([]);
+      used = 0;
+      budget = BUDGET_NEXT_MM;
+    }
+    pages[pages.length - 1].push(r);
+    used += h;
   }
-  if (pages.length === 0) pages.push([]);
-  // La ligne TOTAL doit tenir sur la dernière page : sinon page dédiée.
-  const last = pages[pages.length - 1];
-  const lastCap = pages.length === 1 ? ROWS_FIRST_PAGE : ROWS_NEXT_PAGE;
-  if (last.length > lastCap - 1) {
-    const moved = last.pop() as JournalRow;
+  // La ligne TOTAL doit tenir sur la dernière page, sinon on déplace la dernière ligne
+  if (used + TOTAL_ROW_MM > budget && pages[pages.length - 1].length > 1) {
+    const moved = pages[pages.length - 1].pop() as JournalRow;
     pages.push([moved]);
   }
   return pages;
@@ -57,83 +82,105 @@ export default function JournalPrintable({ id, journal, mono = false }: Props) {
   const j = journal;
   const cols = buildJournalColumns(j);
   const spans = groupSpans(cols);
-  const pages = paginate(j.rows);
-  const totalPages = pages.length + 1; // + page récapitulatif
 
-  const accent = mono ? '#111827' : j.company.primaryColor || '#0EA5E9';
-  const headBg = mono ? '#d1d5db' : accent;
-  const headFg = mono ? '#111827' : '#ffffff';
-  const subBg = mono ? '#eeeeee' : '#f3f4f6';
-  const stripe = mono ? '#f5f5f5' : '#f9fafb';
-  const muted = mono ? '#444444' : '#6b7280';
-  const line = mono ? '#777777' : '#d1d5db';
+  // ── Palette (couleur = Excel ; mono = niveaux de gris) ───────────────
+  const P = mono
+    ? {
+        navy: '#111827', gold: '#111827', goldLight: '#e5e7eb', kpiBg: '#f3f4f6',
+        zebra: '#f3f4f6', border: '#9ca3af', text: '#111827', muted: '#4b5563',
+        mismatch: '#e5e7eb',
+      }
+    : {
+        navy: '#1F3864', gold: '#C9A227', goldLight: '#F4E9C9', kpiBg: '#EFF3F8',
+        zebra: '#F7F8FA', border: '#D9DEE4', text: '#334155', muted: '#64748B',
+        mismatch: '#FFF3CD',
+      };
+  const groupBg = (g: keyof typeof GROUP_COLOR) => (mono ? GROUP_COLOR_MONO[g] : GROUP_COLOR[g]);
 
-  // Taille de police selon le nombre de colonnes (A4 paysage = 273 mm utiles)
-  const n = cols.length;
-  const fs = n > 20 ? 6 : n > 16 ? 6.5 : n > 12 ? 7.5 : 8.5;
+  // ── Largeur par colonne → taille de police (jamais de débordement) ───
+  const nCols = cols.length;
+  const colMm = (USABLE_MM - NO_MM - NAME_MM) / Math.max(nCols, 1);
+  const fs = Math.min(8.5, Math.max(5.5, (colMm - 1.2) / 1.5));
+
+  const pages = paginate(j.rows, fs);
+  const totalPages = pages.length + 1; // + récapitulatif
 
   const period = `${MONTHS_FR[j.month - 1]} ${j.year}`;
   const c = j.company;
   const generated = new Date(j.generatedAt).toLocaleDateString('fr-FR');
+  const FONT = 'Calibri, Carlito, Arial, Helvetica, sans-serif';
 
   const pageStyle: React.CSSProperties = {
     width: '297mm', height: '210mm', boxSizing: 'border-box', background: '#fff',
-    color: '#111827', fontFamily: 'Arial, Helvetica, sans-serif',
-    padding: '9mm 10mm 8mm', position: 'relative', overflow: 'hidden',
-    pageBreakAfter: 'always', breakAfter: 'page',
+    color: P.text, fontFamily: FONT, padding: '8mm 10mm 7mm', position: 'relative',
+    overflow: 'hidden', pageBreakAfter: 'always', breakAfter: 'page',
   };
 
+  const cellBase: React.CSSProperties = {
+    border: `0.5px solid ${P.border}`, fontSize: fs, padding: '2.2px 3px', overflow: 'hidden',
+  };
+
+  // ── En-tête : identité entreprise + bandeau titre bleu marine ────────
   const Header = () => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `2px solid ${accent}`, paddingBottom: 6, marginBottom: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {c.logo && <img src={c.logo} alt={c.name} crossOrigin="anonymous" style={{ height: 38, maxWidth: 110, objectFit: 'contain', filter: mono ? 'grayscale(1)' : undefined }} />}
-        <div>
-          <p style={{ fontSize: 14, fontWeight: 800, margin: 0 }}>{c.name}{c.legalForm ? ` (${c.legalForm})` : ''}</p>
-          <p style={{ fontSize: 7.5, color: muted, margin: 0 }}>
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        {c.logo && (
+          <img
+            src={c.logo} alt={c.name} crossOrigin="anonymous"
+            style={{ height: 34, maxWidth: 100, objectFit: 'contain', filter: mono ? 'grayscale(1)' : undefined }}
+          />
+        )}
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 12, fontWeight: 800, margin: 0, color: P.navy }}>
+            {c.name}{c.legalForm ? ` (${c.legalForm})` : ''}
+          </p>
+          <p style={{ fontSize: 7, color: P.muted, margin: 0 }}>
             RCCM : {c.rccm}
             {c.taxNumber ? ` · NIU : ${c.taxNumber}` : ''}
             {c.cnssNumber ? ` · N° CNSS : ${c.cnssNumber}` : ''}
-          </p>
-          <p style={{ fontSize: 7.5, color: muted, margin: 0 }}>
-            {c.address}, {c.city} · Tél : {c.phone} · {c.email}
+            {' · '}{c.address}, {c.city} · Tél : {c.phone} · {c.email}
           </p>
         </div>
       </div>
-      <div style={{ textAlign: 'right' }}>
-        <p style={{ fontSize: 16, fontWeight: 800, margin: 0, letterSpacing: 0.5, color: accent }}>JOURNAL DE PAIE</p>
-        <p style={{ fontSize: 11, margin: 0, fontWeight: 700 }}>{period}</p>
+      <div style={{
+        background: P.navy, color: '#fff', textAlign: 'center', fontWeight: 800,
+        fontSize: 12.5, letterSpacing: 0.6, padding: '5px 8px',
+      }}>
+        JOURNAL DE PAIE — {period.toUpperCase()}
       </div>
     </div>
   );
 
   const Footer = ({ page }: { page: number }) => (
-    <div style={{ position: 'absolute', left: '10mm', right: '10mm', bottom: '5mm', display: 'flex', justifyContent: 'space-between', fontSize: 7, color: muted, borderTop: `1px solid ${line}`, paddingTop: 3 }}>
-      <span>Document généré via Konza RH le {generated} · Montants en FCFA</span>
-      <span>Page {page} / {totalPages}</span>
+    <div style={{
+      position: 'absolute', left: '10mm', right: '10mm', bottom: '4mm', display: 'flex',
+      justifyContent: 'space-between', fontSize: 6.5, color: P.muted,
+      borderTop: `0.5px solid ${P.border}`, paddingTop: 2,
+    }}>
+      <span>
+        BRUT = base + primes + ancienneté + congés + heures sup. − absences · NET = brut − charges − retenues + indemnités non imposables ·
+        Classement du plus payé au moins payé · Généré via Konza RH le {generated} · Montants en FCFA
+      </span>
+      <span style={{ whiteSpace: 'nowrap', marginLeft: 8 }}>Page {page} / {totalPages}</span>
     </div>
   );
 
-  const th: React.CSSProperties = { padding: '3px 4px', textAlign: 'right', border: `0.5px solid ${line}`, fontSize: fs, fontWeight: 700, background: subBg, whiteSpace: 'nowrap' };
-  const td: React.CSSProperties = { padding: '3px 4px', textAlign: 'right', border: `0.5px solid ${line}`, fontSize: fs, whiteSpace: 'nowrap' };
-
-  const Summary = () => (
-    <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-      {[
-        { l: 'Effectif', v: String(j.summary.headcount) },
-        { l: 'Brut Congo', v: fmtMoney(j.summary.grossCongo) },
-        { l: 'Charges salariales', v: fmtMoney(j.summary.totalChargesCongo) },
-        { l: 'Net Congo', v: fmtMoney(j.summary.netCongo) },
-        ...(j.options.hasExpat
-          ? [
-              { l: 'Brut étranger', v: fmtMoney(j.summary.foreignGross) },
-              { l: 'Net étranger', v: fmtMoney(j.summary.foreignNet) },
-              { l: 'Net total', v: fmtMoney(j.summary.totalNet) },
-            ]
-          : []),
-      ].map((s) => (
-        <div key={s.l} style={{ flex: 1, border: `1px solid ${line}`, borderRadius: 4, padding: '4px 6px', textAlign: 'center' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, margin: 0 }}>{s.v}</p>
-          <p style={{ fontSize: 7, color: muted, margin: 0 }}>{s.l}</p>
+  // ── Bandeau KPI (1re page) : liseré or, fond bleu clair ──────────────
+  const kpis = [
+    { l: j.options.hasExpat ? `EFFECTIF (dont ${j.summary.expatCount} expat.)` : 'EFFECTIF', v: String(j.summary.headcount) },
+    { l: j.options.hasExpat ? 'BRUT TOTAL (CONGO + ÉTRANGER)' : 'MASSE SALARIALE BRUTE', v: `${fmtMoney(j.options.hasExpat ? j.summary.totalGross : j.summary.grossCongo)} F` },
+    { l: 'CHARGES & RETENUES (CONGO)', v: `${fmtMoney(j.summary.totalChargesCongo + j.summary.retenues)} F` },
+    { l: j.options.hasExpat ? 'NET TOTAL (CONGO + ÉTRANGER)' : 'NET À PAYER', v: `${fmtMoney(j.options.hasExpat ? j.summary.totalNet : j.summary.netCongo)} F` },
+  ];
+  const Kpis = () => (
+    <div style={{ display: 'flex', gap: 5, marginBottom: 6 }}>
+      {kpis.map((k) => (
+        <div key={k.l} style={{
+          flex: 1, background: P.kpiBg, border: `0.5px solid ${P.border}`,
+          borderTop: `2.5px solid ${P.gold}`, padding: '3px 6px', textAlign: 'center',
+        }}>
+          <p style={{ fontSize: 6.5, fontWeight: 800, color: P.muted, margin: 0 }}>{k.l}</p>
+          <p style={{ fontSize: 13, fontWeight: 800, color: P.navy, margin: 0 }}>{k.v}</p>
         </div>
       ))}
     </div>
@@ -141,56 +188,97 @@ export default function JournalPrintable({ id, journal, mono = false }: Props) {
 
   return (
     <div id={id} style={{ width: '297mm', background: '#fff' }}>
-      {/* ── Pages du tableau ───────────────────────────────────────── */}
       {pages.map((pageRows, pi) => {
         const isLast = pi === pages.length - 1;
         return (
           <div key={pi} data-journal-page style={pageStyle}>
             <Header />
-            {pi === 0 && <Summary />}
+            {pi === 0 && <Kpis />}
 
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: `${NO_MM}mm` }} />
+                <col style={{ width: `${NAME_MM}mm` }} />
+                {cols.map((col) => <col key={col.id} />)}
+              </colgroup>
               <thead style={{ display: 'table-header-group' }}>
                 <tr>
-                  <th rowSpan={2} style={{ ...th, textAlign: 'center', width: '4mm' }}>N°</th>
-                  <th rowSpan={2} style={{ ...th, textAlign: 'left', minWidth: '34mm' }}>Employé</th>
+                  <th rowSpan={2} style={{ ...cellBase, background: P.navy, color: '#fff', textAlign: 'center', fontWeight: 800 }}>N°</th>
+                  <th rowSpan={2} style={{ ...cellBase, background: P.navy, color: '#fff', textAlign: 'center', fontWeight: 800 }}>Employé</th>
                   {spans.map((s, i) => (
-                    <th key={i} colSpan={s.span} style={{ ...th, textAlign: 'center', background: headBg, color: headFg, textTransform: 'uppercase', fontSize: fs - 0.5 }}>
+                    <th
+                      key={i} colSpan={s.span}
+                      style={{
+                        ...cellBase, background: groupBg(s.group), color: '#fff', textAlign: 'center',
+                        fontWeight: 800, textTransform: 'uppercase', fontSize: Math.max(5, fs - 1),
+                      }}
+                    >
                       {GROUP_LABEL[s.group]}
                     </th>
                   ))}
                 </tr>
                 <tr>
                   {cols.map((col) => (
-                    <th key={col.id} style={{ ...th, whiteSpace: 'normal', lineHeight: 1.15 }}>{col.label}</th>
+                    <th
+                      key={col.id}
+                      style={{
+                        ...cellBase, background: groupBg(col.group), color: '#fff', textAlign: 'center',
+                        fontWeight: 800, lineHeight: 1.15, fontSize: Math.max(5, fs - 0.5),
+                      }}
+                    >
+                      {col.label}
+                    </th>
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {pageRows.map((r, ri) => (
-                  <tr key={r.employeeId} style={{ background: ri % 2 ? stripe : '#fff', pageBreakInside: 'avoid' }}>
-                    <td style={{ ...td, textAlign: 'center' }}>{r.rank}</td>
-                    <td style={{ ...td, textAlign: 'left', whiteSpace: 'normal' }}>
-                      <span style={{ fontWeight: 700 }}>{r.employeeName}</span>
-                      {r.isExpat && <span style={{ fontSize: fs - 1, fontWeight: 700 }}> [Expat {r.foreign.map((f) => f.countryCode).join('/')}]</span>}
+                  <tr key={r.employeeId} style={{ background: ri % 2 === 0 ? P.zebra : '#fff', pageBreakInside: 'avoid' }}>
+                    <td style={{ ...cellBase, textAlign: 'center', color: P.muted }}>{r.rank}</td>
+                    <td style={{ ...cellBase, textAlign: 'left', wordBreak: 'break-word' }}>
+                      <span style={{ fontWeight: 800, color: P.navy }}>{r.employeeName}</span>
+                      {r.isExpat && (
+                        <span style={{ fontSize: fs - 1, fontWeight: 800 }}> [Expat {r.foreign.map((f) => f.countryCode).join('/')}]</span>
+                      )}
                       <br />
-                      <span style={{ fontSize: fs - 1, color: muted }}>{r.position}</span>
+                      <span style={{ fontSize: Math.max(5, fs - 1), color: P.muted }}>{r.position}</span>
                     </td>
-                    {cols.map((col) => (
-                      <td key={col.id} style={{ ...td, fontWeight: col.strong ? 800 : 400 }}>{fmtMoney(col.get(r))}</td>
-                    ))}
+                    {cols.map((col) => {
+                      const v = col.get(r);
+                      return (
+                        <td
+                          key={col.id}
+                          style={{
+                            ...cellBase, textAlign: 'right', whiteSpace: 'nowrap',
+                            fontWeight: col.strong ? 800 : 400, color: v ? (col.strong ? P.navy : P.text) : '#94a3b8',
+                          }}
+                        >
+                          {fmtMoney(v)}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
+
               {isLast && (
                 <tfoot>
-                  <tr style={{ background: subBg }}>
-                    <td style={{ ...td, borderTop: `1.5px solid ${accent}` }} />
-                    <td style={{ ...td, textAlign: 'left', fontWeight: 800, textTransform: 'uppercase', borderTop: `1.5px solid ${accent}` }}>
+                  <tr style={{ background: P.goldLight }}>
+                    <td style={{ ...cellBase, borderTop: `1.5px double ${P.navy}` }} />
+                    <td style={{ ...cellBase, borderTop: `1.5px double ${P.navy}`, fontWeight: 800, color: P.navy, textTransform: 'uppercase' }}>
                       Total ({j.rows.length})
                     </td>
                     {cols.map((col) => (
-                      <td key={col.id} style={{ ...td, fontWeight: 800, borderTop: `1.5px solid ${accent}` }}>{fmtMoney(col.total(j.totals))}</td>
+                      <td
+                        key={col.id}
+                        style={{
+                          ...cellBase, borderTop: `1.5px double ${P.navy}`, textAlign: 'right',
+                          fontWeight: 800, color: P.navy, whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {fmtMoney(col.total(j.totals))}
+                      </td>
                     ))}
                   </tr>
                 </tfoot>
@@ -202,42 +290,47 @@ export default function JournalPrintable({ id, journal, mono = false }: Props) {
         );
       })}
 
-      {/* ── Page récapitulative ────────────────────────────────────── */}
       <RecapPage
         journal={j}
         pageStyle={{ ...pageStyle, pageBreakAfter: 'auto', breakAfter: 'auto' }}
         header={<Header />}
         footer={<Footer page={totalPages} />}
-        colors={{ accent, headBg, headFg, subBg, muted, line }}
+        palette={P}
+        groupBg={groupBg}
       />
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Page récapitulative — mêmes codes visuels (bandeaux marine, filets or)
+// ─────────────────────────────────────────────────────────────────────────────
 
 function RecapPage({
-  journal: j, pageStyle, header, footer, colors,
+  journal: j, pageStyle, header, footer, palette: P, groupBg,
 }: {
   journal: PayrollJournal;
   pageStyle: React.CSSProperties;
   header: React.ReactNode;
   footer: React.ReactNode;
-  colors: { accent: string; headBg: string; headFg: string; subBg: string; muted: string; line: string };
+  palette: { navy: string; gold: string; goldLight: string; kpiBg: string; zebra: string; border: string; text: string; muted: string };
+  groupBg: (g: keyof typeof GROUP_COLOR) => string;
 }) {
-  const { accent, headBg, headFg, subBg, muted, line } = colors;
   const s = j.summary;
   const t = j.totals;
   const indemTotal = Object.values(t.indemnites).reduce((a, b) => a + b, 0);
   const primesTotal = Object.values(t.primes).reduce((a, b) => a + b, 0);
+  const remuExtra = primesTotal + t.anciennete + t.conges + t.overtime;
 
-  const box: React.CSSProperties = { border: `1px solid ${line}`, borderRadius: 4, overflow: 'hidden' };
-  const boxTitle: React.CSSProperties = { background: headBg, color: headFg, fontSize: 9, fontWeight: 800, padding: '4px 8px', textTransform: 'uppercase' };
+  const box: React.CSSProperties = { border: `0.5px solid ${P.border}`, flex: 1 };
+  const boxTitle = (bg: string): React.CSSProperties => ({
+    background: bg, color: '#fff', fontSize: 9, fontWeight: 800, padding: '4px 8px', textTransform: 'uppercase',
+  });
   const lineRow = (strong = false): React.CSSProperties => ({
     display: 'flex', justifyContent: 'space-between', padding: '3px 8px', fontSize: 9,
-    fontWeight: strong ? 800 : 400, borderTop: `0.5px solid ${line}`, background: strong ? subBg : undefined,
+    fontWeight: strong ? 800 : 400, borderTop: `0.5px solid ${P.border}`,
+    background: strong ? P.goldLight : undefined, color: strong ? P.navy : P.text,
   });
-
   const Line = ({ l, v, strong }: { l: string; v: number; strong?: boolean }) => (
     <div style={lineRow(strong)}>
       <span>{l}</span>
@@ -245,25 +338,20 @@ function RecapPage({
     </div>
   );
 
-  const foreignLines = j.rows.flatMap((r) =>
-    r.foreign.map((f) => ({ employee: r.employeeName, ...f })),
-  );
+  const foreignLines = j.rows.flatMap((r) => r.foreign.map((f) => ({ employee: r.employeeName, ...f })));
 
   return (
     <div data-journal-page style={pageStyle}>
       {header}
-      <p style={{ fontSize: 10, fontWeight: 800, margin: '0 0 6px', textTransform: 'uppercase', color: accent }}>
+      <p style={{ fontSize: 10, fontWeight: 800, margin: '2px 0 6px', textTransform: 'uppercase', color: P.navy }}>
         Récapitulatif de la paie — {MONTHS_FR[j.month - 1]} {j.year}
       </p>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-        {/* Paie Congo */}
-        <div style={{ ...box, flex: 1 }}>
-          <div style={boxTitle}>Paie Congo</div>
+        <div style={box}>
+          <div style={boxTitle(groupBg('REMUNERATION'))}>Paie Congo</div>
           <Line l="Salaires de base" v={t.baseSalary} />
-          {primesTotal + t.anciennete + t.conges + t.overtime > 0 && (
-            <Line l="Primes, ancienneté, congés, heures sup." v={primesTotal + t.anciennete + t.conges + t.overtime} />
-          )}
+          {remuExtra > 0 && <Line l="Primes, ancienneté, congés, heures sup." v={remuExtra} />}
           {t.absences > 0 && <Line l="Absences (déduction)" v={-t.absences} />}
           <Line l="Brut" v={t.grossCongo} strong />
           <Line l="CNSS salarié" v={t.cnss} />
@@ -274,9 +362,8 @@ function RecapPage({
           <Line l="Net à payer — Congo" v={t.netCongo} strong />
         </div>
 
-        {/* Charges patronales & coût */}
-        <div style={{ ...box, flex: 1 }}>
-          <div style={boxTitle}>Charges patronales &amp; coût</div>
+        <div style={box}>
+          <div style={boxTitle(groupBg('NET'))}>Charges patronales &amp; coût</div>
           <Line l="CNSS patronale" v={s.cnssEmployer} />
           <Line l="Coût employeur Congo (bulletins)" v={s.employerCostCongo} />
           {j.options.hasExpat && <Line l="Brut payé à l'étranger" v={s.foreignGross} />}
@@ -288,10 +375,9 @@ function RecapPage({
           </div>
         </div>
 
-        {/* Total Congo + étranger */}
         {j.options.hasExpat && (
-          <div style={{ ...box, flex: 1 }}>
-            <div style={boxTitle}>Total Congo + étranger</div>
+          <div style={box}>
+            <div style={boxTitle(groupBg('ETRANGER'))}>Total Congo + étranger</div>
             <Line l="Brut Congo" v={s.grossCongo} />
             <Line l="Brut étranger" v={s.foreignGross} />
             <Line l="Brut total" v={s.totalGross} strong />
@@ -302,45 +388,43 @@ function RecapPage({
         )}
       </div>
 
-      {/* Détail des paies étrangères : qui a payé quoi, à qui, d'où */}
       {j.options.hasExpat && foreignLines.length > 0 && (
-        <div style={{ ...box, marginTop: 8 }}>
-          <div style={boxTitle}>Détail des rémunérations à l'étranger (saisies manuellement, en FCFA)</div>
+        <div style={{ ...box, flex: 'none', marginTop: 8 }}>
+          <div style={boxTitle(groupBg('ETRANGER'))}>Détail des rémunérations à l'étranger (saisies manuellement, en FCFA)</div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 8.5 }}>
             <thead>
-              <tr style={{ background: subBg }}>
+              <tr style={{ background: P.kpiBg }}>
                 {['Employé', 'Pays', 'Entité qui paie', 'Brut', 'Net', 'Note'].map((h, i) => (
-                  <th key={h} style={{ padding: '3px 6px', textAlign: i === 3 || i === 4 ? 'right' : 'left', borderTop: `0.5px solid ${line}`, fontWeight: 700 }}>{h}</th>
+                  <th key={h} style={{ padding: '3px 6px', textAlign: i === 3 || i === 4 ? 'right' : 'left', borderTop: `0.5px solid ${P.border}`, fontWeight: 800, color: P.navy }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {foreignLines.slice(0, 10).map((f) => (
                 <tr key={f.id}>
-                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${line}`, fontWeight: 700 }}>{f.employee}</td>
-                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${line}` }}>{f.countryName} ({f.countryCode})</td>
-                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${line}` }}>{f.payerName || '—'}</td>
-                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${line}`, textAlign: 'right' }}>{fmtMoney(f.grossAmount)}</td>
-                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${line}`, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(f.netAmount)}</td>
-                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${line}`, color: muted }}>{f.note || ''}</td>
+                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${P.border}`, fontWeight: 700 }}>{f.employee}</td>
+                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${P.border}` }}>{f.countryName} ({f.countryCode})</td>
+                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${P.border}` }}>{f.payerName || '—'}</td>
+                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${P.border}`, textAlign: 'right' }}>{fmtMoney(f.grossAmount)}</td>
+                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${P.border}`, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(f.netAmount)}</td>
+                  <td style={{ padding: '2.5px 6px', borderTop: `0.5px solid ${P.border}`, color: P.muted }}>{f.note || ''}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {foreignLines.length > 10 && (
-            <p style={{ fontSize: 7.5, color: muted, margin: 0, padding: '3px 8px', borderTop: `0.5px solid ${line}` }}>
-              … et {foreignLines.length - 10} autre(s) ligne(s) — voir le journal à l'écran.
+            <p style={{ fontSize: 7.5, color: P.muted, margin: 0, padding: '3px 8px', borderTop: `0.5px solid ${P.border}` }}>
+              … et {foreignLines.length - 10} autre(s) ligne(s) — voir le journal à l'écran ou l'export Excel.
             </p>
           )}
         </div>
       )}
 
-      {/* Signatures */}
-      <div style={{ position: 'absolute', left: '10mm', right: '10mm', bottom: '14mm', display: 'flex', gap: 10 }}>
+      <div style={{ position: 'absolute', left: '10mm', right: '10mm', bottom: '12mm', display: 'flex', gap: 10 }}>
         {['Établi par (RH)', 'Vérifié par (Comptabilité)', 'Approuvé par (Direction)'].map((l) => (
-          <div key={l} style={{ flex: 1, border: `1px solid ${line}`, borderRadius: 4, height: '24mm', padding: '4px 8px' }}>
-            <p style={{ fontSize: 8, fontWeight: 700, margin: 0 }}>{l}</p>
-            <p style={{ fontSize: 7, color: muted, margin: '2px 0 0' }}>Nom, date et signature</p>
+          <div key={l} style={{ flex: 1, border: `0.5px solid ${P.border}`, borderTop: `2px solid ${P.gold}`, height: '24mm', padding: '4px 8px' }}>
+            <p style={{ fontSize: 8, fontWeight: 800, margin: 0, color: P.navy }}>{l}</p>
+            <p style={{ fontSize: 7, color: P.muted, margin: '2px 0 0' }}>Nom, date et signature</p>
           </div>
         ))}
       </div>

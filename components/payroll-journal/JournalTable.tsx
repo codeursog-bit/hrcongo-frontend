@@ -2,30 +2,29 @@
 
 // ============================================================================
 // 📁 components/payroll-journal/JournalTable.tsx
-// ✅ Tableau du journal de paie à l'écran — du plus payé au moins payé.
-//    Colonnes générées par lib/payroll-journal-columns.ts (mêmes colonnes que
-//    le document imprimable). Les expatriés portent un badge avec leurs pays ;
-//    le bouton globe ouvre la saisie de leur paie étrangère.
+// ✅ Tableau du journal de paie — rendu "feuille de comptabilité" (même
+//    palette que l'export Excel : bleu marine, rouge brique, vert, ambre,
+//    violet, or ; grille fine, lignes zébrées, ligne TOTAL dorée).
+//    Du plus payé au moins payé. Colonnes = lib/payroll-journal-columns.ts.
+//
+//    ✅ CORRECTIF "noms transparents au scroll horizontal" : les cellules
+//    figées (N° + Employé) utilisent désormais des fonds OPAQUES (hex pleins,
+//    clair + sombre). Avant, elles utilisaient var(--surface-2) qui est
+//    semi-transparent en mode sombre → on voyait les colonnes défiler dessous.
 // ============================================================================
 
 import React, { useMemo } from 'react';
 import { Globe2 } from 'lucide-react';
 import type { JournalRow, PayrollJournal } from '@/types/payroll-journal';
 import {
-  GROUP_LABEL, buildJournalColumns, fmtMoney, groupSpans,
-  type JournalGroup,
+  GROUP_COLOR, GROUP_LABEL, buildJournalColumns, fmtMoney, groupSpans,
 } from '@/lib/payroll-journal-columns';
 
-// Teinte d'en-tête par groupe — uniquement les variables du thème de l'app.
-const GROUP_HEAD: Record<JournalGroup, string> = {
-  REMUNERATION: 'bg-[var(--brand-soft)] text-[var(--brand-strong)]',
-  CHARGES: 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300',
-  INDEMNITES: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300',
-  RETENUES: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300',
-  NET: 'bg-[var(--brand)] text-white',
-  ETRANGER: 'bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-300',
-  TOTAL: 'bg-[var(--text)] text-[var(--surface)]',
-};
+// Fonds pleins (jamais de transparence sur une cellule figée)
+const BG_EVEN = 'bg-white dark:bg-[#0B0C0F]';
+const BG_ODD = 'bg-[#F7F8FA] dark:bg-[#12141A]';
+const BG_HOVER = 'group-hover:bg-[#E8EFF9] dark:group-hover:bg-[#1B2433]';
+const GRID = 'border border-[#D9DEE4] dark:border-[#262A33]';
 
 interface Props {
   journal: PayrollJournal;
@@ -38,37 +37,50 @@ export default function JournalTable({ journal, onEditForeign }: Props) {
   const canEdit = !!onEditForeign;
 
   return (
-    <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-[#D9DEE4] dark:border-[#262A33] shadow-sm overflow-hidden bg-white dark:bg-[#0B0C0F]">
+      {/* Bandeau titre façon Excel */}
+      <div className="px-4 py-2.5 text-center text-sm font-bold tracking-wide text-white bg-[#1F3864]">
+        JOURNAL DE PAIE — {journal.company.name.toUpperCase()}
+      </div>
+
       <div className="overflow-x-auto">
-        <table className="w-full text-xs border-collapse">
+        <table className="w-full text-[12px] border-separate border-spacing-0 text-[#334155] dark:text-slate-200">
           <thead>
             {/* Ligne 1 : groupes */}
             <tr>
-              <th rowSpan={2} className="sticky left-0 z-20 bg-[var(--surface-2)] px-3 py-2 text-left text-[11px] font-semibold uppercase text-[var(--text-muted)] border-b border-[var(--border)] w-8">
+              <th
+                rowSpan={2}
+                className={`sticky left-0 z-30 w-10 min-w-[40px] px-2 py-2 text-center text-[11px] font-bold text-white bg-[#1F3864] ${GRID}`}
+              >
                 N°
               </th>
-              <th rowSpan={2} className="sticky left-8 z-20 bg-[var(--surface-2)] px-3 py-2 text-left text-[11px] font-semibold uppercase text-[var(--text-muted)] border-b border-[var(--border)] min-w-[200px]">
+              <th
+                rowSpan={2}
+                className={`sticky left-10 z-30 min-w-[210px] px-3 py-2 text-left text-[11px] font-bold text-white bg-[#1F3864] ${GRID} shadow-[3px_0_4px_-2px_rgba(0,0,0,0.25)]`}
+              >
                 Employé
               </th>
               {spans.map((s, i) => (
                 <th
                   key={`${s.group}-${i}`}
                   colSpan={s.span}
-                  className={`px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide border-l border-[var(--border)] ${GROUP_HEAD[s.group]}`}
+                  style={{ background: GROUP_COLOR[s.group] }}
+                  className={`px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-white ${GRID}`}
                 >
                   {GROUP_LABEL[s.group]}
                 </th>
               ))}
               {canEdit && (
-                <th rowSpan={2} className="bg-[var(--surface-2)] px-2 py-2 border-b border-[var(--border)] w-10 print:hidden" />
+                <th rowSpan={2} className={`w-10 bg-[#1F3864] ${GRID} print:hidden`} />
               )}
             </tr>
             {/* Ligne 2 : colonnes */}
-            <tr className="bg-[var(--surface-2)]">
+            <tr>
               {cols.map((c) => (
                 <th
                   key={c.id}
-                  className={`px-2 py-2 text-right text-[11px] font-semibold text-[var(--text-muted)] border-b border-l border-[var(--border)] whitespace-nowrap ${c.strong ? 'text-[var(--text)]' : ''}`}
+                  style={{ background: GROUP_COLOR[c.group] }}
+                  className={`px-2 py-2 text-center text-[11px] font-bold leading-tight text-white ${GRID} min-w-[92px]`}
                 >
                   {c.label}
                 </th>
@@ -77,68 +89,78 @@ export default function JournalTable({ journal, onEditForeign }: Props) {
           </thead>
 
           <tbody>
-            {journal.rows.map((r) => (
-              <tr key={r.employeeId} className="group hover:bg-[var(--surface-2)] transition-colors">
-                <td className="sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--surface-2)] px-3 py-2 text-[var(--text-muted)] border-b border-[var(--border)]">
-                  {r.rank}
-                </td>
-                <td className="sticky left-8 z-10 bg-[var(--surface)] group-hover:bg-[var(--surface-2)] px-3 py-2 border-b border-[var(--border)]">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-[var(--text)]">{r.employeeName}</span>
-                    {r.isExpat && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 text-[10px] font-semibold">
-                        <Globe2 className="w-3 h-3" />
-                        Expat · {r.foreign.map((f) => f.countryCode).join(', ')}
-                      </span>
-                    )}
-                    {r.status === 'ETRANGER_SEUL' && (
-                      <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 text-[10px] font-semibold">
-                        Sans bulletin Congo
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-[var(--text-muted)]">{r.position}</div>
-                </td>
-                {cols.map((c) => {
-                  const v = c.get(r);
-                  return (
-                    <td
-                      key={c.id}
-                      className={`px-2 py-2 text-right tabular-nums border-b border-l border-[var(--border)] whitespace-nowrap ${
-                        c.strong ? 'font-bold text-[var(--text)]' : 'text-[var(--text)]'
-                      } ${c.negative && v ? 'text-red-600 dark:text-red-400' : ''}`}
-                    >
-                      {fmtMoney(v)}
-                    </td>
-                  );
-                })}
-                {canEdit && (
-                  <td className="px-2 py-2 border-b border-[var(--border)] text-center print:hidden">
-                    <button
-                      onClick={() => onEditForeign?.(r)}
-                      title="Paie à l'étranger (expatrié)"
-                      className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition-colors"
-                    >
-                      <Globe2 className="w-4 h-4" />
-                    </button>
+            {journal.rows.map((r, idx) => {
+              const bg = idx % 2 === 0 ? BG_EVEN : BG_ODD;
+              return (
+                <tr key={r.employeeId} className="group">
+                  <td className={`sticky left-0 z-20 w-10 min-w-[40px] px-2 py-1.5 text-center text-slate-500 ${bg} ${BG_HOVER} ${GRID}`}>
+                    {r.rank}
                   </td>
-                )}
-              </tr>
-            ))}
+                  <td
+                    className={`sticky left-10 z-20 min-w-[210px] px-3 py-1.5 ${bg} ${BG_HOVER} ${GRID} shadow-[3px_0_4px_-2px_rgba(0,0,0,0.18)]`}
+                  >
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-[#1F3864] dark:text-white">{r.employeeName}</span>
+                      {r.isExpat && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#E9E2F4] text-[#6B4E9B] dark:bg-[#2A2140] dark:text-[#CDB8F0] text-[10px] font-bold">
+                          <Globe2 className="w-3 h-3" />
+                          {r.foreign.map((f) => f.countryCode).join(' / ')}
+                        </span>
+                      )}
+                      {r.status === 'ETRANGER_SEUL' && (
+                        <span className="px-1.5 py-0.5 rounded bg-[#FFF3CD] text-[#8A6D0B] dark:bg-[#3A300E] dark:text-[#F0D77A] text-[10px] font-bold">
+                          Sans bulletin Congo
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">{r.position}</div>
+                  </td>
+
+                  {cols.map((c) => {
+                    const v = c.get(r);
+                    return (
+                      <td
+                        key={c.id}
+                        className={`px-2 py-1.5 text-right tabular-nums whitespace-nowrap ${bg} ${BG_HOVER} ${GRID} ${
+                          c.strong ? 'font-bold text-[#1F3864] dark:text-white' : ''
+                        } ${v ? '' : 'text-slate-400'}`}
+                      >
+                        {fmtMoney(v)}
+                      </td>
+                    );
+                  })}
+
+                  {canEdit && (
+                    <td className={`px-1 py-1.5 text-center ${bg} ${BG_HOVER} ${GRID} print:hidden`}>
+                      <button
+                        onClick={() => onEditForeign?.(r)}
+                        title="Paie à l'étranger (expatrié)"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-[#6B4E9B] hover:bg-[#E9E2F4] dark:hover:bg-[#2A2140] transition-colors"
+                      >
+                        <Globe2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
 
           <tfoot>
-            <tr className="bg-[var(--surface-2)] font-bold">
-              <td className="sticky left-0 z-10 bg-[var(--surface-2)] px-3 py-2.5" />
-              <td className="sticky left-8 z-10 bg-[var(--surface-2)] px-3 py-2.5 text-[var(--text)] uppercase">
+            <tr className="font-bold text-[#1F3864] dark:text-[#F0D77A]">
+              <td className="sticky left-0 z-20 bg-[#F4E9C9] dark:bg-[#2A2410] border border-[#D9DEE4] dark:border-[#262A33] border-t-[3px] border-t-[#1F3864] px-2 py-2" />
+              <td className="sticky left-10 z-20 bg-[#F4E9C9] dark:bg-[#2A2410] border border-[#D9DEE4] dark:border-[#262A33] border-t-[3px] border-t-[#1F3864] px-3 py-2 uppercase shadow-[3px_0_4px_-2px_rgba(0,0,0,0.18)]">
                 Total ({journal.rows.length})
               </td>
               {cols.map((c) => (
-                <td key={c.id} className="px-2 py-2.5 text-right tabular-nums text-[var(--text)] border-l border-[var(--border)] whitespace-nowrap">
+                <td
+                  key={c.id}
+                  className="px-2 py-2 text-right tabular-nums whitespace-nowrap bg-[#F4E9C9] dark:bg-[#2A2410] border border-[#D9DEE4] dark:border-[#262A33] border-t-[3px] border-t-[#1F3864]"
+                >
                   {fmtMoney(c.total(journal.totals))}
                 </td>
               ))}
-              {canEdit && <td className="print:hidden" />}
+              {canEdit && <td className="bg-[#F4E9C9] dark:bg-[#2A2410] border border-[#D9DEE4] dark:border-[#262A33] border-t-[3px] border-t-[#1F3864] print:hidden" />}
             </tr>
           </tfoot>
         </table>

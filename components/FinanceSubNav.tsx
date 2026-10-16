@@ -9,7 +9,7 @@
 // ============================================================================
 
 import React from 'react';
-import { LayoutGrid, Plus, UserCircle, LineChart, CheckSquare, FileBarChart, BookOpen } from 'lucide-react';
+import { LayoutGrid, Plus, UserCircle, LineChart, CheckSquare, FileBarChart, BookOpen, PieChart } from 'lucide-react';
 import RequestModuleNav, { NavLinkDef } from '@/components/RequestModuleNav';
 
 const FINANCE_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
@@ -21,6 +21,7 @@ export default function FinanceSubNav({ userRole }: { userRole: string }) {
       { href: '/loans', label: 'Gestion', icon: LayoutGrid, group: 'pilot' as const },
       { href: '/loans/validations', label: 'Validations', icon: CheckSquare, group: 'pilot' as const },
       { href: '/loans/suivi-dettes', label: 'Suivi des dettes', icon: LineChart, group: 'pilot' as const },
+      { href: '/loans/dashboard', label: 'Tableau de bord', icon: PieChart, group: 'analysis' as const },
       { href: '/loans/releve', label: 'Relevé', icon: BookOpen, group: 'analysis' as const },
       { href: '/loans/rapport', label: 'Rapport', icon: FileBarChart, group: 'analysis' as const },
     ] : []),

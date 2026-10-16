@@ -30,6 +30,29 @@ export const GROUP_LABEL: Record<JournalGroup, string> = {
   TOTAL: 'Total Congo + étranger',
 };
 
+// Couleurs des groupes — IDENTIQUES à l'export Excel (même palette que le
+// récap personnel : bleu marine, rouge brique, vert sourd, ambre, violet, or).
+export const GROUP_COLOR: Record<JournalGroup, string> = {
+  REMUNERATION: '#2F5496',
+  CHARGES: '#B03A2E',
+  INDEMNITES: '#2E7D4F',
+  RETENUES: '#B7791F',
+  NET: '#1F3864',
+  ETRANGER: '#6B4E9B',
+  TOTAL: '#8A6D0B',
+};
+
+// Variante noir & blanc : gris foncés distincts (texte blanc lisible à l'impression N&B)
+export const GROUP_COLOR_MONO: Record<JournalGroup, string> = {
+  REMUNERATION: '#374151',
+  CHARGES: '#4B5563',
+  INDEMNITES: '#6B7280',
+  RETENUES: '#4B5563',
+  NET: '#111827',
+  ETRANGER: '#6B7280',
+  TOTAL: '#111827',
+};
+
 export interface JournalCol {
   id: string;
   group: JournalGroup;

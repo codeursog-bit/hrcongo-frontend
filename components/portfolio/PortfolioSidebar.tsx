@@ -51,6 +51,8 @@ const NAV: NavEntry[] = [
   { id: 'conges', label: 'Congés', icon: Calendar, path: '/portefeuille/conges', category: 'Gestion RH' },
   { id: 'presences', label: 'Présences', icon: Users2, path: '/portefeuille/presences', category: 'Gestion RH' },
   { id: 'absences', label: 'Absences', icon: ClipboardList, path: '/portefeuille/absences', category: 'Gestion RH' },
+  { id: 'presences-absences', label: 'Tableau de bord présences', icon: BarChart3, path: '/portefeuille/presences-absences', category: 'Gestion RH' },
+  { id: 'prets-avances', label: 'Tableau de bord prêts', icon: BarChart3, path: '/portefeuille/prets-avances', category: 'Gestion RH' },
   { id: 'rapports', label: 'Rapports', icon: BarChart3, path: '/portefeuille/rapports', category: 'Organisation' },
   { id: 'equipe', label: 'Équipe', icon: UserPlus, path: '/portefeuille/equipe', category: 'Organisation' },
 ];

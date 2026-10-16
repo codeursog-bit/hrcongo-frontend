@@ -9,6 +9,7 @@
 //    3) Saisie manuelle de la paie étrangère des expatriés (ForeignPayModal)
 //    4) Impression / PDF A4 paysage avec en-tête entreprise, en couleur ou
 //       en noir & blanc (JournalPrintable)
+//    5) Export Excel dynamique (formules) généré par le serveur
 //    Accès : déjà couvert par la règle /rapports/* de lib/route-access.ts.
 // ============================================================================
 
@@ -16,7 +17,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, BookOpen, ChevronDown, Printer, FileDown, Globe2,
-  AlertTriangle, Loader2, Palette, Contrast,
+  AlertTriangle, Loader2, Palette, Contrast, FileSpreadsheet,
 } from 'lucide-react';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
@@ -50,6 +51,8 @@ export default function JournalPaiePage() {
 
   const [mono, setMono] = useState(false); // false = couleur, true = noir & blanc
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [excelBusy, setExcelBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEmployeeId, setModalEmployeeId] = useState<string | null>(null);
@@ -83,6 +86,28 @@ export default function JournalPaiePage() {
   };
 
   const handlePrint = () => setTimeout(() => printReport(REPORT_ID), 50);
+
+  // Export Excel DYNAMIQUE (formules, cellules modifiables) — généré côté serveur,
+  // même design que l'Excel du récap personnel.
+  const handleExcel = async () => {
+    setExcelBusy(true);
+    setActionError(null);
+    try {
+      const blob = await api.getBlob(
+        `/payroll-journal/export/excel?month=${period.month}&year=${period.year}`,
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `journal_paie_${String(period.month).padStart(2, '0')}_${period.year}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      setActionError(e?.message || "Erreur lors de l'export Excel");
+    } finally {
+      setExcelBusy(false);
+    }
+  };
 
   const handlePdf = async () => {
     if (!journal) return;
@@ -158,6 +183,14 @@ export default function JournalPaiePage() {
               <Printer className="w-4 h-4" /> Imprimer
             </button>
             <button
+              onClick={handleExcel}
+              disabled={!hasRows || excelBusy}
+              className="px-3 py-2 text-sm font-semibold rounded-xl border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {excelBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+              Excel
+            </button>
+            <button
               onClick={handlePdf}
               disabled={!hasRows || pdfBusy}
               className="px-3 py-2 text-sm font-semibold rounded-xl bg-[var(--brand)] text-white shadow-md shadow-[var(--brand)]/30 hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
@@ -197,6 +230,13 @@ export default function JournalPaiePage() {
         </div>
 
         <RapportsSubNav active="/rapports/journal-paie" />
+
+        {actionError && (
+          <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
+            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700 dark:text-red-300">{actionError}</p>
+          </div>
+        )}
 
         {loadError && (
           <div className="mt-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-2xl">
