@@ -2,57 +2,24 @@
 
 // ============================================================================
 // 📁 components/PresenceModuleSwitcher.tsx
-// ✅ Mini sélecteur (3 pills) pour sauter entre les modules Présences /
-//    Absences / Permissions sans reposer la barre complète PresenceSubNav.
+// ✅ Sélecteur de module Présences · Absences · Permissions.
 //    À poser UNIQUEMENT sur /presences/absences/* et /presences/permissions/*
-//    (au-dessus de AbsenceSubNav / PermissionsSubNav). Le hub /presences
-//    garde PresenceSubNav en entier et n'a pas besoin de ce switcher.
+//    (au-dessus de AbsenceSubNav / PermissionsSubNav).
+// 🆕 Même rendu que la navigation de Prêts (RequestModuleNav) : plus de pastilles rondes à part.
 // ============================================================================
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Fingerprint, FileText, Ticket } from 'lucide-react';
-import { useBasePath } from '@/hooks/useBasePath';
+import RequestModuleNav, { NavLinkDef } from '@/components/RequestModuleNav';
 
-const MODULES = [
-  { href: '/presences', label: 'Présences', icon: Fingerprint },
-  { href: '/presences/absences', label: 'Absences', icon: FileText },
-  { href: '/presences/permissions', label: 'Permissions', icon: Ticket },
+const LINKS: NavLinkDef[] = [
+  { href: '/presences', label: 'Présences', icon: Fingerprint, group: 'module' },
+  { href: '/presences/absences', label: 'Absences', icon: FileText, group: 'module' },
+  { href: '/presences/permissions', label: 'Permissions', icon: Ticket, group: 'module' },
 ];
 
 export default function PresenceModuleSwitcher() {
-  const { bp } = useBasePath();
-  const pathname = usePathname();
-
-  const isActive = (href: string) => {
-    const target = bp(href);
-    if (href === '/presences') {
-      // ne pas matcher les sous-modules absences/permissions
-      return pathname === target || (pathname?.startsWith(target) && !pathname?.startsWith(bp('/presences/absences')) && !pathname?.startsWith(bp('/presences/permissions')));
-    }
-    return pathname?.startsWith(target);
-  };
-
-  return (
-    <div className="flex gap-1.5 mb-3">
-      {MODULES.map(m => {
-        const Icon = m.icon;
-        const active = isActive(m.href);
-        return (
-          <Link
-            key={m.href}
-            href={bp(m.href)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all shrink-0 border ${
-              active
-                ? 'bg-emerald-500 border-emerald-500 text-white'
-                : 'bg-transparent border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'
-            }`}
-          >
-            <Icon size={12} /> {m.label}
-          </Link>
-        );
-      })}
-    </div>
-  );
+  // RequestModuleNav allume le lien le plus spécifique : /presences/absences/* → Absences,
+  // /presences/permissions/* → Permissions, le reste de /presences → Présences.
+  return <RequestModuleNav links={LINKS} accent="emerald" />;
 }

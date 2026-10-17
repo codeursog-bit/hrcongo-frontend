@@ -50,7 +50,7 @@ export function LoansExportDialog({ open, onClose, scope, initialPeriod, company
   const n = monthsCount(period);
   const invalid = n === 0 || n > 24;
   const selected = which === 'ALL' ? 'ALL' : oneId;
-  const fileLabel = scope === 'PORTFOLIO' ? (which === 'ALL' ? 'Portefeuille' : companies.find((c) => c.id === oneId)?.name ?? 'Entreprise') : companyLabel;
+  const fileLabel = scope === 'PORTFOLIO' ? (which === 'ALL' ? 'Konza RH' : companies.find((c) => c.id === oneId)?.name ?? 'Entreprise') : companyLabel;
 
   const download = async () => {
     setBusy(true);

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {
-  Document, Page, View, Text, Image, StyleSheet,
+  Document, Page, View, Text, Image, StyleSheet, Svg, Path, Circle,
 } from '@react-pdf/renderer';
 
 // ============================================================================
@@ -20,6 +20,8 @@ const C = {
   sky: '#38BDF8',
   skySoft: '#E8F3FF',
   lime: '#A3E635',
+  limeDeep: '#84CC16',
+  limeSoft: '#F1FADD',
   orange: '#F97316',
   orangeSoft: '#FFEFD9',
   cream: '#FFF8EF',
@@ -30,8 +32,7 @@ const C = {
   white: '#FFFFFF',
 };
 
-const SIDEBAR_W = 196;
-const BAND_H = 152;
+const SIDEBAR_W = 200;
 
 const S = StyleSheet.create({
   page: {
@@ -41,74 +42,90 @@ const S = StyleSheet.create({
     backgroundColor: C.white,
   },
 
-  // ── fonds de la page 1
   sideBg: { position: 'absolute', top: 0, bottom: 0, left: 0, width: SIDEBAR_W, backgroundColor: C.cream },
-  bandBg: { position: 'absolute', top: 0, left: SIDEBAR_W, right: 0, height: BAND_H, backgroundColor: C.navy },
-  bandAccent: { position: 'absolute', top: BAND_H, left: SIDEBAR_W, right: 0, height: 4, backgroundColor: C.orange },
+  sideStripe: { position: 'absolute', top: 0, bottom: 0, left: SIDEBAR_W - 4, width: 4, backgroundColor: C.orangeSoft },
 
   row: { flexDirection: 'row' },
 
   // ── colonne latérale
-  side: { width: SIDEBAR_W, paddingTop: 28, paddingHorizontal: 20, paddingBottom: 44 },
-  photoWrap: {
-    width: 118, height: 140, alignSelf: 'center', borderRadius: 8, overflow: 'hidden',
-    backgroundColor: C.white, borderWidth: 3, borderColor: C.white,
-  },
-  photo: { width: 112, height: 134, objectFit: 'cover' },
-  photoFallback: {
-    width: 112, height: 134, backgroundColor: C.skySoft, alignItems: 'center', justifyContent: 'center',
-  },
-  photoInitials: { fontFamily: 'Helvetica-Bold', fontSize: 38, color: C.navy },
+  side: { width: SIDEBAR_W, paddingTop: 28, paddingHorizontal: 22, paddingBottom: 44 },
+  ringOuter: { width: 142, height: 142, borderRadius: 71, backgroundColor: C.orange, alignSelf: 'center', alignItems: 'center', justifyContent: 'center' },
+  ringMid: { width: 134, height: 134, borderRadius: 67, backgroundColor: C.white, alignItems: 'center', justifyContent: 'center' },
+  ringIn: { width: 124, height: 124, borderRadius: 62, overflow: 'hidden' },
+  photo: { width: 124, height: 124, objectFit: 'cover', objectPosition: '50% 18%' },
+  photoFallback: { width: 124, height: 124, backgroundColor: C.skySoft, alignItems: 'center', justifyContent: 'center' },
+  photoInitials: { fontFamily: 'Helvetica-Bold', fontSize: 40, color: C.navy },
   badge: {
-    alignSelf: 'center', marginTop: 8, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 10,
-    fontFamily: 'Helvetica-Bold', fontSize: 7.5, letterSpacing: 0.8,
+    alignSelf: 'center', marginTop: 10, paddingVertical: 4, paddingHorizontal: 14, borderRadius: 11,
+    fontFamily: 'Helvetica-Bold', fontSize: 8, letterSpacing: 1,
   },
-  matricule: { alignSelf: 'center', marginTop: 5, fontSize: 8, color: C.muted, letterSpacing: 0.6 },
+  matricule: { alignSelf: 'center', marginTop: 6, fontFamily: 'Helvetica-Bold', fontSize: 8, color: C.orange, letterSpacing: 0.8 },
 
-  sideBlock: { marginTop: 12 },
+  sideBlock: { marginTop: 16 },
+  sideTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 9 },
+  sideBar: { width: 4, height: 18, borderRadius: 2, backgroundColor: C.orange, marginRight: 6 },
   sideChip: {
-    alignSelf: 'flex-start', backgroundColor: C.white, paddingVertical: 4, paddingHorizontal: 9, marginBottom: 7,
+    backgroundColor: C.white, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 3,
     fontFamily: 'Helvetica-Bold', fontSize: 10, letterSpacing: 1.1, color: C.navyDark,
   },
-  sideItem: { marginBottom: 5 },
+  sideItem: { marginBottom: 6 },
   sideLabel: { fontFamily: 'Helvetica-Bold', fontSize: 6.8, letterSpacing: 0.9, color: C.orange, marginBottom: 1.5 },
-  sideValue: { fontSize: 9, color: C.text, lineHeight: 1.3 },
+  sideValue: { fontSize: 9.2, color: C.text, lineHeight: 1.3 },
+  sideEmpty: { fontFamily: 'Helvetica-Oblique', fontSize: 8.5, color: C.muted },
+
+  contactRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  icon: { width: 20, height: 20, borderRadius: 10, backgroundColor: C.orange, alignItems: 'center', justifyContent: 'center', marginRight: 8, marginTop: 1 },
 
   // ── colonne principale
   main: { flex: 1, paddingBottom: 44 },
-  band: { height: BAND_H, paddingTop: 28, paddingHorizontal: 28 },
-  bandTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  band: {
+    backgroundColor: C.navy, paddingTop: 26, paddingHorizontal: 28, paddingBottom: 20,
+    borderBottomWidth: 4, borderBottomColor: C.orange, overflow: 'hidden',
+  },
+  bandDeco: { position: 'absolute', top: 0, right: 0 },
+  bandTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   logoBox: { backgroundColor: C.white, borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8 },
   logo: { height: 30, maxWidth: 120, objectFit: 'contain' },
   companyName: { fontFamily: 'Helvetica-Bold', fontSize: 12, color: C.white, letterSpacing: 0.4 },
   docTag: { fontFamily: 'Helvetica-Bold', fontSize: 7.5, letterSpacing: 1.6, color: '#BFD7FF' },
-  firstName: { fontSize: 24, color: C.white, letterSpacing: 2, lineHeight: 1 },
-  lastName: { fontFamily: 'Helvetica-Bold', fontSize: 28, color: C.white, letterSpacing: 2, lineHeight: 1.05, marginBottom: 7 },
+  lastName: { fontFamily: 'Helvetica-Bold', color: C.white, letterSpacing: 1.5, marginTop: 2, marginBottom: 9 },
   position: { fontFamily: 'Helvetica-Bold', fontSize: 10, letterSpacing: 1.6, color: '#FDBA74' },
+  limeDash: { width: 34, height: 3, borderRadius: 2, backgroundColor: C.lime, marginBottom: 9 },
 
   mainBody: { paddingTop: 22, paddingHorizontal: 28 },
 
-  stats: { flexDirection: 'row', marginBottom: 6 },
-  stat: {
-    flex: 1, backgroundColor: C.cream, borderLeftWidth: 3, borderLeftColor: C.orange,
-    paddingVertical: 7, paddingHorizontal: 9, marginRight: 8, borderRadius: 3,
-  },
+  stats: { flexDirection: 'row', marginBottom: 4 },
+  stat: { flex: 1, paddingVertical: 9, paddingHorizontal: 10, marginRight: 8, borderRadius: 4, borderLeftWidth: 4 },
   statLast: { marginRight: 0 },
-  statLabel: { fontSize: 6.6, letterSpacing: 0.9, color: C.muted, fontFamily: 'Helvetica-Bold', marginBottom: 2 },
-  statValue: { fontFamily: 'Helvetica-Bold', fontSize: 10, color: C.navyDark },
+  statLabel: { fontSize: 6.6, letterSpacing: 0.9, color: C.muted, fontFamily: 'Helvetica-Bold', marginBottom: 3 },
+  statValue: { fontFamily: 'Helvetica-Bold', fontSize: 12, color: C.navyDark },
 
-  // ── sections (colonne principale + pages suivantes)
-  section: { marginTop: 13 },
+  // ── sections
+  section: { marginTop: 20 },
+  secTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  secBar: { width: 4, height: 20, borderRadius: 2, marginRight: 7 },
   chip: {
-    alignSelf: 'flex-start', backgroundColor: C.skySoft, paddingVertical: 4, paddingHorizontal: 10, marginBottom: 9,
+    backgroundColor: C.skySoft, paddingVertical: 5, paddingHorizontal: 11, borderRadius: 3,
     fontFamily: 'Helvetica-Bold', fontSize: 10.5, letterSpacing: 1.2, color: C.navyDark,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { width: '50%', paddingRight: 12, paddingVertical: 4, borderBottomWidth: 0.6, borderBottomColor: C.line },
-  cellFull: { width: '100%', paddingRight: 12, paddingVertical: 4, borderBottomWidth: 0.6, borderBottomColor: C.line },
-  label: { fontFamily: 'Helvetica-Bold', fontSize: 6.8, letterSpacing: 0.9, color: C.muted, marginBottom: 1.5 },
-  value: { fontSize: 9.5, color: C.text, lineHeight: 1.25 },
-  valueEmpty: { fontSize: 9.5, color: '#C9BBA8' },
+  cell: { width: '50%', paddingRight: 12, paddingVertical: 5, borderBottomWidth: 0.6, borderBottomColor: C.line },
+  cellFull: { width: '100%', paddingRight: 12, paddingVertical: 5, borderBottomWidth: 0.6, borderBottomColor: C.line },
+  label: { fontFamily: 'Helvetica-Bold', fontSize: 6.8, letterSpacing: 0.9, color: C.muted, marginBottom: 2 },
+  value: { fontSize: 10, color: C.text, lineHeight: 1.25 },
+  emptyBox: { borderWidth: 0.8, borderColor: C.creamLine, borderStyle: 'dashed', borderRadius: 4, paddingVertical: 10, paddingHorizontal: 12 },
+  emptyText: { fontFamily: 'Helvetica-Oblique', fontSize: 9, color: C.muted },
+
+  // ── rémunération / fiscal
+  payRow: { flexDirection: 'row' },
+  hero: { width: 200, backgroundColor: C.navy, borderRadius: 6, padding: 14, marginRight: 14, justifyContent: 'center' },
+  heroLabel: { fontFamily: 'Helvetica-Bold', fontSize: 7, letterSpacing: 1.1, color: '#BFD7FF', marginBottom: 5 },
+  heroValue: { fontFamily: 'Helvetica-Bold', fontSize: 19, color: C.white },
+  heroUnit: { fontFamily: 'Helvetica-Bold', fontSize: 9, color: '#FDBA74', marginTop: 3, letterSpacing: 1 },
+  payCol: { flex: 1 },
+  taxRow: { flexDirection: 'row' },
+  taxCard: { flex: 1, backgroundColor: C.cream, borderRadius: 4, padding: 9, marginRight: 8 },
+  pill: { alignSelf: 'flex-start', paddingVertical: 3, paddingHorizontal: 10, borderRadius: 9, fontFamily: 'Helvetica-Bold', fontSize: 8, letterSpacing: 0.8 },
 
   // ── pages suivantes
   p2: { paddingTop: 66, paddingHorizontal: 36, paddingBottom: 62 },
@@ -347,38 +364,111 @@ const yesNo = (v?: boolean | null) => (v === null || v === undefined ? '' : v ? 
 // Briques de mise en page
 // ============================================================================
 
+const nonEmpty = (v?: string | null) => !!(v && String(v).trim());
+
+function Icon({ kind }: { kind: 'phone' | 'mail' | 'pin' }) {
+  return (
+    <View style={S.icon}>
+      <Svg width={11} height={11} viewBox="0 0 14 14">
+        {kind === 'mail' && (
+          <>
+            <Path d="M1.5 3.5 H12.5 V10.5 H1.5 Z" stroke="#FFFFFF" strokeWidth={1.3} fill="none" />
+            <Path d="M1.5 3.8 L7 8 L12.5 3.8" stroke="#FFFFFF" strokeWidth={1.3} fill="none" />
+          </>
+        )}
+        {kind === 'pin' && (
+          <>
+            <Path d="M7 13 C7 13 2.5 8.6 2.5 5.6 A4.5 4.5 0 0 1 11.5 5.6 C11.5 8.6 7 13 7 13 Z" fill="#FFFFFF" />
+            <Circle cx={7} cy={5.6} r={1.6} fill="#F97316" />
+          </>
+        )}
+        {kind === 'phone' && (
+          <Path d="M3 1.5 L5.6 1.2 L6.7 4 L5.4 5.1 C6.2 6.8 7.2 7.8 8.9 8.6 L10 7.3 L12.8 8.4 L12.5 11 C6.5 12.4 1.4 7.2 3 1.5 Z" fill="#FFFFFF" />
+        )}
+      </Svg>
+    </View>
+  );
+}
+
+function ContactRow({ kind, label, value }: { kind: 'phone' | 'mail' | 'pin'; label: string; value?: string | null }) {
+  if (!nonEmpty(value)) return null;
+  return (
+    <View style={S.contactRow} wrap={false}>
+      <Icon kind={kind} />
+      <View style={{ flex: 1 }}>
+        <Text style={S.sideLabel}>{label.toUpperCase()}</Text>
+        <Text style={S.sideValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
 function SideItem({ label, value }: { label: string; value?: string | null }) {
+  if (!nonEmpty(value)) return null;
   return (
     <View style={S.sideItem} wrap={false}>
       <Text style={S.sideLabel}>{label.toUpperCase()}</Text>
-      <Text style={S.sideValue}>{value || '—'}</Text>
+      <Text style={S.sideValue}>{value}</Text>
     </View>
   );
 }
 
-function SideBlock({ title, children }: { title: string; children: React.ReactNode }) {
+function SideBlock({ title, empty, children }: { title: string; empty?: boolean; children?: React.ReactNode }) {
   return (
     <View style={S.sideBlock}>
-      <Text style={S.sideChip}>{title}</Text>
-      {children}
+      <View style={S.sideTitleRow}>
+        <View style={S.sideBar} />
+        <Text style={S.sideChip}>{title}</Text>
+      </View>
+      {empty ? <Text style={S.sideEmpty}>Non renseigné</Text> : children}
     </View>
   );
 }
 
-function Cell({ label, value, full }: { label: string; value?: string | null; full?: boolean }) {
+type GridItem = { label: string; value?: string | null; full?: boolean };
+
+// Les champs vides sont masqués (rendu plus aéré et plus vivant)
+function Grid({ items, emptyText = 'Aucune information renseignée' }: { items: GridItem[]; emptyText?: string }) {
+  const shown = items.filter((i) => nonEmpty(i.value));
+  if (shown.length === 0) {
+    return <View style={S.emptyBox}><Text style={S.emptyText}>{emptyText}</Text></View>;
+  }
   return (
-    <View style={full ? S.cellFull : S.cell} wrap={false}>
-      <Text style={S.label}>{label.toUpperCase()}</Text>
-      {value ? <Text style={S.value}>{value}</Text> : <Text style={S.valueEmpty}>—</Text>}
+    <View style={S.grid}>
+      {shown.map((i) => (
+        <View key={i.label} style={i.full ? S.cellFull : S.cell} wrap={false}>
+          <Text style={S.label}>{i.label.toUpperCase()}</Text>
+          <Text style={S.value}>{i.value}</Text>
+        </View>
+      ))}
     </View>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, accent = C.orange, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
     <View style={S.section}>
-      <Text style={S.chip} minPresenceAhead={60}>{title}</Text>
+      <View style={S.secTitleRow} minPresenceAhead={60}>
+        <View style={[S.secBar, { backgroundColor: accent }]} />
+        <Text style={S.chip}>{title}</Text>
+      </View>
       {children}
+    </View>
+  );
+}
+
+function Pill({ value }: { value?: boolean | null }) {
+  if (value === null || value === undefined) return <Text style={[S.pill, { backgroundColor: '#EEE7DC', color: C.muted }]}>—</Text>;
+  return value
+    ? <Text style={[S.pill, { backgroundColor: '#DDF5B8', color: '#3F6212' }]}>OUI</Text>
+    : <Text style={[S.pill, { backgroundColor: '#EEE7DC', color: '#6B5E50' }]}>NON</Text>;
+}
+
+function TaxCard({ label, value, last }: { label: string; value?: boolean | null; last?: boolean }) {
+  return (
+    <View style={[S.taxCard, last ? { marginRight: 0 } : {}]}>
+      <Text style={S.label}>{label.toUpperCase()}</Text>
+      <Pill value={value} />
     </View>
   );
 }
@@ -437,10 +527,14 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
   const age = ageFrom(e.dateOfBirth);
   const fullTitle = [e.position, e.departmentName].filter(Boolean).join('  •  ').toUpperCase();
 
+  // Taille du prénom adaptée à sa longueur (évite tout chevauchement avec le nom)
+  const fn = (e.firstName || '').toUpperCase();
+  const fnSize = fn.length <= 14 ? 24 : fn.length <= 20 ? 20 : 16;
+  const ln = (e.lastName || '').toUpperCase();
+  const lnSize = ln.length <= 12 ? 30 : ln.length <= 18 ? 26 : 21;
+
   const naissance = [fmtDate(e.dateOfBirth), e.placeOfBirth].filter(Boolean).join(' — à ') +
-    (age !== null ? `  (${age} ans)` : '');
-  const nationalite = [countryName(e.nationality), e.isResident === false ? 'non résident' : e.isResident === true ? 'résident' : null]
-    .filter(Boolean).join(' — ');
+    (age !== null && e.dateOfBirth ? `  (${age} ans)` : '');
   const classification = e.echelon || e.professionalCategory;
 
   const essai = e.trialStatus && e.trialStatus !== 'NONE'
@@ -455,6 +549,10 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
   const assets = e.assets || [];
   const docs = e.documents || [];
 
+  const urgenceEmpty = ![e.emergencyContactName, e.emergencyContactRelation, e.emergencyContactPhone].some(nonEmpty);
+  const santeEmpty = ![e.bloodType, e.pathology, e.uniformSize, e.shoeSize].some(nonEmpty);
+  const compEmpty = ![e.educationLevel, e.foreignLanguages].some(nonEmpty) && !e.hasDrivingLicense;
+
   const logoNode = hasLogo
     ? <View style={S.logoBox}><Image src={company!.logoUrl as string} style={S.logo} /></View>
     : <Text style={S.companyName}>{company?.name || 'Entreprise'}</Text>;
@@ -463,52 +561,63 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
     ? <View style={S.slimLogoBox}><Image src={company!.logoUrl as string} style={S.slimLogo} /></View>
     : <Text style={S.slimName}>{company?.name || 'Entreprise'}</Text>;
 
+  const payCells: GridItem[] = [
+    { label: 'Mode de paiement', value: PAYMENT[e.paymentMethod || ''] || e.paymentMethod, full: true },
+    { label: 'Banque', value: e.bankName },
+    { label: 'N° de compte / RIB', value: e.bankAccountNumber },
+    { label: 'Opérateur Mobile Money', value: e.mobileMoneyOperator },
+    { label: 'N° Mobile Money', value: e.mobileMoneyNumber },
+  ];
+
   return (
     <Document title={`Fiche_${e.lastName}_${e.firstName}`} author={company?.name || 'KonzaRH'} subject="Fiche du personnel">
 
       {/* ════════════════════════ PAGE 1 — identité ════════════════════════ */}
       <Page size="A4" style={S.page}>
         <View style={S.sideBg} />
-        <View style={S.bandBg} />
-        <View style={S.bandAccent} />
+        <View style={S.sideStripe} />
 
         <View style={S.row}>
           {/* ── Colonne latérale ── */}
           <View style={S.side}>
-            <View style={S.photoWrap}>
-              {e.photoUrl
-                ? <Image src={e.photoUrl} style={S.photo} />
-                : <View style={S.photoFallback}><Text style={S.photoInitials}>{initials}</Text></View>}
+            <View style={S.ringOuter}>
+              <View style={S.ringMid}>
+                <View style={S.ringIn}>
+                  {e.photoUrl
+                    ? <Image src={e.photoUrl} style={S.photo} />
+                    : <View style={S.photoFallback}><Text style={S.photoInitials}>{initials}</Text></View>}
+                </View>
+              </View>
             </View>
             <Text style={[S.badge, { backgroundColor: st.bg, color: st.fg }]}>{st.label}</Text>
             <Text style={S.matricule}>MATRICULE  {e.employeeNumber || '—'}</Text>
 
             <SideBlock title="CONTACT">
-              <SideItem label="Téléphone" value={e.phone} />
-              {e.secondaryPhone ? <SideItem label="Téléphone secondaire" value={e.secondaryPhone} /> : null}
-              <SideItem label="E-mail" value={e.email} />
-              <SideItem label="Adresse" value={[e.address, e.city].filter(Boolean).join(', ')} />
+              <ContactRow kind="phone" label="Téléphone" value={e.phone} />
+              <ContactRow kind="phone" label="Téléphone secondaire" value={e.secondaryPhone} />
+              <ContactRow kind="mail" label="E-mail" value={e.email} />
+              <ContactRow kind="pin" label="Adresse" value={[e.address, e.city].filter(Boolean).join(', ')} />
             </SideBlock>
 
-            <SideBlock title="URGENCE">
+            <SideBlock title="URGENCE" empty={urgenceEmpty}>
               <SideItem label="Personne à prévenir" value={e.emergencyContactName} />
               <SideItem label="Lien de parenté" value={e.emergencyContactRelation} />
               <SideItem label="Téléphone" value={e.emergencyContactPhone} />
             </SideBlock>
 
-            <SideBlock title="SANTÉ & TENUE">
+            <SideBlock title="SANTÉ & TENUE" empty={santeEmpty}>
               <SideItem label="Groupe sanguin" value={e.bloodType} />
-              <SideItem label="Pathologie habituelle" value={e.pathology || 'Aucune renseignée'} />
+              <SideItem label="Pathologie habituelle" value={e.pathology} />
               <SideItem label="Taille de la tenue" value={e.uniformSize} />
               <SideItem label="Pointure" value={e.shoeSize} />
             </SideBlock>
 
-            <SideBlock title="COMPÉTENCES">
+            <SideBlock title="COMPÉTENCES" empty={compEmpty}>
               <SideItem label="Niveau d'études" value={e.educationLevel} />
               <SideItem label="Langues étrangères" value={e.foreignLanguages} />
               <SideItem
                 label="Permis de conduire"
-                value={e.hasDrivingLicense ? `Oui${e.drivingLicenseNumber ? ` — N° ${e.drivingLicenseNumber}` : ''}` : 'Non'}
+                value={e.hasDrivingLicense ? `Oui${e.drivingLicenseNumber ? ` — N° ${e.drivingLicenseNumber}` : ''}` : ''}
               />
             </SideBlock>
           </View>
@@ -516,65 +625,79 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
           {/* ── Colonne principale ── */}
           <View style={S.main}>
             <View style={S.band}>
+              <Svg style={S.bandDeco} width={230} height={190} viewBox="0 0 230 190">
+                <Circle cx={190} cy={30} r={86} fill="#2C4FA6" />
+                <Circle cx={254} cy={168} r={42} fill="#F97316" fillOpacity={0.9} />
+                <Circle cx={204} cy={112} r={8} fill="#A3E635" fillOpacity={0.95} />
+                <Circle cx={96} cy={14} r={6} fill="#38BDF8" fillOpacity={0.9} />
+              </Svg>
               <View style={S.bandTop}>
                 <View style={{ flex: 1, paddingRight: 12, alignItems: 'flex-start' }}>{logoNode}</View>
                 <Text style={S.docTag}>FICHE DU PERSONNEL  •  {today}</Text>
               </View>
-              <Text style={S.firstName}>{(e.firstName || '').toUpperCase()}</Text>
-              <Text style={S.lastName}>{(e.lastName || '').toUpperCase()}</Text>
+              <Text style={{ fontSize: fnSize, color: C.white, letterSpacing: 1.5, lineHeight: 1.15 }}>{fn}</Text>
+              <Text style={[S.lastName, { fontSize: lnSize, lineHeight: 1.1 }]}>{ln}</Text>
+              <View style={S.limeDash} />
               <Text style={S.position}>{fullTitle || 'EMPLOYÉ'}</Text>
             </View>
 
             <View style={S.mainBody}>
               <View style={S.stats}>
-                <View style={S.stat}>
+                <View style={[S.stat, { backgroundColor: C.orangeSoft, borderLeftColor: C.orange }]}>
                   <Text style={S.statLabel}>EMBAUCHÉ(E) LE</Text>
                   <Text style={S.statValue}>{fmtShort(e.hireDate) || '—'}</Text>
                 </View>
-                <View style={S.stat}>
+                <View style={[S.stat, { backgroundColor: C.skySoft, borderLeftColor: C.sky }]}>
                   <Text style={S.statLabel}>ANCIENNETÉ</Text>
                   <Text style={S.statValue}>{seniority(e.hireDate, e.terminationDate) || '—'}</Text>
                 </View>
-                <View style={[S.stat, S.statLast]}>
+                <View style={[S.stat, S.statLast, { backgroundColor: C.limeSoft, borderLeftColor: C.limeDeep }]}>
                   <Text style={S.statLabel}>CONTRAT</Text>
                   <Text style={S.statValue}>{e.contractType || '—'}</Text>
                 </View>
               </View>
 
-              <Section title="IDENTITÉ">
-                <View style={S.grid}>
-                  <Cell label="Nom complet" value={`${e.lastName || ''} ${e.firstName || ''}`.trim()} full />
-                  <Cell label="Genre" value={GENDER[e.gender || ''] || e.gender} />
-                  <Cell label="Nationalité" value={nationalite} />
-                  <Cell label="Naissance" value={naissance} full />
-                  <Cell label="Père" value={e.fatherName} />
-                  <Cell label="Mère" value={e.motherName} />
-                  <Cell label="Situation familiale" value={MARITAL[e.maritalStatus || ''] || e.maritalStatus} />
-                  <Cell label="Enfant(s) à charge" value={e.numberOfChildren !== undefined ? String(e.numberOfChildren) : ''} />
-                </View>
+              <Section title="IDENTITÉ" accent={C.orange}>
+                <Grid
+                  items={[
+                    { label: 'Naissance', value: naissance, full: true },
+                    { label: 'Genre', value: GENDER[e.gender || ''] || e.gender },
+                    { label: 'Nationalité', value: countryName(e.nationality) },
+                    { label: 'Résidence', value: e.isResident === true ? 'Résident' : e.isResident === false ? 'Non résident' : '' },
+                    { label: 'Situation familiale', value: MARITAL[e.maritalStatus || ''] || e.maritalStatus },
+                    { label: 'Enfant(s) à charge', value: e.numberOfChildren !== undefined && e.numberOfChildren !== null ? String(e.numberOfChildren) : '' },
+                    { label: 'Père', value: e.fatherName },
+                    { label: 'Mère', value: e.motherName },
+                  ]}
+                />
               </Section>
 
-              <Section title="PIÈCES & NUMÉROS">
-                <View style={S.grid}>
-                  <Cell label="Pièce d'identité" value={e.nationalIdNumber} />
-                  <Cell label="N° CNSS" value={e.cnssNumber} />
-                  <Cell label="NIU" value={e.niu} />
-                  <Cell label="N° contribuable" value={e.taxNumber} />
-                </View>
+              <Section title="PIÈCES & NUMÉROS" accent={C.sky}>
+                <Grid
+                  emptyText="Aucune pièce ni aucun numéro renseigné"
+                  items={[
+                    { label: "Pièce d'identité", value: e.nationalIdNumber },
+                    { label: 'N° CNSS', value: e.cnssNumber },
+                    { label: 'NIU', value: e.niu },
+                    { label: 'N° contribuable', value: e.taxNumber },
+                  ]}
+                />
               </Section>
 
-              <Section title="EMPLOI & CONTRAT">
-                <View style={S.grid}>
-                  <Cell label="Poste" value={e.position} />
-                  <Cell label="Département / service" value={e.departmentName} />
-                  <Cell label="Catégorie / échelon" value={classification} />
-                  <Cell label="Type de contrat" value={e.contractType} />
-                  <Cell label="Date d'embauche" value={fmtDate(e.hireDate)} />
-                  <Cell label="Fin de contrat" value={e.contractEndDate ? fmtDate(e.contractEndDate) : (e.contractType === 'CDI' ? 'Durée indéterminée' : '')} />
-                  {essai ? <Cell label="Période d'essai" value={essai} full /> : null}
-                  {e.terminationDate ? <Cell label="Date de sortie" value={fmtDate(e.terminationDate)} /> : null}
-                  {e.terminationReason ? <Cell label="Motif de sortie" value={e.terminationReason} /> : null}
-                </View>
+              <Section title="EMPLOI & CONTRAT" accent={C.limeDeep}>
+                <Grid
+                  items={[
+                    { label: 'Poste', value: e.position },
+                    { label: 'Département / service', value: e.departmentName },
+                    { label: 'Catégorie / échelon', value: classification },
+                    { label: 'Type de contrat', value: e.contractType },
+                    { label: "Date d'embauche", value: fmtDate(e.hireDate) },
+                    { label: 'Fin de contrat', value: e.contractEndDate ? fmtDate(e.contractEndDate) : (e.contractType === 'CDI' ? 'Durée indéterminée' : '') },
+                    { label: "Période d'essai", value: essai, full: true },
+                    { label: 'Date de sortie', value: e.terminationDate ? fmtDate(e.terminationDate) : '' },
+                    { label: 'Motif de sortie', value: e.terminationReason },
+                  ]}
+                />
               </Section>
             </View>
           </View>
@@ -595,38 +718,41 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
         <View style={S.slimAccent} fixed />
 
         {hasSalaryInfo && (
-          <Section title="RÉMUNÉRATION & PAIEMENT">
-            <View style={S.grid}>
-              <Cell label="Salaire de base" value={fmtMoney(e.baseSalary)} />
-              <Cell label="Mode de paiement" value={PAYMENT[e.paymentMethod || ''] || e.paymentMethod} />
-              {e.bankName || e.bankAccountNumber ? (
-                <>
-                  <Cell label="Banque" value={e.bankName} />
-                  <Cell label="N° de compte / RIB" value={e.bankAccountNumber} />
-                </>
-              ) : null}
-              {e.mobileMoneyNumber || e.mobileMoneyOperator ? (
-                <>
-                  <Cell label="Opérateur Mobile Money" value={e.mobileMoneyOperator} />
-                  <Cell label="N° Mobile Money" value={e.mobileMoneyNumber} />
-                </>
-              ) : null}
+          <Section title="RÉMUNÉRATION & PAIEMENT" accent={C.orange}>
+            <View style={S.payRow}>
+              <View style={S.hero}>
+                <Text style={S.heroLabel}>SALAIRE DE BASE</Text>
+                <Text style={S.heroValue}>{fmtMoney(e.baseSalary) || '—'}</Text>
+                <Text style={S.heroUnit}>PAR MOIS</Text>
+              </View>
+              <View style={S.payCol}>
+                <Grid items={payCells.map((c) => ({ ...c, full: true }))} emptyText="Aucun moyen de paiement renseigné" />
+              </View>
             </View>
           </Section>
         )}
 
-        <Section title="RÉGIME FISCAL & SOCIAL">
-          <View style={S.grid}>
-            <Cell label="Soumis à l'ITS / IRPP" value={yesNo(e.isSubjectToIrpp)} />
-            <Cell label="Soumis à la CNSS" value={yesNo(e.isSubjectToCnss)} />
-            <Cell label="Soumis à la TUS" value={yesNo(e.isSubjectToTus)} />
-            <Cell label="Zone TOL" value={e.tolZone === 'PERIPHERIE' ? 'Périphérie' : e.tolZone === 'VILLE' ? 'Ville' : e.tolZone} />
-            {e.taxExemptionReason ? <Cell label="Motif d'exonération" value={e.taxExemptionReason} full /> : null}
+        <Section title="RÉGIME FISCAL & SOCIAL" accent={C.sky}>
+          <View style={S.taxRow}>
+            <TaxCard label="ITS / IRPP" value={e.isSubjectToIrpp} />
+            <TaxCard label="CNSS" value={e.isSubjectToCnss} />
+            <TaxCard label="TUS" value={e.isSubjectToTus} />
+            <View style={[S.taxCard, { marginRight: 0 }]}>
+              <Text style={S.label}>ZONE TOL</Text>
+              <Text style={[S.pill, { backgroundColor: C.skySoft, color: C.navy }]}>
+                {(e.tolZone === 'PERIPHERIE' ? 'PÉRIPHÉRIE' : e.tolZone === 'VILLE' ? 'VILLE' : e.tolZone || '—')}
+              </Text>
+            </View>
           </View>
+          {e.taxExemptionReason ? (
+            <View style={{ marginTop: 8 }}>
+              <Grid items={[{ label: "Motif d'exonération", value: e.taxExemptionReason, full: true }]} />
+            </View>
+          ) : null}
         </Section>
 
-        {assets.length > 0 && (
-          <Section title="MATÉRIEL EN DOTATION">
+        <Section title="MATÉRIEL EN DOTATION" accent={C.limeDeep}>
+          {assets.length > 0 ? (
             <Table
               cols={[
                 { title: 'Équipement', width: '50%' },
@@ -635,11 +761,13 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
               ]}
               rows={assets.map((a) => [a.name, a.category || '', a.serialNumber || ''])}
             />
-          </Section>
-        )}
+          ) : (
+            <View style={S.emptyBox}><Text style={S.emptyText}>Aucun matériel en dotation</Text></View>
+          )}
+        </Section>
 
-        {docs.length > 0 && (
-          <Section title="DOCUMENTS AU DOSSIER">
+        <Section title="DOCUMENTS AU DOSSIER" accent={C.orange}>
+          {docs.length > 0 ? (
             <Table
               cols={[
                 { title: 'Type', width: '26%' },
@@ -654,8 +782,10 @@ export function FicheEmployePdf({ employee: e, company }: { employee: FicheEmplo
                 fmtShort(d.expiresAt),
               ])}
             />
-          </Section>
-        )}
+          ) : (
+            <View style={S.emptyBox}><Text style={S.emptyText}>Aucun document enregistré dans le dossier</Text></View>
+          )}
+        </Section>
 
         <View style={S.sigRow}>
           <View style={S.sigBox}><Text style={S.sigLabel}>VISA DES RESSOURCES HUMAINES</Text></View>

@@ -2,87 +2,59 @@
 
 // ============================================================================
 // 📁 components/PresenceSubNav.tsx
-// ✅ Barre de navigation courte, commune à toutes les pages du module
-//    Présences (anciennes et nouvelles) — pour qu'on puisse toujours passer
-//    de l'une à l'autre en un clic, sans repasser par le menu principal.
-//    À poser en haut de chaque page : /presences, /presences/pointage,
-//    /presences/pointage-manuel, /presences/resume, /presences/shifts,
-//    /presences/absences, /presences/absences/nouveau, /presences/absences/mon-espace
+// ✅ Barre de navigation commune à toutes les pages du module Présences.
+// 🆕 Même rendu que Prêts / Absences / Permissions (RequestModuleNav) :
+//      PILOTAGE  → Vue d'ensemble · Pointage manuel · Shifts · Tablettes · Écrans QR
+//      ANALYSE   → Tableau de bord · Suivi des absences
+//      ACTIONS   → Ma pointeuse · Absences · Permissions · Mon résumé
+//    Mêmes droits qu'avant (aucune page n'est ajoutée ni retirée selon les rôles).
+//    À poser en haut de chaque page : /presences, /presences/pointage, /presences/pointage-manuel,
+//    /presences/resume, /presences/shifts, /presences/tablettes, /presences/ecrans, /presences/dashboard…
 // ============================================================================
 
 import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   LayoutGrid, Fingerprint, KeyRound, FileText, CalendarClock,
   BarChart3, Ticket, CalendarDays, Tablet, MonitorSmartphone, PieChart,
 } from 'lucide-react';
-import { useBasePath } from '@/hooks/useBasePath';
+import RequestModuleNav, { NavLinkDef } from '@/components/RequestModuleNav';
 
 interface PresenceSubNavProps {
   userRole: string;
-  canRecordAttendanceForAll?: boolean; // 🆕 permission "secrétaire" : pointage manuel pour tout le monde
+  canRecordAttendanceForAll?: boolean; // permission "secrétaire" : pointage manuel pour tout le monde
 }
 
 export default function PresenceSubNav({ userRole, canRecordAttendanceForAll = false }: PresenceSubNavProps) {
-  const { bp } = useBasePath();
-  const pathname = usePathname();
-
   const canManage = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(userRole);
-  // 🆕 Mêmes rôles que AbsenceSubNav / PermissionsSubNav : un employé (ou un manager) ne voit
-  // pas les écrans de gestion/suivi, il est envoyé directement vers « son espace ».
+  // Un employé (ou un manager) ne voit pas les écrans de gestion/suivi des absences et permissions :
+  // il est envoyé vers « son espace ».
   const canAdminAbsences = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole);
-  const canManualPointage = canManage || canRecordAttendanceForAll; // 🆕 secrétaire : pointage manuel uniquement, pas les shifts
+  const canManualPointage = canManage || canRecordAttendanceForAll; // secrétaire : pointage manuel uniquement, pas les shifts
 
-  const links = [
-    { href: '/presences',                  label: 'Vue d\u2019ensemble', icon: LayoutGrid },
-    { href: '/presences/pointage',         label: 'Ma pointeuse',       icon: Fingerprint },
-    ...(canManualPointage ? [{ href: '/presences/pointage-manuel', label: 'Pointage manuel', icon: KeyRound }] : []),
+  const links: NavLinkDef[] = [
+    // ── Pilotage ──
+    { href: '/presences', label: 'Vue d\u2019ensemble', icon: LayoutGrid, group: canManage ? 'pilot' : 'action' },
+    ...(canManualPointage ? [{ href: '/presences/pointage-manuel', label: 'Pointage manuel', icon: KeyRound, group: 'pilot' as const }] : []),
+    ...(canManage ? [{ href: '/presences/shifts', label: 'Shifts', icon: CalendarClock, group: 'pilot' as const }] : []),
+    ...(canManage ? [{ href: '/presences/tablettes', label: 'Tablettes', icon: Tablet, group: 'pilot' as const }] : []),
+    ...(canAdminAbsences ? [{ href: '/presences/ecrans', label: 'Écrans QR', icon: MonitorSmartphone, group: 'pilot' as const }] : []),
+
+    // ── Analyse ──
+    ...(canAdminAbsences ? [
+      { href: '/presences/dashboard', label: 'Tableau de bord', icon: PieChart, group: 'analysis' as const },
+      { href: '/presences/absences/suivi', label: 'Suivi des absences', icon: CalendarDays, group: 'analysis' as const },
+    ] : []),
+
+    // ── Actions ──
+    { href: '/presences/pointage', label: 'Ma pointeuse', icon: Fingerprint, group: 'action' },
     canAdminAbsences
-      ? { href: '/presences/absences',            label: 'Demande d\u2019absence', icon: FileText }
-      : { href: '/presences/absences/mon-espace', label: 'Mes absences',           icon: FileText },
-    ...(canAdminAbsences ? [{ href: '/presences/absences/suivi', label: 'Suivi des absences', icon: CalendarDays }] : []),
+      ? { href: '/presences/absences', label: 'Demande d\u2019absence', icon: FileText, group: 'action' as const }
+      : { href: '/presences/absences/mon-espace', label: 'Mes absences', icon: FileText, group: 'action' as const },
     canAdminAbsences
-      ? { href: '/presences/permissions',            label: 'Permissions',      icon: Ticket }
-      : { href: '/presences/permissions/mon-espace', label: 'Mes permissions',  icon: Ticket },
-    ...(canManage ? [{ href: '/presences/shifts', label: 'Shifts', icon: CalendarClock }] : []),
-    ...(canManage ? [{ href: '/presences/tablettes', label: 'Tablettes', icon: Tablet }] : []),
-    ...(['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'].includes(userRole) ? [{ href: '/presences/ecrans', label: 'Écrans QR', icon: MonitorSmartphone }] : []),
-    ...(canAdminAbsences ? [{ href: '/presences/dashboard', label: 'Tableau de bord', icon: PieChart }] : []),
-    { href: '/presences/resume',           label: 'Mon résumé',         icon: BarChart3 },
+      ? { href: '/presences/permissions', label: 'Permissions', icon: Ticket, group: 'action' as const }
+      : { href: '/presences/permissions/mon-espace', label: 'Mes permissions', icon: Ticket, group: 'action' as const },
+    { href: '/presences/resume', label: 'Mon résumé', icon: BarChart3, group: 'action' },
   ];
 
-  const isActive = (href: string) => {
-    const target = bp(href);
-    if (pathname === target) return true;
-    if (href === '/presences') return false;
-    // ✅ '/presences/absences' ne doit pas matcher '/presences/absences/suivi'
-    //    (routes distinctes désormais : demande vs suivi)
-    if (href === '/presences/absences') {
-      return pathname?.startsWith(target) && !pathname?.startsWith(bp('/presences/absences/suivi'));
-    }
-    return pathname?.startsWith(target);
-  };
-
-  return (
-    <div className="flex gap-1.5 overflow-x-auto pb-1 mb-5 -mt-1">
-      {links.map(l => {
-        const Icon = l.icon;
-        const active = isActive(l.href);
-        return (
-          <Link
-            key={l.href}
-            href={bp(l.href)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 ${
-              active
-                ? 'bg-emerald-500 text-white shadow-sm'
-                : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            <Icon size={14} /> {l.label}
-          </Link>
-        );
-      })}
-    </div>
-  );
+  return <RequestModuleNav links={links} accent="emerald" />;
 }

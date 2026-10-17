@@ -59,7 +59,7 @@ export function WorkforceExportDialog({
   const n = monthsCount(period);
   const invalid = n === 0 || n > 24;
   const selected = which === 'ALL' ? 'ALL' : oneId;
-  const fileLabel = scope === 'PORTFOLIO' ? (which === 'ALL' ? 'Portefeuille' : companies.find((c) => c.id === oneId)?.name ?? 'Entreprise') : companyLabel;
+  const fileLabel = scope === 'PORTFOLIO' ? (which === 'ALL' ? 'Konza RH' : companies.find((c) => c.id === oneId)?.name ?? 'Entreprise') : companyLabel;
   const sheetsHint =
     n <= 1
       ? model === 'ORCA' ? '4 onglets : listes (employés, stagiaires, prestataires) + tableau de bord.' : '4 onglets : effectif, répartition, indicateurs RH, classification et net.'
@@ -103,7 +103,7 @@ export function WorkforceExportDialog({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--text)]">
-                {model === 'ORCA' ? 'Télécharger le fichier effectif (modèle ORCA)' : 'Télécharger le tableau de bord effectifs (modèle POWERMAN)'}
+                {model === 'ORCA' ? 'Télécharger le fichier effectif' : 'Télécharger le tableau de bord des effectifs'}
               </h2>
               <p className="text-sm text-[var(--text-muted)] mt-0.5">Choisissez la période : les onglets et le rendu suivent votre choix.</p>
             </div>

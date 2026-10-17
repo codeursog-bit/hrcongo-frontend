@@ -294,7 +294,7 @@ export function WorkforceDashboard({ model, scope, companyId, title, initialPeri
             <>
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <Kpi title="EFFECTIF GÉNÉRAL" value={String(cur.total)} sub={`${cur.hires} entrée${cur.hires > 1 ? 's' : ''} · ${cur.departures} sortie${cur.departures > 1 ? 's' : ''} ce mois`} />
-                <Kpi title="TAUX DE PRÉSENCE" value={ind.hasAttendance ? pct(ind.presenceRate) : 'n/d'} sub={ind.hasAttendance ? undefined : 'pas de synthèse de présence'} />
+                <Kpi title="TAUX DE PRÉSENCE" value={ind.hasAttendance ? pct(ind.presenceRate) : 'n/d'} sub={ind.hasAttendance ? undefined : 'aucun pointage sur la période'} />
                 <Kpi tone="light" title="TAUX D’ABSENTÉISME" value={ind.hasAttendance ? pct(ind.absenteeismRate) : 'n/d'} sub={ind.hasAttendance ? `${ind.absenceDays} j d’absence / ${ind.theoreticalDays} j à travailler` : undefined} />
                 <Kpi tone="light" title="DURÉE MOY. DES ABSENCES" value={ind.hasAttendance ? `${ind.avgAbsenceDuration.toFixed(2).replace('.', ',')} j` : 'n/d'} sub={ind.hasAttendance ? `${ind.absenceCount} salarié${ind.absenceCount > 1 ? 's' : ''} concerné${ind.absenceCount > 1 ? 's' : ''}` : undefined} />
                 <Kpi tone="light" title="TURN-OVER (ANNÉE)" value={pct(ind.turnover)} sub={`${ind.departuresYtd} départ${ind.departuresYtd > 1 ? 's' : ''} / effectif moyen ${ind.avgHeadcountYtd.toFixed(1).replace('.', ',')}`} />

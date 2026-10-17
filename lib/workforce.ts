@@ -77,15 +77,16 @@ export function endpointFor(scope: WfScopeMode, kind: 'view' | 'export', model: 
   return `${base}${kind === 'export' ? '/export' : ''}?${q.toString()}`;
 }
 
-export function exportFileName(model: WfModel, p: WfPeriodState, companyLabel: string): string {
+// Nom du fichier : « Effectif_<entreprise>_<période>.xlsx » — aucune marque de modèle (ni ORCA ni POWERMAN).
+// `_model` est conservé pour ne casser aucun appel existant.
+export function exportFileName(_model: WfModel, p: WfPeriodState, companyLabel: string): string {
   const clean = (s: string) =>
     s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
   const span =
     p.mode === 'MOIS' ? `${String(p.month).padStart(2, '0')}_${p.year}`
     : p.mode === 'ANNEE' ? `${p.year}`
     : `${p.fromYear}_${String(p.fromMonth).padStart(2, '0')}_a_${p.toYear}_${String(p.toMonth).padStart(2, '0')}`;
-  const prefix = model === 'ORCA' ? 'Effectif_ORCA' : 'TB_Effectifs_POWERMAN';
-  return `${prefix}_${clean(companyLabel) || 'Entreprise'}_${span}.xlsx`;
+  return `Effectif_${clean(companyLabel) || 'Konza_RH'}_${span}.xlsx`;
 }
 
 // ─── Réponse du back (voir WorkforceDashboardView) ───────────────────────────

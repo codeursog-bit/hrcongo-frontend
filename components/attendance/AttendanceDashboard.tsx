@@ -4,17 +4,18 @@
 // 📁 components/attendance/AttendanceDashboard.tsx
 // Tableau de bord Présences · Absences · Permissions — même logique que le
 // dashboard effectifs : mêmes sélecteurs de période, mêmes cartes, Excel
-// téléchargeable depuis le même écran. Trois onglets :
+// téléchargeable depuis le même écran. Quatre onglets :
 //   • Présences    : taux de présence / absentéisme / retards, jours par statut, départements
 //   • Absences     : demandes par statut, type, motif ; jours payés / non payés ; salariés les plus absents
 //   • Permissions  : tickets par statut, type, mission ; heures, retours en retard ; salariés les plus sortis
+//   • Congés       : demandes par statut et type ; jours de congé pris ; salariés les plus en congé
 // Toutes les valeurs viennent du back (/attendance-dashboard) — la même source que
 // l'Excel : l'écran et le fichier affichent les mêmes chiffres.
 // ============================================================================
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Download, Loader2, AlertCircle, UserCheck, UserX, Ticket, Clock, Building2, TrendingUp, PieChart as PieIcon, BarChart3,
+  Download, Loader2, AlertCircle, UserCheck, UserX, Ticket, Clock, Building2, TrendingUp, PieChart as PieIcon, BarChart3, CalendarDays,
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, PieChart, Pie, Legend,
@@ -163,11 +164,12 @@ function TopTable({ rows, valueLabel, extraLabel, fmtExtra }: { rows: AdTopEmplo
 
 // ─── Composant principal ─────────────────────────────────────────────────────
 
-type Tab = 'PRESENCES' | 'ABSENCES' | 'PERMISSIONS';
+type Tab = 'PRESENCES' | 'ABSENCES' | 'PERMISSIONS' | 'CONGES';
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'PRESENCES', label: 'Présences', icon: <UserCheck size={15} /> },
   { id: 'ABSENCES', label: 'Absences', icon: <UserX size={15} /> },
   { id: 'PERMISSIONS', label: 'Permissions', icon: <Ticket size={15} /> },
+  { id: 'CONGES', label: 'Congés', icon: <CalendarDays size={15} /> },
 ];
 
 interface Props {
@@ -212,6 +214,7 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
   const T = view?.totals;
   const A = view?.absences;
   const P = view?.permissions;
+  const L = view?.leaves;
   const evo = view?.evolution ?? [];
   const evoPct = evo.map((e) => ({ short: e.short, Présence: +(e.presenceRate * 100).toFixed(2), Absentéisme: +(e.absenteeismRate * 100).toFixed(2) }));
 
@@ -283,15 +286,16 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
         <div className="flex items-center justify-center py-16 text-[var(--text-muted)]"><Loader2 className="animate-spin mr-2" size={18} /> Calcul en cours…</div>
       )}
 
-      {view && T && A && P && (
+      {view && T && A && P && L && (
         <div className={`space-y-6 transition-opacity ${loading ? 'opacity-60' : ''}`}>
           {/* KPI communs */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <Kpi tone="dark" title="TAUX DE PRÉSENCE" value={T.theoreticalDays > 0 ? pct(T.presenceRate) : 'n/d'} sub={`${T.workedDays} j travaillés / ${T.theoreticalDays} j à travailler`} />
-            <Kpi title="TAUX D’ABSENTÉISME" value={T.theoreticalDays > 0 ? pct(T.absenteeismRate) : 'n/d'} sub={`${T.absenceDays} j d’absence · ${T.absentEmployees} salarié${T.absentEmployees > 1 ? 's' : ''}`} />
+            <Kpi title="TAUX D’ABSENTÉISME" value={T.theoreticalDays > 0 ? pct(T.absenteeismRate) : 'n/d'} sub={`${T.absenceDays} j d’absence · ${T.absUnjustified} non justifiée${T.absUnjustified > 1 ? 's' : ''}`} />
             <Kpi title="TAUX DE RETARD" value={T.workedDays > 0 ? pct(T.lateRate) : 'n/d'} sub={`${T.late} jour${T.late > 1 ? 's' : ''} en retard`} />
             <Kpi title="ABSENCES APPROUVÉES" value={String(A.approved)} sub={`${num1(A.approvedDays)} j ouvrés · ${A.pending} en attente`} />
             <Kpi title="PERMISSIONS APPROUVÉES" value={String(P.approved)} sub={`${num1(P.totalHours)} h · ${P.pending} en attente`} />
+            <Kpi title="JOURS DE CONGÉ" value={num1(T.leave)} sub={`${pct(T.leaveRate)} des jours · ${T.leaveEmployees} salarié${T.leaveEmployees > 1 ? 's' : ''}`} />
           </div>
 
           {/* Onglets */}
@@ -308,10 +312,11 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
           {tab === 'PRESENCES' && (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <Card title="Répartition des jours" icon={<PieIcon size={15} className="text-emerald-500" />}
-                hint="Les jours de retard comptent comme jours travaillés. Congés, fériés et repos sont exclus des taux.">
-                <Donut colors={[C.navy, C.teal, C.amber, C.red, C.purple]} data={[
+                hint="Les jours de retard comptent comme jours travaillés. Les congés sont affichés ici mais exclus des taux, comme les fériés et les repos.">
+                <Donut colors={[C.navy, C.teal, C.amber, C.red, C.purple, C.green]} data={[
                   { label: 'Présent', count: T.present }, { label: 'Télétravail', count: T.remote }, { label: 'En retard', count: T.late },
-                  { label: 'Absence payée', count: T.absPaid }, { label: 'Absence non payée', count: T.absUnpaid },
+                  { label: 'Absence justifiée', count: T.absJustified }, { label: 'Absence non justifiée', count: T.absUnjustified },
+                  { label: 'Congé', count: T.leave },
                 ]} />
               </Card>
               <Card title="Absentéisme par département (%)" icon={<Building2 size={15} className="text-emerald-500" />}>
@@ -340,6 +345,54 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                   {monthBars([{ key: 'absenceDays', name: 'Jours d’absence', color: C.red }, { key: 'lateDays', name: 'Jours en retard', color: C.orange }])}
                 </Card>
               )}
+              {view.absenceBreakdown && view.absenceBreakdown.total > 0 && (
+                <div className="xl:col-span-2">
+                  <Card title="Absences justifiées et non justifiées" icon={<AlertCircle size={15} className="text-emerald-500" />}
+                    hint="Justifiée : couverte par une demande d’absence validée (maladie, mariage, décès, naissance, conventionnelle, exceptionnelle…). Non justifiée : aucun pointage et aucune demande validée.">
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Justifiées</div>
+                        <div className="text-2xl font-bold text-[var(--text)]">{num1(view.absenceBreakdown.justified)} j</div>
+                        <div className="text-xs text-[var(--text-muted)]">{view.absenceBreakdown.justifiedEmployees} salarié{view.absenceBreakdown.justifiedEmployees > 1 ? 's' : ''}</div>
+                      </div>
+                      <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Non justifiées</div>
+                        <div className="text-2xl font-bold text-[var(--text)]">{num1(view.absenceBreakdown.unjustified)} j</div>
+                        <div className="text-xs text-[var(--text-muted)]">{view.absenceBreakdown.unjustifiedEmployees} salarié{view.absenceBreakdown.unjustifiedEmployees > 1 ? 's' : ''}</div>
+                      </div>
+                    </div>
+                    {view.absenceBreakdown.motifs.length === 0 ? <Empty text="Aucune absence justifiée sur la période." /> : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-xs uppercase tracking-wide text-[var(--text-muted)] border-b border-[var(--border)]">
+                              <th className="py-2 pr-3">Motif</th><th className="py-2 pr-3">Type</th>
+                              <th className="py-2 pr-3 text-right">Jours</th><th className="py-2 pr-3 text-right">Dont payés</th>
+                              <th className="py-2 pr-3 text-right">Dont non payés</th><th className="py-2 text-right">Salariés</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {view.absenceBreakdown.motifs.map((m) => (
+                              <tr key={m.key} className="border-b border-[var(--border)] last:border-0 text-[var(--text)]">
+                                <td className="py-2 pr-3 font-semibold">{m.label}</td>
+                                <td className="py-2 pr-3 text-[var(--text-muted)]">{m.typeLabel !== m.label ? m.typeLabel : '—'}</td>
+                                <td className="py-2 pr-3 text-right font-semibold">{num1(m.days)}</td>
+                                <td className="py-2 pr-3 text-right">{num1(m.paidDays)}</td>
+                                <td className="py-2 pr-3 text-right">{num1(m.unpaidDays)}</td>
+                                <td className="py-2 text-right">{m.employees}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+              )}
+              <Card title="Salariés les plus en retard" icon={<Clock size={15} className="text-emerald-500" />}
+                hint="Jours en retard sur la période. Un retard compte comme jour travaillé : le salarié est présent, mais arrivé après l’heure.">
+                <TopTable rows={view.topLate ?? []} valueLabel="Jours de retard" extraLabel="Taux de retard" fmtExtra={(x) => `${num1(x)} %`} />
+              </Card>
               <div className="xl:col-span-2">
                 <Card title="Détail par département" icon={<Building2 size={15} className="text-emerald-500" />}>
                   {view.departments.length === 0 ? <Empty /> : (
@@ -431,6 +484,35 @@ export function AttendanceDashboard({ scope, companyId, title, initialPeriod }: 
                 {evo.length > 1 && (
                   <Card title="Permissions approuvées par mois" icon={<TrendingUp size={15} className="text-emerald-500" />} hint="Rattachées au mois de la sortie.">
                     {monthBars([{ key: 'permissions', name: 'Permissions approuvées', color: C.orange }])}
+                  </Card>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* ───────────── CONGÉS ───────────── */}
+          {tab === 'CONGES' && (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <Kpi title="DEMANDES" value={String(L.total)} sub={`${L.approved} approuvée${L.approved > 1 ? 's' : ''}`} />
+                <Kpi title="JOURS DE CONGÉ PRIS" value={num1(T.leave)} sub="selon les synthèses de présence" />
+                <Kpi title="JOURS ACCORDÉS" value={num1(L.approvedDays)} sub="congés approuvés débutant sur la période" />
+                <Kpi title="EN ATTENTE" value={String(L.pending)} />
+                <Kpi title="PART DES JOURS EN CONGÉ" value={pct(T.leaveRate)} sub={`${T.leaveEmployees} salarié${T.leaveEmployees > 1 ? 's' : ''} concerné${T.leaveEmployees > 1 ? 's' : ''}`} />
+              </div>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <Card title="Par type (jours accordés)" icon={<PieIcon size={15} className="text-emerald-500" />} hint="Congés approuvés, rattachés au mois de début.">
+                  <Donut colors={C.multi} data={L.byType.map((t) => ({ label: t.label, count: t.days ?? 0 }))} />
+                </Card>
+                <Card title="Demandes de congé par statut" icon={<BarChart3 size={15} className="text-emerald-500" />}>
+                  <VBar colors={[C.amber, C.green, C.red, '#94A3B8']} data={L.byStatus} />
+                </Card>
+                <Card title="Salariés les plus en congé" icon={<CalendarDays size={15} className="text-emerald-500" />} hint="Jours de congé sur la période (synthèses de présence).">
+                  <TopTable rows={view.topLeave} valueLabel="Jours de congé" extraLabel="Congés approuvés" />
+                </Card>
+                {evo.length > 1 && (
+                  <Card title="Jours de congé par mois" icon={<TrendingUp size={15} className="text-emerald-500" />}>
+                    {monthBars([{ key: 'leaveDays', name: 'Jours de congé', color: C.green }])}
                   </Card>
                 )}
               </div>

@@ -50,7 +50,7 @@ export function AttendanceExportDialog({ open, onClose, scope, initialPeriod, co
   const n = monthsCount(period);
   const invalid = n === 0 || n > 24;
   const selected = which === 'ALL' ? 'ALL' : oneId;
-  const fileLabel = scope === 'PORTFOLIO' ? (which === 'ALL' ? 'Portefeuille' : companies.find((c) => c.id === oneId)?.name ?? 'Entreprise') : companyLabel;
+  const fileLabel = scope === 'PORTFOLIO' ? (which === 'ALL' ? 'Konza RH' : companies.find((c) => c.id === oneId)?.name ?? 'Entreprise') : companyLabel;
 
   const download = async () => {
     setBusy(true);
@@ -84,7 +84,7 @@ export function AttendanceExportDialog({ open, onClose, scope, initialPeriod, co
             </div>
             <div>
               <h2 className="text-lg font-bold text-[var(--text)]">Télécharger le tableau de bord présences & absences</h2>
-              <p className="text-sm text-[var(--text-muted)] mt-0.5">Choisissez la période : synthèse, évolution mensuelle, présences, absences et permissions.</p>
+              <p className="text-sm text-[var(--text-muted)] mt-0.5">Choisissez la période : synthèse, évolution mensuelle, présences, absences, permissions et congés.</p>
             </div>
           </div>
           <button onClick={() => !busy && onClose()} className="p-1.5 rounded-lg hover:bg-[var(--surface-2)] text-[var(--text-muted)]" aria-label="Fermer">
@@ -121,7 +121,7 @@ export function AttendanceExportDialog({ open, onClose, scope, initialPeriod, co
 
           <div className="rounded-xl bg-[var(--surface-2)] border border-[var(--border)] px-4 py-3 text-sm text-[var(--text)]">
             <strong>{periodLabel(period)}</strong>
-            <span className="text-[var(--text-muted)]"> — {invalid ? (n === 0 ? 'période invalide (début après la fin ou mois futur).' : 'maximum 24 mois par fichier.') : '5 onglets : synthèse, évolution, présences, absences, permissions (avec formules et graphiques).'}</span>
+            <span className="text-[var(--text-muted)]"> — {invalid ? (n === 0 ? 'période invalide (début après la fin ou mois futur).' : 'maximum 24 mois par fichier.') : '6 onglets : synthèse, évolution, présences, absences, permissions, congés (avec formules et graphiques).'}</span>
           </div>
 
           {error && (

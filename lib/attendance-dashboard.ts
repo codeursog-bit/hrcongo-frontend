@@ -12,8 +12,19 @@ export interface AdCount { label: string; count: number; days?: number }
 export interface AdTotals {
   present: number; remote: number; late: number; leave: number; absPaid: number; absUnpaid: number;
   holiday: number; offDay: number;
-  workedDays: number; absenceDays: number; theoreticalDays: number; absentEmployees: number;
+  workedDays: number; absenceDays: number; absJustified: number; absUnjustified: number; theoreticalDays: number; absentEmployees: number;
   presenceRate: number; absenteeismRate: number; lateRate: number; remoteRate: number; avgAbsenceDuration: number;
+  leaveRate: number; leaveEmployees: number;
+}
+
+/** 🆕 Un motif d'absence justifiée (ex. Mariage — Exceptionnelle). */
+export interface AdAbsenceMotif {
+  key: string; label: string; typeLabel: string; days: number; paidDays: number; unpaidDays: number; employees: number;
+}
+/** 🆕 Absences justifiées (demande validée) / non justifiées, par motif. */
+export interface AdAbsenceBreakdown {
+  total: number; justified: number; unjustified: number; justifiedEmployees: number; unjustifiedEmployees: number;
+  motifs: AdAbsenceMotif[];
 }
 
 export interface AdDepartmentRow {
@@ -28,7 +39,7 @@ export interface AdTopEmployee {
 export interface AdMonthPoint {
   month: number; year: number; label: string; short: string; key: string; hasAttendance: boolean;
   workedDays: number; absenceDays: number; lateDays: number; presenceRate: number; absenteeismRate: number;
-  absenceRequests: number; permissions: number;
+  absenceRequests: number; permissions: number; leaveDays: number; leaveRequests: number;
 }
 
 export interface AdAbsenceStats {
@@ -43,6 +54,11 @@ export interface AdPermissionStats {
   byType: AdCount[]; byMission: AdCount[]; byStatus: AdCount[];
 }
 
+export interface AdLeaveStats {
+  total: number; approved: number; pending: number; rejected: number; cancelled: number; approvedDays: number;
+  byType: AdCount[]; byStatus: AdCount[];
+}
+
 export interface AdView {
   companyName: string;
   city: string;
@@ -54,9 +70,13 @@ export interface AdView {
   totals: AdTotals;
   absences: AdAbsenceStats;
   permissions: AdPermissionStats;
+  leaves: AdLeaveStats;
   departments: AdDepartmentRow[];
   topAbsent: AdTopEmployee[];
+  topLate: AdTopEmployee[]; // 🆕 salariés les plus en retard
+  absenceBreakdown: AdAbsenceBreakdown; // 🆕 absences justifiées / non justifiées, par motif
   topPermissions: AdTopEmployee[];
+  topLeave: AdTopEmployee[];
   evolution: AdMonthPoint[];
 }
 
