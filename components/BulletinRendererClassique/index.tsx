@@ -21,6 +21,7 @@
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
+import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
 
 export interface BulletinRendererClassiqueProps {
@@ -442,16 +443,15 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
 
               {itsAmount > 0 && <Row n={4520} label={itsLabel} base={fmt(totalBrut - cnssSal)} ret={fmt(itsAmount)} />}
 
+              {/* Taxes configurées : UNE ligne par taxe — part salarié dans la colonne
+                  Retenue, part patronale dans la colonne Charges patronales. */}
               {(()=>{
                 let r = 5700;
-                return ctaxEmp.map((item: any) => { r++; return (
-                  <Row key={item.id || item.code} n={r} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} ret={fmt(item.amount)} />
-                ); });
-              })()}
-              {(()=>{
-                let r = 5800;
-                return ctaxPat.map((item: any) => { r++; return (
-                  <Row key={item.id || item.code} n={r} label={item.label} tauxP={itemTaux(item)} retP={fmt(item.amount)} />
+                return mergeCustomTaxLines(ctaxEmp, ctaxPat).map(({ key, emp, pat }) => { r++; return (
+                  <Row key={key} n={r} label={cleanTaxLabel((emp ?? pat).label)}
+                    base={itemBase(emp ?? pat)}
+                    tauxS={emp ? itemTaux(emp) : ''} ret={emp ? fmt(emp.amount) : ''}
+                    tauxP={pat ? itemTaux(pat) : ''} retP={pat ? fmt(pat.amount) : ''} />
                 ); });
               })()}
               {(()=>{

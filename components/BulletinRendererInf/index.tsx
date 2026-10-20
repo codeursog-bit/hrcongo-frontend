@@ -30,6 +30,7 @@
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
+import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
 
 export interface BulletinRendererInfProps {
@@ -500,13 +501,13 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                 <Row label={absCongeItem.label} ret={fmt(absCongeItem.amount)} />
               )}
 
-              {/* Taxes custom (CompanyTax) — part salariale (CTAX_*) puis
-                  part patronale (CTAX_EMP_*), une ligne par taxe */}
-              {ctaxSalItems.map((item: any) => (
-                <Row key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} ret={fmt(item.amount)} />
-              ))}
-              {ctaxPatItems.map((item: any) => (
-                <Row key={item.id || item.code} label={item.label} base={itemBase(item)} tauxP={itemTaux(item)} retP={fmt(item.amount)} />
+              {/* Taxes custom (CompanyTax) — UNE ligne par taxe : part salariale
+                  (CTAX_*) dans la colonne Retenue, part patronale (CTAX_EMP_*)
+                  dans la colonne Charges patronales */}
+              {mergeCustomTaxLines(ctaxSalItems, ctaxPatItems).map(({ key, emp, pat }) => (
+                <Row key={key} label={cleanTaxLabel((emp ?? pat).label)} base={itemBase(emp ?? pat)}
+                  tauxS={emp ? itemTaux(emp) : ''} ret={emp ? fmt(emp.amount) : ''}
+                  tauxP={pat ? itemTaux(pat) : ''} retP={pat ? fmt(pat.amount) : ''} />
               ))}
 
               {/* TUS — 2 lignes distinctes DGI + CNSS (part patronale) —

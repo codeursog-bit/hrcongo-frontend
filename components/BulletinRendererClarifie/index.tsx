@@ -18,6 +18,7 @@
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
+import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
 
 export interface BulletinRendererClarifieProps {
@@ -470,11 +471,11 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
               {/* ── Autres cotisations et taxes ─────────────────────────── */}
               {(ctaxEmp.length > 0 || ctaxPat.length > 0 || loanItems.length > 0 || manualDeductions.length > 0) && <>
                 <SectionHeader>Autres cotisations et retenues</SectionHeader>
-                {ctaxEmp.map((item: any) => (
-                  <DataRow key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmtNeg(item.amount)} />
-                ))}
-                {ctaxPat.map((item: any) => (
-                  <DataRow key={item.id || item.code} label={item.label} tauxP={itemTaux(item)} mtP={fmtNeg(item.amount)} />
+                {/* Une ligne par taxe : part salarié et part patronale dans leurs colonnes */}
+                {mergeCustomTaxLines(ctaxEmp, ctaxPat).map(({ key, emp, pat }) => (
+                  <DataRow key={key} label={cleanTaxLabel((emp ?? pat).label)} base={itemBase(emp ?? pat)}
+                    tauxS={emp ? itemTaux(emp) : ''} mtS={emp ? fmtNeg(emp.amount) : ''}
+                    tauxP={pat ? itemTaux(pat) : ''} mtP={pat ? fmtNeg(pat.amount) : ''} />
                 ))}
                 {loanItems.map((item: any) => (
                   <DataRow key={item.id || item.code} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} mtS={fmtNeg(item.amount)} />

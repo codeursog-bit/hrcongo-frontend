@@ -632,10 +632,16 @@ function CreateEmployeeFormInner() {
       setShowSuccess(true);
     } catch (error: any) {
       setIsLoading(false);
-      if (error.response?.data?.fields) {
-        alert.error('Champs manquants', `Vérifiez : ${error.response.data.fields.join(', ')}`);
+      // services/api.ts lève une Error avec .message / .status / .data
+      // (pas de .response comme axios) → on lit donc error.data.
+      const data = error?.data;
+      if (Array.isArray(data?.fields) && data.fields.length > 0) {
+        alert.error('Champs manquants', `Vérifiez : ${data.fields.join(', ')}`);
       } else {
-        alert.error('Erreur', error.response?.data?.message || 'Erreur lors de la création');
+        const msg = Array.isArray(data?.message)
+          ? data.message.join(' • ')
+          : data?.message || error?.message;
+        alert.error('Erreur', msg || 'Erreur lors de la création');
       }
     }
   };

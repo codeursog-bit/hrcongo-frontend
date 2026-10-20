@@ -10,6 +10,7 @@
 import React, { useMemo } from 'react';
 import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/types/bulletin-template';
 import { classifyItems } from '@/lib/bulletin-items-classifier';
+import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
 
 export interface BulletinRendererDefaultProps {
@@ -319,8 +320,9 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
     + manualDeductions.reduce((s: number, i: any) => s + nv(i.amount), 0)
     + absDeductAmount;  // ✅ ABS_DEDUCT dans totalRetenues
 
+  const ctaxPatTotal = ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
   const totalPat    = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
-    + ctaxPat.reduce((s: number, i: any) => s + nv(i.amount), 0);
+    + ctaxPatTotal;
   // ✅ Charges Pat colonne = CNSS patron seul (pension+famille+accident) — pas TUS ni DGI
   // ✅ Charges Pat = CNSS patron (pension+famille+accident) + TUS CNSS — pas TUS DGI
   const cnssPatOnly = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss;
@@ -596,15 +598,9 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
                 label="Taxe unique sur salaire (DGI)"
                 base={fmtZ(totalBrut)} patTaux="2,025" patMt={fmt(tusDgi)} />; })()}
 
-              {/* ── Autres cotisations patronales ───────────────────── */}
-              {ctaxPat.map((item: any) => {
-                patRef+=10;
-                return <Row key={item.id||item.code}
-                  rub={patRef} label={cleanLabel(item.label.replace(' (part patronale)',''))}
-                  base={itemBase(item)} patTaux={itemTaux(item)} patMt={fmt(item.amount)} />;
-              })}
-
-              <TotalRow label="Total cotisations" ret={fmtZ(cnssSal)} patMt={fmtZ(totalPat)} />
+              {/* Les taxes configurées (part salarié + part patronale) sont affichées
+                  sur UNE seule ligne plus bas, avec « Autres taxes ». */}
+              <TotalRow label="Total cotisations" ret={fmtZ(cnssSal)} patMt={fmtZ(totalPat - ctaxPatTotal)} />
 
               {/* ── ITS / BNC ───────────────────────────────────────── */}
               {itsAmount > 0 && (
@@ -612,20 +608,16 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
                   base={fmt(itsBase)} ret={fmt(itsAmount)} />
               )}
 
-              {/* ── Cotisations salariales supplémentaires ──────────── */}
+              {/* ── Autres taxes et cotisations configurées ─────────────
+                   UNE ligne par taxe : part salarié → colonne Retenue,
+                   part patronale → colonne Charges patronales. */}
               {(()=>{
-                const taxMap = new Map<string,{emp:any|null,pat:any|null}>();
-                ctaxEmp.forEach((i: any) => {
-                  const k = i.code.replace(/^CTAX_/,'');
-                  if (!taxMap.has(k)) taxMap.set(k,{emp:null,pat:null});
-                  taxMap.get(k)!.emp = i;
-                });
                 let rub = 4600;
-                return Array.from(taxMap.entries()).map(([k,{emp,pat}]) => {
+                return mergeCustomTaxLines(ctaxEmp, ctaxPat).map(({ key: k, emp, pat }) => {
                   rub++;
                   const fixedRub: Record<string,number> = { TOL:4601, CAMU:4650 };
                   const r = fixedRub[k] ?? rub;
-                  const label = cleanLabel(emp?.label ?? pat?.label?.replace(' (part patronale)','') ?? k);
+                  const label = cleanLabel(cleanTaxLabel(emp?.label ?? pat?.label ?? k));
                   return <Row key={k} rub={r} label={label}
                     base={emp ? itemBase(emp) : (pat ? itemBase(pat) : '')}
                     taux={emp ? itemTaux(emp) : ''}
