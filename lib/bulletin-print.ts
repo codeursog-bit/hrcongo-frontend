@@ -184,6 +184,26 @@ export async function downloadBulletinPDF(
     '.bul-legal,.bulletin-legal,.adm-legal,.bulletin-legal-corp'
   ).forEach(n => { n.style.display = 'none'; });
 
+  // ✅ FIX TEXTE COUPÉ DANS LE PDF — html2canvas dessine les glyphes 1 à 2 px
+  //    plus bas que le navigateur. Tout élément texte avec `overflow:hidden`
+  //    et une hauteur serrée (valeurs de l'en-tête : "PETROLE", dates, etc.)
+  //    voit alors le bas de ses lettres rogné. À l'impression le navigateur
+  //    n'a pas ce décalage, d'où « ok à l'impression, coupé en PDF ».
+  //    On donne de l'air vertical à ces éléments, uniquement dans le clone
+  //    (le bulletin affiché à l'écran et imprimé n'est pas touché).
+  clone.querySelectorAll<HTMLElement>('span,strong,div').forEach((n) => {
+    const cs = window.getComputedStyle(n);
+    if (cs.overflow !== 'hidden' && cs.overflowY !== 'hidden') return;
+    // Ne touche pas aux conteneurs de mise en page (ceux qui ont des enfants éléments)
+    if (n.children.length > 0) return;
+    if (!(n.textContent || '').trim()) return;
+    n.style.paddingTop    = '2px';
+    n.style.paddingBottom = '3px';
+    n.style.marginTop     = '-2px';
+    n.style.marginBottom  = '-3px';
+    n.style.lineHeight    = '1.5';
+  });
+
   container.appendChild(clone);
   document.body.appendChild(container);
 
@@ -232,16 +252,22 @@ export async function downloadBulletinPDF(
     const finalW   = pdfW;
     const finalH   = pdfW / imgRatio;
 
-    if (finalH > pdfH) {
-      // Bulletin multi-page (rare mais géré)
+    // ✅ FIX PAGE 2 BLANCHE — le clone mesure parfois 1 px de plus que 297 mm
+    //    (arrondi scrollHeight), ce qui donnait finalH ≈ 297,3 mm > 297 mm et
+    //    déclenchait une 2ᵉ page vide. On tolère jusqu'à 3 mm d'écart : dans
+    //    ce cas le bulletin tient sur UNE page (écrasé de moins de 1 %).
+    const TOLERANCE_MM = 3;
+
+    if (finalH <= pdfH + TOLERANCE_MM) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, Math.min(finalH, pdfH), '', 'FAST');
+    } else {
+      // Bulletin réellement multi-page
       let posY = 0;
-      while (posY < finalH) {
+      while (posY < finalH - TOLERANCE_MM) {
         if (posY > 0) pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, -posY, finalW, finalH, '', 'FAST');
         posY += pdfH;
       }
-    } else {
-      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, finalH, '', 'FAST');
     }
 
     pdf.save(filename);

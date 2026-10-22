@@ -23,6 +23,7 @@ import StandardAbsenceRequestForm from '@/components/documents/standard/Standard
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
+import AbsenceCeilingBalance from '@/components/absences/AbsenceCeilingBalance';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 import ContactAdminButton from '@/components/chat/ContactAdminButton';
 
@@ -161,6 +162,9 @@ export default function MonEspaceAbsencesPage() {
           <Plus size={18} /> Nouvelle demande
         </Link>
       </div>
+
+      {/* 🆕 Solde du plafond annuel (par année civile, sans cumul) */}
+      {isStandard && <AbsenceCeilingBalance selectable className="max-w-xl" />}
 
       {requests.length === 0 ? (
         <div className="text-center py-24 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">

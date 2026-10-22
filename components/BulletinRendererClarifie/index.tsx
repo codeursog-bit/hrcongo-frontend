@@ -201,7 +201,7 @@ const DataRow = ({ label, base = '', tauxS = '', mtS = '', tauxP = '', mtP = '',
 const InfoLine = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div style={{ display: 'flex', gap: 5, fontSize: 9, marginBottom: 1 }}>
     <span style={{ color: '#555', minWidth: 84, flexShrink: 0 }}>{label}</span>
-    <strong style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
+    <strong style={{ color: K, lineHeight: 1.45, padding: '2px 0', margin: '-2px 0', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
   </div>
 );
 

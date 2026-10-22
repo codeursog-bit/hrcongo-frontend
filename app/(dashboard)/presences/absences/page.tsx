@@ -25,6 +25,7 @@ import StandardAbsenceRequestForm from '@/components/documents/standard/Standard
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
+import AbsenceCeilingBalance from '@/components/absences/AbsenceCeilingBalance';
 import AbsencesOverview from '@/components/absences/AbsencesOverview';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
@@ -420,6 +421,16 @@ export default function AbsenceManagementPage() {
                     <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">Motif</p>
                     <p className="text-[var(--text-muted)] bg-[var(--surface-2)] p-3.5 rounded-xl">{selected.reason}</p>
                   </div>
+
+                  {/* 🆕 Solde du plafond annuel de l'employé (année de la demande, sans cumul) */}
+                  {isStandard && selected.type === 'EXCEPTIONNELLE' && (selected.employeeId ?? selected.employee?.id) && (
+                    <AbsenceCeilingBalance
+                      selectable
+                      employeeId={selected.employeeId ?? selected.employee?.id}
+                      year={new Date(selected.startDate).getUTCFullYear()}
+                      refreshKey={`${selected.id}-${selected.status}`}
+                    />
+                  )}
 
                   {selected.status === 'REJECTED' && selected.rejectionReason && (
                     <div className="text-sm flex items-start gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">

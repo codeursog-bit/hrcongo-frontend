@@ -190,7 +190,7 @@ const DashRow = () => (
 const InfoField = ({ label, value, labelWidth = 108 }: { label: string; value: React.ReactNode; labelWidth?: number }) => (
   <div style={{ display: 'flex', gap: 4, fontSize: 10, padding: '3px 0' }}>
     <span style={{ fontWeight: 700, minWidth: labelWidth, flexShrink: 0, color: K }}>{label}</span>
-    <span style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
+    <span style={{ color: K, lineHeight: 1.45, padding: '2px 0', margin: '-2px 0', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</span>
   </div>
 );
 

@@ -196,7 +196,7 @@ const TotalRow = ({ label, gain = '', ret = '', retP = '' }: { label: string; ga
 const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div style={{ display: 'flex', gap: 4, fontSize: 8.5, marginBottom: 1 }}>
     <span style={{ color: '#555', minWidth: 70, flexShrink: 0 }}>{label}</span>
-    <strong style={{ color: K, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
+    <strong style={{ color: K, lineHeight: 1.45, padding: '2px 0', margin: '-2px 0', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</strong>
   </div>
 );
 

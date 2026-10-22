@@ -21,6 +21,7 @@ import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
 import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
+import AbsenceCeilingBalance, { type CeilingBalance } from '@/components/absences/AbsenceCeilingBalance';
 
 const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
@@ -100,6 +101,14 @@ export default function NouvelleAbsencePage() {
   }, [isStandard]);
 
   const selectedMotif = motifCatalog.find(m => m.key === selectedMotifKey);
+
+  // 🆕 Solde du plafond annuel de permissions exceptionnelles (par année civile,
+  // année de la date de départ). Un RH/Admin n'est jamais bloqué.
+  const [ceilingBalance, setCeilingBalance] = useState<CeilingBalance | null>(null);
+  const ceilingYear = startDate ? Number(startDate.slice(0, 4)) : new Date().getFullYear();
+  const ceilingRemaining = ceilingBalance?.remaining ?? null;
+  const motifExceeds = (days: number) => !isApprover && ceilingRemaining != null && days > ceilingRemaining;
+  const ceilingBlocks = !isOther && !!selectedMotif && motifExceeds(selectedMotif.days);
   useEffect(() => {
     if (!onBehalf) return;
     (async () => {
@@ -206,7 +215,7 @@ export default function NouvelleAbsencePage() {
     ? reason.trim().length >= 3 && !!startDate && !!returnDate && workingDays > 0
       && (!onBehalf || (!!selectedEmployeeId && paidChoice !== null)) && !isSubmitting
     : isStandard
-    ? !!selectedMotifKey && !!startDate && !!returnDate && workingDays > 0 && (!onBehalf || !!selectedEmployeeId) && !isSubmitting
+    ? !!selectedMotifKey && !!startDate && !!returnDate && workingDays > 0 && (!onBehalf || !!selectedEmployeeId) && !ceilingBlocks && !isSubmitting
     : type && subType && startDate && returnDate && reason.trim().length >= 3 && workingDays > 0
       && (!onBehalf || !!selectedEmployeeId) && !isSubmitting;
 
@@ -499,6 +508,32 @@ export default function NouvelleAbsencePage() {
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 block">Motif de l&apos;absence</label>
                 <p className="text-xs text-[var(--text-muted)] mb-3">Le nombre de jours conventionnels est pris par défaut ; vous pouvez ensuite ajuster votre date de reprise.</p>
+                {(!onBehalf || selectedEmployeeId) && (
+                  <AbsenceCeilingBalance
+                    employeeId={onBehalf ? selectedEmployeeId : undefined}
+                    year={ceilingYear}
+                    onLoaded={setCeilingBalance}
+                    className="mb-3"
+                  />
+                )}
+                {ceilingBlocks && selectedMotif && ceilingRemaining != null && (
+                  <div className="flex items-start gap-2 text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-lg mb-3">
+                    <Info size={14} className="mt-0.5 shrink-0" />
+                    <span>
+                      Ce motif ({selectedMotif.days} j.) dépasse votre solde de <strong>{Math.max(0, ceilingRemaining)} j.</strong> pour {ceilingYear} :
+                      la demande serait refusée. Choisissez un autre motif ou une date de départ dans une autre année.
+                    </span>
+                  </div>
+                )}
+                {isApprover && selectedMotif && !isOther && ceilingRemaining != null && selectedMotif.days > ceilingRemaining && (
+                  <div className="flex items-start gap-2 text-sm bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-lg mb-3">
+                    <Info size={14} className="mt-0.5 shrink-0" />
+                    <span>
+                      Ce motif ({selectedMotif.days} j.) dépasse le solde de {Math.max(0, ceilingRemaining)} j. pour {ceilingYear}.
+                      Vous pouvez l&apos;enregistrer quand même : le plafond ne s&apos;applique pas aux RH/Admin.
+                    </span>
+                  </div>
+                )}
                 <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                   {motifCatalog.length === 0 && (
                     <p className="text-sm text-[var(--text-muted)] italic">Aucun motif configuré pour votre entreprise — contactez les RH.</p>
@@ -512,7 +547,9 @@ export default function NouvelleAbsencePage() {
                       }`}
                     >
                       <span className="text-sm font-medium text-[var(--text)]">{m.label}</span>
-                      <span className="text-xs text-[var(--text-muted)] shrink-0 ml-2">{m.days} j.</span>
+                      <span className={`text-xs shrink-0 ml-2 ${motifExceeds(m.days) ? 'text-red-500 font-semibold' : 'text-[var(--text-muted)]'}`}>
+                        {m.days} j.{motifExceeds(m.days) ? ' · dépasse le solde' : ''}
+                      </span>
                     </button>
                   ))}
                   {/* 🆕 Autre — motif non prévu par la convention */}
