@@ -103,15 +103,21 @@ export async function downloadReportPDF(elementId: string, filename: string, ori
     const finalW   = pdfW;
     const finalH   = pdfW / imgRatio;
 
-    if (finalH > pdfH) {
+    // ✅ FIX PAGE BLANCHE EN FIN DE PDF — le clone mesure souvent 1 px de plus
+    //    que la page (arrondi scrollHeight + min-height), ce qui donnait
+    //    finalH légèrement > pdfH et créait une page quasi vide. On tolère
+    //    3 mm d'écart (même correctif que bulletin-print.ts).
+    const TOLERANCE_MM = 3;
+
+    if (finalH <= pdfH + TOLERANCE_MM) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, Math.min(finalH, pdfH), '', 'FAST');
+    } else {
       let posY = 0;
-      while (posY < finalH) {
+      while (posY < finalH - TOLERANCE_MM) {
         if (posY > 0) pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, -posY, finalW, finalH, '', 'FAST');
         posY += pdfH;
       }
-    } else {
-      pdf.addImage(imgData, 'JPEG', 0, 0, finalW, finalH, '', 'FAST');
     }
 
     pdf.save(filename);

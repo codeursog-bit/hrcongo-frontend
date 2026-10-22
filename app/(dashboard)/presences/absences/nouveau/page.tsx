@@ -136,7 +136,8 @@ export default function NouvelleAbsencePage() {
         `/absence-requests/calculate-return-date?employeeId=${selectedTargetEmployee.id}&startDate=${startDate}&days=${days}`,
       );
       // returnDate = prochain jour OUVRABLE après le dernier jour d'absence
-      setReturnDate(result.returnDate);
+      const rd = typeof result?.returnDate === 'string' ? result.returnDate.slice(0, 10) : '';
+      setReturnDate(/^\d{4}-\d{2}-\d{2}$/.test(rd) ? rd : '');
       setReturnCalc(result);
     } catch (e: any) {
       alert(e?.message || "Erreur lors du calcul de la date de retour");
@@ -179,6 +180,7 @@ export default function NouvelleAbsencePage() {
   const lastAbsenceDate = useMemo(() => {
     if (!returnDate) return '';
     const d = new Date(returnDate);
+    if (isNaN(d.getTime())) return '';
     d.setUTCDate(d.getUTCDate() - 1);
     return d.toISOString().slice(0, 10);
   }, [returnDate]);
@@ -377,7 +379,7 @@ export default function NouvelleAbsencePage() {
       <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>
       <div className="relative">
         <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-        <input type="date" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+        <input type="date" min="2000-01-01" max="2100-12-31" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
       </div>
     </div>
   );
@@ -582,7 +584,7 @@ export default function NouvelleAbsencePage() {
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
                   <div className="relative">
                     <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                    <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
                 </div>
                 {(selectedMotif || isOther) && startDate && (
@@ -699,14 +701,14 @@ export default function NouvelleAbsencePage() {
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
                 <div className="relative">
                   <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>
                 <div className="relative">
                   <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <input type="date" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  <input type="date" min="2000-01-01" max="2100-12-31" value={returnDate} onChange={e => { setReturnDate(e.target.value); setReturnCalc(null); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
               </div>
             </div>
