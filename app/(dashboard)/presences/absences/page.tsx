@@ -225,6 +225,7 @@ export default function AbsenceManagementPage() {
     otherReason: docData.otherReason,
     startDate: docData.startDate,
     endDate: docData.endDate,
+    workingDays: docData.workingDays ?? selected?.workingDays,
     status: docData.status,
     requestedAt: selected?.requestedAt || selected?.createdAt,
   } : null;

@@ -286,6 +286,7 @@ export default function NouvelleAbsencePage() {
     otherReason: isOther ? (reason.trim() || '…') : undefined,
     startDate: startDate || new Date(),
     endDate: lastAbsenceDate || startDate || new Date(),
+    workingDays: workingDays || undefined,
     status: 'PENDING',
     requestedAt: new Date(),
   };

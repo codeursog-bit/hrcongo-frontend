@@ -139,6 +139,7 @@ export default function MonEspaceAbsencesPage() {
     motifKey: motifCatalog.find((m: any) => m.label === selected.reason)?.key,
     startDate: selected.startDate,
     endDate: selected.endDate,
+    workingDays: selected.workingDays,
     status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,
     signatures: docSignatures,

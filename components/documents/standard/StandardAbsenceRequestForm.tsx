@@ -50,6 +50,8 @@ export interface StandardAbsenceRequestFormData {
   otherReason?: string | null;
   startDate: string | Date;
   endDate: string | Date;
+  // Nombre de jours ouvrables comptés (dates de début et de fin incluses)
+  workingDays?: number | string | null;
   requestedAt?: string | Date;
   status: string;
   // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
@@ -302,6 +304,15 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
         <strong>au</strong>
         <span style={{ flex: 1, textAlign: 'center' }}>{fmtDate(data.endDate)}</span>
       </div>
+      {(() => {
+        const n = Number(data.workingDays);
+        if (!Number.isFinite(n) || n <= 0) return null;
+        return (
+          <div className="std-abs-gray" style={{ marginTop: 5, fontSize: 10.5 }}>
+            {`(${n} jour${n > 1 ? 's' : ''} ouvrable${n > 1 ? 's' : ''}, dates de début et de fin incluses)`}
+          </div>
+        );
+      })()}
 
       <Spacer h={43} />
       <div className="std-abs-gray" style={{ fontSize: 11.5 }}>
