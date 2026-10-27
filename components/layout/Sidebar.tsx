@@ -375,6 +375,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [canSignPersonally, setCanSignPersonally] = useState(false);
   // ✅ LOT B — l'entrée "Avis à donner" n'apparaît que pour les titulaires d'une fonction
   const [hasApprovalFunction, setHasApprovalFunction] = useState(false);
+  // 💰 Module Finances : le menu n'apparaît que pour l'ADMIN si le module est activé
+  const [financeEnabled, setFinanceEnabled] = useState(false);
 
   const isWhiteLabel = !!(brandName || brandLogo);
   const accentColor = brandColor || '#10B981';
@@ -444,6 +446,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         setCanSignPersonally(!!me?.canSign);
         setHasApprovalFunction((me?.functions?.length ?? 0) > 0 || (me?.externalCompanies?.length ?? 0) > 0);
       })
+      .catch(() => {});
+  }, []);
+
+  // 💰 Finances : statut du module (ADMIN uniquement)
+  useEffect(() => {
+    const stored = localStorage.getItem('user');
+    if (!stored) return;
+    try {
+      if (JSON.parse(stored).role !== 'ADMIN') return;
+    } catch {
+      return;
+    }
+    api.get<{ enabled?: boolean }>('/finance/status')
+      .then((s) => setFinanceEnabled(!!s?.enabled))
       .catch(() => {});
   }, []);
 
@@ -600,6 +616,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }
     : null;
 
+  // 💰 Finances : visible seulement si le module est activé (ADMIN uniquement)
+  const financeItems: NavItem[] = financeEnabled
+    ? [
+        {
+          id: 'finances',
+          label: 'Finances',
+          icon: Wallet,
+          path: '/finances',
+          allowedRoles: ['ADMIN'],
+        } as NavItem,
+      ]
+    : [];
+
   const approvalExtraItems: NavItem[] = [
     ...(canSignPersonally
     ? [
@@ -729,11 +758,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               pointage_gps_manager: 'Mon espace', mes_conges_manager: 'Mon espace', mes_absences_manager: 'Mon espace', mes_permissions_manager: 'Mon espace', mes_prets_manager: 'Mon espace', ma_paie_manager: 'Mon espace', mon_profil_manager: 'Mon espace', ma_performance_manager: 'Organisation',
               mes_presences: 'Mon espace', pointage_gps_employee: 'Mon espace', mes_conges: 'Mon espace', mes_absences: 'Mon espace', mes_permissions: 'Mon espace', mes_prets: 'Mon espace', ma_paie: 'Mon espace', mon_profil: 'Mon espace', ma_performance: 'Organisation',
               ma_signature: 'Mon espace', pointage_gps_admin: 'Mon espace', mon_profil_admin: 'Mon espace',
-              recrutement: 'Organisation', materiel: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
+              recrutement: 'Organisation', materiel: 'Organisation', finances: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 
             const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role) && !(item.id === 'messages' && basePath));
-            const trailingExtras = [...secretaryExtraItems, ...approvalExtraItems];
+            const trailingExtras = [...secretaryExtraItems, ...approvalExtraItems, ...financeItems];
             const TOP_IDS = ['dashboard', 'messages', 'demandes'];
             const flat: NavItem[] = isAdminLike
               ? [

@@ -52,6 +52,8 @@ export interface StandardAbsenceRequestFormData {
   endDate: string | Date;
   // Nombre de jours ouvrables comptés (dates de début et de fin incluses)
   workingDays?: number | string | null;
+  // Jour de REPRISE réel (premier jour travaillé après le dernier jour d'absence)
+  returnDate?: string | Date | null;
   requestedAt?: string | Date;
   status: string;
   // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
@@ -310,6 +312,7 @@ export default function StandardAbsenceRequestForm({ data, id }: { data: Standar
         return (
           <div className="std-abs-gray" style={{ marginTop: 5, fontSize: 10.5 }}>
             {`(${n} jour${n > 1 ? 's' : ''} ouvrable${n > 1 ? 's' : ''}, dates de début et de fin incluses)`}
+            {fmtDate(data.returnDate) ? ` — Reprise le ${fmtDate(data.returnDate)}` : ''}
           </div>
         );
       })()}

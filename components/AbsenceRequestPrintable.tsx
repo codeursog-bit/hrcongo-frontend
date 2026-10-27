@@ -37,7 +37,10 @@ export interface AbsenceRequestPrintableData {
   reason: string;
   isPaid: boolean;
   startDate: string | Date;
+  /** DERNIER jour d'absence (inclus) */
   endDate: string | Date;
+  /** Jour de REPRISE réel (premier jour travaillé après l'absence) */
+  returnDate?: string | Date | null;
   workingDays: number | string;
   hasAttachment?: boolean;
   // ✅ LOT D — avis/signatures personnelles (optionnel : sans avis, rendu identique à avant)
@@ -144,7 +147,8 @@ export default function AbsenceRequestPrintable({ data }: { data: AbsenceRequest
         </div>
 
         <div style={{ marginTop: 7 }}><strong>Date de départ :</strong> {fmt(data.startDate)}</div>
-        <div><strong>Date de reprise du travail :</strong> {fmt(data.endDate)}</div>
+        <div><strong>Dernier jour d&apos;absence :</strong> {fmt(data.endDate)}</div>
+        <div><strong>Date de reprise du travail :</strong> {fmt(data.returnDate || undefined)}</div>
         <div><strong>Nombre de jours ouvrables d&apos;absence :</strong> {data.workingDays}</div>
 
         <div style={{ marginTop: 7 }}>

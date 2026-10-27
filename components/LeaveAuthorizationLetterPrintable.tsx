@@ -26,6 +26,8 @@ export interface LeaveLetterData {
   leaveYear: number;
   startDate: string | Date;
   endDate: string | Date;
+  /** Jour de REPRISE réel (premier jour travaillé après le congé) */
+  returnDate?: string | Date | null;
   daysCount: number | string;
   remainingDays?: number | string | null;
   extraDaysGranted?: number | string | null;
@@ -66,7 +68,8 @@ const addDays = (d: string | Date, n: number) => {
 export default function LeaveAuthorizationLetterPrintable({ id, data }: { id: string; data: LeaveLetterData }) {
   const companyName = data.company.tradeName || data.company.legalName || 'Entreprise';
   const civility = data.employee.gender === 'FEMALE' ? 'Madame' : 'Monsieur';
-  const resumptionDate = addDays(data.endDate, 1);
+  // Reprise réelle fournie par le backend (week-ends / fériés sautés) ; sinon lendemain du dernier jour
+  const resumptionDate = data.returnDate ? new Date(data.returnDate) : addDays(data.endDate, 1);
 
   return (
     <div

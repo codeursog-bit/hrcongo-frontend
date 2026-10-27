@@ -71,7 +71,10 @@ export interface StandardLeaveRequestFormData {
     hireDate?: string | Date | null;
   };
   startDate: string | Date;
+  /** DERNIER jour de congé (inclus) */
   endDate: string | Date;
+  /** Jour de REPRISE réel (premier jour travaillé après le congé) */
+  returnDate?: string | Date | null;
   daysCount: number | string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | string;
   requestedAt?: string | Date;
@@ -223,7 +226,8 @@ export default function StandardLeaveRequestForm({ data, id }: { data: StandardL
       <table style={{ ...tableStyle, marginTop: 10, fontSize: 12 }}>
         <tbody>
           <Row label="Date de départ" value={fmtDate(data.startDate) || PLACEHOLDER_DATE} />
-          <Row label="Date de retour" value={fmtDate(data.endDate) || PLACEHOLDER_DATE} />
+          <Row label="Dernier jour de congé" value={fmtDate(data.endDate) || PLACEHOLDER_DATE} />
+          <Row label="Date de reprise du travail" value={fmtDate(data.returnDate) || PLACEHOLDER_DATE} />
           <Row label="Nombre de jours" value={String(data.daysCount)} />
         </tbody>
       </table>

@@ -8,6 +8,7 @@
 //    liste/grille existante — vient en complément.
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -24,7 +25,7 @@ import LeaveAuthorizationLetterPrintable from '@/components/LeaveAuthorizationLe
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import OrcaLeaveAbsenceDocument from '@/components/documents/orca/OrcaLeaveAbsenceDocument';
-import StandardLeaveRequestForm from '@/components/documents/standard/StandardLeaveRequestForm';
+import { LeaveRequestDocument } from '@/components/documents/RequestDocuments';
 // ✅ LOT E — circuit d'avis + signatures personnelles (inactifs tant que l'admin n'a rien configuré)
 import ApprovalPanel from '@/components/approvals/ApprovalPanel';
 import { useApprovalDecision } from '@/hooks/useApprovalDecision';
@@ -300,14 +301,14 @@ export default function LeaveDetailPage() {
   const LETTER_ID = 'leave-letter-print';
   const reference = `CGE-${leave.id.slice(0, 8).toUpperCase()}`;
   const isOrca = docData?.company?.documentTemplate === 'ORCA';
-  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(docData?.company?.documentTemplate);
 
   const formData = {
     reference,
     company: leave.company || {},
     employee: { firstName: leave.employee?.firstName || '', lastName: leave.employee?.lastName || '', position: leave.employee?.position, departmentName: leave.employee?.department?.name },
     type: leave.type, reason: leave.reason, isPaid: leave.type !== 'UNPAID',
-    startDate: leave.startDate, endDate: leave.endDate, daysCount: leave.daysCount,
+    startDate: leave.startDate, endDate: leave.endDate, returnDate: leave.returnDate, daysCount: leave.daysCount,
     hasAttachment: !!leave.attachmentUrl, status: leave.status,
     requestedAt: leave.requestedAt || leave.createdAt,
     reviewedByName: leave.approvedByUser
@@ -324,7 +325,7 @@ export default function LeaveDetailPage() {
     company: leave.company || {},
     employee: { firstName: leave.employee?.firstName || '', lastName: leave.employee?.lastName || '', position: leave.employee?.position, hireDate: leave.employee?.hireDate, gender: leave.employee?.gender },
     leaveYear: new Date(leave.startDate).getFullYear(),
-    startDate: leave.startDate, endDate: leave.endDate, daysCount: leave.daysCount,
+    startDate: leave.startDate, endDate: leave.endDate, returnDate: leave.returnDate, daysCount: leave.daysCount,
     // ✅ CORRECTIF : le paragraphe "jours restants... seront reportés" n'a
     // de sens que pour un congé ANNUAL — c'est lui qui déclenche le
     // paiement de l'indemnité, donc lui seul peut avoir une part
@@ -373,6 +374,7 @@ export default function LeaveDetailPage() {
         isPaid={leave.type !== 'UNPAID'}
         startDate={docData.startDate}
         endDate={docData.endDate}
+        returnDate={leave.returnDate}
         daysCount={docData.daysCount}
         reason={docData.reason}
         status={docData.status}
@@ -380,7 +382,7 @@ export default function LeaveDetailPage() {
         signatures={docSignatures}
       />
     ) : isStandard ? (
-      <StandardLeaveRequestForm
+      <LeaveRequestDocument template={docData?.company?.documentTemplate}
         id={elementId}
         data={{
           reference,
@@ -395,6 +397,7 @@ export default function LeaveDetailPage() {
           },
           startDate: leave.startDate,
           endDate: leave.endDate,
+          returnDate: leave.returnDate,
           daysCount: leave.daysCount,
           status: leave.status,
           requestedAt: leave.requestedAt || leave.createdAt,
@@ -452,6 +455,12 @@ export default function LeaveDetailPage() {
               <span className="font-mono text-xs">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
               <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Math.round(Number(leave.daysCount))}j</span>
             </div>
+            {leave.returnDate && (
+              <p className="text-xs text-[var(--text-muted)] px-1">
+                Dernier jour de congé : <span className="font-semibold text-[var(--text)]">{new Date(leave.endDate).toLocaleDateString('fr-FR')}</span>
+                {' · '}Reprise le <span className="font-semibold text-[var(--text)]">{new Date(`${leave.returnDate}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+              </p>
+            )}
 
             {isCarryover ? (
               <div className="flex items-start gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10">
@@ -641,7 +650,7 @@ export default function LeaveDetailPage() {
                     </div>
                     {new Date(leave.endDate) > new Date() && (
                       <div className="text-xs text-[var(--text-muted)]">
-                        Si la date choisie est avant le {new Date(leave.endDate).toLocaleDateString('fr-FR')} (retour prévu), les jours restants seront comptés comme non pris.
+                        Si la date choisie est avant le {new Date(leave.endDate).toLocaleDateString('fr-FR')} (dernier jour de congé), les jours restants seront comptés comme non pris.
                       </div>
                     )}
                   </div>

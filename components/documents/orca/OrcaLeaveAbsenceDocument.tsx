@@ -36,6 +36,8 @@ interface OrcaLeaveAbsenceDocumentProps {
   isPaid: boolean; // congé : Statut du congé Payé/Non-payé — absence : n'affecte pas l'affichage
   startDate: string | Date;
   endDate: string | Date;
+  /** Jour de REPRISE réel (absences). Absent : le congé garde l'affichage historique (endDate). */
+  returnDate?: string | Date | null;
   daysCount: number | string;
   reason?: string | null;
   status: RequestStatus;
@@ -57,7 +59,8 @@ const ABSENCE_TYPES: { key: AbsenceType[]; label: string }[] = [
   { key: ['EXCEPTIONNELLE'], label: 'Exceptionnel' },
 ];
 
-function fmtDate(d: string | Date) {
+function fmtDate(d?: string | Date | null) {
+  if (!d) return '……………………';
   const date = typeof d === 'string' ? new Date(d) : d;
   if (isNaN(date.getTime())) return '……………………';
   return date.toLocaleDateString('fr-FR');
@@ -103,6 +106,7 @@ export default function OrcaLeaveAbsenceDocument({
   isPaid,
   startDate,
   endDate,
+  returnDate,
   daysCount,
   reason,
   status,
@@ -154,7 +158,7 @@ export default function OrcaLeaveAbsenceDocument({
       )}
 
       <FieldLine label="Date de départ" value={fmtDate(startDate)} minWidth={140} />
-      <FieldLine label="Date de reprise du travail" value={fmtDate(endDate)} minWidth={190} />
+      <FieldLine label="Date de reprise du travail" value={fmtDate(returnDate ?? (isConge ? endDate : undefined))} minWidth={190} />
       <FieldLine label={daysLabel} value={String(daysCount)} minWidth={260} />
 
       {/* Avis de la Hiérarchie (gauche) — Justificatif (coin haut droit), comme le modèle original */}

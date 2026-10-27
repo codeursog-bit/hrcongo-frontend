@@ -1,5 +1,6 @@
 'use client';
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { 
     CreditCard, Calendar, Clock, DollarSign, List, UserCheck, 
@@ -535,7 +536,7 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                             <Input icon={Wallet} label="Remboursement Mensuel (FCFA)" name="monthlyRepayment" type="number" value={formData.monthlyRepayment || ''} onChange={handleChange} placeholder="Ex: 25000" min={1} required />
                             <Input icon={Calendar} label="Date de Début" name="startDate" type="date" value={formData.startDate || ''} onChange={handleChange} required />
                             <Input icon={Clock} label="Date de Fin Estimée" name="endDate" type="date" value={formData.endDate || ''} onChange={handleChange} required />
-                            {documentTemplate === 'STANDARD' && (
+                            {usesStandardData(documentTemplate) && (
                                 <div className="md:col-span-3">
                                     <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Nature du prêt</label>
                                     <select
@@ -553,7 +554,7 @@ export const LoansForm = ({ onCreationSuccess }: { onCreationSuccess: () => void
                                     </select>
                                 </div>
                             )}
-                            {documentTemplate === 'STANDARD' && (
+                            {usesStandardData(documentTemplate) && (
                                 <div className="md:col-span-3">
                                     <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">Pièce jointe (devis, justificatif de scolarité, certificat médical...)</label>
                                     <label className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-dashed border-[var(--border)] text-sm text-[var(--text-muted)] cursor-pointer hover:border-emerald-400 hover:text-emerald-500 transition-colors">

@@ -6,6 +6,7 @@
 //    avec pagination, cohérent avec les autres modules (absences, permissions).
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import { debtRefDate } from '@/lib/debt-dates';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
@@ -22,8 +23,7 @@ import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
-import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
+import { AdvanceRequestDocument, LoanRequestDocument } from '@/components/documents/RequestDocuments';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
@@ -165,7 +165,7 @@ export default function MonEspacePretsAvancesPage() {
     signatures: docSignatures,
   } : null;
 
-  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(docData?.company?.documentTemplate);
   const standardLoanData = docData && selected?.kind === 'loan' ? {
     reference,
     company: docData.company,
@@ -178,6 +178,9 @@ export default function MonEspacePretsAvancesPage() {
     requestedAt: docData.createdAt,
     drhDecision: docData.drhDecision,
     dgDecision: docData.dgDecision,
+    status: docData.status,
+    monthlyRepayment: docData.monthlyRepayment,
+    attachmentUrl: docData.attachmentUrl,
     signatures: docSignatures,
   } : null;
   const standardAdvanceData = docData && selected?.kind === 'advance' ? {
@@ -428,8 +431,8 @@ export default function MonEspacePretsAvancesPage() {
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                     ) : isStandard ? (
                       selected.kind === 'loan'
-                        ? standardLoanData && <StandardLoanRequestForm id={PRINT_ID} data={standardLoanData as any} />
-                        : standardAdvanceData && <StandardAdvanceRequestForm id={PRINT_ID} data={standardAdvanceData as any} />
+                        ? standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id={PRINT_ID} data={standardLoanData as any} />
+                        : standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id={PRINT_ID} data={standardAdvanceData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -501,8 +504,8 @@ export default function MonEspacePretsAvancesPage() {
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
             selected.kind === 'loan'
-              ? standardLoanData && <StandardLoanRequestForm id="my-doc-preview" data={standardLoanData as any} />
-              : standardAdvanceData && <StandardAdvanceRequestForm id="my-doc-preview" data={standardAdvanceData as any} />
+              ? standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="my-doc-preview" data={standardLoanData as any} />
+              : standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="my-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="my-doc-preview" data={printData as any} />
           )

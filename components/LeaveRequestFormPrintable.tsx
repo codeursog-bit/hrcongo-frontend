@@ -24,7 +24,10 @@ export interface LeaveRequestFormData {
   reason?: string;
   isPaid: boolean;
   startDate: string | Date;
+  /** DERNIER jour de congé (inclus) */
   endDate: string | Date;
+  /** Jour de REPRISE réel (premier jour travaillé après le congé) */
+  returnDate?: string | Date | null;
   daysCount: number | string;
   hasAttachment?: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | string;
@@ -93,7 +96,8 @@ export default function LeaveRequestFormPrintable({ data }: { data: LeaveRequest
         </div>
 
         <div style={{ marginTop: 7 }}><strong>Date de départ :</strong> {fmt(data.startDate)}</div>
-        <div><strong>Date de reprise du travail :</strong> {fmt(data.endDate)}</div>
+        <div><strong>Dernier jour de congé :</strong> {fmt(data.endDate)}</div>
+        <div><strong>Date de reprise du travail :</strong> {fmt(data.returnDate || undefined)}</div>
         <div><strong>Nombre de jours ouvrables :</strong> {data.daysCount}</div>
 
         <div style={{ marginTop: 7 }}>

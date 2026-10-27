@@ -7,6 +7,7 @@
 //    cohérente avec la page de gestion RH.
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDocSignatures } from '@/hooks/useDocSignatures';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
+import { AbsenceRequestDocument } from '@/components/documents/RequestDocuments';
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
@@ -112,7 +113,7 @@ export default function MonEspaceAbsencesPage() {
       position: employee?.position, departmentName: employee?.department?.name,
     },
     type: selected.type, subType: selected.subType, reason: selected.reason, isPaid: selected.isPaid,
-    startDate: selected.startDate, endDate: selected.endDate, workingDays: selected.workingDays,
+    startDate: selected.startDate, endDate: selected.endDate, returnDate: selected.returnDate, workingDays: selected.workingDays,
     hasAttachment: !!selected.attachmentUrl, status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,
     reviewedByName: selected.reviewedByUser?.email,
@@ -121,7 +122,7 @@ export default function MonEspaceAbsencesPage() {
     signatures: docSignatures,
   } : null;
 
-  const isStandard = company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(company?.documentTemplate);
   const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
   useEffect(() => {
     if (!isStandard) return;
@@ -139,6 +140,7 @@ export default function MonEspaceAbsencesPage() {
     motifKey: motifCatalog.find((m: any) => m.label === selected.reason)?.key,
     startDate: selected.startDate,
     endDate: selected.endDate,
+    returnDate: selected.returnDate,
     workingDays: selected.workingDays,
     status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,
@@ -252,6 +254,13 @@ export default function MonEspaceAbsencesPage() {
                       <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Number(selected.workingDays)}j ouvrables</span>
                     </div>
 
+                    {selected.returnDate && (
+                      <p className="text-xs text-[var(--text-muted)] px-1">
+                        Dernier jour d&apos;absence : <span className="font-semibold text-[var(--text)]">{new Date(selected.endDate).toLocaleDateString('fr-FR')}</span>
+                        {' · '}Reprise le <span className="font-semibold text-[var(--text)]">{new Date(`${selected.returnDate}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                      </p>
+                    )}
+
                     <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
                       <Wallet size={14} className="text-[var(--text-muted)]" />
                       {selected.subType === 'AUTRE' && selected.status === 'PENDING'
@@ -333,7 +342,7 @@ export default function MonEspaceAbsencesPage() {
                   <div className="bg-[var(--surface-2)] rounded-2xl p-3 overflow-hidden border border-[var(--border)]">
                     <div className="scale-[0.42] origin-top-left -mb-[58%]" style={{ width: '238%' }}>
                       {isStandard ? (
-                        standardAbsenceData && <StandardAbsenceRequestForm data={standardAbsenceData as any} />
+                        standardAbsenceData && <AbsenceRequestDocument template={company?.documentTemplate} data={standardAbsenceData as any} />
                       ) : (
                         printData && <AbsenceRequestPrintable data={printData as any} />
                       )}

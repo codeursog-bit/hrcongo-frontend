@@ -4,6 +4,7 @@
 // 📁 app/(dashboard)/loans/nouveau/page.tsx
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,8 +17,7 @@ import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
-import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
+import { AdvanceRequestDocument, LoanRequestDocument } from '@/components/documents/RequestDocuments';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
 
@@ -74,7 +74,7 @@ export default function NouvellePretAvancePage() {
   // jointe réelle (au lieu des cases "j'ai un devis" non vérifiables).
   // N'a de sens que pour un prêt (argent/marchandise/autre) — l'avance n'a
   // pas cette notion sur le papier.
-  const isStandard = company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(company?.documentTemplate);
   const [nature, setNature] = useState('');
   const { uploadedUrl: attachmentUrl, uploading: uploadingAttachment, handleFileSelect: handleAttachmentSelect } = useImageUpload({ folder: 'loans' });
 
@@ -452,8 +452,8 @@ export default function NouvellePretAvancePage() {
       <DocumentPreviewModal open={showPreviewModal} onClose={() => setShowPreviewModal(false)}>
         {isStandard ? (
           isAdvance
-            ? <StandardAdvanceRequestForm id="preview-loan" data={standardAdvancePreviewData as any} />
-            : <StandardLoanRequestForm id="preview-loan" data={standardPreviewData as any} />
+            ? <AdvanceRequestDocument template={company?.documentTemplate} id="preview-loan" data={standardAdvancePreviewData as any} />
+            : <LoanRequestDocument template={company?.documentTemplate} id="preview-loan" data={standardPreviewData as any} />
         ) : (
           <LoanRequestPrintable id="preview-loan" data={previewData as any} />
         )}

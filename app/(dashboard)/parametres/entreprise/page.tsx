@@ -888,6 +888,7 @@ setSites(s => s.map(x => x.id === site.id ? updated : x));
     <option value="DEFAULT">Modèle par défaut</option>
     <option value="ORCA">Modèle 1</option>
     <option value="STANDARD">Modèle 2</option>
+    <option value="MODERN">Modèle 3</option>
   </select>
 </div>
 

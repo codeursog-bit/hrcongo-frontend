@@ -8,6 +8,7 @@
 //    complet + décision + aperçu de fiche masqué par défaut (comme /loans).
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Loader2, Check, X, Clock, CheckCircle2, XCircle, Ban, Filter, Users2,
@@ -20,8 +21,7 @@ import { api } from '@/services/api';
 import { sanitizeOrcaHtml } from '@/lib/sanitize-html';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
-import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
+import { AdvanceRequestDocument, LoanRequestDocument } from '@/components/documents/RequestDocuments';
 import DocumentPreviewModal from '@/components/loans/DocumentPreviewModal';
 import { printLoanDocument } from '@/lib/loan-print';
 // ✅ LOT B — circuit d'avis (inactif tant que l'admin n'a rien configuré)
@@ -203,7 +203,7 @@ export default function ValidationsPage() {
     signatures: docSignatures,
   } : null;
 
-  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(docData?.company?.documentTemplate);
   const standardLoanData = docData && selected?.kind === 'loan' ? {
     reference,
     company: docData.company,
@@ -216,6 +216,9 @@ export default function ValidationsPage() {
     requestedAt: docData.createdAt,
     drhDecision: docData.drhDecision,
     dgDecision: docData.dgDecision,
+    status: docData.status,
+    monthlyRepayment: docData.monthlyRepayment,
+    attachmentUrl: docData.attachmentUrl,
     signatures: docSignatures,
   } : null;
   const standardAdvanceData = docData && selected?.kind === 'advance' ? {
@@ -484,8 +487,8 @@ export default function ValidationsPage() {
                   orcaHtml && <div id="val-print-target" dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                 ) : isStandard ? (
                   selected.kind === 'loan'
-                    ? standardLoanData && <StandardLoanRequestForm id="val-print-target" data={standardLoanData as any} />
-                    : standardAdvanceData && <StandardAdvanceRequestForm id="val-print-target" data={standardAdvanceData as any} />
+                    ? standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="val-print-target" data={standardLoanData as any} />
+                    : standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="val-print-target" data={standardAdvanceData as any} />
                 ) : (
                   printData && <LoanRequestPrintable id="val-print-target" data={printData as any} />
                 )
@@ -503,8 +506,8 @@ export default function ValidationsPage() {
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
             selected.kind === 'loan'
-              ? standardLoanData && <StandardLoanRequestForm id="val-doc-preview" data={standardLoanData as any} />
-              : standardAdvanceData && <StandardAdvanceRequestForm id="val-doc-preview" data={standardAdvanceData as any} />
+              ? standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="val-doc-preview" data={standardLoanData as any} />
+              : standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="val-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="val-doc-preview" data={printData as any} />
           )

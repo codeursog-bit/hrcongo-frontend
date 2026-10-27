@@ -15,7 +15,7 @@
 //    l'exception à ajouter dans lib/loan-print.ts (sinon impression/export les
 //    aplatissent en noir sur fond transparent).
 // ✅ Même simplification hiérarchique que le prêt : seule la ligne RH reflète
-//    une vraie décision ; Responsable direct / Direction Générale restent des
+//    une vraie décision ; Responsable Comptable / Direction Générale restent des
 //    cases à signer à la main.
 // ============================================================================
 
@@ -166,7 +166,7 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
   ].filter(Boolean).join(', ');
 
   const approvers = [
-    { fn: 'Responsable direct', code: 'HIERARCHY_HEAD', h: 33, fav: false, unf: false, cachet: false },
+    { fn: 'Responsable Comptable', code: 'ACCOUNTANT', h: 33, fav: false, unf: false, cachet: false },
     { fn: 'Direction des Ressources Humaines', code: 'HR', h: 33, fav: validated, unf: rejected, cachet: true },
     { fn: 'Direction Générale', code: 'DG', h: 48, fav: false, unf: false, cachet: false },
   ];
@@ -347,7 +347,7 @@ export default function StandardAdvanceRequestForm({ data, id }: { data: Standar
       </table>
 
       {/* ✅ LOT D — fonctions sans case sur ce modèle (comptable, chef d'équipe…) */}
-      <OtherOpinions signatures={data.signatures} boxCodes={['HIERARCHY_HEAD', 'HR', 'DG']} fontSize={9} />
+      <OtherOpinions signatures={data.signatures} boxCodes={['ACCOUNTANT', 'HR', 'DG']} fontSize={9} />
 
       <Spacer h={48} />
       <div className="std-adv-body" style={{ fontSize: 12.5, lineHeight: '16px' }}>

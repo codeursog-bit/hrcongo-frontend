@@ -114,14 +114,32 @@ function itemBase(item: any): string {
   if (!item || item.base == null || nv(item.base) === 0) return '';
   return Math.round(nv(item.base)).toLocaleString('fr-FR');
 }
-function itemTaux(item: any): string {
-  if (!item) return '';
-  if (item.quantity != null && nv(item.quantity) !== 0) return String(nv(item.quantity));
-  if (item.rate == null) return '';
+// ✅ Taux « pur » (colonne Taux) — jamais la quantité. Sert aux gains et
+// indemnités, où la quantité s'affiche déjà dans la colonne Nombre.
+function itemRate(item: any): string {
+  if (!item || item.rate == null) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
   if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
   return (Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ','));
+}
+function itemTaux(item: any): string {
+  if (!item) return '';
+  if (item.quantity != null && nv(item.quantity) !== 0) return String(nv(item.quantity));
+  return itemRate(item);
+}
+// ✅ Indemnités hors brut : on montre le détail du calcul
+//    Nombre × Base = Gain (ex. 20 × 2 000 = 40 000).
+//    - si l'item a un taux ET une quantité → Nombre = quantité, Taux = taux
+//    - si l'item n'a que la quantité       → elle s'affiche dans Taux
+//      (même convention que TOL / taxes custom et que les gabarits
+//      Classique et Clarifié)
+function indemNombre(item: any): string {
+  if (!itemRate(item)) return '';
+  return item.quantity != null && nv(item.quantity) !== 0 ? String(nv(item.quantity)) : '';
+}
+function indemTaux(item: any): string {
+  return itemRate(item) || itemTaux(item);
 }
 // ✅ Uniquement pour les 4 lignes CNSS (salariale + les 3 branches
 // patronales) : elles gardent le "%", contrairement à TOL/CAMU/TUS/taxes
@@ -462,7 +480,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               {gains.map((item: any, idx: number) => { const n = rubGain; rubGain += 100; return (
                 <Row key={item.id || item.code || idx} n={n} label={item.label}
                   nombre={item.quantity != null && nv(item.quantity) !== 0 ? String(nv(item.quantity)) : (payroll.workedDays ? String(payroll.workedDays) + '.00' : '')}
-                  base={itemBase(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
+                  base={itemBase(item)} tauxS={itemRate(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
               ); })}
               {absDeductItem && (
                 <Row label={absDeductItem.label}
@@ -558,7 +576,8 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
 
               {/* ── Indemnités hors brut (numérotées 4100, 4120…) ─────── */}
               {indemItems.map((item: any) => { const n = rubIndem; rubIndem += 20; return (
-                <Row key={item.id || item.code} n={n} label={item.label} base={itemBase(item)} gain={fmt(item.amount)} />
+                <Row key={item.id || item.code} n={n} label={item.label}
+                  nombre={indemNombre(item)} base={itemBase(item)} tauxS={indemTaux(item)} gain={fmt(item.amount)} />
               ); })}
 
               <DashRow />

@@ -7,6 +7,7 @@
 //    demandé : l'employé voit exactement le document qui partira au dossier.
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -18,7 +19,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
+import { AbsenceRequestDocument } from '@/components/documents/RequestDocuments';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
 import AbsenceCeilingBalance, { type CeilingBalance } from '@/components/absences/AbsenceCeilingBalance';
@@ -81,7 +82,7 @@ export default function NouvelleAbsencePage() {
   // ✅ Modèle STANDARD : catalogue de motifs conventionnels propre à
   // l'entreprise, avec un nombre de jours fixe (remplace le choix
   // type/sous-type/raison libre + double date de la version DEFAULT).
-  const isStandard = company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(company?.documentTemplate);
   const [motifCatalog, setMotifCatalog] = useState<any[]>([]);
   const [selectedMotifKey, setSelectedMotifKey] = useState('');
   // 🆕 Motif « Autre » : hors catalogue, motif saisi librement ; la RH tranche payé / non payé.
@@ -286,6 +287,7 @@ export default function NouvelleAbsencePage() {
     otherReason: isOther ? (reason.trim() || '…') : undefined,
     startDate: startDate || new Date(),
     endDate: lastAbsenceDate || startDate || new Date(),
+    returnDate: returnDate || undefined,
     workingDays: workingDays || undefined,
     status: 'PENDING',
     requestedAt: new Date(),
@@ -315,6 +317,7 @@ export default function NouvelleAbsencePage() {
     isPaid,
     startDate: startDate || new Date(),
     endDate: lastAbsenceDate || new Date(),
+    returnDate: returnDate || undefined,
     workingDays: workingDays || '—',
     hasAttachment: !!uploadedUrl,
     status: 'PENDING' as const,
@@ -773,7 +776,7 @@ export default function NouvelleAbsencePage() {
             <div className="bg-[var(--surface-2)] rounded-2xl p-4 overflow-auto max-h-[85vh] border border-[var(--border)]">
               <div className="scale-[0.62] origin-top -mb-[38%] shadow-2xl">
                 {isStandard ? (
-                  <StandardAbsenceRequestForm data={standardPreviewData as any} />
+                  <AbsenceRequestDocument template={company?.documentTemplate} data={standardPreviewData as any} />
                 ) : (
                   <AbsenceRequestPrintable data={previewData as any} />
                 )}

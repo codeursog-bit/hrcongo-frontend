@@ -11,6 +11,7 @@
 //    autorisées pour ne pas proposer un bouton qui échouerait.
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -27,8 +28,7 @@ import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import FinanceSubNav from '@/components/FinanceSubNav';
 import LoanRequestPrintable from '@/components/LoanRequestPrintable';
-import StandardLoanRequestForm from '@/components/documents/standard/StandardLoanRequestForm';
-import StandardAdvanceRequestForm from '@/components/documents/standard/StandardAdvanceRequestForm';
+import { AdvanceRequestDocument, LoanRequestDocument } from '@/components/documents/RequestDocuments';
 import { printLoanDocument, downloadLoanDocumentPDF } from '@/lib/loan-print';
 import { PrintAuthorizationModal } from '@/components/documents/PrintAuthorizationModal';
 import LoansOverview from '@/components/loans/LoansOverview';
@@ -384,7 +384,7 @@ export default function LoansManagementPage() {
   // ── Impression ─────────────────────────────────────────────────────────────
 
   const PRINT_ID = 'loan-doc-print';
-  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(docData?.company?.documentTemplate);
   const printSource = tab === 'loans' ? selectedLoan : selectedAdvance;
   const printReference = printSource ? `${tab === 'loans' ? 'PR' : 'AV'}-${printSource.id.slice(0, 8).toUpperCase()}` : '';
 
@@ -427,6 +427,9 @@ export default function LoansManagementPage() {
     requestedAt: docData.createdAt,
     drhDecision: docData.drhDecision,
     dgDecision: docData.dgDecision,
+    status: docData.status,
+    monthlyRepayment: docData.monthlyRepayment,
+    attachmentUrl: docData.attachmentUrl,
     signatures: docSignatures,
   } : null;
 
@@ -858,7 +861,7 @@ export default function LoansManagementPage() {
                     {docData?.company?.documentTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                     ) : isStandard ? (
-                      standardLoanData && <StandardLoanRequestForm id={PRINT_ID} data={standardLoanData as any} />
+                      standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id={PRINT_ID} data={standardLoanData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -1107,7 +1110,7 @@ export default function LoansManagementPage() {
                     {docData?.company?.documentTemplate === 'ORCA' ? (
                       orcaHtml && <div id={PRINT_ID} dangerouslySetInnerHTML={{ __html: orcaHtml }} />
                     ) : isStandard ? (
-                      standardAdvanceData && <StandardAdvanceRequestForm id={PRINT_ID} data={standardAdvanceData as any} />
+                      standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id={PRINT_ID} data={standardAdvanceData as any} />
                     ) : (
                       printData && <LoanRequestPrintable id={PRINT_ID} data={printData as any} />
                     )}
@@ -1416,7 +1419,7 @@ export default function LoansManagementPage() {
           docData.company?.documentTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
-            standardLoanData && <StandardLoanRequestForm id="loan-doc-preview" data={standardLoanData as any} />
+            standardLoanData && <LoanRequestDocument template={docData?.company?.documentTemplate} id="loan-doc-preview" data={standardLoanData as any} />
           ) : (
             printData && <LoanRequestPrintable id="loan-doc-preview" data={printData as any} />
           )
@@ -1425,7 +1428,7 @@ export default function LoansManagementPage() {
           docData.company?.documentTemplate === 'ORCA' ? (
             orcaHtml && <div dangerouslySetInnerHTML={{ __html: orcaHtml }} />
           ) : isStandard ? (
-            standardAdvanceData && <StandardAdvanceRequestForm id="advance-doc-preview" data={standardAdvanceData as any} />
+            standardAdvanceData && <AdvanceRequestDocument template={docData?.company?.documentTemplate} id="advance-doc-preview" data={standardAdvanceData as any} />
           ) : (
             printData && <LoanRequestPrintable id="advance-doc-preview" data={printData as any} />
           )

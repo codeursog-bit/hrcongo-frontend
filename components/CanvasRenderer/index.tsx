@@ -470,7 +470,15 @@ function RenderTable({ block, payroll }: { block: CanvasBlock; payroll: Bulletin
                   {item.base ? fmt(item.base) : '—'}
                 </td>
                 <td style={{ padding:`${pad}`, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontSize:fs - 1.5, color:'#9ca3af' }}>
-                  {item.rate ? `${(item.rate * 100).toFixed(2)}%` : '—'}
+                  {(() => {
+                    // ✅ Primes/indemnités à quantité (ex. 20 × 2 000 = 40 000) :
+                    //    rate est null, la quantité est le seul « taux » à afficher.
+                    const q = Number(item.quantity);
+                    if (item.quantity != null && q !== 0 && !Number.isNaN(q)) return String(q);
+                    if (!item.rate) return '—';
+                    const r = Number(item.rate);
+                    return r > 0 && r < 1 ? `${(r * 100).toFixed(2)}%` : String(r);
+                  })()}
                 </td>
                 <td style={{ padding:`${pad}`, borderBottom:'1px solid #e5e7eb', textAlign:'right', fontFamily:'monospace', fontWeight:700, fontSize:fs + 0.5, color: amountColor(item.type) }}>
                   {sign(item.type)}{fmt(item.amount)}

@@ -9,6 +9,7 @@
 //    changer d'écran.
 // ============================================================================
 
+import { usesStandardData } from '@/lib/document-template';
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
@@ -21,7 +22,7 @@ import { motion } from 'framer-motion';
 import { api } from '@/services/api';
 import { useBasePath } from '@/hooks/useBasePath';
 import AbsenceRequestPrintable from '@/components/AbsenceRequestPrintable';
-import StandardAbsenceRequestForm from '@/components/documents/standard/StandardAbsenceRequestForm';
+import { AbsenceRequestDocument } from '@/components/documents/RequestDocuments';
 import { printAbsenceRequest, downloadAbsenceRequestPDF } from '@/lib/absence-print';
 import PresenceModuleSwitcher from '@/components/PresenceModuleSwitcher';
 import AbsenceSubNav from '@/components/AbsenceSubNav';
@@ -207,7 +208,7 @@ export default function AbsenceManagementPage() {
       position: selected.employee?.position, departmentName: selected.employee?.department?.name,
     },
     type: selected.type, subType: selected.subType, reason: selected.reason, isPaid: selected.isPaid,
-    startDate: selected.startDate, endDate: selected.endDate, workingDays: selected.workingDays,
+    startDate: selected.startDate, endDate: selected.endDate, returnDate: selected.returnDate, workingDays: selected.workingDays,
     hasAttachment: !!selected.attachmentUrl, status: selected.status,
     requestedAt: selected.requestedAt || selected.createdAt,
     reviewedByName: selected.reviewedByUser?.email,
@@ -215,7 +216,7 @@ export default function AbsenceManagementPage() {
     rejectionReason: selected.rejectionReason,
   } : null;
 
-  const isStandard = docData?.company?.documentTemplate === 'STANDARD';
+  const isStandard = usesStandardData(docData?.company?.documentTemplate);
   const standardAbsenceData = docData && isStandard ? {
     reference: `DEA-${selected?.id?.slice(0, 8).toUpperCase() || ''}`,
     company: docData.company,
@@ -225,6 +226,7 @@ export default function AbsenceManagementPage() {
     otherReason: docData.otherReason,
     startDate: docData.startDate,
     endDate: docData.endDate,
+    returnDate: docData.returnDate ?? selected?.returnDate,
     workingDays: docData.workingDays ?? selected?.workingDays,
     status: docData.status,
     requestedAt: selected?.requestedAt || selected?.createdAt,
@@ -384,6 +386,13 @@ export default function AbsenceManagementPage() {
                     <span className="font-mono text-xs">{new Date(selected.endDate).toLocaleDateString('fr-FR')}</span>
                     <span className="ml-auto font-bold text-xs text-[var(--text-muted)]">{Number(selected.workingDays)}j ouvrables</span>
                   </div>
+
+                  {selected.returnDate && (
+                    <p className="text-xs text-[var(--text-muted)] px-1">
+                      Dernier jour d&apos;absence : <span className="font-semibold text-[var(--text)]">{new Date(selected.endDate).toLocaleDateString('fr-FR')}</span>
+                      {' · '}Reprise le <span className="font-semibold text-[var(--text)]">{new Date(`${selected.returnDate}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                    </p>
+                  )}
 
                   <div className="flex items-center gap-2 text-sm px-3.5 py-2.5 rounded-xl border border-[var(--border)]">
                     <Wallet size={14} className="text-[var(--text-muted)]" />
@@ -546,13 +555,14 @@ export default function AbsenceManagementPage() {
                         isPaid={docData.isPaid}
                         startDate={docData.startDate}
                         endDate={docData.endDate}
+                        returnDate={docData.returnDate ?? selected?.returnDate}
                         daysCount={docData.workingDays}
                         reason={docData.reason}
                         status={docData.status}
                         company={docData.company}
                       />
                     ) : isStandard ? (
-                      standardAbsenceData && <StandardAbsenceRequestForm id="absence-print-root" data={standardAbsenceData as any} />
+                      standardAbsenceData && <AbsenceRequestDocument template={docData?.company?.documentTemplate} id="absence-print-root" data={standardAbsenceData as any} />
                     ) : (
                       printData && <AbsenceRequestPrintable data={printData as any} />
                     )}

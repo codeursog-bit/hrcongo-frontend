@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle,
   Download, ChevronRight, ArrowLeft, Loader2, Users, FileCheck,
-  Zap, Info, Check, X,
+  Zap, Info, Check, X, Coins,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -20,13 +20,40 @@ interface AnalysisResult {
     previewData: Record<string, any>[];
     suggestedMappings: Array<{ excelColumn: string; dbField: string; confidence: number }>;
     warnings: string[];
+    /** 🆕 aide au choix de la nature fiscale, par colonne */
+    bonusColumnInfo?: Record<string, BonusColumnInfo>;
   };
 }
+interface BonusColumnInfo {
+  name: string;
+  allowanceHint: boolean;
+  catalogName: string | null;
+  catalogNature: 'TAXABLE' | 'NON_TAXABLE' | null;
+  catalogLabel: string | null;
+}
+// 🆕 Primes / indemnités détectées (plan renvoyé par la validation)
+interface BonusPlanItem {
+  column: string; name: string; kind: string; kindLabel: string;
+  action: 'REUSE' | 'CREATE'; conflict: 'NONE' | 'TAXABILITY';
+  employees: number; totalAmount: number;
+}
+interface BonusSummary {
+  templatesCreated: Array<{ name: string; kind: string }>;
+  templatesReused: Array<{ name: string; kind: string }>;
+  bonusesAssigned: number; totalAmount: number;
+}
 interface ValidationResult {
-  data: { isValid: boolean; validRows: number; invalidRows: number; errors: string[] };
+  data: {
+    isValid: boolean; validRows: number; invalidRows: number; errors: string[];
+    bonusPlan?: BonusPlanItem[]; bonusWarnings?: string[];
+  };
 }
 interface ImportResult {
-  data: { success: boolean; imported: number; skipped: number; errors: Array<{ row: number; message: string }> };
+  data: {
+    success: boolean; imported: number; skipped: number;
+    errors: Array<{ row: number; message: string }>;
+    bonuses?: BonusSummary;
+  };
 }
 
 // ─── DB field labels ─────────────────────────────────────────────────────────
@@ -50,6 +77,14 @@ const DB_FIELDS: Record<string, string> = {
   foreignLanguages: 'Langue Étrangère', uniformSize: 'Taille Tenue', shoeSize: 'Pointure',
   nationality: 'Nationalité',
 };
+
+// 🆕 Primes & indemnités : le NOM de la colonne devient le nom de la prime.
+// Nature fiscale : IMPOSABLE par défaut, ou NON imposable (au choix de l'utilisateur).
+const BONUS_TAXABLE     = 'BONUS_TAXABLE';
+const BONUS_NON_TAXABLE = 'BONUS_NON_TAXABLE';
+const isBonusValue = (v?: string) =>
+  v === BONUS_TAXABLE || v === BONUS_NON_TAXABLE || v === 'BONUS_TAXABLE_CNSS' || v === 'BONUS_TAXABLE_NO_CNSS';
+const fcfa = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} FCFA`;
 
 // ─── Step config ─────────────────────────────────────────────────────────────
 const IMPORT_STEPS = [
@@ -153,6 +188,8 @@ export default function EmployeeImportPage() {
   const [validation, setValidation]   = useState<any>(null);
   const [importResult, setImportResult] = useState<any>(null);
   const [isLoading, setIsLoading]     = useState(false);
+  // 🆕 l'utilisateur doit confirmer la nature fiscale des primes avant de valider
+  const [fiscalConfirmed, setFiscalConfirmed] = useState(false);
 
   // ── Upload & Analyse ────────────────────────────────────────────────────────
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
@@ -174,6 +211,12 @@ export default function EmployeeImportPage() {
         setAnalysis(result.data);
         const init: Record<string, string> = {};
         result.data.suggestedMappings.forEach(m => { init[m.excelColumn] = m.dbField; });
+        // 🆕 prime déjà au catalogue → sa nature fait foi
+        Object.keys(init).forEach(col => {
+          const nat = result.data.bonusColumnInfo?.[col]?.catalogNature;
+          if (isBonusValue(init[col]) && nat) init[col] = nat === 'NON_TAXABLE' ? BONUS_NON_TAXABLE : BONUS_TAXABLE;
+        });
+        setFiscalConfirmed(false);
         setMappings(init);
         setStep(2);
       }
@@ -185,8 +228,21 @@ export default function EmployeeImportPage() {
   };
 
   // ── Mapping validation ──────────────────────────────────────────────────────
-  const handleMappingChange = (col: string, field: string) =>
-    setMappings(prev => ({ ...prev, [col]: field }));
+  const handleMappingChange = (col: string, field: string) => {
+    const wasBonus = isBonusValue(mappings[col]);
+    if (field === BONUS_TAXABLE && wasBonus) return; // on garde la nature déjà choisie
+    // 🆕 prime déjà au catalogue → sa nature fait foi ; sinon « imposable » par défaut
+    const nat = analysis?.bonusColumnInfo?.[col]?.catalogNature;
+    const next = field === BONUS_TAXABLE && nat === 'NON_TAXABLE' ? BONUS_NON_TAXABLE : field;
+    setMappings(prev => ({ ...prev, [col]: next }));
+    if (wasBonus || isBonusValue(field)) setFiscalConfirmed(false);
+  };
+
+  const setBonusNature = (col: string, nature: 'TAXABLE' | 'NON_TAXABLE') => {
+    setMappings(prev => ({ ...prev, [col]: nature === 'NON_TAXABLE' ? BONUS_NON_TAXABLE : BONUS_TAXABLE }));
+    setFiscalConfirmed(false);
+  };
+  const bonusCols = Object.keys(mappings).filter(c => isBonusValue(mappings[c]));
 
   const validateMappings = async () => {
     if (!file) return;
@@ -422,7 +478,8 @@ export default function EmployeeImportPage() {
                         const suggestion = analysis.suggestedMappings.find((m: any) => m.excelColumn === excelCol);
                         const isMapped   = !!mappings[excelCol];
                         return (
-                          <div key={excelCol} className={`flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
+                          <div key={excelCol}>
+                          <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
                             isMapped
                               ? 'bg-[var(--surface-2)] border-[var(--border)]'
                               : 'bg-[var(--surface)] border-[var(--border)]'
@@ -440,7 +497,7 @@ export default function EmployeeImportPage() {
                             <ChevronRight size={14} className="text-[var(--text-muted)] flex-shrink-0" />
                             {/* Select */}
                             <select
-                              value={mappings[excelCol] || ''}
+                              value={isBonusValue(mappings[excelCol]) ? BONUS_TAXABLE : (mappings[excelCol] || '')}
                               onChange={e => handleMappingChange(excelCol, e.target.value)}
                               className="flex-1 px-3 py-2 text-sm border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 outline-none transition-all"
                             >
@@ -448,6 +505,7 @@ export default function EmployeeImportPage() {
                               {Object.entries(DB_FIELDS).map(([value, label]) => (
                                 <option key={value} value={value}>{label}</option>
                               ))}
+                              <option value={BONUS_TAXABLE}>Prime / indemnité (le nom de la colonne = nom de la prime)</option>
                             </select>
                             {/* Status indicator */}
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -459,9 +517,81 @@ export default function EmployeeImportPage() {
                               }
                             </div>
                           </div>
+
+                          {/* 🆕 Nature fiscale de la prime */}
+                          {isBonusValue(mappings[excelCol]) && (() => {
+                            const info   = analysis.bonusColumnInfo?.[excelCol];
+                            const locked = !!info?.catalogNature;
+                            const nature: 'TAXABLE' | 'NON_TAXABLE' = locked
+                              ? (info!.catalogNature as 'TAXABLE' | 'NON_TAXABLE')
+                              : mappings[excelCol] === BONUS_NON_TAXABLE ? 'NON_TAXABLE' : 'TAXABLE';
+                            return (
+                              <div className="ml-6 mt-1.5 p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] space-y-2.5">
+                                <p className="text-xs text-[var(--text-muted)] flex items-center gap-1.5">
+                                  <Coins size={12} /> Prime : <b className="text-[var(--text)]">{info?.name ?? excelCol}</b>
+                                  {info?.catalogName && <span>(déjà dans votre catalogue)</span>}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-3">
+                                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Nature fiscale</span>
+                                  <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden">
+                                    {([['TAXABLE', 'Imposable'], ['NON_TAXABLE', 'Non imposable']] as const).map(([val, label]) => (
+                                      <button key={val} type="button" disabled={locked}
+                                        onClick={() => setBonusNature(excelCol, val)}
+                                        className={`px-3.5 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
+                                          nature === val
+                                            ? 'bg-[var(--text)] text-[var(--bg)]'
+                                            : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
+                                        }`}>{label}</button>
+                                    ))}
+                                  </div>
+                                </div>
+                                {locked ? (
+                                  <p className="text-[11px] text-[var(--text-muted)]">Défini par votre catalogue : {info?.catalogLabel}. Pour le changer, modifiez la prime dans le catalogue.</p>
+                                ) : info?.allowanceHint && nature === 'TAXABLE' ? (
+                                  <p className="text-[11px] text-[var(--text-muted)] flex items-start gap-1.5">
+                                    <Info size={12} className="flex-shrink-0 mt-0.5" />
+                                    Les frais de transport, panier, logement, représentation… sont souvent non imposables : vérifiez.
+                                  </p>
+                                ) : null}
+                              </div>
+                            );
+                          })()}
+                          </div>
                         );
                       })}
                     </div>
+
+                    {/* 🆕 Confirmation de la nature fiscale des primes */}
+                    {bonusCols.length > 0 && (
+                      <div className="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] space-y-3">
+                        <p className="text-sm font-bold text-[var(--text)] flex items-center gap-2">
+                          <Coins size={15} /> Nature fiscale des primes ({bonusCols.length})
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Chaque prime est imposable par défaut. Passez en « Non imposable » les indemnités qui ne le sont pas (transport, représentation…).
+                          Ce choix détermine les retenues sur le bulletin.
+                        </p>
+                        <ul className="space-y-1">
+                          {bonusCols.map((c: string) => {
+                            const info = analysis.bonusColumnInfo?.[c];
+                            const non  = (info?.catalogNature ? info.catalogNature === 'NON_TAXABLE' : mappings[c] === BONUS_NON_TAXABLE);
+                            return (
+                              <li key={c} className="flex items-center justify-between text-sm text-[var(--text)]">
+                                <span>{info?.name ?? c}</span>
+                                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                                  non ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                }`}>{non ? 'Non imposable' : 'Imposable'}</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                        <label className="flex items-center gap-2 text-sm text-[var(--text)] cursor-pointer">
+                          <input type="checkbox" checked={fiscalConfirmed} onChange={e => setFiscalConfirmed(e.target.checked)} className="accent-emerald-600" />
+                          J'ai vérifié la nature fiscale de chaque prime
+                        </label>
+                      </div>
+                    )}
 
                     {/* Actions */}
                     <div className="flex justify-between pt-2">
@@ -469,7 +599,7 @@ export default function EmployeeImportPage() {
                         className="px-5 py-2.5 text-sm text-[var(--text-muted)] font-semibold hover:bg-[var(--surface-2)] rounded-xl transition-colors">
                         ← Retour
                       </button>
-                      <button onClick={validateMappings} disabled={isLoading}
+                      <button onClick={validateMappings} disabled={isLoading || (bonusCols.length > 0 && !fiscalConfirmed)}
                         className="flex items-center gap-2 px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm disabled:opacity-50 transition-colors">
                         {isLoading ? <><Loader2 className="animate-spin" size={16} />Validation…</> : <>Valider <ChevronRight size={16} /></>}
                       </button>
@@ -510,6 +640,59 @@ export default function EmployeeImportPage() {
                         }`}>{validation.invalidRows}</div>
                       </div>
                     </div>
+
+                    {/* 🆕 Primes et indemnités détectées */}
+                    {validation.bonusPlan && validation.bonusPlan.length > 0 && (
+                      <div className="rounded-2xl border border-[var(--border)] overflow-hidden">
+                        <div className="px-5 py-3 bg-[var(--surface-2)] border-b border-[var(--border)]">
+                          <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide flex items-center gap-1.5">
+                            <Coins size={13} /> Primes et indemnités ({validation.bonusPlan.length})
+                          </p>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border)]">
+                                <th className="px-4 py-2.5">Prime</th>
+                                <th className="px-4 py-2.5">Type</th>
+                                <th className="px-4 py-2.5">Catalogue</th>
+                                <th className="px-4 py-2.5 text-right">Employés</th>
+                                <th className="px-4 py-2.5 text-right">Total / mois</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {validation.bonusPlan.map((b: BonusPlanItem) => (
+                                <tr key={b.column} className="border-b last:border-0 border-[var(--border)]">
+                                  <td className="px-4 py-2.5 font-semibold text-[var(--text)]">{b.name}</td>
+                                  <td className="px-4 py-2.5">
+                                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                                      b.kind === 'BONUS_NON_TAXABLE'
+                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
+                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                    }`}>{b.kindLabel}</span>
+                                  </td>
+                                  <td className="px-4 py-2.5 text-[var(--text-muted)] text-xs">
+                                    {b.action === 'CREATE' ? 'Sera créée' : 'Déjà au catalogue'}
+                                    {b.conflict !== 'NONE' && <span className="block text-[11px]">type du catalogue conservé</span>}
+                                  </td>
+                                  <td className="px-4 py-2.5 text-right text-[var(--text)]">{b.employees}</td>
+                                  <td className="px-4 py-2.5 text-right text-[var(--text)]">{fcfa(b.totalAmount)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        {validation.bonusWarnings && validation.bonusWarnings.length > 0 && (
+                          <div className="px-5 py-3 border-t border-[var(--border)] bg-[var(--surface-2)] space-y-1.5">
+                            {validation.bonusWarnings.map((w: string, i: number) => (
+                              <p key={i} className="text-xs text-[var(--text-muted)] flex items-start gap-2">
+                                <Info size={13} className="flex-shrink-0 mt-0.5" />{w}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Errors list */}
                     {validation.errors.length > 0 && (
@@ -576,6 +759,31 @@ export default function EmployeeImportPage() {
                         )}
                       </div>
                     </motion.div>
+
+                    {/* 🆕 Primes et indemnités */}
+                    {importResult.bonuses && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
+                        className="rounded-2xl border border-[var(--border)] overflow-hidden text-left">
+                        <div className="px-5 py-3 bg-[var(--surface-2)] border-b border-[var(--border)]">
+                          <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide flex items-center gap-1.5">
+                            <Coins size={13} /> Primes et indemnités
+                          </p>
+                        </div>
+                        <div className="p-4 space-y-2 text-sm text-[var(--text)]">
+                          <p><b>{importResult.bonuses.bonusesAssigned}</b> prime(s) attribuée(s) · <b>{fcfa(importResult.bonuses.totalAmount)}</b> / mois</p>
+                          {importResult.bonuses.templatesCreated.length > 0 && (
+                            <p className="text-xs text-[var(--text-muted)]">
+                              Créées dans le catalogue : {importResult.bonuses.templatesCreated.map((t: { name: string }) => t.name).join(', ')}
+                            </p>
+                          )}
+                          {importResult.bonuses.templatesReused.length > 0 && (
+                            <p className="text-xs text-[var(--text-muted)]">
+                              Catalogue existant utilisé : {importResult.bonuses.templatesReused.map((t: { name: string }) => t.name).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
 
                     {/* Errors */}
                     {importResult.errors.length > 0 && (
