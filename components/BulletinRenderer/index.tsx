@@ -12,6 +12,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
+import { formatUnitBase, formatQty } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererDefaultProps {
   payroll:      BulletinPayroll;
@@ -88,13 +89,13 @@ function cleanLabel(label: string): string {
 // Les primes ont leur base reconstituée dans payroll-items.service.ts.
 function itemBase(item: any): string {
   if (item.base == null || nv(item.base) === 0) return '';
-  return Math.round(nv(item.base)).toLocaleString('fr-FR');
+  return formatUnitBase(item.base);
 }
 
 function itemTaux(item: any): string {
   // 1. quantity prioritaire (nb jours, nb heures, nb unités)
   if (item.quantity != null && nv(item.quantity) !== 0) {
-    return String(nv(item.quantity));
+    return formatQty(item.quantity);
   }
   // 2. rate — affiché tel quel depuis la BDD
   if (item.rate == null || item.rate === undefined) return '';
@@ -563,8 +564,8 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
                       <Row
                         rub={gainRef}
                         label={cleanLabel(absDeductItem.label)}
-                        base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
-                        taux={absDeductItem.quantity ? String(absDeductItem.quantity) : ''}
+                        base={itemBase(absDeductItem)}
+                        taux={absDeductItem.quantity ? formatQty(absDeductItem.quantity) : ''}
                         ret={fmt(absDeductItem.amount)}
                       />
                     </React.Fragment>

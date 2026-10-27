@@ -20,6 +20,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
+import { formatUnitBase, formatQty } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererClarifieProps {
   payroll:      BulletinPayroll;
@@ -96,10 +97,10 @@ function cleanLabel(label: string): string {
 
 function itemBase(item: any): string {
   if (item.base == null || nv(item.base) === 0) return '';
-  return Math.round(nv(item.base)).toLocaleString('fr-FR');
+  return formatUnitBase(item.base);
 }
 function itemTaux(item: any): string {
-  if (item.quantity != null && nv(item.quantity) !== 0) return String(nv(item.quantity));
+  if (item.quantity != null && nv(item.quantity) !== 0) return formatQty(item.quantity);
   if (item.rate == null) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
@@ -441,7 +442,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
               ))}
               {absDeductItem && (
                 <DataRow indent={false} label={absDeductItem.label}
-                  base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
+                  base={itemBase(absDeductItem)} tauxS={itemTaux(absDeductItem)}
                   mtS={fmtNeg(absDeductItem.amount)} />
               )}
               <tr style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>

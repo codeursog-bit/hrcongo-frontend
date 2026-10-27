@@ -23,6 +23,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
+import { formatUnitBase, formatQty } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererClassiqueProps {
   payroll:      BulletinPayroll;
@@ -88,10 +89,22 @@ function cleanLabel(label: string): string {
 }
 function itemBase(item: any): string {
   if (item.base == null || nv(item.base) === 0) return '';
-  return Math.round(nv(item.base)).toLocaleString('fr-FR');
+  return formatUnitBase(item.base);
+}
+// ✅ Taux « pur » (colonne Taux) — jamais la quantité, qui a sa propre
+// colonne « Nombre » sur les gains et indemnités.
+function itemRate(item: any): string {
+  if (item.rate == null) return '';
+  const r = nv(item.rate);
+  if (r === 0) return '';
+  if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
+  return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
+}
+function itemQty(item: any): string {
+  return item?.quantity != null && nv(item.quantity) !== 0 ? formatQty(item.quantity) : '';
 }
 function itemTaux(item: any): string {
-  if (item.quantity != null && nv(item.quantity) !== 0) return String(nv(item.quantity));
+  if (item.quantity != null && nv(item.quantity) !== 0) return formatQty(item.quantity);
   if (item.rate == null) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
@@ -229,6 +242,16 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
 
   const absDeductItem = gainItems.find((i: any) => i.code === 'ABS_DEDUCT') ?? null;
   const gains = gainItems.filter((i: any) => !['ABS_DEDUCT','ABS_CONGE'].includes(i.code));
+
+  // ✅ Colonne Nombre des gains : quantité envoyée par le back uniquement
+  // (jours / heures / unités). Repli ancien bulletin : SAL_BASE sans
+  // quantité → jours théoriques stockés sur le bulletin (workDays).
+  const gainNombre = (item: any): string => {
+    const q = itemQty(item);
+    if (q) return q;
+    if (item?.code === 'SAL_BASE' && nv((payroll as any).workDays) > 0) return formatQty((payroll as any).workDays);
+    return '';
+  };
 
   // ⚠️ CORRECTIF — codes réels générés par payroll-items.service.ts sont
   // CNSS_EMP_FAM / CNSS_EMP_AT (pas CNSS_EMP_FAMILY / CNSS_EMP_ACCIDENT), et
@@ -424,11 +447,11 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
             <tbody>
               {gains.map((item: any, idx: number) => { rub++; return (
                 <Row key={item.id || item.code || idx} n={rub} label={item.label}
-                  base={itemBase(item)} tauxS={itemTaux(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
+                  nombre={gainNombre(item)} base={itemBase(item)} tauxS={itemRate(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
               ); })}
               {absDeductItem && (()=>{ rub++; return (
                 <Row n={rub} label={absDeductItem.label}
-                  base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
+                  nombre={itemQty(absDeductItem)} base={itemBase(absDeductItem)}
                   ret={fmt(absDeductItem.amount)} />
               ); })()}
 
@@ -464,7 +487,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
                 <Row key={item.id || item.code || idx} n={6800 + idx} label={item.label} ret={fmt(item.amount)} />
               ))}
               {indemItems.map((item: any) => { rub += 10; return (
-                <Row key={item.id || item.code} n={rub} label={item.label} base={itemBase(item)} tauxS={itemTaux(item)} gain={fmt(item.amount)} />
+                <Row key={item.id || item.code} n={rub} label={item.label} nombre={itemQty(item)} base={itemBase(item)} tauxS={itemRate(item)} gain={fmt(item.amount)} />
               ); })}
 
               {/* ── Spacer — absorbe l'espace restant du canevas A4 fixe (au

@@ -32,6 +32,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
+import { formatUnitBase, formatQty } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererInfProps {
   payroll:      BulletinPayroll;
@@ -112,7 +113,7 @@ function cleanLabel(label: string): string {
 }
 function itemBase(item: any): string {
   if (!item || item.base == null || nv(item.base) === 0) return '';
-  return Math.round(nv(item.base)).toLocaleString('fr-FR');
+  return formatUnitBase(item.base);
 }
 // ✅ Taux « pur » (colonne Taux) — jamais la quantité. Sert aux gains et
 // indemnités, où la quantité s'affiche déjà dans la colonne Nombre.
@@ -130,16 +131,13 @@ function itemTaux(item: any): string {
 }
 // ✅ Indemnités hors brut : on montre le détail du calcul
 //    Nombre × Base = Gain (ex. 20 × 2 000 = 40 000).
-//    - si l'item a un taux ET une quantité → Nombre = quantité, Taux = taux
-//    - si l'item n'a que la quantité       → elle s'affiche dans Taux
-//      (même convention que TOL / taxes custom et que les gabarits
-//      Classique et Clarifié)
+//    Nombre = quantité (colonne Nombre), Base = valeur d'une unité,
+//    Taux = taux pur (jamais la quantité).
 function indemNombre(item: any): string {
-  if (!itemRate(item)) return '';
-  return item.quantity != null && nv(item.quantity) !== 0 ? String(nv(item.quantity)) : '';
+  return item?.quantity != null && nv(item.quantity) !== 0 ? formatQty(item.quantity) : '';
 }
 function indemTaux(item: any): string {
-  return itemRate(item) || itemTaux(item);
+  return itemRate(item);
 }
 // ✅ Uniquement pour les 4 lignes CNSS (salariale + les 3 branches
 // patronales) : elles gardent le "%", contrairement à TOL/CAMU/TUS/taxes
@@ -350,6 +348,17 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   let rubGain  = 100;
   let rubIndem = 4100;
 
+  // ✅ Colonne Nombre des gains : uniquement la quantité envoyée par le back
+  // (jours / heures / unités). Plus de repli « workedDays » sur toutes les
+  // lignes — une prime fixe n'affiche ni Nombre ni Base. Seul repli : les
+  // anciens bulletins (SAL_BASE sans quantité) affichent les jours
+  // théoriques stockés sur le bulletin (workDays).
+  const gainNombre = (item: any): string => {
+    if (item?.quantity != null && nv(item.quantity) !== 0) return formatQty(item.quantity);
+    if (item?.code === 'SAL_BASE' && nv((payroll as any).workDays) > 0) return formatQty((payroll as any).workDays);
+    return '';
+  };
+
   return (
     <>
       <style>{`
@@ -479,12 +488,12 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               {/* ── Gains soumis au brut ──────────────────────────────── */}
               {gains.map((item: any, idx: number) => { const n = rubGain; rubGain += 100; return (
                 <Row key={item.id || item.code || idx} n={n} label={item.label}
-                  nombre={item.quantity != null && nv(item.quantity) !== 0 ? String(nv(item.quantity)) : (payroll.workedDays ? String(payroll.workedDays) + '.00' : '')}
+                  nombre={gainNombre(item)}
                   base={itemBase(item)} tauxS={itemRate(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
               ); })}
               {absDeductItem && (
                 <Row label={absDeductItem.label}
-                  base={absDeductItem.base ? Math.round(Number(absDeductItem.base)).toLocaleString('fr-FR') : ''}
+                  nombre={indemNombre(absDeductItem)} base={itemBase(absDeductItem)}
                   ret={fmt(absDeductItem.amount)} />
               )}
 
@@ -516,7 +525,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               <Row label={itsLabel} ret={fmt(itsAmount)} />
 
               {absCongeItem && (
-                <Row label={absCongeItem.label} ret={fmt(absCongeItem.amount)} />
+                <Row label={absCongeItem.label} nombre={indemNombre(absCongeItem)} base={itemBase(absCongeItem)} ret={fmt(absCongeItem.amount)} />
               )}
 
               {/* Taxes custom (CompanyTax) — UNE ligne par taxe : part salariale
