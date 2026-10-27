@@ -45,3 +45,19 @@ export function formatQty(v: any): string {
   if (Number.isInteger(x)) return String(x);
   return x.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
+
+/**
+ * Sur une ligne de gain / indemnité, un « taux » ≥ 1 n'est PAS un pourcentage :
+ * les vrais taux sont décimaux (0,06 = 6 %, 0,26 = 26 %). C'est une quantité
+ * enregistrée dans `rate` (ex. bulletin saisi / modifié à la main, où « rate »
+ * porte la quantité). Les gabarits à colonnes séparées l'affichent donc dans
+ * « Nombre », jamais dans « Taux » — pour que le nombre soit toujours au même
+ * endroit sur toutes les lignes.
+ */
+export function isQtyLikeRate(item: any): boolean {
+  const q = Number(item?.quantity);
+  if (Number.isFinite(q) && q !== 0) return false; // une vraie quantité existe déjà
+  const r = item?.rate;
+  if (r == null || r === '') return false;
+  return Number(r) >= 1;
+}

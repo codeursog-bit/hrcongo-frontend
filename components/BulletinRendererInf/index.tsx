@@ -32,7 +32,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
-import { formatUnitBase, formatQty } from '@/lib/bulletin-qty-format';
+import { formatUnitBase, formatQty, isQtyLikeRate } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererInfProps {
   payroll:      BulletinPayroll;
@@ -134,10 +134,12 @@ function itemTaux(item: any): string {
 //    Nombre = quantité (colonne Nombre), Base = valeur d'une unité,
 //    Taux = taux pur (jamais la quantité).
 function indemNombre(item: any): string {
-  return item?.quantity != null && nv(item.quantity) !== 0 ? formatQty(item.quantity) : '';
+  if (item?.quantity != null && nv(item.quantity) !== 0) return formatQty(item.quantity);
+  // « taux » ≥ 1 = quantité (bulletin saisi à la main) → colonne Nombre, jamais Taux
+  return isQtyLikeRate(item) ? formatQty(item.rate) : '';
 }
 function indemTaux(item: any): string {
-  return itemRate(item);
+  return isQtyLikeRate(item) ? '' : itemRate(item);
 }
 // ✅ Uniquement pour les 4 lignes CNSS (salariale + les 3 branches
 // patronales) : elles gardent le "%", contrairement à TOL/CAMU/TUS/taxes
@@ -355,9 +357,12 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   // théoriques stockés sur le bulletin (workDays).
   const gainNombre = (item: any): string => {
     if (item?.quantity != null && nv(item.quantity) !== 0) return formatQty(item.quantity);
+    if (isQtyLikeRate(item)) return formatQty(item.rate); // quantité stockée dans « rate »
     if (item?.code === 'SAL_BASE' && nv((payroll as any).workDays) > 0) return formatQty((payroll as any).workDays);
     return '';
   };
+  // ✅ Colonne Taux des gains : uniquement un vrai pourcentage (jamais une quantité).
+  const gainTaux = (item: any): string => (isQtyLikeRate(item) ? '' : itemRate(item));
 
   return (
     <>
@@ -489,7 +494,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
               {gains.map((item: any, idx: number) => { const n = rubGain; rubGain += 100; return (
                 <Row key={item.id || item.code || idx} n={n} label={item.label}
                   nombre={gainNombre(item)}
-                  base={itemBase(item)} tauxS={itemRate(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
+                  base={itemBase(item)} tauxS={gainTaux(item)} gain={fmt(item.amount)} bold={item.code === 'SAL_BASE'} />
               ); })}
               {absDeductItem && (
                 <Row label={absDeductItem.label}
