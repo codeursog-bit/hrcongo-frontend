@@ -67,6 +67,12 @@ export default function NouvelleAbsencePage() {
   const [subType, setSubType]     = useState<AbsenceSubType>('MALADIE');
   const [startDate, setStartDate] = useState('');
   const [returnDate, setReturnDate] = useState(''); // jour de REPRISE (l'absence court jusqu'à la veille)
+  const [startShiftNote, setStartShiftNote] = useState(''); // départ décalé (jour non travaillé / férié)
+  const shiftStart = (from: string, to: string) => {
+    const f = (d: string) => new Date(d).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
+    setStartShiftNote(`Le ${f(from)} n'est pas travaillé : départ au ${f(to)}.`);
+    setStartDate(to);
+  };
   const [reason, setReason]       = useState('');
   const [isPaid, setIsPaid]       = useState(true); // payée par défaut — la RH tranche à la validation
 
@@ -136,6 +142,7 @@ export default function NouvelleAbsencePage() {
       const result: any = await api.get(
         `/absence-requests/calculate-return-date?employeeId=${selectedTargetEmployee.id}&startDate=${startDate}&days=${days}`,
       );
+      if (result?.startAdjusted && typeof result.startDate === 'string') shiftStart(startDate, result.startDate.slice(0, 10));
       // returnDate = prochain jour OUVRABLE après le dernier jour d'absence
       const rd = typeof result?.returnDate === 'string' ? result.returnDate.slice(0, 10) : '';
       setReturnDate(/^\d{4}-\d{2}-\d{2}$/.test(rd) ? rd : '');
@@ -171,7 +178,10 @@ export default function NouvelleAbsencePage() {
         const q = new URLSearchParams({ startDate, returnDate });
         if (isStandard && selectedMotifKey) q.set('motifKey', selectedMotifKey);
         const r: any = await api.get(`/absence-requests/coverage-preview?${q.toString()}`);
-        if (!cancelled) setCoverage(r);
+        if (!cancelled) {
+          if (r?.startAdjusted && typeof r.startDate === 'string') shiftStart(startDate, r.startDate.slice(0, 10));
+          setCoverage(r);
+        }
       } catch { if (!cancelled) setCoverage(null); }
     })();
     return () => { cancelled = true; };
@@ -588,8 +598,9 @@ export default function NouvelleAbsencePage() {
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
                   <div className="relative">
                     <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                    <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => { setStartShiftNote(''); setStartDate(e.target.value); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                   </div>
+                  {startShiftNote && <p className="mt-1 text-xs text-amber-600">{startShiftNote}</p>}
                 </div>
                 {(selectedMotif || isOther) && startDate && (
                   <>
@@ -705,8 +716,9 @@ export default function NouvelleAbsencePage() {
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de départ</label>
                 <div className="relative">
                   <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                  <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
+                  <input type="date" min="2000-01-01" max="2100-12-31" value={startDate} onChange={e => { setStartShiftNote(''); setStartDate(e.target.value); }} className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm" />
                 </div>
+                {startShiftNote && <p className="mt-1 text-xs text-amber-600">{startShiftNote}</p>}
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Date de reprise</label>

@@ -118,6 +118,8 @@ export default function ProgrammeCongesPage() {
   const [lastEdited, setLastEdited] = useState<'days' | 'end' | null>(null);
   const [preview, setPreview] = useState<any>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  // Avis quand le départ choisi tombe un jour non travaillé / férié (décalé au suivant)
+  const [startShiftNote, setStartShiftNote] = useState('');
   const pendingCarryoverRef = useRef<string | null>(null);
   // ✅ Suivi des jours restants (congé annuel pris en partie) — vue admin.
   const [pendingRemainders, setPendingRemainders] = useState<PendingRemainder[]>([]);
@@ -278,6 +280,11 @@ export default function ProgrammeCongesPage() {
         if (cancelled) return;
         setPreview(p);
         if (p && p.reliable !== false) {
+          if (p.startAdjusted && p.startDate) {
+            const from = manualForm.startDate;
+            setStartShiftNote(`Le ${new Date(from).toLocaleDateString('fr-FR', { timeZone: 'UTC' })} n'est pas travaillé : départ au ${new Date(p.startDate).toLocaleDateString('fr-FR', { timeZone: 'UTC' })}.`);
+            setManualForm(f => ({ ...f, startDate: p.startDate }));
+          }
           if (lastEdited !== 'end' && p.endDate) setManualForm(f => ({ ...f, endDate: p.endDate }));
           if (lastEdited !== 'days' && p.workingDays) setDaysInput(String(p.workingDays));
         }
@@ -945,9 +952,10 @@ export default function ProgrammeCongesPage() {
                   <input
                     type="date"
                     value={manualForm.startDate}
-                    onChange={e => setManualForm(f => ({ ...f, startDate: e.target.value }))}
+                    onChange={e => { setStartShiftNote(''); setManualForm(f => ({ ...f, startDate: e.target.value })); }}
                     className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   />
+                  {startShiftNote && <p className="mt-1 text-[11px] text-amber-600">{startShiftNote}</p>}
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[var(--text-muted)]">Nombre de jours (ouvrables)</label>
