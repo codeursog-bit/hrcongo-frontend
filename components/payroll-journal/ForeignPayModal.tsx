@@ -14,6 +14,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { X, Globe2, Trash2, Loader2, Save, AlertTriangle, Pencil } from 'lucide-react';
 import { api } from '@/services/api';
+import SearchSelect from '@/components/ui/SearchSelect';
 import type { JournalRow, PayrollJournal, UpsertForeignPayPayload } from '@/types/payroll-journal';
 import { fmtMoney, MONTHS_FR } from '@/lib/payroll-journal-columns';
 
@@ -106,7 +107,6 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
     const n = parseAmount(net);
     if (g <= 0) return setError('Le brut doit être supérieur à 0.');
     if (n < 0) return setError('Le net est invalide.');
-    if (n > g) return setError('Le net ne peut pas dépasser le brut.');
 
     const payload: UpsertForeignPayPayload = {
       employeeId, month: journal.month, year: journal.year,
@@ -171,14 +171,15 @@ export default function ForeignPayModal({ open, onClose, journal, initialEmploye
           {/* Employé */}
           <div>
             <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1">Employé</label>
-            <select value={employeeId} onChange={(e) => { setEmployeeId(e.target.value); resetForm(); }} className={input}>
-              <option value="">— Choisir —</option>
-              {journal.rows.map((r) => (
-                <option key={r.employeeId} value={r.employeeId}>
-                  {r.employeeName}{r.isExpat ? ' (expatrié)' : ''}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              value={employeeId}
+              onChange={(v) => { setEmployeeId(v); resetForm(); }}
+              placeholder="Rechercher un employé…"
+              options={journal.rows.map((r) => ({
+                value: r.employeeId,
+                label: `${r.employeeName}${r.isExpat ? ' (expatrié)' : ''}`,
+              }))}
+            />
           </div>
 
           {/* Lignes déjà saisies */}

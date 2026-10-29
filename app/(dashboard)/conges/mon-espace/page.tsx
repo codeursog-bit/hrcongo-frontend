@@ -2,21 +2,14 @@
 
 // ============================================================================
 // 📁 app/(dashboard)/conges/mon-espace/page.tsx
-// ✅ Espace employé — refonte : un solde de congé que TOUT LE MONDE comprend.
-//    • Résumé en haut : "il me reste X jours" + anneau "acquis sur 26 jours"
-//    • Le calcul pas à pas (base + ancienneté − déjà pris = reste), chaque ligne expliquée
-//    • Mon cycle (12 mois) et la date à partir de laquelle je peux partir
-//    • Mon prochain départ : planifié, ou date probable
-//    • Mon ancienneté, ma convention et mon prochain palier
-//    • "Comprendre mon solde" : questions/réponses en mots simples
-//    • Reliquat de retour anticipé (jours à rattraper) + mes demandes (conservés)
+// ✅ Espace employé — sobre : chiffres et statuts, très peu de texte.
 // ============================================================================
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Loader2, Clock, CheckCircle2, XCircle, Ban, Calendar, ArrowRight, Wallet, Info, Umbrella, Zap,
-  X, Check, AlertTriangle, History, Sparkles, Plane, Award, ChevronDown, CalendarCheck, Sun, Lock,
+  Loader2, Clock, CheckCircle2, XCircle, Ban, Calendar, ArrowRight, Wallet, Umbrella, Zap,
+  X, Check, AlertTriangle, History, Sparkles, Plane, Award, CalendarCheck, Sun, Lock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/services/api';
@@ -28,7 +21,7 @@ import ContactAdminButton from '@/components/chat/ContactAdminButton';
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<Status, { label: string; badge: string; bar: string; icon: any }> = {
-  PENDING:   { label: 'En attente de validation', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', bar: 'bg-amber-400', icon: Clock },
+  PENDING:   { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800', bar: 'bg-amber-400', icon: Clock },
   APPROVED:  { label: 'Accepté', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800', bar: 'bg-emerald-500', icon: CheckCircle2 },
   REJECTED:  { label: 'Refusé', badge: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800', bar: 'bg-red-400', icon: XCircle },
   CANCELLED: { label: 'Annulé', badge: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]', bar: 'bg-slate-300', icon: Ban },
@@ -40,8 +33,6 @@ const TYPE_ICONS: Record<string, any> = { ANNUAL: Umbrella, ANNUAL_ANTICIPATED: 
 const fmtDate = (d: string | Date) => new Date(d).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
 const fmtLong = (d: string | Date) =>
   new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-const fmtMonthYear = (d: string | Date) =>
-  new Date(d).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 const nb = (n: number) => (Math.round(n * 10) / 10).toString().replace('.', ',');
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
 
@@ -74,16 +65,16 @@ function Ring({ value, max }: { value: number; max: number }) {
 
 function Step({
   sign, tone, label, value, help, strong,
-}: { sign: string; tone: string; label: string; value: string; help: React.ReactNode; strong?: boolean }) {
+}: { sign: string; tone: string; label: string; value: string; help?: React.ReactNode; strong?: boolean }) {
   return (
-    <div className={`flex gap-3 py-3 ${strong ? '' : 'border-b border-[var(--border)]/70'}`}>
+    <div className={`flex gap-3 py-2.5 ${strong ? '' : 'border-b border-[var(--border)]/70'}`}>
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-extrabold shrink-0 ${tone}`}>{sign}</div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
           <p className={`text-sm ${strong ? 'font-extrabold text-[var(--text)]' : 'font-semibold text-[var(--text)]'}`}>{label}</p>
           <p className={`shrink-0 ${strong ? 'text-xl font-extrabold text-emerald-600 dark:text-emerald-400' : 'text-base font-bold text-[var(--text)]'}`}>{value}</p>
         </div>
-        <p className="text-xs text-[var(--text-muted)] mt-0.5 leading-relaxed">{help}</p>
+        {help && <p className="text-xs text-[var(--text-muted)] mt-0.5">{help}</p>}
       </div>
     </div>
   );
@@ -111,33 +102,6 @@ function CardTitle({ icon: Icon, children, tone = 'text-emerald-500' }: { icon: 
   );
 }
 
-const FAQ: { q: string; a: React.ReactNode }[] = [
-  {
-    q: 'C’est quoi le « solde de congé » ?',
-    a: 'C’est le nombre de jours de repos payés auxquels vous avez droit et que vous n’avez pas encore pris. Quand vous partez en congé, ce nombre diminue du nombre de jours posés.',
-  },
-  {
-    q: 'Pourquoi « sur 26 jours » ?',
-    a: 'La loi prévoit 26 jours de congé pour une année complète de travail (12 mois). Ces jours ne tombent pas d’un coup : chaque mois travaillé vous en apporte environ 2,2. Au bout de 12 mois, vous avez vos 26 jours.',
-  },
-  {
-    q: 'Pourquoi ai-je des jours en plus ?',
-    a: 'Selon la convention collective de votre entreprise, plus vous avez d’années d’ancienneté, plus vous avez de jours de congé supplémentaires. Ils sont ajoutés à vos 26 jours dès le début du cycle.',
-  },
-  {
-    q: 'Quand est-ce que je peux partir en congé ?',
-    a: 'Un congé annuel normal est possible après un cycle complet de 12 mois. La date indiquée dans « Mon prochain départ » est une date probable : elle devient officielle quand les RH valident votre demande.',
-  },
-  {
-    q: 'J’ai pris un congé en avance (anticipé) : que se passe-t-il ?',
-    a: 'Ses jours sont retirés de votre solde. À la date normale de votre congé, vous partez avec ce qui reste (par exemple 26 − 10 = 16 jours) : le système n’attend pas que vous ayez 26 jours. Ensuite, un nouveau cycle commence.',
-  },
-  {
-    q: 'Mon solde a changé, pourquoi ?',
-    a: 'Il augmente chaque début de mois (jours acquis), et il diminue quand un congé est validé. Les jours non pris après un retour anticipé apparaissent séparément, en orange, dans « Jours restants à prendre ».',
-  },
-];
-
 export default function MonEspaceCongesPage() {
   const { bp } = useBasePath();
   const [userRole, setUserRole] = useState('');
@@ -146,7 +110,6 @@ export default function MonEspaceCongesPage() {
   const [ex, setEx] = useState<any>(null); // solde expliqué
   const [myLeaves, setMyLeaves] = useState<any[]>([]);
   const [carryover, setCarryover] = useState<any[]>([]);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   // ✅ Demande de rattrapage (bouton "Demander mes jours restants")
   const [requesting, setRequesting] = useState<any>(null);
@@ -194,7 +157,7 @@ export default function MonEspaceCongesPage() {
   const submitCarryoverRequest = async () => {
     if (!requesting || !balance?.employeeId) return;
     if (!requestForm.startDate || !requestForm.endDate) {
-      setRequestError('Renseigne une date de départ et une date de retour');
+      setRequestError('Dates requises');
       return;
     }
     setIsSubmittingRequest(true);
@@ -262,13 +225,8 @@ export default function MonEspaceCongesPage() {
                 <Sparkles size={15} /> Bonjour {ex.employee.firstName}
               </p>
               <h1 className="text-3xl sm:text-4xl font-extrabold mt-1 leading-tight">
-                Il vous reste <span className="underline decoration-white/40 decoration-4 underline-offset-4">{nb(ex.totals.remaining)} {plural(ex.totals.remaining, 'jour', 'jours')}</span> de congé
+                <span className="underline decoration-white/40 decoration-4 underline-offset-4">{nb(ex.totals.remaining)} {plural(ex.totals.remaining, 'jour', 'jours')}</span> restants
               </h1>
-              <p className="text-emerald-50/90 text-sm mt-3 max-w-xl">
-                {ex.base.missing > 0
-                  ? <>L’anneau montre vos jours de base acquis : <strong>{nb(ex.base.acquired)} sur {ex.base.max}</strong>. Il en manque encore {nb(ex.base.missing)} ; ils s’ajoutent automatiquement chaque mois (environ {nb(ex.base.perMonth)} jours par mois).</>
-                  : <>Vos <strong>{ex.base.max} jours de base</strong> sont complets pour ce cycle.</>}
-              </p>
               <div className="grid grid-cols-3 gap-2 mt-5 max-w-md mx-auto md:mx-0">
                 {[
                   ['Mon droit total', nb(ex.totals.entitled)],
@@ -286,7 +244,7 @@ export default function MonEspaceCongesPage() {
         </motion.section>
       ) : (
         <Card>
-          <p className="text-sm text-[var(--text-muted)]">Impossible de charger votre solde pour le moment. Réessayez dans un instant.</p>
+          <p className="text-sm text-[var(--text-muted)]">Solde indisponible</p>
         </Card>
       )}
 
@@ -294,8 +252,7 @@ export default function MonEspaceCongesPage() {
         <div className="flex items-start gap-3 rounded-2xl bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
           <Lock size={16} className="mt-0.5 shrink-0" />
           <span>
-            Vos jours s’accumulent, mais un congé annuel normal n’est possible qu’après 12 mois.
-            Vous pourrez partir à partir du <strong>{fmtLong(ex.cycle.eligibleDate)}</strong> (encore {ex.cycle.monthsUntilEligible} {plural(ex.cycle.monthsUntilEligible, 'mois', 'mois')}).
+            Départ possible dès le <strong>{fmtLong(ex.cycle.eligibleDate)}</strong> · {ex.cycle.monthsUntilEligible} mois
           </span>
         </div>
       )}
@@ -304,61 +261,32 @@ export default function MonEspaceCongesPage() {
         <div className="grid lg:grid-cols-5 gap-5">
           {/* ── 2) Le calcul pas à pas ── */}
           <Card className="lg:col-span-3">
-            <CardTitle icon={Wallet}>Comment mon solde est calculé</CardTitle>
+            <CardTitle icon={Wallet}>Mon solde</CardTitle>
             <Step
               sign="+" tone="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-              label="Jours de base acquis" value={`${nb(ex.base.acquired)} j`}
-              help={
-                <>
-                  {ex.cycle.startReason === 'HIRE' && <>Votre cycle a commencé à votre embauche, en {fmtMonthYear(ex.cycle.startDate)}. </>}
-                  {ex.cycle.startReason === 'LAST_LEAVE_RETURN' && <>Votre cycle a recommencé à votre retour de congé, en {fmtMonthYear(ex.cycle.startDate)}. </>}
-                  {ex.cycle.startReason === 'ANNIVERSARY' && <>Votre cycle a commencé à votre dernier anniversaire d’embauche, en {fmtMonthYear(ex.cycle.startDate)}. </>}
-                  Depuis, <strong>{ex.cycle.monthsElapsedFull} mois</strong> se sont écoulés, et chaque mois vous apporte environ <strong>{nb(ex.base.perMonth)} jours</strong>
-                  {' '}(26 jours ÷ 12 mois) : {ex.cycle.monthsElapsedFull} × {nb(ex.base.perMonth)} ≈ <strong>{nb(ex.base.acquired)} jours</strong>.
-                </>
-              }
+              label="Base acquise" value={`${nb(ex.base.acquired)} j`}
+              help={`${ex.cycle.monthsElapsedFull} mois × ${nb(ex.base.perMonth)} j`}
             />
-            <Step
-              sign="+" tone="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
-              label="Jours d’ancienneté" value={`${nb(ex.seniority.days)} j`}
-              help={
-                !ex.seniority.applies
-                  ? 'Votre entreprise n’accorde pas de jours supplémentaires pour l’ancienneté.'
-                  : ex.seniority.days > 0
-                    ? <>Vous avez {ex.employee.seniority.label} d’ancienneté : votre convention ({ex.seniority.conventionName}) vous accorde {nb(ex.seniority.days)} {plural(ex.seniority.days, 'jour', 'jours')} en plus.</>
-                    : <>Pas encore de jours d’ancienneté.{ex.seniority.next && <> Le premier palier arrive à {ex.seniority.next.minYears} ans d’ancienneté.</>}</>
-              }
-            />
-            <Step
-              sign="=" tone="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              label="Mon droit total" value={`${nb(ex.totals.entitled)} j`}
-              help="C’est la somme de vos jours de base et de vos jours d’ancienneté."
-            />
+            {ex.seniority.applies && (
+              <Step
+                sign="+" tone="bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
+                label="Ancienneté" value={`${nb(ex.seniority.days)} j`}
+              />
+            )}
             <Step
               sign="−" tone="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-              label="Jours déjà pris" value={`${nb(ex.totals.taken)} j`}
-              help={ex.anticipated.days > 0
-                ? <>Les jours de vos congés déjà validés sur ce cycle, dont <strong>{nb(ex.anticipated.days)} {plural(ex.anticipated.days, 'jour', 'jours')} pris en congé anticipé</strong> (voir plus bas).</>
-                : 'Les jours de vos congés déjà validés par les RH, sur ce cycle.'}
+              label="Déjà pris" value={`${nb(ex.totals.taken)} j`}
+              help={ex.anticipated.days > 0 ? `dont ${nb(ex.anticipated.days)} j en anticipé` : undefined}
             />
             <Step
               sign="=" tone="bg-emerald-500 text-white"
-              label="Il me reste" value={`${nb(ex.totals.remaining)} j`}
-              help="Ce sont les jours que vous pouvez encore poser en congé payé aujourd’hui." strong
+              label="Il me reste" value={`${nb(ex.totals.remaining)} j`} strong
             />
 
             {(ex.cycle.progressPct < 100 || ex.anticipated.days > 0) && (
-              <div className="mt-4 rounded-2xl border-2 border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/50 dark:bg-sky-900/10 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-sky-600 dark:text-sky-300 mb-2">
-                  À la fin de mon cycle ({fmtDate(ex.projection.cycleEndDate)})
-                </p>
-                <p className="text-sm text-[var(--text)] leading-relaxed">
-                  Vous aurez acquis vos <strong>{nb(ex.projection.fullEntitlement)} jours</strong>
-                  {ex.seniority.days > 0 && <> (26 de base + {nb(ex.seniority.days)} d’ancienneté)</>}.
-                  {ex.projection.taken > 0 && <> Moins les <strong>{nb(ex.projection.taken)} jours</strong> déjà pris, il vous restera <strong>{nb(ex.projection.remainingAtCycleEnd)} jours</strong>.</>}
-                  {' '}Vous partirez donc avec <strong>{nb(ex.projection.remainingAtCycleEnd)} jours</strong> à la date normale de congé
-                  {ex.projection.taken > 0 && <> — sans attendre d’en avoir 26</>}.
-                </p>
+              <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-dashed border-sky-300 dark:border-sky-700 bg-sky-50/50 dark:bg-sky-900/10 px-4 py-3">
+                <span className="text-xs font-semibold text-sky-600 dark:text-sky-300">Fin de cycle · {fmtDate(ex.projection.cycleEndDate)}</span>
+                <span className="text-sm font-extrabold text-[var(--text)]">{nb(ex.projection.remainingAtCycleEnd)} j</span>
               </div>
             )}
           </Card>
@@ -366,9 +294,6 @@ export default function MonEspaceCongesPage() {
           {/* ── 3) Mon cycle ── */}
           <Card className="lg:col-span-2">
             <CardTitle icon={CalendarCheck} tone="text-sky-500">Mon cycle de congé</CardTitle>
-            <p className="text-sm text-[var(--text-muted)] mb-4">
-              Un cycle dure <strong className="text-[var(--text)]">12 mois</strong>. Au bout, vous avez acquis vos 26 jours et pouvez partir en congé.
-            </p>
             <div className="relative pt-6 pb-2">
               <div className="h-3 rounded-full bg-[var(--surface-2)] overflow-hidden">
                 <motion.div
@@ -390,9 +315,8 @@ export default function MonEspaceCongesPage() {
               <span className="text-right">Fin<br /><strong className="text-[var(--text)]">{fmtDate(ex.cycle.endDate)}</strong></span>
             </div>
             {ex.base.daysUntilNextAccrual != null && ex.base.missing > 0 && (
-              <p className="text-xs text-[var(--text-muted)] mt-4 flex items-start gap-1.5">
-                <Info size={13} className="mt-0.5 shrink-0" />
-                Prochains jours ajoutés dans {ex.base.daysUntilNextAccrual} {plural(ex.base.daysUntilNextAccrual, 'jour', 'jours')} (début du mois).
+              <p className="text-xs text-[var(--text-muted)] mt-4">
+                +{nb(ex.base.perMonth)} j dans {ex.base.daysUntilNextAccrual} {plural(ex.base.daysUntilNextAccrual, 'jour', 'jours')}
               </p>
             )}
           </Card>
@@ -402,38 +326,15 @@ export default function MonEspaceCongesPage() {
       {/* ── Congés pris en avance (anticipés) ── */}
       {ex && ex.anticipated.leaves.length > 0 && (
         <Card className="!border-amber-200 dark:!border-amber-800">
-          <CardTitle icon={Zap} tone="text-amber-500">Mes congés pris en avance (anticipés)</CardTitle>
-          <p className="text-sm text-[var(--text-muted)] mb-4 leading-relaxed">
-            Un congé anticipé, c’est un congé pris <strong className="text-[var(--text)]">avant</strong> la fin de votre cycle. Ses jours sont retirés de votre solde :
-            ils ne seront donc pas à reprendre à votre congé normal.
-          </p>
-          <div className="space-y-2 mb-5">
+          <CardTitle icon={Zap} tone="text-amber-500">Congés anticipés</CardTitle>
+          <div className="space-y-2">
             {ex.anticipated.leaves.map((a: any) => (
-              <div key={a.id} className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 px-4 py-3">
-                <span className="text-sm text-[var(--text)]">Du <strong>{fmtDate(a.startDate)}</strong> au <strong>{fmtDate(a.endDate)}</strong></span>
-                <span className="text-sm font-bold text-amber-700 dark:text-amber-300 shrink-0">− {nb(a.days)} {plural(a.days, 'jour', 'jours')}</span>
+              <div key={a.id} className="flex items-center justify-between gap-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 px-4 py-2.5">
+                <span className="text-sm text-[var(--text)]">{fmtDate(a.startDate)} → {fmtDate(a.endDate)}</span>
+                <span className="text-sm font-bold text-amber-700 dark:text-amber-300 shrink-0">− {nb(a.days)} j</span>
               </div>
             ))}
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-center">
-            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/15 px-4 py-3">
-              <p className="text-2xl font-extrabold text-emerald-600">{nb(ex.projection.fullEntitlement)}</p>
-              <p className="text-[11px] text-[var(--text-muted)]">jours acquis<br />en fin de cycle</p>
-            </div>
-            <span className="text-xl font-bold text-[var(--text-muted)]">−</span>
-            <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/15 px-4 py-3">
-              <p className="text-2xl font-extrabold text-amber-600">{nb(ex.projection.taken)}</p>
-              <p className="text-[11px] text-[var(--text-muted)]">jours déjà pris<br />(anticipé compris)</p>
-            </div>
-            <span className="text-xl font-bold text-[var(--text-muted)]">=</span>
-            <div className="rounded-2xl bg-sky-50 dark:bg-sky-900/15 px-4 py-3">
-              <p className="text-2xl font-extrabold text-sky-600">{nb(ex.projection.remainingAtCycleEnd)}</p>
-              <p className="text-[11px] text-[var(--text-muted)]">jours pour votre<br />congé normal</p>
-            </div>
-          </div>
-          <p className="text-xs text-[var(--text-muted)] mt-4 text-center">
-            À la date normale de votre congé, vous partirez avec {nb(ex.projection.remainingAtCycleEnd)} jours, puis un nouveau cycle recommencera.
-          </p>
         </Card>
       )}
 
@@ -441,35 +342,30 @@ export default function MonEspaceCongesPage() {
         <div className="grid md:grid-cols-2 gap-5">
           {/* ── 4) Mon prochain départ ── */}
           <Card>
-            <CardTitle icon={Plane} tone="text-blue-500">Mon prochain départ en congé</CardTitle>
+            <CardTitle icon={Plane} tone="text-blue-500">Prochain départ</CardTitle>
             {nd?.kind === 'IN_PROGRESS' && (
               <div className="rounded-2xl bg-blue-50 dark:bg-blue-900/15 p-4">
-                <p className="text-sm font-bold text-blue-700 dark:text-blue-300 flex items-center gap-2"><Sun size={16} /> Vous êtes en congé</p>
-                <p className="text-sm text-[var(--text)] mt-1">Jusqu’au <strong>{fmtLong(nd.endDate)}</strong> ({nb(nd.days)} jours).</p>
+                <p className="text-sm font-bold text-blue-700 dark:text-blue-300 flex items-center gap-2"><Sun size={16} /> En congé</p>
+                <p className="text-sm text-[var(--text)] mt-1">Jusqu’au <strong>{fmtLong(nd.endDate)}</strong></p>
               </div>
             )}
             {nd?.kind === 'PLANNED' && (
               <div className={`rounded-2xl p-4 ${nd.status === 'APPROVED' ? 'bg-emerald-50 dark:bg-emerald-900/15' : 'bg-amber-50 dark:bg-amber-900/15'}`}>
                 <p className={`text-sm font-bold flex items-center gap-2 ${nd.status === 'APPROVED' ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
-                  {nd.status === 'APPROVED' ? <><CheckCircle2 size={16} /> Congé validé</> : <><Clock size={16} /> Demande en attente de validation</>}
+                  {nd.status === 'APPROVED' ? <><CheckCircle2 size={16} /> Validé</> : <><Clock size={16} /> En attente</>}
                 </p>
                 <p className="text-sm text-[var(--text)] mt-1">
-                  Du <strong>{fmtLong(nd.startDate)}</strong> au <strong>{fmtLong(nd.endDate)}</strong> ({nb(nd.days)} {plural(nd.days, 'jour', 'jours')}).
+                  {fmtDate(nd.startDate)} → {fmtDate(nd.endDate)} · {nb(nd.days)} j
                 </p>
               </div>
             )}
             {nd?.kind === 'PROBABLE' && (
               <div className="rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-700 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">Date probable</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-600">Probable</p>
                 <p className="text-xl font-extrabold text-[var(--text)] mt-0.5">
                   {nd.reason === 'AVAILABLE_NOW' ? 'Dès maintenant' : fmtLong(nd.startDate)}
                 </p>
-                <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
-                  {nd.reason === 'AVAILABLE_NOW'
-                    ? <>Votre cycle est terminé : vous pouvez demander votre congé de {nb(ex.projection.remainingAtCycleEnd)} jours.</>
-                    : <>C’est la fin de votre cycle de 12 mois. À cette date, il vous restera <strong>{nb(ex.projection.remainingAtCycleEnd)} jours</strong>
-                        {ex.projection.taken > 0 && <> ({nb(ex.projection.fullEntitlement)} acquis − {nb(ex.projection.taken)} déjà pris)</>} : c’est avec eux que vous partirez. Cette date deviendra officielle quand votre demande sera validée.</>}
-                </p>
+                <p className="text-xs text-[var(--text-muted)] mt-1">{nb(ex.projection.remainingAtCycleEnd)} j disponibles</p>
                 <Link
                   href={bp('/conges/nouveau')}
                   className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 rounded-xl"
@@ -481,12 +377,12 @@ export default function MonEspaceCongesPage() {
             {nd?.kind === 'NOT_YET' && (
               <div className="rounded-2xl bg-[var(--surface-2)] p-4">
                 <p className="text-sm text-[var(--text)]">
-                  Votre premier congé annuel sera possible à partir du <strong>{fmtLong(nd.startDate)}</strong>.
+                  Possible dès le <strong>{fmtLong(nd.startDate)}</strong>
                 </p>
               </div>
             )}
             {nd?.kind === 'NONE' && (
-              <p className="text-sm text-[var(--text-muted)]">Aucun congé à prévoir : votre solde est utilisé.</p>
+              <p className="text-sm text-[var(--text-muted)]">Aucun</p>
             )}
           </Card>
 
@@ -503,101 +399,76 @@ export default function MonEspaceCongesPage() {
                 <p className="text-sm font-bold text-[var(--text)]">{ex.employee.seniority.label}</p>
               </div>
             </div>
-            {ex.seniority.applies ? (
-              <div className="text-sm text-[var(--text)] space-y-2">
-                {ex.seniority.conventionName && (
-                  <p className="text-xs text-[var(--text-muted)]">Convention de votre entreprise : <strong className="text-[var(--text)]">{ex.seniority.conventionName}</strong></p>
-                )}
-                <p>
-                  À ce jour : <strong>{nb(ex.seniority.currentBonus)} {plural(ex.seniority.currentBonus, 'jour', 'jours')}</strong> en plus pour l’ancienneté.
-                </p>
-                {ex.seniority.next && (
-                  <p className="text-xs text-[var(--text-muted)] rounded-xl bg-violet-50/70 dark:bg-violet-900/10 px-3 py-2">
-                    Prochain palier : à <strong>{ex.seniority.next.minYears} ans</strong> d’ancienneté (le {fmtDate(ex.seniority.next.date)}),
-                    vous aurez <strong>{nb(ex.seniority.next.days)} jours</strong> en plus sur votre cycle suivant.
-                  </p>
-                )}
+            {ex.seniority.applies && (
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-[var(--text-muted)]">{ex.seniority.conventionName || 'Bonus'}</span>
+                <strong className="text-[var(--text)]">+{nb(ex.seniority.currentBonus)} j</strong>
               </div>
-            ) : (
-              <p className="text-xs text-[var(--text-muted)]">Votre entreprise n’accorde pas de jours de congé supplémentaires pour l’ancienneté.</p>
+            )}
+            {ex.seniority.applies && ex.seniority.next && (
+              <p className="text-xs text-[var(--text-muted)] mt-2">
+                Prochain palier : {ex.seniority.next.minYears} ans · {fmtDate(ex.seniority.next.date)} (+{nb(ex.seniority.next.days)} j)
+              </p>
             )}
           </Card>
         </div>
       )}
 
-      {/* ── 6) Comprendre mon solde ── */}
-      <Card>
-        <CardTitle icon={Info} tone="text-sky-500">Comprendre mon solde</CardTitle>
-        <div className="divide-y divide-[var(--border)]">
-          {FAQ.map((f, i) => (
-            <div key={f.q}>
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between gap-3 py-3 text-left"
-              >
-                <span className="text-sm font-semibold text-[var(--text)]">{f.q}</span>
-                <ChevronDown size={16} className={`text-[var(--text-muted)] transition-transform shrink-0 ${openFaq === i ? 'rotate-180' : ''}`} />
-              </button>
-              <AnimatePresence initial={false}>
-                {openFaq === i && (
-                  <motion.p
-                    initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                    className="text-sm text-[var(--text-muted)] overflow-hidden pb-3 leading-relaxed"
-                  >
-                    {f.a}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </div>
-      </Card>
-
       {/* ── Reliquat de retour anticipé — jours non pris à rattraper ── */}
       {carryover.length > 0 && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-3xl p-5 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-bold text-amber-700 dark:text-amber-300 mb-3">
-            <History size={16} /> Jours restants à prendre (cycle précédent)
+            <History size={16} /> Jours à prendre
           </div>
           <div className="space-y-3">
             {carryover.map(co => (
               <div key={co.sourceLeaveId} className="bg-[var(--surface)] rounded-2xl p-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm text-[var(--text-muted)]">
-                    Congé {co.cycleLabel ? `du cycle ${co.cycleLabel}` : ''} — {fmtDate(co.originalStartDate)} au {fmtDate(co.originalEndDate)}
+                    {fmtDate(co.originalStartDate)} → {fmtDate(co.originalEndDate)}
                   </p>
-                  <p className="text-xs text-[var(--text-muted)]">Retour anticipé le {fmtDate(co.actualReturnDate)}</p>
+                  {co.kind === 'PARTIAL_ANNUAL' ? (
+                    <>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {co.remainingBaseDays != null && (
+                          <>{Math.round(co.remainingBaseDays * 10) / 10} j base{co.remainingSeniorityDays > 0 && ` + ${Math.round(co.remainingSeniorityDays * 10) / 10} j ancienneté`} · </>
+                        )}
+                        {co.nextDepartureDate ? <>départ le <strong>{fmtDate(co.nextDepartureDate)}</strong></> : 'date à confirmer'}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-[var(--text-muted)]">Retour le {fmtDate(co.actualReturnDate)}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span className="text-lg font-bold text-amber-600 dark:text-amber-400">{Math.round(co.remainingDays * 10) / 10}j</span>
-                  <button
-                    onClick={() => openRequestModal(co)}
-                    className="text-xs font-bold px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white"
-                  >
-                    Demander mes jours restants
-                  </button>
+                  {co.kind !== 'PARTIAL_ANNUAL' && (
+                    <button
+                      onClick={() => openRequestModal(co)}
+                      className="text-xs font-bold px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white"
+                    >
+                      Demander
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-amber-600/70 dark:text-amber-400/70 mt-3">
-            Ce reliquat ne fait jamais partie de mon cycle en cours et n&apos;est jamais payé une seconde fois — c&apos;est un repos physique, à faire valider par le RH comme une demande normale.
-          </p>
         </div>
       )}
 
       {/* ── Mes demandes ── */}
       <div className="bg-[var(--surface)] rounded-3xl border border-[var(--border)] shadow-sm overflow-hidden">
         <div className="px-5 sm:px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <h2 className="text-sm font-bold text-[var(--text)]">Mes demandes de congé</h2>
+          <h2 className="text-sm font-bold text-[var(--text)]">Mes demandes</h2>
           <Link href={bp('/conges/nouveau')} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
-            Nouvelle demande <ArrowRight size={12} />
+            Nouvelle <ArrowRight size={12} />
           </Link>
         </div>
         {myLeaves.length === 0 ? (
           <div className="text-center py-14">
             <Calendar size={28} className="text-[var(--text-muted)] mx-auto mb-2" />
-            <p className="text-sm text-[var(--text-muted)]">Aucune demande de congé pour le moment.</p>
+            <p className="text-sm text-[var(--text-muted)]">Aucune demande</p>
           </div>
         ) : (
           <div className="divide-y divide-[var(--border)]">
@@ -614,7 +485,7 @@ export default function MonEspaceCongesPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-[var(--text)] flex items-center gap-1.5 flex-wrap">
-                        {leave.carriedFromLeaveId ? 'Rattrapage — reliquat non payé' : (TYPE_LABELS[leave.type] || leave.type)}
+                        {leave.carriedFromLeaveId ? 'Rattrapage' : (TYPE_LABELS[leave.type] || leave.type)}
                         {leave.carriedFromLeaveId && (
                           <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">Non payé</span>
                         )}
@@ -664,13 +535,13 @@ export default function MonEspaceCongesPage() {
               className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-[var(--text)]">Demander mes jours restants</h2>
+                <h2 className="text-lg font-bold text-[var(--text)]">Jours restants</h2>
                 <button onClick={() => setRequesting(null)} className="text-[var(--text-muted)] hover:text-[var(--text)]">
                   <X size={20} />
                 </button>
               </div>
-              <p className="text-xs text-[var(--text-muted)]">
-                Il te reste <strong>{Math.round(requesting.remainingDays * 10) / 10}j</strong> à rattraper sur ton congé du {fmtDate(requesting.originalStartDate)} au {fmtDate(requesting.originalEndDate)}. Ce repos n&apos;est pas payé une seconde fois et n&apos;affecte pas ton solde en cours — le RH validera comme une demande normale.
+              <p className="text-sm text-[var(--text-muted)]">
+                <strong className="text-[var(--text)]">{Math.round(requesting.remainingDays * 10) / 10} j</strong> à rattraper · repos non payé
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -706,7 +577,7 @@ export default function MonEspaceCongesPage() {
                   disabled={isSubmittingRequest}
                   className="px-4 py-2 text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 disabled:opacity-40"
                 >
-                  {isSubmittingRequest ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Envoyer la demande
+                  {isSubmittingRequest ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Envoyer
                 </button>
               </div>
             </motion.div>

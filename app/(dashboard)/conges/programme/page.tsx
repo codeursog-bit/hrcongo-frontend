@@ -11,7 +11,7 @@
 //    réservé RH/Admin.
 // ============================================================================
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Loader2, Filter, Umbrella, Zap, Download, FileDown, Printer,
   Users, Plane, CalendarClock, Plus, X, Check, Pencil, Trash2, AlertTriangle,
@@ -21,6 +21,7 @@ import CongeSubNav from '@/components/CongeSubNav';
 import LeavePlanningPrintable from '@/components/LeavePlanningPrintable';
 import { printLeaveDocument, downloadLeaveDocumentPDF } from '@/lib/leave-print';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import SearchSelect from '@/components/ui/SearchSelect';
 
 /** Affichage propre d'un nombre de jours (évite les artefacts de virgule
  * flottante type "28.799999999999997j") — arrondi entier, jamais de décimale
@@ -47,6 +48,25 @@ interface DepartureRow {
   status: string; // 'APPROVED' (réel) | 'PREVU' (calcul théorique)
   isTheoretical: boolean;
   isManual?: boolean;
+  /** Reprise de jours restants d'un congé annuel pris en partie (sans paie). */
+  isRemainder?: boolean;
+  sourceLeaveId?: string;
+  /** Ce qu'il reste à prendre après ce congé (base consommée en premier). */
+  remainderLeft?: { base: number; seniority: number; total: number } | null;
+  nextDepartureDate?: string | null;
+}
+
+interface PendingRemainder {
+  sourceLeaveId: string;
+  employeeId: string;
+  employee: { firstName: string; lastName: string; position?: string; department?: { name?: string } | null };
+  takenStartDate: string;
+  takenEndDate: string;
+  takenDays: number;
+  remainingBaseDays: number;
+  remainingSeniorityDays: number;
+  remainingDays: number;
+  nextDepartureDate: string | null;
 }
 
 const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -88,13 +108,33 @@ export default function ProgrammeCongesPage() {
   const [manualForm, setManualForm] = useState({
     employeeId: '', type: 'ANNUAL' as 'ANNUAL' | 'ANNUAL_ANTICIPATED',
     startDate: '', endDate: '', reason: '',
-    extraDaysGranted: '', resumptionNote: '',
+    resumptionNote: '', nextDepartureDate: '',
   });
+  // ✅ Planification par NOMBRE DE JOURS : le RH peut saisir soit le nombre de
+  // jours (la date de fin se calcule), soit la date de fin (le nombre de jours
+  // se déduit) — et s'il ne saisit rien, le système propose tout le droit
+  // restant (base + ancienneté) avec la date de retour correspondante.
+  const [daysInput, setDaysInput] = useState('');
+  const [lastEdited, setLastEdited] = useState<'days' | 'end' | null>(null);
+  const [preview, setPreview] = useState<any>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const pendingCarryoverRef = useRef<string | null>(null);
+  // ✅ Suivi des jours restants (congé annuel pris en partie) — vue admin.
+  const [pendingRemainders, setPendingRemainders] = useState<PendingRemainder[]>([]);
   // ✅ Édition d'une planification existante — même modale que la création,
   // seul l'appel réseau change (PATCH sur la même ligne au lieu de POST),
   // pour ne jamais dupliquer la planification sur cette page ni sur le
   // planning / calendrier qui lisent la même donnée.
   const [editingRow, setEditingRow] = useState<DepartureRow | null>(null);
+  // ✅ REPOUSSER (≠ Modifier) : "plus tard" — on ne change que la date de
+  // départ ; la durée reste la même, le cycle et la paie ne bougent pas
+  // (PATCH /leaves/:id/reschedule). "Modifier" reste pour corriger une erreur.
+  const [postponingRow, setPostponingRow] = useState<DepartureRow | null>(null);
+  const [postponeStart, setPostponeStart] = useState('');
+  const [postponeEnd, setPostponeEnd] = useState('');
+  const [postponeBusy, setPostponeBusy] = useState(false);
+  const [postponeSaving, setPostponeSaving] = useState(false);
+  const [postponeError, setPostponeError] = useState('');
   // ✅ Suppression — confirmation avant l'appel DELETE définitif.
   const [deletingRow, setDeletingRow] = useState<DepartureRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -103,7 +143,6 @@ export default function ProgrammeCongesPage() {
   // congé déjà APPROVED — c'était le seul chemin où le motif de report et
   // les jours d'ancienneté n'étaient jamais proposés au RH (contrairement
   // à l'écran d'approbation d'une demande employé, /conges/[id]).
-  const [manualBalance, setManualBalance] = useState<{ annualEntitled: number; seniorityDays: number } | null>(null);
   // ✅ Rattrapage d'un reliquat de retour anticipé — si l'employé sélectionné
   // en a un disponible, le RH peut planifier ce repos (non payé, sans impact
   // sur le solde/cycle en cours) au lieu d'un congé normal.
@@ -126,8 +165,30 @@ export default function ProgrammeCongesPage() {
   const openManualModal = () => {
     setManualError('');
     setEditingRow(null);
-    setManualForm({ employeeId: employees[0]?.id || '', type: 'ANNUAL', startDate: '', endDate: '', reason: '', extraDaysGranted: '', resumptionNote: '' });
-    setManualBalance(null);
+    setManualForm({ employeeId: employees[0]?.id || '', type: 'ANNUAL', startDate: '', endDate: '', reason: '', resumptionNote: '', nextDepartureDate: '' });
+    setDaysInput('');
+    setLastEdited(null);
+    setPreview(null);
+    pendingCarryoverRef.current = null;
+    setSelectedCarryoverId('');
+    setShowManualModal(true);
+  };
+
+  // ✅ Planifier la reprise des jours restants d'un congé annuel pris en
+  // partie : ouvre la modale sur l'employé, à la date de prochain départ
+  // prévue, avec le reliquat déjà sélectionné.
+  const openRemainderModal = (sourceLeaveId: string, employeeId: string, nextDate?: string | null) => {
+    setManualError('');
+    setEditingRow(null);
+    setManualForm({
+      employeeId, type: 'ANNUAL',
+      startDate: nextDate ? new Date(nextDate).toISOString().slice(0, 10) : '',
+      endDate: '', reason: '', resumptionNote: '', nextDepartureDate: '',
+    });
+    setDaysInput('');
+    setLastEdited(null);
+    setPreview(null);
+    pendingCarryoverRef.current = sourceLeaveId;
     setSelectedCarryoverId('');
     setShowManualModal(true);
   };
@@ -143,29 +204,23 @@ export default function ProgrammeCongesPage() {
       startDate: new Date(row.startDate).toISOString().slice(0, 10),
       endDate: new Date(row.endDate).toISOString().slice(0, 10),
       reason: '',
-      extraDaysGranted: '',
       resumptionNote: '',
+      nextDepartureDate: row.nextDepartureDate ? new Date(row.nextDepartureDate).toISOString().slice(0, 10) : '',
     });
-    setManualBalance(null);
+    setDaysInput(String(row.daysCount ?? ''));
+    setLastEdited('end');
+    setPreview(null);
+    pendingCarryoverRef.current = null;
     setShowManualModal(true);
   };
 
-  // ✅ Charge le solde de l'employé sélectionné pour afficher le rappel
-  // "26j + Xj ancienneté" et pouvoir estimer un éventuel reste.
+  // Verrouille le scroll de la page derrière la modale (évite le scroll "chaînage" qui bloque)
   useEffect(() => {
-    if (!manualForm.employeeId || !showManualModal) return;
-    (async () => {
-      try {
-        const bal = await api.get<any>(`/leaves/balance/${manualForm.employeeId}`);
-        setManualBalance({
-          annualEntitled: Number(bal?.annualEntitled ?? 26),
-          seniorityDays: Number(bal?.seniorityDays ?? 0),
-        });
-      } catch {
-        setManualBalance(null);
-      }
-    })();
-  }, [manualForm.employeeId, showManualModal]);
+    if (!showManualModal) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [showManualModal]);
 
   // ✅ Charge les reliquats de retour anticipé encore disponibles pour
   // l'employé sélectionné — n'a de sens qu'à la création (pas en édition).
@@ -174,28 +229,129 @@ export default function ProgrammeCongesPage() {
       setCarryoverOptions([]);
       return;
     }
-    setSelectedCarryoverId('');
+    if (!pendingCarryoverRef.current) setSelectedCarryoverId('');
     (async () => {
       try {
         const co = await api.get<any[]>(`/leaves/carryover/${manualForm.employeeId}`);
         setCarryoverOptions(co || []);
+        const wanted = pendingCarryoverRef.current;
+        if (wanted && (co || []).some(c => c.sourceLeaveId === wanted)) {
+          setSelectedCarryoverId(wanted);
+        }
+        pendingCarryoverRef.current = null;
       } catch {
         setCarryoverOptions([]);
       }
     })();
   }, [manualForm.employeeId, showManualModal, editingRow]);
 
-  // Jours calendaires approximatifs entre les 2 dates (estimation front —
-  // le vrai décompte en jours ouvrés se fait côté serveur à la sauvegarde).
-  const manualEstimatedDays = manualForm.startDate && manualForm.endDate
-    ? Math.max(0, Math.round((new Date(manualForm.endDate).getTime() - new Date(manualForm.startDate).getTime()) / 86400000) + 1)
-    : 0;
-  const manualBaseRemaining = manualBalance ? Math.max(0, 26 - manualEstimatedDays) : 0;
-  const manualSeniorityRemaining = manualBalance
-    ? Math.max(0, manualBalance.seniorityDays - Math.max(0, manualEstimatedDays - 26))
-    : 0;
-  const manualNeedsMotif = !selectedCarryoverId && manualForm.type === 'ANNUAL' && (manualBaseRemaining > 0 || Number(manualForm.extraDaysGranted) > 0);
   const selectedCarryover = carryoverOptions.find(c => c.sourceLeaveId === selectedCarryoverId) || null;
+  const isAnnual = manualForm.type === 'ANNUAL';
+  const reliable = preview && preview.reliable !== false;
+  const split = reliable ? preview.split : null;
+  // Jours qui resteront à prendre plus tard après CE congé annuel (le solde,
+  // lui, repart à 0 sur le nouveau cycle — ces jours restent dus quand même).
+  const remainderAfter: number = selectedCarryover
+    ? Number(preview?.carryover?.remainderAfter ?? 0)
+    : (isAnnual && split ? Number(split.remainderTotal) : 0);
+  const manualNeedsNextDate = remainderAfter > 0 && (isAnnual || !!selectedCarryover) && !(selectedCarryover && selectedCarryover.kind === 'EARLY_RETURN');
+  const manualNeedsMotif = !selectedCarryoverId && isAnnual && !!split && Number(split.remainderTotal) > 0;
+
+  // ✅ Aperçu en direct (jours ↔ date de fin ↔ restant). Clé = uniquement ce que
+  // le RH pilote, pour qu'un champ rempli automatiquement ne relance pas le calcul.
+  const previewKey = [
+    showManualModal, manualForm.employeeId, manualForm.startDate, selectedCarryoverId, editingRow?.id || '',
+    lastEdited, lastEdited === 'days' ? daysInput : lastEdited === 'end' ? manualForm.endDate : '',
+  ].join('|');
+  useEffect(() => {
+    if (!showManualModal || !manualForm.employeeId || !manualForm.startDate) { setPreview(null); return; }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setPreviewLoading(true);
+      try {
+        const qs = new URLSearchParams({ employeeId: manualForm.employeeId, startDate: manualForm.startDate });
+        if (lastEdited === 'days' && Number(daysInput) > 0) qs.set('days', daysInput);
+        else if (lastEdited === 'end' && manualForm.endDate) qs.set('endDate', manualForm.endDate);
+        if (editingRow) qs.set('excludeLeaveId', editingRow.id);
+        if (selectedCarryoverId) qs.set('carriedFromLeaveId', selectedCarryoverId);
+        const p = await api.get<any>(`/leaves/planning-preview?${qs.toString()}`);
+        if (cancelled) return;
+        setPreview(p);
+        if (p && p.reliable !== false) {
+          if (lastEdited !== 'end' && p.endDate) setManualForm(f => ({ ...f, endDate: p.endDate }));
+          if (lastEdited !== 'days' && p.workingDays) setDaysInput(String(p.workingDays));
+        }
+      } catch (e: any) {
+        if (!cancelled) setPreview({ reliable: false, reason: e?.message || 'Calcul impossible pour cette date.' });
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewKey]);
+
+  const openPostponeModal = (row: DepartureRow) => {
+    setPostponeError('');
+    setPostponingRow(row);
+    setPostponeStart(new Date(row.startDate).toISOString().slice(0, 10));
+    setPostponeEnd(new Date(row.endDate).toISOString().slice(0, 10));
+  };
+
+  // Même durée (jours ouvrés) → la date de retour est recalculée par le serveur
+  // à partir de la nouvelle date de départ.
+  useEffect(() => {
+    if (!postponingRow || !postponeStart) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setPostponeBusy(true);
+      try {
+        const qs = new URLSearchParams({
+          employeeId: postponingRow.employeeId,
+          startDate: postponeStart,
+          days: String(postponingRow.daysCount),
+          excludeLeaveId: postponingRow.id,
+        });
+        const p = await api.get<any>(`/leaves/planning-preview?${qs.toString()}`);
+        if (!cancelled && p?.endDate) setPostponeEnd(p.endDate);
+      } catch {
+        /* la date de retour reste celle affichée */
+      } finally {
+        if (!cancelled) setPostponeBusy(false);
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [postponingRow, postponeStart]);
+
+  const savePostpone = async () => {
+    if (!postponingRow || !postponeStart || !postponeEnd) return;
+    setPostponeSaving(true);
+    setPostponeError('');
+    try {
+      await api.patch(`/leaves/${postponingRow.id}/reschedule`, {
+        startDate: postponeStart,
+        endDate: postponeEnd,
+      });
+      setPostponingRow(null);
+      await load();
+      await loadRemainders();
+    } catch (e: any) {
+      setPostponeError(e?.message || 'Impossible de repousser ce congé');
+    } finally {
+      setPostponeSaving(false);
+    }
+  };
+
+  const loadRemainders = async () => {
+    try {
+      const data = await api.get<{ rows: PendingRemainder[] }>('/leaves/pending-remainders');
+      setPendingRemainders(data?.rows || []);
+    } catch {
+      setPendingRemainders([]);
+    }
+  };
+  useEffect(() => { if (canPlan) loadRemainders(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [canPlan]);
+
 
   const saveManualLeave = async () => {
     if (!manualForm.employeeId || !manualForm.startDate || !manualForm.endDate) {
@@ -204,6 +360,10 @@ export default function ProgrammeCongesPage() {
     }
     if (manualNeedsMotif && !manualForm.resumptionNote.trim()) {
       setManualError('Merci de préciser le motif de report (il apparaîtra sur la lettre officielle).');
+      return;
+    }
+    if (manualNeedsNextDate && !manualForm.nextDepartureDate) {
+      setManualError(`Il restera ${Math.round(remainderAfter * 10) / 10}j à prendre plus tard — indique la date du prochain départ pour que le système puisse le rappeler.`);
       return;
     }
     setIsSavingManual(true);
@@ -216,8 +376,8 @@ export default function ProgrammeCongesPage() {
           startDate: manualForm.startDate,
           endDate: manualForm.endDate,
           reason: manualForm.reason || undefined,
-          extraDaysGranted: manualForm.extraDaysGranted ? Number(manualForm.extraDaysGranted) : undefined,
           resumptionNote: manualForm.resumptionNote || undefined,
+          nextDepartureDate: manualNeedsNextDate ? manualForm.nextDepartureDate : undefined,
         });
       } else if (selectedCarryoverId) {
         // ✅ Rattrapage d'un reliquat — toujours ANNUAL, jamais payé, ne
@@ -229,18 +389,26 @@ export default function ProgrammeCongesPage() {
           startDate: manualForm.startDate,
           endDate: manualForm.endDate,
           carriedFromLeaveId: selectedCarryoverId,
+          nextDepartureDate: manualNeedsNextDate ? manualForm.nextDepartureDate : undefined,
         });
       } else {
         await api.post('/leaves/manual', {
-          ...manualForm,
-          extraDaysGranted: manualForm.extraDaysGranted ? Number(manualForm.extraDaysGranted) : undefined,
+          employeeId: manualForm.employeeId,
+          type: manualForm.type,
+          startDate: manualForm.startDate,
+          endDate: manualForm.endDate,
+          // Le motif de réduction exigé côté serveur = le motif de report saisi
+          // (même texte, imprimé sur la lettre) si aucune note n'a été donnée.
+          reason: manualForm.reason || manualForm.resumptionNote || undefined,
           resumptionNote: manualForm.resumptionNote || undefined,
+          nextDepartureDate: manualNeedsNextDate ? manualForm.nextDepartureDate : undefined,
         });
       }
       setShowManualModal(false);
       setEditingRow(null);
       setSelectedCarryoverId('');
       await load();
+      await loadRemainders();
     } catch (e: any) {
       setManualError(e?.message || (editingRow ? 'Erreur lors de la modification du congé' : 'Erreur lors de la planification du congé'));
     } finally {
@@ -500,6 +668,73 @@ export default function ProgrammeCongesPage() {
             </div>
           </div>
 
+          {/* Jours restants à prendre (congé annuel pris en partie) — vue admin.
+              Indépendant du solde : le solde repart à 0 sur le nouveau cycle,
+              ces jours restent dus à l'employé. */}
+          {canPlan && pendingRemainders.length > 0 && (
+            <div className="bg-[var(--surface)] rounded-2xl border border-amber-200 dark:border-amber-800 overflow-hidden">
+              <div className="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+                <h3 className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                  Jours restants à prendre — {pendingRemainders.length} employé{pendingRemainders.length > 1 ? 's' : ''}
+                </h3>
+                <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
+                  Congé annuel pris en partie. Ces jours ne sont pas dans le solde : ils restent dus, sans nouvelle indemnité.
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[640px]">
+                  <thead>
+                    <tr className="text-left text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">
+                      <th className="px-4 py-2">Employé</th>
+                      <th className="px-4 py-2">Déjà pris</th>
+                      <th className="px-4 py-2">Reste à prendre</th>
+                      <th className="px-4 py-2">Prochain départ prévu</th>
+                      <th className="px-4 py-2 text-right"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingRemainders.map(pr => {
+                      const overdue = pr.nextDepartureDate && new Date(pr.nextDepartureDate) < new Date(new Date().toDateString());
+                      return (
+                        <tr key={pr.sourceLeaveId} className="border-b border-[var(--border)] last:border-0">
+                          <td className="px-4 py-2.5 font-semibold text-[var(--text)]">
+                            {pr.employee.lastName} {pr.employee.firstName}
+                            {pr.employee.department?.name && <div className="text-[11px] font-normal text-[var(--text-muted)]">{pr.employee.department.name}</div>}
+                          </td>
+                          <td className="px-4 py-2.5 text-[var(--text-muted)]">
+                            {formatDays(pr.takenDays)}j
+                            <div className="text-[11px]">du {fmtDate(pr.takenStartDate)} au {fmtDate(pr.takenEndDate)}</div>
+                          </td>
+                          <td className="px-4 py-2.5 font-bold text-amber-600 dark:text-amber-400">
+                            {Math.round(pr.remainingDays * 10) / 10}j
+                            <div className="text-[11px] font-normal text-[var(--text-muted)]">
+                              {Math.round(pr.remainingBaseDays * 10) / 10}j base{pr.remainingSeniorityDays > 0 && ` + ${Math.round(pr.remainingSeniorityDays * 10) / 10}j ancienneté`}
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            {pr.nextDepartureDate ? (
+                              <span className={overdue ? 'font-semibold text-red-500' : 'text-[var(--text-muted)]'}>
+                                {fmtDate(pr.nextDepartureDate)}{overdue && ' — en retard'}
+                              </span>
+                            ) : <span className="text-[var(--text-muted)]">Non définie</span>}
+                          </td>
+                          <td className="px-4 py-2.5 text-right">
+                            <button
+                              onClick={() => openRemainderModal(pr.sourceLeaveId, pr.employeeId, pr.nextDepartureDate)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              Planifier
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* Tableau — qui part quand */}
           <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-x-auto">
             {!filteredRows.length ? (
@@ -533,9 +768,25 @@ export default function ProgrammeCongesPage() {
                         </td>
                         <td className="px-4 py-3 text-[var(--text-muted)]">{fmtDate(r.startDate)}</td>
                         <td className="px-4 py-3 text-[var(--text-muted)]">{fmtDate(r.endDate)}</td>
-                        <td className="px-4 py-3 font-semibold text-[var(--text-muted)]">{formatDays(r.daysCount)}j</td>
+                        <td className="px-4 py-3 font-semibold text-[var(--text-muted)]">
+                          {formatDays(r.daysCount)}j
+                          {!r.isRemainder && r.remainderLeft && r.remainderLeft.total > 0 && (
+                            <div
+                              className="mt-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap"
+                              title="Congé pris en partie : jours encore dus à l'employé, indépendants du solde"
+                            >
+                              Reste {Math.round(r.remainderLeft.total * 10) / 10}j
+                              {r.remainderLeft.seniority > 0 && ` (${Math.round(r.remainderLeft.base * 10) / 10} base + ${Math.round(r.remainderLeft.seniority * 10) / 10} anc.)`}
+                              {r.nextDepartureDate && ` · prévu le ${fmtDate(r.nextDepartureDate)}`}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
-                          {r.isTheoretical ? (
+                          {r.isRemainder ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400" title="Reprise des jours restants d'un congé pris en partie — pas d'indemnité (déjà payée)">
+                              <CalendarClock size={12} /> Reste à prendre
+                            </span>
+                          ) : r.isTheoretical ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
                               <CalendarClock size={12} /> Prévu
                             </span>
@@ -551,11 +802,28 @@ export default function ProgrammeCongesPage() {
                         </td>
                         {canPlan && (
                           <td className="px-4 py-3">
+                            {r.isRemainder && r.sourceLeaveId && (
+                              <div className="flex items-center justify-end">
+                                <button
+                                  onClick={() => openRemainderModal(r.sourceLeaveId!, r.employeeId, r.startDate)}
+                                  className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                                >
+                                  Planifier
+                                </button>
+                              </div>
+                            )}
                             {!r.isTheoretical && (
                               <div className="flex items-center justify-end gap-1">
                                 <button
+                                  onClick={() => openPostponeModal(r)}
+                                  title="Repousser ce départ (même durée, la paie ne change pas)"
+                                  className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                                >
+                                  <CalendarClock size={14} />
+                                </button>
+                                <button
                                   onClick={() => openEditModal(r)}
-                                  title="Modifier cette planification"
+                                  title="Modifier (corriger une erreur de saisie)"
                                   className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                                 >
                                   <Pencil size={14} />
@@ -590,7 +858,9 @@ export default function ProgrammeCongesPage() {
 
       {showManualModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md max-h-[90dvh] flex flex-col overflow-hidden">
+           {/* En-tête fixe */}
+           <div className="px-6 pt-6 pb-3 space-y-2 shrink-0">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-[var(--text)]">{editingRow ? 'Modifier la planification' : 'Planifier un congé'}</h2>
               <button onClick={() => { setShowManualModal(false); setEditingRow(null); }} className="text-[var(--text-muted)] hover:text-[var(--text)]">
@@ -602,7 +872,10 @@ export default function ProgrammeCongesPage() {
                 ? "Modifie directement cette planification — les dates/le type sont ajustés sur la même ligne, sans jamais en créer une nouvelle."
                 : "Crée directement un congé validé pour l'employé — remplace tout calcul automatique pour cette période."}
             </p>
+           </div>
 
+           {/* Corps scrollable */}
+           <div className="px-6 py-2 overflow-y-auto overscroll-contain flex-1 min-h-0">
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-[var(--text-muted)]">Employé</label>
@@ -611,16 +884,15 @@ export default function ProgrammeCongesPage() {
                     {editingRow.employee.lastName} {editingRow.employee.firstName}
                   </p>
                 ) : (
-                  <select
+                  <SearchSelect
                     value={manualForm.employeeId}
-                    onChange={e => setManualForm(f => ({ ...f, employeeId: e.target.value }))}
-                    className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
-                  >
-                    <option value="">— Sélectionner —</option>
-                    {employees.map((e: any) => (
-                      <option key={e.id} value={e.id}>{e.lastName} {e.firstName}</option>
-                    ))}
-                  </select>
+                    onChange={v => {
+                      setManualForm(f => ({ ...f, employeeId: v, endDate: '', nextDepartureDate: '' }));
+                      setDaysInput(''); setLastEdited(null); setPreview(null);
+                    }}
+                    placeholder="Rechercher un employé…"
+                    options={employees.map((e: any) => ({ value: e.id, label: `${e.lastName} ${e.firstName}` }))}
+                  />
                 )}
               </div>
 
@@ -629,23 +901,25 @@ export default function ProgrammeCongesPage() {
               {!editingRow && carryoverOptions.length > 0 && (
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                   <label className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                    Rattrapage d'un reliquat de retour anticipé (repos non payé)
+                    Reprise de jours restants / reliquat (repos non payé, sans impact sur le solde)
                   </label>
                   <select
                     value={selectedCarryoverId}
                     onChange={e => setSelectedCarryoverId(e.target.value)}
                     className="mt-1 w-full text-sm border border-amber-200 dark:border-amber-700 bg-[var(--surface)] rounded-lg px-3 py-2"
                   >
-                    <option value="">— Congé normal (aucun rattrapage) —</option>
+                    <option value="">— Congé normal (aucune reprise) —</option>
                     {carryoverOptions.map((co: any) => (
                       <option key={co.sourceLeaveId} value={co.sourceLeaveId}>
-                        {Math.round(co.remainingDays * 10) / 10}j restants — congé du {new Date(co.originalStartDate).toLocaleDateString('fr-FR')} au {new Date(co.originalEndDate).toLocaleDateString('fr-FR')}
+                        {Math.round(co.remainingDays * 10) / 10}j restants
+                        {co.remainingBaseDays != null ? ` (${Math.round(co.remainingBaseDays * 10) / 10}j base${co.remainingSeniorityDays > 0 ? ` + ${Math.round(co.remainingSeniorityDays * 10) / 10}j ancienneté` : ''})` : ''}
+                        {' '}— {co.kind === 'EARLY_RETURN' ? 'retour anticipé' : 'congé pris en partie'} du {new Date(co.originalStartDate).toLocaleDateString('fr-FR')} au {new Date(co.originalEndDate).toLocaleDateString('fr-FR')}
                       </option>
                     ))}
                   </select>
                   {selectedCarryover && (
                     <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80 mt-1.5">
-                      Ce repos ne sera jamais payé et ne touchera ni le solde ni le cycle en cours — plafonné à {Math.round(selectedCarryover.remainingDays * 10) / 10}j.
+                      Ce repos ne sera jamais payé (l'indemnité a déjà été versée) et ne touchera ni le solde ni le cycle en cours — plafonné à {Math.round(selectedCarryover.remainingDays * 10) / 10}j.
                     </p>
                   )}
                 </div>
@@ -676,15 +950,38 @@ export default function ProgrammeCongesPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[var(--text-muted)]">Date de retour</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Nombre de jours (ouvrables)</label>
                   <input
-                    type="date"
-                    value={manualForm.endDate}
-                    onChange={e => setManualForm(f => ({ ...f, endDate: e.target.value }))}
+                    type="number" min="0.5" step="0.5"
+                    value={daysInput}
+                    onChange={e => { setDaysInput(e.target.value); setLastEdited(e.target.value ? 'days' : null); }}
+                    placeholder="Auto"
                     className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)]">Dernier jour de congé</label>
+                <input
+                  type="date"
+                  value={manualForm.endDate}
+                  onChange={e => { setManualForm(f => ({ ...f, endDate: e.target.value })); setLastEdited(e.target.value ? 'end' : null); }}
+                  className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
+                />
+                <p className="text-[11px] text-[var(--text-muted)] mt-1 min-h-[16px]">
+                  {previewLoading ? 'Calcul en cours…' : reliable && preview.returnDate
+                    ? <>Reprise du travail : <strong>{new Date(preview.returnDate + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>. Laisse « jours » vide pour proposer tout le droit restant.</>
+                    : preview?.carryover && preview.returnDate
+                      ? <>Reprise du travail : <strong>{new Date(preview.returnDate + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong></>
+                      : 'Choisis la date de départ : le système propose les jours et la date de retour.'}
+                </p>
+              </div>
+
+              {preview && preview.reliable === false && (
+                <div className="text-xs rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 p-3">
+                  {preview.reason}
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-semibold text-[var(--text-muted)]">Note (optionnel)</label>
@@ -697,30 +994,85 @@ export default function ProgrammeCongesPage() {
                 />
               </div>
 
-              {!selectedCarryoverId && manualForm.type === 'ANNUAL' && (
+              {/* Reprise de jours restants : plafond + reste éventuel */}
+              {selectedCarryover && preview?.carryover && (
                 <div className="space-y-2 pt-1 border-t border-[var(--border)]">
-                  {manualBalance && (
-                    <p className="text-xs text-[var(--text-muted)] pt-2">
-                      Droit du cycle : {Math.round(manualBalance.annualEntitled)}j
-                      {manualBalance.seniorityDays > 0 && ` (dont ${Math.round(manualBalance.seniorityDays)}j ancienneté)`}
+                  <p className="text-xs text-[var(--text-muted)] pt-2">
+                    Reste à prendre sur ce congé : <strong>{Math.round(preview.carryover.remaining * 10) / 10}j</strong>.
+                    Cette reprise : <strong>{Math.round(preview.workingDays * 10) / 10}j</strong>
+                    {preview.carryover.excessDays > 0
+                      ? <span className="text-red-500"> — dépasse le reliquat de {preview.carryover.excessDays}j</span>
+                      : preview.carryover.remainderAfter > 0
+                        ? <> — il en restera encore <strong>{preview.carryover.remainderAfter}j</strong>.</>
+                        : <> — solde du reliquat entièrement repris.</>}
+                  </p>
+                  {manualNeedsNextDate && (
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--text-muted)]">Date du prochain départ (pour le rappel) *</label>
+                      <input
+                        type="date"
+                        value={manualForm.nextDepartureDate}
+                        min={manualForm.endDate || undefined}
+                        onChange={e => setManualForm(f => ({ ...f, nextDepartureDate: e.target.value }))}
+                        className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Droit, jours pris et reste — congé annuel ou anticipé */}
+              {!selectedCarryoverId && reliable && (
+                <div className="space-y-2 pt-1 border-t border-[var(--border)]">
+                  <div className="pt-2 text-xs text-[var(--text-muted)] space-y-1">
+                    <p>
+                      Droit disponible : <strong>{preview.entitlement.availableBase}j</strong> de base
+                      {preview.entitlement.seniority > 0 && <> + <strong>{preview.entitlement.availableSeniority}j</strong> d&apos;ancienneté</>}
+                      {' '}= <strong>{preview.entitlement.availableTotal}j</strong>
+                      {preview.entitlement.takenBefore > 0 && <> (après {Math.round(preview.entitlement.takenBefore * 10) / 10}j déjà pris en anticipé)</>}
+                    </p>
+                    <p>
+                      Ce congé : <strong>{Math.round(preview.workingDays * 10) / 10}j</strong>
+                      {preview.split.usedSeniority > 0 && <> (dont {preview.split.usedSeniority}j d&apos;ancienneté)</>}
+                    </p>
+                  </div>
+
+                  {split.excessDays >= 1 && (
+                    <p className="text-xs text-red-500">
+                      Ce congé dépasse le droit disponible de {split.excessDays}j.
                     </p>
                   )}
-                  <div>
-                    <label className="text-xs font-semibold text-[var(--text-muted)]">Jours d&apos;ancienneté reportés (optionnel)</label>
-                    <input
-                      type="number" min="0" step="0.5"
-                      value={manualForm.extraDaysGranted}
-                      onChange={e => setManualForm(f => ({ ...f, extraDaysGranted: e.target.value }))}
-                      placeholder="Ex : 4 — laisser vide si non applicable"
-                      className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
-                    />
-                    {(manualBaseRemaining > 0 || manualSeniorityRemaining > 0) && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        Congé partiel probable : ~{manualEstimatedDays}j estimés — il resterait ~{manualBaseRemaining}j de congé de base
-                        {manualSeniorityRemaining > 0 ? ` et ${manualSeniorityRemaining}j d'ancienneté` : ''} à reporter.
-                      </p>
-                    )}
-                  </div>
+
+                  {split.remainderTotal > 0 && (
+                    <div className="text-xs rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 p-3">
+                      {isAnnual ? (
+                        <>
+                          <strong>Congé pris en partie :</strong> il restera <strong>{split.remainderTotal}j</strong> à prendre plus tard
+                          ({split.remainderBase}j de base{split.remainderSeniority > 0 ? ` + ${split.remainderSeniority}j d'ancienneté` : ''}).
+                          Ces jours restent dus même si le solde repart à 0 sur le nouveau cycle ; l&apos;indemnité du droit total est payée à ce départ.
+                        </>
+                      ) : (
+                        <>
+                          Après ce congé anticipé, il lui restera <strong>{split.remainderTotal}j</strong> sur son solde
+                          ({split.remainderBase}j de base{split.remainderSeniority > 0 ? ` + ${split.remainderSeniority}j d'ancienneté` : ''}) — aucune indemnité n&apos;est payée à cette date.
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {isAnnual && split.remainderTotal > 0 && (
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--text-muted)]">Date du prochain départ (pour le rappel) *</label>
+                      <input
+                        type="date"
+                        value={manualForm.nextDepartureDate}
+                        min={manualForm.endDate || undefined}
+                        onChange={e => setManualForm(f => ({ ...f, nextDepartureDate: e.target.value }))}
+                        className="mt-1 w-full text-sm border border-[var(--border)] bg-[var(--surface)] rounded-lg px-3 py-2"
+                      />
+                    </div>
+                  )}
+
                   {manualNeedsMotif && (
                     <div>
                       <label className="text-xs font-semibold text-[var(--text-muted)]">Motif de report (pour la lettre) *</label>
@@ -737,9 +1089,12 @@ export default function ProgrammeCongesPage() {
               )}
             </div>
 
-            {manualError && <div className="text-xs text-red-500">{manualError}</div>}
+            {manualError && <div className="text-xs text-red-500 mt-3">{manualError}</div>}
+           </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+           {/* Pied fixe */}
+           <div className="px-6 py-4 shrink-0 border-t border-[var(--border)]">
+            <div className="flex justify-end gap-2">
               <button onClick={() => { setShowManualModal(false); setEditingRow(null); }} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
                 Annuler
               </button>
@@ -749,6 +1104,57 @@ export default function ProgrammeCongesPage() {
                 className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40"
               >
                 {isSavingManual ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} {editingRow ? 'Enregistrer' : 'Planifier'}
+              </button>
+            </div>
+           </div>
+          </div>
+        </div>
+      )}
+
+      {postponingRow && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center shrink-0">
+                <CalendarClock size={20} />
+              </div>
+              <h2 className="text-lg font-bold text-[var(--text)]">Repousser le départ</h2>
+            </div>
+            <p className="text-sm text-[var(--text-muted)]">
+              {postponingRow.employee.lastName} {postponingRow.employee.firstName} — actuellement du {fmtDate(postponingRow.startDate)} au {fmtDate(postponingRow.endDate)} ({postponingRow.daysCount} j).
+              Seules les dates de repos changent : la durée, le mois de paie de l'indemnité et le calcul restent identiques.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
+                Nouveau départ
+                <input
+                  type="date"
+                  value={postponeStart}
+                  onChange={e => setPostponeStart(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]"
+                />
+              </label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
+                Nouveau retour {postponeBusy && <Loader2 size={11} className="inline animate-spin" />}
+                <input
+                  type="date"
+                  value={postponeEnd}
+                  readOnly
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-sm text-[var(--text)]"
+                />
+              </label>
+            </div>
+            {postponeError && <p className="text-sm text-red-500">{postponeError}</p>}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setPostponingRow(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+                Annuler
+              </button>
+              <button
+                onClick={savePostpone}
+                disabled={postponeSaving || postponeBusy || !postponeStart}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white flex items-center gap-2 disabled:opacity-40"
+              >
+                {postponeSaving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Repousser
               </button>
             </div>
           </div>

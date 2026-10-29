@@ -69,6 +69,11 @@ export default function DailyView({
   const isAdmin = ['ADMIN', 'HR_MANAGER', 'SUPER_ADMIN'].includes(userRole);
   const [breakEditId, setBreakEditId] = useState<string | null>(null); // 🆕 correction de pause
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // ✅ Modifier les heures d'entrée / sortie d'un pointage (mêmes rôles que la suppression)
+  const [timesRow, setTimesRow] = useState<any | null>(null);
+  const [timesForm, setTimesForm] = useState({ checkIn: '', checkOut: '', reason: '' });
+  const [timesSaving, setTimesSaving] = useState(false);
+  const [timesError, setTimesError] = useState('');
   const [selectedRow, setSelectedRow] = useState<EmployeeDayDetail | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
@@ -144,6 +149,50 @@ export default function DailyView({
       alert(e.message || 'Erreur lors de la suppression.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const toHHMM = (iso?: string | null) =>
+    iso ? new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+  const openTimesModal = (att: any) => {
+    setTimesError('');
+    setTimesRow(att);
+    setTimesForm({ checkIn: toHHMM(att.checkIn), checkOut: toHHMM(att.checkOut), reason: '' });
+  };
+
+  // Garde le jour d'origine du pointage, ne remplace que l'heure.
+  const withTime = (baseIso: string, hhmm: string) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    const d = new Date(baseIso);
+    d.setHours(h, m, 0, 0);
+    return d.toISOString();
+  };
+
+  const saveTimes = async () => {
+    if (!timesRow) return;
+    if (!timesForm.checkIn && !timesForm.checkOut) { setTimesError('Renseignez au moins une heure.'); return; }
+    if (timesForm.reason.trim().length < 3) { setTimesError('Motif obligatoire (3 caractères min.).'); return; }
+    const base = timesRow.checkIn || timesRow.checkOut;
+    if (!base) { setTimesError('Pointage sans date de référence.'); return; }
+    const payload: any = { reason: timesForm.reason.trim() };
+    if (timesForm.checkIn && timesForm.checkIn !== toHHMM(timesRow.checkIn)) {
+      payload.checkIn = withTime(timesRow.checkIn || base, timesForm.checkIn);
+    }
+    if (timesForm.checkOut && timesForm.checkOut !== toHHMM(timesRow.checkOut)) {
+      payload.checkOut = withTime(timesRow.checkOut || timesRow.checkIn || base, timesForm.checkOut);
+    }
+    if (!payload.checkIn && !payload.checkOut) { setTimesError('Aucune heure modifiée.'); return; }
+    setTimesSaving(true);
+    setTimesError('');
+    try {
+      await api.put(`/attendance/correct/${timesRow.id}`, payload);
+      setTimesRow(null);
+      await fetchDailyData();
+    } catch (e: any) {
+      setTimesError(e?.response?.data?.message || e?.message || 'Erreur lors de la modification.');
+    } finally {
+      setTimesSaving(false);
     }
   };
 
@@ -590,6 +639,15 @@ export default function DailyView({
                     {isAdmin && (
                       <td className="px-6 py-4 text-right">
                         {att.id ? (
+                          <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openTimesModal(att); }}
+                            title="Modifier les heures d'entrée / sortie"
+                            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                          >
+                            <Pencil size={16} />
+                          </button>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -602,6 +660,7 @@ export default function DailyView({
                           >
                             {deletingId === att.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                           </button>
+                          </div>
                         ) : (
                           // ✅ Pas de pointage réel en base pour ce statut calculé
                           // (ex : absence déduite, sans ligne "attendance") —
@@ -617,6 +676,44 @@ export default function DailyView({
           </table>
         </div>
       </div>
+
+      {timesRow && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+            <h2 className="text-lg font-bold text-[var(--text)]">Modifier les heures</h2>
+            <p className="text-sm text-[var(--text-muted)]">{timesRow.employee.firstName} {timesRow.employee.lastName}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
+                Entrée
+                <input type="time" value={timesForm.checkIn}
+                  onChange={e => setTimesForm(f => ({ ...f, checkIn: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
+              </label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
+                Sortie
+                <input type="time" value={timesForm.checkOut}
+                  onChange={e => setTimesForm(f => ({ ...f, checkOut: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
+              </label>
+            </div>
+            <label className="block text-xs font-semibold text-[var(--text-muted)] space-y-1">
+              Motif (obligatoire)
+              <input type="text" value={timesForm.reason}
+                onChange={e => setTimesForm(f => ({ ...f, reason: e.target.value }))}
+                placeholder="Ex : oubli de pointer la sortie"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
+            </label>
+            {timesError && <p className="text-sm text-red-500">{timesError}</p>}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setTimesRow(null)} className="px-4 py-2 text-sm font-semibold rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)]">Annuler</button>
+              <button onClick={saveTimes} disabled={timesSaving}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 disabled:opacity-40">
+                {timesSaving && <Loader2 size={14} className="animate-spin" />} Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sidebar de détail employé */}
       <EmployeeDayDetailSidebar

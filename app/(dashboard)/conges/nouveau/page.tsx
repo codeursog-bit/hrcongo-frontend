@@ -114,7 +114,9 @@ export default function NewLeaveRequestPage() {
           const emp = await api.get<any>('/employees/me');
           if (emp?.id) {
             setMyEmployee(emp);
-            setFormData(prev => ({ ...prev, employeeId: emp.id }));
+            // ✅ Un employé ne demande QUE un congé annuel anticipé : le congé
+            // annuel suit le planning de l'entreprise (planifié par le RH).
+            setFormData(prev => ({ ...prev, employeeId: emp.id, type: 'ANNUAL_ANTICIPATED' }));
           } else {
             setLoadError("Profil employé introuvable. Contactez votre RH.");
           }
@@ -244,6 +246,9 @@ export default function NewLeaveRequestPage() {
     submitLeave(motifDraft.trim());
   };
 
+  // ✅ Rôle EMPLOYEE : congé annuel complet bloqué (planifié par le RH),
+  // seul l'anticipé est proposé.
+  const isEmployeeRole = currentUser?.role === 'EMPLOYEE';
   const showEmployeeSelect = currentUser &&
     ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'MANAGER'].includes(currentUser.role);
 
@@ -426,10 +431,19 @@ export default function NewLeaveRequestPage() {
             onChange={(v) => setFormData({ ...formData, type: v })}
             icon={Umbrella}
             options={[
-              { value: 'ANNUAL',             label: 'Congé Annuel (fin de cycle)',              icon: Umbrella },
+              ...(isEmployeeRole ? [] : [{ value: 'ANNUAL', label: 'Congé Annuel (fin de cycle)', icon: Umbrella }]),
               { value: 'ANNUAL_ANTICIPATED', label: 'Congé Annuel Anticipé (avant fin de cycle)', icon: Zap },
             ]}
           />
+
+          {isEmployeeRole && (
+            <div className="flex items-start gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl">
+              <Info size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                Le congé annuel suit le planning de l&apos;entreprise : c&apos;est le RH qui le planifie. Tu peux demander ici un congé annuel <strong>anticipé</strong> — il est déduit de ton solde et te laisse le reste à prendre à la date fixée par l&apos;entreprise.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-start gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xl">
             <Info size={16} className="text-emerald-500 mt-0.5 shrink-0" />
@@ -635,7 +649,7 @@ export default function NewLeaveRequestPage() {
                   <CheckCircle2 size={14} className="text-emerald-500 mt-0.5 shrink-0" />
                   <p>
                     {formData.type === 'ANNUAL_ANTICIPATED'
-                      ? 'Congé anticipé : payé et déduit du solde comme un congé annuel classique — plafonné à ce qui est déjà accumulé à ce jour.'
+                      ? 'Congé anticipé : déduit du solde, plafonné à ce qui est déjà accumulé à ce jour. Aucune indemnité n\'est payée à cette date — l\'indemnité du droit total est versée au départ en congé annuel planifié.'
                       : 'Congé annuel : indemnité calculée sur la base brute de référence ÷ 26.'}
                   </p>
                 </div>
