@@ -23,7 +23,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
-import { formatUnitBase, formatQty, isQtyLikeRate } from '@/lib/bulletin-qty-format';
+import { formatUnitBase, formatQty, isQtyLikeRate, formatRatePct, isFixedTaxFlag } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererClassiqueProps {
   payroll:      BulletinPayroll;
@@ -95,10 +95,11 @@ function itemBase(item: any): string {
 // colonne « Nombre » sur les gains et indemnités.
 function itemRate(item: any): string {
   if (item.rate == null) return '';
+  if (isFixedTaxFlag(item)) return ''; // taxe fixe (TOL) : ni taux ni nombre
   if (isQtyLikeRate(item)) return ''; // « taux » ≥ 1 = quantité → colonne Nombre, jamais Taux
   const r = nv(item.rate);
   if (r === 0) return '';
-  if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
+  if (r > 0 && r < 1) return formatRatePct(r); // « 26% », comme la CNSS
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 function itemQty(item: any): string {
@@ -106,11 +107,12 @@ function itemQty(item: any): string {
   return isQtyLikeRate(item) ? formatQty(item.rate) : ''; // quantité stockée dans « rate »
 }
 function itemTaux(item: any): string {
+  if (isFixedTaxFlag(item)) return ''; // taxe fixe (TOL) : ni taux ni nombre
   if (item.quantity != null && nv(item.quantity) !== 0) return formatQty(item.quantity);
   if (item.rate == null) return '';
   const r = nv(item.rate);
   if (r === 0) return '';
-  if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
+  if (r > 0 && r < 1) return formatRatePct(r); // « 26% », comme la CNSS
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }
 

@@ -18,7 +18,8 @@
 // utilisateur RH à chaque consultation.
 //
 // Props :
-//   payroll      — données payroll telles que retournées par l'API
+//   payroll      — données payroll telles que retournées par l'API (la fusion
+//                  « salaire proratisé » éventuelle est faite ici, à l'affichage)
 //   previewMode  — true = taille réduite pour preview (pas impression)
 // ============================================================================
 
@@ -31,6 +32,7 @@ import CanvasRenderer   from '@/components/CanvasRenderer';
 import FactureDisplay   from '@/components/FactureDisplay';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
 import { isFactureContract } from '@/lib/facture-contract-types';
+import { presentSalaryProrata } from '@/lib/bulletin-salary-prorata';
 import type { BulletinPayroll } from '@/types/bulletin-template';
 
 interface Props {
@@ -38,8 +40,14 @@ interface Props {
   previewMode?: boolean;
 }
 
-export default function BulletinDisplay({ payroll, previewMode = false }: Props) {
+export default function BulletinDisplay({ payroll: rawPayroll, previewMode = false }: Props) {
   const { config, isLoading } = useBulletinConfig();
+
+  // ✅ Option entreprise « salaire de base proratisé » : fusion SAL_BASE +
+  // ABS_DEDUCT À L'AFFICHAGE uniquement (rien n'est modifié en base). Appliquée
+  // ici, une seule fois, donc valable pour tous les gabarits, le mode canvas,
+  // l'impression par lot et « Ma paie ». Sans effet si l'option est désactivée.
+  const payroll = React.useMemo(() => presentSalaryProrata(rawPayroll), [rawPayroll]);
 
   // ── Routage facture — avant tout le reste, indépendant du mode
   //    template/canvas puisque ça concerne le TYPE de document, pas son style.

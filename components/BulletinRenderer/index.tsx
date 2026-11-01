@@ -12,7 +12,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
-import { formatUnitBase, formatQty } from '@/lib/bulletin-qty-format';
+import { formatUnitBase, formatQty, formatRatePct, isFixedTaxFlag } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererDefaultProps {
   payroll:      BulletinPayroll;
@@ -93,6 +93,10 @@ function itemBase(item: any): string {
 }
 
 function itemTaux(item: any): string {
+  if (isFixedTaxFlag(item)) return ''; // taxe fixe (TOL) : ni taux ni nombre
+  // Colonne combinée : le vrai taux (« 26% ») prime sur le nombre de jours
+  const pct = formatRatePct(item.rate);
+  if (pct) return pct;
   // 1. quantity prioritaire (nb jours, nb heures, nb unités)
   if (item.quantity != null && nv(item.quantity) !== 0) {
     return formatQty(item.quantity);
@@ -102,7 +106,7 @@ function itemTaux(item: any): string {
   const r = nv(item.rate);
   if (r === 0) return '';
   // Taux en % (ex: 0.08 → 8%, 0.05 → 5%) stocké en décimal
-  if (r > 0 && r < 1) return (r * 100).toFixed(2).replace('.', ',').replace(/,?0+$/, '');
+  if (r > 0 && r < 1) return formatRatePct(r); // « 26% », comme la CNSS
   // Taux entier ou décimal > 1 (ex: 4.00, 10.03, 1.10)
   return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
 }

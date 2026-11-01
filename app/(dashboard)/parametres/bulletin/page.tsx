@@ -36,6 +36,7 @@ import type {
 } from '@/types/bulletin-template';
 import type { CanvasLayout } from '@/types/canvas-block';
 import { TEMPLATE_LIST, getBaseTemplate } from '@/lib/bulletin-templates';
+import { presentSalaryProrata } from '@/lib/bulletin-salary-prorata';
 import { EMPTY_CANVAS, PALETTE_ITEMS, REQUIRED_VARIABLES, VARIABLE_LABELS } from '@/types/canvas-block';
 
 // ─── Données démo pour preview quand aucun payroll n'existe ──────────────────
@@ -49,7 +50,8 @@ const DEMO: BulletinPayroll = {
   cnssEmployerPension:36000, cnssEmployerFamily:25000, cnssEmployerAccident:11000,
   its:55250, tusDgiAmount:10375, tusCnssAmount:28012, tusTotal:38387,
   items:[
-    {id:'1',code:'SAL_BASE',label:'Salaire de base',type:'GAIN',amount:450000,base:450000,rate:1,isTaxable:true,isCnss:true,order:1},
+    {id:'1',code:'SAL_BASE',label:'Salaire de base',type:'GAIN',amount:450000,base:17307.69,quantity:26,isTaxable:true,isCnss:true,order:1},
+    {id:'1b',code:'ABS_DEDUCT',label:'Déduction absences',type:'DEDUCTION',amount:34615,base:17307.69,quantity:2,isTaxable:false,isCnss:false,order:1},
     {id:'2',code:'HS_10',label:'Heures sup. (+10%)',type:'GAIN',amount:12000,rate:1.10,isTaxable:true,isCnss:true,order:2},
     {id:'3',code:'HS_25',label:'Heures sup. (+25%)',type:'GAIN',amount:8000,rate:1.25,isTaxable:true,isCnss:true,order:3},
     {id:'4',code:'AUTO_BONUS_001',label:'Prime de transport',type:'GAIN',amount:30000,isTaxable:false,isCnss:false,order:4},
@@ -238,6 +240,17 @@ export default function BulletinDesignerPage() {
   const [toast, setToast]       = useState<{msg:string;ok:boolean}|null>(null);
   const [showPreview, setShowPreview] = useState(true);
   const [previewKind, setPreviewKind] = useState<'bulletin' | 'facture'>('bulletin');
+  // ── Option entreprise : salaire de base proratisé (présentation seulement) ──
+  const [salaryProrata, setSalaryProrata] = useState(false);
+
+  // Aperçu en direct : applique le choix courant (même fusion que BulletinDisplay)
+  const previewPayroll = React.useMemo(
+    () => presentSalaryProrata({
+      ...payroll,
+      company: { ...((payroll as any).company ?? {}), salaryProrataDisplay: salaryProrata },
+    } as any) as BulletinPayroll,
+    [payroll, salaryProrata],
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint:{ distance:6 } }));
 
@@ -245,10 +258,12 @@ export default function BulletinDesignerPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [tRes, pRes] = await Promise.allSettled([
+        const [tRes, pRes, cRes] = await Promise.allSettled([
           api.get<{config: any}>('/companies/bulletin-template'),
           api.get<any[]>('/payrolls?limit=1&sort=createdAt:desc'),
+          api.get<any>('/companies/mine'),
         ]);
+        if (cRes.status === 'fulfilled') setSalaryProrata(!!cRes.value?.salaryProrataDisplay);
         if (tRes.status === 'fulfilled' && tRes.value?.config) {
           const saved = tRes.value.config;
           if (saved.mode === 'canvas' && saved.canvasLayout) {
@@ -276,6 +291,8 @@ export default function BulletinDesignerPage() {
       : { mode: 'template', ...cfg };
 
     await api.put('/companies/bulletin-template', payload);
+    // Option entreprise : présentation du salaire de base (donnée « company », pas du gabarit)
+    await api.patch('/companies', { salaryProrataDisplay: salaryProrata });
     invalidateBulletinTemplateCache(); // invalide + dispatche l'événement
 
     // ✅ AJOUTER : recharger depuis la BDD pour que la page elle-même se mette à jour
@@ -660,6 +677,13 @@ export default function BulletinDesignerPage() {
       </div>
 
       <div style={{ marginTop:16 }}>
+        <Label>Salaire de base</Label>
+        <ToggleRow label="Salaire de base proratisé"
+          sub="Affiche les jours réellement payés (ex. 20 j × valeur d'un jour) au lieu du salaire plein + la ligne « Déduction absences ». Présentation seulement : le journal de paie et les données gardent l'absence."
+          val={salaryProrata} onChange={()=>setSalaryProrata(v=>!v)} primary={p} />
+      </div>
+
+      <div style={{ marginTop:16 }}>
         <Label>Message pour vos employés</Label>
         <Sub>Apparaît en bas du bulletin. Activez aussi le bloc "Message employeur" dans Blocs.</Sub>
         <textarea value={cfg.style.footerMessage} onChange={e=>setStyle('footerMessage',e.target.value)}
@@ -762,13 +786,13 @@ export default function BulletinDesignerPage() {
                   <FactureRendererForfait payroll={DEMO_FACTURE} template={cfg} previewMode />
                 )
               ) : cfg.templateId === 'clarifie' ? (
-                <BulletinRendererClarifie payroll={payroll} template={cfg} previewMode />
+                <BulletinRendererClarifie payroll={previewPayroll} template={cfg} previewMode />
               ) : cfg.templateId === 'classique' ? (
-                <BulletinRendererClassique payroll={payroll} template={cfg} previewMode />
+                <BulletinRendererClassique payroll={previewPayroll} template={cfg} previewMode />
               ) : cfg.templateId === 'inf' ? (
-                <BulletinRendererInf payroll={payroll} template={cfg} previewMode />
+                <BulletinRendererInf payroll={previewPayroll} template={cfg} previewMode />
               ) : (
-                <BulletinRenderer payroll={payroll} template={cfg} previewMode />
+                <BulletinRenderer payroll={previewPayroll} template={cfg} previewMode />
               )}
             </div>
           </div>

@@ -32,7 +32,7 @@ import type { BulletinPayroll, BulletinTemplateConfig, PayrollItem } from '@/typ
 import { classifyItems } from '@/lib/bulletin-items-classifier';
 import { mergeCustomTaxLines, cleanTaxLabel } from '@/lib/merge-custom-tax-lines';
 import { getBaseTemplate } from '@/lib/bulletin-templates';
-import { formatUnitBase, formatQty, isQtyLikeRate } from '@/lib/bulletin-qty-format';
+import { formatUnitBase, formatQty, isQtyLikeRate, formatRatePct, isFixedTaxFlag } from '@/lib/bulletin-qty-format';
 
 export interface BulletinRendererInfProps {
   payroll:      BulletinPayroll;
@@ -119,9 +119,10 @@ function itemBase(item: any): string {
 // indemnités, où la quantité s'affiche déjà dans la colonne Nombre.
 function itemRate(item: any): string {
   if (!item || item.rate == null) return '';
+  if (isFixedTaxFlag(item)) return ''; // taxe fixe (TOL) : ni taux ni nombre
   const r = nv(item.rate);
   if (r === 0) return '';
-  if (r > 0 && r < 1) return (r * 100).toFixed(3).replace('.', ',').replace(/,?0+$/, '');
+  if (r > 0 && r < 1) return formatRatePct(r); // « 26% », comme la CNSS
   return (Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ','));
 }
 function itemTaux(item: any): string {
