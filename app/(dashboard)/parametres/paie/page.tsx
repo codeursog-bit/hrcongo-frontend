@@ -185,6 +185,8 @@ export default function PayrollSettingsPage() {
   // 🆕 Mode de cycle de départ en congé (ROLLING = glissant/retour réel,
   // ANNIVERSARY = toujours calé sur le mois d'embauche)
   const [leaveCycleMode, setLeaveCycleMode] = useState<'ROLLING' | 'ANNIVERSARY'>('ROLLING');
+  // 🧮 Option « paie sur le net » (Company.netBasedProrata) — désactivée par défaut
+  const [netBasedProrata, setNetBasedProrata] = useState(false);
 
   // Simulateur ITS
   const [simIncome, setSimIncome]   = useState(450000);
@@ -240,6 +242,7 @@ export default function PayrollSettingsPage() {
     api.get<any>('/companies/mine').then(ci => {
       if (ci?.leaveIndemnityMethod) setLeaveMethod(ci.leaveIndemnityMethod);
       if (ci?.leaveCycleMode) setLeaveCycleMode(ci.leaveCycleMode);
+      setNetBasedProrata(ci?.netBasedProrata === true);
     }).catch(() => {});
   }, []);
 
@@ -288,6 +291,7 @@ const handleSave = async () => {
       await api.patch('/companies', {
         leaveIndemnityMethod: leaveMethod,
         leaveCycleMode,
+        netBasedProrata,
       });
 
       setShowConfirm(false);
@@ -923,6 +927,55 @@ const handleSave = async () => {
                       </button>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* 🧮 Paie sur le net — option de flexibilité (calcul légal inchangé par défaut) */}
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden">
+                <div className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                      <Banknote size={18} className="text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-[var(--text)]">Paie sur le net</p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        Option de flexibilité — le calcul légal habituel reste la règle par défaut
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setNetBasedProrata(v => !v)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border flex-shrink-0 ${
+                      netBasedProrata
+                        ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                        : 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]'
+                    }`}
+                  >
+                    {netBasedProrata ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                    {netBasedProrata ? 'Activée' : 'Désactivée'}
+                  </button>
+                </div>
+                <div className="px-6 pb-5 -mt-1 space-y-2">
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Pour une entreprise dont la comptabilité paie sur le net : quand un salarié travaille moins
+                    que le mois complet, le net du bulletin est recalé sur{' '}
+                    <strong>net du mois plein × jours payés ÷ jours théoriques</strong>.
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Seule la ligne <strong>Sursalaire</strong> est ajustée (créée si elle n&apos;existe pas).
+                    Les jours travaillés, le salaire de base, les indemnités (transport, salissure…) et les
+                    autres lignes ne changent pas. Les mois avec congé ne sont pas concernés.
+                  </p>
+                  {netBasedProrata && (
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-2">
+                      <AlertTriangle size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        Activée : le brut des bulletins à jours réduits peut dépasser le brut proratisé légal.
+                        À valider avec votre comptable (déclarations CNSS / ITS).
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
