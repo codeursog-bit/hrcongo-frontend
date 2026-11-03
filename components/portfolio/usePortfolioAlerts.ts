@@ -55,7 +55,7 @@ export function usePortfolioAlerts() {
         .catch(() => {});
 
       if (hasApprovalFunctionRef.current) {
-        api.get<any>('/approvals/inbox/all')
+        api.get<any>(force === true ? '/approvals/inbox/all?fresh=1' : '/approvals/inbox/all')
           .then((res) => { if (!cancelled) setAvis(readCount(res)); })
           .catch(() => {});
       } else if (!cancelled) {

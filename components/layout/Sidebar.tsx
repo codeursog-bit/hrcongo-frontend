@@ -369,6 +369,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // 🔔 Avis en attente de MON avis (fonction de validation)
   const [pendingAvisCount, setPendingAvisCount] = useState(0);
   const lastRefreshRef = React.useRef(0);
+  // ⚡ PERF : mémorise la dernière valeur de hasApprovalFunction pour ne forcer
+  // un rafraîchissement QUE quand elle change (sinon l'anti-spam s'applique).
+  const prevHasApprovalFunctionRef = React.useRef(false);
   // 🆕 Permission "secrétaire" : pointage manuel pour tout le monde
   const [hasAttendanceAllPermission, setHasAttendanceAllPermission] = useState(false);
   // ✅ LOT A — droit de signer accordé par l'admin (fonction de validation)
@@ -377,6 +380,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [hasApprovalFunction, setHasApprovalFunction] = useState(false);
   // 💰 Module Finances : le menu n'apparaît que pour l'ADMIN si le module est activé
   const [financeEnabled, setFinanceEnabled] = useState(false);
+  // Stagiaires et prestataires (sans l'option entreprise) n'ont pas de congés : on masque "Mes congés".
+  const [leaveEligible, setLeaveEligible] = useState(true);
 
   const isWhiteLabel = !!(brandName || brandLogo);
   const accentColor = brandColor || '#10B981';
@@ -449,6 +454,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       .catch(() => {});
   }, []);
 
+  // 🎫 Éligibilité aux congés — échec silencieux : le menu reste affiché.
+  useEffect(() => {
+    if (!localStorage.getItem('user')) return;
+    api.get<{ eligible?: boolean }>('/leaves/me/eligibility')
+      .then((r) => setLeaveEligible(r?.eligible !== false))
+      .catch(() => {});
+  }, []);
+
   // 💰 Finances : statut du module (ADMIN uniquement)
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -464,7 +477,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, []);
 
   // Compteurs d'alerte : demandes en attente (Admin/RH) + avis à donner (titulaires d'une fonction).
-  // Rafraîchis à chaque navigation, toutes les 60 s et au retour sur l'onglet.
+  // Rafraîchis à l'ouverture, toutes les 60 s et au retour sur l'onglet — mais
+  // JAMAIS plus d'une fois toutes les 45 s (sauf évènement explicite).
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (!stored) return;
@@ -474,9 +488,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     let cancelled = false;
 
     const refresh = (force?: boolean | Event) => {
-      // Anti-spam : pas plus d'un rafraîchissement toutes les 15 s (sauf évènement explicite)
+      // ⚡ PERF — Anti-spam : pas plus d'un rafraîchissement toutes les 45 s (sauf évènement explicite).
+      // Avant : 15 s ET l'effet appelait refresh(true) à CHAQUE changement de page, ce qui
+      // contournait totalement l'anti-spam (2 requêtes serveur à chaque navigation).
       const now = Date.now();
-      if (force !== true && now - lastRefreshRef.current < 15000) return;
+      if (force !== true && now - lastRefreshRef.current < 45000) return;
       lastRefreshRef.current = now;
 
       if (canSeeRequests) {
@@ -485,7 +501,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           .catch(() => {});
       }
       if (hasApprovalFunction) {
-        api.get(AVIS_PENDING_ENDPOINT)
+        // ?fresh=1 : seulement sur un rafraîchissement explicite (avis donné…), sinon le
+        // serveur peut répondre depuis son cache de 20 s.
+        api.get(force === true ? `${AVIS_PENDING_ENDPOINT}?fresh=1` : AVIS_PENDING_ENDPOINT)
           .then((res: any) => { if (!cancelled) setPendingAvisCount(readCount(res)); })
           .catch(() => {});
       } else {
@@ -496,8 +514,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     // Un avis vient d'être donné / une validation finalisée → compteur à jour tout de suite
     const onAvisChanged = () => refresh(true);
 
-    refresh(true);
-    const timer = setInterval(() => refresh(), 60000);
+    // On ne force que si hasApprovalFunction vient de changer (ex. /approvals/me répond
+    // après le 1er rendu) : sans ça le compteur « Avis » attendrait jusqu'à 60 s.
+    // Un simple changement de page, lui, reste soumis à l'anti-spam.
+    const approvalFunctionChanged = prevHasApprovalFunctionRef.current !== hasApprovalFunction;
+    prevHasApprovalFunctionRef.current = hasApprovalFunction;
+    refresh(approvalFunctionChanged);
+    const timer = setInterval(() => { if (!document.hidden) refresh(); }, 60000);
     const onFocus = () => refresh();
     window.addEventListener('focus', onFocus);
     window.addEventListener('konza:avis-changed', onAvisChanged);
@@ -761,7 +784,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               recrutement: 'Organisation', materiel: 'Organisation', finances: 'Organisation', formation: 'Organisation', performance: 'Organisation', rapports: 'Organisation', parametres: 'Organisation',
             };
 
-            const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role) && !(item.id === 'messages' && basePath));
+            const baseItems = navItems.filter(item => user && item.allowedRoles.includes(user.role) && !(item.id === 'messages' && basePath) && !(!leaveEligible && (item.id === 'mes_conges' || item.id === 'mes_conges_manager')));
             const trailingExtras = [...secretaryExtraItems, ...approvalExtraItems, ...financeItems];
             const TOP_IDS = ['dashboard', 'messages', 'demandes'];
             const flat: NavItem[] = isAdminLike

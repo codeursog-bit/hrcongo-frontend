@@ -91,7 +91,16 @@ export const DashboardContent = () => {
   const [stats, setStats]               = useState<any>({});
   const [charts, setCharts]             = useState<any>({ salaryTrend: [], deptDistribution: [] });
   const [myStats, setMyStats]           = useState<any>({});
+  // Stagiaires / prestataires sans l'option entreprise : pas de congés → cartes congés masquées.
+  const [leaveEligible, setLeaveEligible] = useState(true);
   const [managerStats, setManagerStats] = useState<any>({});
+
+  useEffect(() => {
+    if (!localStorage.getItem('user')) return;
+    api.get<{ eligible?: boolean }>('/leaves/me/eligibility')
+      .then((r) => setLeaveEligible(r?.eligible !== false))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -467,11 +476,13 @@ export const DashboardContent = () => {
               <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text)' }}>Mon espace personnel</h3>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {leaveEligible && (
               <div onClick={() => router.push('/conges/nouveau')} className="group cursor-pointer rounded-xl p-4 transition-all hover:-translate-y-0.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Congés en attente</p>
                 <p className="text-2xl font-extrabold text-amber-500">{myStats.pendingLeaves || 0}</p>
                 <p className="text-[10px] mt-1 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}><ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />Demander congé</p>
               </div>
+              )}
               <div onClick={() => setShowSalary(!showSalary)} className="cursor-pointer rounded-xl p-4 transition-all hover:-translate-y-0.5" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                 <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Dernier salaire</p>
                 {showSalary
@@ -578,6 +589,7 @@ export const DashboardContent = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {leaveEligible && (
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <Panel>
               {myStats.leaveEx ? (() => {
@@ -647,8 +659,9 @@ export const DashboardContent = () => {
               )}
             </Panel>
           </motion.div>
+          )}
 
-          <motion.div variants={itemVariants} className="lg:col-span-2">
+          <motion.div variants={itemVariants} className={leaveEligible ? 'lg:col-span-2' : 'lg:col-span-3'}>
             <Panel>
               <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Mes Actions Rapides</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -657,7 +670,7 @@ export const DashboardContent = () => {
                   { label: 'Mes bulletins',  icon: Wallet,      color: 'text-emerald-500', path: '/ma-paie' },
                   { label: 'Formation',      icon: PlayCircle,  color: 'text-amber-500',   path: '/formation' },
                   { label: 'Pointer',        icon: Fingerprint, color: 'text-amber-500',   path: '/presences/pointage' },
-                ].map(item => (
+                ].filter(item => leaveEligible || item.path !== '/conges/nouveau').map(item => (
                   <button key={item.label} onClick={() => router.push(item.path)} className="p-4 rounded-xl text-left transition-colors group" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
                     <item.icon className={`${item.color} mb-3 group-hover:scale-110 transition-transform`} size={24} />
                     <p className="font-bold text-sm" style={{ color: 'var(--text)' }}>{item.label}</p>

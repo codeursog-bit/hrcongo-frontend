@@ -30,11 +30,11 @@ export default function AvisInbox() {
   const [error, setError] = useState<string | null>(null);
   const [openKey, setOpenKey] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (fresh = false) => {
     try {
       let res: { items: AvisItem[] };
       try {
-        res = await api.get<{ items: AvisItem[] }>('/approvals/inbox/all');
+        res = await api.get<{ items: AvisItem[] }>(fresh ? '/approvals/inbox/all?fresh=1' : '/approvals/inbox/all');
       } catch {
         // Backend pas encore à jour → boîte habituelle (sa propre entreprise).
         res = await api.get<{ items: AvisItem[] }>('/approvals/inbox');
@@ -128,7 +128,7 @@ export default function AvisInbox() {
                       kind={kindOf(it.requestType)}
                       requestId={it.requestId}
                       companyId={it.external ? it.companyId : undefined}
-                      onChanged={() => { load(); window.dispatchEvent(new Event('konza:avis-changed')); }}
+                      onChanged={() => { load(true); window.dispatchEvent(new Event('konza:avis-changed')); }}
                     />
                   </div>
                 )}

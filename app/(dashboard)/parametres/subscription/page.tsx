@@ -20,6 +20,7 @@ import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
 import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
 import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
 import { KonzaLoader } from '@/components/ui/KonzaLoader';
+import { InvoicesList } from '@/components/subscription/InvoicesList';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Subscription {
@@ -537,6 +538,9 @@ export default function SubscriptionPage() {
               </div>
             </div>
           )}
+
+          {/* Mes factures */}
+          <InvoicesList />
 
           {/* Info facturation */}
           <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700 flex gap-3">

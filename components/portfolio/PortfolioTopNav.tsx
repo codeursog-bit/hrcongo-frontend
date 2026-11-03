@@ -66,7 +66,9 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
+    const interval = setInterval(() => { if (!document.hidden) fetchNotifications(); }, 180000);
+    const onPush = () => fetchNotifications();
+    window.addEventListener('konza:notif-push', onPush);
 
     const handleClickOutside = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifs(false);
@@ -75,6 +77,7 @@ export default function PortfolioTopNav({ userName, userEmail, userPhotoUrl, onM
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       clearInterval(interval);
+      window.removeEventListener('konza:notif-push', onPush);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);

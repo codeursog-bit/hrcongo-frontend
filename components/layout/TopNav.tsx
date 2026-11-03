@@ -47,7 +47,9 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
     }
     
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
+    const interval = setInterval(() => { if (!document.hidden) fetchNotifications(); }, 180000);
+    const onPush = () => fetchNotifications();
+    window.addEventListener('konza:notif-push', onPush);
     
     const handleClickOutside = (event: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
@@ -61,6 +63,7 @@ export const TopNav: React.FC<TopNavProps> = ({ onMenuClick, activeLabel }) => {
     
     return () => {
       clearInterval(interval);
+      window.removeEventListener('konza:notif-push', onPush);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);

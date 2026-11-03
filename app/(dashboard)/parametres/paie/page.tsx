@@ -185,6 +185,9 @@ export default function PayrollSettingsPage() {
   // 🆕 Mode de cycle de départ en congé (ROLLING = glissant/retour réel,
   // ANNIVERSARY = toujours calé sur le mois d'embauche)
   const [leaveCycleMode, setLeaveCycleMode] = useState<'ROLLING' | 'ANNIVERSARY'>('ROLLING');
+  // 🆕 Congés des prestataires/consultants (Company.leaveAppliesToContractors) — désactivé par défaut.
+  // Les stagiaires n'ont jamais de congé.
+  const [leaveAppliesToContractors, setLeaveAppliesToContractors] = useState(false);
   // 🧮 Option « paie sur le net » (Company.netBasedProrata) — désactivée par défaut
   const [netBasedProrata, setNetBasedProrata] = useState(false);
 
@@ -242,6 +245,7 @@ export default function PayrollSettingsPage() {
     api.get<any>('/companies/mine').then(ci => {
       if (ci?.leaveIndemnityMethod) setLeaveMethod(ci.leaveIndemnityMethod);
       if (ci?.leaveCycleMode) setLeaveCycleMode(ci.leaveCycleMode);
+      setLeaveAppliesToContractors(ci?.leaveAppliesToContractors === true);
       setNetBasedProrata(ci?.netBasedProrata === true);
     }).catch(() => {});
   }, []);
@@ -291,6 +295,7 @@ const handleSave = async () => {
       await api.patch('/companies', {
         leaveIndemnityMethod: leaveMethod,
         leaveCycleMode,
+        leaveAppliesToContractors,
         netBasedProrata,
       });
 
@@ -1057,6 +1062,31 @@ const handleSave = async () => {
                     Ce changement s'applique aux prochains cycles calculés — les cycles déjà ouverts (en cours) ne sont pas recalculés rétroactivement.
                   </p>
                 )}
+              </div>
+
+
+              {/* 🆕 Prestataires & stagiaires */}
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
+                <p className="font-bold text-sm text-[var(--text)] mb-1">Prestataires et stagiaires</p>
+                <p className="text-xs text-[var(--text-muted)] mb-4 leading-relaxed">
+                  Les stagiaires n'ont jamais de congé. Pour les prestataires/consultants, choisissez si votre entreprise leur accorde des congés et leur paie l'indemnité.
+                </p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={leaveAppliesToContractors}
+                    onChange={e => setLeaveAppliesToContractors(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-emerald-600"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-[var(--text)]">
+                      Accorder des congés (et l'indemnité) aux prestataires
+                    </span>
+                    <span className="block text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
+                      Désactivé : les prestataires n'apparaissent nulle part dans les congés (ni notifications, ni soldes, ni plannings, ni provisions).
+                    </span>
+                  </span>
+                </label>
               </div>
 
               {/* Rappel règles légales */}

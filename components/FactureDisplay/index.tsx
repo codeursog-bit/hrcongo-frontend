@@ -6,7 +6,7 @@
 // Équivalent de BulletinDisplay, mais pour les contrats PRESTATAIRE /
 // CONSULTANT / INTERIM / STAGE (cf. lib/facture-contract-types.ts).
 //
-// Choix du modèle (Forfait simple vs Détaillée numérotée) : lu dans le MÊME
+// Choix du modèle (Forfait simple, Détaillée numérotée ou Professionnelle bleu/rouge A4) : lu dans le MÊME
 // objet BulletinTemplate.config que les bulletins (Json libre, companyId
 // unique) — on stocke juste une clé de plus (config.factureTemplateId) au
 // lieu d'ajouter une colonne/table. Si absente → 'forfait' par défaut.
@@ -15,6 +15,7 @@
 import React from 'react';
 import FactureRendererForfait from '@/components/FactureRendererForfait';
 import FactureRendererDetaillee from '@/components/FactureRendererDetaillee';
+import FactureRendererPro from '@/components/FactureRendererPro';
 import { useBulletinConfig } from '@/hooks/useBulletinConfig';
 import type { BulletinPayroll } from '@/types/bulletin-template';
 
@@ -39,6 +40,16 @@ export default function FactureDisplay({ payroll, previewMode = false }: Props) 
   const factureTemplateId = (config as any).templateConfig?.factureTemplateId
     ?? (config as any).factureTemplateId
     ?? 'forfait';
+
+  if (factureTemplateId === 'professionnelle') {
+    return (
+      <FactureRendererPro
+        payroll={payroll}
+        template={config.templateConfig}
+        previewMode={previewMode}
+      />
+    );
+  }
 
   if (factureTemplateId === 'detaillee') {
     return (

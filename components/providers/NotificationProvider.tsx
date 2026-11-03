@@ -56,7 +56,12 @@ export function NotificationProvider({ children }: { children?: React.ReactNode 
       withCredentials: true,
     });
 
+    // Prévient la cloche (TopNav / PortfolioTopNav) de recharger tout de suite :
+    // leur polling est à 180 s, le socket prend le relais pour l'instantané.
+    const pingBell = () => window.dispatchEvent(new Event('konza:notif-push'));
+
     socket.on('admin-notification', (data: any) => {
+      pingBell();
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
@@ -67,6 +72,7 @@ export function NotificationProvider({ children }: { children?: React.ReactNode 
     });
 
     socket.on('company-notification', (data: any) => {
+      pingBell();
       addNotification({ type: 'INFO', title: data.title, message: data.message, link: data.link });
     });
 

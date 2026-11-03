@@ -28,6 +28,7 @@ import BulletinRendererClassique from '@/components/BulletinRendererClassique';
 import BulletinRendererInf from '@/components/BulletinRendererInf';
 import FactureRendererForfait from '@/components/FactureRendererForfait';
 import FactureRendererDetaillee from '@/components/FactureRendererDetaillee';
+import FactureRendererPro from '@/components/FactureRendererPro';
 import CanvasEditor from '@/components/CanvasEditor';
 import CanvasRenderer from '@/components/CanvasRenderer';
 import type {
@@ -101,6 +102,19 @@ const DEMO_FACTURE: BulletinPayroll = {
   },
   company: DEMO.company,
 };
+
+// Démo du modèle « Facture professionnelle » : coordonnées et compte bancaire renseignés
+// pour que l'aperçu montre le rendu complet (même données que le moteur : champs Company / Employee).
+const DEMO_FACTURE_PRO: BulletinPayroll = {
+  ...DEMO_FACTURE,
+  paymentDate: new Date().toISOString(),
+  employee: {
+    ...DEMO_FACTURE.employee,
+    address:'Rue Mpila, Talangaï', city:'Brazzaville', phone:'+242 05 987 65 43', email:'jean.okouyi@mail.cg',
+    paymentMethod:'BANK_TRANSFER', bankName:'BGFIBank', bankAccountNumber:'CG39 3000 1000 1100 0123 4567',
+  },
+  company: { ...DEMO.company, industry:'Services financiers', email:'contact@sgcongo.cg', website:'www.sgcongo.cg' },
+} as any;
 
 // ─── Métadonnées blocs (pour l'onglet Blocs du mode Template) ────────────────
 
@@ -611,9 +625,10 @@ export default function BulletinDesignerPage() {
     );
   };
 
-  const FACTURE_MODELS: { id: 'forfait' | 'detaillee'; name: string; desc: string }[] = [
+  const FACTURE_MODELS: { id: 'forfait' | 'detaillee' | 'professionnelle'; name: string; desc: string }[] = [
     { id:'forfait',   name:'Forfait simple',      desc:'Reçu compact — forfait, retenues, net à payer. 2 signatures.' },
     { id:'detaillee', name:'Facture détaillée',   desc:'Facture numérotée — congé, total brut, retenue BNC, net à payer.' },
+    { id:'professionnelle', name:'Facture professionnelle', desc:'A4 bleu marine et rouge — tableau, totaux, barre « Net à payer », informations de paiement et cadre de signature.' },
   ];
 
   const FactureTab = () => (
@@ -628,9 +643,9 @@ export default function BulletinDesignerPage() {
       </div>
 
       {FACTURE_MODELS.map(m => {
-        const active = (cfg.factureTemplateId ?? 'forfait') === m.id;
+        const active = ((cfg as any).factureTemplateId ?? 'forfait') === m.id;
         return (
-          <div key={m.id} onClick={() => setCfg(prev => ({ ...prev, factureTemplateId: m.id }))}
+          <div key={m.id} onClick={() => setCfg(prev => ({ ...prev, factureTemplateId: m.id as any }))}
             style={{ padding:'12px 14px', borderRadius:10, cursor:'pointer', marginBottom:8,
               border: active ? `2px solid ${p}` : '1.5px solid var(--border)',
               background: active ? `${p}0d` : 'var(--surface)', transition:'all .15s' }}>
@@ -780,7 +795,9 @@ export default function BulletinDesignerPage() {
           <div style={{ flex:1, overflowY:'auto', padding:'20px', background:'var(--surface-2)', display:'flex', justifyContent:'center' }}>
             <div style={{ width:794, background:'#fff', borderRadius:10, boxShadow:'0 4px 20px rgba(0,0,0,.1)', overflow:'hidden' }}>
               {previewKind === 'facture' ? (
-                cfg.factureTemplateId === 'detaillee' ? (
+                (cfg as any).factureTemplateId === 'professionnelle' ? (
+                  <FactureRendererPro payroll={DEMO_FACTURE_PRO} template={cfg} previewMode />
+                ) : (cfg as any).factureTemplateId === 'detaillee' ? (
                   <FactureRendererDetaillee payroll={DEMO_FACTURE} template={cfg} previewMode />
                 ) : (
                   <FactureRendererForfait payroll={DEMO_FACTURE} template={cfg} previewMode />

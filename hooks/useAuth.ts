@@ -78,6 +78,18 @@ interface User {
   [key: string]: any;
 }
 
+// Le layout dashboard ET RouteGuard appellent useAuth() : sans ça, chaque
+// chargement de page envoie 2× /auth/verify (et, session expirée, 2× /auth/refresh
+// en parallèle). On partage donc la même requête pendant 3 s.
+const sharedCalls = new Map<string, { at: number; p: Promise<Response> }>();
+function sharedPost(key: string, url: string): Promise<Response> {
+  const hit = sharedCalls.get(key);
+  if (hit && Date.now() - hit.at < 3000) return hit.p.then((r) => r.clone());
+  const p = fetch(url, { method: 'POST', credentials: 'include' });
+  sharedCalls.set(key, { at: Date.now(), p });
+  return p.then((r) => r.clone());
+}
+
 export function useAuth() {
   const router   = useRouter();
   const pathname = usePathname();
@@ -101,10 +113,7 @@ export function useAuth() {
 
       // ── 2. Vérification du cookie via /auth/verify ────────────────────────
       try {
-        const res = await fetch(`${API_URL}/auth/verify`, {
-          method:      'POST',
-          credentials: 'include',
-        });
+        const res = await sharedPost('verify', `${API_URL}/auth/verify`);
 
         if (res.ok) {
           // Cookie valide → synchroniser localStorage avec les données fraîches
@@ -120,10 +129,7 @@ export function useAuth() {
 
         } else if (res.status === 401) {
           // ── 3. Cookie access_token expiré → tenter un refresh silencieux ──
-          const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
-            method:      'POST',
-            credentials: 'include',
-          });
+          const refreshRes = await sharedPost('refresh', `${API_URL}/auth/refresh`);
 
           if (refreshRes.ok) {
             // Refresh OK → re-vérifier avec le nouveau cookie
