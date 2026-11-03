@@ -71,7 +71,7 @@ export default function DailyView({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   // ✅ Modifier les heures d'entrée / sortie d'un pointage (mêmes rôles que la suppression)
   const [timesRow, setTimesRow] = useState<any | null>(null);
-  const [timesForm, setTimesForm] = useState({ checkIn: '', checkOut: '', reason: '' });
+  const [timesForm, setTimesForm] = useState({ checkIn: '', checkOut: '', breakStart: '', breakEnd: '', removeBreak: false, reason: '' });
   const [timesSaving, setTimesSaving] = useState(false);
   const [timesError, setTimesError] = useState('');
   const [selectedRow, setSelectedRow] = useState<EmployeeDayDetail | null>(null);
@@ -158,7 +158,14 @@ export default function DailyView({
   const openTimesModal = (att: any) => {
     setTimesError('');
     setTimesRow(att);
-    setTimesForm({ checkIn: toHHMM(att.checkIn), checkOut: toHHMM(att.checkOut), reason: '' });
+    setTimesForm({
+      checkIn: toHHMM(att.checkIn),
+      checkOut: toHHMM(att.checkOut),
+      breakStart: toHHMM(att.pause?.startedAt),
+      breakEnd: toHHMM(att.pause?.endedAt),
+      removeBreak: false,
+      reason: '',
+    });
   };
 
   // Garde le jour d'origine du pointage, ne remplace que l'heure.
@@ -169,20 +176,79 @@ export default function DailyView({
     return d.toISOString();
   };
 
+  // Place une heure « HH:MM » après `refIso` : même jour, ou le lendemain si l'heure est
+  // plus petite (service qui passe minuit).
+  const timeAfter = (refIso: string, hhmm: string) => {
+    const ref = new Date(refIso);
+    const d = new Date(withTime(refIso, hhmm));
+    if (d.getTime() < ref.getTime()) d.setDate(d.getDate() + 1);
+    return d;
+  };
+
+  // Valeurs effectives du formulaire (entrée / sortie / pause) — utilisées par l'aperçu ET l'enregistrement
+  const computeTimes = () => {
+    if (!timesRow) return null;
+    const base = timesRow.checkIn || timesRow.checkOut;
+    if (!base) return null;
+    const inChanged = !!timesForm.checkIn && timesForm.checkIn !== toHHMM(timesRow.checkIn);
+    const outChanged = !!timesForm.checkOut && timesForm.checkOut !== toHHMM(timesRow.checkOut);
+    const effIn: string | null = inChanged
+      ? withTime(timesRow.checkIn || base, timesForm.checkIn)
+      : (timesRow.checkIn ?? null);
+    const effOut: string | null = outChanged
+      ? (timesRow.checkOut
+          ? withTime(timesRow.checkOut, timesForm.checkOut)
+          : timeAfter(effIn || base, timesForm.checkOut).toISOString())
+      : (timesRow.checkOut ?? null);
+
+    const pz = timesRow.pause;
+    const pauseTouched =
+      timesForm.breakStart !== toHHMM(pz?.startedAt) || timesForm.breakEnd !== toHHMM(pz?.endedAt);
+    let bs: Date | null = null;
+    let be: Date | null = null;
+    if (!timesForm.removeBreak && timesForm.breakStart && timesForm.breakEnd) {
+      bs = timeAfter(effIn || base, timesForm.breakStart);
+      be = timeAfter(bs.toISOString(), timesForm.breakEnd);
+    }
+    // Minutes de pause retenues pour l'aperçu
+    let pauseMinutes = 0;
+    if (timesForm.removeBreak) pauseMinutes = 0;
+    else if (bs && be) pauseMinutes = Math.round((be.getTime() - bs.getTime()) / 60_000);
+    else pauseMinutes = Number(pz?.minutes ?? timesRow.breakMinutes ?? 0);
+
+    return { inChanged, outChanged, effIn, effOut, bs, be, pauseTouched, pauseMinutes };
+  };
+
+  const fmtDur = (min: number) => `${Math.floor(min / 60)}h${String(Math.round(min % 60)).padStart(2, '0')}`;
+
   const saveTimes = async () => {
     if (!timesRow) return;
     if (!timesForm.checkIn && !timesForm.checkOut) { setTimesError('Renseignez au moins une heure.'); return; }
     if (timesForm.reason.trim().length < 3) { setTimesError('Motif obligatoire (3 caractères min.).'); return; }
-    const base = timesRow.checkIn || timesRow.checkOut;
-    if (!base) { setTimesError('Pointage sans date de référence.'); return; }
+    const t = computeTimes();
+    if (!t) { setTimesError('Pointage sans date de référence.'); return; }
     const payload: any = { reason: timesForm.reason.trim() };
-    if (timesForm.checkIn && timesForm.checkIn !== toHHMM(timesRow.checkIn)) {
-      payload.checkIn = withTime(timesRow.checkIn || base, timesForm.checkIn);
+    if (t.inChanged && t.effIn) payload.checkIn = t.effIn;
+    if (t.outChanged && t.effOut) payload.checkOut = t.effOut;
+
+    // 🆕 Pause : insertion / modification / suppression
+    if (timesForm.removeBreak) {
+      if (timesRow.pause) payload.removeBreak = true;
+    } else if (t.pauseTouched) {
+      if (!timesForm.breakStart || !timesForm.breakEnd) {
+        setTimesError('Renseignez le début ET la fin de la pause.');
+        return;
+      }
+      if (t.bs && t.be) {
+        payload.breakStart = t.bs.toISOString();
+        payload.breakEnd = t.be.toISOString();
+      }
     }
-    if (timesForm.checkOut && timesForm.checkOut !== toHHMM(timesRow.checkOut)) {
-      payload.checkOut = withTime(timesRow.checkOut || timesRow.checkIn || base, timesForm.checkOut);
+
+    if (!payload.checkIn && !payload.checkOut && !payload.breakStart && !payload.removeBreak) {
+      setTimesError('Aucune modification.');
+      return;
     }
-    if (!payload.checkIn && !payload.checkOut) { setTimesError('Aucune heure modifiée.'); return; }
     setTimesSaving(true);
     setTimesError('');
     try {
@@ -679,7 +745,7 @@ export default function DailyView({
 
       {timesRow && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4">
+          <div className="bg-[var(--surface)] rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-bold text-[var(--text)]">Modifier les heures</h2>
             <p className="text-sm text-[var(--text-muted)]">{timesRow.employee.firstName} {timesRow.employee.lastName}</p>
             <div className="grid grid-cols-2 gap-3">
@@ -696,6 +762,52 @@ export default function DailyView({
                   className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
               </label>
             </div>
+            {/* 🆕 Pause : ajouter / corriger / supprimer */}
+            <div className="rounded-xl border border-[var(--border)] p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[var(--text)] flex items-center gap-1"><Coffee size={12} /> Pause</span>
+                {timesRow.pause && (
+                  <button type="button"
+                    onClick={() => setTimesForm(f => ({ ...f, removeBreak: !f.removeBreak }))}
+                    className="text-[11px] font-semibold text-red-500 hover:underline">
+                    {timesForm.removeBreak ? 'Annuler la suppression' : 'Supprimer la pause'}
+                  </button>
+                )}
+              </div>
+              <div className={`grid grid-cols-2 gap-3 ${timesForm.removeBreak ? 'opacity-40' : ''}`}>
+                <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
+                  Début pause
+                  <input type="time" value={timesForm.breakStart} disabled={timesForm.removeBreak}
+                    onChange={e => setTimesForm(f => ({ ...f, breakStart: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
+                </label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] space-y-1">
+                  Fin pause
+                  <input type="time" value={timesForm.breakEnd} disabled={timesForm.removeBreak}
+                    onChange={e => setTimesForm(f => ({ ...f, breakEnd: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)]" />
+                </label>
+              </div>
+              {!timesRow.pause && !timesForm.breakStart && !timesForm.breakEnd && (
+                <p className="text-[11px] text-[var(--text-muted)]">Aucune pause pointée. Renseignez début et fin pour l'ajouter.</p>
+              )}
+            </div>
+
+            {(() => {
+              const t = computeTimes();
+              if (!t?.effIn || !t?.effOut) return null;
+              const gross = (new Date(t.effOut).getTime() - new Date(t.effIn).getTime()) / 60_000;
+              if (gross <= 0) return null;
+              const net = Math.max(0, gross - t.pauseMinutes);
+              return (
+                <div className="rounded-xl bg-[var(--surface-2)] p-3 text-xs space-y-1">
+                  <div className="flex justify-between text-[var(--text-muted)]"><span>Présence (entrée → sortie)</span><span className="font-mono">{fmtDur(gross)}</span></div>
+                  <div className="flex justify-between text-[var(--text-muted)]"><span>Pause</span><span className="font-mono">− {fmtDur(t.pauseMinutes)}</span></div>
+                  <div className="flex justify-between font-bold text-[var(--text)] border-t border-[var(--border)] pt-1"><span>Temps réellement travaillé</span><span className="font-mono">{fmtDur(net)}</span></div>
+                </div>
+              );
+            })()}
+
             <label className="block text-xs font-semibold text-[var(--text-muted)] space-y-1">
               Motif (obligatoire)
               <input type="text" value={timesForm.reason}
