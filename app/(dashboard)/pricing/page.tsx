@@ -45,6 +45,16 @@ function PricingContent() {
   const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
 
+  // 🎟️ Code de réduction + 📄 tarif négocié (devis) — uniquement avec YabetoPay
+  const [discountCode, setDiscountCode] = useState('');
+  const [quote, setQuote] = useState<{ id: string; plan: string; amount: number; months: number } | null>(null);
+
+  useEffect(() => {
+    api.get<{ quote: any }>('/subscriptions/quote')
+      .then((r) => setQuote(r.quote))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     api.get<{ provider: 'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' }>('/subscriptions/payment-provider')
       .then((r) => setActiveProvider(r.provider))
@@ -73,7 +83,11 @@ function PricingContent() {
     if (activeProvider === 'YABETOOPAY') {
       setUpgradingPlan(plan);
       try {
-        const data = await api.post<PaymentIntent>('/subscriptions/upgrade', { plan, billingPeriod });
+        const data = await api.post<PaymentIntent>('/subscriptions/upgrade', {
+          plan,
+          billingPeriod,
+          discountCode: discountCode.trim() || undefined,
+        });
         setPaymentIntent(data);
       } catch (error: any) {
         toast.error(error.message || "Erreur lors de l'initialisation du paiement");
@@ -84,6 +98,20 @@ function PricingContent() {
     }
 
     setCheckoutTarget({ plan, billingPeriod, amount });
+  };
+
+  // Paiement au tarif négocié (devis enregistré par le super admin)
+  const handlePayQuote = async () => {
+    if (activeProvider !== 'YABETOOPAY') {
+      toast.error("Le paiement sur devis n'est pas disponible avec ce moyen de paiement.");
+      return;
+    }
+    try {
+      const data = await api.post<PaymentIntent>('/subscriptions/upgrade', { useQuote: true });
+      setPaymentIntent(data);
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'initialisation du paiement");
+    }
   };
 
   if (isLoading) {
@@ -184,6 +212,33 @@ function PricingContent() {
             ))}
           </div>
         </div>
+
+        {/* Tarif négocié (devis) — YabetoPay uniquement */}
+        {activeProvider === 'YABETOOPAY' && quote && (
+          <div className="max-w-xl mx-auto mb-8 glass-card rounded-2xl p-5 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold">Votre tarif négocié</p>
+              <p className="text-sm text-slate-500">
+                {quote.amount.toLocaleString('fr-FR')} FCFA pour {quote.months} mois
+              </p>
+            </div>
+            <button onClick={handlePayQuote} className="px-4 py-2 rounded-xl bg-purple-600 text-white text-sm">
+              Payer
+            </button>
+          </div>
+        )}
+
+        {/* Code de réduction — YabetoPay uniquement */}
+        {activeProvider === 'YABETOOPAY' && (
+          <div className="max-w-xs mx-auto mb-8">
+            <input
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+              placeholder="Code de réduction (optionnel)"
+              className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent text-sm text-center"
+            />
+          </div>
+        )}
 
         {/* Cartes */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">

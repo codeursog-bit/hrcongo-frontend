@@ -25,6 +25,10 @@ export interface PaymentIntent {
   plan: string;
   billingPeriod: string;
   amount: number;
+  originalAmount?: number | null;
+  discountAmount?: number;
+  isQuote?: boolean;
+  months?: number | null;
 }
 
 const OPERATORS = [
@@ -102,7 +106,7 @@ export function YabetooCheckoutModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <div>
             <p className="text-sm font-bold text-gray-900 dark:text-white">Paiement Mobile Money</p>
-            <p className="text-xs text-gray-400 mt-0.5">Plan {planLabel} · {intent.amount.toLocaleString('fr-FR')} FCFA/mois</p>
+            <p className="text-xs text-gray-400 mt-0.5">Plan {planLabel} · {intent.amount.toLocaleString('fr-FR')} FCFA{intent.isQuote ? ` (${intent.months} mois, tarif négocié)` : intent.billingPeriod === 'yearly' ? '/an' : '/mois'}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
             <X size={15} className="text-gray-500" />
@@ -145,6 +149,19 @@ export function YabetooCheckoutModal({
               </div>
               <p className="mt-1.5 text-[11px] text-gray-400">Le numéro associé à votre compte {OPERATORS.find(o => o.value === operator)?.label}</p>
             </div>
+
+            {!!intent.discountAmount && intent.originalAmount && (
+              <div className="px-1 space-y-1">
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>Prix catalogue</span>
+                  <span className="line-through font-mono">{intent.originalAmount.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-400">
+                  <span>Réduction</span>
+                  <span className="font-mono">-{intent.discountAmount.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+              </div>
+            )}
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 flex items-center justify-between">
               <span className="text-xs text-gray-500 dark:text-gray-400">Montant à payer</span>

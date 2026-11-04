@@ -3,7 +3,7 @@
 // ============================================================================
 import {
   LayoutDashboard, Building2, BarChart2, CreditCard, Bug,
-  Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio, Layers, Bell, HardDrive,
+  Terminal, Users, Settings, Link2, BookOpen, Repeat, ScrollText, Radio, Layers, Bell, HardDrive, Wallet,
 } from 'lucide-react';
 
 export const NAVIGATION_ITEMS = [
@@ -15,6 +15,7 @@ export const NAVIGATION_ITEMS = [
   { path: '/admin/push-notifications', label: 'Notifications Push', icon: Bell },
   { path: '/admin/analytics',    label: 'Analytics',     icon: BarChart2       },
   { path: '/admin/billing',      label: 'Revenus',       icon: CreditCard      },
+  { path: '/admin/facturation',  label: 'Facturation',   icon: Wallet          },
   { path: '/admin/monitoring',   label: 'Monitoring',    icon: Terminal        },
   { path: '/admin/serveur',      label: 'Serveur',       icon: HardDrive       },
   { path: '/admin/mes-logs',         label: 'Mes Logs Système',  icon: ScrollText      },

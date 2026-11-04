@@ -79,6 +79,50 @@ export const adminService = {
   unarchiveCompany: (id: string) =>
     adminFetch<any>(`/admin/companies/${id}/unarchive`, 'POST'),
 
+  // ── Config facturation (prix, codes, devis, agrégateur) ─────────────────
+  getPlanPrices: () => adminFetch<any[]>('/admin/billing-config/plans'),
+  updatePlanPrice: (plan: string, body: { priceMonthly: number; priceYearly?: number }) =>
+    adminFetch<any>(`/admin/billing-config/plans/${plan}`, 'PATCH', body),
+  resetPlanPrice: (plan: string) =>
+    adminFetch<any>(`/admin/billing-config/plans/${plan}`, 'DELETE'),
+
+  getDiscountCodes: () => adminFetch<any[]>('/admin/billing-config/discount-codes'),
+  createDiscountCode: (body: any) =>
+    adminFetch<any>('/admin/billing-config/discount-codes', 'POST', body),
+  updateDiscountCode: (id: string, body: any) =>
+    adminFetch<any>(`/admin/billing-config/discount-codes/${id}`, 'PATCH', body),
+
+  getCustomQuotes: (companyId?: string) =>
+    adminFetch<any[]>(`/admin/billing-config/quotes${companyId ? `?companyId=${companyId}` : ''}`),
+  createCustomQuote: (body: any) =>
+    adminFetch<any>('/admin/billing-config/quotes', 'POST', body),
+  cancelCustomQuote: (id: string) =>
+    adminFetch<any>(`/admin/billing-config/quotes/${id}/cancel`, 'PATCH'),
+
+  getPaymentProvider: () => adminFetch<any>('/admin/billing-config/provider'),
+  setPaymentProvider: (provider: 'YABETOOPAY' | 'MOTEKI' | 'CHARIOW') =>
+    adminFetch<any>('/admin/billing-config/provider', 'PATCH', { provider }),
+
+  // ── Factures ────────────────────────────────────────────────────────────
+  getInvoices: (filters?: { search?: string; companyId?: string; page?: number }) => {
+    const p = new URLSearchParams();
+    if (filters?.search)    p.set('search', filters.search);
+    if (filters?.companyId) p.set('companyId', filters.companyId);
+    if (filters?.page)      p.set('page', String(filters.page));
+    return adminFetch<any>(`/admin/billing-config/invoices?${p}`);
+  },
+  resendInvoice: (id: string) =>
+    adminFetch<any>(`/admin/billing-config/invoices/${id}/resend`, 'POST'),
+  // Téléchargement PDF (cookie HttpOnly → fetch direct, pas adminFetch qui attend du JSON)
+  downloadInvoice: async (id: string, number: string) => {
+    const res = await fetch(`${API_URL}/admin/billing-config/invoices/${id}/pdf`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Téléchargement impossible');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = `${number}.pdf`; a.click();
+    URL.revokeObjectURL(url);
+  },
+
   // ── Abonnements ──────────────────────────────────────────────────────────
   // ── Abonnements ──────────────────────────────────────────────────────────
   getSubscriptions: (filters?: { expiringInDays?: number; expired?: boolean; status?: string }) => {
