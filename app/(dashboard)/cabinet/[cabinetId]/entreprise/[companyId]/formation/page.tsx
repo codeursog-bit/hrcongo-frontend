@@ -28,7 +28,7 @@ export default function CabinetFormationPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get(`/training?companyId=${companyId}`)
+    api.get(`/training/courses?companyId=${companyId}`)
       .then((r: any) => setCourses(Array.isArray(r) ? r : r?.data ?? []))
       .catch(() => setCourses([]))
       .finally(() => setLoading(false));

@@ -16,6 +16,9 @@ const CONTRACT_TYPES: Record<string, string> = {
 };
 
 const STATUS_CFG: Record<string, { label: string; variant: any }> = {
+  DRAFT: { label: 'Brouillon', variant: 'default' },
+  PUBLISHED: { label: 'Publiée', variant: 'success' },
+  ARCHIVED: { label: 'Archivée', variant: 'default' },
   OPEN:    { label: 'Ouverte',  variant: 'success' },
   CLOSED:  { label: 'Fermée',  variant: 'default'  },
   ON_HOLD: { label: 'En pause', variant: 'warning'  },
@@ -31,11 +34,13 @@ export default function CabinetRecrutementPage() {
   const [offers,  setOffers]  = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search,  setSearch]  = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get(`/recruitment/offers?companyId=${companyId}`)
+    setLoading(true); setError('');
+    api.get(`/recruitment/jobs?companyId=${companyId}`)
       .then((r: any) => setOffers(Array.isArray(r) ? r : r?.data ?? []))
-      .catch(() => setOffers([]))
+      .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [companyId]);
 
@@ -45,9 +50,9 @@ export default function CabinetRecrutementPage() {
   });
 
   const stats = {
-    open:   offers.filter(o => o.status === 'OPEN').length,
+    open:   offers.filter(o => o.status === 'PUBLISHED').length,
     filled: offers.filter(o => o.status === 'FILLED').length,
-    total:  offers.reduce((s, o) => s + (o._count?.applications ?? 0), 0),
+    total:  offers.reduce((s, o) => s + (o._count?.candidates ?? 0), 0),
   };
 
   return (
@@ -80,7 +85,7 @@ export default function CabinetRecrutementPage() {
         <SearchBar value={search} onChange={setSearch} placeholder="Rechercher une offre..." />
       </div>
 
-      {loading ? <LoadingInline /> : filtered.length === 0 ? (
+      {error ? <p role="alert" className="text-red-300">{error}</p> : loading ? <LoadingInline /> : filtered.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Ico.UserCog size={22} color={C.textMuted} />}

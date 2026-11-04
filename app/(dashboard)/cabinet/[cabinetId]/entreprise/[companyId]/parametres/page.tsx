@@ -375,8 +375,8 @@ export default function CabinetEntrepriseParametresPage() {
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Taux CNSS salarial (%)',  key: 'cnssSalarialRate' },
-                { label: 'Taux CNSS patronal (%)',  key: 'cnssEmployerRate' },
+                { label: 'Taux CNSS salarial (%) — Fixe Décret',  key: 'cnssSalarialRate', readOnly: true },
+                { label: 'Taux CNSS patronal (%) — Fixe Décret',  key: 'cnssEmployerRate', readOnly: true },
                 { label: 'H.Sup ×10% — taux (%)',  key: 'overtimeRate10'   },
                 { label: 'H.Sup ×25% — taux (%)',  key: 'overtimeRate25'   },
                 { label: 'H.Sup ×50% — taux (%)',  key: 'overtimeRate50'   },
@@ -386,8 +386,9 @@ export default function CabinetEntrepriseParametresPage() {
                   key={f.key}
                   label={f.label}
                   type="number"
+                  disabled={f.readOnly}
                   value={payrollSettings[f.key] ?? ''}
-                  onChange={e => setPayrollSettings({ ...payrollSettings, [f.key]: parseFloat(e.target.value) || 0 })}
+                  onChange={e => !f.readOnly && setPayrollSettings({ ...payrollSettings, [f.key]: parseFloat(e.target.value) || 0 })}
                 />
               ))}
             </div>

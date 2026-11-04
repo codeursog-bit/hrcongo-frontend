@@ -121,9 +121,19 @@ export default function CabinetDocumentsPage() {
                     <div className="flex items-center justify-center gap-1">
                       {doc.fileUrl && (
                         <a
-                          href={doc.fileUrl}
+                          href="#"
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={async e => {
+                            e.preventDefault();
+                            const tab = window.open('about:blank', '_blank');
+                            if (tab) tab.opener = null;
+                            try {
+                              const result = await api.get<{ url: string }>(`/documents/${doc.id}/download`);
+                              if (tab) tab.location.href = result.url;
+                              else window.location.assign(result.url);
+                            } catch (err: any) { tab?.close(); window.alert(err.message || 'Document inaccessible'); }
+                          }}
                           className="p-1.5 rounded-lg transition-colors"
                           style={{ color: C.textMuted }}
                           onMouseEnter={e => (e.currentTarget.style.color = C.textPrimary)}
@@ -134,8 +144,15 @@ export default function CabinetDocumentsPage() {
                       )}
                       {doc.fileUrl && (
                         <a
-                          href={doc.fileUrl}
+                          href="#"
                           download
+                          onClick={async e => {
+                            e.preventDefault();
+                            try {
+                              const result = await api.get<{ url: string }>(`/documents/${doc.id}/download`);
+                              const a = document.createElement('a'); a.href = result.url; a.download = doc.name; a.rel = 'noopener noreferrer'; a.click();
+                            } catch (err: any) { window.alert(err.message || 'Document inaccessible'); }
+                          }}
                           className="p-1.5 rounded-lg transition-colors"
                           style={{ color: C.textMuted }}
                           onMouseEnter={e => (e.currentTarget.style.color = C.textPrimary)}

@@ -8,6 +8,7 @@ import { useParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/services/api';
 import { C, Ico } from '@/components/cabinet/cabinet-ui';
+import { CabinetRole, canAccessCabinetPath } from '@/lib/cabinet-access';
 
 interface CompanyInfo { id: string; legalName: string; tradeName: string | null; city: string }
 
@@ -51,17 +52,36 @@ export default function CabinetCompanyLayout({ children }: { children: React.Rea
 
   const [company,   setCompany]   = useState<CompanyInfo | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({ Config: true });
+  const [verifiedKey, setVerifiedKey] = useState('');
+  const [role, setRole] = useState<CabinetRole>('GESTIONNAIRE');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    sessionStorage.setItem('cabinetContext',  cabinetId);
-    sessionStorage.setItem('activeCompanyId', companyId);
-    api.get(`/companies/${companyId}`)
-      .then((r: any) => setCompany(r))
-      .catch(() => null);
+    let cancelled = false;
+    setError('');
+    api.get(`/cabinet/${cabinetId}/companies/${companyId}/context`)
+      .then((r: any) => {
+        if (cancelled) return;
+        setCompany(r.company); setRole(r.role); setVerifiedKey(`${cabinetId}/${companyId}`);
+        sessionStorage.setItem('cabinetContext', cabinetId);
+        sessionStorage.setItem('activeCompanyId', companyId);
+      })
+      .catch((e: Error) => { if (!cancelled) { setCompany(null); setError(e.message); } });
+    return () => {
+      cancelled = true;
+      if (sessionStorage.getItem('activeCompanyId') === companyId) {
+        sessionStorage.removeItem('activeCompanyId');
+        sessionStorage.removeItem('cabinetContext');
+      }
+    };
   }, [cabinetId, companyId]);
 
   const isActive = (slug: string) => pathname.includes(`/${slug}`);
   const toggle   = (s: string)    => setCollapsed(p => ({ ...p, [s]: !p[s] }));
+
+  if (error) return <div className="p-8 text-slate-100 bg-slate-950 min-h-screen"><h1 className="text-xl mb-4">Accès à la PME refusé</h1><p>{error}</p><Link className="text-cyan-400" href={`/cabinet/${cabinetId}/mes-pme`}>Retour aux PME</Link></div>;
+  if (!company || verifiedKey !== `${cabinetId}/${companyId}`) return <div className="p-8 text-slate-100 bg-slate-950 min-h-screen" role="status">Vérification de l’accès à la PME…</div>;
+  if (!canAccessCabinetPath(role, pathname, cabinetId)) return <div className="p-8 text-slate-100 bg-slate-950 min-h-screen">Cette page est réservée à l’administrateur du cabinet. <Link className="text-cyan-400" href={`/cabinet/${cabinetId}/entreprise/${companyId}/dashboard`}>Retour au dossier</Link></div>;
 
   return (
     /**
@@ -172,7 +192,8 @@ export default function CabinetCompanyLayout({ children }: { children: React.Rea
         >
           <nav style={{ display: 'flex', flexDirection: 'column', padding: '12px 8px' }}>
             {SECTIONS.map(({ key, label }) => {
-              const items       = NAV.filter(n => n.section === key);
+              const items = NAV.filter(n => n.section === key && canAccessCabinetPath(role, `/cabinet/${cabinetId}/entreprise/${companyId}/${n.slug}`, cabinetId));
+              if (!items.length) return null;
               const isCollapsed = collapsed[key];
 
               return (

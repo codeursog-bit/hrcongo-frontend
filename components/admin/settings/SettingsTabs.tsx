@@ -113,16 +113,17 @@ const PayrollSettings = ({ settings, onUpdate }: any) => {
                   <span className="text-gray-400">%</span>
                </div>
             </div>
-            <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
-               <label className="text-xs text-gray-500 uppercase">Employer Rate</label>
+            <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg opacity-75">
+               <label className="text-xs text-gray-400 uppercase font-semibold">Taux CNSS Patronal (Décret n°99-284)</label>
                <div className="flex items-center mt-2">
                   <input 
                     type="number" 
-                    value={settings?.cnssEmployerRate || 16}
-                    onChange={(e) => onUpdate({ ...settings, cnssEmployerRate: Number(e.target.value) })}
-                    className="bg-transparent text-xl font-bold text-white w-16 outline-none" 
+                    readOnly
+                    disabled
+                    value={20.28}
+                    className="bg-transparent text-xl font-bold text-emerald-400 w-20 outline-none cursor-not-allowed" 
                   />
-                  <span className="text-gray-400">%</span>
+                  <span className="text-gray-400">% (Fixe)</span>
                </div>
             </div>
          </div>

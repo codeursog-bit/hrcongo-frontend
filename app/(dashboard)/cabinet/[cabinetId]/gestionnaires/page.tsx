@@ -90,7 +90,7 @@ const IcoLoader = () => (
 );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type CabinetRole = 'CABINET_ADMIN' | 'CABINET_MEMBER';
+type CabinetRole = 'CABINET_ADMIN' | 'GESTIONNAIRE';
 
 interface CabinetMember {
   id:     string;
@@ -113,7 +113,7 @@ const roleConfig: Record<CabinetRole, { label: string; iconEl: JSX.Element; colo
     bgColor: 'rgba(245,158,11,0.1)',
     borderColor: 'rgba(245,158,11,0.25)',
   },
-  CABINET_MEMBER: {
+  GESTIONNAIRE: {
     label: 'Membre',
     iconEl: <IcoShield color="#06b6d4" />,
     color: '#06b6d4',
@@ -149,7 +149,7 @@ export default function GestionnairesPage() {
   // Formulaire invitation
   const [showForm,    setShowForm]   = useState(false);
   const [invEmail,    setInvEmail]   = useState('');
-  const [invRole,     setInvRole]    = useState<CabinetRole>('CABINET_MEMBER');
+  const [invRole,     setInvRole]    = useState<CabinetRole>('GESTIONNAIRE');
   const [inviting,    setInviting]   = useState(false);
   const [invError,    setInvError]   = useState('');
   const [invSuccess,  setInvSuccess] = useState('');
@@ -318,7 +318,7 @@ export default function GestionnairesPage() {
               <div>
                 <label className="block text-sm mb-2" style={{ color: T.muted }}>Rôle</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {(['CABINET_ADMIN', 'CABINET_MEMBER'] as CabinetRole[]).map(role => {
+                  {(['CABINET_ADMIN', 'GESTIONNAIRE'] as CabinetRole[]).map(role => {
                     const conf     = roleConfig[role];
                     const selected = invRole === role;
                     return (

@@ -13,6 +13,8 @@ import {
 } from 'recharts';
 import { api } from '@/services/api';
 import CabinetSidebar from '../CabinetSidebar';
+import { useCabinetAccess } from '@/components/cabinet/CabinetAccessProvider';
+import { canAccessCabinetPath } from '@/lib/cabinet-access';
 import {
   C, Ico, PageShell, TopBar, Card, KpiCard,
   SectionHeader, Badge, Avatar, Btn, Banner,
@@ -74,6 +76,7 @@ export default function CabinetDashboardPage() {
   const params    = useParams();
   const router    = useRouter();
   const cabinetId = params.cabinetId as string;
+  const access = useCabinetAccess();
 
   const [data,    setData]    = useState<DashboardData | null>(null);
   const [sub,     setSub]     = useState<Subscription | null>(null);
@@ -88,7 +91,7 @@ export default function CabinetDashboardPage() {
       try {
         const [dash, subscription] = await Promise.all([
           api.get(`/cabinet/${cabinetId}/dashboard`),
-          api.get(`/cabinet/${cabinetId}/subscription`),
+          access?.canAdminister ? api.get(`/cabinet/${cabinetId}/subscription`) : Promise.resolve(null),
         ]);
         setData(dash as DashboardData);
         setSub(subscription as Subscription);
@@ -96,7 +99,7 @@ export default function CabinetDashboardPage() {
       finally { setLoading(false); }
     };
     load();
-  }, [cabinetId]);
+  }, [cabinetId, access?.canAdminister]);
 
   const agg = useMemo(() => {
     if (!data) return null;
@@ -183,7 +186,7 @@ export default function CabinetDashboardPage() {
             <Banner
               icon={<Ico.Alert size={16} color={C.amber} />}
               color={C.amber}
-              title={`${data.pendingPayrolls} PME ont des bulletins en attente ce mois`}
+              title={`${data.pendingPayrolls} bulletin(s) en attente de traitement`}
               action={{ label: 'Traiter', onClick: () => router.push(`/cabinet/${cabinetId}/mes-pme?filter=PENDING`) }}
             />
           )}
@@ -212,14 +215,14 @@ export default function CabinetDashboardPage() {
               icon={<Ico.Dollar size={18} color={C.emerald} />}
               accentColor={C.emerald}
             />
-            <KpiCard
+            {access?.canAdminister && <KpiCard
               label="Plan cabinet"
               value={sub ? `${sub.currentCompanies ?? 0}/${sub.maxCompanies ?? 5}` : '—'}
               sub={sub ? `Plan ${sub.plan} · ${sub.currentEmployees ?? 0} employés` : 'Chargement…'}
               icon={<Ico.Wallet size={18} color={C.amber} />}
               accentColor={C.amber}
               onClick={() => router.push(`/cabinet/${cabinetId}/abonnement`)}
-            />
+            />}
           </div>
 
           {/* ── KPI secondaires ─────────────────────────────────────────── */}
@@ -385,13 +388,13 @@ export default function CabinetDashboardPage() {
                 {(agg?.topPme ?? []).length === 0 ? (
                   <div className="py-10 text-center text-sm" style={{ color: C.textMuted }}>
                     Aucune PME ·{' '}
-                    <button
+                    {access?.canAdminister && <button
                       onClick={() => router.push(`/cabinet/${cabinetId}/ajouter-pme`)}
                       className="transition-opacity hover:opacity-75"
                       style={{ color: C.indigoL }}
                     >
                       Ajouter
-                    </button>
+                    </button>}
                   </div>
                 ) : (
                   (agg?.topPme ?? []).map((company, idx) => {
@@ -441,7 +444,7 @@ export default function CabinetDashboardPage() {
             {/* Accès rapides */}
             <div className="space-y-2.5">
               <p className="text-sm font-semibold px-1 mb-3" style={{ color: C.textPrimary }}>Accès rapides</p>
-              {quickActions.map((a, i) => (
+              {quickActions.filter(a => !!access && canAccessCabinetPath(access.role, `/cabinet/${cabinetId}/${a.href}`, cabinetId)).map((a, i) => (
                 <Card
                   key={i}
                   onClick={() => router.push(`/cabinet/${cabinetId}/${a.href}`)}

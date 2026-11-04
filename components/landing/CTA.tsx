@@ -12,7 +12,7 @@ export function CTA() {
           Configurez votre première paie en 10 minutes.
         </h2>
         <p className="mt-4 text-[16px] text-[#8B8F98]">
-          Aucune carte bancaire requise pour commencer l'essai.
+          30 jours d'essai gratuit · Aucune carte bancaire requise.
         </p>
         <Link
           href="/auth/register"

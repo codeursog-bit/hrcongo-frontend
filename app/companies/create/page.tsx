@@ -636,15 +636,15 @@ export default function CreateCompanyPage() {
                         className="overflow-hidden"
                       >
                         <div className="ml-9 p-4 bg-emerald-500/8 border border-emerald-500/25 rounded-xl">
-                          <label className="block text-[11px] font-bold text-emerald-400 mb-2 uppercase tracking-wide">Taux CNSS Patronale</label>
+                          <label className="block text-[11px] font-bold text-emerald-400 mb-2 uppercase tracking-wide">Taux CNSS Patronale (Fixé par décret)</label>
                           <div className="flex items-center gap-3">
                             <input
                               type="number" name="cnssEmployerRate" min="0" max="50" step="0.5"
-                              value={form.cnssEmployerRate} onChange={handleChange}
-                              className="w-24 p-2.5 bg-white/5 border border-emerald-500/30 rounded-xl font-mono font-bold text-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 outline-none text-sm"
+                              value={20.28} readOnly disabled
+                              className="w-24 p-2.5 bg-white/5 border border-emerald-500/30 rounded-xl font-mono font-bold text-emerald-400 outline-none text-sm cursor-not-allowed opacity-80"
                             />
                             <span className="text-xl font-bold text-gray-500">%</span>
-                            <p className="text-xs text-gray-500">Taux proposé : <strong className="text-emerald-400">20,28%</strong> · à adapter à votre régime</p>
+                            <p className="text-xs text-gray-500">Taux proposé : <strong className="text-emerald-400">20,28%</strong> (Légal Congo) · Fixe</p>
                           </div>
                         </div>
                       </motion.div>

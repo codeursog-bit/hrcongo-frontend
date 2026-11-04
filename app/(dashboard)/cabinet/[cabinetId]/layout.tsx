@@ -5,6 +5,7 @@
 'use client';
 
 import React from 'react';
+import CabinetAccessProvider, { useCabinetAccess } from '@/components/cabinet/CabinetAccessProvider';
 import CabinetOnboardingChecklist from '@/components/onboarding/CabinetOnboardingChecklist';
 
 // ─── ErrorBoundary simple ─────────────────────────────────────────────────────
@@ -37,17 +38,20 @@ class ChecklistErrorBoundary extends React.Component<
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
 
+function CabinetChecklist() {
+  const access = useCabinetAccess();
+  return access?.canAdminister ? <ChecklistErrorBoundary><CabinetOnboardingChecklist /></ChecklistErrorBoundary> : null;
+}
+
 export default function CabinetLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <ChecklistErrorBoundary>
-        <CabinetOnboardingChecklist />
-      </ChecklistErrorBoundary>
+    <CabinetAccessProvider>
+      <CabinetChecklist />
       {children}
-    </>
+    </CabinetAccessProvider>
   );
 }

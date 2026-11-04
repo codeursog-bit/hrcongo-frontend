@@ -7,6 +7,9 @@
 
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useCabinetAccess } from '@/components/cabinet/CabinetAccessProvider';
+import { canAccessCabinetPath } from '@/lib/cabinet-access';
+import { api } from '@/services/api';
 
 interface CabinetSidebarProps {
   cabinetId: string;
@@ -152,7 +155,12 @@ function getInitials(email?: string, name?: string): string {
 export default function CabinetSidebar({ cabinetId, userEmail, userName }: CabinetSidebarProps) {
   const router   = useRouter();
   const pathname = usePathname();
-  const nav      = buildNav(cabinetId);
+  const access = useCabinetAccess();
+  const nav = buildNav(cabinetId).map(group => ({ ...group,
+    children: group.children?.filter(child => !!access && canAccessCabinetPath(access.role, `/cabinet/${cabinetId}/${child.slug}`, cabinetId)),
+  })).filter(group => group.slug
+    ? !!access && canAccessCabinetPath(access.role, `/cabinet/${cabinetId}/${group.slug}`, cabinetId)
+    : !!group.children?.length);
 
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set(['mes-pme']));
 
@@ -173,7 +181,15 @@ export default function CabinetSidebar({ cabinetId, userEmail, userName }: Cabin
     return group.children?.some(c => isActive(c.slug)) ?? false;
   };
 
-  const logout = () => { localStorage.clear(); router.push('/auth/login'); };
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout', {});
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('cabinetContext');
+      sessionStorage.removeItem('activeCompanyId');
+      router.replace('/auth/login');
+    } catch (e: any) { window.alert(e.message || 'La déconnexion a échoué. Réessayez.'); }
+  };
 
   const initials = getInitials(userEmail, userName);
 

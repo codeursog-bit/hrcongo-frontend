@@ -1,4 +1,5 @@
 'use client';
+import { useCabinetAccess } from '@/components/cabinet/CabinetAccessProvider';
 
 // app/(dashboard)/cabinet/[cabinetId]/mes-pme/page.tsx
 // REFONTE UX ONLY — 100% logique originale preservee, no Lucide
@@ -192,9 +193,8 @@ export default function MesPmePage() {
       .finally(()=>setLoading(false));
   },[cabinetId]);
 
+  const access = useCabinetAccess();
   const openCompany=(companyId:string)=>{
-    sessionStorage.setItem('cabinetContext',cabinetId);
-    sessionStorage.setItem('activeCompanyId',companyId);
     router.push(`/cabinet/${cabinetId}/entreprise/${companyId}/dashboard`);
   };
 
@@ -227,14 +227,14 @@ export default function MesPmePage() {
             <h1 className="text-2xl font-bold" style={{color:T.text}}>Mes PME clientes</h1>
             <p className="text-sm mt-0.5" style={{color:T.muted}}>{companies.length} entreprise{companies.length>1?'s':''} sous gestion</p>
           </div>
-          <button onClick={()=>router.push(`/cabinet/${cabinetId}/ajouter-pme`)}
+          {access?.canAdminister && <button onClick={()=>router.push(`/cabinet/${cabinetId}/ajouter-pme`)}
             className="flex items-center gap-2 rounded-xl text-sm font-semibold"
             style={{padding:'10px 18px',background:T.indigo,color:'#fff',border:'none',cursor:'pointer'}}
             onMouseEnter={e=>(e.currentTarget.style.background='#4f46e5')}
             onMouseLeave={e=>(e.currentTarget.style.background=T.indigo)}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
             Ajouter une PME
-          </button>
+          </button>}
         </div>
 
         {/* ── Barre filtres + vue ── */}
@@ -308,7 +308,7 @@ export default function MesPmePage() {
             <p className="text-sm mt-3" style={{color:T.muted}}>
               {search||filter!=='ALL' ? 'Aucune PME ne correspond aux filtres' : "Aucune PME cliente pour l'instant"}
             </p>
-            {!search && filter==='ALL' && (
+            {access?.canAdminister && !search && filter==='ALL' && (
               <button onClick={()=>router.push(`/cabinet/${cabinetId}/ajouter-pme`)}
                 className="mt-4 rounded-xl text-sm font-semibold"
                 style={{padding:'9px 20px',background:'rgba(99,102,241,0.12)',border:'1px solid rgba(99,102,241,0.28)',color:T.indigoL,cursor:'pointer'}}>
