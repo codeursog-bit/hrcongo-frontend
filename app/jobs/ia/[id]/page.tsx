@@ -31,6 +31,7 @@ interface ApplicationResult {
   strengths?: string[];
   shouldTakeTest: boolean;
   candidateId?: string; // ✅ AJOUTÉ
+  testToken?: string;
 }
 
 export default function JobApplyIAPage({ params }: { params: { id: string } }) {
@@ -119,6 +120,7 @@ export default function JobApplyIAPage({ params }: { params: { id: string } }) {
       const result = await res.json();
       
       if (res.ok) {
+        if (result.candidateId && result.testToken) sessionStorage.setItem(`recruitment-test:${result.candidateId}`, result.testToken);
         setApplicationResult(result);
       } else {
         alert(result.message || "Erreur lors de l'envoi.");

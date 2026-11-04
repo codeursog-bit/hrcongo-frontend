@@ -1,3 +1,4 @@
+import { localDateKey, attendanceCutoff, monthlyAttendanceStatus } from '@/lib/attendance-calendar';
 import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/services/api';
@@ -15,17 +16,8 @@ interface MonthlyViewProps {
 export default function MonthlyView({ data, date, setDate, userRole, userDepartment, canRecordAttendanceForAll = false }: MonthlyViewProps) {
 
   const [companyCreatedAt, setCompanyCreatedAt] = useState<Date | null>(null);
-  const [officialStartHour, setOfficialStartHour] = useState<number>(8);
-  const [lateToleranceMinutes, setLateToleranceMinutes] = useState<number>(60);
-  const [workDays, setWorkDays] = useState<number[]>([1, 2, 3, 4, 5]);
-
-  useEffect(() => {
-    if (data?.settings) {
-      setOfficialStartHour(data.settings.officialStartHour || 8);
-      setLateToleranceMinutes(data.settings.lateToleranceMinutes || 0);
-      setWorkDays(data.settings.workDays || [1, 2, 3, 4, 5]);
-    }
-  }, [data?.settings]);
+  const settings = data?.settings ?? {};
+  const workDays: number[] = settings.workDays ?? [1, 2, 3, 4, 5];
 
   useEffect(() => {
     const fetchCompanyInfo = async () => {
@@ -42,20 +34,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
   }, []);
 
   const today = new Date();
-  const currentDayStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-    officialStartHour,
-    lateToleranceMinutes,
-    0
-  );
-
-  const effectiveToday = today < currentDayStart
-    ? new Date(today.getTime() - 24 * 60 * 60 * 1000)
-    : today;
-
-  effectiveToday.setHours(23, 59, 59, 999);
+  const currentDayStart = attendanceCutoff(today, settings);
 
   const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -83,9 +62,6 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
     const cellDate = new Date(date.getFullYear(), date.getMonth(), day);
     cellDate.setHours(23, 59, 59, 999);
 
-    if (!isWorkingDay(day)) return 'non-working';
-    if (cellDate > effectiveToday) return 'future';
-
     const empIndex = data.employees.findIndex((e: any) => e.id === empId);
     if (empIndex === -1) return 'future';
 
@@ -94,19 +70,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
     if (!dayStatusesRow || !Array.isArray(dayStatusesRow)) return 'future';
 
     const dayStatus = dayStatusesRow.find((ds: any) => ds.date === dateStr);
-    if (!dayStatus) return 'future';
-
-    switch (dayStatus.status) {
-      case 'PRESENT':       return 'present';
-      case 'LATE':          return 'late';
-      case 'ABSENT_UNPAID': return 'absent';
-      case 'REMOTE':        return 'remote';
-      case 'LEAVE':         return 'leave';
-      case 'HOLIDAY':       return 'holiday';
-      case 'OFF_DAY':       return 'non-working';
-      case 'FUTURE':        return 'future';
-      default:              return 'future';
-    }
+    return monthlyAttendanceStatus(cellDate, isWorkingDay(day), dayStatus, today, settings);
   };
 
   const StatusCell = ({ status, isToday }: { status: string; isToday: boolean }) => {
@@ -153,9 +117,9 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
   });
 
   const currentDay =
-    date.getMonth() === effectiveToday.getMonth() &&
-    date.getFullYear() === effectiveToday.getFullYear()
-      ? effectiveToday.getDate()
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+      ? today.getDate()
       : null;
 
   const formatWorkDays = () => {
@@ -194,7 +158,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
               📅 <strong>Aujourd'hui :</strong> {currentDay} {date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
             </p>
             <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-              Nouveau jour à {String(officialStartHour).padStart(2, '0')}h{String(lateToleranceMinutes).padStart(2, '0')} ·
+              Absences du jour comptabilisées à partir de {String(currentDayStart.getHours()).padStart(2, '0')}h{String(currentDayStart.getMinutes()).padStart(2, '0')} ·
               Jours ouvrables : {formatWorkDays()} ({workingDaysCount} jours ce mois-ci)
             </p>
           </div>
@@ -268,7 +232,7 @@ export default function MonthlyView({ data, date, setDate, userRole, userDepartm
                   const isToday = d === currentDay;
                   const cellDate = new Date(date.getFullYear(), date.getMonth(), d);
                   cellDate.setHours(23, 59, 59, 999);
-                  const isFuture = cellDate > effectiveToday;
+                  const isFuture = localDateKey(cellDate) > localDateKey(today);
                   const dayName = getDayName(d);
                   const isWorking = isWorkingDay(d);
 

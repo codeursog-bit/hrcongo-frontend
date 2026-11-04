@@ -45,6 +45,9 @@ export interface PlanLimits {
   hasAttendanceGPS: boolean;
   hasLeaveManagement: boolean;
   hasPayrollBulk: boolean;
+  hasPayrollIndividual: boolean;
+  hasPayrollExport: boolean;
+  hasLoansAndAdvances: boolean;
   hasPayrollAccountingExport: boolean;
   hasRecruitmentManual: boolean;
   hasRecruitmentAI: boolean;
@@ -62,8 +65,9 @@ export interface PlanLimits {
 export interface Plan {
   name: string;
   description: string;
-  priceMonthly: number;
-  priceYearly: number;
+  priceMonthly: number | null;
+  priceYearly: number | null;
+  isPriceConfigured: boolean;
   currency: string;
   popular: boolean;
   limits: PlanLimits;
@@ -220,19 +224,27 @@ interface PlansResponse {
 }
 
 export function usePlans() {
-  const { data: plans, isLoading } = useQuery({
+  const { data: plans, isLoading, error, refetch } = useQuery({
     queryKey: ['plans'],
     queryFn: async () => {
       // ✅ TYPER EXPLICITEMENT
-      const response = await api.get<PlansResponse>('/subscriptions/plans');
-      return (response as PlansResponse).plans;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/public/subscriptions/plans`, {
+        cache: 'no-store',
+        credentials: 'omit',
+      });
+      if (!response.ok) throw new Error('Les tarifs sont momentanément indisponibles.');
+      const catalog: PlansResponse = await response.json();
+      return catalog.plans;
     },
-    staleTime: 60 * 60 * 1000,
+    staleTime: 0,
+    refetchInterval: 30_000,
   });
 
   return {
     plans,
     isLoading,
+    error,
+    refetch,
   };
 }
 

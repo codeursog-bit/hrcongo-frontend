@@ -156,7 +156,7 @@ export default function AboutPage(){
         <Blob color={C.cyan} style={{width:500,height:500,top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}/>
         <div style={{maxWidth:600,margin:'0 auto',position:'relative'}}>
           <h2 style={{fontSize:'clamp(26px,4vw,42px)',fontWeight:900,letterSpacing:'-0.03em',lineHeight:1.15,marginBottom:18}}>Prêt à rejoindre l'aventure Konza RH ?</h2>
-          <p style={{fontSize:17,color:C.sub,marginBottom:34,lineHeight:1.7}}>14 jours d'essai gratuit. Configuration en 30 minutes. Support en français, par des Congolais.</p>
+          <p style={{fontSize:17,color:C.sub,marginBottom:34,lineHeight:1.7}}>30 jours d'essai gratuit. Configuration en 30 minutes. Support en français, par des Congolais.</p>
           <div style={{display:'flex',justifyContent:'center',gap:14,flexWrap:'wrap'}}>
             <GradBtn href="/auth/register">Démarrer gratuitement</GradBtn>
             <GhostBtn href="/contact">Nous contacter</GhostBtn>

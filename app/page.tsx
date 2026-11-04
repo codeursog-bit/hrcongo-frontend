@@ -433,7 +433,7 @@ function FeaturesSection() {
 
         <div className="mt-14 flex flex-col items-center gap-4 text-center">
           <p className="max-w-[460px] text-[16px] text-[#8B8F98]">
-            Toutes les fonctionnalités incluses dans votre essai gratuit de 14 jours.
+            Toutes les fonctionnalités incluses dans votre essai gratuit de 30 jours.
           </p>
           <Link
             href="/auth/register"
@@ -817,7 +817,7 @@ function FinalCta() {
           Dès aujourd'hui.
         </h2>
         <p className="mx-auto mt-5 max-w-lg text-[18px] leading-relaxed text-[#8B8F98]">
-          Rejoignez les DRH congolais qui ont choisi la sérénité. 14 jours d'essai gratuit, sans
+          Rejoignez les DRH congolais qui ont choisi la sérénité. 30 jours d'essai gratuit, sans
           engagement, sans carte bancaire.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">

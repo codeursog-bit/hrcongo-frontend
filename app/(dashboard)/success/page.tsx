@@ -81,6 +81,17 @@ function SuccessContent() {
   const yabetooProvider = searchParams.get('provider') === 'yabetoo';
   const yabetooPaymentId = searchParams.get('paymentId');
 
+  // 🔒 Un seul verdict fait foi : celui du serveur pour CE paiement (jamais « l'abonnement est ACTIVE »,
+  // vrai aussi pour un plan gratuit ou un abonnement existant). Les 3 endpoints renvoient
+  // { activated, status } avec status ∈ activated | already_succeeded | pending | failed | already_failed.
+  const chariowId = searchParams.get('paymentId') ?? chariowPaymentId;
+  const verifyEndpoint: string | null =
+    yabetooProvider && yabetooPaymentId ? `/subscriptions/yabetoo/check-payment/${yabetooPaymentId}`
+    : chariowProvider && chariowId       ? `/subscriptions/chariow/check-sale/${chariowId}`
+    : motekiStatus === 'success' && pendingCheckout.paymentId
+                                          ? `/subscriptions/moteki/check-order/${pendingCheckout.paymentId}`
+    : null;
+
   const plan      = searchParams.get('plan') ?? pendingCheckout.plan ?? pendingChariowCheckout.plan ?? '';
   const immediate = searchParams.get('immediate') === 'true' || motekiStatus === 'success';
   const failed    = searchParams.get('failed') === 'true' || motekiStatus === 'cancel';
@@ -101,73 +112,47 @@ function SuccessContent() {
   const [attempts,  setAttempts]  = useState(0);
   const [isChecking, setIsChecking] = useState(false);
 
-  // 🛒 Moteki : on ne dépend pas du webhook pour savoir si c'est payé — on
-  // interroge nous-mêmes la commande dès l'arrivée sur cette page (au lieu
-  // d'attendre le prochain passage du cron de polling, toutes les 5 min).
-  // Best-effort : si ça échoue (paiement encore en cours côté opérateur),
-  // le countdown "waiting" classique + le cron prennent le relais.
-  useEffect(() => {
-    if (motekiStatus !== 'success' || !pendingCheckout.paymentId) return;
-    (async () => {
-      try {
-        await api.post(`/subscriptions/moteki/check-order/${pendingCheckout.paymentId}`, {});
-      } catch {
-        // pas grave — le cron de polling réessaiera dans les minutes qui suivent
-      } finally {
-        refetch();
-      }
-    })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const clearPending = () => {
+    try {
+      sessionStorage.removeItem('pendingSubscriptionCheckout');
+      sessionStorage.removeItem('pendingChariowCheckout');
+    } catch {}
+  };
 
-  // 🛒 Chariow : même principe que Moteki ci-dessus, mais en plus on
-  // regarde le résultat renvoyé — si la vente est confirmée FAILED (solde
-  // insuffisant, annulation, etc. — voir ta capture d'écran), on bascule
-  // directement sur l'écran d'échec au lieu de laisser tourner le
-  // countdown "en attente" indéfiniment pour rien.
-  useEffect(() => {
-    if (!chariowProvider || !chariowPaymentId) return;
-    (async () => {
-      try {
-        const result = await api.post<{ activated: boolean; status: string }>(
-          `/subscriptions/chariow/check-sale/${chariowPaymentId}`,
-          {},
-        );
-        if (result.status === 'failed') {
-          setStatus('failed');
-          return;
-        }
-      } catch {
-        // pas grave — le cron de polling réessaiera dans les minutes qui suivent
-      } finally {
-        refetch();
-      }
-    })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Applique le verdict du serveur : succès UNIQUEMENT si activated === true
+  const applyVerdict = (r: { activated?: boolean; status?: string }) => {
+    if (r?.activated) {
+      setStatus('success');
+      clearPending();
+      return;
+    }
+    if (r?.status === 'failed' || r?.status === 'already_failed') {
+      setStatus('failed');
+      return;
+    }
+    setStatus('waiting'); // pending / missing_metadata : on réessaiera
+  };
 
-  // 🛒 Yabetoo : même principe — filet de sécurité en plus du webhook et de
-  // la vérification déjà faite dans YabetooCheckoutModal juste avant la
-  // redirection (celle-ci peut avoir échoué, ou l'utilisateur peut être
-  // revenu sur cette page plus tard).
-  useEffect(() => {
-    if (!yabetooProvider || !yabetooPaymentId) return;
-    (async () => {
-      try {
-        const result = await api.post<{ activated: boolean; status: string }>(
-          `/subscriptions/yabetoo/check-payment/${yabetooPaymentId}`,
-          {},
-        );
-        if (result.status === 'failed') {
-          setStatus('failed');
-          return;
-        }
-      } catch {
-        // pas grave — le cron de polling réessaiera dans les minutes qui suivent
-      } finally {
-        refetch();
-      }
-    })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Vérifie le paiement auprès du serveur (Moteki / Chariow / Yabetoo).
+  // Sans identifiant de paiement (ancien flux), on retombe sur l'état de l'abonnement
+  // (voir l'effet « refetch » plus bas, qui exige le BON plan, payant).
+  const checkNow = async () => {
+    if (!verifyEndpoint) { refetch(); return; }
+    try {
+      applyVerdict(await api.post<{ activated: boolean; status: string }>(verifyEndpoint, {}));
+    } catch {
+      setStatus('waiting'); // erreur réseau : jamais de faux succès, on réessaiera
+    } finally {
+      setIsChecking(false);
+      refetch();
+    }
+  };
 
+  // Vérification dès l'arrivée sur la page (le webhook / le cron restent le filet de sécurité)
+  useEffect(() => {
+    if (!verifyEndpoint || failed) return;
+    checkNow();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Vérification initiale si paiement immédiat ────────────────────────────
   useEffect(() => {
@@ -177,21 +162,26 @@ function SuccessContent() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Réagir au résultat du refetch quand on est en mode "checking" ─────────
+  // Uniquement pour l'ancien flux SANS identifiant de paiement : on exige alors que le plan
+  // payant demandé soit réellement actif (un plan FREE ou un autre plan « ACTIVE » ne compte pas).
   useEffect(() => {
     if (isLoading) return;
     if (status !== 'checking') return;
 
     setIsChecking(false);
+    if (verifyEndpoint) return; // le verdict vient du serveur (checkNow)
 
-    if (subscription?.status === 'ACTIVE') {
+    const targetActive =
+      subscription?.status === 'ACTIVE' &&
+      subscription.plan !== 'FREE' &&
+      (!plan || subscription.plan === plan);
+
+    if (targetActive) {
       setStatus('success');
       if (attempts > 0) toast.success('🎉 Abonnement activé !');
-      try {
-        sessionStorage.removeItem('pendingSubscriptionCheckout');
-        sessionStorage.removeItem('pendingChariowCheckout');
-      } catch {}
+      clearPending();
     } else {
-      // Pas encore activé → retour en attente
+      // Pas (encore) activé → retour en attente
       setStatus('waiting');
     }
   }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -209,7 +199,7 @@ function SuccessContent() {
     setAttempts(a => a + 1);
     setCountdown(10);
     setStatus('checking');
-    refetch();
+    checkNow();
   }, [status, countdown]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Vérification manuelle ─────────────────────────────────────────────────
@@ -217,7 +207,7 @@ function SuccessContent() {
     if (isChecking) return;
     setIsChecking(true);
     setStatus('checking');
-    refetch();
+    checkNow();
   };
 
   // ==========================================================================

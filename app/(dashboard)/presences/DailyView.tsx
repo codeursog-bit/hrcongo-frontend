@@ -1,3 +1,4 @@
+import { localDateKey, attendanceCutoff } from '@/lib/attendance-calendar';
 'use client';
 
 // ============================================================================
@@ -79,6 +80,7 @@ export default function DailyView({
 
   const [companySettings, setCompanySettings] = useState({
     officialStartHour: 8,
+    officialStartMinute: 0,
     lateToleranceMinutes: 0,
     workDays: [1, 2, 3, 4, 5],
   });
@@ -88,7 +90,8 @@ export default function DailyView({
       try {
         const res: any = await api.get('/payroll-settings');
         setCompanySettings({
-          officialStartHour: res.officialStartHour || 8,
+          officialStartHour: res.officialStartHour ?? 8,
+          officialStartMinute: res.officialStartMinute ?? 0,
           lateToleranceMinutes: res.lateToleranceMinutes || 0,
           workDays: res.workDays || [1, 2, 3, 4, 5],
         });
@@ -288,7 +291,7 @@ export default function DailyView({
   const getDailyAttendances = () => {
     if (!data?.employees || !data?.dayStatuses) return [];
 
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = localDateKey(selectedDate);
     const dailyData: any[] = [];
 
     // 🕐 Selon la CONFIGURATION de l'entreprise (0 = dimanche). Un jour non travaillé n'efface plus
@@ -296,10 +299,9 @@ export default function DailyView({
     const isWorkingDay = isWorkDay(companySettings.workDays, selectedDate.getDay());
 
     const now = new Date();
-    const absenceThreshold = new Date(selectedDate);
-    absenceThreshold.setHours(companySettings.officialStartHour, companySettings.lateToleranceMinutes, 0, 0);
+    const absenceThreshold = attendanceCutoff(selectedDate, companySettings);
 
-    const isToday = dateStr === now.toISOString().split('T')[0];
+    const isToday = dateStr === localDateKey(now);
     const isBeforeWorkTime = isToday && now < absenceThreshold;
 
     // Le backend renvoie déjà uniquement les employés accessibles (filtré par département si MANAGER)
@@ -410,10 +412,9 @@ export default function DailyView({
   const isWorkingDay = isWorkDay(companySettings.workDays, selectedDate.getDay());
 
   const now = new Date();
-  const dateStr = selectedDate.toISOString().split('T')[0];
-  const isToday = dateStr === now.toISOString().split('T')[0];
-  const absenceThreshold = new Date(selectedDate);
-  absenceThreshold.setHours(companySettings.officialStartHour, companySettings.lateToleranceMinutes, 0, 0);
+  const dateStr = localDateKey(selectedDate);
+  const isToday = dateStr === localDateKey(now);
+  const absenceThreshold = attendanceCutoff(selectedDate, companySettings);
   const isBeforeWorkTime = isToday && now < absenceThreshold;
 
   const REPORT_ID = 'daily-attendance-report';
@@ -503,7 +504,7 @@ export default function DailyView({
               <strong>Avant l&apos;heure de travail</strong>
             </p>
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-              Les absences seront comptabilisées à partir de {String(companySettings.officialStartHour).padStart(2, '0')}h{String(companySettings.lateToleranceMinutes).padStart(2, '0')}
+              Les absences seront comptabilisées à partir de {String(absenceThreshold.getHours()).padStart(2, '0')}h{String(absenceThreshold.getMinutes()).padStart(2, '0')}
             </p>
           </div>
         </div>
@@ -608,7 +609,7 @@ export default function DailyView({
                         <>
                           <Timer size={36} className="text-[var(--text-muted)]" />
                           <p className="text-lg font-bold text-[var(--text-muted)]">Avant l&apos;heure de travail</p>
-                          <p className="text-sm text-[var(--text-muted)]">Les absences seront comptabilisées à partir de {String(companySettings.officialStartHour).padStart(2, '0')}h{String(companySettings.lateToleranceMinutes).padStart(2, '0')}</p>
+                          <p className="text-sm text-[var(--text-muted)]">Les absences seront comptabilisées à partir de {String(absenceThreshold.getHours()).padStart(2, '0')}h{String(absenceThreshold.getMinutes()).padStart(2, '0')}</p>
                         </>
                       ) : (
                         <>

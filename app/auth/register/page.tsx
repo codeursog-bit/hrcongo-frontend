@@ -279,7 +279,7 @@
 //                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-5"
 //                 >
 //                   <Zap size={12} className="fill-emerald-400" />
-//                   1 mois d'essai gratuit — sans carte bancaire
+//                   30 jours d'essai gratuit — sans carte bancaire
 //                 </motion.div>
 
 //                 <motion.h1
@@ -324,7 +324,7 @@
 //                   {/* Badges */}
 //                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
 //                     <div className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
-//                       <Zap size={9} className="fill-emerald-400" /> 1 mois gratuit
+//                       <Zap size={9} className="fill-emerald-400" /> 30 jours gratuits
 //                     </div>
 //                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Star size={9} className="fill-amber-400" /> Le plus choisi
@@ -382,7 +382,7 @@
 //                   {/* Badges */}
 //                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
 //                     <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
-//                       <Sparkles size={9} /> 1 mois gratuit
+//                       <Sparkles size={9} /> 30 jours gratuits
 //                     </div>
 //                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
 //                       <Rocket size={9} /> Meilleur ROI
@@ -471,7 +471,7 @@
 //                   {accountType === 'CABINET' ? 'Créer votre cabinet' : 'Créer votre compte'}
 //                 </h2>
 //                 <p className="text-xs text-gray-500 mb-5">
-//                   1 mois d'essai gratuit, sans carte bancaire requise.
+//                   30 jours d'essai gratuit, sans carte bancaire requise.
 //                 </p>
 
 //                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -917,7 +917,7 @@ function RegisterForm() {
                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-5"
                 >
                   <Zap size={12} className="fill-emerald-400" />
-                  1 mois d'essai gratuit — sans carte bancaire
+                  30 jours d'essai gratuit — sans carte bancaire
                 </motion.div>
 
                 <motion.h1
@@ -970,7 +970,7 @@ function RegisterForm() {
 
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
                     <div className="flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      <Zap size={9} className="fill-emerald-400" /> 1 mois gratuit
+                      <Zap size={9} className="fill-emerald-400" /> 30 jours gratuits
                     </div>
                     <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Star size={9} className="fill-amber-400" /> Le plus choisi
@@ -1027,7 +1027,7 @@ function RegisterForm() {
 
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5">
                     <div className="flex items-center gap-1 bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-2.5 py-1 rounded-full">
-                      <Sparkles size={9} /> 1 mois gratuit
+                      <Sparkles size={9} /> 30 jours gratuits
                     </div>
                     <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
                       <Rocket size={9} /> Meilleur ROI
@@ -1116,7 +1116,7 @@ function RegisterForm() {
                   {accountType === 'CABINET' ? 'Créer votre cabinet' : 'Créer votre compte'}
                 </h2>
                 <p className="text-xs text-gray-500 mb-5">
-                  1 mois d'essai gratuit, sans carte bancaire requise.
+                  30 jours d'essai gratuit, sans carte bancaire requise.
                 </p>
 
                 {/* Bandeau affilié */}

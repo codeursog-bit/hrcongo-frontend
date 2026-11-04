@@ -15,6 +15,7 @@ import {
   LayoutList, LayoutGrid, Star,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { DiscountCodeField, type AppliedDiscount } from '@/components/subscription/DiscountCodeField';
 import { usePlans } from '@/hooks/useSubscription';
 import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
 import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
@@ -68,14 +69,7 @@ const STATUS_STYLES: Record<string, { color: string; bg: string; border: string;
   PAUSED:   { color: 'text-gray-600 dark:text-gray-400',       bg: 'bg-gray-100 dark:bg-gray-800',          border: 'border-gray-200 dark:border-gray-700',       label: 'Pausé',         icon: <AlertTriangle size={12} /> },
 };
 
-// ✅ FREE inclus
-// 💰 Les PRIX ne sont plus codés en dur ici : ils viennent de usePlans()
-// (GET /subscriptions/plans), la même source que pricing/page.tsx et que
-// les modals de paiement. Seuls le libellé et la liste de fonctionnalités
-// (copy statique, pas de la donnée financière) restent définis ici. Changer
-// un prix dans src/subscriptions/config/plans.config.ts côté backend et
-// redéployer met donc à jour cette page, /pricing, ET le montant réel
-// débité — une seule source de vérité, plus de désynchronisation possible.
+// Catalogue de prix publié par le superadmin, partagé avec /tarifs et /pricing.
 const PLANS_CONFIG = [
   {
     name: 'FREE' as const,
@@ -149,12 +143,15 @@ export default function SubscriptionPage() {
 
   const [activeProvider, setActiveProvider] = useState<'MOTEKI' | 'CHARIOW' | 'YABETOOPAY' | 'NONE' | null>(null);
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
+  // 🎟️ Code de réduction (YabetoPay uniquement)
+  const [discountInput, setDiscountInput] = useState('');
+  const [applied, setApplied] = useState<AppliedDiscount | null>(null);
 
   // 💰 Vrais tarifs (même source que /pricing et que les modals de paiement)
   const { plans, isLoading: plansLoading } = usePlans();
   const displayPlans = PLANS_CONFIG.map((p) => ({
     ...p,
-    price: plansLoading ? null : (plans?.[p.name]?.priceMonthly ?? 0),
+    price: plans?.[p.name]?.priceMonthly ?? null,
   }));
 
   const showToast = (message: string, type: 'success' | 'error') => setToast({ message, type });
@@ -203,10 +200,12 @@ export default function SubscriptionPage() {
         const data = await api.post<PaymentIntent>('/subscriptions/upgrade', {
           plan: targetPlan,
           billingPeriod: 'monthly',
+          discountCode: applied?.code ?? (discountInput.trim() || undefined),
         });
         setPaymentIntent(data);
-      } catch {
-        showToast('Une erreur est survenue, réessayez.', 'error');
+      } catch (e: any) {
+        // Le serveur renvoie un message clair pour un code invalide / expiré / déjà utilisé
+        showToast(e?.message || 'Une erreur est survenue, réessayez.', 'error');
       } finally {
         setUpgradeLoading(null);
       }
@@ -352,6 +351,18 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
+            {/* 🎟️ Code de réduction — YabetoPay uniquement */}
+            {activeProvider === 'YABETOOPAY' && (
+              <div className="max-w-md">
+                <DiscountCodeField
+                  value={discountInput}
+                  onChange={setDiscountInput}
+                  applied={applied}
+                  onApplied={setApplied}
+                />
+              </div>
+            )}
+
             {/* VUE LISTE */}
             {viewMode === 'list' && (
               <div className="grid gap-3">
@@ -381,7 +392,7 @@ export default function SubscriptionPage() {
                             )}
                             <span className="text-xs font-mono font-bold text-gray-900 dark:text-white ml-auto">
                               {p.price === null
-                                ? '…'
+                                 ? (plansLoading ? '…' : 'Tarif non configuré')
                                 : p.price === 0
                                   ? 'Gratuit'
                                   : `${p.price.toLocaleString('fr-FR')} FCFA/mois`}
@@ -449,7 +460,7 @@ export default function SubscriptionPage() {
 
                       <div className="text-lg font-black text-gray-900 dark:text-white font-mono">
                         {p.price === null
-                          ? '…'
+                            ? (plansLoading ? '…' : 'Tarif non configuré')
                           : p.price === 0
                             ? 'Gratuit'
                             : `${p.price.toLocaleString('fr-FR')}`}

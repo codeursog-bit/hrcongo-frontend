@@ -12,6 +12,7 @@ import { MotekiCheckoutModal } from '@/components/payment/MotekiCheckoutModal';
 import { ChariowCheckoutModal } from '@/components/payment/ChariowCheckoutModal';
 import { YabetooCheckoutModal, type PaymentIntent } from '@/components/payment/YabetooCheckoutModal';
 import { api } from '@/services/api';
+import { DiscountCodeField, discountedPrice, type AppliedDiscount } from '@/components/subscription/DiscountCodeField';
 import {
   Check, Zap, Gift, Sparkles, AlertTriangle,
   Rocket, Building2, Star, X, Phone, ChevronDown, Loader2, Crown,
@@ -46,7 +47,8 @@ function PricingContent() {
   const [paymentIntent,  setPaymentIntent]  = useState<PaymentIntent | null>(null);
 
   // 🎟️ Code de réduction + 📄 tarif négocié (devis) — uniquement avec YabetoPay
-  const [discountCode, setDiscountCode] = useState('');
+  const [discountInput, setDiscountInput] = useState('');
+  const [applied, setApplied] = useState<AppliedDiscount | null>(null);
   const [quote, setQuote] = useState<{ id: string; plan: string; amount: number; months: number } | null>(null);
 
   useEffect(() => {
@@ -86,7 +88,8 @@ function PricingContent() {
         const data = await api.post<PaymentIntent>('/subscriptions/upgrade', {
           plan,
           billingPeriod,
-          discountCode: discountCode.trim() || undefined,
+          // code « Appliqué » en priorité, sinon ce qui est tapé (le serveur le vérifie et renvoie une erreur claire)
+          discountCode: applied?.code ?? (discountInput.trim() || undefined),
         });
         setPaymentIntent(data);
       } catch (error: any) {
@@ -230,12 +233,13 @@ function PricingContent() {
 
         {/* Code de réduction — YabetoPay uniquement */}
         {activeProvider === 'YABETOOPAY' && (
-          <div className="max-w-xs mx-auto mb-8">
-            <input
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-              placeholder="Code de réduction (optionnel)"
-              className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent text-sm text-center"
+          <div className="max-w-md mx-auto mb-8">
+            <DiscountCodeField
+              value={discountInput}
+              onChange={setDiscountInput}
+              applied={applied}
+              onApplied={setApplied}
+              billingPeriod={billingPeriod}
             />
           </div>
         )}
@@ -246,9 +250,10 @@ function PricingContent() {
             const isCurrentPlan = subscription?.plan === planKey;
             const isPro         = planKey === 'PRO';
             const isFree        = planKey === 'FREE';
+            const isConfigured = plan.priceMonthly != null && plan.priceYearly != null;
             const isUpgrading   = upgradingPlan === planKey;
             const monthlyPrice  = billingPeriod === 'yearly'
-              ? Math.round(plan.priceYearly / 12)
+              ? (isConfigured ? Math.round(plan.priceYearly / 12) : null)
               : plan.priceMonthly;
             const totalPrice    = billingPeriod === 'yearly' ? plan.priceYearly : plan.priceMonthly;
 
@@ -283,6 +288,8 @@ function PricingContent() {
                 <div className="mb-6">
                   {isFree ? (
                     <div className="text-4xl font-bold">Gratuit</div>
+                  ) : !isConfigured ? (
+                    <div className="text-lg font-semibold">Tarif non configuré</div>
                   ) : (
                     <>
                       <div className="text-4xl font-bold mb-1">
@@ -298,13 +305,24 @@ function PricingContent() {
                           </>
                         ) : '/ mois'}
                       </div>
+                      {applied && (
+                        <div className="mt-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 text-sm">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                            Avec {applied.code} (−{applied.percentOff} %)
+                          </span>
+                          <div className="font-bold">
+                            <span className="line-through text-slate-400 font-normal mr-2">{totalPrice.toLocaleString('fr-FR')}</span>
+                            {discountedPrice(totalPrice, applied.percentOff).toLocaleString('fr-FR')} FCFA à payer
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
 
                 <button
                   onClick={() => !isFree && !isCurrentPlan && handleUpgrade(planKey as 'BASIC' | 'PRO' | 'ENTERPRISE')}
-                  disabled={isFree || isCurrentPlan || isUpgrading}
+                  disabled={isFree || isCurrentPlan || isUpgrading || !isConfigured}
                   className={`
                     w-full py-3 px-6 rounded-lg font-bold text-sm mb-6
                     transition-all duration-300 flex items-center justify-center gap-2

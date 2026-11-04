@@ -43,6 +43,7 @@ interface CandidateIA {
   interviewNotes?: string;
   jobOffer: {
     id: string;
+    status?: string;
     title: string;
     location: string;
     type: string;
@@ -71,6 +72,20 @@ function DetailCandidatIAContent({ id }: { id: string }) {
   const [hrDecision, setHrDecision] = useState<AIDecision | null>(null);
   const [hrNotes, setHrNotes] = useState('');
   const [isSavingDecision, setIsSavingDecision] = useState(false);
+  const [testUrl, setTestUrl] = useState('');
+  const [creatingTestAccess, setCreatingTestAccess] = useState(false);
+
+  const renewTestAccess = async () => {
+    setCreatingTestAccess(true);
+    try {
+      const result = await api.put<{ testUrl: string }>(`/recruitment/candidates/${id}/allow-retake`, { reason: 'Nouvel accès accordé par le recruteur' });
+      setTestUrl(new URL(result.testUrl, window.location.origin).toString());
+      await fetchCandidate();
+      toast.success('Accès créé', 'Le nouveau lien est prêt à être transmis au candidat.');
+    } catch (error) {
+      toast.error('Accès non créé', error instanceof Error ? error.message : 'Réessayez.');
+    } finally { setCreatingTestAccess(false); }
+  };
 
   // Modal entretien
   const [showInterviewModal, setShowInterviewModal] = useState(false);
@@ -246,6 +261,23 @@ function DetailCandidatIAContent({ id }: { id: string }) {
             </p>
           </div>
         </div>
+
+        {candidate.jobOffer.status === 'PUBLISHED' && (
+          <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
+            <h2 className="font-bold">Accès au test candidat</h2>
+            <p className="text-sm text-[var(--text-muted)]">Un nouveau lien remplace le précédent et remet les réponses et le score du test à zéro. Il est valable 24 heures.</p>
+            <button onClick={renewTestAccess} disabled={creatingTestAccess} className="rounded-lg bg-emerald-600 px-4 py-2 text-white disabled:opacity-50">
+              {creatingTestAccess ? 'Création…' : 'Réinitialiser le test et créer un lien'}
+            </button>
+            {testUrl && <div className="flex gap-2">
+              <input aria-label="Lien du test à transmettre au candidat" readOnly value={testUrl} className="min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-2" />
+              <button className="rounded-lg border border-[var(--border)] px-3" onClick={async () => {
+                try { await navigator.clipboard.writeText(testUrl); toast.success('Lien copié', 'Vous pouvez le transmettre au candidat.'); }
+                catch { toast.error('Copie indisponible', 'Sélectionnez le lien et copiez-le manuellement.'); }
+              }}>Copier</button>
+            </div>}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 

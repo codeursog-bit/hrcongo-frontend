@@ -81,7 +81,7 @@ export const adminService = {
 
   // ── Config facturation (prix, codes, devis, agrégateur) ─────────────────
   getPlanPrices: () => adminFetch<any[]>('/admin/billing-config/plans'),
-  updatePlanPrice: (plan: string, body: { priceMonthly: number; priceYearly?: number }) =>
+  updatePlanPrice: (plan: string, body: { priceMonthly: number; priceYearly: number }) =>
     adminFetch<any>(`/admin/billing-config/plans/${plan}`, 'PATCH', body),
   resetPlanPrice: (plan: string) =>
     adminFetch<any>(`/admin/billing-config/plans/${plan}`, 'DELETE'),
@@ -91,6 +91,8 @@ export const adminService = {
     adminFetch<any>('/admin/billing-config/discount-codes', 'POST', body),
   updateDiscountCode: (id: string, body: any) =>
     adminFetch<any>(`/admin/billing-config/discount-codes/${id}`, 'PATCH', body),
+  deleteDiscountCode: (id: string) =>
+    adminFetch<any>(`/admin/billing-config/discount-codes/${id}`, 'DELETE'),
 
   getCustomQuotes: (companyId?: string) =>
     adminFetch<any[]>(`/admin/billing-config/quotes${companyId ? `?companyId=${companyId}` : ''}`),

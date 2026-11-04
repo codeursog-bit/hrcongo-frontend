@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
+import { usePlans } from '@/hooks/useSubscription';
+import { buildPublicPlans, publicPlanAmount, type PublicPricingPlan as Plan } from '@/lib/public-pricing';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,155 +14,6 @@ type Feature = {
   included: boolean | 'partial';
   note?: string;
 };
-
-type Plan = {
-  id: string;
-  name: string;
-  tagline: string;
-  price: number | null; // null = sur devis
-  priceNote: string;
-  employees: string;
-  users: string;
-  color: string;
-  accent: string;
-  textAccent: string;
-  popular?: boolean;
-  cta: string;
-  ctaHref: string;
-  features: Feature[];
-};
-
-// ─── Données plans ────────────────────────────────────────────────────────────
-
-const plans: Plan[] = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    tagline: 'Pour tester sans risque',
-    price: 0,
-    priceNote: 'Gratuit pour toujours',
-    employees: '1 admin + 2 employés',
-    users: '1 utilisateur (admin)',
-    color: 'rgba(255,255,255,0.04)',
-    accent: 'rgba(148,163,184,0.3)',
-    textAccent: '#94A3B8',
-    cta: 'Démarrer gratuitement',
-    ctaHref: '/auth/register',
-    features: [
-      { label: 'Gestion de 2 employés', included: true },
-      { label: 'Fiche employé complète', included: true },
-      { label: 'Congés & absences basiques', included: true },
-      { label: 'Tableau de bord RH', included: true },
-      { label: 'Calcul de paie (IRPP/CNSS)', included: false },
-      { label: 'Bulletins de salaire PDF', included: false },
-      { label: 'Pointage GPS', included: false },
-      { label: 'Gestion des contrats', included: false },
-      { label: 'Rupture de contrat (STC)', included: false },
-      { label: 'Gestion des impayés', included: false },
-      { label: 'Système de shifts / plannings', included: false },
-      { label: 'Recrutement & offres', included: false },
-      { label: 'Prêts & avances', included: false },
-      { label: 'Déclarations CNSS', included: false },
-      { label: 'Support', included: true, note: 'Communauté' },
-    ],
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    tagline: 'La paie professionnelle',
-    price: 20000,
-    priceNote: "par mois · jusqu'à 30 employés",
-    employees: "Jusqu'à 30 employés",
-    users: "Admin + tous vos employés",
-    color: 'rgba(52,211,153,0.05)',
-    accent: 'rgba(16,185,129,0.4)',
-    textAccent: '#10B981',
-    cta: 'Essai 14 jours gratuit',
-    ctaHref: '/auth/register?plan=business',
-    features: [
-      { label: 'Gestion jusqu\'à 30 employés', included: true },
-      { label: 'Fiche employé complète', included: true },
-      { label: 'Congés & absences avancés', included: true },
-      { label: 'Tableau de bord RH', included: true },
-      { label: 'Calcul de paie (IRPP/CNSS/TUS)', included: true },
-      { label: 'Bulletins de salaire PDF', included: true },
-      { label: 'Pointage GPS', included: true },
-      { label: 'Gestion des contrats', included: true },
-      { label: 'Rupture de contrat (STC)', included: false },
-      { label: 'Gestion des impayés', included: false },
-      { label: 'Système de shifts / plannings', included: false },
-      { label: 'Recrutement & offres', included: 'partial', note: 'Manuel uniquement' },
-      { label: 'Prêts & avances', included: true },
-      { label: 'Déclarations CNSS', included: false },
-      { label: 'Support', included: true, note: 'Email sous 48h' },
-    ],
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    tagline: 'RH complète & conformité totale',
-    price: 40000,
-    priceNote: "par mois · jusqu'à 100 employés",
-    employees: "Jusqu'à 100 employés",
-    users: "Admin + tous vos employés",
-    color: 'rgba(16,185,129,0.07)',
-    accent: 'rgba(16,185,129,0.7)',
-    textAccent: '#10B981',
-    popular: true,
-    cta: 'Essai 14 jours gratuit',
-    ctaHref: '/auth/register?plan=pro',
-    features: [
-      { label: 'Gestion jusqu\'à 100 employés', included: true },
-      { label: 'Fiche employé complète', included: true },
-      { label: 'Congés & absences avancés', included: true },
-      { label: 'Tableau de bord RH', included: true },
-      { label: 'Calcul de paie (IRPP/CNSS/TUS)', included: true },
-      { label: 'Bulletins de salaire PDF', included: true },
-      { label: 'Pointage GPS multi-sites', included: true },
-      { label: 'Gestion des contrats', included: true },
-      { label: 'Rupture de contrat (STC)', included: true },
-      { label: 'Gestion des impayés', included: true },
-      { label: 'Système de shifts / plannings', included: true },
-      { label: 'Recrutement & scoring IA', included: true },
-      { label: 'Prêts & avances', included: true },
-      { label: 'Déclarations CNSS export', included: true },
-      { label: 'Support', included: true, note: 'Prioritaire sous 24h' },
-    ],
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    tagline: 'Sur mesure pour grandes structures',
-    price: null,
-    priceNote: 'Tarif négocié selon vos besoins',
-    employees: '100+ employés · illimité',
-    users: 'Utilisateurs illimités',
-    color: 'rgba(100,116,139,0.05)',
-    accent: 'rgba(100,116,139,0.4)',
-    textAccent: '#94A3B8',
-    cta: 'Nous contacter',
-    ctaHref: '/contact',
-    features: [
-      { label: 'Employés illimités', included: true },
-      { label: 'Fiche employé complète', included: true },
-      { label: 'Congés & absences avancés', included: true },
-      { label: 'Tableau de bord RH', included: true },
-      { label: 'Calcul de paie (IRPP/CNSS/TUS)', included: true },
-      { label: 'Bulletins de salaire PDF', included: true },
-      { label: 'Pointage GPS multi-sites', included: true },
-      { label: 'Gestion des contrats', included: true },
-      { label: 'Rupture de contrat (STC)', included: true },
-      { label: 'Gestion des impayés', included: true },
-      { label: 'Système de shifts / plannings', included: true },
-      { label: 'Recrutement & scoring IA', included: true },
-      { label: 'Prêts & avances', included: true },
-      { label: 'Déclarations CNSS export', included: true },
-      { label: 'Support', included: true, note: 'Gestionnaire dédié 24/7' },
-    ],
-  },
-];
-
-// ─── Icônes inline ────────────────────────────────────────────────────────────
 
 function IconCheck({ color }: { color: string }) {
   return (
@@ -192,10 +45,7 @@ function IconX() {
 // ─── Carte plan ───────────────────────────────────────────────────────────────
 
 function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
-  const monthlyPrice = plan.price;
-  const displayPrice = monthlyPrice !== null
-    ? annual ? Math.round(monthlyPrice * 0.85) : monthlyPrice
-    : null;
+  const displayPrice = publicPlanAmount(plan, annual);
 
   return (
     <div
@@ -274,7 +124,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
             }}>
               {displayPrice.toLocaleString('fr-FR')}
             </span>
-            <span style={{ color: '#64748B', fontSize: 14 }}>XAF/mois</span>
+            <span style={{ color: '#64748B', fontSize: 14 }}>{plan.currency}/{annual ? 'an' : 'mois'}</span>
           </div>
         ) : (
           <div style={{
@@ -284,23 +134,11 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
             fontFamily: "'DM Sans', system-ui, sans-serif",
             lineHeight: 1,
           }}>
-            Sur devis
+            Tarif non configuré
           </div>
         )}
 
-        {annual && displayPrice !== null && displayPrice > 0 && (
-          <div style={{
-            display: 'inline-block',
-            marginTop: 6,
-            fontSize: 11,
-            color: '#10B981',
-            background: 'rgba(16,185,129,0.1)',
-            padding: '2px 8px',
-            borderRadius: 4,
-          }}>
-            −15% paiement annuel
-          </div>
-        )}
+
 
         <p style={{ color: '#475569', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>
           {plan.priceNote}
@@ -432,8 +270,8 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
 
 const faqs = [
   {
-    q: 'Combien coûte un employé supplémentaire au-delà de 30 (plan Business) ?',
-    a: "Le plan Business est conçu jusqu'à 30 employés. Au-delà, vous passez automatiquement au plan Pro (40 000 XAF/mois) qui couvre jusqu'à 100 employés. Nous vous prévenons avant tout changement.",
+    q: 'Que se passe-t-il si mon entreprise dépasse la limite de son forfait ?',
+    a: 'Les limites de chaque forfait figurent dans les offres ci-dessus. Choisissez un forfait adapté à votre effectif ou contactez-nous pour étudier vos besoins.',
   },
   {
     q: 'Qu\'est-ce que la gestion des impayés inclut ?',
@@ -528,6 +366,8 @@ function FAQ() {
 
 export default function PricingPage() {
   const [annual, setAnnual] = React.useState(false);
+  const { plans: catalog, isLoading, error, refetch } = usePlans();
+  const plans = buildPublicPlans(catalog || {});
 
   return (
     <main style={{
@@ -661,7 +501,8 @@ export default function PricingPage() {
               opacity: annual ? 1 : 0.5,
               transition: 'opacity 0.2s',
             }}>
-              −15%
+
+              Facturation annuelle
             </span>
           </div>
         </div>
@@ -675,19 +516,21 @@ export default function PricingPage() {
           gap: 20,
           alignItems: 'start',
         }}>
-          {plans.map(plan => (
+          {isLoading && <p role="status" style={{ color: '#CBD5E1' }}>Chargement des tarifs…</p>}
+          {error && <div role="alert" style={{ color: '#CBD5E1' }}>Les tarifs sont momentanément indisponibles. <button onClick={() => refetch()}>Réessayer</button></div>}
+          {!isLoading && !error && plans.map(plan => (
             <PlanCard key={plan.id} plan={plan} annual={annual} />
           ))}
         </div>
 
-        {/* Note 14 jours */}
+        {/* Durée de l’essai PRO */}
         <p style={{
           textAlign: 'center',
           color: '#334155',
           fontSize: 14,
           marginTop: 28,
         }}>
-          14 jours d'essai gratuit sur tous les plans payants · Sans carte bancaire · Résiliation sans engagement
+          30 jours d'essai gratuit PRO · Sans carte bancaire · Résiliation sans engagement
         </p>
       </section>
 

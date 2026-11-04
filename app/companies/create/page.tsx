@@ -644,7 +644,7 @@ export default function CreateCompanyPage() {
                               className="w-24 p-2.5 bg-white/5 border border-emerald-500/30 rounded-xl font-mono font-bold text-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 outline-none text-sm"
                             />
                             <span className="text-xl font-bold text-gray-500">%</span>
-                            <p className="text-xs text-gray-500">Standard Congo : <strong className="text-emerald-400">16%</strong></p>
+                            <p className="text-xs text-gray-500">Taux proposé : <strong className="text-emerald-400">20,28%</strong> · à adapter à votre régime</p>
                           </div>
                         </div>
                       </motion.div>

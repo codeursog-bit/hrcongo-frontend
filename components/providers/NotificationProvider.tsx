@@ -14,7 +14,7 @@
 // ============================================================================
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, UserCheck, AlertTriangle, Info, GraduationCap, CheckCircle,
@@ -46,12 +46,15 @@ const APPROVER_ROLES = ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'];
 
 export function NotificationProvider({ children }: { children?: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isPublicPage = pathname === '/' || /^\/(auth|register|verify|tarifs|contact|qui-sommes-nous|blog|docs|entreprises|privacy|mentions-legales|confidentialite|cgu|cgv|jobs|outils|simulateur|kiosk|ecran|inscription-portefeuille)(\/|$)/.test(pathname);
   const { bp } = useBasePath();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [mutedUntil, setMutedUntil] = useState<number | null>(null);
 
   // --- WEBSOCKET : événements temps réel ---
   useEffect(() => {
+    if (isPublicPage || !localStorage.getItem('user')) return;
     const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
       withCredentials: true,
     });
@@ -77,10 +80,12 @@ export function NotificationProvider({ children }: { children?: React.ReactNode 
     });
 
     return () => { socket.disconnect(); };
-  }, []);
+  }, [isPublicPage]);
 
   // --- SYNTHÈSE AU CHARGEMENT : un toast par type de demande en attente ---
   useEffect(() => {
+    if (isPublicPage) { setNotifications([]); return; }
+    let cancelled = false;
     const storedUser = localStorage.getItem('user');
     if (!storedUser) return;
     let user: any;
@@ -90,6 +95,7 @@ export function NotificationProvider({ children }: { children?: React.ReactNode 
     (async () => {
       try {
         const counts: any = await api.get('/dashboard/pending-requests-count');
+        if (cancelled) return;
 
         if (counts.absences > 0) {
           addNotification({
@@ -119,8 +125,9 @@ export function NotificationProvider({ children }: { children?: React.ReactNode 
         console.error('Erreur chargement synthèse des demandes en attente', e);
       }
     })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isPublicPage]);
 
   useEffect(() => {
     const muteTimestamp = localStorage.getItem('notifications_muted_until');

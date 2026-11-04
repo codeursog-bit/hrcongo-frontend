@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrainCircuit, Clock, Target, CheckCircle2, Loader2, Zap, AlertTriangle, Sparkles, XCircle } from 'lucide-react';
-import { api } from '@/services/api';
+import { recruitmentTestRequest } from '@/lib/recruitment-test';
 
 interface TestQuestion {
   id: string;
@@ -61,20 +61,20 @@ export default function TestIAPage({ params }: { params: { id: string; candidate
 
   const completeTest = useCallback(
     async (disqualified = false) => {
-      setTestState(prev => ({ ...prev, isCompleted: true, isDisqualified: disqualified }));
       exitFullscreen();
 
       const testDuration = Math.floor((Date.now() - startTime) / 1000);
 
       try {
-        await api.post(`/public/jobs/${params.id}/candidates/${params.candidateId}/submit-test`, {
+        await recruitmentTestRequest(params.id, params.candidateId, true, {
           answers: disqualified ? {} : testState.answers,
-          tabSwitchCount: testState.tabSwitchCount,
+          tabSwitchCount: disqualified ? Math.max(MAX_TAB_SWITCHES, testState.tabSwitchCount) : testState.tabSwitchCount,
           testDuration,
-          autoDisqualified: disqualified,
         });
+        setTestState(prev => ({ ...prev, isCompleted: true, isDisqualified: disqualified }));
       } catch (e) {
         console.error('❌ Erreur envoi réponses:', e);
+        alert(e instanceof Error ? e.message : 'Réponses non enregistrées. Réessayez.');
       }
     },
     [params.id, params.candidateId, testState.answers, testState.tabSwitchCount, startTime],
@@ -119,7 +119,7 @@ export default function TestIAPage({ params }: { params: { id: string; candidate
 
   const fetchQuestions = async () => {
     try {
-      const response = await api.get<TestQuestionsResponse>(`/public/jobs/${params.id}/test-questions`);
+      const response = await recruitmentTestRequest<TestQuestionsResponse>(params.id, params.candidateId);
       setQuestions(response.questions || []);
       const duration = response.config?.duration || 10;
       const totalPoints = response.questions?.reduce((sum: number, q: TestQuestion) => sum + q.points, 0) || 0;
@@ -127,7 +127,7 @@ export default function TestIAPage({ params }: { params: { id: string; candidate
       setTestState(prev => ({ ...prev, timeRemaining: duration * 60 }));
     } catch (e) {
       console.error('❌ Erreur chargement questions:', e);
-      alert('Erreur lors du chargement du test');
+      alert(e instanceof Error ? e.message : 'Erreur lors du chargement du test');
     } finally {
       setIsLoadingQuestions(false);
     }

@@ -52,7 +52,7 @@ const QUICK_LINKS = [
   { label: 'Voir la FAQ',               href: '/docs'           },
   { label: 'Consulter la documentation',href: '/docs'          },
   { label: 'Voir les tarifs',           href: '/tarifs'        },
-  { label: 'Essai gratuit 14 jours',    href: '/auth/register' },
+  { label: 'Essai gratuit 30 jours',    href: '/auth/register' },
 ];
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────

@@ -526,7 +526,7 @@ export function computeSimulation(input: EngineInput): EngineResult {
   // ── Totaux (même formule que le bulletin) ─────────────────────────────────
   const totalDeductions = cnssSalarial + its + custom.employeeTotal + totalAdvanceDeduction;
   const netSalary = Math.floor(grossSalary - totalDeductions + nonTaxableBonuses);
-  const totalEmployerCost = grossSalary + cnssEmployer + tusTotal + custom.employerTotal;
+  const totalEmployerCost = grossSalary + nonTaxableBonuses + cnssEmployer + tusTotal + custom.employerTotal;
 
   return {
     employee: {
@@ -594,7 +594,7 @@ export function computeSimulation(input: EngineInput): EngineResult {
     bncLabel,
     settings: {
       cnssSalarialRate: CNSS_SALARIAL_RATE * 100,
-      cnssEmployerRate: 20.25,
+      cnssEmployerRate: Number(((CNSS_EMPLOYER_PENSION_RATE + CNSS_EMPLOYER_FAMILY_RATE + CNSS_EMPLOYER_ACCIDENT_RATE) * 100).toFixed(2)),
       overtimeRate10: 10, overtimeRate25: 25, overtimeRate50: 50, overtimeRate100: 100,
       fiscalMode: fiscalModeInput,
       forfaitItsRate,
