@@ -84,7 +84,7 @@ export default function DeclarationsPage() {
   const exportPDF = async () => {
     setExporting(true);
     try {
-      const blob: any = await api.post('/payrolls/export/declarations-pdf', { companyId, month, year });
+      const blob = await api.postBlob('/payrolls/export/declarations-pdf', { companyId, month, year });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

@@ -26,7 +26,11 @@ import { api } from '@/services/api';
 // connexion, comme le fait déjà CompanyReminderProvider.
 function isUserAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!localStorage.getItem('user');
+  if (window.location.pathname.startsWith('/cabinet/')) return false;
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    return !!user && !['CABINET_ADMIN', 'CABINET_GESTIONNAIRE'].includes(user.role);
+  } catch { return false; }
 }
 
 // ============================================================================

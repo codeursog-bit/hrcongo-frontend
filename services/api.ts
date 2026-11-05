@@ -198,19 +198,18 @@ async function requestFormData<T>(
 }
 
 // ─── Blob (Téléchargement de fichiers) ───────────────────────────────────────
-async function requestBlob(endpoint: string): Promise<Blob> {
+async function requestBlob(endpoint: string, body?: unknown): Promise<Blob> {
+  const config: RequestInit = {
+    method: body === undefined ? 'GET' : 'POST', credentials: 'include',
+    ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  };
   try {
-    let response = await fetch(`${API_URL}${endpoint}`, {
-      method:      'GET',
-      credentials: 'include',
-    });
+    let response = await fetch(`${API_URL}${endpoint}`, config);
 
     if (response.status === 401) {
       const refreshed = await tryRefreshToken();
       if (refreshed) {
-        response = await fetch(`${API_URL}${endpoint}`, {
-          method: 'GET', credentials: 'include',
-        });
+        response = await fetch(`${API_URL}${endpoint}`, config);
       }
     }
 
@@ -325,6 +324,7 @@ export const api = {
   postFormData: <T>(endpoint: string, fd: FormData) => requestFormData<T>(endpoint, fd, 'POST'),
   putFormData:  <T>(endpoint: string, fd: FormData) => requestFormData<T>(endpoint, fd, 'PUT'),
   getBlob: (endpoint: string) => requestBlob(endpoint),
+  postBlob: (endpoint: string, body: unknown) => requestBlob(endpoint, body),
   getText: (endpoint: string) => requestText(endpoint),
   postStream: (endpoint: string, body: any, onLine: (obj: any) => void) =>
     requestStream(endpoint, body, onLine),

@@ -1,5 +1,6 @@
-import { localDateKey, attendanceCutoff } from '@/lib/attendance-calendar';
 'use client';
+
+import { localDateKey, attendanceCutoff } from '@/lib/attendance-calendar';
 
 // ============================================================================
 // 📁 app/(dashboard)/presences/DailyView.tsx

@@ -65,24 +65,26 @@ export default function BulletinsPage() {
     setSelected(selected.length === payrolls.length ? [] : payrolls.map(p => p.id));
 
   const validateAll = async () => {
-    for (const id of (selected.length ? selected : payrolls.map(p => p.id))) {
-      await api.patch(`/payrolls/${id}`, { status: 'VALIDATED' }).catch(() => null);
+    const targets = payrolls.filter(p => p.status === 'DRAFT' && (!selected.length || selected.includes(p.id)));
+    for (const { id } of targets) {
+      try {
+        const updated = await api.patch<Payroll>(`/payrolls/${id}`, { status: 'VALIDATED' });
+        setPayrolls(prev => prev.map(p => p.id === id ? { ...p, status: updated.status } : p));
+      } catch (e: any) { window.alert(e.message || 'Validation impossible'); return; }
     }
-    setPayrolls(prev => prev.map(p =>
-      (!selected.length || selected.includes(p.id)) ? { ...p, status: 'VALIDATED' } : p,
-    ));
   };
 
   const exportPDF = async () => {
     setExporting(true);
     try {
       const ids  = selected.length ? selected : payrolls.map(p => p.id);
-      const blob: any = await api.post('/payrolls/export/batch-pdf', { payrollIds: ids });
+      const blob = await api.postBlob('/payrolls/export/batch-pdf', { payrollIds: ids });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
       a.download = `bulletins-${MONTHS[month - 1]}-${year}.pdf`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e: any) {
       alert(`Erreur export : ${e.message}`);
     } finally {
@@ -94,12 +96,13 @@ export default function BulletinsPage() {
     setExporting(true);
     try {
       const ids  = selected.length ? selected : payrolls.map(p => p.id);
-      const blob: any = await api.post('/payrolls/export/sage', { payrollIds: ids, companyId });
+      const blob = await api.postBlob('/payrolls/export/sage', { payrollIds: ids, companyId });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = `sage-paie-${month}-${year}.csv`;
+      a.download = `sage-paie-${month}-${year}.txt`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (e: any) {
       alert(`Erreur export Sage : ${e.message}`);
     } finally {

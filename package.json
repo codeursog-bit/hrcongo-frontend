@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "check-types": "tsc --noEmit",
-    "build": "npm run check-types && next build",
+    "build": "npm run check-client-directives && npm run check-types && next build",
+    "check-client-directives": "node scripts/check-client-directives.cjs",
     "start": "node server.js",
     "lint": "next lint"
   },

@@ -114,7 +114,7 @@ const roleConfig: Record<CabinetRole, { label: string; iconEl: JSX.Element; colo
     borderColor: 'rgba(245,158,11,0.25)',
   },
   GESTIONNAIRE: {
-    label: 'Membre',
+    label: 'Gestionnaire',
     iconEl: <IcoShield color="#06b6d4" />,
     color: '#06b6d4',
     bgColor: 'rgba(6,182,212,0.1)',

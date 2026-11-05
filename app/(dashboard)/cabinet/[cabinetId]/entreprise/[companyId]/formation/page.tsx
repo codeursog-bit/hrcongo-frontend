@@ -14,6 +14,7 @@ import {
 const fmt = (n: number) => new Intl.NumberFormat('fr-CG', { maximumFractionDigits: 0 }).format(n);
 
 const STATUS_MAP: Record<string, { label: string; variant: any; accentColor: string }> = {
+  NOT_STARTED: { label: 'Au catalogue', variant: 'info', accentColor: C.cyan },
   PLANNED:    { label: 'Planifiée',  variant: 'info',    accentColor: C.cyan    },
   IN_PROGRESS:{ label: 'En cours',   variant: 'warning', accentColor: C.amber   },
   COMPLETED:  { label: 'Terminée',   variant: 'success', accentColor: C.emerald },
@@ -26,19 +27,19 @@ export default function CabinetFormationPage() {
 
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     api.get(`/training/courses?companyId=${companyId}`)
       .then((r: any) => setCourses(Array.isArray(r) ? r : r?.data ?? []))
-      .catch(() => setCourses([]))
+      .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [companyId]);
 
   const stats = {
-    planned:    courses.filter(c => c.status === 'PLANNED').length,
-    inProgress: courses.filter(c => c.status === 'IN_PROGRESS').length,
-    completed:  courses.filter(c => c.status === 'COMPLETED').length,
-    totalBudget:courses.reduce((s, c) => s + (c.budget ?? 0), 0),
+    total: courses.length,
+    enrolled: courses.reduce((s, c) => s + (c.enrolledCount ?? 0), 0),
+    totalBudget:courses.reduce((s, c) => s + Number(c.cost ?? 0), 0),
   };
 
   return (
@@ -51,15 +52,14 @@ export default function CabinetFormationPage() {
       />
 
       {courses.length > 0 && (
-        <div className="grid grid-cols-4 gap-3">
-          <KpiCard label="Planifiées"  value={stats.planned}    icon={<Ico.Clock  size={16} color={C.cyan}    />} accentColor={C.cyan}    />
-          <KpiCard label="En cours"    value={stats.inProgress} icon={<Ico.Alert  size={16} color={C.amber}   />} accentColor={C.amber}   />
-          <KpiCard label="Terminées"   value={stats.completed}  icon={<Ico.Check  size={16} color={C.emerald} />} accentColor={C.emerald} />
-          <KpiCard label="Budget total"value={`${fmt(stats.totalBudget)} F`} icon={<Ico.Dollar size={16} color={C.violet} />} accentColor={C.violet} />
+        <div className="grid grid-cols-3 gap-3">
+          <KpiCard label="Formations" value={stats.total} icon={<Ico.Book size={16} color={C.cyan} />} accentColor={C.cyan} />
+          <KpiCard label="Inscriptions" value={stats.enrolled} icon={<Ico.Users size={16} color={C.emerald} />} accentColor={C.emerald} />
+          <KpiCard label="Coût du catalogue" value={`${fmt(stats.totalBudget)} F`} icon={<Ico.Dollar size={16} color={C.violet} />} accentColor={C.violet} />
         </div>
       )}
 
-      {loading ? <LoadingInline /> : courses.length === 0 ? (
+      {error ? <p role="alert" className="text-red-300">{error}</p> : loading ? <LoadingInline /> : courses.length === 0 ? (
         <Card>
           <EmptyState
             icon={<Ico.Book size={22} color={C.textMuted} />}
@@ -87,10 +87,10 @@ export default function CabinetFormationPage() {
                       </p>
                     )}
                     <div className="flex items-center gap-4" style={{ color: C.textMuted }}>
-                      {c.startDate && (
+                      {c.dateSchedule && (
                         <span className="flex items-center gap-1 text-xs">
                           <Ico.Leave size={11} color="currentColor" />
-                          {new Date(c.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {new Date(c.dateSchedule).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       )}
                       {c.duration && (
@@ -99,16 +99,16 @@ export default function CabinetFormationPage() {
                           {c.duration}h
                         </span>
                       )}
-                      {c.budget && (
+                      {c.cost != null && (
                         <span className="flex items-center gap-1 text-xs">
                           <Ico.Dollar size={11} color="currentColor" />
-                          {fmt(c.budget)} F
+                          {fmt(c.cost)} F
                         </span>
                       )}
-                      {c._count?.enrollments !== undefined && (
+                      {c.enrolledCount !== undefined && (
                         <span className="flex items-center gap-1 text-xs">
                           <Ico.Users size={11} color="currentColor" />
-                          {c._count.enrollments} inscrit{c._count.enrollments > 1 ? 's' : ''}
+                          {c.enrolledCount} inscrit{c.enrolledCount > 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
