@@ -67,13 +67,14 @@ const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Aoû
 const STATUS_INFO: Record<string, { label: string; dot: string; border: string; text: string }> = {
   DRAFT:     { label:'Brouillon', dot:'#94a3b8', border:'#e2e8f0', text:'#64748b' },
   VALIDATED: { label:'Validé',    dot:'#10b981', border:'#a7f3d0', text:'#059669' },
+  TO_PAY:    { label:'À payer',   dot:'#f97316', border:'#fed7aa', text:'#c2410c' },
   PAID:      { label:'Payé',      dot:'#f59e0b', border:'#fde68a', text:'#b45309' },
   CANCELLED: { label:'Annulé',    dot:'#ef4444', border:'#fecaca', text:'#dc2626' },
 };
 
 const CONFIRM_CONFIG = {
-  validate: { title:'Valider le bulletin ?',      sub:'Le bulletin ne pourra plus être modifié.', btnLabel:'Valider',   btnColor:'#10b981', icon: Check      },
-  pay:      { title:'Confirmer le paiement ?',    sub:"L'employé pourra accéder à son bulletin.", btnLabel:'Confirmer', btnColor:'#d97706', icon: DollarSign },
+  validate: { title:'Valider le bulletin ?',      sub:'Vous pourrez encore le corriger avant de le passer à payer.', btnLabel:'Valider', btnColor:'#10b981', icon: Check      },
+  pay:      { title:'Passer le bulletin à payer ?', sub:'Le bulletin sera verrouillé puis transmis à Compta.', btnLabel:'À payer', btnColor:'#d97706', icon: DollarSign },
   cancel:   { title:'Annuler ce bulletin ?',      sub:'Le bulletin sera invalidé.',               btnLabel:'Annuler',   btnColor:'#d97706', icon: Ban        },
   restore:  { title:'Remettre en brouillon ?',    sub:'Repassera en statut Brouillon.',           btnLabel:'Restaurer', btnColor:'#6b7280', icon: RotateCcw  },
   delete:   { title:'Supprimer définitivement ?', sub:'Action irréversible.',                     btnLabel:'Supprimer', btnColor:'#dc2626', icon: Trash2     },
@@ -122,7 +123,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
         return;
       }
       const statusMap: Record<string, string> = {
-        validate:'VALIDATED', pay:'PAID', cancel:'CANCELLED', restore:'DRAFT',
+        validate:'VALIDATED', pay:'TO_PAY', cancel:'CANCELLED', restore:'DRAFT',
       };
       const updated = await api.patch<PayrollData>(`/payrolls/${params.id}`, { status: statusMap[confirm] });
       setData(updated);
@@ -213,7 +214,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
               </button>
             )}
             {isAdmin && data.status==='DRAFT'     && <button onClick={()=>setConfirm('validate')} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-sm"><Check size={15}/> Valider</button>}
-            {isAdmin && data.status==='VALIDATED' && <button onClick={()=>setConfirm('pay')}      className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm"><DollarSign size={15}/> Marquer Payé</button>}
+            {isAdmin && data.status==='VALIDATED' && <button onClick={()=>setConfirm('pay')}      className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm"><DollarSign size={15}/> À payer</button>}
             {isAdmin && !['CANCELLED','PAID'].includes(data.status) && <button onClick={()=>setConfirm('cancel')}  className="flex items-center gap-2 px-4 py-2.5 border border-amber-200 dark:border-amber-700 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 font-bold rounded-xl text-sm"><Ban size={15}/> Annuler</button>}
             {isAdmin && data.status==='CANCELLED' && <button onClick={()=>setConfirm('restore')} className="flex items-center gap-2 px-4 py-2.5 border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] font-bold rounded-xl text-sm"><RotateCcw size={15}/> Restaurer</button>}
             <div className="w-px h-7 bg-[var(--border)] hidden sm:block mx-1" />
@@ -241,7 +242,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
             >
               <Printer size={15}/> Imprimer
             </button>
-            {isAdmin && <button onClick={()=>setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 font-bold rounded-xl text-sm"><Trash2 size={14}/> Supprimer</button>}
+            {isAdmin && !['TO_PAY','PAID'].includes(data.status) && <button onClick={()=>setConfirm('delete')} className="ml-auto flex items-center gap-2 px-3 py-2.5 border border-red-200 dark:border-red-800 text-red-500 hover:bg-red-50 font-bold rounded-xl text-sm"><Trash2 size={14}/> Supprimer</button>}
           </div>
 
           {/* Bandeau modifiable */}

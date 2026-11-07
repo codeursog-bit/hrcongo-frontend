@@ -15,6 +15,7 @@ const fmt    = (n: number) => new Intl.NumberFormat('fr-CG', { maximumFractionDi
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   DRAFT:     { label: 'En cours',  color: 'text-amber-400'   },
   VALIDATED: { label: 'Validé',    color: 'text-blue-400'    },
+  TO_PAY:    { label: 'À payer',   color: 'text-orange-400'  },
   PAID:      { label: 'Payé',      color: 'text-emerald-400' },
 };
 

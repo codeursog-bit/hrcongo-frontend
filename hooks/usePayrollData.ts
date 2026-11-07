@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '@/services/api';
 
-type PayrollStatus = 'Draft' | 'Validated' | 'Paid' | 'Cancelled';
+type PayrollStatus = 'Draft' | 'Validated' | 'ToPay' | 'Paid' | 'Cancelled';
 
 interface PayrollEntry {
   id: string;
@@ -52,7 +52,7 @@ export function usePayrollData(selectedMonth: string, selectedYear: number) {
         grossSalary: Number(p.grossSalary) || 0,
         netSalary: Number(p.netSalary) || 0,
         charges: (Number(p.cnssSalarial) || 0) + (Number(p.its) || 0),
-        status: p.status === 'DRAFT' ? 'Draft' : p.status === 'VALIDATED' ? 'Validated' : p.status === 'PAID' ? 'Paid' : 'Cancelled',
+        status: p.status === 'DRAFT' ? 'Draft' : p.status === 'VALIDATED' ? 'Validated' : p.status === 'TO_PAY' ? 'ToPay' : p.status === 'PAID' ? 'Paid' : 'Cancelled',
         month: MONTHS[(p.month || 1) - 1],
         year: p.year || new Date().getFullYear()
       }));

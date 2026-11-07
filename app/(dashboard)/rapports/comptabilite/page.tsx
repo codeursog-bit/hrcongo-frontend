@@ -1,4 +1,5 @@
 'use client';
+import { ComptaConnectorPanel } from '@/components/ComptaConnectorPanel';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -47,6 +48,7 @@ export default function AccountingPage() {
 
   const now = new Date();
   const [period, setPeriod]     = useState({ month: now.getMonth() + 1, year: now.getFullYear() });
+  const [journalError,setJournalError] = useState<string|null>(null);
   const [journal, setJournal]   = useState<JournalResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied]     = useState(false);
@@ -61,13 +63,14 @@ export default function AccountingPage() {
   useEffect(() => {
     const fetch = async () => {
       setIsLoading(true);
+      setJournalError(null);
       try {
         const data = await api.get<JournalResponse>(
           `/payrolls/journal?month=${period.month}&year=${period.year}`
         );
         setJournal(data);
       } catch (e) {
-        console.error(e);
+        setJournalError(e instanceof Error?e.message:'Le journal comptable est indisponible.');
         setJournal(null);
       } finally {
         setIsLoading(false);
@@ -79,7 +82,7 @@ export default function AccountingPage() {
   const entries      = journal?.entries || [];
   const totalDebit   = entries.reduce((s, e) => s + Number(e.debit  || 0), 0);
   const totalCredit  = entries.reduce((s, e) => s + Number(e.credit || 0), 0);
-  const isBalanced   = Math.abs(totalDebit - totalCredit) < 10;
+  const isBalanced   = totalDebit === totalCredit;
   const monthName    = MONTHS[(period.month - 1)] + ' ' + period.year;
 
   // ── Export Excel Standard ────────────────────────────────────────────
@@ -129,7 +132,7 @@ export default function AccountingPage() {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const response = await fetch(
         `${API_URL}/payrolls/export/etax?month=${period.month}&year=${period.year}`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
+        { credentials: 'include', headers: token ? { 'Authorization': `Bearer ${token}` } : {} }
       );
 
       if (!response.ok) {
@@ -254,6 +257,8 @@ export default function AccountingPage() {
       {/* ── NAV ────────────────────────────────────────────────────────── */}
       <RapportsSubNav active="/rapports/comptabilite" />
 
+      <ComptaConnectorPanel />
+
       {/* ── CONTENU PRINCIPAL ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -271,21 +276,21 @@ export default function AccountingPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-[var(--text)]">Journal de Paie — OD</h3>
-                  <p className="text-xs text-[var(--text-muted)]">{entries.length} écritures · {monthName}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{isLoading?'Chargement…':journalError?'Journal indisponible':`${entries.length} écritures`} · {monthName}</p>
                 </div>
               </div>
               <div className={`px-3 py-1.5 rounded-full text-xs font-bold border
-                ${isBalanced
+                ${!journal || isLoading ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300' : isBalanced
                   ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400'
                   : 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400'}`}>
-                {isBalanced ? '✓ ÉQUILIBRÉ' : '⚠ DÉSÉQUILIBRÉ'}
+                {!journal || isLoading ? 'NON VÉRIFIÉ' : isBalanced ? '✓ ÉQUILIBRÉ' : '⚠ DÉSÉQUILIBRÉ'}
               </div>
             </div>
 
             <div className="overflow-x-auto">
               {isLoading ? (
                 <KonzaLoader variant="section" />
-              ) : entries.length === 0 ? (
+              ) : journalError ? (<div role="alert" className="p-6 space-y-2 text-red-600 dark:text-red-400"><p className="font-semibold">Journal comptable indisponible</p><p className="text-sm">{journalError}</p><p className="text-sm">Aucun total ni équilibre ne peut être confirmé. Vérifiez l’accès à l’export comptable dans les paramètres d’abonnement.</p></div>) : entries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-[var(--text-muted)]">
                   <Receipt size={40} className="mb-3 opacity-30" />
                   <p className="font-medium">Aucune écriture pour cette période</p>
@@ -380,7 +385,7 @@ export default function AccountingPage() {
               {/* Excel Standard */}
               <button
                 onClick={handleExcelExport}
-                disabled={exportLoading === 'excel'}
+                disabled={!!exportLoading || isLoading || !journal}
                 className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
@@ -398,7 +403,7 @@ export default function AccountingPage() {
               {/* Sage */}
               <button
                 onClick={handleSageExport}
-                disabled={exportLoading === 'sage'}
+                disabled={!!exportLoading || isLoading || !journal}
                 className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
@@ -416,7 +421,7 @@ export default function AccountingPage() {
               {/* eTax DGID */}
               <button
                 onClick={handleETaxExport}
-                disabled={exportLoading === 'etax'}
+                disabled={!!exportLoading || isLoading || !journal}
                 className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--accent-2)] hover:bg-[var(--accent-2-soft)] transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
@@ -436,7 +441,7 @@ export default function AccountingPage() {
               {/* CSV Générique */}
               <button
                 onClick={handleCSVExport}
-                disabled={exportLoading === 'csv'}
+                disabled={!!exportLoading || isLoading || !journal}
                 className="w-full flex items-center justify-between p-3.5 rounded-xl border border-[var(--border)] hover:border-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-all group disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
@@ -462,7 +467,7 @@ export default function AccountingPage() {
 
             <div className="space-y-3">
               {[
-                { label: 'Bulletins',          val: `${journal?.totalEntries ? Math.floor(journal.totalEntries / 4) : 0} emp.`, mono: false },
+                { label: 'Bulletins',          val: `${new Set(entries.map(entry=>entry.piece)).size} emp.`, mono: false },
                 { label: 'Total Débit',         val: totalDebit.toLocaleString('fr-FR'),  mono: true, color: 'text-emerald-400' },
                 { label: 'Total Crédit',        val: totalCredit.toLocaleString('fr-FR'), mono: true, color: 'text-red-400' },
                 { label: 'Équilibre',           val: isBalanced ? '✓ OK' : '⚠ Écart : ' + Math.abs(totalDebit - totalCredit).toLocaleString(), mono: false, color: isBalanced ? 'text-emerald-400' : 'text-amber-400' },
@@ -470,13 +475,14 @@ export default function AccountingPage() {
                 <div key={i} className={`flex justify-between items-center pb-3 ${i < 3 ? 'border-b border-white/10' : ''}`}>
                   <span className="text-sm text-white/80">{item.label}</span>
                   <span className={`font-bold ${item.mono ? 'font-mono text-sm' : ''} ${item.color || ''}`}>
-                    {item.val}
+                    {isLoading || !journal ? '—' : item.val}
                   </span>
                 </div>
               ))}
             </div>
 
             <button
+              disabled={isLoading || !journal || !entries.length}
               onClick={handleCopy}
               className="w-full mt-5 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors"
             >
@@ -506,7 +512,7 @@ export default function AccountingPage() {
                     { col: 'C', label: 'Salaire Brut', desc: 'Total avant déductions' },
                     { col: 'D', label: 'Base ITS/IRPP', desc: '(Brut − CNSS) × 80%' },
                     { col: 'E', label: 'Montant ITS', desc: 'Impôt retenu à la source' },
-                    { col: 'F', label: 'TUS', desc: 'Brut × 7,5% (charge patronale)' },
+                    { col: 'F', label: 'TUS', desc: 'Montant patronal enregistré sur le bulletin' },
                   ].map((item) => (
                     <div key={item.col} className="flex items-center gap-2 text-xs">
                       <span className="w-5 h-5 rounded bg-[var(--accent-2-soft)] text-[var(--accent-2)] font-bold text-center leading-5 text-xs shrink-0">

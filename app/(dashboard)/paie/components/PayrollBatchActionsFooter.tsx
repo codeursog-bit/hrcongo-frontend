@@ -79,13 +79,13 @@ export function PayrollBatchActionsFooter({
                   <span className="hidden sm:inline">Valider</span>
                 </button>
 
-                {/* ✅ Bouton Payer (ambre) */}
+                {/* ✅ Bouton À payer (ambre) */}
                 <button 
                   onClick={onPay}
                   className="flex-1 md:flex-none px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
                 >
                   <DollarSign size={18} />
-                  <span className="hidden sm:inline">Payer</span>
+                  <span className="hidden sm:inline">À payer</span>
                 </button>
 
                 {/* ✅ Bouton Annuler (rouge) */}

@@ -64,7 +64,7 @@ export default function PayrollAuditBanner({ month, year, refreshKey }: { month:
         <div className="min-w-0">
           <p className="text-sm font-bold text-[var(--text)]">
             Contrôle de paie — {MONTHS_FR[month - 1]} {year}
-            {summary.conformityRate !== null && <span className="ml-2 font-black">{summary.conformityRate} % conforme</span>}
+            {!never && summary.payrollsChecked > 0 && summary.conformityRate !== null && <span className="ml-2 font-black">{summary.conformityRate} % conforme</span>}
           </p>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">
             {never ? 'Aucun contrôle effectué pour ce mois.'

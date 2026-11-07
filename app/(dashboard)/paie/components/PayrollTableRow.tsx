@@ -6,7 +6,7 @@ import { Eye, MoreHorizontal, Loader2, CheckCircle, DollarSign, Ban, RotateCcw, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 
-type PayrollStatus = 'Draft' | 'Validated' | 'Paid' | 'Cancelled';
+type PayrollStatus = 'Draft' | 'Validated' | 'ToPay' | 'Paid' | 'Cancelled';
 
 interface PayrollEntry {
   id: string;
@@ -36,6 +36,7 @@ const StatusBadge = ({ status }: { status: PayrollStatus }) => {
   const config = {
     Draft:     { color: 'bg-[var(--surface-2)] text-[var(--text-muted)]',                              icon: Pencil,      label: 'Brouillon' },
     Validated: { color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: CheckCircle, label: 'Validé' },
+    ToPay:     { color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', icon: DollarSign,   label: 'À payer' },
     Paid:      { color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',        icon: CheckCircle, label: 'Payé' },
     Cancelled: { color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',              icon: Ban,         label: 'Annulé' },
   };
@@ -157,14 +158,22 @@ export function PayrollTableRow({
                   {/* ── VALIDATED ── */}
                   {entry.status === 'Validated' && (
                     <>
-                      <MenuItem icon={DollarSign} label="Payer" sub="Marquer comme payé"
-                        onClick={() => { onStatusChange('PAID'); close(); }}
-                        colorClass="text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                        iconBg="bg-emerald-100 dark:bg-emerald-900/30" divider />
+                      <MenuItem icon={DollarSign} label="À payer" sub="Verrouiller et transmettre à Compta"
+                        onClick={() => { onStatusChange('TO_PAY'); close(); }}
+                        colorClass="text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                        iconBg="bg-orange-100 dark:bg-orange-900/30" divider />
                       <MenuItem icon={RotateCcw} label="Remettre en brouillon"
                         onClick={() => { onStatusChange('DRAFT'); close(); }}
                         iconBg="bg-[var(--surface-2)]" divider />
                     </>
+                  )}
+
+                  {/* ── À PAYER ── */}
+                  {entry.status === 'ToPay' && (
+                    <MenuItem icon={Ban} label="Annuler la demande" sub="Annuler avant paiement"
+                      onClick={() => { onStatusChange('CANCELLED'); close(); }}
+                      colorClass="text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                      iconBg="bg-amber-100 dark:bg-amber-900/30" divider />
                   )}
 
                   {/* ── PAID ── */}
@@ -183,7 +192,7 @@ export function PayrollTableRow({
                   )}
 
                   {/* ── SUPPRIMER — toujours disponible ── */}
-                  {onDelete && (
+                  {onDelete && entry.status !== 'ToPay' && entry.status !== 'Paid' && (
                     <MenuItem
                       icon={Trash2}
                       label="Supprimer"

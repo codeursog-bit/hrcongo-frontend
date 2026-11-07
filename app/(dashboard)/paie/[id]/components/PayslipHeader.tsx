@@ -25,6 +25,7 @@ const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Aoû
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   DRAFT:     { label: 'Brouillon', bg: 'bg-[var(--surface-2)]',                   text: 'text-[var(--text-muted)]',            dot: 'bg-gray-400' },
   VALIDATED: { label: 'Validé',    bg: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500' },
+  TO_PAY:    { label: 'À payer',   bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-700 dark:text-orange-300', dot: 'bg-orange-500' },
   PAID:      { label: 'Payé',      bg: 'bg-amber-100 dark:bg-amber-900/40',       text: 'text-amber-700 dark:text-amber-300',   dot: 'bg-amber-500' },
   CANCELLED: { label: 'Annulé',    bg: 'bg-red-100 dark:bg-red-900/40',         text: 'text-red-700 dark:text-red-300',       dot: 'bg-red-500' },
 };

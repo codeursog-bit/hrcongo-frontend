@@ -69,7 +69,7 @@ export default function OnboardingChecklist({ hidePaie = false }: Props) {
   const [companyId,   setCompanyId]   = useState<string | null>(null);
   const [userName,    setUserName]    = useState('');
   const [visible,     setVisible]     = useState(false);
-  const [collapsed,   setCollapsed]   = useState(false);
+  const [collapsed,   setCollapsed]   = useState(true);
   const [celebrating, setCelebrating] = useState(false);
 
   const totalSteps = hidePaie ? 4 : 5;
@@ -327,11 +327,11 @@ export default function OnboardingChecklist({ hidePaie = false }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-0.5">
-              <button onClick={() => setCollapsed(c => !c)}
+              <button aria-label={collapsed?'Développer le guide de démarrage':'Réduire le guide de démarrage'} aria-expanded={!collapsed} onClick={() => setCollapsed(c => !c)}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 {collapsed ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
               </button>
-              <button onClick={hideForNow}
+              <button aria-label="Masquer le guide de démarrage" onClick={hideForNow}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <X size={14}/>
               </button>

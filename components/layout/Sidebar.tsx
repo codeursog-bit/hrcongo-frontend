@@ -1,4 +1,5 @@
 'use client';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 import { api } from '@/services/api';
 import React, { useEffect, useState } from 'react';
@@ -748,7 +749,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className={`rounded-2xl ${mini ? 'p-1.5 justify-center' : 'p-3'} flex items-center gap-3 transition-colors group`} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
             <div className="relative shrink-0">
               {user ? (
-                <img src={employeePhotoUrl || user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-xl object-cover" />
+                <ProfileAvatar src={employeePhotoUrl} name={user.name}/>
               ) : (
                 <div className="w-9 h-9 rounded-xl animate-pulse" style={{ background: 'var(--border)' }} />
               )}

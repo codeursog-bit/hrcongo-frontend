@@ -28,7 +28,7 @@ interface MoisNonPaye {
   montant:        number;
   isApproximate:  boolean;
   estimateSource: 'BULLETIN' | 'SIMULATION' | 'BASE_SALARY';
-  bulletinStatus: 'NONE' | 'DRAFT' | 'VALIDATED';
+  bulletinStatus: 'NONE' | 'DRAFT' | 'VALIDATED' | 'TO_PAY';
   dueDate:        string;
   daysOverdue:    number;
   phase:          'NO_BULLETIN' | 'UNPAID_BULLETIN';
@@ -126,13 +126,14 @@ function MontantBadge({ montant, isApproximate, source, className = '' }: { mont
 }
 
 // Badge statut bulletin
-function BulletinStatusBadge({ status }: { status: 'NONE' | 'DRAFT' | 'VALIDATED' }) {
+function BulletinStatusBadge({ status }: { status: 'NONE' | 'DRAFT' | 'VALIDATED' | 'TO_PAY' }) {
   const styles = {
     NONE:      'bg-[var(--surface-2)] text-[var(--text-muted)]',
     DRAFT:     'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
     VALIDATED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+    TO_PAY:    'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
   };
-  const labels = { NONE: 'Pas de bulletin', DRAFT: 'Brouillon', VALIDATED: 'Validé' };
+  const labels = { NONE: 'Pas de bulletin', DRAFT: 'Brouillon', VALIDATED: 'Validé', TO_PAY: 'À payer' };
   return (
     <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${styles[status]}`}>
       {labels[status]}

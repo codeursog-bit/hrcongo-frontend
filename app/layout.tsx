@@ -4,7 +4,7 @@
 // ============================================================================
 import React from 'react';
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import { AlertProvider } from '@/components/providers/AlertProvider';
@@ -15,14 +15,16 @@ import { SubscriptionEndedBanner } from '@/components/providers/SubscriptionEnde
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import './globals.css';
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
+  weight: '100 900',
   display: 'swap',
   variable: '--font-inter',
 });
 
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
+const mono = localFont({
+  src: '../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2',
+  weight: '100 800',
   display: 'swap',
   variable: '--font-mono',
 });
@@ -161,7 +163,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         {/* Preconnect pour la perf */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://res.cloudinary.com" />
         {/* JSON-LD Organisation */}
         <script

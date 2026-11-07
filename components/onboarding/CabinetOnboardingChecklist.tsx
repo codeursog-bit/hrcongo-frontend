@@ -79,7 +79,7 @@ export default function CabinetOnboardingChecklist() {
   const cabinetId = params.cabinetId as string;
 
   const [visible,        setVisible]        = useState(false);
-  const [collapsed,      setCollapsed]      = useState(false);
+  const [collapsed,      setCollapsed]      = useState(true);
   const [celebrating,    setCelebrating]    = useState(false);
   const [userName,       setUserName]       = useState('');
   const [firstCompanyId, setFirstCompanyId] = useState<string | null>(null);
@@ -377,7 +377,7 @@ export default function CabinetOnboardingChecklist() {
               <button onClick={() => setCollapsed(c=>!c)} style={{width:28,height:28,borderRadius:7,border:'none',cursor:'pointer',background:'rgba(255,255,255,.05)',color:'#64748b',display:'flex',alignItems:'center',justifyContent:'center'}}>
                 {collapsed ? <ChevronUp size={13}/> : <ChevronDown size={13}/>}
               </button>
-              <button onClick={hideForNow} style={{width:28,height:28,borderRadius:7,border:'none',cursor:'pointer',background:'rgba(255,255,255,.05)',color:'#64748b',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <button aria-label="Masquer le guide de démarrage" onClick={hideForNow} style={{width:28,height:28,borderRadius:7,border:'none',cursor:'pointer',background:'rgba(255,255,255,.05)',color:'#64748b',display:'flex',alignItems:'center',justifyContent:'center'}}>
                 <X size={13}/>
               </button>
             </div>

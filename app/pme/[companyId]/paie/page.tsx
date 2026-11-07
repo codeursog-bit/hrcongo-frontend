@@ -15,7 +15,7 @@ import { PayrollBatchActionsFooter } from './components/PayrollBatchActionsFoote
 import { PayrollPagination } from './components/PayrollPagination';
 import { usePayrollData } from '@/hooks/usePayrollData';
 
-type PayrollStatus = 'Draft' | 'Validated' | 'Paid' | 'Cancelled';
+type PayrollStatus = 'Draft' | 'Validated' | 'ToPay' | 'Paid' | 'Cancelled';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -49,6 +49,7 @@ export default function PayrollPage() {
     setActionLoadingId(id);
     const backendStatus  = newStatus.toUpperCase();
     const frontendStatus = newStatus === 'VALIDATED' ? 'Validated'
+                         : newStatus === 'TO_PAY'    ? 'ToPay'
                          : newStatus === 'PAID'      ? 'Paid'
                          : newStatus === 'DRAFT'     ? 'Draft'
                          : 'Cancelled';
@@ -97,7 +98,7 @@ export default function PayrollPage() {
       alert('\u26a0\ufe0f Veuillez sélectionner au moins un bulletin');
       return;
     }
-    const label = action === 'VALIDATED' ? 'Valider' : action === 'PAID' ? 'Marquer comme payé' : 'Annuler';
+    const label = action === 'VALIDATED' ? 'Valider' : action === 'TO_PAY' ? 'Passer à payer' : 'Annuler';
     if (!confirm(`Voulez-vous vraiment ${label} ${selectedIds.length} bulletin(s) ?`)) return;
 
     setIsBatchActionLoading(true);
@@ -189,6 +190,7 @@ export default function PayrollPage() {
               { id: 'All',       label: 'Tous',       count: entries.length },
               { id: 'Draft',     label: 'Brouillons', count: entries.filter(e => e.status === 'Draft').length },
               { id: 'Validated', label: 'Validés',    count: entries.filter(e => e.status === 'Validated').length },
+              { id: 'ToPay',     label: 'À payer',    count: entries.filter(e => e.status === 'ToPay').length },
               { id: 'Paid',      label: 'Payés',      count: entries.filter(e => e.status === 'Paid').length },
             ].map(tab => (
               <button key={tab.id}
@@ -260,7 +262,7 @@ export default function PayrollPage() {
                     onEdit={entry.status === 'Draft'
                       ? () => router.push(`/paie/${entry.id}/modifier`)
                       : undefined}
-                    onDelete={() => openDeleteModal(entry.id, entry.name)}
+                    onDelete={entry.status === 'ToPay' || entry.status === 'Paid' ? undefined : () => openDeleteModal(entry.id, entry.name)}
                   />
                 ))
               )}
@@ -282,7 +284,7 @@ export default function PayrollPage() {
         selectedCount={selectedIds.length}
         isLoading={isBatchActionLoading}
         onValidate={() => handleBatchAction('VALIDATED')}
-        onPay={() => handleBatchAction('PAID')}
+        onPay={() => handleBatchAction('TO_PAY')}
         onCancel={() => handleBatchAction('CANCELLED')}
         onClear={() => setSelectedIds([])}
       />
