@@ -870,7 +870,7 @@ export default function ManuelPayrollPage() {
 
       // Primes (GAIN isTaxable) depuis les items du bulletin
       const prevPrimes: Row[] = (prev.items ?? [])
-        .filter((i: any) => i.type === 'GAIN' && i.isTaxable && !['SAL_BASE','INDEM_CONGE'].includes(i.code))
+        .filter((i: any) => i.type === 'GAIN' && i.isTaxable && !['SAL_BASE','INDEM_CONGE','CONGE_SUPP'].includes(i.code))
         .map((i: any) => ({
           localId: uid(),
           label:   i.label ?? '',

@@ -1,4 +1,5 @@
 'use client';
+import { presentBulletinItem } from '@/lib/bulletin-item-presentation';
 
 // ============================================================================
 // components/CanvasRenderer/index.tsx
@@ -136,7 +137,7 @@ function resolveScalar(variable: CanvasVariable, payroll: BulletinPayroll): stri
 
 // Retourne les items filtrés selon la variable
 function resolveItems(variable: CanvasVariable, payroll: BulletinPayroll): any[] {
-  const items = payroll.items ?? [];
+  const items = (payroll.items ?? []).map(presentBulletinItem);
   switch (variable) {
     case 'items.gains':      return items.filter(i => i.type === 'GAIN' && !['HS_10','HS_25','HS_50','HS_100'].includes(i.code) && !i.code.startsWith('BONUS_') && !i.code.startsWith('AUTO_BONUS_')).sort((a,b)=>a.order-b.order);
     case 'items.deductions': return items.filter(i => i.type === 'DEDUCTION').sort((a,b)=>a.order-b.order);
@@ -523,7 +524,7 @@ function RenderText({ block, payroll }: { block: CanvasBlock; payroll: BulletinP
           ⚖️ Réglementation — République du Congo
         </div>
         <div style={{ padding:'10px 12px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'3px 16px' }}>
-          {['Code du Travail — Loi n°45-75 du 15 mars 1975','ITS 2026 — Barème progressif — Abattement 20%','CNSS salarié : 4% — Plafond : 1 200 000 FCFA','CNSS patronale : pensions 8% · famille 10% · AT 2,25%','SMIG Congo : 70 400 FCFA/mois (2026)','TUS : 7,5% sur brut total (DGI + CNSS)','HS — Décret n°78-360 : +10%·+25%·+50%·+100%',"L'ITS est prélevé à la source et reversé à la DGID"].map((item, i) => (
+          {['Code du Travail — Loi n°45-75 du 15 mars 1975','ITS 2026 — Barème progressif — Abattement 20%','CNSS salarié : 4% — Plafond : 1 200 000 FCFA','CNSS patronale : pensions 8% · famille 10% · AT 2,25%','SMIG Congo : 70 400 FCFA/mois (2026)','TUS : 7,5% sur brut total (FISC + CNSS)','HS — Décret n°78-360 : +10%·+25%·+50%·+100%',"L'ITS est prélevé à la source et reversé à le FISC"].map((item, i) => (
             <div key={i} style={{ display:'flex', gap:4 }}>
               <span style={{ color:'#cbd5e1', fontSize:fs - 2, flexShrink:0 }}>•</span>
               <span style={{ fontSize:fs - 2, color:'#64748b', lineHeight:1.5 }}>{item}</span>

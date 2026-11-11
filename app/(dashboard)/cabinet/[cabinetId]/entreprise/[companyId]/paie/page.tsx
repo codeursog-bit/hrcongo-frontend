@@ -384,7 +384,7 @@ function EmployeeRowComponent({ row, onChange, onCalculate, onSave, index }: {
                     { label: 'CNSS retraite (8%)',      value: p.cnssEmployerPension   },
                     { label: 'CNSS famille (10.03%)',    value: p.cnssEmployerFamily    },
                     { label: 'CNSS accidents (2.25%)',   value: p.cnssEmployerAccident  },
-                    { label: 'TUS DGI (4.13%)',          value: p.tusDgiAmount          },
+                    { label: 'TUS FISC (4.13%)',          value: p.tusDgiAmount          },
                     { label: 'TUS CNSS (3.38%)',         value: p.tusCnssAmount         },
                     ...p.customTaxDetails.filter(t => t.employerAmount > 0).map(t => ({
                       label: `${t.name} (${t.code})`, value: t.employerAmount,

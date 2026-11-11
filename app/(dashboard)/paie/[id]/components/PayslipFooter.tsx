@@ -11,7 +11,7 @@ export default function PayslipFooter() {
     'SMIG Congo : 70 400 FCFA/mois (2026)',
     'TUS : 2% sur brut total (patronale, sans plafond)',
     "HS — Décret n°78-360 : +10% · +25% · +50% · +100%",
-    "L'ITS est prélevé à la source et reversé à la DGID",
+    "L'ITS est prélevé à la source et reversé à le FISC",
   ];
  
   const legaItems = [

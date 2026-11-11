@@ -93,7 +93,7 @@ export const VARIABLE_LABELS: Record<CanvasVariable, string> = {
   'pay.cnssEmployerPension':  'CNSS patronale — Pensions (8%)',
   'pay.cnssEmployerFamily':   'CNSS patronale — Famille (10,03%)',
   'pay.cnssEmployerAccident': 'CNSS patronale — Accidents (2,25%)',
-  'pay.tusDgi':               'TUS Part DGI (2,025%)',
+  'pay.tusDgi':               'TUS FISC (2,025%)',
   'pay.tusCnss':              'TUS Part CNSS (5,475%)',
   'items.loans':              'Tableau — Prêts & remboursements',
   'items.advances':           'Tableau — Avances sur salaire',

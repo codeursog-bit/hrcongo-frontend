@@ -1,3 +1,4 @@
+import { presentBulletinItem } from './bulletin-item-presentation';
 // // ============================================================================
 // // lib/bulletin-items-classifier.ts
 // //
@@ -202,7 +203,8 @@ export function classifyItems(items: PayrollItem[]): ClassifiedItems {
   const retenueItems: PayrollItem[] = [];
   const empItems:     PayrollItem[] = [];
 
-  for (const item of items) {
+  for (const rawItem of items) {
+    const item = presentBulletinItem(rawItem);
     // ── EMPLOYER_COST ─────────────────────────────────────────────────────
     if (item.type === 'EMPLOYER_COST') {
       empItems.push(item);

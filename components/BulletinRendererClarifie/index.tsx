@@ -470,7 +470,7 @@ export default function BulletinRendererClarifie({ payroll, template, previewMod
                 <SectionHeader>Impôts sur salaires (ITS / TUS)</SectionHeader>
                 {itsAmount > 0 && <DataRow label={itsLabel} base={fmt(totalBrut - cnssSal)} mtS={fmtNeg(itsAmount)} />}
                 {tusCnss   > 0 && <DataRow label="Taxe unique/salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475%" mtP={fmtNeg(tusCnss)} />}
-                {tusDgi    > 0 && <DataRow label="Taxe unique/salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025%" mtP={fmtNeg(tusDgi)} />}
+                {tusDgi    > 0 && <DataRow label="TUS FISC"  base={fmtZ(totalBrut)} tauxP="2,025%" mtP={fmtNeg(tusDgi)} />}
               </>}
 
               {/* ── Autres cotisations et taxes ─────────────────────────── */}

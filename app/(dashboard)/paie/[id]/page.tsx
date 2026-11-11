@@ -323,7 +323,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                           ['CNSS Pensions 8%',  `+${fmt(data.cnssEmployerPension ?? 0)} F`, 'font-mono font-bold text-amber-500'],
                           ['CNSS Famille',      `+${fmt(data.cnssEmployerFamily   ?? 0)} F`, 'font-mono font-bold text-amber-500'],
                           ['CNSS Accident',     `+${fmt(data.cnssEmployerAccident ?? 0)} F`, 'font-mono font-bold text-amber-500'],
-                          ['TUS DGI 2,025%',    `+${fmt(tusDgiAmount)} F`,                  'font-mono font-bold text-amber-500'],
+                          ['TUS FISC 2,025%',    `+${fmt(tusDgiAmount)} F`,                  'font-mono font-bold text-amber-500'],
                           ['TUS CNSS 5,475%',   `+${fmt(tusCnssAmount)} F`,                 'font-mono font-bold text-amber-500'],
                         ].map(([l,v,cls]) => (
                           <div key={l} className="flex justify-between">
@@ -370,7 +370,7 @@ export default function PayslipPage({ params }: { params: { id: string } }) {
                 <p>• ITS 2026 — barème progressif — Abattement 20%</p>
                 <p>• CNSS salarié : 4% (plafond 1 200 000 F)</p>
                 <p>• CNSS patronale : 8% + 10,03% + 2,25%</p>
-                <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS DGI : 2,025% sur brut</p>
+                <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS FISC : 2,025% sur brut</p>
                 <p className="font-semibold text-amber-600 dark:text-amber-400">• TUS CNSS : 5,475% sur brut</p>
                 <p>• SMIG : 70 400 FCFA/mois</p>
               </div>

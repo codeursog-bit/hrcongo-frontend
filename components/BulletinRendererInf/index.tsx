@@ -240,7 +240,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
   const advanceItemsList  = items.filter((i: any) => i.code === 'ADVANCE');
   const companyDeductions = items.filter((i: any) => i.code === 'COMPANY_DEDUCTION');
 
-  // ── Charges patronales — CNSS en 3 lignes distinctes + TUS DGI/CNSS ────
+  // ── Charges patronales — CNSS en 3 lignes distinctes + TUS FISC/CNSS ────
   // (mêmes codes que payroll-items.service.ts §10-11 : CNSS_EMP_PENSION,
   // CNSS_EMP_FAM, CNSS_EMP_AT, TUS_DGI, TUS_CNSS)
   const cnssEmpPensionItem = findItem('CNSS_EMP_PENSION');
@@ -553,7 +553,7 @@ export default function BulletinRendererInf({ payroll, template, previewMode }: 
                   5 décimales de 0.02025/0.05475 (arrondi visible sinon :
                   2,03 / 5,48 au lieu de 2,025 / 5,475). */}
               {tusDgi  > 0 && (
-                <Row label="TUS DGI" tauxP="2,025" retP={fmt(tusDgi)} />
+                <Row label="TUS FISC" tauxP="2,025" retP={fmt(tusDgi)} />
               )}
               {tusCnss > 0 && (
                 <Row label="TUS CNSS" tauxP="5,475" retP={fmt(tusCnss)} />

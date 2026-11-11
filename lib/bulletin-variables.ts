@@ -66,7 +66,7 @@ export const BACKEND_VARIABLES: VariableInfo[] = [
   { key:'cnssSalarial',             label:'CNSS salariale (4%)',       group:'Cotisations',   format:'money',  required:true  },
   { key:'its',                      label:'ITS / IRPP',                group:'Cotisations',   format:'money',  required:true  },
   { key:'irppEffectiveRate',        label:'Taux effectif IRPP',        group:'Cotisations',   format:'percent' },
-  { key:'tusDgiAmount',             label:'TUS Part DGI',              group:'Cotisations',   format:'money'  },
+  { key:'tusDgiAmount',             label:'TUS FISC',              group:'Cotisations',   format:'money'  },
   { key:'tusCnssAmount',            label:'TUS Part CNSS',             group:'Cotisations',   format:'money'  },
   { key:'tusTotal',                 label:'TUS Total',                 group:'Cotisations',   format:'money'  },
 

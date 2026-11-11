@@ -60,7 +60,7 @@ const DEMO: BulletinPayroll = {
     {id:'6',code:'CNSS_SAL',label:'CNSS Salariale',type:'DEDUCTION',amount:18000,base:450000,rate:0.04,isTaxable:false,isCnss:true,order:1},
     {id:'7',code:'ITS',label:'ITS',type:'DEDUCTION',amount:55250,base:512000,isTaxable:false,isCnss:false,order:2},
     {id:'8',code:'CNSS_EMP',label:'CNSS Patronale',type:'EMPLOYER_COST',amount:72000,isTaxable:false,isCnss:false,order:1},
-    {id:'9',code:'TUS_DGI',label:'TUS Part DGI',type:'EMPLOYER_COST',amount:10375,rate:0.02025,isTaxable:false,isCnss:false,order:2},
+    {id:'9',code:'TUS_DGI',label:'TUS FISC',type:'EMPLOYER_COST',amount:10375,rate:0.02025,isTaxable:false,isCnss:false,order:2},
     {id:'10',code:'TUS_CNSS',label:'TUS Part CNSS',type:'EMPLOYER_COST',amount:28012,rate:0.05475,isTaxable:false,isCnss:false,order:3},
   ],
   bonuses:[],

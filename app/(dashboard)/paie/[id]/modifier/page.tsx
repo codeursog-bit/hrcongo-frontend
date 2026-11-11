@@ -277,7 +277,7 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
         const items: any[] = payroll.items ?? [];
 
         const extractedPrimes: Row[] = items
-          .filter(i => i.type === 'GAIN' && i.isTaxable && !['SAL_BASE','INDEM_CONGE','ABS_DEDUCT','ABS_CONGE'].includes(i.code))
+          .filter(i => i.type === 'GAIN' && i.isTaxable && !['SAL_BASE','INDEM_CONGE','CONGE_SUPP','ABS_DEDUCT','ABS_CONGE'].includes(i.code))
           .map(i => ({
             localId: uid(),
             label:   i.label ?? '',
@@ -730,7 +730,7 @@ export default function ModifierBulletinPage({ params }: { params: { id: string 
                             <BLine label="CNSS Pensions (8%)"    value={`+${fmt(sim.cnssEmployerPension)} F`}  cls="text-amber-500" sm />
                             <BLine label="CNSS Famille (10,03%)" value={`+${fmt(sim.cnssEmployerFamily)} F`}   cls="text-amber-500" sm />
                             <BLine label="CNSS Accident (2,25%)" value={`+${fmt(sim.cnssEmployerAccident)} F`} cls="text-amber-500" sm />
-                            <BLine label="TUS DGI (2,025%)"      value={`+${fmt(sim.tusDgiAmount)} F`}         cls="text-amber-500"  sm />
+                            <BLine label="TUS FISC (2,025%)"      value={`+${fmt(sim.tusDgiAmount)} F`}         cls="text-amber-500"  sm />
                             <BLine label="TUS CNSS (5,475%)"     value={`+${fmt(sim.tusCnssAmount)} F`}        cls="text-amber-500"  sm />
                           </div>
                         </motion.div>

@@ -199,7 +199,7 @@ export default function SimulateurPublicPage() {
       `  CNSS Pensions (8%)  : +${fmt(result.cnssEmployerPension)} FCFA`,
       `  CNSS Famille (10,03%): +${fmt(result.cnssEmployerFamily)} FCFA`,
       `  CNSS Accident (2,25%): +${fmt(result.cnssEmployerAccident)} FCFA`,
-      `  TUS DGI (2,025%)    : +${fmt(result.tusDgiAmount)} FCFA`,
+      `  TUS FISC (2,025%)    : +${fmt(result.tusDgiAmount)} FCFA`,
       `  TUS CNSS (5,475%)   : +${fmt(result.tusCnssAmount)} FCFA`,
       ...result.customTaxes.filter(t => t.employerAmount > 0).map(t => `  ${t.name} pat.    : +${fmt(t.employerAmount)} FCFA`),
       '─'.repeat(55),

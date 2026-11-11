@@ -466,7 +466,7 @@ export default function BulletinRendererClassique({ payroll, template, previewMo
               {cnssEmpFamily   > 0 && <Row n={2102} label="CNSS Famille"  base={fmtZ(Math.min(totalBrut,600_000))}   tauxP="10,03" retP={fmt(cnssEmpFamily)} />}
               {cnssEmpAccident > 0 && <Row n={2103} label="CNSS Accident du travail" base={fmtZ(Math.min(totalBrut,600_000))} tauxP="2,25" retP={fmt(cnssEmpAccident)} />}
               {tusCnss > 0 && <Row n={2104} label="Taxe unique/salaire (CNSS)" base={fmtZ(totalBrut)} tauxP="5,475" retP={fmt(tusCnss)} />}
-              {tusDgi  > 0 && <Row n={2105} label="Taxe unique/salaire (DGI)"  base={fmtZ(totalBrut)} tauxP="2,025" retP={fmt(tusDgi)} />}
+              {tusDgi  > 0 && <Row n={2105} label="TUS FISC"  base={fmtZ(totalBrut)} tauxP="2,025" retP={fmt(tusDgi)} />}
 
               {itsAmount > 0 && <Row n={4520} label={itsLabel} base={fmt(totalBrut - cnssSal)} ret={fmt(itsAmount)} />}
 

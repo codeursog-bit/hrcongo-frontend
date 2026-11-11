@@ -329,7 +329,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
   const totalPat    = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss + tusDgi
     + ctaxPatTotal;
   // ✅ Charges Pat colonne = CNSS patron seul (pension+famille+accident) — pas TUS ni DGI
-  // ✅ Charges Pat = CNSS patron (pension+famille+accident) + TUS CNSS — pas TUS DGI
+  // ✅ Charges Pat = CNSS patron (pension+famille+accident) + TUS CNSS — pas TUS FISC
   const cnssPatOnly = cnssEmpPension + cnssEmpFamily + cnssEmpAccident + tusCnss;
 
   const monthLabel = MONTHS[(payroll.month ?? 1) - 1];
@@ -600,7 +600,7 @@ export function BulletinRendererDefault({ payroll, template }: BulletinRendererD
                 label="Taxe unique sur salaire (CNSS)"
                 base={fmtZ(totalBrut)} patTaux="5,475" patMt={fmt(tusCnss)} />; })()}
               {tusDgi  > 0 && (()=>{ patRef+=10; return <Row key="td" rub={patRef}
-                label="Taxe unique sur salaire (DGI)"
+                label="TUS FISC"
                 base={fmtZ(totalBrut)} patTaux="2,025" patMt={fmt(tusDgi)} />; })()}
 
               {/* Les taxes configurées (part salarié + part patronale) sont affichées

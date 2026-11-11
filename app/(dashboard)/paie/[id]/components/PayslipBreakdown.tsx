@@ -292,8 +292,8 @@ export default function PayslipBreakdown({
               rate="2,25 %" amount={`+${fmt(cnssEmployerAccident)}`} amtColor={C.orange} />
 
             {/* TUS — 2 lignes séparées */}
-            <Row label="TUS — Part DGI (2,025%)"
-              sub="Taxe Unique sur Salaires · versée à la DGI · déplafonné"
+            <Row label="TUS — Part FISC (2,025%)"
+              sub="Taxe Unique sur Salaires · versée à le FISC · déplafonné"
               rate="2,025 %" amount={`+${fmt(tusDgiAmount)}`} amtColor={C.orange} />
             <Row label="TUS — Part CNSS (5,475%)"
               sub="Taxe Unique sur Salaires · versée à la CNSS · déplafonné"
@@ -377,7 +377,7 @@ export default function PayslipBreakdown({
               { label: 'Pensions 8% / 1 200k',  val: `+${fmt(cnssEmployerPension)} F`,  color: C.orange },
               { label: 'Famille 10% / 600k',    val: `+${fmt(cnssEmployerFamily)} F`,   color: C.orange },
               { label: 'AT 2,25% / 600k',       val: `+${fmt(cnssEmployerAccident)} F`, color: C.orange },
-              { label: 'TUS DGI 2,025%',         val: `+${fmt(tusDgiAmount)} F`,         color: C.orange },
+              { label: 'TUS FISC 2,025%',         val: `+${fmt(tusDgiAmount)} F`,         color: C.orange },
               { label: 'TUS CNSS 5,475%',        val: `+${fmt(tusCnssAmount)} F`,        color: C.orange },
             ].map(r => (
               <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
@@ -443,7 +443,7 @@ export default function PayslipBreakdown({
           <div>
             <p style={{ fontSize: '10px', fontWeight: 700, color: '#92400e', margin: '0 0 3px' }}>TUS — Déclarations séparées</p>
             <p style={{ fontSize: '9.5px', color: '#b45309', margin: 0, lineHeight: 1.5 }}>
-              Part DGI ({fmt(tusDgiAmount)} F à 2,025%) → formulaire eTax DGI ·{' '}
+              Part FISC ({fmt(tusDgiAmount)} F à 2,025%) → formulaire eTax FISC ·{' '}
               Part CNSS ({fmt(tusCnssAmount)} F à 5,475%) → déclaration CNSS mensuelle
             </p>
           </div>
