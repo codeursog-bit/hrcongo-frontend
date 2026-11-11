@@ -1,4 +1,4 @@
-import { presentBulletinItem } from './bulletin-item-presentation';
+import { presentBulletinItem, compareBulletinItems } from './bulletin-item-presentation';
 // // ============================================================================
 // // lib/bulletin-items-classifier.ts
 // //
@@ -246,8 +246,8 @@ export function classifyItems(items: PayrollItem[]): ClassifiedItems {
   const byOrder = (a: PayrollItem, b: PayrollItem) => a.order - b.order;
 
   return {
-    gainItems:    gainItems.sort(byOrder),
-    indemItems:   indemItems.sort(byOrder),
+    gainItems:    gainItems.sort(compareBulletinItems),
+    indemItems:   indemItems.sort(compareBulletinItems),
     cotisItems:   cotisItems.sort(byOrder),
     retenueItems: retenueItems.sort(byOrder),
     empItems:     empItems.sort(byOrder),

@@ -1,5 +1,5 @@
 'use client';
-import { presentBulletinItem } from '@/lib/bulletin-item-presentation';
+import { presentBulletinItem, compareBulletinItems } from '@/lib/bulletin-item-presentation';
 
 // ============================================================================
 // components/CanvasRenderer/index.tsx
@@ -139,10 +139,10 @@ function resolveScalar(variable: CanvasVariable, payroll: BulletinPayroll): stri
 function resolveItems(variable: CanvasVariable, payroll: BulletinPayroll): any[] {
   const items = (payroll.items ?? []).map(presentBulletinItem);
   switch (variable) {
-    case 'items.gains':      return items.filter(i => i.type === 'GAIN' && !['HS_10','HS_25','HS_50','HS_100'].includes(i.code) && !i.code.startsWith('BONUS_') && !i.code.startsWith('AUTO_BONUS_')).sort((a,b)=>a.order-b.order);
-    case 'items.deductions': return items.filter(i => i.type === 'DEDUCTION').sort((a,b)=>a.order-b.order);
-    case 'items.employer':   return items.filter(i => i.type === 'EMPLOYER_COST').sort((a,b)=>a.order-b.order);
-    case 'items.overtime':   return items.filter(i => ['HS_10','HS_25','HS_50','HS_100'].includes(i.code)).sort((a,b)=>a.order-b.order);
+    case 'items.gains':      return items.filter(i => i.type === 'GAIN' && !['HS_10','HS_25','HS_50','HS_100'].includes(i.code) && !i.code.startsWith('BONUS_') && !i.code.startsWith('AUTO_BONUS_')).sort(compareBulletinItems);
+    case 'items.deductions': return items.filter(i => i.type === 'DEDUCTION').sort(compareBulletinItems);
+    case 'items.employer':   return items.filter(i => i.type === 'EMPLOYER_COST').sort(compareBulletinItems);
+    case 'items.overtime':   return items.filter(i => ['HS_10','HS_25','HS_50','HS_100'].includes(i.code)).sort(compareBulletinItems);
     case 'items.bonuses':    return items.filter(i =>
       i.type === 'GAIN' &&
       !['SAL_BASE','INDEM_CONGE'].includes(i.code) &&
@@ -151,13 +151,13 @@ function resolveItems(variable: CanvasVariable, payroll: BulletinPayroll): any[]
        i.code.startsWith('PRIME_') || i.code.startsWith('TRANSPORT') ||
        i.code.startsWith('REPAS')  || i.code.startsWith('PANIER') ||
        i.code.startsWith('INDEM_') || i.code.startsWith('ALLOC_'))
-    ).sort((a,b)=>a.order-b.order);
-    case 'items.all':        return [...items].sort((a,b)=>a.order-b.order);
-    case 'items.loans':      return items.filter(i => i.code === 'LOAN').sort((a,b)=>a.order-b.order);
-    case 'items.advances':   return items.filter(i => i.code === 'ADVANCE').sort((a,b)=>a.order-b.order);
-    case 'items.customTaxEmp':      return items.filter(i => i.type === 'DEDUCTION' && i.code?.startsWith('CTAX_') && !i.code?.startsWith('CTAX_EMP_')).sort((a,b)=>a.order-b.order);
-    case 'items.customTaxEmployer': return items.filter(i => i.code?.startsWith('CTAX_EMP_')).sort((a,b)=>a.order-b.order);
-    case 'items.congé':      return items.filter(i => ['ABS_CONGE','ABS_DEDUCT','INDEM_CONGE'].includes(i.code)).sort((a,b)=>a.order-b.order);
+    ).sort(compareBulletinItems);
+    case 'items.all':        return [...items].sort(compareBulletinItems);
+    case 'items.loans':      return items.filter(i => i.code === 'LOAN').sort(compareBulletinItems);
+    case 'items.advances':   return items.filter(i => i.code === 'ADVANCE').sort(compareBulletinItems);
+    case 'items.customTaxEmp':      return items.filter(i => i.type === 'DEDUCTION' && i.code?.startsWith('CTAX_') && !i.code?.startsWith('CTAX_EMP_')).sort(compareBulletinItems);
+    case 'items.customTaxEmployer': return items.filter(i => i.code?.startsWith('CTAX_EMP_')).sort(compareBulletinItems);
+    case 'items.congé':      return items.filter(i => ['ABS_CONGE','ABS_DEDUCT','INDEM_CONGE','CONGE_SUPP'].includes(i.code)).sort(compareBulletinItems);
     default:                 return [];
   }
 }
