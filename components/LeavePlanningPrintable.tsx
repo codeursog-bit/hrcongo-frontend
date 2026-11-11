@@ -26,6 +26,7 @@ export interface LeavePlanningRow {
   indemnityAmount?: number;
   monthsKnown?: number | null; // ✅ "X/12 mois connus" — compteur qui grandit en direct au fil des bulletins générés
   currentMonthEstimated?: boolean; // ✅ le brut propre du mois de paie (12e mois) est estimé tant que la paie n'est pas générée
+  calculationError?: boolean;
   status: string;
   isTheoretical?: boolean; // ✅ pas encore planifié — projection sur le cycle/solde de l'employé
   isManual?: boolean;
@@ -98,8 +99,8 @@ export default function LeavePlanningPrintable({
               <td style={{ padding: '6px 8px', border: '1px solid #d1d5db', fontFamily: 'monospace' }}>{fmtDate(r.endDate)}</td>
               {mode === 'payable' && (
                 <td style={{ padding: '6px 8px', border: '1px solid #d1d5db', fontWeight: 700, textAlign: 'right' }}>
-                  {fmtMoney(r.indemnityAmount)}
-                  {typeof r.monthsKnown === 'number' && (r.monthsKnown < 12 || r.currentMonthEstimated) && (
+                  {r.calculationError ? 'Calcul indisponible' : fmtMoney(r.indemnityAmount)}
+                  {!r.calculationError && typeof r.monthsKnown === 'number' && (r.monthsKnown < 12 || r.currentMonthEstimated) && (
                     <div style={{ fontSize: 8, fontWeight: 400, color: '#9ca3af', marginTop: 2 }}>
                       ({r.monthsKnown}/12 mois connus{r.currentMonthEstimated ? ', dont le mois de paie estimé' : ''} — évolutif)
                     </div>
