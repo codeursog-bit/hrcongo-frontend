@@ -192,7 +192,7 @@ export default function DailyView({
   // Valeurs effectives du formulaire (entrée / sortie / pause) — utilisées par l'aperçu ET l'enregistrement
   const computeTimes = () => {
     if (!timesRow) return null;
-    const base = timesRow.checkIn || timesRow.checkOut;
+    const base = timesRow.checkIn || timesRow.checkOut || `${timesRow.date}T00:00:00`;
     if (!base) return null;
     const inChanged = !!timesForm.checkIn && timesForm.checkIn !== toHHMM(timesRow.checkIn);
     const outChanged = !!timesForm.checkOut && timesForm.checkOut !== toHHMM(timesRow.checkOut);
@@ -234,6 +234,11 @@ export default function DailyView({
     const payload: any = { reason: timesForm.reason.trim() };
     if (t.inChanged && t.effIn) payload.checkIn = t.effIn;
     if (t.outChanged && t.effOut) payload.checkOut = t.effOut;
+    if (!timesRow.checkIn && payload.checkIn) payload.status = 'PRESENT';
+    if (!timesRow.id && !payload.checkIn) {
+      setTimesError("Renseignez l'heure d'entrée.");
+      return;
+    }
 
     // 🆕 Pause : insertion / modification / suppression
     if (timesForm.removeBreak) {
@@ -256,7 +261,13 @@ export default function DailyView({
     setTimesSaving(true);
     setTimesError('');
     try {
-      await api.put(`/attendance/correct/${timesRow.id}`, payload);
+      if (timesRow.id) {
+        await api.put(`/attendance/correct/${timesRow.id}`, payload);
+      } else {
+        await api.put('/attendance/correct-day', {
+          ...payload, employeeId: timesRow.employee.id, date: timesRow.date,
+        });
+      }
       setTimesRow(null);
       await fetchDailyData();
     } catch (e: any) {
@@ -729,11 +740,16 @@ export default function DailyView({
                             {deletingId === att.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                           </button>
                           </div>
+                        ) : ['ABSENT_UNPAID', 'ABSENT_PAID', 'UNKNOWN'].includes(att.status) ? (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openTimesModal(att); }}
+                            title="Modifier les heures d'entrée / sortie"
+                            aria-label={`Modifier les heures de ${att.employee.firstName} ${att.employee.lastName}`}
+                            className="p-2 rounded-lg text-[var(--text-muted)] hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                          ><Pencil size={16} /></button>
                         ) : (
-                          // ✅ Pas de pointage réel en base pour ce statut calculé
-                          // (ex : absence déduite, sans ligne "attendance") —
-                          // rien à supprimer, donc pas de bouton actionnable.
-                          <span className="text-xs text-[var(--text-muted)]" title="Aucun pointage réel enregistré pour ce jour">—</span>
+                          <span className="text-xs text-[var(--text-muted)]">—</span>
                         )}
                       </td>
                     )}
