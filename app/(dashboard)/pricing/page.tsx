@@ -49,7 +49,7 @@ function PricingContent() {
   // 🎟️ Code de réduction + 📄 tarif négocié (devis) — uniquement avec YabetoPay
   const [discountInput, setDiscountInput] = useState('');
   const [applied, setApplied] = useState<AppliedDiscount | null>(null);
-  const [quote, setQuote] = useState<{ id: string; plan: string; amount: number; months: number } | null>(null);
+  const [quote, setQuote] = useState<{ id: string; plan: string; amount: number; months: number; coversPortfolio?: boolean; coveredCompanies?: string[] } | null>(null);
 
   useEffect(() => {
     api.get<{ quote: any }>('/subscriptions/quote')
@@ -224,6 +224,11 @@ function PricingContent() {
               <p className="text-sm text-slate-500">
                 {quote.amount.toLocaleString('fr-FR')} FCFA pour {quote.months} mois
               </p>
+              {quote.coversPortfolio && (quote.coveredCompanies?.length ?? 0) > 0 && (
+                <p className="text-xs text-slate-500 mt-1">
+                  Un seul paiement active vos {quote.coveredCompanies!.length} entreprises : {quote.coveredCompanies!.join(', ')}
+                </p>
+              )}
             </div>
             <button onClick={handlePayQuote} className="px-4 py-2 rounded-xl bg-purple-600 text-white text-sm">
               Payer

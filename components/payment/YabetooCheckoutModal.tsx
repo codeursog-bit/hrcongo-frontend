@@ -29,6 +29,7 @@ export interface PaymentIntent {
   discountAmount?: number;
   isQuote?: boolean;
   months?: number | null;
+  coveredCompanies?: string[];
 }
 
 const OPERATORS = [
@@ -112,6 +113,17 @@ export function YabetooCheckoutModal({
             <X size={15} className="text-gray-500" />
           </button>
         </div>
+
+        {(intent.coveredCompanies?.length ?? 0) > 1 && (
+          <div className="mx-5 mt-4 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-100 dark:border-purple-500/20 px-3 py-2">
+            <p className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+              Ce paiement active {intent.coveredCompanies!.length} entreprises
+            </p>
+            <p className="text-xs text-purple-600/80 dark:text-purple-300/70 mt-0.5">
+              {intent.coveredCompanies!.join(', ')}
+            </p>
+          </div>
+        )}
 
         {step === 'form' ? (
           <div className="p-5 space-y-4">

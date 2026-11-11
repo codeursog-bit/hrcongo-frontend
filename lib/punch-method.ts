@@ -1,11 +1,11 @@
+// 📁 EMPLACEMENT (projet frontend) : lib/punch-method.ts
 // ============================================================================
-// 📁 lib/punch-method.ts
 // Libellés des méthodes de pointage + règle d'affichage d'UNE méthode résumée.
 // Règle : on garde la méthode de l'ENTRÉE (la première), mais le QR code est
 // prioritaire : si l'entrée OU la sortie a été faite par scan QR, on affiche QR.
 // Le détail (entrée + sortie) est toujours visible dans le panneau de la présence.
 // ============================================================================
-export type PunchMethodValue = 'GPS' | 'KIOSK' | 'QR_SCAN' | 'SECRET_CODE' | 'MANUAL';
+export type PunchMethodValue = 'GPS' | 'KIOSK' | 'QR_SCAN' | 'SECRET_CODE' | 'MANUAL' | 'DEVICE';
 
 export const PUNCH_METHOD_LABEL: Record<string, string> = {
   GPS: 'Téléphone (GPS)',
@@ -13,6 +13,7 @@ export const PUNCH_METHOD_LABEL: Record<string, string> = {
   QR_SCAN: 'Scan QR',
   SECRET_CODE: 'Code secret',
   MANUAL: 'Saisie manuelle',
+  DEVICE: 'Pointeuse de l’entreprise',
 };
 
 export function summaryPunchMethod(

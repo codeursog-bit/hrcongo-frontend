@@ -1,7 +1,7 @@
+// 📁 EMPLACEMENT (projet frontend) : app/(dashboard)/presences/CorrectionsView.tsx
 'use client';
 
 // ============================================================================
-// 📁 app/(dashboard)/presences/CorrectionsView.tsx
 // ============================================================================
 // 🔥 KONZA SUITE — Vue Corrections + Workflow Heures Sup
 //
@@ -24,6 +24,7 @@ import {
   ArrowRight, Eye, Shield
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { PUNCH_METHOD_LABEL, summaryPunchMethod } from '@/lib/punch-method';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface OvertimePendingItem {
@@ -48,6 +49,50 @@ interface CorrectionsViewProps {
   userDepartment: string;
   onRefresh: () => void;
   canRecordAttendanceForAll?: boolean; // 🆕 permission "secrétaire" : pointage manuel pour tout le monde
+}
+
+// ─── Heures : toujours en heure du Congo, indépendamment du fuseau du navigateur ───
+// (avant : toISOString().slice(0,16) affichait l'heure UTC dans un champ « heure locale »,
+//  ce qui décalait le pointage d'1 h à chaque enregistrement)
+const TZ = 'Africa/Brazzaville';
+const CONGO_OFFSET = '+01:00';
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const toHM = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : '';
+const congoDateOf = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ });
+const toIso = (day: string, hm: string, nextDay = false) => {
+  const t = new Date(`${day}T${hm}:00${CONGO_OFFSET}`).getTime() + (nextDay ? 86_400_000 : 0);
+  return new Date(t).toISOString();
+};
+const minutesOf = (hm: string) => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
+const fmtDuration = (min: number) => `${Math.floor(min / 60)} h ${pad2(min % 60)}`;
+
+const STATUS_LABEL: Record<string, string> = {
+  PRESENT: 'Présent', LATE: 'En retard', REMOTE: 'Télétravail', ABSENT_PAID: 'Absent justifié',
+  ABSENT_UNPAID: 'Absent non justifié', LEAVE: 'Congé', HOLIDAY: 'Férié', OFF_DAY: 'Repos', UNKNOWN: '—', FUTURE: 'À venir',
+};
+const FIELD_LABEL: Record<string, string> = { status: 'Statut', checkIn: 'Entrée', checkOut: 'Sortie', totalHours: 'Durée (h)', pause: 'Pause' };
+const ACTION_LABEL: Record<string, string> = { MANUAL_CREATE: 'Saisie manuelle', CORRECTION: 'Correction', DEVICE_SYNC: 'Pointeuse' };
+const ROLE_LABEL: Record<string, string> = { ADMIN: 'Admin', SUPER_ADMIN: 'Admin', HR_MANAGER: 'RH', MANAGER: 'Manager', EMPLOYEE: 'Secrétaire' };
+
+function fmtTraceValue(field: string, v: string): string {
+  if (!v) return '—';
+  if (field === 'status') return STATUS_LABEL[v] || v;
+  if ((field === 'checkIn' || field === 'checkOut') && /^\d{4}-\d{2}-\d{2}T/.test(v)) return toHM(v);
+  if (field === 'pause') return v.split('→').map((x) => (/^\d{4}-\d{2}-\d{2}T/.test(x) ? toHM(x) : x)).join(' → ');
+  return v;
+}
+
+/** Détail « quoi » d'une ligne d'historique : [{ label, from, to }]. Vide si l'ancien format n'est pas lisible. */
+function describeTrace(log: any): { label: string; from: string; to: string }[] {
+  const fields = String(log.field || '').split(',').filter(Boolean);
+  const olds = String(log.oldValue ?? '').split(',');
+  const news = String(log.newValue ?? '').split(',');
+  if (!fields.length || olds.length !== fields.length || news.length !== fields.length) return [];
+  return fields
+    .map((f, i) => ({ label: FIELD_LABEL[f] || f, from: fmtTraceValue(f, olds[i]), to: fmtTraceValue(f, news[i]), same: olds[i] === news[i] }))
+    .filter((c) => !c.same)
+    .map(({ label, from, to }) => ({ label, from, to }));
 }
 
 // ─── Composant Toast ──────────────────────────────────────────────────────────
@@ -116,6 +161,8 @@ function OvertimeBadge({ status }: { status: string }) {
 }
 
 // ─── Modal slide-over correction ─────────────────────────────────────────────
+type PresenceKind = 'PRESENT' | 'REMOTE' | 'ABSENT_PAID' | 'ABSENT_UNPAID';
+
 function CorrectionModal({
   attendance,
   onSave,
@@ -123,168 +170,156 @@ function CorrectionModal({
   companySettings,
 }: {
   attendance: any;
-  onSave: (att: any, data: any) => Promise<void>;
+  onSave: (att: any, data: { status: string; checkIn?: string; checkOut?: string; reason: string }) => Promise<void>;
   onClose: () => void;
   companySettings: any;
 }) {
-  const [status, setStatus]     = useState(attendance.status || '');
-  const [checkIn, setCheckIn]   = useState(
-    attendance.checkIn ? new Date(attendance.checkIn).toISOString().slice(0, 16) : ''
-  );
-  const [checkOut, setCheckOut] = useState(
-    attendance.checkOut ? new Date(attendance.checkOut).toISOString().slice(0, 16) : ''
-  );
-  const [reason, setReason]     = useState('');
-  const [saving, setSaving]     = useState(false);
+  const day = String(attendance.date).slice(0, 10);
+  const startHour = Number(companySettings.officialStartHour ?? 8);
+  const defaultIn = `${pad2(startHour)}:00`;
+  const defaultOut = `${pad2(Math.min(23, startHour + Math.round(Number(companySettings.workHoursPerDay ?? 8))))}:00`;
 
-  const showHours = ['PRESENT', 'LATE', 'REMOTE'].includes(status);
+  const [kind, setKind] = useState<PresenceKind>(
+    attendance.status === 'REMOTE' ? 'REMOTE' : attendance.status === 'ABSENT_PAID' ? 'ABSENT_PAID' : 'PRESENT',
+  );
+  const [timeIn, setTimeIn] = useState(attendance.checkIn ? toHM(attendance.checkIn) : defaultIn);
+  const [timeOut, setTimeOut] = useState(attendance.checkOut ? toHM(attendance.checkOut) : defaultOut);
+  const [nextDay, setNextDay] = useState(
+    !!(attendance.checkIn && attendance.checkOut && congoDateOf(attendance.checkOut) > congoDateOf(attendance.checkIn)),
+  );
+  const [reason, setReason] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const withHours = kind === 'PRESENT' || kind === 'REMOTE';
+  const exitNotAfterEntry = withHours && !!timeIn && !!timeOut && minutesOf(timeOut) <= minutesOf(timeIn);
+  const effNextDay = nextDay && exitNotAfterEntry;
+  const hoursError =
+    !withHours ? null
+    : !timeIn || !timeOut ? 'Renseignez l’heure d’entrée et l’heure de sortie.'
+    : exitNotAfterEntry && !nextDay ? 'La sortie doit être après l’entrée (ou cochez « sortie le lendemain »).'
+    : null;
+  const durationMin = withHours && !hoursError ? minutesOf(timeOut) - minutesOf(timeIn) + (effNextDay ? 1440 : 0) : 0;
+  const lateHint =
+    kind === 'PRESENT' && timeIn &&
+    minutesOf(timeIn) > startHour * 60 + Number(companySettings.lateToleranceMinutes ?? 0);
+  const reasonOk = reason.trim().length >= 3;
+  const canSave = reasonOk && !hoursError && !saving;
 
   const handleSave = async () => {
-    if (!reason.trim()) return;
-    if (!status) return;
+    if (!canSave) return;
     setSaving(true);
-    await onSave(attendance, { status, checkIn, checkOut, reason });
-    setSaving(false);
+    try {
+      await onSave(attendance, {
+        status: kind,
+        checkIn: withHours ? toIso(day, timeIn) : undefined,
+        checkOut: withHours ? toIso(day, timeOut, effNextDay) : undefined,
+        reason: reason.trim(),
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const statusOptions = [
-    { value: 'PRESENT',      label: '✅ Présent',           color: 'text-emerald-600' },
-    { value: 'ABSENT_PAID',  label: '💼 Justifié (payé)',   color: 'text-amber-600' },
-    { value: 'REMOTE',       label: '🏠 Télétravail',       color: 'text-emerald-600' },
-    { value: 'LATE',         label: '⏰ Retard',             color: 'text-amber-600' },
-    { value: 'ABSENT_UNPAID',label: '❌ Non justifié',       color: 'text-red-600' },
+  const kinds: { value: PresenceKind; label: string; hint: string }[] = [
+    { value: 'PRESENT', label: '✅ Présent', hint: 'avec heures' },
+    { value: 'REMOTE', label: '🏠 Télétravail', hint: 'avec heures' },
+    { value: 'ABSENT_PAID', label: '💼 Absent justifié', hint: 'payé' },
+    { value: 'ABSENT_UNPAID', label: '❌ Absent', hint: 'non payé' },
   ];
+
+  const current = attendance.checkIn
+    ? `${toHM(attendance.checkIn)} → ${attendance.checkOut ? toHM(attendance.checkOut) : 'en cours'}`
+    : STATUS_LABEL[attendance.status] || '—';
+
+  const timeCls = 'w-full px-3 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-lg font-mono font-bold text-center focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all';
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full sm:max-w-md bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
+        <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 bg-[var(--border)] rounded-full" /></div>
 
-      {/* Panel */}
-      <div className="relative w-full sm:max-w-lg bg-[var(--surface)] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden">
-        {/* Handle mobile */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="w-10 h-1 bg-[var(--border)] rounded-full" />
-        </div>
-
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-[var(--text)]">Corriger le pointage</h3>
-            <p className="text-sm text-[var(--text-muted)] mt-0.5">
+        <div className="px-6 py-4 border-b border-[var(--border)] flex items-start justify-between">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-[var(--text)]">{attendance.checkIn ? 'Modifier le pointage' : 'Corriger le pointage'}</h3>
+            <p className="text-sm text-[var(--text-muted)] mt-0.5 truncate">
               {attendance.employee.firstName} {attendance.employee.lastName} &bull;{' '}
-              {new Date(attendance.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date(`${day}T12:00:00Z`).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Actuellement : <span className="font-semibold text-[var(--text)]">{current}</span></p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--surface-2)] transition-colors">
-            <X size={20} className="text-[var(--text-muted)]" />
-          </button>
+          <button onClick={onClose} aria-label="Fermer" className="p-2 rounded-xl hover:bg-[var(--surface-2)] transition-colors"><X size={20} className="text-[var(--text-muted)]" /></button>
         </div>
 
-        {/* Body */}
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
-          {/* Statut */}
-          <div>
-            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
-              Nouveau statut <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 gap-2">
-              {statusOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setStatus(opt.value)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left text-sm font-semibold transition-all ${
-                    status === opt.value
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                      : 'border-[var(--border)] hover:border-[var(--text-muted)] text-[var(--text-muted)]'
-                  }`}
-                >
-                  <span className={`text-base ${status === opt.value ? '' : opt.color}`}>{opt.label}</span>
-                  {status === opt.value && <Check size={16} className="ml-auto text-emerald-500" />}
-                </button>
-              ))}
-            </div>
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Situation du jour">
+            {kinds.map((k) => (
+              <button
+                key={k.value} type="button" role="radio" aria-checked={kind === k.value} onClick={() => setKind(k.value)}
+                className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${kind === k.value
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                  : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'}`}
+              >
+                <span className="block text-sm font-bold">{k.label}</span>
+                <span className="block text-[11px] opacity-70">{k.hint}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Horaires */}
-          {showHours && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Entrée</label>
-                <input
-                  type="datetime-local"
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                />
+          {withHours && (
+            <div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="corr-in" className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Entrée <span className="text-red-500">*</span></label>
+                  <input id="corr-in" type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} className={timeCls} />
+                </div>
+                <div>
+                  <label htmlFor="corr-out" className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Sortie <span className="text-red-500">*</span></label>
+                  <input id="corr-out" type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} className={timeCls} />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Sortie</label>
-                <input
-                  type="datetime-local"
-                  value={checkOut}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full px-3 py-2.5 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm font-mono focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                />
-              </div>
+              {exitNotAfterEntry && (
+                <label className="flex items-center gap-2 mt-3 text-xs font-semibold text-[var(--text)]">
+                  <input type="checkbox" checked={nextDay} onChange={(e) => setNextDay(e.target.checked)} className="accent-emerald-500" />
+                  La sortie a eu lieu le lendemain (équipe de nuit)
+                </label>
+              )}
+              {hoursError ? (
+                <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><AlertCircle size={12} /> {hoursError}</p>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)] mt-2">
+                  Durée : <b className="text-[var(--text)]">{fmtDuration(durationMin)}</b>
+                  {lateHint && <span className="text-amber-600"> · sera enregistré « En retard »</span>}
+                  <span> · retard et heures sup calculés automatiquement</span>
+                </p>
+              )}
             </div>
           )}
 
-          {/* Justification */}
           <div>
-            <label className="block text-sm font-bold text-[var(--text-muted)] mb-2">
-              Justification <span className="text-red-500">*</span>
-            </label>
+            <label htmlFor="corr-reason" className="block text-sm font-bold text-[var(--text-muted)] mb-2">Pourquoi ? <span className="text-red-500">*</span></label>
             <div className="grid grid-cols-2 gap-2 mb-2">
-              {[
-                'Oubli de pointage confirmé',
-                'Certificat médical reçu',
-                'Mission externe validée',
-                'Erreur système corrigée',
-              ].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setReason(s)}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${
-                    reason === s
-                      ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                      : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
-                  }`}
-                >
-                  {s}
+              {['Oubli de pointage confirmé', 'Certificat médical reçu', 'Mission externe validée', 'Erreur système corrigée'].map((r) => (
+                <button key={r} type="button" onClick={() => setReason(r)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${reason === r
+                    ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+                    : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'}`}>
+                  {r}
                 </button>
               ))}
             </div>
-            <textarea
-              placeholder="Ou saisissez une justification personnalisée..."
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={2}
-              className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-[var(--text-muted)]"
-            />
-            {!reason.trim() && (
-              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> Justification obligatoire
-              </p>
-            )}
+            <textarea id="corr-reason" placeholder="Ou saisissez un motif…" value={reason} onChange={(e) => setReason(e.target.value)} rows={2}
+              className="w-full px-4 py-3 border-2 border-[var(--border)] rounded-xl bg-[var(--surface)] text-sm resize-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder-[var(--text-muted)]" />
+            <p className="text-[11px] text-[var(--text-muted)] mt-1">Enregistré avec votre nom, la date et l’heure de la modification.</p>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="px-6 py-4 border-t border-[var(--border)] flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text-muted)] rounded-xl text-sm font-bold transition-all"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!reason.trim() || !status || saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors"
-          >
+          <button onClick={onClose} className="flex-1 px-4 py-3 bg-[var(--surface-2)] hover:bg-[var(--border)] text-[var(--text-muted)] rounded-xl text-sm font-bold transition-all">Annuler</button>
+          <button onClick={handleSave} disabled={!canSave}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-            Valider la correction
+            Enregistrer
           </button>
         </div>
       </div>
@@ -440,17 +475,23 @@ export default function CorrectionsView({
   const [historyLogs, setHistoryLogs]         = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory]   = useState(false);
   const [pendingOvertimes, setPendingOvertimes] = useState<OvertimePendingItem[]>([]);
-  const [activeTab, setActiveTab]             = useState<'absences' | 'overtime'>('absences');
+  const [activeTab, setActiveTab]             = useState<'absences' | 'pointages' | 'overtime'>('absences');
   // 🔒 HS désactivées pour l'entreprise : aucune HS (onglet, compteurs, liste) n'est affichée
   const [overtimeEnabled, setOvertimeEnabled]   = useState(true);
   const [searchTerm, setSearchTerm]           = useState('');
   const [toast, setToast]                     = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [savingId, setSavingId]               = useState<string | null>(null);
+  // 🆕 liste « Pointages » (modifier un pointage complet) + historique par pointage
+  const [onlyIncomplete, setOnlyIncomplete]     = useState(false);
+  const [visibleCount, setVisibleCount]         = useState(60);
+  const [expandedId, setExpandedId]             = useState<string | null>(null);
+  const [traces, setTraces]                     = useState<Record<string, any[] | 'loading' | 'error'>>({});
 
   const [companySettings, setCompanySettings] = useState({
     officialStartHour: 8,
     lateToleranceMinutes: 0,
     workDays: [1, 2, 3, 4, 5],
+    workHoursPerDay: 8,
   });
 
   // ⚠️ isAdmin ne doit PAS inclure la permission "secrétaire" : il gère
@@ -472,6 +513,7 @@ export default function CorrectionsView({
           officialStartHour: res.officialStartHour || 8,
           lateToleranceMinutes: res.lateToleranceMinutes || 0,
           workDays: res.workDays || [1, 2, 3, 4, 5],
+          workHoursPerDay: Number(res.workHoursPerDay) || 8,
         });
         otEnabled = res.overtimeEnabled !== false;
         setOvertimeEnabled(otEnabled);
@@ -515,35 +557,59 @@ export default function CorrectionsView({
     }
   };
 
-  const handleSaveCorrection = async (attendance: any, correctionData: any) => {
+  const handleSaveCorrection = async (
+    attendance: any,
+    d: { status: string; checkIn?: string; checkOut?: string; reason: string },
+  ) => {
     setSavingId(attendance.id);
     try {
+      let overtimeRecalculated: boolean | null = null;
       if (attendance.isVirtual) {
         await api.post('/attendance/create-manual', {
           employeeId: attendance.employeeId,
           date: attendance.date,
-          status: correctionData.status,
-          checkIn: correctionData.checkIn ? new Date(correctionData.checkIn).toISOString() : null,
-          checkOut: correctionData.checkOut ? new Date(correctionData.checkOut).toISOString() : null,
-          notes: `Correction manuelle: ${correctionData.reason}`,
+          status: d.status,
+          checkIn: d.checkIn ?? null,
+          checkOut: d.checkOut ?? null,
+          notes: d.reason,
         });
       } else {
-        await api.put(`/attendance/correct/${attendance.id}`, {
-          status: correctionData.status,
-          checkIn: correctionData.checkIn ? new Date(correctionData.checkIn).toISOString() : undefined,
-          checkOut: correctionData.checkOut ? new Date(correctionData.checkOut).toISOString() : undefined,
-          reason: correctionData.reason,
+        const res: any = await api.put(`/attendance/correct/${attendance.id}`, {
+          status: d.status,
+          checkIn: d.checkIn,
+          checkOut: d.checkOut,
+          reason: d.reason,
         });
+        overtimeRecalculated = res?.overtimeRecalculated ?? null;
       }
 
       setEditingAtt(null);
+      setTraces((t) => { const n = { ...t }; delete n[attendance.id]; return n; });
       onRefresh();
       if (showHistory) fetchHistory();
-      showToast('✅ Correction enregistrée avec succès', 'success');
+      if (overtimeRecalculated === false) {
+        showToast('✅ Enregistré. Les heures sup sont déjà en validation : elles n’ont pas été recalculées.', 'info');
+      } else {
+        showToast('✅ Pointage enregistré', 'success');
+      }
     } catch (err: any) {
-      showToast(`❌ ${err?.response?.data?.message || 'Erreur lors de la correction'}`, 'error');
+      showToast(`❌ ${err?.message || err?.response?.data?.message || 'Erreur lors de la correction'}`, 'error');
     } finally {
       setSavingId(null);
+    }
+  };
+
+  // 🆕 Historique d'UN pointage : qui, quoi, quand, pourquoi
+  const toggleTrace = async (attId: string) => {
+    if (expandedId === attId) { setExpandedId(null); return; }
+    setExpandedId(attId);
+    if (traces[attId] && traces[attId] !== 'error') return;
+    setTraces((t) => ({ ...t, [attId]: 'loading' }));
+    try {
+      const res: any = await api.get(`/attendance/logs?attendanceId=${attId}`);
+      setTraces((t) => ({ ...t, [attId]: res?.logs || [] }));
+    } catch {
+      setTraces((t) => ({ ...t, [attId]: 'error' }));
     }
   };
 
@@ -624,6 +690,19 @@ export default function CorrectionsView({
       )
     : absences;
 
+  // 🆕 Pointages enregistrés du mois (complets ou non) : modifiables par l'admin, le RH et le secrétaire
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+  const allPointages: any[] = (data?.attendances || [])
+    .filter((a: any) => a.checkIn || a.checkOut)
+    .filter((a: any) => !onlyIncomplete || !a.checkOut || !a.checkIn)
+    .filter((a: any) =>
+      searchTerm
+        ? `${a.employee?.firstName} ${a.employee?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+        : true,
+    )
+    .sort((a: any, b: any) => String(b.date).localeCompare(String(a.date)));
+  const pointages = allPointages.slice(0, visibleCount);
+
   const filteredOvertimes = searchTerm
     ? pendingOvertimes.filter((o) =>
         `${o.employee.firstName} ${o.employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
@@ -688,6 +767,17 @@ export default function CorrectionsView({
             {absences.length > 0 && (
               <span className="px-1.5 py-0.5 bg-red-500 text-white rounded-full text-xs">{absences.length}</span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab('pointages')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              activeTab === 'pointages'
+                ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+            }`}
+          >
+            <Clock size={14} />
+            Pointages
           </button>
           {isAdmin && overtimeEnabled && (
             <button
@@ -866,6 +956,129 @@ export default function CorrectionsView({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* ── 🆕 Tab Pointages : modifier un pointage complet + voir qui a fait quoi ─ */}
+      {activeTab === 'pointages' && (
+        <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[var(--border)] flex flex-wrap items-center gap-3">
+            <p className="text-sm text-[var(--text-muted)] flex-1 min-w-48">
+              <b className="text-[var(--text)]">{allPointages.length}</b> pointage(s) ce mois. Cliquez sur « Modifier » pour changer l’entrée, la sortie ou le statut.
+            </p>
+            <label className="flex items-center gap-2 text-xs font-semibold text-[var(--text)]">
+              <input type="checkbox" checked={onlyIncomplete} onChange={(e) => { setOnlyIncomplete(e.target.checked); setVisibleCount(60); }} className="accent-emerald-500" />
+              Sortie manquante seulement
+            </label>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-[var(--surface-2)]">
+                <tr>
+                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Employé</th>
+                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Date</th>
+                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Entrée → Sortie</th>
+                  <th className="px-5 py-3 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider hidden md:table-cell">Origine</th>
+                  <th className="px-5 py-3 text-right text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {pointages.length === 0 && (
+                  <tr><td colSpan={5} className="px-5 py-14 text-center text-sm text-[var(--text-muted)]">Aucun pointage à afficher.</td></tr>
+                )}
+                {pointages.map((a: any) => {
+                  const day = String(a.date).slice(0, 10);
+                  const missingOut = !!a.checkIn && !a.checkOut;
+                  const modified = typeof a.notes === 'string' && a.notes.includes('[Modifié');
+                  const method = summaryPunchMethod(a.checkInMethod, a.checkOutMethod);
+                  const trace = traces[a.id];
+                  return (
+                    <React.Fragment key={a.id}>
+                      <tr className="hover:bg-[var(--surface-2)] transition-colors">
+                        <td className="px-5 py-3.5">
+                          <p className="font-bold text-sm text-[var(--text)]">{a.employee?.firstName} {a.employee?.lastName}</p>
+                          <p className="text-xs text-[var(--text-muted)]">{STATUS_LABEL[a.status] || a.status}</p>
+                        </td>
+                        <td className="px-5 py-3.5 text-sm text-[var(--text)] capitalize">
+                          {new Date(`${day}T12:00:00Z`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </td>
+                        <td className="px-5 py-3.5 text-sm font-mono text-[var(--text)]">
+                          {toHM(a.checkIn) || '—'} → {a.checkOut ? toHM(a.checkOut) : (
+                            <span className={`font-sans text-xs font-bold ${missingOut && day < today ? 'text-amber-600' : 'text-[var(--text-muted)]'}`}>
+                              {day < today ? 'sortie manquante' : 'en cours'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5 hidden md:table-cell">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {method && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--surface-2)] text-[var(--text-muted)]">{PUNCH_METHOD_LABEL[method] || method}</span>}
+                            {modified && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">Modifié</span>}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                          <button onClick={() => toggleTrace(a.id)} className="inline-flex items-center gap-1.5 px-3 py-2 mr-2 rounded-xl text-xs font-bold border border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-400 transition-all" aria-expanded={expandedId === a.id}>
+                            <History size={13} /> Historique
+                          </button>
+                          <button onClick={() => setEditingAtt(a)} disabled={savingId === a.id} className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all">
+                            {savingId === a.id ? <Loader2 size={13} className="animate-spin" /> : <Edit3 size={13} />} Modifier
+                          </button>
+                        </td>
+                      </tr>
+                      {expandedId === a.id && (
+                        <tr className="bg-[var(--surface-2)]">
+                          <td colSpan={5} className="px-5 py-4">
+                            {trace === 'loading' || trace === undefined ? (
+                              <p className="text-xs text-[var(--text-muted)] flex items-center gap-2"><Loader2 size={13} className="animate-spin" /> Chargement…</p>
+                            ) : trace === 'error' ? (
+                              <p className="text-xs text-red-500">Impossible de charger l’historique.</p>
+                            ) : trace.length === 0 ? (
+                              <p className="text-xs text-[var(--text-muted)]">Aucune modification : ce pointage est tel qu’enregistré à l’origine ({method ? PUNCH_METHOD_LABEL[method] || method : 'pointage'}).</p>
+                            ) : (
+                              <ol className="space-y-3">
+                                {trace.map((log: any) => {
+                                  const changes = describeTrace(log);
+                                  const who = log.modifiedBy ? `${log.modifiedBy.firstName} ${log.modifiedBy.lastName}` : 'Utilisateur inconnu';
+                                  const role = ROLE_LABEL[log.actorRole || log.modifiedBy?.role] || '';
+                                  return (
+                                    <li key={log.id} className="text-xs border-l-2 border-emerald-500 pl-3">
+                                      <p className="text-[var(--text)]">
+                                        <b>{who}</b>{role && <span className="text-[var(--text-muted)]"> ({role})</span>} ·{' '}
+                                        <span className="font-semibold">{ACTION_LABEL[log.action] || 'Modification'}</span> ·{' '}
+                                        <span className="text-[var(--text-muted)]">
+                                          {new Date(log.createdAt).toLocaleString('fr-FR', { timeZone: TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      </p>
+                                      {changes.length > 0 ? (
+                                        <ul className="mt-1 space-y-0.5">
+                                          {changes.map((c) => (
+                                            <li key={c.label} className="text-[var(--text-muted)]">{c.label} : <span className="line-through">{c.from}</span> → <b className="text-[var(--text)]">{c.to}</b></li>
+                                          ))}
+                                        </ul>
+                                      ) : (
+                                        <p className="mt-1 text-[var(--text-muted)]">{log.field} : {log.oldValue || '—'} → {log.newValue}</p>
+                                      )}
+                                      <p className="mt-1 text-[var(--text)]">Motif : <span className="italic">{log.reason || '—'}</span></p>
+                                    </li>
+                                  );
+                                })}
+                              </ol>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {allPointages.length > visibleCount && (
+            <div className="p-4 text-center border-t border-[var(--border)]">
+              <button onClick={() => setVisibleCount((n) => n + 60)} className="px-4 py-2 rounded-xl text-xs font-bold border border-[var(--border)] text-[var(--text)] hover:border-emerald-400 transition-all">
+                Afficher plus ({allPointages.length - visibleCount} restants)
+              </button>
+            </div>
+          )}
         </div>
       )}
 

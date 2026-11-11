@@ -1,7 +1,7 @@
+// 📁 EMPLACEMENT (projet frontend) : components/PresenceSubNav.tsx
 'use client';
 
 // ============================================================================
-// 📁 components/PresenceSubNav.tsx
 // ✅ Barre de navigation commune à toutes les pages du module Présences.
 // 🆕 Même rendu que Prêts / Absences / Permissions (RequestModuleNav) :
 //      PILOTAGE  → Vue d'ensemble · Pointage manuel · Shifts · Tablettes · Écrans QR
@@ -15,7 +15,7 @@
 import React from 'react';
 import {
   LayoutGrid, Fingerprint, KeyRound, FileText, CalendarClock,
-  BarChart3, Ticket, CalendarDays, Tablet, MonitorSmartphone, PieChart,
+  BarChart3, Ticket, CalendarDays, Tablet, MonitorSmartphone, PieChart, RefreshCw,
 } from 'lucide-react';
 import RequestModuleNav, { NavLinkDef } from '@/components/RequestModuleNav';
 
@@ -38,6 +38,7 @@ export default function PresenceSubNav({ userRole, canRecordAttendanceForAll = f
     ...(canManage ? [{ href: '/presences/shifts', label: 'Shifts', icon: CalendarClock, group: 'pilot' as const }] : []),
     ...(canManage ? [{ href: '/presences/tablettes', label: 'Tablettes', icon: Tablet, group: 'pilot' as const }] : []),
     ...(canAdminAbsences ? [{ href: '/presences/ecrans', label: 'Écrans QR', icon: MonitorSmartphone, group: 'pilot' as const }] : []),
+    ...(canAdminAbsences ? [{ href: '/presences/synchronisation', label: 'Pointeuses', icon: RefreshCw, group: 'pilot' as const }] : []),
 
     // ── Analyse ──
     ...(canAdminAbsences ? [

@@ -1,3 +1,4 @@
+// 📁 EMPLACEMENT (projet frontend) : app/(dashboard)/presences/pointage-manuel/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -150,6 +151,17 @@ export default function PointageManuelPage() {
       return;
     }
 
+    // 🆕 Motif obligatoire : il est enregistré avec votre nom dans l'historique du pointage
+    if (notes.trim().length < 3) {
+      alert('Indiquez le motif de ce pointage manuel (obligatoire).');
+      return;
+    }
+    // 🆕 Jour passé : entrée ET sortie (jamais « présent » sans heures)
+    if (date < new Date().toISOString().split('T')[0] && !(recordCheckIn && recordCheckOut)) {
+      alert('Pour un jour passé, renseignez l’heure d’entrée ET l’heure de sortie.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -168,20 +180,14 @@ export default function PointageManuelPage() {
         ? new Date(`${selectedDate}T${checkOutTime}:00`).toISOString()
         : undefined;
 
-      let totalHours: number | undefined;
-      if (checkInDateTime && checkOutDateTime) {
-        const durationMs = new Date(checkOutDateTime).getTime() - new Date(checkInDateTime).getTime();
-        totalHours = parseFloat((durationMs / (1000 * 60 * 60)).toFixed(2));
-      }
-
       await attendanceApi.correctAttendance(
         attendanceRecord.id,
         {
           status: 'PRESENT',
           checkIn: checkInDateTime,
           checkOut: checkOutDateTime,
-          totalHours,
-          reason: notes || 'Pointage manuel saisi par RH'
+          // La durée, les heures sup et le retard sont calculés par le serveur.
+          reason: notes.trim()
         }
       );
 

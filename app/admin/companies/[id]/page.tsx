@@ -10,7 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Mail, Phone, MapPin,
   CreditCard, Ban, PlayCircle, Archive,
-  ArchiveRestore, Pencil, Loader2, X, AlertTriangle,
+  ArchiveRestore, Pencil, Loader2, X, AlertTriangle, BarChart3,
 } from 'lucide-react';
 import { adminService } from '@/lib/services/adminService';
 import { CompanyInsightsPanel, CompanyInsightsData } from '@/components/admin/companies/CompanyInsights';
@@ -268,6 +268,12 @@ export default function CompanyDetailsPage() {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => router.push(`/admin/companies/${companyId}/gestion`)}
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm">
+          <BarChart3 className="w-4 h-4" />
+          Gestion avancée
+        </button>
         <button
           onClick={() => setModal('edit')}
           className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm border border-gray-700">

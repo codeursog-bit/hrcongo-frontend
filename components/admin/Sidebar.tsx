@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { NAVIGATION_ITEMS } from '@/lib/admin/constants';
+import { NAVIGATION_GROUPS } from '@/lib/admin/constants';
 import { Plus, Activity, Bug, RefreshCw, AlertTriangle, CheckCircle2, Zap, LogOut, X } from 'lucide-react';
 
 export interface SidebarAlerts {
@@ -76,25 +76,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Menu */}
         <div className="p-4 border-b border-gray-800">
-          <nav className="space-y-1">
-            {NAVIGATION_ITEMS.map((item) => {
-              const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path));
-              return (
-                <Link
-                  key={item.path}
-                  href={item.path}
-                  onClick={onMobileClose}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-brand-red/10 text-brand-red border border-brand-red/20'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <item.icon className={`w-4 h-4 ${isActive ? 'text-brand-red' : 'text-gray-500'}`} />
-                  {item.label}
-                </Link>
-              );
-            })}
+          <nav className="space-y-4">
+            {NAVIGATION_GROUPS.map((group) => (
+              <div key={group.label}>
+                <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-wider text-gray-600">{group.label}</p>
+                <div className="space-y-1">
+                  {group.items.map((item) => {
+                    // '/admin' (Dashboard) ne doit être actif que sur sa propre page
+                    const isActive = item.path === '/admin'
+                      ? pathname === '/admin'
+                      : pathname === item.path || pathname.startsWith(`${item.path}/`);
+                    return (
+                      <Link
+                        key={item.path}
+                        href={item.path}
+                        onClick={onMobileClose}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'bg-brand-red/10 text-brand-red border border-brand-red/20'
+                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                        }`}
+                      >
+                        <item.icon className={`w-4 h-4 ${isActive ? 'text-brand-red' : 'text-gray-500'}`} />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
         </div>
 

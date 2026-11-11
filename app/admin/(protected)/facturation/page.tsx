@@ -431,13 +431,75 @@ function CodesTab() {
 // ── Devis ────────────────────────────────────────────────────────────────────
 const QUOTE_STATUS: Record<string, string> = { ACTIVE: 'Actif', USED: 'Utilisé', CANCELED: 'Annulé' };
 
+// ── Sélecteur du compte multi-entreprises (devis « portefeuille ») ───────────
+function PortfolioOwnerPicker({
+  companyId, value, onChange,
+}: {
+  companyId: string;
+  value: string;
+  onChange: (userId: string) => void;
+}) {
+  const [q, setQ] = useState('');
+  const [users, setUsers] = useState<any[]>([]);
+  const [detail, setDetail] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Comptes multi-entreprises uniquement
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const r = await adminService.searchPortfolioUsers(q);
+        setUsers((Array.isArray(r) ? r : []).filter((u: any) => u.manageMultipleCompanies));
+      } catch { setUsers([]); } finally { setLoading(false); }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  // Aperçu des entreprises qui seront activées
+  useEffect(() => {
+    if (!value) { setDetail(null); return; }
+    adminService.getPortfolioUserDetail(value).then(setDetail).catch(() => setDetail(null));
+  }, [value]);
+
+  const covered = (detail?.companies ?? []).filter((c: any) => c.isActive);
+  const linked = (detail?.companies ?? []).some((c: any) => c.id === companyId);
+
+  return (
+    <div className="space-y-2 md:col-span-3">
+      <input className={inputCls} placeholder="Rechercher un compte multi-entreprises (email, nom)…"
+        value={q} onChange={e => setQ(e.target.value)} />
+      <div className="max-h-40 overflow-y-auto border border-gray-800 rounded-lg divide-y divide-gray-800">
+        {loading && <p className="px-3 py-2 text-xs text-gray-500">Recherche…</p>}
+        {!loading && users.length === 0 && <p className="px-3 py-2 text-xs text-gray-500">Aucun compte multi-entreprises trouvé</p>}
+        {users.map(u => (
+          <button key={u.id} type="button" onClick={() => onChange(u.id)}
+            className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-800 ${value === u.id ? 'bg-gray-800 text-white' : 'text-gray-300'}`}>
+            {u.firstName} {u.lastName} <span className="text-xs text-gray-500">· {u.email} · {u.linkedCompaniesCount} entreprise(s)</span>
+          </button>
+        ))}
+      </div>
+      {detail && (
+        <div className="text-xs rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 space-y-1">
+          <p className="text-gray-300">Le paiement activera {covered.length} entreprise(s) :</p>
+          <p className="text-gray-400">{covered.map((c: any) => c.name).join(', ') || '—'}</p>
+          {companyId && !linked && (
+            <p className="text-amber-400">⚠ Ce compte n'est pas lié à l'entreprise du devis — le devis sera refusé.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function QuotesTab() {
   const companies = useCompanies();
   const [quotes, setQuotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [f, setF] = useState({ companyId: '', plan: 'PRO', amount: '', months: '1', isRecurring: false, validUntil: '', note: '' });
+  const emptyForm = { companyId: '', plan: 'PRO', amount: '', months: '1', isRecurring: false, validUntil: '', note: '', coversPortfolio: false, portfolioOwnerId: '' };
+  const [f, setF] = useState(emptyForm);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -456,8 +518,9 @@ function QuotesTab() {
         isRecurring: f.isRecurring,
         validUntil: f.validUntil ? new Date(f.validUntil).toISOString() : undefined,
         note: f.note || undefined,
+        ...(f.coversPortfolio ? { coversPortfolio: true, portfolioOwnerId: f.portfolioOwnerId } : {}),
       });
-      setF({ companyId: '', plan: 'PRO', amount: '', months: '1', isRecurring: false, validUntil: '', note: '' });
+      setF(emptyForm);
       setMsg({ ok: true, text: 'Devis enregistré — le client pourra le payer depuis la page des plans' });
       await load();
     } catch (e: any) { setMsg({ ok: false, text: e.message }); } finally { setBusy(false); }
@@ -496,11 +559,20 @@ function QuotesTab() {
             <input type="checkbox" checked={f.isRecurring} onChange={e => setF({ ...f, isRecurring: e.target.checked })} />
             Reconduire ce tarif à chaque renouvellement
           </label>
+          <label className="flex items-center gap-2 text-sm text-gray-300 md:col-span-3">
+            <input type="checkbox" checked={f.coversPortfolio}
+              onChange={e => setF({ ...f, coversPortfolio: e.target.checked, portfolioOwnerId: '' })} />
+            Devis portefeuille — un seul paiement active toutes les entreprises d'un compte multi-entreprises
+          </label>
+          {f.coversPortfolio && (
+            <PortfolioOwnerPicker companyId={f.companyId} value={f.portfolioOwnerId}
+              onChange={id => setF({ ...f, portfolioOwnerId: id })} />
+          )}
         </div>
         <label className="text-xs text-gray-400 space-y-1 block">Note interne
           <input className={inputCls} value={f.note} onChange={e => setF({ ...f, note: e.target.value })} />
         </label>
-        <button className={btnPrimary} disabled={busy || !f.companyId || !f.amount} onClick={create}>
+        <button className={btnPrimary} disabled={busy || !f.companyId || !f.amount || (f.coversPortfolio && !f.portfolioOwnerId)} onClick={create}>
           {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Enregistrer le devis
         </button>
       </div>
@@ -515,7 +587,16 @@ function QuotesTab() {
               {quotes.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">Aucun devis</td></tr>}
               {quotes.map(q => (
                 <tr key={q.id}>
-                  <td className="px-4 py-3 text-white">{companyName(q.company)}</td>
+                  <td className="px-4 py-3 text-white">
+                    {companyName(q.company)}
+                    {q.coversPortfolio && (
+                      <div className="text-xs text-purple-300 mt-0.5">
+                        Portefeuille · {q.portfolioOwner ? `${q.portfolioOwner.firstName} ${q.portfolioOwner.lastName}` : '—'}
+                        {' · '}{(q.coveredCompanies ?? []).length} entreprise(s)
+                        {q.invalidReason && <span className="text-amber-400"> · ⚠ {q.invalidReason}</span>}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3">{q.plan}</td>
                   <td className="px-4 py-3">{fmt(q.amount)}</td>
                   <td className="px-4 py-3">{q.months} mois</td>

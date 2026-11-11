@@ -34,6 +34,12 @@ async function adminFetch<T>(
 }
 
 export const adminService = {
+  // ── Appels génériques (pages Actions de support, Comptes, Paiements, Gestion d'entreprise) ──
+  // Même gestion de session que le reste du super admin (401 → /admin/login)
+  get:    <T = any>(url: string)                => adminFetch<T>(url),
+  post:   <T = any>(url: string, body?: any)    => adminFetch<T>(url, 'POST', body ?? {}),
+  patch:  <T = any>(url: string, body?: any)    => adminFetch<T>(url, 'PATCH', body ?? {}),
+  delete: <T = any>(url: string, body?: any)    => adminFetch<T>(url, 'DELETE', body),
   // ── Dashboard ────────────────────────────────────────────────────────────
   getDashboardStats:  () => adminFetch<any>('/admin/stats'),
   getAnalytics:       () => adminFetch<any>('/admin/analytics'),
