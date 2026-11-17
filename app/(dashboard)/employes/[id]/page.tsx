@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import '@/components/employees/employee-profile.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -139,18 +141,18 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
   const pctElapsed = Math.min(100, Math.round(((totalDays - Math.max(daysLeft, 0)) / totalDays) * 100));
 
   const urgencyColor = isExpired
-    ? 'text-[var(--text-muted)]'
-    : daysLeft <= 7  ? 'text-red-600 dark:text-red-400'
-    : daysLeft <= 14 ? 'text-amber-600 dark:text-amber-400'
-    : daysLeft <= 30 ? 'text-yellow-600 dark:text-yellow-500'
-    : 'text-emerald-600 dark:text-emerald-400';
+    ? 'text-[var(--text-secondary)]'
+    : daysLeft <= 7  ? 'profile-ink-danger '
+    : daysLeft <= 14 ? 'profile-ink-warning '
+    : daysLeft <= 30 ? 'profile-ink-warning '
+    : 'profile-ink-success ';
 
   const barColor = isExpired
-    ? 'bg-gray-400'
-    : daysLeft <= 7  ? 'bg-red-500'
-    : daysLeft <= 14 ? 'bg-amber-500'
-    : daysLeft <= 30 ? 'bg-yellow-500'
-    : 'bg-emerald-500';
+    ? 'profile-fill-neutral'
+    : daysLeft <= 7  ? 'profile-fill-danger'
+    : daysLeft <= 14 ? 'profile-fill-warning'
+    : daysLeft <= 30 ? 'profile-fill-warning'
+    : 'profile-fill-success';
 
   const durationLabel = totalDays < 30
     ? `${totalDays}j`
@@ -162,7 +164,7 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
     <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-3">
       {/* Date de fin */}
       <div>
-        <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1">
+        <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1">
           <CalendarDays size={11} /> Date de fin de contrat
         </p>
         <p className={`font-bold ${urgencyColor}`}>
@@ -172,7 +174,7 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
 
       {/* Barre progression */}
       <div>
-        <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
+        <div className="flex justify-between text-xs text-[var(--text-secondary)] mb-1">
           <span>Durée totale : {durationLabel}</span>
           <span>{pctElapsed}% écoulé</span>
         </div>
@@ -186,16 +188,16 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
 
       {/* Jours restants */}
       {isExpired ? (
-        <div className="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded-lg">
-          <span className="text-xs font-bold text-[var(--text-muted)]"><AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Contrat expiré</span>
+        <div className="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded-lg profile-inset">
+          <span className="text-xs font-bold text-[var(--text-secondary)]"><AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Contrat expiré</span>
         </div>
       ) : (
         <div className={`flex items-center gap-2 p-2.5 rounded-lg ${
           daysLeft <= 7
-            ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+            ? 'profile-soft-danger border profile-outline '
             : daysLeft <= 30
-            ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
-            : 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+            ? 'profile-soft-warning border profile-outline '
+            : 'profile-soft-success border profile-outline '
         }`}>
           {daysLeft <= 30 ? <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> : <CheckCircle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" />}
           <span className={`text-xs font-bold ${urgencyColor}`}>
@@ -468,57 +470,57 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {/* Informations personnelles */}
             <section>
               <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <User size={20} className="text-emerald-500" /> Informations Personnelles
+                <User size={20} className="profile-ink-neutral" /> Informations Personnelles
               </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)] grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 profile-inset">
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Nom complet</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Nom complet</p>
                   <p className="font-medium text-[var(--text)]">{employee.firstName} {employee.lastName}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Date de naissance</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Date de naissance</p>
                   <p className="font-medium text-[var(--text)]">{new Date(employee.dateOfBirth).toLocaleDateString('fr-FR')}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Âge</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Âge</p>
                   <p className="font-medium text-[var(--text)]">{calculateAge(employee.dateOfBirth)} ans</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Lieu de naissance</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Lieu de naissance</p>
                   <p className="font-medium text-[var(--text)]">{employee.placeOfBirth}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Genre</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Genre</p>
                   <p className="font-medium text-[var(--text)]">{employee.gender === 'MALE' ? 'Homme' : 'Femme'}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Phone size={11} /> Téléphone</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Phone size={11} /> Téléphone</p>
                   <p className="font-medium font-mono text-[var(--text)]">{employee.phone}</p>
                 </div>
                 {employee.secondaryPhone && (
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Phone size={11} /> Téléphone secondaire</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Phone size={11} /> Téléphone secondaire</p>
                     <p className="font-medium font-mono text-[var(--text)]">{employee.secondaryPhone}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Mail size={11} /> Email</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Mail size={11} /> Email</p>
                   <p className="font-medium text-[var(--text)] truncate">{employee.email}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><MapPin size={11} /> Adresse</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><MapPin size={11} /> Adresse</p>
                   <p className="font-medium text-[var(--text)]">{employee.address}{employee.city ? `, ${employee.city}` : ''}</p>
                 </div>
                 {(employee.maritalStatus || employee.numberOfChildren >= 0) && (
                   <>
                     <div>
-                      <p className="text-xs text-[var(--text-muted)] mb-1">Situation familiale</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Situation familiale</p>
                       <p className="font-medium text-[var(--text)]">
                         {employee.maritalStatus === 'SINGLE' ? 'Célibataire' : employee.maritalStatus === 'MARRIED' ? 'Marié(e)' : employee.maritalStatus === 'DIVORCED' ? 'Divorcé(e)' : 'Veuf/Veuve'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--text-muted)] mb-1">Enfants à charge</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Enfants à charge</p>
                       <p className="font-medium text-[var(--text)]">{employee.numberOfChildren || 0}</p>
                     </div>
                   </>
@@ -529,16 +531,16 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {/* Documents administratifs */}
             <section>
               <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <BookOpen size={20} className="text-emerald-500" /> Documents Administratifs
+                <BookOpen size={20} className="profile-ink-neutral" /> Documents Administratifs
               </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)] grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
-                  <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Hash size={11} /> N° CNI / Passeport</p>
-                  <p className="font-semibold font-mono text-[var(--text)]">{employee.nationalIdNumber || <span className="text-[var(--text-muted)] italic text-sm font-sans font-normal">Non renseigné</span>}</p>
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4 profile-inset">
+                <div className="p-4 bg-[var(--surface)] rounded-xl profile-card">
+                  <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Hash size={11} /> N° CNI / Passeport</p>
+                  <p className="font-semibold font-mono text-[var(--text)]">{employee.nationalIdNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans font-normal">Non renseigné</span>}</p>
                 </div>
-                <div className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
-                  <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Shield size={11} /> N° CNSS</p>
-                  <p className="font-semibold font-mono text-[var(--text)]">{employee.cnssNumber || <span className="text-[var(--text-muted)] italic text-sm font-sans font-normal">Non renseigné</span>}</p>
+                <div className="p-4 bg-[var(--surface)] rounded-xl profile-card">
+                  <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Shield size={11} /> N° CNSS</p>
+                  <p className="font-semibold font-mono text-[var(--text)]">{employee.cnssNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans font-normal">Non renseigné</span>}</p>
                 </div>
               </div>
             </section>
@@ -546,66 +548,66 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {/* 🆕 Informations complémentaires (Fiche ORCA) */}
             <section>
               <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <HeartPulse size={20} className="text-amber-500" /> Informations Complémentaires
+                <HeartPulse size={20} className="profile-ink-neutral" /> Informations Complémentaires
               </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)] space-y-5">
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-5 profile-inset">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1">Groupe sanguin</p>
-                    <p className="font-medium text-[var(--text)]">{employee.bloodType || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">Groupe sanguin</p>
+                    <p className="font-medium text-[var(--text)]">{employee.bloodType || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><GraduationCap size={11} /> Niveau d'études</p>
-                    <p className="font-medium text-[var(--text)]">{employee.educationLevel || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><GraduationCap size={11} /> Niveau d'études</p>
+                    <p className="font-medium text-[var(--text)]">{employee.educationLevel || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-xs text-[var(--text-muted)] mb-1">Pathologie / maladie habituelle</p>
-                    <p className="font-medium text-[var(--text)]">{employee.pathology || <span className="text-[var(--text-muted)] italic text-sm">Aucune renseignée</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">Pathologie / maladie habituelle</p>
+                    <p className="font-medium text-[var(--text)]">{employee.pathology || <span className="text-[var(--text-secondary)] italic text-sm">Aucune renseignée</span>}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Users size={11} /> Nom & prénom(s) du père</p>
-                    <p className="font-medium text-[var(--text)]">{employee.fatherName || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Users size={11} /> Nom & prénom(s) du père</p>
+                    <p className="font-medium text-[var(--text)]">{employee.fatherName || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Users size={11} /> Nom & prénom(s) de la mère</p>
-                    <p className="font-medium text-[var(--text)]">{employee.motherName || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Users size={11} /> Nom & prénom(s) de la mère</p>
+                    <p className="font-medium text-[var(--text)]">{employee.motherName || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Languages size={11} /> Langue étrangère</p>
-                    <p className="font-medium text-[var(--text)]">{employee.foreignLanguages || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Languages size={11} /> Langue étrangère</p>
+                    <p className="font-medium text-[var(--text)]">{employee.foreignLanguages || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Car size={11} /> Permis de conduire</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Car size={11} /> Permis de conduire</p>
                     <p className="font-medium text-[var(--text)]">
                       {employee.hasDrivingLicense
                         ? `Oui${employee.drivingLicenseNumber ? ` — ${employee.drivingLicenseNumber}` : ''}`
-                        : <span className="text-[var(--text-muted)] italic text-sm">Non</span>}
+                        : <span className="text-[var(--text-secondary)] italic text-sm">Non</span>}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1 flex items-center gap-1"><Shirt size={11} /> Taille de la tenue</p>
-                    <p className="font-medium text-[var(--text)]">{employee.uniformSize || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Shirt size={11} /> Taille de la tenue</p>
+                    <p className="font-medium text-[var(--text)]">{employee.uniformSize || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-[var(--text-muted)] mb-1">Pointure de chaussures</p>
-                    <p className="font-medium text-[var(--text)]">{employee.shoeSize || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">Pointure de chaussures</p>
+                    <p className="font-medium text-[var(--text)]">{employee.shoeSize || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                   </div>
                 </div>
 
                 {(employee.emergencyContactName || employee.emergencyContactPhone) && (
-                  <div className="p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
-                    <p className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-1"><AlertTriangle size={11} /> Personne à contacter en cas d'urgence</p>
+                  <div className="p-4 bg-[var(--surface)] rounded-xl profile-card">
+                    <p className="text-xs text-[var(--text-secondary)] mb-2 flex items-center gap-1"><AlertTriangle size={11} /> Personne à contacter en cas d'urgence</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <p className="text-[11px] text-[var(--text-muted)]">Nom</p>
+                        <p className="text-[11px] text-[var(--text-secondary)]">Nom</p>
                         <p className="font-semibold text-[var(--text)]">{employee.emergencyContactName || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-[var(--text-muted)]">Lien de parenté</p>
+                        <p className="text-[11px] text-[var(--text-secondary)]">Lien de parenté</p>
                         <p className="font-semibold text-[var(--text)]">{employee.emergencyContactRelation || '—'}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-[var(--text-muted)]">Téléphone</p>
+                        <p className="text-[11px] text-[var(--text-secondary)]">Téléphone</p>
                         <p className="font-semibold font-mono text-[var(--text)]">{employee.emergencyContactPhone || '—'}</p>
                       </div>
                     </div>
@@ -618,28 +620,28 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {(companyConvention || employee.professionalCategory) && (
               <section>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                  <Award size={20} className="text-amber-500" /> Classification Conventionnelle
+                  <Award size={20} className="profile-ink-neutral" /> Classification Conventionnelle
                 </h3>
-                <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)] space-y-3">
+                <div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-3 profile-inset">
                   {companyConvention && (
-                    <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
+                    <div className="flex items-center justify-between p-4 profile-soft-neutral rounded-xl profile-inset">
                       <div>
-                        <p className="text-xs text-amber-500 mb-0.5">Convention Collective</p>
-                        <p className="font-bold text-amber-900 dark:text-amber-100">{companyConvention}</p>
+                        <p className="text-xs profile-ink-neutral mb-0.5">Convention Collective</p>
+                        <p className="font-bold profile-ink-primary ">{companyConvention}</p>
                       </div>
-                      <BookOpen size={20} className="text-amber-400" />
+                      <BookOpen size={20} className="profile-ink-neutral" />
                     </div>
                   )}
                   {employee.professionalCategory && (
-                    <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl border border-[var(--border)]">
+                    <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl profile-card">
                       <div>
-                        <p className="text-xs text-[var(--text-muted)] mb-0.5">Catégorie Professionnelle</p>
+                        <p className="text-xs text-[var(--text-secondary)] mb-0.5">Catégorie Professionnelle</p>
                         <p className="font-bold font-mono text-[var(--text)]">{employee.professionalCategory}</p>
                       </div>
                       {employee.echelon && (
                         <div className="text-right">
-                          <p className="text-xs text-[var(--text-muted)] mb-0.5">Échelon</p>
-                          <p className="font-bold text-emerald-600 dark:text-emerald-400">{employee.echelon}</p>
+                          <p className="text-xs text-[var(--text-secondary)] mb-0.5">Échelon</p>
+                          <p className="font-bold profile-ink-neutral ">{employee.echelon}</p>
                         </div>
                       )}
                     </div>
@@ -651,32 +653,32 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {/* Régime fiscal */}
             <section>
               <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Shield size={20} className="text-emerald-500" /> Régime Fiscal
+                <Shield size={20} className="profile-ink-neutral" /> Régime Fiscal
               </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)]">
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 profile-inset">
                 <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
                     <div className="shrink-0 flex items-center justify-center">
                       <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[var(--text)]">IRPP / ITS</p>
-                      <p className="text-xs text-[var(--text-muted)]">{employee.isSubjectToIrpp ? 'Soumis' : 'Exempté'}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToIrpp ? 'Soumis' : 'Exempté'}</p>
                     </div>
                   </div>
-                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
                     <div className="shrink-0 flex items-center justify-center">
                       <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[var(--text)]">CNSS (4%)</p>
-                      <p className="text-xs text-[var(--text-muted)]">{employee.isSubjectToCnss ? 'Soumis' : 'Exempté'}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToCnss ? 'Soumis' : 'Exempté'}</p>
                     </div>
                   </div>
                 </div>
                 {employee.taxExemptionReason && (
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-lg">
-                    <p className="text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                  <div className="p-3 profile-soft-warning rounded-lg profile-inset">
+                    <p className="text-xs profile-ink-warning flex items-start gap-2">
                       <AlertCircle size={12} className="mt-0.5 shrink-0" />
                       <span><strong>Raison d'exemption :</strong> {employee.taxExemptionReason}</span>
                     </p>
@@ -691,23 +693,23 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {/* EMPLOI — 🆕 avec durée contrat */}
             <section>
               <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Briefcase size={20} className="text-amber-500" /> Emploi
+                <Briefcase size={20} className="profile-ink-neutral" /> Emploi
               </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)] space-y-4">
+              <div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-4 profile-inset">
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Date d'embauche</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Date d'embauche</p>
                   <p className="font-medium text-[var(--text)]">{new Date(employee.hireDate).toLocaleDateString('fr-FR')}</p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Ancienneté : {getAnciennete()}</p>
+                  <p className="text-xs profile-ink-neutral mt-0.5">Ancienneté : {getAnciennete()}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Type de contrat</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Type de contrat</p>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold ${
-                    employee.contractType === 'CDI'         ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
-                    employee.contractType === 'CDD'         ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
-                    employee.contractType === 'STAGE'       ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
-                    employee.contractType === 'CONSULTANT'  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
-                    employee.contractType === 'PRESTATAIRE' ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' :
-                    'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                    employee.contractType === 'CDI'         ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'CDD'         ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'STAGE'       ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'CONSULTANT'  ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'PRESTATAIRE' ? 'profile-soft-neutral profile-ink-neutral ' :
+                    'profile-soft-neutral profile-ink-neutral '
                   }`}>
                     <Briefcase size={16} strokeWidth={1.5} aria-hidden="true" />
                     {employee.contractType === 'CDI' ? 'CDI' :
@@ -720,15 +722,15 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Poste occupé</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Poste occupé</p>
                   <p className="font-medium text-[var(--text)]">{employee.position}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Département</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Département</p>
                   <p className="font-medium text-[var(--text)]">{employee.department?.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Mode de paiement</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Mode de paiement</p>
                   <p className="font-medium text-[var(--text)]">
                     {employee.paymentMethod === 'CASH' ? 'Espèces' : employee.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Mobile Money'}
                   </p>
@@ -736,37 +738,37 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {employee.paymentMethod === 'BANK_TRANSFER' && (
                   <>
                     <div>
-                      <p className="text-xs text-[var(--text-muted)] mb-1">Banque</p>
-                      <p className="font-medium text-[var(--text)]">{employee.bankName || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Banque</p>
+                      <p className="font-medium text-[var(--text)]">{employee.bankName || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--text-muted)] mb-1">N° de compte</p>
-                      <p className="font-medium text-[var(--text)] font-mono">{employee.bankAccountNumber || <span className="text-[var(--text-muted)] italic text-sm font-sans">Non renseigné</span>}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">N° de compte</p>
+                      <p className="font-medium text-[var(--text)] font-mono">{employee.bankAccountNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
                     </div>
                   </>
                 )}
                 {employee.paymentMethod === 'MOBILE_MONEY' && (
                   <>
                     <div>
-                      <p className="text-xs text-[var(--text-muted)] mb-1">Opérateur Mobile Money</p>
-                      <p className="font-medium text-[var(--text)]">{employee.mobileMoneyOperator || <span className="text-[var(--text-muted)] italic text-sm">Non renseigné</span>}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Opérateur Mobile Money</p>
+                      <p className="font-medium text-[var(--text)]">{employee.mobileMoneyOperator || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[var(--text-muted)] mb-1">N° Mobile Money</p>
-                      <p className="font-medium text-[var(--text)] font-mono">{employee.mobileMoneyNumber || <span className="text-[var(--text-muted)] italic text-sm font-sans">Non renseigné</span>}</p>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">N° Mobile Money</p>
+                      <p className="font-medium text-[var(--text)] font-mono">{employee.mobileMoneyNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
                     </div>
                   </>
                 )}
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">N° Fiscal</p>
-                  <p className="font-medium text-[var(--text)] font-mono">{employee.taxNumber || <span className="text-[var(--text-muted)] italic text-sm font-sans">Non renseigné</span>}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">N° Fiscal</p>
+                  <p className="font-medium text-[var(--text)] font-mono">{employee.taxNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">NIU</p>
-                  <p className="font-medium text-[var(--text)] font-mono">{employee.niu || <span className="text-[var(--text-muted)] italic text-sm font-sans">Non renseigné</span>}</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">NIU</p>
+                  <p className="font-medium text-[var(--text)] font-mono">{employee.niu || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-1">Zone (transport / TOL)</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Zone (transport / TOL)</p>
                   <p className="font-medium text-[var(--text)]">{employee.tolZone === 'PERIPHERIE' ? 'Périphérie' : 'Ville'}</p>
                 </div>
 
@@ -780,9 +782,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {/* CDI — badge durée indéterminée */}
                 {employee.contractType === 'CDI' && (
                   <div className="pt-3 border-t border-[var(--border)]">
-                    <div className="flex items-center gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                      <CheckCircle size={13} className="text-emerald-500" />
-                      <span className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">CDI — Durée indéterminée</span>
+                    <div className="flex items-center gap-2 p-2 profile-soft-neutral rounded-lg profile-inset">
+                      <CheckCircle size={13} className="profile-ink-neutral" />
+                      <span className="text-xs profile-ink-neutral font-semibold">CDI — Durée indéterminée</span>
                     </div>
                   </div>
                 )}
@@ -795,35 +797,35 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     toujours un booléen, jamais rendu comme 0. */}
                 {(employee.trialPeriodDays ?? 0) > 0 && (
                   <div className="pt-3 border-t border-[var(--border)]">
-                    <p className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-1.5">
+                    <p className="text-xs text-[var(--text-secondary)] mb-2 flex items-center gap-1.5">
                       <Clock size={11} /> Période d'essai
                     </p>
                     {employee.trialStatus === 'IN_PROGRESS' && employee.trialEndDate && (
-                      <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-700">
+                      <div className="p-3 profile-soft-warning rounded-xl profile-inset">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300"><Clock size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Essai en cours</span>
-                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                          <span className="text-xs font-bold profile-ink-warning "><Clock size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Essai en cours</span>
+                          <span className="text-xs profile-ink-warning font-semibold">
                             {Math.max(0, Math.ceil((new Date(employee.trialEndDate).getTime() - Date.now()) / 86400000))} jours restants
                           </span>
                         </div>
-                        <p className="text-xs text-emerald-600 dark:text-emerald-500">
+                        <p className="text-xs profile-ink-warning ">
                           Fin le {new Date(employee.trialEndDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </p>
-                        <p className="text-xs text-emerald-500 mt-1">Rupture sans préavis ni indemnités possible.</p>
+                        <p className="text-xs profile-ink-warning mt-1">Rupture sans préavis ni indemnités possible.</p>
                       </div>
                     )}
                     {employee.trialStatus === 'CONFIRMED' && (
-                      <div className="flex items-center gap-2 p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700">
-                        <CheckCircle size={13} className="text-emerald-500" />
-                        <span className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
+                      <div className="flex items-center gap-2 p-2 profile-soft-success rounded-lg profile-inset">
+                        <CheckCircle size={13} className="profile-ink-success" />
+                        <span className="text-xs profile-ink-success font-semibold">
                           Essai confirmé {employee.trialConfirmedAt ? `— le ${new Date(employee.trialConfirmedAt).toLocaleDateString('fr-FR')}` : ''}
                         </span>
                       </div>
                     )}
                     {employee.trialStatus === 'EXPIRED' && (
-                      <div className="flex items-center gap-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700">
-                        <AlertCircle size={13} className="text-amber-500" />
-                        <span className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
+                      <div className="flex items-center gap-2 p-2 profile-soft-warning rounded-lg profile-inset">
+                        <AlertCircle size={13} className="profile-ink-warning" />
+                        <span className="text-xs profile-ink-warning font-semibold">
                           Essai expiré — à régulariser (confirmation ou rupture)
                         </span>
                       </div>
@@ -834,27 +836,27 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {/* BNC — Consultant / Prestataire */}
                 {BNC_CONTRACTS.includes(employee.contractType) && (
                   <div className="pt-3 border-t border-[var(--border)]">
-                    <p className="text-xs text-[var(--text-muted)] mb-2">Régime fiscal BNC</p>
-                    <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-700 space-y-1">
+                    <p className="text-xs text-[var(--text-secondary)] mb-2">Régime fiscal BNC</p>
+                    <div className="p-3 profile-soft-neutral rounded-xl space-y-1 profile-inset">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-emerald-700 dark:text-emerald-400">Résidence</span>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${employee.isResident !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'}`}>
+                        <span className="text-xs profile-ink-neutral ">Résidence</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${employee.isResident !== false ? 'profile-soft-neutral profile-ink-neutral ' : 'profile-soft-neutral profile-ink-neutral '}`}>
                           {employee.isResident !== false ? 'Résident' : 'Non-résident'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-emerald-700 dark:text-emerald-400">Taux BNC</span>
-                        <span className="text-xs font-black text-emerald-800 dark:text-emerald-300">
+                        <span className="text-xs profile-ink-neutral ">Taux BNC</span>
+                        <span className="text-xs font-black profile-ink-primary ">
                           {employee.isResident !== false ? '10%' : '20%'}
                         </span>
                       </div>
                       {employee.nationality && (
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-emerald-700 dark:text-emerald-400">Nationalité</span>
-                          <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">{employee.nationality}</span>
+                          <span className="text-xs profile-ink-neutral ">Nationalité</span>
+                          <span className="text-xs font-semibold profile-ink-primary ">{employee.nationality}</span>
                         </div>
                       )}
-                      <p className="text-[11px] text-emerald-600 dark:text-emerald-500 pt-1">
+                      <p className="text-[11px] profile-ink-neutral pt-1">
                         <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Pas de bulletin — FACTURE HT. BNC reversé DGI avant le 15.
                       </p>
                     </div>
@@ -864,9 +866,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {/* INTERIM — info agence */}
                 {employee.contractType === 'INTERIM' && (
                   <div className="pt-3 border-t border-[var(--border)]">
-                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1"><Briefcase size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Intérimaire</p>
-                      <p className="text-xs text-amber-600 dark:text-amber-500">
+                    <div className="p-3 profile-soft-neutral rounded-xl profile-inset">
+                      <p className="text-xs font-bold profile-ink-neutral mb-1"><Briefcase size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Intérimaire</p>
+                      <p className="text-xs profile-ink-neutral ">
                         Salarié de l'agence d'intérim. Aucun bulletin généré côté entreprise. Suivi de mission uniquement.
                       </p>
                     </div>
@@ -876,9 +878,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {/* STAGE — info convention */}
                 {employee.contractType === 'STAGE' && (
                   <div className="pt-3 border-t border-[var(--border)]">
-                    <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1"><GraduationCap size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Stage</p>
-                      <p className="text-xs text-amber-600 dark:text-amber-500">
+                    <div className="p-3 profile-soft-neutral rounded-xl profile-inset">
+                      <p className="text-xs font-bold profile-ink-neutral mb-1"><GraduationCap size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Stage</p>
+                      <p className="text-xs profile-ink-neutral ">
                         Gratification. CNSS patronale AT 2,25% uniquement. ITS seulement si gratification &gt; SMIG (50 400 FCFA).
                       </p>
                     </div>
@@ -886,12 +888,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 )}
 
                 <div className="pt-4 border-t border-[var(--border)]">
-                  <p className="text-xs text-[var(--text-muted)] uppercase font-bold mb-1">Salaire de base</p>
+                  <p className="text-xs text-[var(--text-secondary)] uppercase font-bold mb-1">Salaire de base</p>
                   <div className="flex items-center justify-between">
                     <p className="text-xl font-bold text-[var(--text)] font-mono">
                       {showSalary ? `${employee.baseSalary?.toLocaleString('fr-FR')} FCFA` : '• • • • • • •'}
                     </p>
-                    <button onClick={() => setShowSalary(!showSalary)} className="text-[var(--text-muted)] hover:text-emerald-500 transition-colors p-1">
+                    <button onClick={() => setShowSalary(!showSalary)} className="text-[var(--text-secondary)] profile-hover-ink-brand transition-colors p-1">
                       {showSalary ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
@@ -923,13 +925,13 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     méthode AVERAGE_12M). */}
                 {(employee as any).openingCumulativeGross != null && (
                   <div className="pt-4 border-t border-[var(--border)]">
-                    <p className="text-xs text-[var(--text-muted)] uppercase font-bold mb-1">Cumul brut avant Konza RH</p>
+                    <p className="text-xs text-[var(--text-secondary)] uppercase font-bold mb-1">Cumul brut avant Konza RH</p>
                     <p className="text-xl font-bold text-[var(--text)] font-mono">
                       {showSalary
                         ? `${Number((employee as any).openingCumulativeGross).toLocaleString('fr-FR')} FCFA sur ${(employee as any).openingCumulativeMonths ?? '?'} mois`
                         : '• • • • • • •'}
                     </p>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                    <p className="text-xs text-[var(--text-secondary)] mt-1">
                       Cumul des bruts du cycle de congé en cours avant l&apos;arrivée sur Konza RH. Utilisé pour l&apos;indemnité de congé tant que l&apos;historique réel est court — se remet à zéro tout seul au prochain cycle.
                     </p>
                   </div>
@@ -940,92 +942,92 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             {/* Actions rapides */}
             <section>
               <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Star size={20} className="text-amber-500" /> Actions Rapides
+                <Star size={20} className="profile-ink-neutral" /> Actions Rapides
               </h3>
               <div className="space-y-2">
                 <Link href={bp(`/employes/${params.id}/primes`)}
-                  className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all group">
+                  className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="shrink-0 flex items-center justify-center">
-                      <Gift size={16} className="text-amber-500" strokeWidth={1.5} aria-hidden="true" />
+                      <Gift size={16} className="profile-ink-brand" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">Gérer les primes</span>
                   </div>
-                  <ChevronRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
                 </Link>
                 <Link href={`/employes/${params.id}/edit`}
-                  className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all group">
+                  className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="shrink-0 flex items-center justify-center">
-                      <Edit size={16} className="text-emerald-500" strokeWidth={1.5} aria-hidden="true" />
+                      <Edit size={16} className="profile-ink-brand" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">Modifier le dossier</span>
                   </div>
-                  <ChevronRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
                 </Link>
                 <button
                   onClick={handleDownloadFiche}
                   disabled={isGeneratingFiche}
-                  className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group disabled:opacity-60"
+                  className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group disabled:opacity-60"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                      {isGeneratingFiche ? <Loader2 size={16} className="text-emerald-500 animate-spin" /> : <FileText size={16} className="text-emerald-500" />}
+                    <div className="w-8 h-8 profile-soft-brand rounded-lg flex items-center justify-center">
+                      {isGeneratingFiche ? <Loader2 size={16} className="profile-ink-brand animate-spin" /> : <FileText size={16} className="profile-ink-brand" />}
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">
                       {isGeneratingFiche ? 'Génération…' : 'Fiche de renseignement (PDF)'}
                     </span>
                   </div>
-                  <Download size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                  <Download size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
                 </button>
                 <button
                   onClick={handleToggleSelfService}
                   disabled={isTogglingSelfService}
                   className={`w-full flex items-center justify-between p-4 border rounded-xl transition-all group disabled:opacity-60 ${
                     employee?.selfServiceEnabled
-                      ? 'bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800'
-                      : 'bg-[var(--surface-2)] border-[var(--border)] hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10'
+                      ? 'profile-soft-brand profile-outline '
+                      : 'bg-[var(--surface-2)] border-[var(--border)] profile-hover-outline profile-hover-soft-brand '
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${employee?.selfServiceEnabled ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-[var(--surface-2)]'}`}>
-                      {isTogglingSelfService ? <Loader2 size={16} className="text-emerald-500 animate-spin" /> : <UserCheck size={16} className={employee?.selfServiceEnabled ? 'text-emerald-500' : 'text-[var(--text-muted)]'} />}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${employee?.selfServiceEnabled ? 'profile-soft-brand ' : 'bg-[var(--surface-2)]'}`}>
+                      {isTogglingSelfService ? <Loader2 size={16} className="profile-ink-brand animate-spin" /> : <UserCheck size={16} className={employee?.selfServiceEnabled ? 'profile-ink-brand' : 'text-[var(--text-secondary)]'} />}
                     </div>
                     <div className="text-left">
                       <span className="font-bold text-sm text-[var(--text)] block">
                         {employee?.selfServiceEnabled ? "Auto-service activé" : "Autoriser l'employé à modifier son profil"}
                       </span>
-                      <span className="text-[11px] text-[var(--text-muted)]">
+                      <span className="text-[11px] text-[var(--text-secondary)]">
                         {employee?.selfServiceEnabled ? "Cliquer pour reverrouiller" : 'Cliquer pour accorder un accès temporaire'}
                       </span>
                     </div>
                   </div>
-                  <div className={`shrink-0 relative w-11 h-6 rounded-full transition-colors ${employee?.selfServiceEnabled ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${employee?.selfServiceEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                  <div className={`shrink-0 relative w-11 h-6 rounded-full transition-colors ${employee?.selfServiceEnabled ? 'profile-fill-brand' : 'bg-[var(--border)]'}`}>
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 profile-surface rounded-full shadow transform transition-transform ${employee?.selfServiceEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
                 </button>
                 <button onClick={() => setActiveTab('paie')}
-                  className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group">
+                  className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="shrink-0 flex items-center justify-center">
-                      <TrendingUp size={16} className="text-emerald-500" strokeWidth={1.5} aria-hidden="true" />
+                      <TrendingUp size={16} className="profile-ink-brand" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">Historique de paie</span>
                   </div>
-                  <ChevronRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
                 </button>
                 {canDelete && (
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all group"
+                    className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-danger transition-all group"
                   >
                     <div className="flex items-center gap-3">
                       <div className="shrink-0 flex items-center justify-center">
-                        <Trash2 size={16} className="text-red-500" strokeWidth={1.5} aria-hidden="true" />
+                        <Trash2 size={16} className="profile-ink-danger" strokeWidth={1.5} aria-hidden="true" />
                       </div>
-                      <span className="font-bold text-sm text-red-600 dark:text-red-400">Supprimer l'employé</span>
+                      <span className="font-bold text-sm profile-ink-danger ">Supprimer l'employé</span>
                     </div>
-                    <ChevronRight size={16} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+                    <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-danger transition-colors" />
                   </button>
                 )}
               </div>
@@ -1038,8 +1040,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     if (tabLoading) return <KonzaLoader variant="page" />;
     if (!tabData || tabData.length === 0) return (
       <div className="py-20 text-center">
-        <AlertCircle size={28} className="text-[var(--text-muted)] mx-auto mb-3" />
-        <p className="text-[var(--text-muted)] font-medium">Aucune donnée disponible</p>
+        <AlertCircle size={28} className="text-[var(--text-secondary)] mx-auto mb-3" />
+        <p className="text-[var(--text-secondary)] font-medium">Aucune donnée disponible</p>
       </div>
     );
 
@@ -1047,18 +1049,18 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tabData.map((doc: any) => (
-            <div key={doc.id} className="p-4 border border-[var(--border)] rounded-xl flex items-center gap-3 bg-[var(--surface)] hover:shadow-md transition-all">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg"><FileText size={20} /></div>
+            <div key={doc.id} className="p-4 rounded-xl flex items-center gap-3 bg-[var(--surface)] hover: transition-all profile-card">
+              <div className="p-3 profile-soft-neutral profile-ink-neutral rounded-lg profile-inset"><FileText size={20} /></div>
               <div className="flex-1 overflow-hidden">
                 <p className="font-bold truncate text-[var(--text)]">{doc.name}</p>
-                <p className="text-xs text-[var(--text-muted)]">{doc.type}</p>
+                <p className="text-xs text-[var(--text-secondary)]">{doc.type}</p>
               </div>
               <button
                 type="button"
                 onClick={() => handleDownloadDoc(doc)}
                 disabled={downloadingDocId === doc.id}
                 title="Télécharger"
-                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors disabled:opacity-60"
+                className="p-2 rounded-lg text-[var(--text-secondary)] profile-hover-ink-brand profile-hover-soft-brand transition-colors disabled:opacity-60"
               >
                 {downloadingDocId === doc.id ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
               </button>
@@ -1073,22 +1075,22 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         <div className="space-y-3">
           {tabData.map((p: any) => (
             <Link href={bp(`/paie/${p.id}`)} key={p.id}>
-              <div className="flex justify-between items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl hover:bg-[var(--surface-2)] hover:border-emerald-200 dark:hover:border-emerald-800 transition-all cursor-pointer group">
+              <div className="flex justify-between items-center p-4 bg-[var(--surface)] rounded-xl hover:bg-[var(--surface-2)] profile-hover-outline transition-all cursor-pointer group profile-card">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-lg shadow-emerald-500/20">
+                  <div className="w-12 h-12 profile-fill-brand profile-on-fill rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-lg profile-shadow">
                     <span className="leading-none">{String(p.month).padStart(2, '0')}</span>
-                    <span className="leading-none opacity-75 text-[10px]">{p.year?.toString().slice(2)}</span>
+                    <span className="leading-none text-[10px]">{p.year?.toString().slice(2)}</span>
                   </div>
                   <div>
                     <p className="font-bold text-[var(--text)]">Bulletin de Paie</p>
-                    <p className="text-xs text-[var(--text-muted)]">Net versé : <strong className="text-emerald-600 dark:text-emerald-400">{p.netSalary?.toLocaleString('fr-FR')} FCFA</strong></p>
+                    <p className="text-xs text-[var(--text-secondary)]">Net versé : <strong className="profile-ink-brand ">{p.netSalary?.toLocaleString('fr-FR')} FCFA</strong></p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs px-3 py-1 rounded-full font-bold ${p.status === 'PAID' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                  <span className={`text-xs px-3 py-1 rounded-full font-bold ${p.status === 'PAID' ? 'profile-soft-success profile-ink-success ' : 'profile-soft-warning profile-ink-warning '}`}>
                     {p.status === 'PAID' ? 'Payé' : 'En attente'}
                   </span>
-                  <ChevronRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
                 </div>
               </div>
             </Link>
@@ -1101,7 +1103,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       return (
         <div className="space-y-3">
           {tabData.map((l: any) => (
-            <div key={l.id} className="flex justify-between items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
+            <div key={l.id} className="flex justify-between items-center p-4 bg-[var(--surface)] rounded-xl profile-card">
               <div className="flex items-center gap-4">
                 <div className="shrink-0 flex items-center justify-center">
                   <Calendar size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -1110,12 +1112,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <p className="font-bold text-[var(--text)]">
                     {l.type === 'SICK' ? 'Congé maladie' : l.type === 'ANNUAL' ? 'Congé annuel' : l.type}
                   </p>
-                  <p className="text-xs text-[var(--text-muted)]">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     {new Date(l.startDate).toLocaleDateString('fr-FR')} → {new Date(l.endDate).toLocaleDateString('fr-FR')} · <strong>{l.daysCount}j</strong>
                   </p>
                 </div>
               </div>
-              <span className={`text-xs px-3 py-1 rounded-full font-bold ${l.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : l.status === 'PENDING' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+              <span className={`text-xs px-3 py-1 rounded-full font-bold ${l.status === 'APPROVED' ? 'profile-soft-success profile-ink-success ' : l.status === 'PENDING' ? 'profile-soft-warning profile-ink-warning ' : 'profile-soft-danger profile-ink-danger '}`}>
                 {l.status === 'APPROVED' ? 'Approuvé' : l.status === 'PENDING' ? 'En attente' : 'Refusé'}
               </span>
             </div>
@@ -1126,10 +1128,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
 
     if (activeTab === 'materiel') {
       const ASSET_STATUS: Record<string, { label: string; cls: string }> = {
-        IN_USE:      { label: 'En service',   cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' },
-        AVAILABLE:   { label: 'Disponible',   cls: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800' },
-        MAINTENANCE: { label: 'Maintenance',  cls: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800' },
-        RETIRED:     { label: 'Réformé',      cls: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]' },
+        IN_USE:      { label: 'En service',   cls: 'profile-soft-success profile-ink-success profile-outline ' },
+        AVAILABLE:   { label: 'Disponible',   cls: 'profile-soft-neutral profile-ink-neutral profile-outline ' },
+        MAINTENANCE: { label: 'Maintenance',  cls: 'profile-soft-warning profile-ink-warning profile-outline ' },
+        RETIRED:     { label: 'Réformé',      cls: 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)]' },
       };
       const assetIcon = (category?: string) => {
         const c = (category || '').toLowerCase();
@@ -1144,9 +1146,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-[var(--text)]">Matériel attribué</h3>
-              <p className="text-sm text-[var(--text-muted)]">Équipements actuellement confiés à cet employé.</p>
+              <p className="text-sm text-[var(--text-secondary)]">Équipements actuellement confiés à cet employé.</p>
             </div>
-            <span className="px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 text-sm font-bold border border-emerald-200 dark:border-emerald-800">
+            <span className="px-3 py-1.5 rounded-full profile-soft-neutral profile-ink-neutral text-sm font-bold border profile-outline ">
               {tabData.length} équipement{tabData.length > 1 ? 's' : ''}
             </span>
           </div>
@@ -1156,8 +1158,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               const Icon = assetIcon(a.category);
               const st = ASSET_STATUS[a.status] || ASSET_STATUS.IN_USE;
               return (
-                <div key={a.id} className="group relative overflow-hidden p-5 border border-[var(--border)] rounded-2xl bg-[var(--surface)] hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-200 dark:hover:border-emerald-800 transition-all">
-                  <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                <div key={a.id} className="group relative overflow-hidden p-5 rounded-2xl bg-[var(--surface)] hover: hover:-translate-y-0.5 profile-hover-outline transition-all profile-card">
+                  <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full profile-soft-neutral profile-group-hover-soft-neutral transition-colors" />
                   <div className="relative flex items-start gap-4">
                     <div className="shrink-0 flex items-center justify-center">
                       <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
@@ -1165,7 +1167,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-lg text-[var(--text)] truncate">{a.name}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                        {a.category && <span className="px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-muted)] text-xs font-semibold">{a.category}</span>}
+                        {a.category && <span className="px-2 py-0.5 rounded-md bg-[var(--surface-2)] text-[var(--text-secondary)] text-xs font-semibold">{a.category}</span>}
                         <span className={`px-2 py-0.5 rounded-full border text-xs font-semibold ${st.cls}`}>{st.label}</span>
                       </div>
                     </div>
@@ -1173,15 +1175,15 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
 
                   <dl className="relative mt-4 pt-4 border-t border-[var(--border)] grid grid-cols-2 gap-3 text-xs">
                     <div>
-                      <dt className="text-[var(--text-muted)] uppercase tracking-wide font-semibold mb-0.5">N° de série</dt>
+                      <dt className="text-[var(--text-secondary)] uppercase tracking-wide font-semibold mb-0.5">N° de série</dt>
                       <dd className="font-mono text-[var(--text)] truncate">{a.serialNumber || '—'}</dd>
                     </div>
                     <div>
-                      <dt className="text-[var(--text-muted)] uppercase tracking-wide font-semibold mb-0.5">État</dt>
+                      <dt className="text-[var(--text-secondary)] uppercase tracking-wide font-semibold mb-0.5">État</dt>
                       <dd className="text-[var(--text)] truncate">{a.condition || '—'}</dd>
                     </div>
                     <div>
-                      <dt className="text-[var(--text-muted)] uppercase tracking-wide font-semibold mb-0.5">Acquis le</dt>
+                      <dt className="text-[var(--text-secondary)] uppercase tracking-wide font-semibold mb-0.5">Acquis le</dt>
                       <dd className="text-[var(--text)]">{a.purchaseDate ? new Date(a.purchaseDate).toLocaleDateString('fr-FR') : '—'}</dd>
                     </div>
                   </dl>
@@ -1195,7 +1197,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   };
 
   return (
-    <div className="max-w-7xl mx-auto pb-20 space-y-6">
+    <div className="employee-profile-page max-w-7xl mx-auto pb-20 space-y-6">
 
       {/* MODAL SUPPRESSION */}
       <AnimatePresence>
@@ -1211,27 +1213,27 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="relative bg-[var(--surface)] rounded-2xl p-8 shadow-xl max-w-md w-full border border-red-200 dark:border-red-800/50 z-10 overflow-hidden"
+              className="relative bg-[var(--surface)] rounded-2xl p-8 shadow-xl max-w-md w-full border profile-outline z-10 overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-40 h-40 bg-red-50 dark:bg-red-900/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-40 h-40 profile-soft-danger rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
               {!isDeleting && (
                 <button onClick={() => setShowDeleteModal(false)}
-                  className="absolute top-4 right-4 p-2 text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] rounded-xl transition-colors z-10">
+                  className="absolute top-4 right-4 p-2 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] rounded-xl transition-colors z-10">
                   <X size={18} />
                 </button>
               )}
               <div className="relative flex justify-center mb-5">
-                <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 profile-soft-danger rounded-full flex items-center justify-center">
                   <div className="shrink-0 flex items-center justify-center">
-                    <Trash2 size={20} className="text-red-600 dark:text-red-400" strokeWidth={1.5} aria-hidden="true" />
+                    <Trash2 size={20} className="profile-ink-danger " strokeWidth={1.5} aria-hidden="true" />
                   </div>
                 </div>
               </div>
               <h2 className="text-xl font-bold text-center text-[var(--text)] mb-1">Supprimer cet employé ?</h2>
-              <p className="text-center text-[var(--text-muted)] text-sm mb-1">Vous êtes sur le point de désactiver le dossier de</p>
+              <p className="text-center text-[var(--text-secondary)] text-sm mb-1">Vous êtes sur le point de désactiver le dossier de</p>
               <p className="text-center font-extrabold text-[var(--text)] text-lg mb-5">{employee.firstName} {employee.lastName}</p>
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-2xl p-4 mb-6">
-                <p className="text-red-700 dark:text-red-300 text-sm font-bold flex items-center gap-2 mb-3">
+              <div className="profile-soft-danger rounded-2xl p-4 mb-6 profile-inset">
+                <p className="profile-ink-danger text-sm font-bold flex items-center gap-2 mb-3">
                   <AlertCircle size={16} className="shrink-0" /> Cette action est irréversible
                 </p>
                 <ul className="space-y-2">
@@ -1241,8 +1243,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     { text: <>L'email sera à nouveau <strong>disponible</strong></>, color: 'red' },
                     { text: <>L'historique de paie et congés seront <strong>conservés</strong></>, color: 'emerald' },
                   ].map((item, i) => (
-                    <li key={i} className={`flex items-start gap-2 text-${item.color}-600 dark:text-${item.color}-400 text-xs`}>
-                      <span className={`w-1.5 h-1.5 rounded-full bg-${item.color}-400 mt-1.5 shrink-0`} />
+                    <li key={i} className={`flex items-start gap-2 ${item.color === 'red' ? 'profile-ink-danger' : 'profile-ink-success'} text-xs`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${item.color === 'red' ? 'profile-fill-danger' : 'profile-fill-success'} mt-1.5 shrink-0`} />
                       {item.text}
                     </li>
                   ))}
@@ -1250,11 +1252,11 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting}
-                  className="flex-1 px-4 py-3 rounded-xl border border-[var(--border)] text-[var(--text-muted)] font-bold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50">
+                  className="flex-1 px-4 py-3 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-bold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50">
                   Annuler
                 </button>
                 <button onClick={handleDelete} disabled={isDeleting}
-                  className="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg shadow-red-500/25">
+                  className="flex-1 px-4 py-3 rounded-xl profile-soft-danger profile-hover-soft-danger profile-ink-danger font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg profile-shadow">
                   {isDeleting ? <><Loader2 size={16} className="animate-spin" />Suppression...</> : <><Trash2 size={16} />Supprimer</>}
                 </button>
               </div>
@@ -1263,53 +1265,49 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         )}
       </AnimatePresence>
 
-      <Link href={bp('/employes')} className="inline-flex items-center text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
+      <Link href={bp('/employes')} className="inline-flex items-center text-sm text-[var(--text-secondary)] profile-hover-ink-brand transition-colors">
         <ArrowLeft size={16} className="mr-2" /> Retour à la liste
       </Link>
 
       {/* HEADER */}
-      <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 shadow-sm border border-[var(--border)] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/60 dark:bg-emerald-900/10 rounded-bl-full -mr-16 -mt-16 pointer-events-none" />
+      <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 relative overflow-hidden profile-card">
+        <div className="absolute top-0 right-0 w-64 h-64 profile-soft-neutral rounded-bl-full -mr-16 -mt-16 pointer-events-none" />
         <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
           <div className="relative shrink-0">
-            <img
-              src={employee.photoUrl || `https://ui-avatars.com/api/?name=${employee.firstName}+${employee.lastName}&background=10B981&color=fff&size=128`}
-              alt={employee.firstName}
-              className="w-32 h-32 rounded-2xl object-cover shadow-lg border-4 border-[var(--surface)]"
-            />
-            <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-emerald-500 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center">
-              <CheckCircle size={14} className="text-white" />
+            <ProfileAvatar src={employee.photoUrl} name={`${employee.firstName} ${employee.lastName}`} className="profile-avatar w-32 h-32 rounded-2xl object-cover shadow-lg" />
+            <div className="absolute -bottom-2 -right-2 w-7 h-7 profile-fill-success rounded-full border-2 profile-outline flex items-center justify-center">
+              <CheckCircle size={14} className="profile-on-fill" />
             </div>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-[var(--text)]">{employee.firstName} {employee.lastName}</h1>
-                <p className="text-lg text-[var(--text-muted)] font-medium flex items-center gap-2 flex-wrap mt-1">
+                <p className="text-lg text-[var(--text-secondary)] font-medium flex items-center gap-2 flex-wrap mt-1">
                   <span>{employee.position}</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--border)]" />
-                  <span className="text-emerald-600 dark:text-emerald-400">{employee.department?.name}</span>
+                  <span className="profile-ink-neutral ">{employee.department?.name}</span>
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <span className="px-3 py-1 rounded-lg bg-[var(--surface-2)] text-sm font-mono text-[var(--text-muted)] border border-[var(--border)]">
+                  <span className="px-3 py-1 rounded-lg bg-[var(--surface-2)] text-sm font-mono text-[var(--text-secondary)] border border-[var(--border)]">
                     {employee.employeeNumber}
                   </span>
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-sm text-gray-600 dark:text-[var(--text-muted)] border border-[var(--border)]">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-sm profile-ink-neutral border border-[var(--border)]">
                     <Briefcase size={14} /> {employee.contractType}
                   </span>
                   {/* 🆕 Badge jours restants dans le header si contrat temporaire */}
                   {TEMP_CONTRACTS.includes(employee.contractType) && employee.contractEndDate && (() => {
                     const daysLeft = differenceInDays(new Date(employee.contractEndDate), new Date());
                     if (daysLeft < 0) return (
-                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-muted)] text-sm font-bold border border-[var(--border)]">
+                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-secondary)] text-sm font-bold border border-[var(--border)]">
                         <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Expiré
                       </span>
                     );
                     if (daysLeft <= 30) return (
                       <span className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold border ${
                         daysLeft <= 7
-                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
-                          : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                          ? 'profile-soft-danger profile-ink-danger profile-outline '
+                          : 'profile-soft-warning profile-ink-warning profile-outline '
                       }`}>
                         <CalendarDays size={13} /> J-{daysLeft}
                       </span>
@@ -1317,7 +1315,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     return null;
                   })()}
                   {companyConvention && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-sm font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg profile-soft-neutral text-sm font-bold profile-ink-neutral border profile-outline ">
                       <BookOpen size={13} /> {companyConvention}
                     </span>
                   )}
@@ -1325,18 +1323,18 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link href={bp(`/employes/${params.id}/primes`)}
-                  className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 transition-colors border border-amber-200 dark:border-amber-800"
+                  className="p-2.5 rounded-xl profile-soft-brand profile-ink-brand profile-hover-soft-brand transition-colors border profile-outline "
                   title="Gérer les primes">
                   <Gift size={20} />
                 </Link>
                 <button onClick={() => router.push(bp(`/employes/${params.id}/edit`))}
-                  className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 transition-colors border border-emerald-200 dark:border-emerald-700"
+                  className="p-2.5 rounded-xl profile-soft-brand profile-ink-brand profile-hover-soft-brand transition-colors border profile-outline "
                   title="Modifier">
                   <Edit size={20} />
                 </button>
                 {canDelete && (
                   <button onClick={() => setShowDeleteModal(true)}
-                    className="p-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors border border-red-200 dark:border-red-800"
+                    className="p-2.5 rounded-xl profile-soft-danger profile-ink-danger profile-hover-soft-danger transition-colors border profile-outline "
                     title="Supprimer l'employé">
                     <Trash2 size={20} />
                   </button>
@@ -1348,7 +1346,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       </div>
 
       {/* TABS */}
-      <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
+      <div className="bg-[var(--surface)] rounded-2xl overflow-hidden profile-card">
         <div className="flex overflow-x-auto no-scrollbar border-b border-[var(--border)]">
           {[
             { id: 'info',     label: 'Informations' },
@@ -1360,13 +1358,13 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             <button key={tab.id} onClick={() => setActiveTab(tab.id as TabType)}
               className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all relative ${
                 activeTab === tab.id
-                  ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/10'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  ? 'profile-ink-brand profile-soft-brand '
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)]'
               }`}
             >
               {tab.label}
               {activeTab === tab.id && (
-                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
+                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 profile-fill-brand" />
               )}
             </button>
           ))}

@@ -6,7 +6,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Mesure | Total | Objectif |
 |---|---|---|
-| palette | 17815 | tendre vers 0 (tokens) |
+| palette | 17482 | tendre vers 0 (tokens) |
 | hex | 1783 | seulement des constantes de marque ou de graphiques |
 | emojis | 448 | 0 comme icône (réactions et contenus utilisateur autorisés) |
 | dégradés | 252 | 0 |
@@ -19,7 +19,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Zone | Fichiers | palette | hex | emojis | dégradés | pulse / ping | flou / verre | ombres colorées | texte dégradé |
 |---|---|---|---|---|---|---|---|---|---|
-| dashboard | 173 | 10262 | 434 | 189 | 56 | 29 | 100 | 4 | 4 |
+| dashboard | 173 | 9929 | 434 | 189 | 56 | 29 | 100 | 4 | 4 |
 | portefeuille | 18 | 544 | 19 | 0 | 1 | 14 | 11 | 0 | 0 |
 | pages publiques | 51 | 2438 | 630 | 127 | 121 | 14 | 59 | 17 | 2 |
 | composants, hooks, lib | 277 | 4171 | 692 | 119 | 70 | 15 | 36 | 6 | 4 |
@@ -33,7 +33,6 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 369 | `app/simulateur/SimulateurClient.tsx` |
 | 355 | `app/(dashboard)/paie/simulateur/page.tsx` |
 | 343 | `app/(dashboard)/formation/page.tsx` |
-| 333 | `app/(dashboard)/employes/[id]/page.tsx` |
 | 310 | `app/(dashboard)/parametres/entreprise/page.tsx` |
 | 303 | `app/(dashboard)/cnss-declaration/page.tsx` |
 | 261 | `components/absence-analytics/AbsenceAnalyticsBoard.tsx` |
@@ -59,6 +58,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 149 | `app/(dashboard)/performance/objectifs/page.tsx` |
 | 147 | `app/(dashboard)/presences/CorrectionsView.tsx` |
 | 145 | `components/performance/ReviewDetailModal.tsx` |
+| 142 | `app/(dashboard)/success/page.tsx` |
 
 ## Emojis à remplacer par des icônes en trait fin (top 30)
 

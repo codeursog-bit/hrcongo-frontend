@@ -1,0 +1,39 @@
+{
+  "date": "2026-11-17",
+  "scope": [
+    "app/(dashboard)/employes/[id]/page.tsx",
+    "components/employees/employee-profile.css"
+  ],
+  "palette": {
+    "pageBefore": 333,
+    "pageAfter": 0,
+    "globalBefore": 17815,
+    "globalAfter": 17482
+  },
+  "globalOther": {
+    "hex": 1783,
+    "emoji": 448,
+    "gradients": 252,
+    "pulse": 72,
+    "blur": 209
+  },
+  "protectedPdfHandler": {
+    "before": "74180fe87fa1d3c2c52486908bf6e01cb5f4a9e5e19e553efd36050a9fceced3",
+    "after": "74180fe87fa1d3c2c52486908bf6e01cb5f4a9e5e19e553efd36050a9fceced3"
+  },
+  "appearanceChecks": {
+    "combinations": 242,
+    "minimumTextContrast": "4.50:1",
+    "statusTokens": "fixed",
+    "brand": "derived",
+    "screenOnly": true
+  },
+  "verification": {
+    "employeeRegression": "API, rights, state, callbacks, calculations, status branches and PDF checked; only CSS strings of three presentation declarations normalized",
+    "visual": "not run; user review pending",
+    "types": "npm run check-types -- --incremental false: passed",
+    "css": "check-employee-profile-theme.cjs: passed, 242 combinations",
+    "guard": "CSS normalization still detects countdown threshold and asset label mutations"
+  },
+  "remaining": "Other employee pages and components still require pass 2; passes 3 to 7 remain. Cabinet and super admin excluded."
+}

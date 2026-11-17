@@ -1,0 +1,43 @@
+/* Screen-only palette. This scope never reaches the employee PDF renderer. */
+@media screen {
+  .employee-profile-page {--profile-active-text:color-mix(in srgb,var(--action) 90%,black);--profile-on-status:var(--text);--profile-brand-soft:color-mix(in srgb,var(--brand) 20%,var(--surface));}
+  .dark .employee-profile-page {--profile-active-text:var(--brand);--profile-on-status:var(--bg);--profile-brand-soft:color-mix(in srgb,var(--brand) 14%,var(--surface));}
+
+  /* Stronger than the transitional frame remap, usable without that remap. */
+  :root .employee-profile-page .profile-ink-primary {color:var(--text);}
+  :root .employee-profile-page .profile-ink-neutral {color:var(--text-secondary);}
+  :root .employee-profile-page .profile-ink-brand {color:var(--profile-active-text);}
+  :root .employee-profile-page .profile-ink-success {color:var(--success-text);}
+  :root .employee-profile-page .profile-ink-warning {color:var(--warning-text);}
+  :root .employee-profile-page .profile-ink-danger {color:var(--danger-text);}
+
+  :root .employee-profile-page .profile-surface {background:var(--surface);}
+  :root .employee-profile-page .profile-soft-neutral {background:var(--surface-2);}
+  :root .employee-profile-page .profile-soft-brand {background:var(--profile-brand-soft);}
+  :root .employee-profile-page .profile-soft-success {background:color-mix(in srgb,var(--green) 10%,var(--surface));}
+  :root .employee-profile-page .profile-soft-warning {background:color-mix(in srgb,var(--mustard) 12%,var(--surface));}
+  :root .employee-profile-page .profile-soft-danger {background:color-mix(in srgb,var(--danger) 10%,var(--surface));}
+  :root .employee-profile-page .profile-fill-neutral {background:var(--surface-2);}
+  :root .employee-profile-page .profile-fill-brand {background:var(--brand);}
+  :root .employee-profile-page .profile-fill-success {background:var(--green);}
+  :root .employee-profile-page .profile-fill-warning {background:var(--mustard);}
+  :root .employee-profile-page .profile-fill-danger {background:var(--danger);}
+  :root .employee-profile-page .profile-on-fill {color:var(--text);}
+  :root .employee-profile-page :is(.profile-fill-brand,.profile-fill-success,.profile-fill-warning,.profile-fill-danger).profile-on-fill,
+  :root .employee-profile-page :is(.profile-fill-brand,.profile-fill-success,.profile-fill-warning,.profile-fill-danger) .profile-on-fill {color:var(--profile-on-status);}
+  :root .employee-profile-page .profile-fill-brand.profile-on-fill,
+  :root .employee-profile-page .profile-fill-brand .profile-on-fill {color:var(--on-brand-surface,var(--profile-on-status));}
+  :root .employee-profile-page .profile-outline {border-color:var(--border);}
+  :root .employee-profile-page .profile-shadow {box-shadow:var(--shadow-card);}
+  :root .employee-profile-page .profile-card {border:0;box-shadow:var(--shadow-card);border-radius:var(--radius-card);}
+  :root .employee-profile-page .profile-inset {border:0;border-radius:var(--radius-control);}
+
+  :root .employee-profile-page .profile-hover-ink-brand:hover {color:var(--profile-active-text);}
+  :root .employee-profile-page .profile-hover-outline:hover {border-color:var(--focus);}
+  :root .employee-profile-page .profile-hover-soft-brand:hover {background:var(--profile-brand-soft);}
+  :root .employee-profile-page .profile-hover-soft-danger:hover {background:color-mix(in srgb,var(--danger) 15%,var(--surface));}
+  :root .employee-profile-page .group:hover .profile-group-hover-ink-brand {color:var(--profile-active-text);}
+  :root .employee-profile-page .group:hover .profile-group-hover-ink-danger {color:var(--danger-text);}
+  :root .employee-profile-page .group:hover .profile-group-hover-soft-neutral {background:var(--surface-2);}
+  :root .employee-profile-page .profile-avatar {background:var(--profile-brand-soft);color:var(--profile-active-text);font-size:32px;}
+}
