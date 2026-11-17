@@ -187,7 +187,7 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
       {/* Jours restants */}
       {isExpired ? (
         <div className="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded-lg">
-          <span className="text-xs font-bold text-[var(--text-muted)]">⚠️ Contrat expiré</span>
+          <span className="text-xs font-bold text-[var(--text-muted)]"><AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Contrat expiré</span>
         </div>
       ) : (
         <div className={`flex items-center gap-2 p-2.5 rounded-lg ${
@@ -197,13 +197,13 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
             ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800'
             : 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
         }`}>
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${barColor} ${daysLeft <= 7 ? 'animate-pulse' : ''}`} />
+          {daysLeft <= 30 ? <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> : <CheckCircle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" />}
           <span className={`text-xs font-bold ${urgencyColor}`}>
             {daysLeft <= 7
-              ? `🔴 Expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''} !`
+              ? `Expire dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''} !`
               : daysLeft <= 30
-              ? `🟠 ${daysLeft} jours restants`
-              : `✅ ${daysLeft} jours restants`
+              ? `${daysLeft} jours restants`
+              : `${daysLeft} jours restants`
             }
           </span>
         </div>
@@ -656,8 +656,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               <div className="bg-[var(--surface-2)] rounded-2xl p-6 border border-[var(--border)]">
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${employee.isSubjectToIrpp ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
-                      <CheckCircle size={16} className="text-white" />
+                    <div className="shrink-0 flex items-center justify-center">
+                      <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[var(--text)]">IRPP / ITS</p>
@@ -665,8 +665,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     </div>
                   </div>
                   <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${employee.isSubjectToCnss ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}>
-                      <CheckCircle size={16} className="text-white" />
+                    <div className="shrink-0 flex items-center justify-center">
+                      <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-[var(--text)]">CNSS (4%)</p>
@@ -709,13 +709,13 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     employee.contractType === 'PRESTATAIRE' ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300' :
                     'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
                   }`}>
-                    <Briefcase size={12} />
-                    {employee.contractType === 'CDI' ? '♾️ CDI' :
-                     employee.contractType === 'CDD' ? '📅 CDD' :
-                     employee.contractType === 'STAGE' ? '🎓 Stage' :
-                     employee.contractType === 'CONSULTANT' ? '💼 Consultant' :
-                     employee.contractType === 'PRESTATAIRE' ? '🤝 Prestataire' :
-                     employee.contractType === 'INTERIM' ? '🔄 Intérim' :
+                    <Briefcase size={16} strokeWidth={1.5} aria-hidden="true" />
+                    {employee.contractType === 'CDI' ? 'CDI' :
+                     employee.contractType === 'CDD' ? 'CDD' :
+                     employee.contractType === 'STAGE' ? 'Stage' :
+                     employee.contractType === 'CONSULTANT' ? 'Consultant' :
+                     employee.contractType === 'PRESTATAIRE' ? 'Prestataire' :
+                     employee.contractType === 'INTERIM' ? 'Intérim' :
                      employee.contractType}
                   </span>
                 </div>
@@ -801,7 +801,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     {employee.trialStatus === 'IN_PROGRESS' && employee.trialEndDate && (
                       <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-700">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">⏱️ Essai en cours</span>
+                          <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300"><Clock size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Essai en cours</span>
                           <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
                             {Math.max(0, Math.ceil((new Date(employee.trialEndDate).getTime() - Date.now()) / 86400000))} jours restants
                           </span>
@@ -839,7 +839,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-emerald-700 dark:text-emerald-400">Résidence</span>
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${employee.isResident !== false ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'}`}>
-                          {employee.isResident !== false ? '🇨🇬 Résident' : '🌍 Non-résident'}
+                          {employee.isResident !== false ? 'Résident' : 'Non-résident'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
@@ -855,7 +855,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                         </div>
                       )}
                       <p className="text-[11px] text-emerald-600 dark:text-emerald-500 pt-1">
-                        ⚠️ Pas de bulletin — FACTURE HT. BNC reversé DGI avant le 15.
+                        <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Pas de bulletin — FACTURE HT. BNC reversé DGI avant le 15.
                       </p>
                     </div>
                   </div>
@@ -865,7 +865,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {employee.contractType === 'INTERIM' && (
                   <div className="pt-3 border-t border-[var(--border)]">
                     <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">🔄 Intérimaire</p>
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1"><Briefcase size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Intérimaire</p>
                       <p className="text-xs text-amber-600 dark:text-amber-500">
                         Salarié de l'agence d'intérim. Aucun bulletin généré côté entreprise. Suivi de mission uniquement.
                       </p>
@@ -877,7 +877,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 {employee.contractType === 'STAGE' && (
                   <div className="pt-3 border-t border-[var(--border)]">
                     <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">🎓 Stage</p>
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1"><GraduationCap size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Stage</p>
                       <p className="text-xs text-amber-600 dark:text-amber-500">
                         Gratification. CNSS patronale AT 2,25% uniquement. ITS seulement si gratification &gt; SMIG (50 400 FCFA).
                       </p>
@@ -946,8 +946,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <Link href={bp(`/employes/${params.id}/primes`)}
                   className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-amber-300 dark:hover:border-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                      <Gift size={16} className="text-amber-500" />
+                    <div className="shrink-0 flex items-center justify-center">
+                      <Gift size={16} className="text-amber-500" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">Gérer les primes</span>
                   </div>
@@ -956,8 +956,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <Link href={`/employes/${params.id}/edit`}
                   className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-all group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                      <Edit size={16} className="text-emerald-500" />
+                    <div className="shrink-0 flex items-center justify-center">
+                      <Edit size={16} className="text-emerald-500" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">Modifier le dossier</span>
                   </div>
@@ -1007,8 +1007,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <button onClick={() => setActiveTab('paie')}
                   className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-emerald-300 dark:hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all group">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                      <TrendingUp size={16} className="text-emerald-500" />
+                    <div className="shrink-0 flex items-center justify-center">
+                      <TrendingUp size={16} className="text-emerald-500" strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <span className="font-bold text-sm text-[var(--text)]">Historique de paie</span>
                   </div>
@@ -1020,8 +1020,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
-                        <Trash2 size={16} className="text-red-500" />
+                      <div className="shrink-0 flex items-center justify-center">
+                        <Trash2 size={16} className="text-red-500" strokeWidth={1.5} aria-hidden="true" />
                       </div>
                       <span className="font-bold text-sm text-red-600 dark:text-red-400">Supprimer l'employé</span>
                     </div>
@@ -1103,8 +1103,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           {tabData.map((l: any) => (
             <div key={l.id} className="flex justify-between items-center p-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl">
               <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${l.type === 'SICK' ? 'bg-red-100 dark:bg-red-900/20 text-red-500' : 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-500'}`}>
-                  <Calendar size={18} />
+                <div className="shrink-0 flex items-center justify-center">
+                  <Calendar size={16} strokeWidth={1.5} aria-hidden="true" />
                 </div>
                 <div>
                   <p className="font-bold text-[var(--text)]">
@@ -1159,8 +1159,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <div key={a.id} className="group relative overflow-hidden p-5 border border-[var(--border)] rounded-2xl bg-[var(--surface)] hover:shadow-lg hover:-translate-y-0.5 hover:border-emerald-200 dark:hover:border-emerald-800 transition-all">
                   <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
                   <div className="relative flex items-start gap-4">
-                    <div className="w-14 h-14 shrink-0 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                      <Icon size={26} />
+                    <div className="shrink-0 flex items-center justify-center">
+                      <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-lg text-[var(--text)] truncate">{a.name}</p>
@@ -1222,8 +1222,8 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
               )}
               <div className="relative flex justify-center mb-5">
                 <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                  <div className="w-14 h-14 bg-red-200 dark:bg-red-800/40 rounded-full flex items-center justify-center">
-                    <Trash2 size={26} className="text-red-600 dark:text-red-400" />
+                  <div className="shrink-0 flex items-center justify-center">
+                    <Trash2 size={20} className="text-red-600 dark:text-red-400" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                 </div>
               </div>
@@ -1302,7 +1302,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     const daysLeft = differenceInDays(new Date(employee.contractEndDate), new Date());
                     if (daysLeft < 0) return (
                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-muted)] text-sm font-bold border border-[var(--border)]">
-                        ⚠️ Expiré
+                        <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Expiré
                       </span>
                     );
                     if (daysLeft <= 30) return (

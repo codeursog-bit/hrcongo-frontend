@@ -430,8 +430,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
     <motion.div key={bonus.id}
       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
       className="glass-panel rounded-xl p-4 flex items-center gap-4">
-      <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
-        <Gift size={18} className="text-amber-500" />
+      <div className="shrink-0 flex items-center justify-center">
+        <Gift size={16} className="text-amber-500" strokeWidth={1.5} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -467,8 +467,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
 
   const SectionHeader = ({ icon: Icon, label, count, color }: { icon: any; label: string; count: number; color: string }) => (
     <div className="flex items-center gap-3 mb-3">
-      <div className={`w-7 h-7 ${color} rounded-lg flex items-center justify-center`}>
-        <Icon size={14} className="text-white" />
+      <div className="shrink-0 flex items-center justify-center">
+        <Icon size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
       </div>
       <h3 className="text-sm font-bold text-[var(--text)]">{label}</h3>
       <span className="text-xs text-[var(--text-muted)] bg-[var(--surface-2)] px-2 py-0.5 rounded-full font-bold">{count}</span>
@@ -525,8 +525,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {employee && (
         <section className="glass-panel rounded-2xl p-6 border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-900/10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-              <TrendingUp size={16} className="text-white" />
+            <div className="shrink-0 flex items-center justify-center">
+              <TrendingUp size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-[var(--text)]">Prime d'ancienneté — configuration</h2>
@@ -621,7 +621,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           <button onClick={saveSeniorityOverride} disabled={savingSeniority}
             className="mt-4 w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
             {savingSeniority ? <><Loader2 size={12} className="animate-spin"/>Sauvegarde…</> :
-             senioritySaved  ? <><CheckCircle2 size={12}/>Sauvegardé ✓</> :
+             senioritySaved  ? <><CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true"/>Sauvegardé</> :
                                'Enregistrer'}
           </button>
         </section>
@@ -635,8 +635,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           { label: 'À saisir/mois', val: freeBonuses.length, icon: Hash, color: 'text-amber-500', bg: 'bg-amber-100 dark:bg-amber-900/30' },
         ].map(s => (
           <div key={s.label} className="glass-panel rounded-2xl p-5 flex items-center gap-4">
-            <div className={`w-12 h-12 ${s.bg} rounded-xl flex items-center justify-center`}>
-              <s.icon size={22} className={s.color} />
+            <div className="shrink-0 flex items-center justify-center">
+              <s.icon size={20} className={s.color} strokeWidth={1.5} aria-hidden="true" />
             </div>
             <div>
               <p className="text-xs text-[var(--text-muted)] uppercase font-bold">{s.label}</p>
@@ -651,8 +651,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
         <section className="glass-panel rounded-2xl p-6 border border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-                <Hash size={16} className="text-white" />
+              <div className="shrink-0 flex items-center justify-center">
+                <Hash size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-[var(--text)]">Quantités à saisir</h2>
@@ -689,7 +689,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                     </div>
                     {currentQty && (
                       <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
-                        ✓ Saisi : ×{currentQty.quantity}
+                        <CheckCircle2 size={16} strokeWidth={1.5} aria-hidden="true" className="inline align-text-bottom mr-1" /> Saisi : ×{currentQty.quantity}
                       </span>
                     )}
                   </div>
@@ -740,8 +740,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {/* Primes groupées par catégorie fiscale */}
       {manualBonuses.length === 0 ? (
         <div className="glass-panel rounded-2xl p-10 text-center">
-          <div className="w-16 h-16 bg-[var(--surface-2)] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Gift size={28} className="text-[var(--text-muted)]" />
+          <div className="shrink-0 flex items-center justify-center">
+            <Gift size={20} className="text-[var(--text-muted)]" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <p className="text-[var(--text-muted)] font-medium mb-2">Aucune prime attribuée</p>
           <button onClick={openModal}
@@ -785,8 +785,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           <button onClick={() => router.push(bp(`/parametres/primes?back=${encodeURIComponent(backUrl)}`))}
             className="w-full flex items-center justify-between p-4 rounded-xl border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all group">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
-                <Settings2 size={16} className="text-amber-500" />
+              <div className="shrink-0 flex items-center justify-center">
+                <Settings2 size={16} className="text-amber-500" strokeWidth={1.5} aria-hidden="true" />
               </div>
               <div className="text-left">
                 <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Gérer le catalogue</p>
@@ -802,8 +802,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {autoBonuses.length > 0 && (
         <section>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-              <Zap size={16} className="text-amber-500" />
+            <div className="shrink-0 flex items-center justify-center">
+              <Zap size={16} className="text-amber-500" strokeWidth={1.5} aria-hidden="true" />
             </div>
             <h2 className="text-lg font-bold text-[var(--text)]">Primes automatiques</h2>
             <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-2 py-0.5 rounded-full font-bold border border-amber-200 dark:border-amber-800">
@@ -813,8 +813,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
           <div className="space-y-2">
             {autoBonuses.map(bonus => (
               <div key={bonus.id} className="glass-panel rounded-xl p-4 flex items-center gap-4 border-l-4 border-l-amber-500">
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
-                  <Zap size={18} className="text-amber-500" />
+                <div className="shrink-0 flex items-center justify-center">
+                  <Zap size={16} className="text-amber-500" strokeWidth={1.5} aria-hidden="true" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -848,8 +848,8 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
               </button>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-500 rounded-full flex items-center justify-center">
-                  <Gift size={24} />
+                <div className="shrink-0 flex items-center justify-center">
+                  <Gift size={20} strokeWidth={1.5} aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-[var(--text)]">Attribuer une prime</h2>

@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-17",
+  "files": [
+    {
+      "file": "app/(dashboard)/employes/[id]/page.tsx",
+      "emojiLiteralsBefore": 17,
+      "emojiLiteralsAfter": 0,
+      "iconContainersBefore": 9,
+      "iconContainersAfter": 0
+    },
+    {
+      "file": "app/(dashboard)/employes/nouveau/page.tsx",
+      "emojiLiteralsBefore": 1,
+      "emojiLiteralsAfter": 0,
+      "iconContainersBefore": 3,
+      "iconContainersAfter": 0
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/primes/page.tsx",
+      "emojiLiteralsBefore": 0,
+      "emojiLiteralsAfter": 0,
+      "iconContainersBefore": 9,
+      "iconContainersAfter": 0
+    },
+    {
+      "file": "components/employees/ImageUploader.tsx",
+      "emojiLiteralsBefore": 0,
+      "emojiLiteralsAfter": 0,
+      "iconContainersBefore": 0,
+      "iconContainersAfter": 0
+    }
+  ],
+  "residual": [],
+  "notes": "AST source literals only; user data and PDF are excluded. Audit lexical residuals in employee pages are inline comments.",
+  "verification": {
+    "types": "npm run check-types -- --incremental false: passed",
+    "employees": "scripts/check-employees-module.cjs: passed",
+    "snapshot": "existing state, effect bodies, API calls, callbacks and non-JSX calculations unchanged against the pre-pass snapshot",
+    "documents": "PDF component/props and full download handler checked by the employee regression script",
+    "visual": "not run; review by user remains pending"
+  }
+}

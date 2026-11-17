@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { User, Upload, FileSpreadsheet, Zap, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
+import { User, Upload, FileSpreadsheet, Zap, ChevronRight, CheckCircle2, Clock, Lightbulb } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBasePath } from '@/hooks/useBasePath';
 
@@ -19,8 +19,8 @@ export default function NewEmployeePage() {
           className="text-center mb-12"
         >
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-              <User className="text-emerald-600 dark:text-emerald-400" size={20} />
+            <div className="shrink-0 flex items-center justify-center">
+              <User className="text-emerald-600 dark:text-emerald-400" size={20} strokeWidth={1.5} aria-hidden="true" />
             </div>
             <span className="font-bold" style={{ color: 'var(--text)' }}>Nouvel Employé</span>
           </div>
@@ -46,8 +46,8 @@ export default function NewEmployeePage() {
             >
               <div className="relative">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-14 h-14 bg-emerald-500 rounded-xl flex items-center justify-center">
-                    <Upload className="text-white" size={26} />
+                  <div className="shrink-0 flex items-center justify-center">
+                    <Upload className="text-[var(--text-secondary)]" size={20} strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
                     <Zap size={11} /> Rapide
@@ -95,8 +95,8 @@ export default function NewEmployeePage() {
             >
               <div className="relative">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-14 h-14 bg-amber-500 rounded-xl flex items-center justify-center">
-                    <User className="text-white" size={26} />
+                  <div className="shrink-0 flex items-center justify-center">
+                    <User className="text-[var(--text-secondary)]" size={20} strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
                     <CheckCircle2 size={11} /> Complet
@@ -143,9 +143,9 @@ export default function NewEmployeePage() {
           className="text-center mt-8"
         >
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-            <Clock size={14} className="text-emerald-500" />
+            <Lightbulb size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              💡 Vous pourrez toujours modifier ou compléter les informations plus tard
+              Vous pourrez toujours modifier ou compléter les informations plus tard
             </p>
           </div>
         </motion.div>

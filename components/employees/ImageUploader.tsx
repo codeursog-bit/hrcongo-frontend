@@ -109,9 +109,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-0 right-0 bg-emerald-500 text-white p-1.5 rounded-full border-2 border-white dark:border-gray-800 shadow-lg"
+            className="absolute top-0 right-0 text-[var(--green)]"
           >
-            <Check size={14} strokeWidth={3} />
+            <Check size={16} strokeWidth={1.5} aria-hidden="true" />
           </motion.div>
         )}
 
@@ -131,7 +131,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           {uploading 
             ? 'Upload en cours...'
             : preview
-              ? 'Image uploadée ✓'
+              ? 'Image uploadée'
               : 'JPG, PNG ou WebP - Max 5 MB'
           }
         </p>

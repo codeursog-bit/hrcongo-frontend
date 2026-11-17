@@ -6,11 +6,11 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Mesure | Total | Objectif |
 |---|---|---|
-| palette | 17852 | tendre vers 0 (tokens) |
+| palette | 17815 | tendre vers 0 (tokens) |
 | hex | 1783 | seulement des constantes de marque ou de graphiques |
-| emojis | 467 | 0 comme icône (réactions et contenus utilisateur autorisés) |
+| emojis | 448 | 0 comme icône (réactions et contenus utilisateur autorisés) |
 | dégradés | 252 | 0 |
-| pulse / ping | 73 | 0 |
+| pulse / ping | 72 | 0 |
 | flou / verre | 209 | 0 |
 | ombres colorées | 27 | 0 |
 | texte dégradé | 10 | 0 |
@@ -19,10 +19,10 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Zone | Fichiers | palette | hex | emojis | dégradés | pulse / ping | flou / verre | ombres colorées | texte dégradé |
 |---|---|---|---|---|---|---|---|---|---|
-| dashboard | 173 | 10297 | 434 | 207 | 56 | 30 | 100 | 4 | 4 |
+| dashboard | 173 | 10262 | 434 | 189 | 56 | 29 | 100 | 4 | 4 |
 | portefeuille | 18 | 544 | 19 | 0 | 1 | 14 | 11 | 0 | 0 |
 | pages publiques | 51 | 2438 | 630 | 127 | 121 | 14 | 59 | 17 | 2 |
-| composants, hooks, lib | 277 | 4173 | 692 | 120 | 70 | 15 | 36 | 6 | 4 |
+| composants, hooks, lib | 277 | 4171 | 692 | 119 | 70 | 15 | 36 | 6 | 4 |
 | espace PME | 62 | 400 | 8 | 13 | 4 | 0 | 3 | 0 | 0 |
 
 ## Classes de palette Tailwind à convertir en tokens (top 30)
@@ -32,8 +32,8 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 405 | `app/(dashboard)/paie/manuel/page.tsx` |
 | 369 | `app/simulateur/SimulateurClient.tsx` |
 | 355 | `app/(dashboard)/paie/simulateur/page.tsx` |
-| 353 | `app/(dashboard)/employes/[id]/page.tsx` |
 | 343 | `app/(dashboard)/formation/page.tsx` |
+| 333 | `app/(dashboard)/employes/[id]/page.tsx` |
 | 310 | `app/(dashboard)/parametres/entreprise/page.tsx` |
 | 303 | `app/(dashboard)/cnss-declaration/page.tsx` |
 | 261 | `components/absence-analytics/AbsenceAnalyticsBoard.tsx` |
@@ -41,8 +41,8 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 253 | `lib/absence-tracking-colors.ts` |
 | 252 | `app/(dashboard)/parametres/paie/page.tsx` |
 | 246 | `components/ContractRupturePage.tsx` |
-| 223 | `app/(dashboard)/employes/[id]/primes/page.tsx` |
 | 214 | `app/(dashboard)/parametres/securite/page.tsx` |
+| 213 | `app/(dashboard)/employes/[id]/primes/page.tsx` |
 | 203 | `app/(dashboard)/paie/impayes/page.tsx` |
 | 198 | `app/(dashboard)/parametres/subscription/page.tsx` |
 | 198 | `app/affiliate/dashboard/page.tsx` |
@@ -66,7 +66,6 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 |---|---|
 | 24 | `app/docs/page.tsx` |
 | 18 | `components/performance/CreateReviewModal.tsx` |
-| 17 | `app/(dashboard)/employes/[id]/page.tsx` |
 | 16 | `app/outils/calcul-cnss-congo/CnssCalculatorClient.tsx` |
 | 16 | `components/CanvasEditor/index.tsx` |
 | 14 | `app/(dashboard)/presences/shifts/page.tsx` |
@@ -94,6 +93,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 6 | `app/outils/calcul-tus-congo/TusCalculatorClient.tsx` |
 | 5 | `app/not-found.tsx` |
 | 5 | `app/outils/page.tsx` |
+| 4 | `app/(dashboard)/employes/[id]/edit/page.tsx` |
 
 ## Couleurs hexadécimales en dur (dont graphiques) (top 30)
 
@@ -188,7 +188,6 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 1 | `app/(dashboard)/demandes/page.tsx` |
 | 1 | `app/(dashboard)/documents/page.tsx` |
 | 1 | `app/(dashboard)/employes/page.tsx` |
-| 1 | `app/(dashboard)/employes/[id]/page.tsx` |
 | 1 | `app/(dashboard)/materiel/page.tsx` |
 | 1 | `app/(dashboard)/parametres/users/page.tsx` |
 | 1 | `app/(dashboard)/performance/page.tsx` |
@@ -199,6 +198,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 1 | `app/(dashboard)/portefeuille/equipe/page.tsx` |
 | 1 | `app/(dashboard)/portefeuille/mes-entreprises/page.tsx` |
 | 1 | `app/(dashboard)/portefeuille/paie/liste/page.tsx` |
+| 1 | `app/(dashboard)/portefeuille/paie/page.tsx` |
 
 ## Flou et effets de verre à supprimer (top 30)
 
