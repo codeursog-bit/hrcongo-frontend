@@ -65,7 +65,16 @@
  :root .employee-bonus-page .employee-bonus-estimate .salary-estimate-totals {max-width:560px;}
  :root .employee-bonus-page .employee-bonus-estimate .salary-estimate-totals p+p {font-size:26px;}
  :root .employee-bonus-page .k-modal:has(.employee-bonus-form) {width:min(960px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:28px;}
+ :root .employee-bonus-page .k-modal:has(.employee-bonus-catalogue-empty,.employee-bonus-unavailable) {width:min(480px,calc(100vw - 32px));padding:28px;}
+ :root .employee-bonus-page .k-modal:has(.employee-bonus-picking) {width:min(560px,calc(100vw - 32px));}
+ :root .employee-bonus-page :is(.employee-bonus-catalogue-empty,.employee-bonus-unavailable)>svg {color:var(--employee-ink,var(--text));margin:4px 0 16px;}
+ :root .employee-bonus-page .employee-bonus-unavailable>svg {color:var(--danger-text);}
+ :root .employee-bonus-page :is(.employee-bonus-catalogue-empty,.employee-bonus-unavailable) h3 {font-size:18px;font-weight:600;line-height:1.5;margin-bottom:12px;color:var(--text);}
+ :root .employee-bonus-page :is(.employee-bonus-catalogue-empty,.employee-bonus-unavailable) p {font-size:13px;line-height:1.8;}
+ :root .employee-bonus-page :is(.employee-bonus-catalogue-empty,.employee-bonus-unavailable)>div {display:flex;justify-content:flex-end;gap:12px;margin-top:24px;flex-wrap:wrap;}
+ :root .employee-bonus-page :is(.employee-bonus-catalogue-empty,.employee-bonus-unavailable) .k-button {font-size:12px;min-height:44px;}
  :root .employee-bonus-page .employee-bonus-form {display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start;}
+ :root .employee-bonus-page .employee-bonus-form.employee-bonus-picking {grid-template-columns:minmax(0,1fr);}
  :root .employee-bonus-page .employee-bonus-fields {display:grid;gap:24px;min-width:0;}
  :root .employee-bonus-page .employee-bonus-form label {font-size:12px;font-weight:500;line-height:1.7;color:var(--text-secondary);}
  :root .employee-bonus-page .employee-bonus-fields .grid-cols-3 {gap:8px;}

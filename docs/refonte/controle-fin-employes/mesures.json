@@ -42,5 +42,13 @@
     "salaryVisibility": "survol/focus conserve",
     "palette": "zero classe de palette Tailwind dans les huit routes",
     "types": "npm run check-types -- --incremental false : succes"
+  },
+  "bonusEmptyStateCorrection": {
+    "empty": "compact, catalogue action, no preview or disabled attribution",
+    "failed": "distinct error with reload",
+    "demo": "read-only catalog examples, empty assignments; writes remain 501",
+    "tests": "employees and 242 contrast combinations passed",
+    "types": "controle complet reussi ; etats UI verifies par SSR",
+    "picking": "compact until template selection; no unused preview or attribution"
   }
 }

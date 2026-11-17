@@ -1,8 +1,11 @@
 import type { createDemoStore } from './transport';
 import { company } from './employees';
 import { payrolls } from './payroll';
+import { demoBonusCatalog } from './bonus-catalog';
 export function demoEmployeeManagement(url:URL,method:string,body:Record<string,unknown>,store:ReturnType<typeof createDemoStore>,role:'ADMIN'|'EMPLOYEE'):Response|null {
  const p=url.pathname,json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
+ const bonusCatalog=demoBonusCatalog(url,method,store,role);
+ if(bonusCatalog)return bonusCatalog;
  if(!/^\/employees(?:\/|$)/.test(p)||p==='/employees/me'||p==='/employees/simple')return null;
  if(url.searchParams.has('companyId')&&url.searchParams.get('companyId')!==company.id)return json({message:'Entreprise inaccessible.'},404);
  const collection:Record<string,any>[]=store.employees;

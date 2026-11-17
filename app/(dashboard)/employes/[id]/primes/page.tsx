@@ -811,20 +811,13 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
       {/* ═══ MODAL ══════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {showModal && (
-          <Modal open title="Attribuer une prime" onClose={() => setShowModal(false)}><div className="employee-bonus-form"><div className="employee-bonus-fields">
+          <Modal open title="Attribuer une prime" onClose={() => setShowModal(false)}>{uiLoadError ? <div className="employee-bonus-unavailable" role="alert"><AlertCircle size={28} strokeWidth={1.5}/><h3>Le catalogue n’a pas pu être chargé</h3><p>Rechargez la page pour retrouver les primes disponibles. Aucun dossier n’a été modifié.</p><div><Button variant="secondary" onClick={() => setShowModal(false)}>Fermer</Button><Button variant="primary" onClick={() => window.location.reload()}>Recharger la page</Button></div></div> : templates.length === 0 ? <div className="employee-bonus-catalogue-empty"><Gift size={28} strokeWidth={1.5}/><h3>Ajoutez une première prime au catalogue</h3><p>Créez un modèle de prime ou d’indemnité, puis revenez l’attribuer à cet employé.</p><div><Button variant="secondary" onClick={() => setShowModal(false)}>Fermer</Button><Button variant="primary" onClick={() => { setShowModal(false); router.push(bp(`/parametres/primes?back=${encodeURIComponent(backUrl)}`)); }}
+                        className="employee-bonus-catalogue-action">
+                        Ouvrir le catalogue
+                      </Button></div></div> : (<div className={`employee-bonus-form${selectedTemplate ? "" : " employee-bonus-picking"}`}><div className="employee-bonus-fields">
                 {/* Catalogue */}
                 <div>
-                  {templates.length === 0 ? (
-                    <div className="p-4 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl text-center">
-                      <p className="text-sm text-[var(--text-secondary)]  font-medium mb-2">Catalogue vide</p>
-                      <Button variant="ghost" onClick={() => { setShowModal(false); router.push(bp(`/parametres/primes?back=${encodeURIComponent(backUrl)}`)); }}
-                        className="text-xs font-bold text-[var(--text-secondary)]  underline">
-                        Aller au catalogue →
-                      </Button>
-                    </div>
-                  ) : (
-                    <FancySelect label="Prime du catalogue" value={String(selectedTemplate?.id || '')} onChange={value => handleTemplateChange(value)} options={[{value:'',label:'Sélectionner une prime'},...templates.map(t=>({value:t.id,label:`${t.name}${t.unitAmount ? ` — ${Number(t.unitAmount).toLocaleString('fr-FR')} FCFA/unité` : ''}${t.defaultAmount ? ` — ${Number(t.defaultAmount).toLocaleString('fr-FR')} FCFA` : ''}${t.defaultPercentage ? ` — ${t.defaultPercentage}%` : ''}`}))]} />
-                  )}
+<FancySelect label="Prime du catalogue" value={String(selectedTemplate?.id || '')} onChange={value => handleTemplateChange(value)} options={[{value:'',label:'Sélectionner une prime'},...templates.map(t=>({value:t.id,label:`${t.name}${t.unitAmount ? ` — ${Number(t.unitAmount).toLocaleString('fr-FR')} FCFA/unité` : ''}${t.defaultAmount ? ` — ${Number(t.defaultAmount).toLocaleString('fr-FR')} FCFA` : ''}${t.defaultPercentage ? ` — ${t.defaultPercentage}%` : ''}`}))]} />
 
                   {/* Aperçu template sélectionné */}
                   {selectedTemplate && (
@@ -973,7 +966,7 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                   )}
                 </AnimatePresence>
 
-</div><aside className="employee-bonus-preview"><h3>Aperçu de la rémunération</h3>{!selectedTemplate && <p>Choisissez une prime pour voir l’estimation du brut et du net avec cette attribution.</p>}
+</div>{selectedTemplate && <aside className="employee-bonus-preview"><h3>Aperçu de la rémunération</h3>
                 {/* Récap salaire estimé */}
                 {selectedTemplate && (
                   <SalaryRecap
@@ -994,20 +987,20 @@ export default function EmployeePrimesPage({ params }: { params: { id: string } 
                 )}
 
 
-</aside>
+</aside>}
                 {/* Actions */}
                 <div className="employee-bonus-actions">
                   <Button variant="ghost" onClick={() => setShowModal(false)}
                     className="flex-1 py-4 bg-[var(--surface-2)] text-[var(--text-secondary)] font-bold rounded-xl hover:bg-[var(--border)] transition-colors">
                     Annuler
                   </Button>
-                  <Button variant="primary" onClick={handleAdd} disabled={isSaving || !selectedTemplate}
+                  {selectedTemplate && <Button variant="primary" onClick={handleAdd} disabled={isSaving || !selectedTemplate}
                     className="flex-1 py-4 bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-bold rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50">
                     {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                     Attribuer
-                  </Button>
+                  </Button>}
                 </div>
-              </div>
+              </div>)}
             </Modal>
         )}
       </AnimatePresence>
