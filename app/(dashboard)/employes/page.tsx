@@ -181,8 +181,7 @@ export default function EmployeeListPage() {
   const [uiLoadError, setUiLoadError] = useState('');
   const { bp } = useBasePath();
   const router = useRouter();
-  const [viewMode, setViewMode]             = useState<'grid' | 'table'>('grid');
-  const [showAnalytics, setShowAnalytics]   = useState(false); // 🆕 section "Aperçu de l'effectif" repliable
+  const [viewMode, setViewMode]             = useState<'grid' | 'table'>('table');
   const [isLoading, setIsLoading]           = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true); // 🆕 uniquement au tout premier chargement
   const [employees, setEmployees]           = useState<Employee[]>([]);
@@ -605,21 +604,11 @@ export default function EmployeeListPage() {
       {/* 🆕 APERÇU DE L'EFFECTIF — respecte les mêmes filtres/recherche que la liste ci-dessus */}
       {!summaryLoading && summary && summary.total > 0 && (
         <div className="employee-analytics">
-          <Button variant="ghost"
-            aria-expanded={showAnalytics} aria-controls="employee-analytics-content" onClick={() => setShowAnalytics(v => !v)}
-            className="w-full flex items-center justify-between gap-2 mb-1 group"
-          >
-            <div className="flex items-center gap-2">
-              <PieChartIcon size={18} className="text-[var(--employee-ink,var(--text))]" />
-              <h2 className="text-lg font-bold text-[var(--text)]">Aperçu de l'effectif</h2>
-            </div>
-            <ChevronDown size={18} className={`transition-transform ${showAnalytics ? 'rotate-180' : ''}`} style={{ color: 'var(--text-muted)' }} />
-          </Button>
+          <div className="flex items-center gap-2 mb-3"><PieChartIcon size={18} strokeWidth={1.5} className="text-[var(--employee-ink,var(--text))]" /><h2 className="text-lg font-semibold text-[var(--text)]">Aperçu de l'effectif</h2></div>
           <p className="text-sm text-[var(--text-muted)] mb-5">
             {hasActiveFilters ? `Sur les ${summary.total} employé${summary.total > 1 ? 's' : ''} correspondant à la recherche/aux filtres actifs` : `Sur l'ensemble des ${summary.total} employé${summary.total > 1 ? 's' : ''}`}
           </p>
 
-          {showAnalytics && (
           <div id="employee-analytics-content" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
             {/* Par département */}
@@ -804,20 +793,19 @@ export default function EmployeeListPage() {
               );
             })()}
           </div>
-          )}
         </div>
       )}
 
       {/* 🆕 TABLEAU DE BORD EFFECTIF (modèle ORCA) — mêmes représentations que l'onglet dashboard du fichier Excel,
           avec choix de période (mois / plage / année) et téléchargement de l'Excel dynamique */}
       {!isManager && (
-        <details id="wf-dashboard" className="employee-report-disclosure"><summary>Tableau de bord des effectifs et export Excel<span>Choisir une période et préparer le récapitulatif ORCA</span></summary><div className="employee-report-content">
+        <section id="wf-dashboard" className="employee-report-disclosure" aria-labelledby="employee-report-title"><header><h2 id="employee-report-title">Tableau de bord des effectifs et export Excel</h2><p>Choisir une période et préparer le récapitulatif ORCA</p></header><div className="employee-report-content">
           <WorkforceDashboard
             model="ORCA"
             scope="COMPANY"
             companyId={pmeCompanyId || undefined}
           />
-        </div></details>
+        </div></section>
       )}
     </div></div></ModulePageFrame>
   );
