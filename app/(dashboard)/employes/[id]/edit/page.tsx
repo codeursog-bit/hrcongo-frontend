@@ -1,4 +1,13 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/employees/employees.css';
+import '@/components/employees/employee-finishing.css';
+import { EmployeeOnboardingStart as EmployeePageStart } from '@/components/employees/create/EmployeeJourney';
+import { DossierTabList } from '@/components/employees/EmployeeDossier';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { CnssDeclarationField } from '@/components/employees/CnssDeclarationField';
+
 
 // ============================================================================
 // 📁 app/(dashboard)/employes/[id]/edit/page.tsx
@@ -63,8 +72,8 @@ function ContractDurationPreview({ hireDate, endDate }: { hireDate: string; endD
   const daysLeft  = differenceInDays(end, today);
   const pct       = Math.min(100, Math.max(0, Math.round(((totalDays - daysLeft) / totalDays) * 100)));
 
-  const barColor  = daysLeft <= 7 ? 'bg-red-500' : daysLeft <= 30 ? 'bg-amber-500' : daysLeft <= 60 ? 'bg-yellow-500' : 'bg-emerald-500';
-  const textColor = daysLeft <= 7 ? 'text-red-600' : daysLeft <= 30 ? 'text-orange-600' : 'text-emerald-600';
+  const barColor  = daysLeft <= 7 ? 'bg-[var(--danger)]' : daysLeft <= 30 ? 'bg-[var(--mustard)]' : daysLeft <= 60 ? 'bg-[var(--mustard)]' : 'bg-[var(--green)]';
+  const textColor = daysLeft <= 7 ? 'text-[var(--danger-text)]' : daysLeft <= 30 ? 'text-[var(--warning-text)]' : 'text-[var(--success-text)]';
 
   function fmt(days: number) {
     if (days < 30) return `${days}j`;
@@ -77,7 +86,7 @@ function ContractDurationPreview({ hireDate, endDate }: { hireDate: string; endD
     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
       className="mt-3 p-3 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-2">
       <div className="flex justify-between text-sm">
-        <span className="text-[var(--text-muted)] flex items-center gap-1"><Clock size={12} /> Durée totale</span>
+        <span className="text-[var(--text-secondary)] flex items-center gap-1"><Clock size={12} /> Durée totale</span>
         <span className="font-bold text-[var(--text)]">{fmt(totalDays)}</span>
       </div>
       <div>
@@ -85,9 +94,9 @@ function ContractDurationPreview({ hireDate, endDate }: { hireDate: string; endD
           <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.5, ease: 'easeOut' }}
             className={`h-full rounded-full ${barColor}`} />
         </div>
-        <div className="flex justify-between text-[11px] text-[var(--text-muted)] mt-1">
+        <div className="flex justify-between text-[11px] text-[var(--text-secondary)] mt-1">
           <span>{format(start, 'd MMM yyyy', { locale: fr })}</span>
-          <span className={daysLeft <= 30 ? 'text-amber-500 font-bold' : ''}>{format(end, 'd MMM yyyy', { locale: fr })}</span>
+          <span className={daysLeft <= 30 ? 'text-[var(--text-secondary)] font-bold' : ''}>{format(end, 'd MMM yyyy', { locale: fr })}</span>
         </div>
       </div>
       <p className={`text-xs font-semibold flex items-center gap-1 ${textColor}`}>
@@ -105,6 +114,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const router = useRouter();
   const alert  = useAlert();
   const [isSaving, setIsSaving]   = useState(false);
+  const [uiLoadError, setUiLoadError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   // 🔒 CORRECTIF (audit) : companyId capturé à la lecture, renvoyé explicitement
   // sur les actions d'écriture (voir handleSubmit / handleToggleSelfService) —
@@ -128,6 +138,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
     firstName: '', lastName: '', dateOfBirth: '', placeOfBirth: '',
     gender: 'MALE', phone: '', secondaryPhone: '', email: '', address: '', city: '',
     nationalIdNumber: '', cnssNumber: '', niu: '', taxNumber: '',
+    cnssEmployeeDeclared: null as boolean|null,
     trialPeriodDays: '0', trialEndDate: '',
     status: 'ACTIVE', terminationDate: '', terminationReason: '',
     maritalStatus: 'SINGLE', numberOfChildren: 0,
@@ -183,6 +194,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
           city:                employee.city || '',
           nationalIdNumber:    employee.nationalIdNumber || '',
           cnssNumber:          employee.cnssNumber || '',
+          cnssEmployeeDeclared: employee.cnssEmployeeDeclared ?? null,
           niu:                 employee.niu || '',
           taxNumber:           employee.taxNumber || '',
           trialPeriodDays:     employee.trialPeriodDays?.toString() || '0',
@@ -232,10 +244,12 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         });
       } catch {
         alert.error('Erreur', 'Impossible de charger les données');
+        setUiLoadError('Le dossier n’a pas pu être chargé. Rechargez la page avant de le modifier.');
       } finally {
         setIsLoading(false);
       }
     };
+    setUiLoadError('');
     load();
   }, [params.id]);
 
@@ -301,6 +315,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
         address: formData.address, city: formData.city,
         nationalIdNumber: formData.nationalIdNumber || null,
         cnssNumber: formData.cnssNumber || null,
+        cnssEmployeeDeclared: formData.cnssEmployeeDeclared,
         niu: formData.niu?.trim() || null,
         taxNumber: formData.taxNumber?.trim() || null,
         trialPeriodDays: parseInt(formData.trialPeriodDays as string) || 0,
@@ -359,17 +374,17 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   };
 
   const SECTIONS = [
-    { id: 'identity', label: 'Identité',         icon: User,     color: 'text-emerald-500' },
-    { id: 'family',   label: 'Famille & Fiscal',  icon: Heart,    color: 'text-amber-500' },
-    { id: 'contract', label: 'Contrat',            icon: Briefcase,color: 'text-emerald-500' },
-    { id: 'payment',  label: 'Paiement',           icon: Wallet,   color: 'text-amber-500' },
-    { id: 'fiscal',   label: 'Fiscalité',          icon: Shield,   color: 'text-emerald-500' },
-    { id: 'additional', label: 'Compléments',       icon: HeartPulse, color: 'text-amber-500' },
-    { id: 'statut',   label: 'Statut',              icon: BadgeCheck, color: 'text-emerald-500'  },
+    { id: 'identity', label: 'Identité',         icon: User,     color: 'text-[var(--text-secondary)]' },
+    { id: 'family',   label: 'Famille & Fiscal',  icon: Heart,    color: 'text-[var(--text-secondary)]' },
+    { id: 'contract', label: 'Contrat',            icon: Briefcase,color: 'text-[var(--text-secondary)]' },
+    { id: 'payment',  label: 'Paiement',           icon: Wallet,   color: 'text-[var(--text-secondary)]' },
+    { id: 'fiscal',   label: 'Fiscalité',          icon: Shield,   color: 'text-[var(--text-secondary)]' },
+    { id: 'additional', label: 'Compléments',       icon: HeartPulse, color: 'text-[var(--text-secondary)]' },
+    { id: 'statut',   label: 'Statut',              icon: BadgeCheck, color: 'text-[var(--text-secondary)]'  },
   ];
 
-  const inputClass  = "w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all";
-  const labelClass  = "block text-sm font-bold text-[var(--text-muted)] mb-2";
+  const inputClass  = "w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] outline-none transition-all";
+  const labelClass  = "block text-sm font-bold text-[var(--text-secondary)] mb-2";
   const needsEndDate = REQUIRES_END_DATE.includes(formData.contractType);
   const suggestions  = SUGGESTED_DURATIONS[formData.contractType] ?? [];
 
@@ -383,56 +398,42 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
   const bncNet     = montantHT - bncMontant;
 
   if (isLoading) return (
-    <KonzaLoader variant="page" />
+    <ModulePageSkeleton label="Chargement des employés" />
   );
 
   return (
-    <div className="max-w-5xl mx-auto pb-20 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-emerald-500 transition-colors">
+    <ModulePageFrame kind="detail" error={uiLoadError}><div className="employee-module-page employee-edit-page"><EmployeePageStart/><div className="employee-edit-shell">
+      <header className="employee-editor-heading"><div><Button variant="ghost" onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-secondary)] transition-colors">
           <ArrowLeft size={16} /> Retour au profil
-        </button>
-        <button onClick={handleSave} disabled={isSaving || imageUpload.uploading}
-          className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-colors">
-          {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-          {isSaving ? 'Sauvegarde...' : 'Enregistrer'}
-        </button>
-      </div>
-
-      <div>
-        <h1 className="text-3xl font-bold text-[var(--text)]">Modifier le dossier</h1>
-        <p className="text-[var(--text-muted)] text-sm mt-1">Mettez à jour les informations de l'employé</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        </Button><h1>Modifier le dossier</h1><p>Parcourez les rubriques, puis enregistrez toutes vos modifications.</p></div><div className="employee-editor-person"><ProfileAvatar name={`${formData.firstName} ${formData.lastName}`} src={imageUpload.preview || formData.photoUrl || null}/><div><strong>{formData.firstName} {formData.lastName}</strong><span>{formData.position || formData.employeeNumber}</span></div></div></header>
+      <div className="employee-editor-layout">
         {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-2 space-y-1 sticky top-6">
+        <div className="employee-edit-tabs">
+          <DossierTabList>
             {SECTIONS.map((s) => (
-              <button key={s.id} onClick={() => setActiveSection(s.id as any)}
+              <Button variant="ghost" key={s.id} role="tab" id={`edit-tab-${s.id}`} aria-controls="employee-edit-panel" aria-selected={activeSection === s.id} tabIndex={activeSection === s.id ? 0 : -1} onClick={() => setActiveSection(s.id as any)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all text-left ${
-                  activeSection === s.id ? 'bg-[var(--text)] text-[var(--bg)] shadow-md' : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)]'
+                  activeSection === s.id ? 'bg-[var(--text)] text-[var(--bg)] shadow-md' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-2)]'
                 }`}>
                 <s.icon size={16} className={activeSection === s.id ? '' : s.color} />
                 {s.label}
-              </button>
+              </Button>
             ))}
-          </div>
+          </DossierTabList>
         </div>
 
         {/* Formulaire */}
-        <div className="lg:col-span-3">
+        <div className="employee-edit-content">
           <AnimatePresence mode="wait">
-            <motion.div key={activeSection} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }}>
+            <motion.div id="employee-edit-panel" role="tabpanel" aria-labelledby={`edit-tab-${activeSection}`} key={activeSection} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.15 }}>
 
               {/* ── IDENTITÉ ── */}
               {activeSection === 'identity' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-6">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><User size={20} className="text-emerald-500" /> Identité & Coordonnées</h2>
+                <div className="employee-edit-section space-y-6">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><User size={20} className="text-[var(--text-secondary)]" /> Identité & Coordonnées</h2>
 
                   {/* 🆕 Photo de l'employé */}
-                  <div className="flex justify-center pb-2 border-b border-[var(--border)]">
+                  <div className="employee-edit-photo">
                     <ImageUploader
                       preview={imageUpload.preview || formData.photoUrl || null}
                       uploading={imageUpload.uploading}
@@ -448,33 +449,33 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     <div><label className={labelClass}>Date de naissance</label><input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} className={inputClass} /></div>
                     <div><label className={labelClass}>Lieu de naissance</label><input name="placeOfBirth" value={formData.placeOfBirth} onChange={handleChange} className={inputClass} /></div>
                     <div><FancySelect label="Genre" value={formData.gender} onChange={(v) => handleSelect('gender', v)} icon={User} options={[{ value: 'MALE', label: 'Homme' }, { value: 'FEMALE', label: 'Femme' }]} /></div>
-                    <div><label className={labelClass}><Phone size={13} className="inline mr-1 text-emerald-500" />Téléphone</label><input name="phone" value={formData.phone} onChange={handleChange} className={inputClass} /></div>
-                    <div><label className={labelClass}><Phone size={13} className="inline mr-1 text-emerald-500" />Téléphone secondaire</label><input name="secondaryPhone" value={formData.secondaryPhone} onChange={handleChange} className={inputClass} placeholder="Optionnel" /></div>
-                    <div className="md:col-span-2"><label className={labelClass}><Mail size={13} className="inline mr-1 text-emerald-500" />Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className={inputClass} /></div>
-                    <div><label className={labelClass}><MapPin size={13} className="inline mr-1 text-emerald-500" />Adresse</label><input name="address" value={formData.address} onChange={handleChange} className={inputClass} /></div>
+                    <div><label className={labelClass}><Phone size={13} className="inline mr-1 text-[var(--text-secondary)]" />Téléphone</label><input name="phone" value={formData.phone} onChange={handleChange} className={inputClass} /></div>
+                    <div><label className={labelClass}><Phone size={13} className="inline mr-1 text-[var(--text-secondary)]" />Téléphone secondaire</label><input name="secondaryPhone" value={formData.secondaryPhone} onChange={handleChange} className={inputClass} placeholder="Optionnel" /></div>
+                    <div className="md:col-span-2"><label className={labelClass}><Mail size={13} className="inline mr-1 text-[var(--text-secondary)]" />Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className={inputClass} /></div>
+                    <div><label className={labelClass}><MapPin size={13} className="inline mr-1 text-[var(--text-secondary)]" />Adresse</label><input name="address" value={formData.address} onChange={handleChange} className={inputClass} /></div>
                     <div><label className={labelClass}>Ville</label><input name="city" value={formData.city} onChange={handleChange} className={inputClass} /></div>
-                    <div><label className={labelClass}><Hash size={13} className="inline mr-1" />N° CNI <span className="text-xs text-[var(--text-muted)] font-normal">(optionnel)</span></label><input name="nationalIdNumber" value={formData.nationalIdNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
-                    <div><label className={labelClass}><Shield size={13} className="inline mr-1" />N° CNSS <span className="text-xs text-[var(--text-muted)] font-normal">(optionnel)</span></label><input name="cnssNumber" value={formData.cnssNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
-                    <div><label className={labelClass}>Matricule <span className="text-xs text-[var(--text-muted)] font-normal">(optionnel — généré auto si vide)</span></label><input name="employeeNumber" value={formData.employeeNumber} onChange={handleChange} placeholder="Généré automatiquement" className={inputClass + ' font-mono text-sm'} /></div>
-                    <div><label className={labelClass}>NIU <span className="text-xs text-[var(--text-muted)] font-normal">(optionnel)</span></label><input name="niu" value={formData.niu} onChange={handleChange} placeholder="NIU de l'employé" className={inputClass + ' font-mono text-sm'} /></div>
-                    <div><label className={labelClass}>N° Fiscal <span className="text-xs text-[var(--text-muted)] font-normal">(optionnel)</span></label><input name="taxNumber" value={formData.taxNumber} onChange={handleChange} placeholder="Numéro d'impôt individuel" className={inputClass + ' font-mono text-sm'} /></div>
-                    <div><label className={labelClass}><Flag size={13} className="inline mr-1 text-emerald-500" />Nationalité <span className="text-xs text-[var(--text-muted)] font-normal">(optionnel)</span></label><FancySelect label="" value={formData.nationality} onChange={(v) => handleSelect('nationality', v)} icon={Flag} placeholder="Sélectionner un pays…" options={NATIONALITY_OPTIONS} /></div>
+                    <div><label className={labelClass}><Hash size={13} className="inline mr-1" />N° CNI <span className="text-xs text-[var(--text-secondary)] font-normal">(optionnel)</span></label><input name="nationalIdNumber" value={formData.nationalIdNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}><Shield size={13} className="inline mr-1" />N° CNSS <span className="text-xs text-[var(--text-secondary)] font-normal">(optionnel)</span></label><input name="cnssNumber" value={formData.cnssNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}>Matricule <span className="text-xs text-[var(--text-secondary)] font-normal">(optionnel — généré auto si vide)</span></label><input name="employeeNumber" value={formData.employeeNumber} onChange={handleChange} placeholder="Généré automatiquement" className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}>NIU <span className="text-xs text-[var(--text-secondary)] font-normal">(optionnel)</span></label><input name="niu" value={formData.niu} onChange={handleChange} placeholder="NIU de l'employé" className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}>N° Fiscal <span className="text-xs text-[var(--text-secondary)] font-normal">(optionnel)</span></label><input name="taxNumber" value={formData.taxNumber} onChange={handleChange} placeholder="Numéro d'impôt individuel" className={inputClass + ' font-mono text-sm'} /></div>
+                    <div><label className={labelClass}><Flag size={13} className="inline mr-1 text-[var(--text-secondary)]" />Nationalité <span className="text-xs text-[var(--text-secondary)] font-normal">(optionnel)</span></label><FancySelect label="" value={formData.nationality} onChange={(v) => handleSelect('nationality', v)} icon={Flag} placeholder="Sélectionner un pays…" options={NATIONALITY_OPTIONS} /></div>
                   </div>
                 </div>
               )}
 
               {/* ── FAMILLE ── */}
               {activeSection === 'family' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-6">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Heart size={20} className="text-amber-500" /> Situation Familiale</h2>
+                <div className="employee-edit-section space-y-6">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Heart size={20} className="text-[var(--text-secondary)]" /> Situation Familiale</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><FancySelect label="Situation familiale" value={formData.maritalStatus} onChange={(v) => handleSelect('maritalStatus', v)} icon={Heart}
                       options={[{ value: 'SINGLE', label: 'Célibataire' }, { value: 'MARRIED', label: 'Marié(e)' }, { value: 'DIVORCED', label: 'Divorcé(e)' }, { value: 'WIDOWED', label: 'Veuf/Veuve' }]} /></div>
                     <div>
                       <label className={labelClass}>Nombre d'enfants</label>
                       <input type="number" min="0" max="20" name="numberOfChildren" value={formData.numberOfChildren} onChange={handleChange}
-                        className="w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-emerald-500 outline-none text-2xl font-bold text-center" />
-                      <p className="text-xs text-[var(--text-muted)] mt-1">Impacte le quotient familial IRPP</p>
+                        className="w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-[var(--border)] outline-none text-2xl font-bold text-center" />
+                      <p className="text-xs text-[var(--text-secondary)] mt-1">Impacte le quotient familial IRPP</p>
                     </div>
                   </div>
                 </div>
@@ -482,26 +483,26 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
               {/* ── CONTRAT 🆕 ── */}
               {activeSection === 'contract' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-6">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Briefcase size={20} className="text-amber-500" /> Contrat & Poste</h2>
+                <div className="employee-edit-section space-y-6">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Briefcase size={20} className="text-[var(--text-secondary)]" /> Contrat & Poste</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><label className={labelClass}>Intitulé du Poste *</label><input name="position" value={formData.position} onChange={handleChange} className={inputClass} /></div>
                     <div><FancySelect label="Département" value={formData.departmentId} onChange={(v) => handleSelect('departmentId', v)} icon={Building2} options={departments.map((d) => ({ value: d.id, label: d.name }))} /></div>
-                    <div><label className={labelClass}><Calendar size={13} className="inline mr-1 text-amber-500" />Date d'embauche</label><input type="date" name="hireDate" value={formData.hireDate} onChange={handleChange} className={inputClass} /></div>
+                    <div><label className={labelClass}><Calendar size={13} className="inline mr-1 text-[var(--text-secondary)]" />Date d'embauche</label><input type="date" name="hireDate" value={formData.hireDate} onChange={handleChange} className={inputClass} /></div>
 
                     {/* Type de contrat */}
                     <div>
                       <label className={labelClass}>Type de contrat</label>
                       <div className="grid grid-cols-3 gap-2">
                         {['CDI', 'CDD', 'STAGE', 'CONSULTANT', 'PRESTATAIRE', 'INTERIM'].map((type) => (
-                          <button key={type} type="button" onClick={() => handleContractTypeChange(type)}
+                          <Button variant="ghost" key={type} type="button" onClick={() => handleContractTypeChange(type)}
                             className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
                               formData.contractType === type
-                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
-                                : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'
+                                ? 'border-[var(--border)] bg-[var(--surface-2)]  text-[var(--text-secondary)] '
+                                : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)]'
                             }`}>
                             {type}
-                          </button>
+                          </Button>
                         ))}
                       </div>
 
@@ -515,15 +516,15 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                               { label: 'TUS',   value: contractMeta?.tus },
                             ].map(({ label, value }) => (
                               <div key={label}>
-                                <p className="font-black text-[var(--text-muted)] uppercase tracking-wider mb-0.5">{label}</p>
-                                <p className="font-semibold text-[var(--text-muted)] text-[11px] leading-tight">{value}</p>
+                                <p className="font-black text-[var(--text-secondary)] uppercase tracking-wider mb-0.5">{label}</p>
+                                <p className="font-semibold text-[var(--text-secondary)] text-[11px] leading-tight">{value}</p>
                               </div>
                             ))}
                           </div>
                           {contractMeta?.alertes.length > 0 && (
                             <div className="mt-2 pt-2 border-t border-[var(--border)] space-y-1">
                               {contractMeta.alertes.map((a, i) => (
-                                <p key={i} className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                <p key={i} className="text-[11px] text-[var(--text-secondary)]  flex items-center gap-1.5">
                                   <AlertCircle size={10} className="shrink-0" /> {a}
                                 </p>
                               ))}
@@ -538,31 +539,31 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                       <AnimatePresence>
                         {needsEndDate ? (
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                            className="p-5 bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl space-y-3">
+                            className="p-5 bg-[var(--surface-2)]  border-2 border-[var(--border)]  rounded-2xl space-y-3">
                             <div className="flex items-center justify-between">
-                              <label className="text-sm font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
-                                <CalendarDays size={15} className="text-emerald-500" />
-                                Date de fin de contrat <span className="text-red-500">*</span>
+                              <label className="text-sm font-bold text-[var(--text-secondary)]  flex items-center gap-2">
+                                <CalendarDays size={15} className="text-[var(--text-secondary)]" />
+                                Date de fin de contrat <span className="text-[var(--danger-text)]">*</span>
                               </label>
                               {/* Raccourcis */}
                               <div className="flex gap-1.5">
                                 {suggestions.map((s) => (
-                                  <button key={s.months} type="button" onClick={() => applySuggestion(s.months)}
-                                    className="px-2.5 py-1 bg-white dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-600 rounded-lg text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors">
+                                  <Button variant="ghost" key={s.months} type="button" onClick={() => applySuggestion(s.months)}
+                                    className="px-2.5 py-1 bg-[var(--surface)]  border border-[var(--border)]  rounded-lg text-[11px] font-bold text-[var(--text-secondary)]  hover:bg-[var(--surface-2)] transition-colors">
                                     +{s.label}
-                                  </button>
+                                  </Button>
                                 ))}
                               </div>
                             </div>
                             <input type="date" name="contractEndDate" value={formData.contractEndDate || ''} onChange={handleChange}
                               min={formData.hireDate || undefined}
-                              className="w-full px-4 py-3 border-2 border-emerald-300 dark:border-emerald-600 rounded-xl bg-[var(--surface)] dark:text-white focus:border-emerald-500 outline-none font-medium" />
+                              className="w-full px-4 py-3 border-2 border-[var(--border)]  rounded-xl bg-[var(--surface)]  focus:border-[var(--border)] outline-none font-medium" />
                             <ContractDurationPreview hireDate={formData.hireDate} endDate={formData.contractEndDate} />
                           </motion.div>
                         ) : (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl">
-                            <p className="text-sm text-emerald-700 dark:text-emerald-300 flex items-center gap-2 font-medium">
+                            className="p-4 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl">
+                            <p className="text-sm text-[var(--text-secondary)]  flex items-center gap-2 font-medium">
                               <Check size={15} /> CDI — contrat à durée indéterminée, pas de date de fin
                             </p>
                           </motion.div>
@@ -574,8 +575,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     {['CDI', 'CDD'].includes(formData.contractType) && (
                       <div className="md:col-span-2 p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-3">
                         <div className="flex items-center gap-2">
-                          <Clock size={14} className="text-[var(--text-muted)]" />
-                          <span className="text-sm font-bold text-[var(--text-muted)]">Période d'essai <span className="font-normal text-[var(--text-muted)]">(optionnel)</span></span>
+                          <Clock size={14} className="text-[var(--text-secondary)]" />
+                          <span className="text-sm font-bold text-[var(--text-secondary)]">Période d'essai <span className="font-normal text-[var(--text-secondary)]">(optionnel)</span></span>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
@@ -592,11 +593,11 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
                     {/* Salaire */}
                     <div className="md:col-span-2">
-                      <label className={labelClass}><DollarSign size={13} className="inline mr-1 text-amber-500" />{isBncContract ? 'Montant HT de la prestation *' : 'Salaire de base *'}</label>
+                      <label className={labelClass}><DollarSign size={13} className="inline mr-1 text-[var(--text-secondary)]" />{isBncContract ? 'Montant HT de la prestation *' : 'Salaire de base *'}</label>
                       <div className="relative">
                         <input type="number" name="baseSalary" value={formData.baseSalary} onChange={handleChange}
-                          className="w-full px-4 py-4 pr-20 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-emerald-500 outline-none font-bold text-2xl" />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] font-bold">FCFA</span>
+                          className="w-full px-4 py-4 pr-20 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-[var(--border)] outline-none font-bold text-2xl" />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] font-bold">FCFA</span>
                       </div>
                     </div>
 
@@ -606,17 +607,17 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     {!isBncContract && (
                       <div className="md:col-span-2">
                         <label className={labelClass}>Cumul brut avant Konza RH (optionnel)</label>
-                        <p className="text-xs text-[var(--text-muted)] mb-2">Somme des salaires bruts déjà perçus par l&apos;employé depuis le début de son cycle de congé en cours, avant Konza RH (ex: cycle démarré en janvier, vous arrivez sur Konza en juillet → cumul des 6 bulletins jan-juin). Utilisé pour l&apos;indemnité de congé tant que l&apos;historique réel est court. Se remet à zéro tout seul au prochain cycle.</p>
+                        <p className="text-xs text-[var(--text-secondary)] mb-2">Somme des salaires bruts déjà perçus par l&apos;employé depuis le début de son cycle de congé en cours, avant Konza RH (ex: cycle démarré en janvier, vous arrivez sur Konza en juillet → cumul des 6 bulletins jan-juin). Utilisé pour l&apos;indemnité de congé tant que l&apos;historique réel est court. Se remet à zéro tout seul au prochain cycle.</p>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="relative">
                             <input type="number" name="openingCumulativeGross" value={formData.openingCumulativeGross} onChange={handleChange}
-                              placeholder="Cumul brut" className="w-full px-4 py-3 pr-16 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-emerald-500 outline-none font-semibold" />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-xs font-bold">FCFA</span>
+                              placeholder="Cumul brut" className="w-full px-4 py-3 pr-16 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-[var(--border)] outline-none font-semibold" />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-xs font-bold">FCFA</span>
                           </div>
                           <div className="relative">
                             <input type="number" name="openingCumulativeMonths" value={formData.openingCumulativeMonths} onChange={handleChange}
-                              placeholder="Nb de mois" className="w-full px-4 py-3 pr-14 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-emerald-500 outline-none font-semibold" />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-xs font-bold">mois</span>
+                              placeholder="Nb de mois" className="w-full px-4 py-3 pr-14 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] focus:border-[var(--border)] outline-none font-semibold" />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-xs font-bold">mois</span>
                           </div>
                         </div>
                       </div>
@@ -626,12 +627,12 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                     {isBncContract && (
                       <div className="md:col-span-2 p-4 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-4">
                         <div className="flex items-center gap-2">
-                          <UserCheck size={13} className="text-[var(--text-muted)]" />
-                          <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                          <UserCheck size={13} className="text-[var(--text-secondary)]" />
+                          <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
                             Retenue BNC · Résidence fiscale
                           </span>
                         </div>
-                        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
+                        <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
                           CGI Congo art. 47 ter &amp; art. 44 — le taux dépend du statut de résidence.
                         </p>
 
@@ -640,40 +641,40 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                             { value: 'true',  label: 'Résident / Congolais',  sub: 'BNC 10%', active: isResidentBool },
                             { value: 'false', label: 'Étranger non résident', sub: 'BNC 20%', active: !isResidentBool },
                           ].map(({ value, label, sub, active }) => (
-                            <button
+                            <Button variant="ghost"
                               key={value}
                               type="button"
                               onClick={() => handleSelect('isResident', value)}
                               className={`p-3 rounded-xl border text-center transition-all ${
                                 active
                                   ? 'border-[var(--text)] bg-[var(--text)] text-[var(--bg)] shadow-md'
-                                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)]'
+                                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)]'
                               }`}
                             >
                               <p className="text-[11px] font-bold">{label}</p>
-                              <p className={`text-base font-black mt-0.5 ${active ? '' : 'text-[var(--text-muted)]'}`}>{sub}</p>
-                            </button>
+                              <p className={`text-base font-black mt-0.5 ${active ? '' : 'text-[var(--text-secondary)]'}`}>{sub}</p>
+                            </Button>
                           ))}
                         </div>
 
                         {montantHT > 0 && (
                           <div className="p-3 bg-[var(--surface)] rounded-xl border border-[var(--border)] space-y-2 text-xs">
-                            <p className="font-bold text-[var(--text-muted)] flex items-center gap-1.5">
+                            <p className="font-bold text-[var(--text-secondary)] flex items-center gap-1.5">
                               <DollarSign size={11} /> Calcul BNC
                             </p>
-                            <div className="flex justify-between text-[var(--text-muted)]">
+                            <div className="flex justify-between text-[var(--text-secondary)]">
                               <span>Montant HT</span>
                               <span className="font-bold text-[var(--text)]">{montantHT.toLocaleString('fr-FR')} FCFA</span>
                             </div>
-                            <div className="flex justify-between text-[var(--text-muted)]">
+                            <div className="flex justify-between text-[var(--text-secondary)]">
                               <span>BNC retenu ({bncTaux * 100}%)</span>
-                              <span className="font-bold text-red-500">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
+                              <span className="font-bold text-[var(--danger-text)]">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
                             </div>
                             <div className="flex justify-between border-t border-[var(--border)] pt-2">
-                              <span className="font-bold text-[var(--text-muted)]">Net versé</span>
-                              <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
+                              <span className="font-bold text-[var(--text-secondary)]">Net versé</span>
+                              <span className="font-bold text-[var(--text-secondary)] ">{bncNet.toLocaleString('fr-FR')} FCFA</span>
                             </div>
-                            <p className="text-[10px] text-[var(--text-muted)] pt-0.5">
+                            <p className="text-[10px] text-[var(--text-secondary)] pt-0.5">
                               Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois.
                             </p>
                           </div>
@@ -683,20 +684,14 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
                     {/* Convention collective */}
                     {companyConvention && conventionCategories.length > 0 && (
-                      <div className="md:col-span-2 p-5 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl">
-                        <div className="flex items-center gap-2 mb-3"><Award size={18} className="text-amber-500" />
-                          <h4 className="font-bold text-amber-900 dark:text-amber-100 text-sm">Convention : {companyConvention}</h4>
+                      <div className="md:col-span-2 p-5 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl">
+                        <div className="flex items-center gap-2 mb-3"><Award size={18} className="text-[var(--text-secondary)]" />
+                          <h4 className="font-bold text-[var(--text-secondary)]  text-sm">Convention : {companyConvention}</h4>
                         </div>
-                        <select value={formData.professionalCategory} onChange={(e) => handleCategoryChange(e.target.value)}
-                          className="w-full p-3 bg-[var(--surface)] border border-amber-300 dark:border-amber-700 rounded-xl font-medium text-[var(--text)] focus:border-amber-500 outline-none">
-                          <option value="">Sélectionner une catégorie...</option>
-                          {conventionCategories.map((cat) => (
-                            <option key={cat.code} value={cat.code}>{cat.label} — {cat.minSalary.toLocaleString()} FCFA min.</option>
-                          ))}
-                        </select>
+                        <FancySelect label="Catégorie conventionnelle" value={String(formData.professionalCategory)} onChange={value => handleCategoryChange(value)} options={[{value:'',label:'Sélectionner une catégorie...'},...conventionCategories.map(cat=>({value:cat.code,label:`${cat.label} — ${cat.minSalary.toLocaleString()} FCFA min.`}))]} />
                         {formData.professionalCategory && (
-                          <p className="text-xs text-[var(--text-muted)] mt-2 flex items-center gap-1.5">
-                            <span className="font-mono bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded font-bold">{formData.professionalCategory}</span>
+                          <p className="text-xs text-[var(--text-secondary)] mt-2 flex items-center gap-1.5">
+                            <span className="font-mono bg-[var(--surface-2)]  text-[var(--text-secondary)]  px-2 py-0.5 rounded font-bold">{formData.professionalCategory}</span>
                             enregistré comme grade
                           </p>
                         )}
@@ -708,14 +703,14 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
               {/* ── PAIEMENT ── */}
               {activeSection === 'payment' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-6">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Wallet size={20} className="text-emerald-500" /> Mode de Paiement</h2>
+                <div className="employee-edit-section space-y-6">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Wallet size={20} className="text-[var(--text-secondary)]" /> Mode de Paiement</h2>
                   <div className="grid grid-cols-3 gap-3">
                     {[{ value: 'MOBILE_MONEY', label: 'Mobile Money', icon: Smartphone }, { value: 'BANK_TRANSFER', label: 'Virement', icon: Building2 }, { value: 'CASH', label: 'Espèces', icon: CreditCard }].map(({ value, label, icon: Icon }) => (
-                      <button key={value} type="button" onClick={() => handleSelect('paymentMethod', value)}
-                        className={`p-4 rounded-xl border text-center transition-all ${formData.paymentMethod === value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-[var(--border)] text-[var(--text-muted)] hover:border-emerald-300'}`}>
+                      <Button variant="ghost" key={value} type="button" onClick={() => handleSelect('paymentMethod', value)}
+                        className={`p-4 rounded-xl border text-center transition-all ${formData.paymentMethod === value ? 'border-[var(--border)] bg-[var(--surface-2)]  text-[var(--text-secondary)] ' : 'border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border)]'}`}>
                         <Icon className="mx-auto mb-1.5" size={20} /><div className="text-xs font-bold">{label}</div>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                   <AnimatePresence>
@@ -739,22 +734,24 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
               {/* ── FISCALITÉ ── */}
               {activeSection === 'fiscal' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-5">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Shield size={20} className="text-amber-500" /> Régime Fiscal</h2>
+                <div className="employee-edit-section space-y-5">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Shield size={20} className="text-[var(--text-secondary)]" /> Retenues de paie</h2>
+                  <CnssDeclarationField value={formData.cnssEmployeeDeclared} onChange={value=>handleSelect('cnssEmployeeDeclared',value)} />
+                  <p className="fiscal-setting-note">Ces réglages activent les retenues de paie ; ils ne confirment ni une immatriculation ni le dépôt d’une déclaration. Le numéro CNSS se renseigne dans l’identité.</p>
                   {[
-                    { key: 'isSubjectToIrpp', label: 'Soumis à l\'IRPP / ITS', desc: 'Retenue impôt sur le revenu (barème progressif)' },
-                    { key: 'isSubjectToCnss', label: 'Soumis à la CNSS salariale (4%)', desc: 'Cotisation sociale employé' },
+                    { key: 'isSubjectToIrpp', label: 'Retenue ITS / IRPP en paie', desc: 'Active la retenue d’impôt sur le revenu dans le calcul de paie.' },
+                    { key: 'isSubjectToCnss', label: 'Cotisation CNSS en paie', desc: 'Active la cotisation salariale dans le calcul de paie.' },
                   ].map(({ key, label, desc }) => (
-                    <label key={key} className="flex items-start gap-4 cursor-pointer p-5 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-emerald-300 transition-all group">
-                      <input type="checkbox" checked={(formData as any)[key]} onChange={(e) => handleSelect(key, e.target.checked)} className="w-6 h-6 mt-0.5 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500" />
-                      <div><span className="font-bold text-[var(--text)] block mb-1">{label}</span><p className="text-sm text-[var(--text-muted)]">{desc}</p></div>
+                    <label key={key} className="flex items-start gap-4 cursor-pointer p-5 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] hover:border-[var(--border)] transition-all group">
+                      <input type="checkbox" checked={(formData as any)[key]} onChange={(e) => handleSelect(key, e.target.checked)} className="w-6 h-6 mt-0.5 rounded border-[var(--border)] text-[var(--text-secondary)] focus:ring-[var(--focus)]" />
+                      <div><span className="font-bold text-[var(--text)] block mb-1">{label}</span><p className="text-sm text-[var(--text-secondary)]">{desc}</p></div>
                     </label>
                   ))}
 
                   {/* Zone TOL */}
                   <div className="p-5 bg-[var(--surface-2)] rounded-xl border border-[var(--border)] space-y-2">
                     <p className="font-bold text-[var(--text)] text-sm">Zone TOL (Taxe d'Occupation des Locaux)</p>
-                    <p className="text-xs text-[var(--text-muted)] mb-3">Détermine le montant de la TOL prélevée sur le bulletin</p>
+                    <p className="text-xs text-[var(--text-secondary)] mb-3">Détermine le montant de la TOL prélevée sur le bulletin</p>
                     <div className="flex gap-3">
                       {([
                         { value: 'VILLE',      label: 'Ville',       desc: '5 000 F/mois', color: 'sky' },
@@ -762,16 +759,16 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                       ] as const).map(opt => (
                         <label key={opt.value} className={`flex-1 flex items-center gap-3 cursor-pointer p-4 rounded-xl border-2 transition-all ${
                           formData.tolZone === opt.value
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-[var(--border)] hover:border-emerald-300'
+                            ? 'border-[var(--border)] bg-[var(--surface-2)] '
+                            : 'border-[var(--border)] hover:border-[var(--border)]'
                         }`}>
                           <input type="radio" name="tolZone" value={opt.value}
                             checked={formData.tolZone === opt.value}
                             onChange={() => handleSelect('tolZone', opt.value)}
-                            className="text-emerald-600" />
+                            className="text-[var(--text-secondary)]" />
                           <div>
                             <span className="font-bold text-[var(--text)] text-sm block">{opt.label}</span>
-                            <span className="text-xs text-[var(--text-muted)]">{opt.desc}</span>
+                            <span className="text-xs text-[var(--text-secondary)]">{opt.desc}</span>
                           </div>
                         </label>
                       ))}
@@ -780,17 +777,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                   <AnimatePresence>
                     {(!formData.isSubjectToIrpp || !formData.isSubjectToCnss) && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                        className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl">
-                        <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 uppercase mb-2 flex items-center gap-1"><AlertCircle size={12} /> Raison de l'exemption</label>
-                        <select value={formData.taxExemptionReason} onChange={(e) => handleSelect('taxExemptionReason', e.target.value)}
-                          className="w-full p-3 bg-[var(--surface)] border border-amber-300 dark:border-amber-700 rounded-lg text-sm font-medium text-[var(--text)] focus:border-amber-500 outline-none">
-                          <option value="">Sélectionner une raison...</option>
-                          <option value="Stagiaire académique non rémunéré">Stagiaire académique non rémunéré</option>
-                          <option value="Consultant externe - Auto-entrepreneur">Consultant externe - Auto-entrepreneur</option>
-                          <option value="Expatrié sous convention fiscale">Expatrié sous convention fiscale</option>
-                          <option value="Bénévolat / Mission humanitaire">Bénévolat / Mission humanitaire</option>
-                          <option value="Autre raison légale">Autre raison légale</option>
-                        </select>
+                        className="p-4 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl">
+                        <FancySelect label="Raison de l’exemption" value={String(formData.taxExemptionReason)} onChange={value => handleSelect('taxExemptionReason', value)} options={[{"value":"","label":"Sélectionner une raison..."},{"value":"Stagiaire académique non rémunéré","label":"Stagiaire académique non rémunéré"},{"value":"Consultant externe - Auto-entrepreneur","label":"Consultant externe - Auto-entrepreneur"},{"value":"Expatrié sous convention fiscale","label":"Expatrié sous convention fiscale"},{"value":"Bénévolat / Mission humanitaire","label":"Bénévolat / Mission humanitaire"},{"value":"Autre raison légale","label":"Autre raison légale"}]} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -799,8 +787,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
               {/* ── COMPLÉMENTS (Fiche ORCA) 🆕 ── */}
               {activeSection === 'additional' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-6">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><HeartPulse size={20} className="text-amber-500" /> Informations complémentaires</h2>
+                <div className="employee-edit-section space-y-6">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><HeartPulse size={20} className="text-[var(--text-secondary)]" /> Informations complémentaires</h2>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div><FancySelect label="Groupe sanguin" value={formData.bloodType} onChange={(v) => handleSelect('bloodType', v)} icon={HeartPulse}
@@ -809,12 +797,12 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                   </div>
 
                   <div>
-                    <label className={labelClass}>Pathologie / maladie habituelle <span className="text-xs text-[var(--text-muted)] font-normal">(laisser vide si aucune)</span></label>
+                    <label className={labelClass}>Pathologie / maladie habituelle <span className="text-xs text-[var(--text-secondary)] font-normal">(laisser vide si aucune)</span></label>
                     <textarea name="pathology" value={formData.pathology} onChange={handleChange} rows={2} className={inputClass + ' resize-none'} placeholder="Ex : Asthme, diabète…" />
                   </div>
 
                   <div className="border-t border-[var(--border)] pt-5">
-                    <p className={labelClass}><Users size={13} className="inline mr-1 text-[var(--text-muted)]" />Filiation</p>
+                    <p className={labelClass}><Users size={13} className="inline mr-1 text-[var(--text-secondary)]" />Filiation</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div><label className={labelClass}>Nom & prénom(s) du père</label><input name="fatherName" value={formData.fatherName} onChange={handleChange} className={inputClass} /></div>
                       <div><label className={labelClass}>Nom & prénom(s) de la mère</label><input name="motherName" value={formData.motherName} onChange={handleChange} className={inputClass} /></div>
@@ -822,7 +810,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                   </div>
 
                   <div className="border-t border-[var(--border)] pt-5">
-                    <p className={labelClass}><AlertTriangle size={13} className="inline mr-1 text-[var(--text-muted)]" />Personne à contacter en cas d'urgence</p>
+                    <p className={labelClass}><AlertTriangle size={13} className="inline mr-1 text-[var(--text-secondary)]" />Personne à contacter en cas d'urgence</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div><label className={labelClass}>Nom & prénom</label><input name="emergencyContactName" value={formData.emergencyContactName} onChange={handleChange} className={inputClass} /></div>
                       <div><label className={labelClass}>Lien de parenté</label><input name="emergencyContactRelation" value={formData.emergencyContactRelation} onChange={handleChange} className={inputClass} /></div>
@@ -833,8 +821,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                   <div className="border-t border-[var(--border)] pt-5 space-y-4">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input type="checkbox" checked={formData.hasDrivingLicense} onChange={(e) => handleSelect('hasDrivingLicense', e.target.checked)}
-                        className="w-6 h-6 rounded border-[var(--border)] text-emerald-600 focus:ring-emerald-500" />
-                      <span className="font-bold text-[var(--text)] flex items-center gap-1.5"><Car size={16} className="text-[var(--text-muted)]" /> Permis de conduire</span>
+                        className="w-6 h-6 rounded border-[var(--border)] text-[var(--text-secondary)] focus:ring-[var(--focus)]" />
+                      <span className="font-bold text-[var(--text)] flex items-center gap-1.5"><Car size={16} className="text-[var(--text-secondary)]" /> Permis de conduire</span>
                     </label>
                     {formData.hasDrivingLicense && (
                       <div><label className={labelClass}>N° du permis</label><input name="drivingLicenseNumber" value={formData.drivingLicenseNumber} onChange={handleChange} className={inputClass + ' font-mono text-sm'} /></div>
@@ -842,7 +830,7 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-[var(--border)] pt-5">
-                    <div><label className={labelClass}><Languages size={13} className="inline mr-1 text-[var(--text-muted)]" />Langue étrangère</label><input name="foreignLanguages" value={formData.foreignLanguages} onChange={handleChange} className={inputClass} placeholder="Anglais, Lingala…" /></div>
+                    <div><label className={labelClass}><Languages size={13} className="inline mr-1 text-[var(--text-secondary)]" />Langue étrangère</label><input name="foreignLanguages" value={formData.foreignLanguages} onChange={handleChange} className={inputClass} placeholder="Anglais, Lingala…" /></div>
                     <div><FancySelect label="Taille de la tenue" value={formData.uniformSize} onChange={(v) => handleSelect('uniformSize', v)} icon={Shirt}
                       options={['S', 'M', 'L', 'XL', 'XXL'].map((s) => ({ value: s, label: s }))} /></div>
                     <div><label className={labelClass}>Pointure de chaussures</label><input name="shoeSize" value={formData.shoeSize} onChange={handleChange} className={inputClass} placeholder="42" /></div>
@@ -852,8 +840,8 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
 
               {/* ── STATUT ── */}
               {activeSection === 'statut' && (
-                <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] p-6 md:p-8 space-y-6">
-                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Power size={20} className="text-amber-500" /> Statut de l'employé</h2>
+                <div className="employee-edit-section space-y-6">
+                  <h2 className="text-xl font-bold text-[var(--text)] flex items-center gap-2"><Power size={20} className="text-[var(--text-secondary)]" /> Statut de l'employé</h2>
 
                   {/* Statut actif / inactif */}
                   <div className="grid grid-cols-2 gap-3">
@@ -861,72 +849,62 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
                       { value: 'ACTIVE',     label: 'Actif',     icon: BadgeCheck, desc: 'Employé en poste',          color: 'emerald' },
                       { value: 'INACTIVE',   label: 'Inactif',   icon: XCircle,    desc: 'Contrat terminé / archivé', color: 'rose'    },
                     ] as const).map(({ value, label, icon: Icon, desc, color }) => (
-                      <button key={value} type="button" onClick={() => handleSelect('status', value)}
+                      <Button variant="ghost" key={value} type="button" onClick={() => handleSelect('status', value)}
                         className={`p-4 rounded-xl border-2 text-left transition-all ${
                           formData.status === value
                             ? color === 'emerald'
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                              : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
-                            : 'border-[var(--border)] hover:border-[var(--text-muted)]'
+                              ? 'border-[var(--border)] bg-[var(--surface-2)] '
+                              : 'border-[var(--border)] bg-[var(--surface-2)] '
+                            : 'border-[var(--border)] hover:border-[var(--text-secondary)]'
                         }`}>
-                        <Icon size={18} className={formData.status === value ? (color === 'emerald' ? 'text-emerald-600' : 'text-red-600') : 'text-[var(--text-muted)]'} />
+                        <Icon size={18} className={formData.status === value ? (color === 'emerald' ? 'text-[var(--text-secondary)]' : 'text-[var(--danger-text)]') : 'text-[var(--text-secondary)]'} />
                         <p className="font-bold text-[var(--text)] mt-2 text-sm">{label}</p>
-                        <p className="text-xs text-[var(--text-muted)] mt-0.5">{desc}</p>
-                      </button>
+                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">{desc}</p>
+                      </Button>
                     ))}
                   </div>
 
                   {/* Champs conditionnels si INACTIVE */}
                   {formData.status !== 'ACTIVE' && (
-                    <div className="space-y-4 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
+                    <div className="space-y-4 p-4 bg-[var(--surface-2)]  border border-[var(--border)]  rounded-xl">
                       <div>
                         <label className={labelClass}>Date de fin de contrat effective</label>
                         <input type="date" name="terminationDate" value={formData.terminationDate} onChange={handleChange} className={inputClass} />
                       </div>
                       <div>
-                        <label className={labelClass}>Motif</label>
-                        <select name="terminationReason" value={formData.terminationReason} onChange={handleChange} className={inputClass}>
-                          <option value="">Sélectionner un motif…</option>
-                          <option value="Démission">Démission</option>
-                          <option value="Licenciement">Licenciement</option>
-                          <option value="Rupture conventionnelle">Rupture conventionnelle</option>
-                          <option value="Fin de contrat CDD">Fin de contrat CDD</option>
-                          <option value="Départ à la retraite">Départ à la retraite</option>
-                          <option value="Décès">Décès</option>
-                          <option value="Autre">Autre</option>
-                        </select>
+                        <FancySelect label="Motif de fin de contrat" value={String(formData.terminationReason)} onChange={value => handleSelect('terminationReason', value)} options={[{"value":"","label":"Sélectionner un motif…"},{"value":"Démission","label":"Démission"},{"value":"Licenciement","label":"Licenciement"},{"value":"Rupture conventionnelle","label":"Rupture conventionnelle"},{"value":"Fin de contrat CDD","label":"Fin de contrat CDD"},{"value":"Départ à la retraite","label":"Départ à la retraite"},{"value":"Décès","label":"Décès"},{"value":"Autre","label":"Autre"}]} />
                       </div>
                     </div>
                   )}
 
                   {/* 🆕 Auto-service employé */}
-                  <div className={`p-5 rounded-xl border-2 transition-all ${selfService.enabled ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-700' : 'border-[var(--border)]'}`}>
+                  <div className={`p-5 rounded-xl border-2 transition-all ${selfService.enabled ? 'border-[var(--border)] bg-[var(--surface-2)]  ' : 'border-[var(--border)]'}`}>
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h3 className="font-bold text-[var(--text)] text-sm flex items-center gap-2">
-                          <UserCheck size={16} className={selfService.enabled ? 'text-emerald-600' : 'text-[var(--text-muted)]'} />
+                          <UserCheck size={16} className={selfService.enabled ? 'text-[var(--text-secondary)]' : 'text-[var(--text-secondary)]'} />
                           Modification du profil par l'employé
                         </h3>
-                        <p className="text-xs text-[var(--text-muted)] mt-1 max-w-md">
+                        <p className="text-xs text-[var(--text-secondary)] mt-1 max-w-md">
                           Autorise temporairement l'employé à mettre à jour lui-même ses informations personnelles
                           (coordonnées, situation familiale, contact d'urgence, etc.) depuis "Mon Profil" — jamais le
                           contrat, le poste, le salaire ou les informations de paie. Repasse la bascule une fois les
                           modifications validées pour reverrouiller l'accès.
                         </p>
                         {selfService.enabled && selfService.at && (
-                          <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-2 font-medium">
+                          <p className="text-xs text-[var(--text-secondary)]  mt-2 font-medium">
                             Accès accordé le {new Date(selfService.at).toLocaleDateString('fr-FR')}{selfService.by ? ` par ${selfService.by}` : ''}
                           </p>
                         )}
                       </div>
-                      <button
+                      <Button variant="ghost"
                         type="button"
-                        onClick={handleToggleSelfService}
+                        role="switch" aria-checked={selfService.enabled} aria-label="Autoriser la modification du profil" onClick={handleToggleSelfService}
                         disabled={isTogglingSelfService}
-                        className={`shrink-0 relative w-14 h-8 rounded-full transition-colors disabled:opacity-50 ${selfService.enabled ? 'bg-emerald-500' : 'bg-[var(--border)]'}`}
+                        className={`shrink-0 relative w-14 h-8 rounded-full transition-colors disabled:opacity-50 ${selfService.enabled ? 'bg-[var(--action)]' : 'bg-[var(--border)]'}`}
                       >
-                        <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${selfService.enabled ? 'translate-x-6' : 'translate-x-0'}`} />
-                      </button>
+                        <span className={`absolute top-1 left-1 w-6 h-6 bg-[var(--surface)] rounded-full shadow transform transition-transform ${selfService.enabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -935,15 +913,15 @@ export default function EditEmployeePage({ params }: { params: { id: string } })
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-6 flex justify-end">
-            <button onClick={handleSave} disabled={isSaving || imageUpload.uploading}
-              className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-colors">
+          <div className="employee-edit-savebar"><p>Enregistre les modifications de toutes les rubriques.</p>
+            <Button variant="primary" onClick={handleSave} disabled={isSaving || imageUpload.uploading || !!uiLoadError}
+              className="px-8 py-3 bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-bold rounded-xl flex items-center gap-2 disabled:opacity-50 transition-colors">
               {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               {isSaving ? 'Sauvegarde...' : 'Enregistrer les modifications'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

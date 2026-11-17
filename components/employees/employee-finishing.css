@@ -1,0 +1,132 @@
+/* Final employee screens: application UI only, never official documents. */
+@media screen {
+ :root .employee-module-page {--employee-danger-soft:color-mix(in srgb,var(--danger) 8%,var(--surface));}
+ :root .employee-module-page :is(.employee-edit-shell,.employee-bonus-shell,.employee-leaves-shell) {max-width:1200px;margin:auto;display:grid;gap:24px;padding-bottom:32px;min-width:0;}
+ :root .employee-module-page .employee-editor-heading {display:flex;align-items:center;justify-content:space-between;gap:24px;}
+ :root .employee-module-page .employee-editor-heading h1 {margin-top:14px;font-size:28px;line-height:1.35;font-weight:600;letter-spacing:-.035em;}
+ :root .employee-module-page .employee-editor-heading p {margin-top:8px;font-size:13px;line-height:1.8;color:var(--text-secondary);}
+ :root .employee-module-page .employee-editor-heading>.k-button {flex:none;min-height:44px;font-size:13px;}
+ :root .employee-module-page .employee-editor-heading>div>.k-button {padding:0;min-height:32px;font-size:12px;}
+ :root .employee-module-page :is(.employee-editor-person,.employee-bonus-person) {display:flex;align-items:center;gap:12px;min-width:0;}
+ :root .employee-module-page :is(.employee-editor-person,.employee-bonus-person) strong {display:block;font-size:14px;font-weight:600;color:var(--text);overflow-wrap:anywhere;}
+ :root .employee-module-page :is(.employee-editor-person,.employee-bonus-person) span:not([role=img]) {display:block;margin-top:5px;font-size:12px;line-height:1.6;color:var(--text-secondary);}
+ :root .employee-module-page .employee-editor-layout {display:grid;gap:24px;min-width:0;}
+ :root .employee-module-page .employee-edit-tabs {min-width:0;}
+ :root .employee-module-page .employee-edit-tabs .dossier-tabs {display:flex;gap:24px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:thin;}
+ :root .employee-module-page .employee-edit-tabs .k-button {display:inline-flex;align-items:center;gap:8px;flex:none;width:auto;padding:14px 0;border-radius:0;min-height:48px;font-size:12px;white-space:nowrap;background:transparent;color:var(--text-secondary);box-shadow:none;font-weight:500;}
+ :root .employee-module-page .employee-edit-tabs .k-button[aria-selected=true] {color:var(--text);box-shadow:inset 0 -2px var(--brand);font-weight:600;}
+ :root .employee-module-page .employee-edit-tabs .k-button svg {color:currentColor;}
+ :root .employee-module-page .employee-edit-content {min-width:0;}
+ :root .employee-module-page .employee-edit-section {padding:32px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+ :root .employee-module-page .employee-edit-section h2 {font-size:21px;font-weight:600;letter-spacing:-.025em;}
+ :root .employee-module-page .employee-edit-section h2>svg {display:none;}
+ :root .employee-module-page .employee-edit-section :is(label,.fiscal-setting-note) {font-size:12px;line-height:1.7;font-weight:500;color:var(--text-secondary);}
+ :root .employee-module-page .employee-edit-section .grid {gap:20px;}
+ :root .employee-module-page .employee-edit-section :is(input:not([type=checkbox]):not([type=radio]),textarea) {border:0;min-height:46px;font-size:14px;box-shadow:none;}
+ :root .employee-module-page .employee-edit-photo {display:flex;align-items:center;justify-content:flex-start;padding-bottom:24px;border-bottom:1px solid var(--border);}
+ :root .employee-module-page .employee-edit-photo>div {flex-direction:row;gap:24px;}
+ :root .employee-module-page .employee-edit-photo>div>div:last-child {text-align:left;margin:0;}
+ :root .employee-module-page .employee-edit-photo .w-32 {width:88px;height:88px;border-radius:20px;}
+ :root .employee-module-page .employee-edit-savebar {display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:24px;padding:20px 24px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+ :root .employee-module-page .employee-edit-savebar p {font-size:12px;line-height:1.7;color:var(--text-secondary);}
+ :root .employee-module-page .employee-edit-savebar .k-button {font-size:13px;font-weight:600;min-height:46px;flex:none;}
+ :root .employee-module-page .employee-edit-section button[role=switch] {width:54px;height:30px;min-height:30px;padding:0;border-radius:999px;}
+ :root .employee-module-page .employee-edit-section button[role=switch]>span {width:22px;height:22px;top:4px;left:4px;background:var(--surface);}
+ :root .employee-module-page:is(.employee-edit-page,.employee-bonus-page) .font-mono {font-family:inherit;font-variant-numeric:tabular-nums;}
+ :root .employee-bonus-page .employee-bonus-person {padding:0 0 8px;}
+ :root .employee-bonus-page .employee-bonus-surface {background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);border:0;}
+ :root .employee-bonus-page .employee-bonus-empty .k-button {background:var(--surface-2);color:var(--text);}
+ :root .employee-bonus-page .group:hover>svg {transform:none;}
+ :root .employee-bonus-page .employee-bonus-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:22px 8px;}
+ :root .employee-bonus-page .employee-bonus-stats>div {display:flex;align-items:center;gap:16px;padding:0 24px;background:transparent;box-shadow:none;border-radius:0;}
+ :root .employee-bonus-page .employee-bonus-stats>div+div {border-left:1px solid var(--border);}
+ :root .employee-bonus-page .employee-bonus-stats p:first-child {font-size:12px;text-transform:none;font-weight:400;color:var(--text-secondary);}
+ :root .employee-bonus-page .employee-bonus-stats p+p {font-size:28px;font-weight:600;margin-top:6px;}
+ :root .employee-bonus-page .employee-bonus-row {display:grid;grid-template-columns:20px minmax(0,1fr) auto 40px;gap:16px;align-items:center;background:var(--surface);padding:20px 24px;border-radius:var(--radius-control);box-shadow:var(--shadow-card);}
+ :root .employee-bonus-page .employee-bonus-automatic {grid-template-columns:20px minmax(0,1fr) auto;}
+ :root .employee-bonus-page .employee-bonus-row p.font-bold {font-size:14px;font-weight:600;}
+ :root .employee-bonus-page .employee-bonus-row span.rounded-full {font-size:10px;font-weight:500;border:0;background:var(--surface-2);color:var(--text-secondary);}
+ :root .employee-bonus-page .employee-bonus-row .k-button {width:40px;height:40px;min-height:40px;padding:10px;}
+ :root .employee-bonus-page :is(.employee-bonus-seniority,.employee-bonus-quantities,.employee-bonus-estimate) {padding:28px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);min-width:0;}
+ :root .employee-bonus-page :is(.employee-bonus-seniority,.employee-bonus-quantities,.employee-bonus-estimate) h2 {font-size:17px;font-weight:600;letter-spacing:-.02em;}
+ :root .employee-bonus-page :is(.employee-bonus-seniority,.employee-bonus-quantities) p {line-height:1.8;}
+ :root .employee-bonus-page .employee-bonus-seniority>.k-button {width:auto;padding:10px 18px;background:var(--surface-2);color:var(--text);min-height:44px;}
+ :root .employee-bonus-page button[aria-pressed] {display:block;text-align:left;background:var(--surface-2);border:0;box-shadow:none;color:var(--text);}
+ :root .employee-bonus-page button[aria-pressed=true] {background:var(--brand-soft);color:var(--employee-ink,var(--text));box-shadow:inset 0 -2px var(--brand);}
+ :root .employee-bonus-page .employee-bonus-quantities>div:first-child {gap:24px;align-items:flex-start;}
+ :root .employee-bonus-page .employee-bonus-quantities>div:first-child>div:last-child {min-width:260px;display:grid;grid-template-columns:1.6fr 1fr;gap:12px;}
+ :root .employee-bonus-page .employee-quantity-fields {display:grid;grid-template-columns:minmax(0,1.4fr) minmax(120px,1fr) auto;gap:16px;align-items:center;}
+ :root .employee-bonus-page .employee-quantity-computation {display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+ :root .employee-bonus-page .employee-quantity-computation input {width:80px;font-size:16px;}
+ :root .employee-bonus-page .employee-bonus-estimate>.salary-estimate {padding:20px 0 0;border:0;background:transparent;}
+ :root .employee-bonus-page .salary-estimate-totals {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+ :root .employee-bonus-page .salary-estimate-totals dt {font-size:12px;color:var(--text-secondary);}
+ :root .employee-bonus-page .salary-estimate-totals dd {font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);}
+ :root .employee-bonus-page .employee-bonus-estimate .salary-estimate-totals {max-width:560px;}
+ :root .employee-bonus-page .employee-bonus-estimate .salary-estimate-totals p+p {font-size:26px;}
+ :root .employee-bonus-page .k-modal:has(.employee-bonus-form) {width:min(960px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:28px;}
+ :root .employee-bonus-page .employee-bonus-form {display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start;}
+ :root .employee-bonus-page .employee-bonus-fields {display:grid;gap:24px;min-width:0;}
+ :root .employee-bonus-page .employee-bonus-form label {font-size:12px;font-weight:500;line-height:1.7;color:var(--text-secondary);}
+ :root .employee-bonus-page .employee-bonus-fields .grid-cols-3 {gap:8px;}
+ :root .employee-bonus-page .employee-bonus-fields .grid-cols-3 .k-button {padding:12px 10px;}
+ :root .employee-bonus-page .employee-bonus-fields .grid-cols-3 .k-button .font-bold {font-size:12px;line-height:1.7;font-weight:500;}
+ :root .employee-bonus-page .employee-bonus-preview {padding:22px;background:var(--surface-2);border-radius:16px;min-width:0;}
+ :root .employee-bonus-page .employee-bonus-preview h3 {font-size:14px;font-weight:600;line-height:1.5;margin-bottom:12px;}
+ :root .employee-bonus-page .employee-bonus-preview p {font-size:12px;line-height:1.8;}
+ :root .employee-bonus-page .employee-bonus-preview .salary-estimate {background:transparent;padding:0;border:0;}
+ :root .employee-bonus-page .employee-bonus-preview .salary-estimate-totals {grid-template-columns:minmax(0,1fr);gap:16px;}
+ :root .employee-bonus-page .employee-bonus-preview .salary-estimate-totals p+p {font-size:23px;font-weight:600;}
+ :root .employee-bonus-page .employee-bonus-actions {grid-column:1/-1;display:flex;justify-content:flex-end;gap:12px;padding-top:20px;border-top:1px solid var(--border);}
+ :root .employee-bonus-page .employee-bonus-actions .k-button {flex:none;min-width:130px;min-height:46px;padding:12px 20px;}
+ :root .employee-bonus-page :is(.employee-bonus-stats,.employee-bonus-row,.employee-bonus-seniority,.employee-bonus-quantities) :is(svg,p) {color:var(--text-secondary);}
+ :root .employee-bonus-page :is(.employee-bonus-row,.employee-bonus-stats) p.font-bold {color:var(--text);}
+ :root .employee-module-page .employee-leaves-heading {display:flex;align-items:center;gap:16px;}
+ :root .employee-module-page .employee-leaves-heading h1 {font-size:28px;font-weight:600;letter-spacing:-.035em;}
+ :root .employee-module-page .employee-leaves-heading p {margin-top:6px;font-size:13px;line-height:1.7;color:var(--text-secondary);}
+ :root .employee-module-page .employee-leaves-balance {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:24px 8px;border-radius:var(--radius-card);background:var(--surface);box-shadow:var(--shadow-card);}
+ :root .employee-module-page .employee-leaves-balance>div {padding:0 24px;box-shadow:none;background:transparent;border-radius:0;}
+ :root .employee-module-page .employee-leaves-balance>div+div {border-left:1px solid var(--border);}
+ :root .employee-module-page .employee-leaves-balance .employee-leaves-kpi-icon {color:var(--text-secondary);margin-bottom:12px;}
+ :root .employee-module-page .employee-leaves-balance p {text-transform:none;letter-spacing:0;font-size:12px;font-weight:400;}
+ :root .employee-module-page .employee-leaves-balance p+p {font-size:24px;font-weight:600;margin-top:8px;}
+ :root .employee-module-page .employee-leaves-toolbar {display:flex;justify-content:space-between;align-items:flex-end;gap:24px;}
+ :root .employee-module-page .employee-leaves-toolbar>div:last-child {width:220px;flex:none;}
+ :root .employee-module-page .employee-leaves-toolbar h2 {font-size:17px;font-weight:600;}
+ :root .employee-module-page .employee-leaves-toolbar p {font-size:12px;color:var(--text-secondary);margin-top:6px;line-height:1.7;}
+ :root .employee-module-page .employee-leaves-table {min-width:820px;}
+ :root .employee-module-page .employee-leaves-table :is(th,td) {overflow-wrap:normal;word-break:normal;}
+ :root .employee-module-page:is(.employee-edit-page,.employee-bonus-page) :is(a,button):hover {transform:none;}
+}
+@media screen and (max-width:900px) {
+ :root .employee-module-page .employee-editor-heading {flex-wrap:wrap;}
+ :root .employee-module-page .employee-editor-person {width:100%;}
+ :root .employee-bonus-page .employee-bonus-quantities>div:first-child {flex-direction:column;}
+ :root .employee-bonus-page .employee-quantity-fields {grid-template-columns:minmax(0,1fr);}
+ :root .employee-bonus-page .employee-quantity-fields .k-button {justify-self:start;}
+ :root .employee-bonus-page .employee-bonus-form {grid-template-columns:minmax(0,1fr);}
+ :root .employee-bonus-page .employee-bonus-preview .salary-estimate-totals {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media screen and (max-width:700px) {
+ :root .employee-module-page :is(.employee-edit-section,.employee-bonus-seniority,.employee-bonus-quantities,.employee-bonus-estimate) {padding:22px 18px;}
+ :root .employee-module-page .employee-edit-section .grid {grid-template-columns:minmax(0,1fr);gap:18px;}
+ :root .employee-module-page .employee-edit-section .md\:col-span-2 {grid-column:auto;}
+ :root .employee-module-page .employee-edit-savebar {flex-direction:column;align-items:stretch;gap:12px;padding:18px;}
+ :root .employee-module-page .employee-edit-savebar .k-button {width:100%;}
+ :root .employee-bonus-page .employee-bonus-stats>div {padding:0 12px;}
+ :root .employee-bonus-page .employee-bonus-stats>div>div:first-child {display:none;}
+ :root .employee-bonus-page .employee-bonus-stats p:first-child {font-size:10px;}
+ :root .employee-bonus-page .employee-bonus-row {grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:18px;}
+ :root .employee-bonus-page .employee-bonus-row>div:first-child {display:none;}
+ :root .employee-bonus-page .employee-bonus-row>div:nth-child(2) {grid-column:1/-1;}
+ :root .employee-bonus-page .employee-bonus-seniority .grid-cols-3,:root .employee-bonus-page .employee-bonus-seniority .grid-cols-4 {grid-template-columns:minmax(0,1fr);}
+ :root .employee-bonus-page .employee-bonus-seniority>.k-button {width:100%;}
+ :root .employee-bonus-page .k-modal:has(.employee-bonus-form) {padding:22px 18px;}
+ :root .employee-bonus-page .employee-bonus-actions .k-button {min-width:0;flex:1;}
+ :root .employee-module-page .employee-leaves-balance {grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 0;}
+ :root .employee-module-page .employee-leaves-toolbar {align-items:stretch;flex-direction:column;gap:16px;}
+ :root .employee-module-page .employee-leaves-toolbar>div:last-child {width:100%;}
+}
+@media screen and (prefers-reduced-motion:reduce) {
+ :root .employee-module-page :is(.employee-edit-section,.employee-bonus-row) {transition:none;animation:none;}
+}

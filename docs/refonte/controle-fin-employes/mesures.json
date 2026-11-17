@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-17",
+  "scope": [
+    "app/(dashboard)/employes/[id]/edit/page.tsx",
+    "app/(dashboard)/employes/[id]/primes/page.tsx",
+    "app/(dashboard)/employes/[id]/conges/page.tsx"
+  ],
+  "invariants": [
+    {
+      "file": "app/(dashboard)/employes/[id]/edit/page.tsx",
+      "before": "71133d7bf492581b4f176369169e3f493e6ef14f174d281b6760c3549d6c02d0",
+      "after": "71133d7bf492581b4f176369169e3f493e6ef14f174d281b6760c3549d6c02d0"
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/primes/page.tsx",
+      "before": "bd4138ea3f2695d8d30afba473197d204000b19f5816ff7d91202eb9b614eebe",
+      "after": "bd4138ea3f2695d8d30afba473197d204000b19f5816ff7d91202eb9b614eebe"
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/conges/page.tsx",
+      "before": "1b79378f25867490f339043ca944cb9a7f0107dba6ce7a9ead796065755645d6",
+      "after": "1b79378f25867490f339043ca944cb9a7f0107dba6ce7a9ead796065755645d6"
+    }
+  ],
+  "visual": "Revue utilisateur en attente ; aucun navigateur lance.",
+  "routesDelivered": 8,
+  "remainingRoutes": 0,
+  "pme": "Reexports edit/primes verifies et conserves",
+  "audit": {
+    "palette": [
+      17117,
+      16747
+    ],
+    "hex": [
+      1775,
+      1775
+    ]
+  },
+  "checks": {
+    "employees": "succes, huit routes et cas conditionnels",
+    "contrast": "242 combinaisons, minimum 4.50:1",
+    "salaryVisibility": "survol/focus conserve",
+    "palette": "zero classe de palette Tailwind dans les huit routes",
+    "types": "npm run check-types -- --incremental false : succes"
+  }
+}

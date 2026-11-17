@@ -1,4 +1,12 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/employees/employees.css';
+import '@/components/employees/employee-finishing.css';
+import { EmployeeOnboardingStart as EmployeePageStart } from '@/components/employees/create/EmployeeJourney';
+import { FancySelect } from '@/components/ui/FancySelect';
+import { EmptyState } from '@/components/design-system/primitives';
+
 
 // ============================================================================
 // 📁 app/(dashboard)/employes/[id]/conges/page.tsx
@@ -19,10 +27,10 @@ import { KonzaLoader } from '@/components/ui/KonzaLoader';
 const TYPE_LABELS: Record<string, string> = { ANNUAL: 'Annuel', ANNUAL_ANTICIPATED: 'Annuel anticipé' };
 const STATUS_LABELS: Record<string, string> = { PENDING: 'En attente', APPROVED: 'Approuvé', REJECTED: 'Refusé', CANCELLED: 'Annulé' };
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-amber-50 text-amber-700 border-amber-100',
-  APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  REJECTED: 'bg-red-50 text-red-700 border-red-100',
-  CANCELLED: 'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',
+ PENDING: 'k-tone-warning',
+ APPROVED: 'k-tone-success',
+ REJECTED: 'k-tone-danger',
+ CANCELLED: 'k-tone-neutral',
 };
 
 const fmtDate = (v?: string | Date | null) => (v ? new Date(v).toLocaleDateString('fr-FR') : '—');
@@ -68,64 +76,61 @@ export default function EmployeeLeavesPage() {
     [history, year],
   );
 
-  if (isLoading) return <KonzaLoader variant="page" />;
+  if (isLoading) return <ModulePageSkeleton label="Chargement des employés" />;
 
   return (
-    <div className="max-w-[1500px] mx-auto pb-24 space-y-6">
+    <ModulePageFrame kind="detail"><div className="employee-module-page employee-leaves-page"><EmployeePageStart/><div className="employee-leaves-shell">
       <CongeSubNav userRole={userRole} />
 
-      <div className="flex items-center gap-3">
-        <Link href={bp('/conges/provision')} className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
-          <ArrowLeft size={18} className="text-[var(--text-muted)]" />
+      <header className="employee-leaves-heading">
+        <Link href={bp('/conges/provision')} aria-label="Retour aux provisions de congés" className="p-2 bg-[var(--surface)] rounded-xl border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors">
+          <ArrowLeft size={18} className="text-[var(--text-secondary)]" />
         </Link>
         <div>
           <h1 className="text-xl font-bold text-[var(--text)]">
             {employee ? `${employee.firstName} ${employee.lastName}` : 'Fiche congés'}
           </h1>
-          <p className="text-sm text-[var(--text-muted)]">
+          <p className="text-sm text-[var(--text-secondary)]">
             {employee ? [employee.position, employee.department?.name].filter(Boolean).join(' · ') : ''}
           </p>
         </div>
-      </div>
+      </header>
 
-      {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl">{error}</div>}
+      {error && <div role="alert" className="text-sm text-[var(--danger-text)] bg-[var(--employee-danger-soft)]  p-3.5 rounded-xl">{error}</div>}
 
       {balance && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Kpi icon={CalendarDays} label="Droits (cycle)" value={fmtDays(balance.annualEntitled)} cls="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300" />
-          <Kpi icon={CheckCircle2} label="Pris" value={fmtDays(balance.annualTaken)} cls="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300" />
-          <Kpi icon={Wallet} label="Restant" value={fmtDays(balance.annualRemaining)} cls="bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-300" />
-          <Kpi icon={Hourglass} label="Fin du cycle" value={fmtDate(balance.cycleEndDate)} cls="bg-[var(--surface-2)] text-[var(--text-muted)]" />
+        <div className="employee-leaves-balance">
+          <Kpi icon={CalendarDays} label="Droits (cycle)" value={fmtDays(balance.annualEntitled)} cls="bg-[var(--surface-2)] text-[var(--text-secondary)]  " />
+          <Kpi icon={CheckCircle2} label="Pris" value={fmtDays(balance.annualTaken)} cls="bg-[var(--surface-2)] text-[var(--text-secondary)]  " />
+          <Kpi icon={Wallet} label="Restant" value={fmtDays(balance.annualRemaining)} cls="bg-[var(--surface-2)] text-[var(--text-secondary)]  " />
+          <Kpi icon={Hourglass} label="Fin du cycle" value={fmtDate(balance.cycleEndDate)} cls="bg-[var(--surface-2)] text-[var(--text-secondary)]" />
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <select value={year} onChange={e => setYear(e.target.value === '' ? '' : Number(e.target.value))} className="text-xs px-2 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
-          <option value="">Toutes les années</option>
-          {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
+      <div className="employee-leaves-toolbar"><div><h2>Congés et absences</h2><p>Historique de cet employé, toutes natures confondues.</p></div>
+        <FancySelect label="Année de l’historique" value={String(year)} onChange={value => setYear(value === '' ? '' : Number(value))} options={[{value:'',label:'Toutes les années'},...availableYears.map(y=>({value:String(y),label:String(y)}))]} />
       </div>
 
       <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="employee-leaves-table w-full text-sm">
             <thead className="bg-[var(--surface-2)]">
-              <tr>{['Nature', 'Type', 'Début', 'Fin', 'Jours', 'Motif', 'Statut'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-muted)] uppercase whitespace-nowrap">{h}</th>)}</tr>
+              <tr>{['Nature', 'Type', 'Début', 'Fin', 'Jours', 'Motif', 'Statut'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-bold text-[var(--text-secondary)] uppercase whitespace-nowrap">{h}</th>)}</tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-14 text-[var(--text-muted)]">Aucun congé ni absence enregistré.</td></tr>
+                <tr><td colSpan={7} className="text-center py-14 text-[var(--text-secondary)]"><EmptyState icon={CalendarDays} title="Aucun congé ni absence sur cette période">Les demandes enregistrées pour cet employé apparaîtront ici. Vous pouvez choisir une autre année.</EmptyState></td></tr>
               ) : filtered.map(h => (
                 <tr key={`${h.kind}-${h.id}`} className="hover:bg-[var(--surface-2)]/40">
-                  <td className="px-4 py-3 text-[var(--text-muted)] whitespace-nowrap">{h.kind === 'LEAVE' ? 'Congé' : 'Absence'}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)] whitespace-nowrap">{h.kind === 'LEAVE' ? 'Congé' : 'Absence'}</td>
                   <td className="px-4 py-3 font-semibold text-[var(--text)] whitespace-nowrap">
                     {TYPE_LABELS[h.type] || h.type}{h.subType ? ` · ${h.subType}` : ''}
-                    {h.isCarryover && <span className="ml-2 text-[10px] text-[var(--text-muted)]">(rattrapage)</span>}
+                    {h.isCarryover && <span className="ml-2 text-[10px] text-[var(--text-secondary)]">(rattrapage)</span>}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{fmtDate(h.startDate)}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{fmtDate(h.endDate)}</td>
                   <td className="px-4 py-3 font-semibold">{fmtDays(h.daysCount)}</td>
-                  <td className="px-4 py-3 text-[var(--text-muted)] max-w-[280px]">{h.reason || '—'}</td>
+                  <td className="px-4 py-3 text-[var(--text-secondary)] max-w-[280px]">{h.reason || '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full border text-xs font-semibold ${STATUS_COLORS[h.status] || ''}`}>
                       {STATUS_LABELS[h.status] || h.status}
@@ -137,15 +142,15 @@ export default function EmployeeLeavesPage() {
           </table>
         </div>
       </div>
-    </div>
+    </div></div></ModulePageFrame>
   );
 }
 
 function Kpi({ icon: Icon, label, value, cls }: { icon: any; label: string; value: string; cls: string }) {
   return (
     <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${cls}`}><Icon size={18} /></div>
-      <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">{label}</p>
+      <Icon size={18} strokeWidth={1.5} className="employee-leaves-kpi-icon" aria-hidden="true"/>
+      <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1">{label}</p>
       <p className="text-lg font-bold text-[var(--text)]">{value}</p>
     </div>
   );
