@@ -1,0 +1,17 @@
+const fs=require('fs'),ts=require('typescript'),assert=require('node:assert/strict'),React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+let visible=false;
+const output=ts.transpileModule(fs.readFileSync('components/employees/EmployeeSalaryCell.tsx','utf8'),{compilerOptions:{module:1,jsx:4,target:9,esModuleInterop:true}}).outputText;
+const mod={exports:{}};
+new Function('require','module','exports',output)(name=>name==='react'?{...React,useState:()=>[visible,fn=>{visible=typeof fn==='function'?fn(visible):fn;}]}:require(name),mod,mod.exports);
+const {EmployeeSalaryCell}=mod.exports,value=458123;
+let cell=EmployeeSalaryCell({value}),stopped=false;
+assert.ok(!renderToStaticMarkup(cell).includes(value.toLocaleString('fr-FR')));
+assert.equal(cell.props.children[1].props['aria-pressed'],false);
+cell.props.children[1].props.onClick({stopPropagation(){stopped=true;}});
+assert.equal(stopped,true);assert.equal(visible,true);
+cell=EmployeeSalaryCell({value});assert.ok(renderToStaticMarkup(cell).includes(value.toLocaleString('fr-FR')));
+assert.equal(cell.props.children[1].props['aria-pressed'],true);
+cell.props.children[1].props.onClick({stopPropagation(){}});
+assert.equal(visible,false);assert.ok(!renderToStaticMarkup(EmployeeSalaryCell({value})).includes(value.toLocaleString('fr-FR')));
+assert.ok(renderToStaticMarkup(EmployeeSalaryCell({value:null})).includes('—'));
+console.log('Salaire en liste : masqué au départ, révélation explicite, fermeture et propagation maîtrisée.');

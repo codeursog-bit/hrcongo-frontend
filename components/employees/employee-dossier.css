@@ -47,7 +47,10 @@
   :root .employee-profile-page .dossier-field-grid>:not(div) {grid-column:1/-1;}
   :root .employee-profile-page .dossier-field-grid>div:is(.pt-3,.pt-4) {grid-column:1/-1;}
   :root .employee-profile-page .dossier-section-content svg[width="11"] {display:none;}
-  :root .employee-profile-page .dossier-aside {display:grid;grid-template-columns:1.4fr 1fr 1fr;grid-template-areas:'salary contact cnss' 'salary access access';gap:16px;min-width:0;align-items:start;}
+  :root .employee-profile-page .dossier-aside {display:grid;grid-template-columns:1fr 1fr;grid-template-areas:'salary contact' 'salary cnss' 'salary access';gap:24px 32px;min-width:0;align-items:start;padding:28px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+  :root .employee-profile-page .dossier-aside>.dossier-card {padding:0;border-radius:0;box-shadow:none;background:transparent;}
+  :root .employee-profile-page .dossier-aside .dossier-compensation {padding-right:32px;border-right:1px solid var(--border);align-self:stretch;}
+  :root .employee-profile-page .dossier-aside>.dossier-card:hover {transform:none;box-shadow:none;}
   :root .employee-profile-page .dossier-aside>section:first-child {grid-area:contact;}
   :root .employee-profile-page .dossier-aside>section:nth-child(3) {grid-area:cnss;}
   :root .employee-profile-page .dossier-aside .dossier-compensation {grid-area:salary;}
@@ -73,6 +76,8 @@
   :root .employee-profile-page .salary-estimate-unavailable>p {margin-top:14px;}
   :root .employee-profile-page .dossier-compensation .dossier-payroll-link {margin-top:14px;padding:0;min-height:40px;color:var(--profile-active-text);}
   :root .employee-profile-page .dossier-access .k-button {padding:0;background:transparent;border:0;display:flex;align-items:center;gap:12px;text-align:left;}
+  :root .employee-profile-page .dossier-aside .k-button:hover {transform:none;}
+  :root .employee-profile-page .dossier-access .k-button:hover {background:transparent;color:var(--text);}
   :root .employee-profile-page .dossier-access .k-button>div:first-child {display:flex;flex:1;min-width:0;}
   :root .employee-profile-page .dossier-access .k-button>div:first-child>div:first-child {display:none;}
   :root .employee-profile-page .dossier-access .k-button>div:first-child>div.text-left {flex:1;min-width:0;}
@@ -104,7 +109,7 @@
   :root .employee-profile-page .dossier-header {align-items:flex-start;}
   :root .employee-profile-page .dossier-header-actions {max-width:360px;}
   :root .employee-profile-page .dossier-workspace {gap:18px;}
-  :root .employee-profile-page .dossier-aside {grid-template-columns:1.3fr 1fr;grid-template-areas:'salary contact' 'salary cnss' 'access access';}
+  :root .employee-profile-page .dossier-aside {grid-template-columns:1fr 1fr;}
   :root .employee-profile-page .dossier-asset-list {grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 @media screen and (max-width:760px) {
@@ -116,7 +121,8 @@
   :root .employee-profile-page .dossier-avatar {width:56px;height:56px;font-size:20px;}
   :root .employee-profile-page .dossier-summary {grid-template-columns:repeat(2,minmax(0,1fr));padding:18px;gap:20px;}
   :root .employee-profile-page .dossier-workspace {grid-template-columns:minmax(0,1fr);}
-  :root .employee-profile-page .dossier-aside {grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:'salary salary' 'contact cnss' 'access access';}
+  :root .employee-profile-page .dossier-aside {grid-template-columns:minmax(0,1fr);grid-template-areas:'salary' 'contact' 'cnss' 'access';padding:22px;gap:24px;}
+  :root .employee-profile-page .dossier-aside .dossier-compensation {padding-right:0;padding-bottom:24px;border-right:0;border-bottom:1px solid var(--border);}
   :root .employee-profile-page .dossier-paper {padding:0 20px;}
   :root .employee-profile-page .dossier-tabs {gap:22px;}
   :root .employee-profile-page :is(.dossier-document-row,.dossier-payroll-row,.dossier-leave-row) {padding:18px;}

@@ -95,7 +95,25 @@
  :root .employee-create-page .journey-live {position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 32px));z-index:60;pointer-events:none;}
  :root .employee-create-page .journey-feedback {display:flex;align-items:center;gap:14px;padding:20px 24px;background:var(--surface);box-shadow:var(--shadow-pop);border-radius:var(--radius-card);overflow:hidden;position:relative;}
  :root .employee-directory .employee-analytics {padding:24px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
- :root .employee-directory td[data-label] {overflow-wrap:anywhere;}
+ :root .employee-directory .employee-directory-table {min-width:1220px;width:100%;table-layout:auto;}
+ :root .employee-directory .employee-directory-table :is(th,td) {padding:16px 14px;vertical-align:middle;overflow-wrap:normal;word-break:normal;font-size:13px;line-height:1.5;}
+ :root .employee-directory .employee-directory-table th {white-space:nowrap;font-size:12px;letter-spacing:0;text-transform:none;}
+ :root .employee-directory .employee-directory-table td:first-child {min-width:230px;}
+ :root .employee-directory .employee-directory-table td:first-child>.flex {gap:12px;}
+ :root .employee-directory .employee-directory-table td:first-child>.flex>div {min-width:0;}
+ :root .employee-directory .employee-directory-table td:first-child a {font-size:13px;font-weight:600;}
+ :root .employee-directory .employee-directory-table td:first-child .text-xs {max-width:185px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+ :root .employee-directory .employee-directory-table td:nth-child(3) {min-width:180px;}
+ :root .employee-directory .employee-directory-table :is(td:nth-child(2),td:nth-child(4),td:nth-last-child(2)) {white-space:nowrap;}
+ :root .employee-directory .employee-directory-table .k-badge {white-space:nowrap;font-size:10px;}
+ :root .employee-directory .employee-directory-table td:last-child .k-button {height:36px;min-height:36px;min-width:36px;padding:9px;}
+ :root .employee-directory .employee-salary-cell {display:flex;align-items:center;gap:8px;min-width:150px;white-space:nowrap;}
+ :root .employee-directory .employee-salary-value {display:block;min-width:112px;font-variant-numeric:tabular-nums;}
+ :root .employee-directory .employee-salary-value small {font-size:10px;color:var(--text-secondary);}
+ :root .employee-directory .employee-salary-cell button {display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:10px;color:var(--text-secondary);}
+ :root .employee-directory .employee-salary-cell button:hover {background:var(--surface-2);color:var(--text);}
+ :root .employee-directory-person:hover {transform:none;box-shadow:var(--shadow-card);}
+ :root .employee-directory :is(.employee-directory-person,.employee-directory-table) :is(button,a):hover {transform:none;}
  :root .employee-directory :is(a,button,summary):focus-visible,:root .employee-method-page a:focus-visible {outline:2px solid var(--focus);outline-offset:4px;}
  :root .journey-feedback>svg {width:36px;height:36px;flex:none;color:var(--employee-ink,var(--text));}
  :root .journey-feedback strong {display:block;font-size:14px;font-weight:600;color:var(--text);}
@@ -135,6 +153,11 @@
  :root .employee-create-content .grid {grid-template-columns:minmax(0,1fr);}
  :root .employee-create-heading h1 {font-size:25px;}
  :root .employee-create-content .employee-identity-layout {display:block;}
+}
+@media screen and (max-width:700px) {
+ :root .employee-directory .employee-directory-table {min-width:0;}
+ :root .employee-directory .employee-directory-table td {min-width:0!important;padding:10px 4px;}
+ :root .employee-directory .employee-directory-table th {white-space:normal;}
 }
 @media screen and (prefers-reduced-motion:reduce) {
  :root .employee-create-page * {animation:none!important;transition:none!important;scroll-behavior:auto!important;}

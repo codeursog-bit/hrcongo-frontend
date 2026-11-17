@@ -4,6 +4,7 @@ import { Button } from '@/components/design-system/primitives';
 import '@/components/employees/employees.css';
 import '@/components/employees/employee-workspace.css';
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { EmployeeSalaryCell } from '@/components/employees/EmployeeSalaryCell';
 import { WorkforceOverview } from '@/components/employees/WorkforceOverview';
 import { CnssDeclarationBadge } from '@/components/employees/CnssDeclarationField';
 
@@ -522,7 +523,7 @@ export default function EmployeeListPage() {
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="employee-directory-table w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[var(--surface-2)] border-b border-[var(--border)] text-xs uppercase text-[var(--text-secondary)] font-semibold tracking-wider">
                     <th className="px-6 py-4">Employé</th>
@@ -543,7 +544,7 @@ export default function EmployeeListPage() {
                           <ProfileAvatar name={`${emp.firstName} ${emp.lastName}`} src={emp.photoUrl} className="employee-person-avatar" />
                           <div>
                             <Link href={`/employes/${emp.id}`} className="font-bold text-[var(--text)]">{emp.firstName} {emp.lastName}</Link>
-                            <div className="text-xs text-[var(--text-secondary)]">{emp.email}</div>
+                            <div className="text-xs text-[var(--text-secondary)]" title={emp.email}>{emp.email}</div>
                           </div>
                         </div>
                       </td>
@@ -556,12 +557,7 @@ export default function EmployeeListPage() {
                       {canSeeSalary&&<td data-label="Déclaration CNSS" className="px-6 py-4"><CnssDeclarationBadge value={emp.cnssEmployeeDeclared}/></td>}
                       {canSeeSalary && (
                         <td data-label="Salaire de base" className="px-6 py-4 group/salary">
-                          {emp.baseSalary != null ? (
-                            <div className="flex items-center gap-1 cursor-help">
-                              <span className="text-[var(--text)] font-mono group-hover/salary:hidden">• • • • •</span>
-                              <span className="hidden group-hover/salary:block font-bold text-[var(--employee-ink,var(--text))] ">{emp.baseSalary.toLocaleString('fr-FR')} <span className="text-xs">FCFA</span></span>
-                            </div>
-                          ) : <span className="text-[var(--text-secondary)]  text-xs italic">—</span>}
+                          <EmployeeSalaryCell value={emp.baseSalary} />
                         </td>
                       )}
                       <td data-label="Statut" className="px-6 py-4"><StatusBadge status={emp.status || 'ACTIVE'} /></td>
