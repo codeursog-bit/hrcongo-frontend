@@ -1,4 +1,12 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/employees/employees.css';
+import '@/components/employees/employee-workspace.css';
+import '@/components/employees/employee-onboarding.css';
+import { EmployeeProgress, EmployeeCelebration, EmployeeOnboardingStart } from '@/components/employees/create/EmployeeJourney';
+import { FancySelect } from '@/components/ui/FancySelect';
+
 
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -96,90 +104,16 @@ const IMPORT_STEPS = [
 
 // ─── Stepper ─────────────────────────────────────────────────────────────────
 function ImportStepper({ currentStep }: { currentStep: number }) {
-  return (
-    <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-[var(--border)]">
-      <div className="flex items-center gap-0 max-w-lg mx-auto">
-        {IMPORT_STEPS.map((step, idx) => {
-          const isActive    = step.num === currentStep;
-          const isCompleted = step.num < currentStep;
-          const isLast      = idx === IMPORT_STEPS.length - 1;
-          const Icon        = step.icon;
-          return (
-            <React.Fragment key={step.num}>
-              <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                <motion.div
-                  animate={{ scale: isActive ? 1.08 : 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                    isCompleted
-                      ? 'bg-[var(--text)] shadow-md'
-                      : isActive
-                      ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20'
-                      : 'bg-[var(--surface-2)] border border-[var(--border)]'
-                  }`}
-                >
-                  {isCompleted
-                    ? <Check size={16} strokeWidth={2.5} className="text-[var(--bg)]" />
-                    : <Icon size={16} className={isActive ? 'text-white' : 'text-[var(--text-muted)]'} />
-                  }
-                  {isActive && (
-                    <motion.div
-                      animate={{ scale: [1, 1.5, 1], opacity: [0.35, 0, 0.35] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 rounded-2xl bg-emerald-400 -z-10"
-                    />
-                  )}
-                </motion.div>
-                <span className={`text-[10px] font-bold uppercase tracking-wide hidden sm:block transition-colors ${
-                  isActive    ? 'text-[var(--text)]' :
-                  isCompleted ? 'text-[var(--text-muted)]' :
-                                'text-[var(--text-muted)]'
-                }`}>
-                  {step.label}
-                </span>
-              </div>
-              {!isLast && (
-                <div className="flex-1 mx-2 h-px relative top-[-10px] sm:top-[-14px] overflow-hidden">
-                  <div className="absolute inset-0 bg-[var(--border)] rounded-full" />
-                  <motion.div
-                    className="absolute inset-0 bg-[var(--text)] rounded-full"
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: step.num < currentStep ? 1 : 0 }}
-                    transition={{ duration: 0.5 }}
-                    style={{ transformOrigin: 'left' }}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-      {/* Progress bar */}
-      <div className="mt-5 h-1 bg-[var(--surface-2)] rounded-full overflow-hidden max-w-lg mx-auto">
-        <motion.div
-          className="h-full rounded-full bg-emerald-500"
-          animate={{ width: `${((currentStep - 1) / (IMPORT_STEPS.length - 1)) * 100}%` }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
-        />
-      </div>
-    </div>
-  );
+ return <EmployeeProgress currentStep={currentStep} steps={IMPORT_STEPS.map(item => [item.label, ['Choisir le fichier Excel','Associer les colonnes','Vérifier avant de lancer','Retrouver le résultat'][item.num - 1] || ''])} />;
 }
 
 // ─── Page background ──────────────────────────────────────────────────────────
-function PageBackground() {
-  return (
-    <div className="fixed inset-0 pointer-events-none -z-10">
-      <div className="absolute inset-0" style={{ background: 'var(--bg)' }} />
-      <div className="absolute -right-40 -top-40 h-[600px] w-[600px] rounded-full bg-white/[0.04] blur-[130px]" />
-      <div className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#10B981]/[0.06] blur-[130px]" />
-    </div>
-  );
-}
+function PageBackground() { return null; }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function EmployeeImportPage() {
   const router = useRouter();
+  const [uiImportError, setUiImportError] = useState('');
   const [step, setStep]               = useState(1);
   const [file, setFile]               = useState<File | null>(null);
   const [isDragging, setIsDragging]   = useState(false);
@@ -202,6 +136,7 @@ export default function EmployeeImportPage() {
 
   const handleFileSelect = async (selectedFile: File) => {
     setFile(selectedFile);
+    setUiImportError('');
     setIsLoading(true);
     try {
       const fd = new FormData();
@@ -221,7 +156,7 @@ export default function EmployeeImportPage() {
         setStep(2);
       }
     } catch (error) {
-      console.error('Erreur analyse:', error);
+      console.error('Erreur analyse:', error); setUiImportError(error instanceof Error ? error.message : 'Le fichier n’a pas pu être analysé. Réessayez avec un fichier Excel.');
     } finally {
       setIsLoading(false);
     }
@@ -246,6 +181,7 @@ export default function EmployeeImportPage() {
 
   const validateMappings = async () => {
     if (!file) return;
+    setUiImportError('');
     setIsLoading(true);
     try {
       const fd = new FormData();
@@ -254,13 +190,14 @@ export default function EmployeeImportPage() {
       const result = await api.postFormData('/employees/import/validate', fd) as ValidationResult;
       setValidation(result.data);
       setStep(3);
-    } catch (error) { console.error('Erreur validation:', error); }
+    } catch (error) { console.error('Erreur validation:', error); setUiImportError(error instanceof Error ? error.message : 'La vérification a échoué. Vos correspondances sont conservées.'); }
     finally { setIsLoading(false); }
   };
 
   // ── Execute import ──────────────────────────────────────────────────────────
   const executeImport = async () => {
     if (!file) return;
+    setUiImportError('');
     setIsLoading(true);
     try {
       const fd = new FormData();
@@ -269,7 +206,7 @@ export default function EmployeeImportPage() {
       const result = await api.postFormData('/employees/import/execute', fd) as ImportResult;
       setImportResult(result.data);
       setStep(4);
-    } catch (error) { console.error('Erreur import:', error); }
+    } catch (error) { console.error('Erreur import:', error); setUiImportError(error instanceof Error ? error.message : 'L’import n’a pas pu aboutir. Vérifiez le résultat avant de réessayer.'); }
     finally { setIsLoading(false); }
   };
 
@@ -291,23 +228,22 @@ export default function EmployeeImportPage() {
   };
 
   return (
-    <>
-      <PageBackground />
+    <ModulePageFrame kind="list"><div className="employee-module-page employee-import-page"><>
+      <PageBackground /><EmployeeOnboardingStart />
 
-      <div className="w-full max-w-4xl mx-auto py-6 px-4">
+      <div className="employee-import-shell">
 
         {/* Page header */}
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="employee-import-heading">
           <div>
-            <button
+            <Button variant="ghost"
               onClick={() => router.back()}
               className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text)] font-medium transition-colors mb-2 group"
             >
               <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
               Retour aux employés
-            </button>
-            <p className="text-xs font-bold tracking-[0.18em] text-[var(--text-muted)] uppercase mb-1">Ressources Humaines</p>
-            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">Import Excel</h1>
+            </Button>
+            <h1 className="text-2xl font-bold text-[var(--text)] tracking-tight">Importer des employés</h1><p>Votre équipe rejoint Konza, une étape à la fois.</p>
           </div>
           {file && step > 1 && (
             <motion.div
@@ -315,7 +251,7 @@ export default function EmployeeImportPage() {
               animate={{ opacity: 1, x: 0 }}
               className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[var(--surface)] rounded-2xl border border-[var(--border)] text-sm"
             >
-              <FileSpreadsheet size={15} className="text-emerald-500" />
+              <FileSpreadsheet size={15} className="text-[var(--success-text)]" />
               <span className="font-medium text-[var(--text-muted)] max-w-[180px] truncate">{file.name}</span>
             </motion.div>
           )}
@@ -326,13 +262,13 @@ export default function EmployeeImportPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.07 }}
-          className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border)] overflow-hidden"
+          className="employee-import-panel"
         >
           {/* Stepper */}
           <ImportStepper currentStep={step} />
 
           {/* Content */}
-          <div className="p-6 sm:p-10 min-h-[420px]">
+          <div id="employee-import-content" className="employee-import-content">{uiImportError && <div className="employee-import-error" role="alert"><AlertTriangle size={18} strokeWidth={1.5}/><p>{uiImportError}</p><Button variant="ghost" onClick={() => { setUiImportError(''); }} aria-label="Fermer le message"><X size={16}/></Button></div>}
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -345,7 +281,7 @@ export default function EmployeeImportPage() {
 
                 {/* ── ÉTAPE 1 : UPLOAD ─────────────────────────────────────── */}
                 {step === 1 && (
-                  <div className="space-y-6 max-w-2xl mx-auto">
+                  <div className="employee-import-start">
                     <div className="text-center">
                       <h2 className="text-xl font-bold text-[var(--text)] mb-1">
                         Téléversez votre fichier Excel
@@ -360,9 +296,9 @@ export default function EmployeeImportPage() {
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
-                      className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 ${
+                      className={`employee-import-dropzone relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-200 ${
                         isDragging
-                          ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/15 scale-[1.01]'
+                          ? 'border-[var(--border)] bg-[var(--import-success-soft)]  '
                           : 'border-[var(--border)] hover:border-[var(--text-muted)] bg-[var(--surface-2)]'
                       }`}
                     >
@@ -371,18 +307,18 @@ export default function EmployeeImportPage() {
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                       >
                         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 transition-all ${
-                          isDragging ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-[var(--surface-2)]'
+                          isDragging ? 'bg-[var(--import-success-soft)] ' : 'bg-[var(--surface-2)]'
                         }`}>
-                          <FileSpreadsheet className={isDragging ? 'text-emerald-500' : 'text-[var(--text-muted)]'} size={32} />
+                          <FileSpreadsheet className={isDragging ? 'text-[var(--success-text)]' : 'text-[var(--text-muted)]'} size={32} />
                         </div>
                         <p className="text-base font-semibold text-[var(--text-muted)] mb-1">
                           {isDragging ? 'Relâchez le fichier ici' : 'Glissez-déposez votre fichier'}
                         </p>
                         <p className="text-sm text-[var(--text-muted)] mb-5">ou</p>
-                        <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#FAFAFA] text-black rounded-xl font-bold text-sm cursor-pointer hover:bg-white transition-colors shadow-lg shadow-black/10">
+                        <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-[var(--action)] text-[var(--on-brand)] rounded-xl font-bold text-sm cursor-pointer hover:bg-[var(--action)] transition-colors shadow-lg ">
                           <Upload size={15} />
                           Parcourir les fichiers
-                          <input type="file" accept=".xlsx,.xls" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} className="hidden" />
+                          <input type="file" accept=".xlsx,.xls" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} className="sr-only" />
                         </label>
                       </motion.div>
                     </div>
@@ -395,7 +331,7 @@ export default function EmployeeImportPage() {
                     )}
 
                     {/* Template download */}
-                    <div className="flex items-center gap-4 p-5 bg-[var(--surface-2)] rounded-2xl border border-[var(--border)]">
+                    <div className="employee-import-template">
                       <div className="w-10 h-10 bg-[var(--surface-2)] rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
                         <Download className="text-[var(--text-muted)]" size={18} />
                       </div>
@@ -403,10 +339,10 @@ export default function EmployeeImportPage() {
                         <p className="text-sm font-bold text-[var(--text)] mb-0.5">Pas encore de fichier ?</p>
                         <p className="text-xs text-[var(--text-muted)]">Téléchargez notre modèle avec colonnes pré-configurées.</p>
                       </div>
-                      <button onClick={downloadTemplate}
+                      <Button variant="ghost" onClick={downloadTemplate}
                         className="flex-shrink-0 px-4 py-2 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl font-bold text-xs border border-[var(--border)] hover:bg-[var(--surface-2)] transition-colors shadow-sm">
                         Télécharger
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -428,12 +364,12 @@ export default function EmployeeImportPage() {
 
                     {/* Warnings */}
                     {analysis.warnings.length > 0 && (
-                      <div className="p-4 bg-amber-50 dark:bg-amber-900/15 border border-amber-200 dark:border-amber-800/50 rounded-2xl space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wide">
+                      <div className="p-4 bg-[var(--import-warning-soft)]  border border-[var(--border)]  rounded-2xl space-y-2">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--warning-text)]  uppercase tracking-wide">
                           <AlertTriangle size={14} /> Avertissements
                         </div>
                         {analysis.warnings.map((w: string, i: number) => (
-                          <p key={i} className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2">
+                          <p key={i} className="text-sm text-[var(--warning-text)]  flex items-start gap-2">
                             <Info size={14} className="flex-shrink-0 mt-0.5" />{w}
                           </p>
                         ))}
@@ -448,7 +384,7 @@ export default function EmployeeImportPage() {
                         </h3>
                       </div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <table className="employee-import-table w-full text-sm">
                           <thead>
                             <tr className="border-b border-[var(--border)]">
                               {analysis.detectedColumns.map((col: string) => (
@@ -479,7 +415,7 @@ export default function EmployeeImportPage() {
                         const isMapped   = !!mappings[excelCol];
                         return (
                           <div key={excelCol}>
-                          <div className={`flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
+                          <div className={`employee-import-mapping flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
                             isMapped
                               ? 'bg-[var(--surface-2)] border-[var(--border)]'
                               : 'bg-[var(--surface)] border-[var(--border)]'
@@ -488,7 +424,7 @@ export default function EmployeeImportPage() {
                             <div className="w-36 flex-shrink-0">
                               <p className="text-sm font-medium text-[var(--text-muted)] truncate">{excelCol}</p>
                               {suggestion && (
-                                <p className="text-[10px] text-emerald-500 flex items-center gap-1 mt-0.5">
+                                <p className="text-[10px] text-[var(--success-text)] flex items-center gap-1 mt-0.5">
                                   <CheckCircle2 size={10} /> {suggestion.confidence}% confiance
                                 </p>
                               )}
@@ -496,23 +432,16 @@ export default function EmployeeImportPage() {
                             {/* Arrow */}
                             <ChevronRight size={14} className="text-[var(--text-muted)] flex-shrink-0" />
                             {/* Select */}
-                            <select
-                              value={isBonusValue(mappings[excelCol]) ? BONUS_TAXABLE : (mappings[excelCol] || '')}
-                              onChange={e => handleMappingChange(excelCol, e.target.value)}
-                              className="flex-1 px-3 py-2 text-sm border border-[var(--border)] rounded-xl bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 outline-none transition-all"
-                            >
-                              <option value="">— Ignorer cette colonne —</option>
-                              {Object.entries(DB_FIELDS).map(([value, label]) => (
-                                <option key={value} value={value}>{label}</option>
-                              ))}
-                              <option value={BONUS_TAXABLE}>Prime / indemnité (le nom de la colonne = nom de la prime)</option>
-                            </select>
+                            <div className="employee-import-select"><FancySelect label="" placeholder={`Champ pour ${excelCol}`}
+ value={isBonusValue(mappings[excelCol]) ? BONUS_TAXABLE : (mappings[excelCol] || '')}
+ onChange={value => handleMappingChange(excelCol, value)}
+ options={[{value:'',label:'Ignorer cette colonne'},...Object.entries(DB_FIELDS).map(([value,label])=>({value,label})),{value:BONUS_TAXABLE,label:'Prime / indemnité (nom de la colonne conservé)'}]} /></div>
                             {/* Status indicator */}
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              isMapped ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-[var(--surface-2)]'
+                              isMapped ? 'bg-[var(--import-success-soft)] ' : 'bg-[var(--surface-2)]'
                             }`}>
                               {isMapped
-                                ? <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                                ? <Check size={12} className="text-[var(--success-text)] " />
                                 : <X size={12} className="text-[var(--text-muted)]" />
                               }
                             </div>
@@ -535,13 +464,13 @@ export default function EmployeeImportPage() {
                                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Nature fiscale</span>
                                   <div className="inline-flex rounded-lg border border-[var(--border)] overflow-hidden">
                                     {([['TAXABLE', 'Imposable'], ['NON_TAXABLE', 'Non imposable']] as const).map(([val, label]) => (
-                                      <button key={val} type="button" disabled={locked}
+                                      <Button variant="ghost" key={val} type="button" disabled={locked}
                                         onClick={() => setBonusNature(excelCol, val)}
                                         className={`px-3.5 py-1.5 text-xs font-bold transition-colors disabled:cursor-not-allowed ${
                                           nature === val
                                             ? 'bg-[var(--text)] text-[var(--bg)]'
                                             : 'bg-[var(--surface-2)] text-[var(--text-muted)] hover:bg-[var(--border)]'
-                                        }`}>{label}</button>
+                                        }`}>{label}</Button>
                                     ))}
                                   </div>
                                 </div>
@@ -579,15 +508,15 @@ export default function EmployeeImportPage() {
                               <li key={c} className="flex items-center justify-between text-sm text-[var(--text)]">
                                 <span>{info?.name ?? c}</span>
                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
-                                  non ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                  non ? 'bg-[var(--surface-2)] text-[var(--text-secondary)]  border-[var(--border)]'
+                                      : 'bg-[var(--import-success-soft)] text-[var(--success-text)]  border-[var(--border)]'
                                 }`}>{non ? 'Non imposable' : 'Imposable'}</span>
                               </li>
                             );
                           })}
                         </ul>
                         <label className="flex items-center gap-2 text-sm text-[var(--text)] cursor-pointer">
-                          <input type="checkbox" checked={fiscalConfirmed} onChange={e => setFiscalConfirmed(e.target.checked)} className="accent-emerald-600" />
+                          <input type="checkbox" checked={fiscalConfirmed} onChange={e => setFiscalConfirmed(e.target.checked)} className="accent-[var(--brand)]" />
                           J'ai vérifié la nature fiscale de chaque prime
                         </label>
                       </div>
@@ -595,14 +524,14 @@ export default function EmployeeImportPage() {
 
                     {/* Actions */}
                     <div className="flex justify-between pt-2">
-                      <button onClick={() => setStep(1)}
+                      <Button variant="ghost" onClick={() => setStep(1)}
                         className="px-5 py-2.5 text-sm text-[var(--text-muted)] font-semibold hover:bg-[var(--surface-2)] rounded-xl transition-colors">
                         ← Retour
-                      </button>
-                      <button onClick={validateMappings} disabled={isLoading || (bonusCols.length > 0 && !fiscalConfirmed)}
-                        className="flex items-center gap-2 px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm disabled:opacity-50 transition-colors">
+                      </Button>
+                      <Button variant="primary" onClick={validateMappings} disabled={isLoading || (bonusCols.length > 0 && !fiscalConfirmed)}
+                        className="flex items-center gap-2 px-7 py-2.5 bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] rounded-xl font-bold text-sm disabled:opacity-50 transition-colors">
                         {isLoading ? <><Loader2 className="animate-spin" size={16} />Validation…</> : <>Valider <ChevronRight size={16} /></>}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -619,24 +548,24 @@ export default function EmployeeImportPage() {
 
                     {/* Stats cards */}
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-5 bg-emerald-50 dark:bg-emerald-900/15 border border-emerald-100 dark:border-emerald-800/40 rounded-2xl">
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide mb-2">
+                      <div className="p-5 bg-[var(--import-success-soft)]  border border-[var(--border)]  rounded-2xl">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--success-text)]  uppercase tracking-wide mb-2">
                           <CheckCircle2 size={14} /> Lignes valides
                         </div>
-                        <div className="text-4xl font-black text-emerald-700 dark:text-emerald-300">{validation.validRows}</div>
+                        <div className="text-4xl font-black text-[var(--success-text)] ">{validation.validRows}</div>
                       </div>
                       <div className={`p-5 border rounded-2xl ${
                         validation.invalidRows > 0
-                          ? 'bg-red-50 dark:bg-red-900/15 border-red-100 dark:border-red-800/40'
+                          ? 'bg-[var(--import-danger-soft)]  border-[var(--border)] '
                           : 'bg-[var(--surface-2)] border-[var(--border)]'
                       }`}>
                         <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wide mb-2 ${
-                          validation.invalidRows > 0 ? 'text-red-500 dark:text-red-400' : 'text-[var(--text-muted)]'
+                          validation.invalidRows > 0 ? 'text-[var(--danger-text)] ' : 'text-[var(--text-muted)]'
                         }`}>
                           <XCircle size={14} /> Lignes invalides
                         </div>
                         <div className={`text-4xl font-black ${
-                          validation.invalidRows > 0 ? 'text-red-600 dark:text-red-300' : 'text-[var(--text-muted)]'
+                          validation.invalidRows > 0 ? 'text-[var(--danger-text)] ' : 'text-[var(--text-muted)]'
                         }`}>{validation.invalidRows}</div>
                       </div>
                     </div>
@@ -650,7 +579,7 @@ export default function EmployeeImportPage() {
                           </p>
                         </div>
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
+                          <table className="employee-import-table w-full text-sm">
                             <thead>
                               <tr className="text-left text-[11px] uppercase tracking-wider text-[var(--text-muted)] border-b border-[var(--border)]">
                                 <th className="px-4 py-2.5">Prime</th>
@@ -667,8 +596,8 @@ export default function EmployeeImportPage() {
                                   <td className="px-4 py-2.5">
                                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold border ${
                                       b.kind === 'BONUS_NON_TAXABLE'
-                                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'
-                                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                        ? 'bg-[var(--surface-2)] text-[var(--text-secondary)]  border-[var(--border)]'
+                                        : 'bg-[var(--import-success-soft)] text-[var(--success-text)]  border-[var(--border)]'
                                     }`}>{b.kindLabel}</span>
                                   </td>
                                   <td className="px-4 py-2.5 text-[var(--text-muted)] text-xs">
@@ -696,16 +625,16 @@ export default function EmployeeImportPage() {
 
                     {/* Errors list */}
                     {validation.errors.length > 0 && (
-                      <div className="rounded-2xl border border-red-100 dark:border-red-800/40 overflow-hidden">
-                        <div className="px-5 py-3 bg-red-50 dark:bg-red-900/15 border-b border-red-100 dark:border-red-800/40">
-                          <p className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wide flex items-center gap-1.5">
+                      <div className="rounded-2xl border border-[var(--border)]  overflow-hidden">
+                        <div className="px-5 py-3 bg-[var(--import-danger-soft)]  border-b border-[var(--border)] ">
+                          <p className="text-xs font-bold text-[var(--danger-text)]  uppercase tracking-wide flex items-center gap-1.5">
                             <XCircle size={13} /> {validation.errors.length} erreur(s) détectée(s)
                           </p>
                         </div>
                         <div className="max-h-48 overflow-y-auto p-4 space-y-1.5">
                           {validation.errors.map((err: string, i: number) => (
-                            <p key={i} className="text-sm text-red-600 dark:text-red-400 flex items-start gap-2">
-                              <span className="text-red-400 mt-0.5 flex-shrink-0">·</span>{err}
+                            <p key={i} className="text-sm text-[var(--danger-text)]  flex items-start gap-2">
+                              <span className="text-[var(--danger-text)] mt-0.5 flex-shrink-0">·</span>{err}
                             </p>
                           ))}
                         </div>
@@ -714,21 +643,22 @@ export default function EmployeeImportPage() {
 
                     {/* Actions */}
                     <div className="flex justify-between pt-2">
-                      <button onClick={() => setStep(2)}
+                      <Button variant="ghost" onClick={() => setStep(2)}
                         className="px-5 py-2.5 text-sm text-[var(--text-muted)] font-semibold hover:bg-[var(--surface-2)] rounded-xl transition-colors">
                         ← Modifier le mapping
-                      </button>
-                      <button onClick={executeImport} disabled={!validation.isValid || isLoading}
-                        className="flex items-center gap-2 px-7 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      </Button>
+                      <Button variant="primary" onClick={executeImport} disabled={!validation.isValid || isLoading}
+                        className="flex items-center gap-2 px-7 py-2.5 bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] rounded-xl font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                         {isLoading ? <><Loader2 className="animate-spin" size={16} />Import…</> : <>Lancer l'import <ChevronRight size={16} /></>}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
 
                 {/* ── ÉTAPE 4 : RÉSULTAT ───────────────────────────────────── */}
                 {step === 4 && importResult && (
-                  <div className="text-center space-y-6 py-4 max-w-md mx-auto">
+                  <div className="employee-import-result text-center space-y-6 py-4 max-w-md mx-auto">
+                    {importResult.success && importResult.imported > 0 && <div className="employee-import-celebration"><EmployeeCelebration final /></div>}
                     {/* Icon */}
                     <motion.div
                       initial={{ scale: 0, rotate: -12 }}
@@ -736,13 +666,13 @@ export default function EmployeeImportPage() {
                       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
                       className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto ${
                         importResult.success
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30 shadow-lg shadow-emerald-500/15'
-                          : 'bg-amber-100 dark:bg-amber-900/30 shadow-lg shadow-amber-500/15'
+                          ? 'bg-[var(--import-success-soft)]  shadow-lg '
+                          : 'bg-[var(--import-warning-soft)]  shadow-lg '
                       }`}
                     >
                       {importResult.success
-                        ? <CheckCircle2 size={40} className="text-emerald-600 dark:text-emerald-400" />
-                        : <AlertTriangle size={40} className="text-amber-600 dark:text-amber-400" />
+                        ? <CheckCircle2 size={40} className="text-[var(--success-text)] " />
+                        : <AlertTriangle size={40} className="text-[var(--warning-text)] " />
                       }
                     </motion.div>
 
@@ -788,13 +718,13 @@ export default function EmployeeImportPage() {
                     {/* Errors */}
                     {importResult.errors.length > 0 && (
                       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                        className="rounded-2xl border border-amber-100 dark:border-amber-800/40 overflow-hidden text-left">
-                        <div className="px-5 py-3 bg-amber-50 dark:bg-amber-900/15">
-                          <p className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Erreurs rencontrées</p>
+                        className="rounded-2xl border border-[var(--border)]  overflow-hidden text-left">
+                        <div className="px-5 py-3 bg-[var(--import-warning-soft)] ">
+                          <p className="text-xs font-bold text-[var(--warning-text)]  uppercase tracking-wide">Erreurs rencontrées</p>
                         </div>
                         <div className="max-h-36 overflow-y-auto p-4 space-y-1.5">
                           {importResult.errors.map((err: any, i: number) => (
-                            <p key={i} className="text-xs text-amber-700 dark:text-amber-400">
+                            <p key={i} className="text-xs text-[var(--warning-text)] ">
                               <span className="font-bold">Ligne {err.row} :</span> {err.message}
                             </p>
                           ))}
@@ -805,15 +735,15 @@ export default function EmployeeImportPage() {
                     {/* Actions */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}
                       className="flex gap-3 justify-center">
-                      <button onClick={() => window.location.reload()}
+                      <Button variant="ghost" onClick={() => window.location.reload()}
                         className="px-5 py-2.5 bg-[var(--surface-2)] text-[var(--text-muted)] rounded-xl font-bold text-sm hover:bg-[var(--border)] transition-colors">
                         Nouvel import
-                      </button>
-                      <button onClick={() => router.push('/employes')}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-[#FAFAFA] hover:bg-white text-black rounded-xl font-bold text-sm transition-colors group">
+                      </Button>
+                      <Button variant="primary" onClick={() => router.push('/employes')}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] rounded-xl font-bold text-sm transition-colors group">
                         Voir les employés
                         <ArrowLeft size={14} className="rotate-180 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
+                      </Button>
                     </motion.div>
                   </div>
                 )}
@@ -831,6 +761,6 @@ export default function EmployeeImportPage() {
           Les données importées peuvent être modifiées depuis la fiche de chaque employé
         </motion.p>
       </div>
-    </>
+    </></div></ModulePageFrame>
   );
 }

@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-17",
+  "scope": [
+    "employes/nouveau",
+    "employes/nouveau/formulaire",
+    "employes/import"
+  ],
+  "request": "Parcours en haut, encouragements et celebrations ; choix de methode et import repris",
+  "importFunctions": {
+    "before": "6eebe1335b7876616854d303a8da133f8e2722cd935fa4818f8f99a520c80aa6",
+    "after": "6eebe1335b7876616854d303a8da133f8e2722cd935fa4818f8f99a520c80aa6"
+  },
+  "audit": {
+    "palette": [
+      17204,
+      17117
+    ],
+    "hex": [
+      1780,
+      1775
+    ]
+  },
+  "checks": {
+    "employees": "succes",
+    "importStates": "mapping/catalogue fiscal, invalides, succes, partiel et erreurs",
+    "contrast": "242 combinaisons, minimum 4.50:1",
+    "visual": "a valider par utilisateur",
+    "types": "check-types --incremental false : succes"
+  }
+}

@@ -3,7 +3,8 @@ import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/Modul
 import { Button } from '@/components/design-system/primitives';
 import '@/components/employees/employees.css';
 import '@/components/employees/employee-workspace.css';
-import { EmployeeJourney, EmployeeStepFeedback } from '@/components/employees/create/EmployeeJourney';
+import '@/components/employees/employee-onboarding.css';
+import { EmployeeJourney, EmployeeStepFeedback, EmployeeCelebration, EmployeeOnboardingStart } from '@/components/employees/create/EmployeeJourney';
 
 
 import React, { useState, useEffect, Suspense } from 'react';
@@ -106,6 +107,7 @@ function SuccessModal({
           >
             {/* Subtle bg glow */}
 
+            <div className="employee-created-celebration"><EmployeeCelebration final /></div>
             {/* Avatar */}
             <div className="flex justify-center mb-6 relative">
               <motion.div initial={{ scale: 0, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
@@ -491,7 +493,7 @@ function CreateEmployeeFormInner() {
 
   return (
     <>
-      <PageBackground />
+      <PageBackground /><EmployeeOnboardingStart />
 
       <div className="employee-create-workspace">
 
@@ -650,7 +652,7 @@ function CreateEmployeeFormInner() {
                 ) : currentStep === 5 ? (
                   <><BadgeCheck size={16} /> Créer l'employé</>
                 ) : (
-                  <>Suivant <ChevronRight size={16} /></>
+                  <>Continuer <ChevronRight size={16} /></>
                 )}
               </Button>
             </div>

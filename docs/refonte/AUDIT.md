@@ -6,8 +6,8 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Mesure | Total | Objectif |
 |---|---|---|
-| palette | 17204 | tendre vers 0 (tokens) |
-| hex | 1780 | seulement des constantes de marque ou de graphiques |
+| palette | 17117 | tendre vers 0 (tokens) |
+| hex | 1775 | seulement des constantes de marque ou de graphiques |
 | emojis | 448 | 0 comme icône (réactions et contenus utilisateur autorisés) |
 | dégradés | 251 | 0 |
 | pulse / ping | 69 | 0 |
@@ -19,7 +19,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Zone | Fichiers | palette | hex | emojis | dégradés | pulse / ping | flou / verre | ombres colorées | texte dégradé |
 |---|---|---|---|---|---|---|---|---|---|
-| dashboard | 173 | 9763 | 431 | 189 | 56 | 28 | 95 | 4 | 4 |
+| dashboard | 173 | 9676 | 426 | 189 | 56 | 28 | 95 | 4 | 4 |
 | portefeuille | 18 | 544 | 19 | 0 | 1 | 14 | 11 | 0 | 0 |
 | pages publiques | 51 | 2438 | 630 | 127 | 121 | 14 | 59 | 17 | 2 |
 | composants, hooks, lib | 280 | 4059 | 692 | 119 | 69 | 13 | 34 | 6 | 4 |
