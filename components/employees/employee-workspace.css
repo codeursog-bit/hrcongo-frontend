@@ -107,11 +107,9 @@
  :root .employee-directory .employee-directory-table :is(td:nth-child(2),td:nth-child(4),td:nth-last-child(2)) {white-space:nowrap;}
  :root .employee-directory .employee-directory-table .k-badge {white-space:nowrap;font-size:10px;}
  :root .employee-directory .employee-directory-table td:last-child .k-button {height:36px;min-height:36px;min-width:36px;padding:9px;}
- :root .employee-directory .employee-salary-cell {display:flex;align-items:center;gap:8px;min-width:150px;white-space:nowrap;}
+ :root .employee-directory .employee-salary-cell {display:flex;align-items:center;min-width:150px;min-height:40px;width:100%;white-space:nowrap;cursor:help;text-align:left;background:transparent;color:var(--text);}
  :root .employee-directory .employee-salary-value {display:block;min-width:112px;font-variant-numeric:tabular-nums;}
  :root .employee-directory .employee-salary-value small {font-size:10px;color:var(--text-secondary);}
- :root .employee-directory .employee-salary-cell button {display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:10px;color:var(--text-secondary);}
- :root .employee-directory .employee-salary-cell button:hover {background:var(--surface-2);color:var(--text);}
  :root .employee-directory-person:hover {transform:none;box-shadow:var(--shadow-card);}
  :root .employee-directory :is(.employee-directory-person,.employee-directory-table) :is(button,a):hover {transform:none;}
  :root .employee-directory :is(a,button,summary):focus-visible,:root .employee-method-page a:focus-visible {outline:2px solid var(--focus);outline-offset:4px;}

@@ -6,12 +6,12 @@ new Function('require','module','exports',output)(name=>name==='react'?{...React
 const {EmployeeSalaryCell}=mod.exports,value=458123;
 let cell=EmployeeSalaryCell({value}),stopped=false;
 assert.ok(!renderToStaticMarkup(cell).includes(value.toLocaleString('fr-FR')));
-assert.equal(cell.props.children[1].props['aria-pressed'],false);
-cell.props.children[1].props.onClick({stopPropagation(){stopped=true;}});
+assert.ok(!renderToStaticMarkup(cell).includes("<svg"));
+cell.props.onClick({stopPropagation(){stopped=true;}}); cell.props.onMouseEnter();
 assert.equal(stopped,true);assert.equal(visible,true);
 cell=EmployeeSalaryCell({value});assert.ok(renderToStaticMarkup(cell).includes(value.toLocaleString('fr-FR')));
-assert.equal(cell.props.children[1].props['aria-pressed'],true);
-cell.props.children[1].props.onClick({stopPropagation(){}});
+assert.equal(visible,true);
+cell.props.onMouseLeave();
 assert.equal(visible,false);assert.ok(!renderToStaticMarkup(EmployeeSalaryCell({value})).includes(value.toLocaleString('fr-FR')));
 assert.ok(renderToStaticMarkup(EmployeeSalaryCell({value:null})).includes('—'));
-console.log('Salaire en liste : masqué au départ, révélation explicite, fermeture et propagation maîtrisée.');
+cell.props.onFocus(); assert.equal(visible,true); cell.props.onBlur(); assert.equal(visible,false); console.log('Salaire : survol et focus, masquage en sortie, aucun second oeil.');
