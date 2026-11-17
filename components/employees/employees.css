@@ -1,0 +1,58 @@
+.employee-module-page {min-width:0;}
+.employee-module-page #wf-dashboard {--wf-navy:var(--brand);--wf-magenta:var(--green);--wf-teal:var(--green);--wf-salmon:var(--mustard);--wf-orange:var(--brand);--wf-orangeDark:var(--brand-strong);--wf-purple:var(--mustard);--wf-blue:var(--brand);--wf-kpi:var(--surface);--wf-font:inherit;--wf-multi-0:var(--brand);--wf-multi-1:var(--green);--wf-multi-2:var(--mustard);--wf-multi-3:var(--text-secondary);--wf-multi-4:var(--brand);--wf-multi-5:var(--green);--wf-multi-6:var(--mustard);--wf-multi-7:var(--text-secondary);--wf-multi-8:var(--brand);--wf-multi-9:var(--green);--wf-multi-10:var(--mustard);--wf-multi-11:var(--text-secondary);}
+@media screen {
+ .employee-module-page {--employee-ink:color-mix(in srgb,var(--action) 90%,black);}
+ .dark .employee-module-page {--employee-ink:var(--brand);}
+ .employee-module-page #wf-dashboard .wf-kpi {background:var(--surface)!important;color:var(--text);box-shadow:var(--shadow-card);border-radius:var(--radius-card);}
+ .employee-module-page #wf-dashboard .workforce-dashboard>div>p[style] {color:var(--text)!important;}
+ .employee-module-page .flex.gap-2.mb-4:has(.k-badge) {flex-wrap:wrap;justify-content:center;}
+ .loan-module .employee-module-page :where(.min-h-screen,[class*="min-h-[calc"]):not(.loan-document-protected *) {min-height:0;}
+ .loan-module .employee-module-page :where(.fixed.pointer-events-none):not(.employee-step-feedback,.loan-document-protected *) {display:none;}
+ .loan-module .employee-module-page :where(.glass-panel):not(.loan-document-protected *) {background:var(--surface);box-shadow:var(--shadow-card);border:0;backdrop-filter:none;}
+ .loan-module .employee-module-page .employee-step-feedback>div {min-width:0;width:min(420px,calc(100vw - 32px));}
+ .loan-module .employee-module-page :where(.font-mono):not(.loan-document-protected *) {font-family:inherit;font-variant-numeric:tabular-nums;}
+ .loan-module .employee-module-page :where(.font-black,.font-extrabold):not(.loan-document-protected *) {font-weight:600;}
+ .loan-module .employee-module-page :where(input[class*="pl-10"]):not(.loan-document-protected *) {padding-left:42px;}
+ .loan-module .employee-module-page :where(.sticky):not(.loan-document-protected *) {position:relative;top:auto;margin-inline:0;padding:20px;border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+ .loan-module .employee-module-page :where([class*="overflow-x-auto"] .w-48):not(.loan-document-protected *) {flex-shrink:0;}
+ .loan-module .employee-module-page :where([class*="opacity-0"]):has(>button[title="Voir"]) {opacity:1;position:relative;top:auto;right:auto;justify-content:flex-end;margin-bottom:12px;}
+ .loan-module .employee-module-page :where(.cursor-pointer):focus-visible {outline:2px solid var(--focus);outline-offset:4px;}
+ .loan-module .employee-module-page :where(.k-button):not(.loan-document-protected *) {white-space:normal;}
+ .loan-module .employee-module-page :where(.k-button-primary) {background:var(--action);color:var(--on-brand);}
+ .loan-module .employee-module-page :where(.k-button-primary svg) {color:currentColor;}
+ .loan-module .employee-module-page button[class*="bg-[var(--text)]"] {background:var(--brand-soft);color:var(--action);}
+ .employee-module-page .workforce-overview-heading {display:flex;justify-content:space-between;align-items:flex-end;gap:24px;}
+ .employee-module-page .workforce-overview-heading h2 {font-size:18px;font-weight:600;color:var(--text);}
+ .employee-module-page .workforce-overview-heading p,.employee-module-page .workforce-overview-heading>span {font-size:12px;line-height:1.7;color:var(--text-secondary);}
+ .employee-module-page .workforce-overview-heading>span {max-width:280px;}
+ .employee-module-page .workforce-kpis {display:grid;grid-template-columns:1.4fr repeat(6,minmax(0,1fr));gap:16px;}
+ .employee-module-page .workforce-kpis .k-card {min-width:0;padding:20px;}
+ .employee-module-page .workforce-kpis p {font-size:12px;font-weight:500;color:var(--text-secondary);}
+ .employee-module-page .workforce-kpis strong {display:block;margin-block:14px 8px;font-size:30px;line-height:1.2;font-weight:600;font-variant-numeric:tabular-nums;}
+ .employee-module-page .workforce-kpis span {font-size:10px;color:var(--text-secondary);}
+ .employee-module-page .workforce-kpis .workforce-total {background:var(--brand-soft);}
+ .employee-module-page .workforce-admin-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;}
+ .employee-module-page .workforce-metrics {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;}
+ .employee-module-page .workforce-metrics>div {min-width:0;}
+ .employee-module-page .workforce-metrics dt {font-size:12px;line-height:1.6;color:var(--text-secondary);}
+ .employee-module-page .workforce-metrics dd {margin-top:8px;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;}
+ .employee-module-page .workforce-metrics [data-tone=warning] dd {color:var(--warning-text);}
+ .employee-module-page .workforce-note {margin-block:0 20px;font-size:12px;line-height:1.7;color:var(--text-secondary);}
+ .employee-module-page .workforce-followup {display:inline-block;margin-top:20px;font-size:13px;color:var(--action);font-weight:600;}
+ .employee-module-page :where([class*="bg-[#0"]):not(.loan-document-protected *) {background:var(--surface);}
+ .employee-module-page .fiscal-setting-note {padding:14px 16px;background:var(--surface-2);border-radius:var(--radius-control);font-size:12px;line-height:1.7;color:var(--text-secondary);}
+ .employee-module-page :where(input[type=checkbox].sr-only:focus-visible)+div {outline:2px solid var(--focus);outline-offset:3px;}
+}
+@media screen and (max-width:1200px) {
+ .employee-module-page .workforce-kpis {grid-template-columns:repeat(4,minmax(0,1fr));}
+ .employee-module-page .workforce-kpis .workforce-total {grid-column:span 2;}
+}
+@media screen and (max-width:700px) {
+ .employee-module-page .workforce-kpis {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .employee-module-page .workforce-admin-grid {grid-template-columns:minmax(0,1fr);}
+ .employee-module-page .workforce-overview-heading {display:block;}
+ .employee-module-page .workforce-overview-heading>span {display:block;margin-top:8px;}
+ .loan-module .employee-module-page :where(.flex.items-center.gap-3,.flex.items-center.gap-2):not(.loan-document-protected *) {flex-wrap:wrap;}
+ .loan-module .employee-module-page :where(.grid-cols-2):has(input:not([type=checkbox])):not(.loan-document-protected *) {grid-template-columns:minmax(0,1fr);}
+ .loan-module .employee-module-page :where(.k-button):not(.loan-document-protected *) {padding:10px 14px;}
+}

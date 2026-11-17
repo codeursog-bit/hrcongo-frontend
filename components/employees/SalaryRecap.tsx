@@ -122,7 +122,7 @@ export const SalaryRecap = ({
     previewBonus?.isTaxable, previewBonus?.isCnss, previewBonus?.fiscalType,
   ]);
 
-  if (error) return null; // silencieux — le récap est une aide, pas un bloquant
+  if (error) return <div className="salary-estimate-unavailable" role="status"><dl className="salary-estimate-totals"><div><dt>Brut mensuel</dt><dd>—</dd></div><div><dt>Net mensuel</dt><dd>—</dd></div></dl><p>L’estimation du brut et du net est indisponible. Consultez les bulletins ou réessayez en affichant les montants.</p></div>;
 
   const defaultLabel = previewBonus ? 'Brut / net (avec cette prime)' : 'Brut / net';
   const deductions: DeductionLine[] = Array.isArray(result?.deductions) ? result.deductions : [];
@@ -130,37 +130,37 @@ export const SalaryRecap = ({
   const gains: { label: string; amount: number; category: string }[] = Array.isArray(result?.gains) ? result.gains : [];
 
   return (
-    <div className="p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl">
+    <div className="salary-estimate p-4      border border-[var(--border)]  rounded-xl">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-bold text-slate-500 dark:text-white uppercase tracking-wide">
+        <p className="text-xs font-bold text-[var(--text-secondary)]  uppercase tracking-wide">
           {label ?? defaultLabel}
         </p>
-        {loading && <Loader2 size={13} className="animate-spin text-slate-400 dark:text-white" />}
+        {loading && <Loader2 size={13} className="animate-spin text-[var(--text-secondary)] " />}
       </div>
       {result ? (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="salary-estimate-totals grid grid-cols-2 gap-4">
             <div>
-              <p className="text-[10px] text-slate-500 dark:text-white uppercase font-bold">Brut</p>
-              <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">
-                {fmt(result.grossSalary)} <span className="text-xs font-normal text-slate-500 dark:text-slate-200">FCFA</span>
+              <p className="text-[10px] text-[var(--text-secondary)]  uppercase font-bold">Brut mensuel</p>
+              <p className="text-lg font-bold text-[var(--text)]  font-mono">
+                {fmt(result.grossSalary)} <span className="text-xs font-normal text-[var(--text-secondary)] ">FCFA</span>
               </p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-500 dark:text-white uppercase font-bold">Net</p>
-              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                {fmt(result.netSalary)} <span className="text-xs font-normal text-slate-500 dark:text-slate-200">FCFA</span>
+              <p className="text-[10px] text-[var(--text-secondary)]  uppercase font-bold">Net mensuel</p>
+              <p className="text-lg font-bold text-[var(--text)]  font-mono">
+                {fmt(result.netSalary)} <span className="text-xs font-normal text-[var(--text-secondary)] ">FCFA</span>
               </p>
             </div>
           </div>
 
           {/* ── Détail : indemnités + chaque retenue ───────────────────── */}
           {(deductions.length > 0 || nonTaxable > 0 || gains.length > 0) && (
-            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+            <div className="mt-3 pt-3 border-t border-[var(--border)] ">
               <button
                 type="button"
                 onClick={() => setShowDetail(v => !v)}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-200 hover:text-slate-700"
+                aria-expanded={showDetail} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[var(--text-secondary)]  hover:text-[var(--text-secondary)]"
               >
                 <ChevronDown size={12} className={`transition-transform ${showDetail ? '' : '-rotate-90'}`} />
                 Détail gains et retenues
@@ -173,11 +173,11 @@ export const SalaryRecap = ({
                     <li key={`gain-${i}`}
                       className={`flex items-center justify-between ${
                         g.category === 'NON_TAXABLE'
-                          ? 'text-teal-700 dark:text-teal-300'
-                          : 'text-slate-600 dark:text-slate-200'}`}>
+                          ? 'text-[var(--action)] '
+                          : 'text-[var(--text-secondary)] '}`}>
                       <span>
                         {g.label}
-                        <span className="ml-1 text-[10px] text-slate-400 dark:text-slate-300">
+                        <span className="ml-1 text-[10px] text-[var(--text-secondary)] ">
                           {g.category === 'NON_TAXABLE' ? '(indemnité, ajoutée au net)'
                             : g.category === 'TAXABLE_NO_CNSS' ? '(imposable, hors CNSS)' : '(imposable + CNSS)'}
                         </span>
@@ -186,17 +186,17 @@ export const SalaryRecap = ({
                     </li>
                   ))}
                   {deductions.map((d) => (
-                    <li key={`${d.kind}-${d.code}`} className="flex items-center justify-between text-slate-600 dark:text-slate-200">
+                    <li key={`${d.kind}-${d.code}`} className="flex items-center justify-between text-[var(--text-secondary)] ">
                       <span>
                         {d.label}
                         {d.kind === 'TAX' && d.rate != null && (
-                          <span className="ml-1 text-[10px] text-slate-400 dark:text-slate-300">({fmtRate(d.rate)})</span>
+                          <span className="ml-1 text-[10px] text-[var(--text-secondary)] ">({fmtRate(d.rate)})</span>
                         )}
                       </span>
                       <span className="font-mono">− {fmt(d.amount)}</span>
                     </li>
                   ))}
-                  <li className="flex items-center justify-between pt-1 mt-1 border-t border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-white">
+                  <li className="flex items-center justify-between pt-1 mt-1 border-t border-[var(--border)]  font-bold text-[var(--text-secondary)] ">
                     <span>Total retenues</span>
                     <span className="font-mono">− {fmt(result.totalDeductions)}</span>
                   </li>
@@ -206,9 +206,9 @@ export const SalaryRecap = ({
           )}
         </>
       ) : (
-        <p className="text-sm text-slate-500 dark:text-white italic">Calcul en cours…</p>
+        <div aria-busy="true"><dl className="salary-estimate-totals"><div><dt>Brut mensuel</dt><dd>—</dd></div><div><dt>Net mensuel</dt><dd>—</dd></div></dl><p className="text-sm text-[var(--text-secondary)]">Estimation en cours…</p></div>
       )}
-      <p className="text-[10px] text-slate-500 dark:text-slate-200 mt-2">
+      <p className="text-[10px] text-[var(--text-secondary)]  mt-2">
         Brut = salaire de base + primes mensuelles imposables. Net = brut − retenues (CNSS, ITS, TOL et taxes configurées par l'entreprise) + indemnités non imposables. Montant contractuel — ne varie pas selon les jours travaillés ce mois-ci ; seul le bulletin réel applique le prorata des primes proratisées. Les taxes à « mois précis » n'y figurent pas.
       </p>
     </div>

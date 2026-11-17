@@ -26,7 +26,7 @@ function Field({
     <div className="space-y-1.5">
       <label className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
         {label}
-        {required && <span className="text-red-400 text-sm leading-none">*</span>}
+        {required && <span className="text-[var(--danger-text)] text-sm leading-none">*</span>}
       </label>
       {children}
       {hint && <p className="text-[11px] text-[var(--text-muted)]">{hint}</p>}
@@ -38,7 +38,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all ${className}`}
+      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]  transition-all ${className}`}
     />
   );
 }
@@ -65,7 +65,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
   imageUpload,
 }) => {
   return (
-    <div className="space-y-8">
+    <div className="employee-identity-layout">
 
       {/* Step title */}
       <div>
@@ -238,7 +238,7 @@ export const Step1Identity: React.FC<Step1IdentityProps> = ({
               className="font-mono text-sm"
             />
           </Field>
-          <Field label="N° CNSS">
+          <Field label="N° d’immatriculation CNSS" hint="Ce numéro est distinct du statut Déclaré / Non déclaré confirmé par les RH.">
             <Input
               name="cnssNumber"
               value={formData.cnssNumber}

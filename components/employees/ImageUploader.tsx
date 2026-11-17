@@ -40,11 +40,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         {/* Zone de preview/upload */}
         <div
           onClick={handleClick}
+          role="button" tabIndex={uploading ? -1 : 0} aria-label="Choisir la photo de l’employé" aria-disabled={uploading}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
           className={`
             w-32 h-32 rounded-full overflow-hidden border-4 transition-all cursor-pointer
             ${preview 
-              ? 'border-sky-500 shadow-lg shadow-sky-500/20' 
-              : 'border-gray-200 dark:border-gray-700 border-dashed bg-gray-50 dark:bg-gray-800 hover:border-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/10'
+              ? 'border-[var(--border)] shadow-lg '
+              : 'border-[var(--border)]  border-dashed bg-[var(--surface)]  hover:border-[var(--border)] hover:bg-[var(--brand-soft)] '
             }
             ${uploading ? 'cursor-wait opacity-75' : 'cursor-pointer'}
           `}
@@ -56,7 +58,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 group-hover:text-sky-500 transition-colors">
+            <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-secondary)] group-hover:text-[var(--action)] transition-colors">
               <Camera size={32} />
               <span className="text-xs mt-1 font-medium">Photo</span>
             </div>
@@ -69,9 +71,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center"
+                className="absolute inset-0 bg-[var(--surface-2)] flex items-center justify-center"
               >
-                <div className="text-center text-white">
+                <div className="text-center text-[var(--text)]">
                   <Loader2 className="animate-spin mx-auto mb-2" size={32} />
                   <span className="text-xs font-bold">{progress}%</span>
                 </div>
@@ -82,14 +84,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         {/* Bouton d'action */}
         {!uploading && (
-          <div 
+          <button type="button" aria-label={preview ? "Retirer la photo" : "Choisir une photo"}
             className={`
               absolute bottom-0 right-0 p-2 rounded-full shadow-lg transition-transform
               ${preview 
-                ? 'bg-red-500 hover:bg-red-600 group-hover:scale-110' 
-                : 'bg-sky-500 hover:bg-sky-600 group-hover:scale-110'
+                ? 'bg-[var(--action)] hover:bg-[var(--action)] group-hover:scale-110'
+                : 'bg-[var(--action)] hover:bg-[var(--action)] group-hover:scale-110'
               }
-              text-white cursor-pointer
+              text-[var(--on-brand)] cursor-pointer
             `}
             onClick={(e) => {
               e.stopPropagation();
@@ -101,7 +103,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             }}
           >
             {preview ? <X size={16} /> : <Upload size={16} />}
-          </div>
+          </button>
         )}
 
         {/* Badge de succès */}
@@ -127,7 +129,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       {/* Informations */}
       <div className="text-center mt-3">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-[var(--text-secondary)] ">
           {uploading 
             ? 'Upload en cours...'
             : preview
@@ -136,7 +138,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           }
         </p>
         {!preview && !uploading && (
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
             Optionnel
           </p>
         )}

@@ -1,5 +1,14 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button } from '@/components/design-system/primitives';
+import '@/components/employees/employees.css';
+import '@/components/employees/employee-workspace.css';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
+import { WorkforceOverview } from '@/components/employees/WorkforceOverview';
+import { CnssDeclarationBadge } from '@/components/employees/CnssDeclarationField';
 
+
+import { Modal } from '@/components/design-system/feedback';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
@@ -38,6 +47,7 @@ interface Employee {
   baseSalary: number | null;
   photoUrl?: string;
   hireDate: string;
+  cnssEmployeeDeclared?: boolean|null;
 }
 
 interface PaginatedResponse<T> {
@@ -66,8 +76,8 @@ const StatusBadge = ({ status }: { status: string }) => {
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
       isActive
-        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-        : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+        ? 'k-tone-success'
+        : 'bg-[var(--danger-soft)] text-[var(--danger-text)]  '
     }`}>
       <BadgeCheck size={12} />
       {isActive ? 'Actif' : 'Suspendu'}
@@ -77,8 +87,8 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 const ContractBadge = ({ type }: { type: string }) => {
   const colors: Record<string, string> = {
-    CDI:         'border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400',
-    CDD:         'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-400',
+    CDI:         'text-[var(--text-secondary)]',
+    CDD:         'text-[var(--text-secondary)]',
     STAGE:       'border-[var(--border)] text-[var(--text-muted)]',
     INTERIM:     'border-[var(--border)] text-[var(--text-muted)]',
     CONSULTANT:  'border-[var(--border)] text-[var(--text-muted)]',
@@ -103,45 +113,27 @@ interface DeleteModalProps {
 const DeleteConfirmModal = ({ employee, isDeleting, onConfirm, onCancel }: DeleteModalProps) => {
   if (!employee) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={() => !isDeleting && onCancel()}
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-        className="relative bg-[var(--surface)] rounded-2xl p-8 shadow-xl max-w-md w-full border border-red-200 dark:border-red-800/50 z-10 overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-44 h-44 bg-red-50 dark:bg-red-900/10 rounded-bl-full -mr-12 -mt-12 pointer-events-none" />
+    <Modal open title="Désactiver cet employé ?" onClose={() => !isDeleting && onCancel()}>
 
-        {!isDeleting && (
-          <button onClick={onCancel} className="absolute top-4 right-4 p-2 rounded-lg transition-colors z-10 hover:bg-[var(--surface-2)]" style={{ color: 'var(--text-muted)' }}>
-            <X size={18} />
-          </button>
-        )}
+
+
 
         <div className="flex justify-center mb-5">
-          <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-            <div className="w-14 h-14 bg-red-200 dark:bg-red-800/40 rounded-full flex items-center justify-center">
-              <Trash2 size={26} className="text-red-600 dark:text-red-400" />
+          <div className="w-20 h-20 bg-[var(--danger-soft)]  rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 bg-[var(--danger-soft)]  rounded-full flex items-center justify-center">
+              <Trash2 size={26} className="text-[var(--danger-text)] " />
             </div>
           </div>
         </div>
 
-        <h2 className="text-xl font-bold text-center text-[var(--text)] mb-1">Désactiver cet employé ?</h2>
+
         <p className="text-center text-[var(--text-muted)] text-sm mb-1">Vous êtes sur le point de désactiver</p>
         <p className="text-center font-extrabold text-[var(--text)] text-lg mb-5">
           {employee.firstName} {employee.lastName}
         </p>
 
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-2xl p-4 mb-6">
-          <p className="text-red-700 dark:text-red-300 text-sm font-bold flex items-center gap-2 mb-3">
+        <div className="bg-[var(--danger-soft)]  border border-[var(--border)]  rounded-2xl p-4 mb-6">
+          <p className="text-[var(--danger-text)]  text-sm font-bold flex items-center gap-2 mb-3">
             <AlertCircle size={16} className="shrink-0" />
             Cette action est irréversible
           </p>
@@ -152,8 +144,8 @@ const DeleteConfirmModal = ({ employee, isDeleting, onConfirm, onCancel }: Delet
               { text: <>L'adresse email sera à nouveau <strong>disponible</strong></>, red: true },
               { text: <>L'historique de paie et congés sera <strong>conservé</strong></>, red: false },
             ].map((item, i) => (
-              <li key={i} className={`flex items-start gap-2 text-xs ${item.red ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${item.red ? 'bg-red-400' : 'bg-emerald-400'}`} />
+              <li key={i} className={`flex items-start gap-2 text-xs ${item.red ? 'text-[var(--danger-text)] ' : 'text-[var(--employee-ink,var(--text))] '}`}>
+                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${item.red ? 'bg-[var(--danger-soft)]' : 'bg-[var(--action)]'}`} />
                 {item.text}
               </li>
             ))}
@@ -161,36 +153,36 @@ const DeleteConfirmModal = ({ employee, isDeleting, onConfirm, onCancel }: Delet
         </div>
 
         <div className="flex gap-3">
-          <button
+          <Button variant="ghost"
             onClick={onCancel}
             disabled={isDeleting}
-            className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-[var(--text-muted)] font-bold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-3 rounded-xl border-2 border-[var(--border)]  text-[var(--text-muted)] font-bold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Annuler
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-red-500/25"
+            className="flex-1 px-4 py-3 rounded-xl bg-[var(--danger-soft)] hover:bg-[var(--danger-soft)] active:bg-[var(--danger-soft)] text-[var(--on-brand)] font-bold transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg "
           >
             {isDeleting
               ? <><Loader2 size={16} className="animate-spin" /> Suppression...</>
               : <><Trash2 size={16} /> Supprimer</>
             }
-          </button>
+          </Button>
         </div>
-      </motion.div>
-    </div>
+      </Modal>
   );
 };
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
 export default function EmployeeListPage() {
+  const [uiLoadError, setUiLoadError] = useState('');
   const { bp } = useBasePath();
   const router = useRouter();
   const [viewMode, setViewMode]             = useState<'grid' | 'table'>('grid');
-  const [showAnalytics, setShowAnalytics]   = useState(true); // 🆕 section "Aperçu de l'effectif" repliable
+  const [showAnalytics, setShowAnalytics]   = useState(false); // 🆕 section "Aperçu de l'effectif" repliable
   const [isLoading, setIsLoading]           = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true); // 🆕 uniquement au tout premier chargement
   const [employees, setEmployees]           = useState<Employee[]>([]);
@@ -233,6 +225,7 @@ export default function EmployeeListPage() {
   useEffect(() => { setUserRole(getRoleFromStorage()); }, []);
 
   const fetchData = useCallback(async () => {
+    setUiLoadError('');
     setIsLoading(true);
     try {
       const params = new URLSearchParams({ page: currentPage.toString(), limit: itemsPerPage.toString() });
@@ -248,6 +241,7 @@ export default function EmployeeListPage() {
       setTotalPages(empResponse.totalPages || 0);
     } catch (error) {
       console.error('Erreur chargement employés', error);
+      setUiLoadError('Les employés n’ont pas pu être chargés. Réessayez dans un instant.');
       setEmployees([]);
     } finally {
       setIsLoading(false);
@@ -265,6 +259,7 @@ export default function EmployeeListPage() {
   // 🆕 Récap comparatif — respecte les mêmes filtres/recherche que la liste
   const [summary, setSummary] = useState<any>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
+  const [uiSummaryRevision, setUiSummaryRevision] = useState(0);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -285,9 +280,9 @@ export default function EmployeeListPage() {
       }
     };
     fetchSummary();
-  }, [debouncedSearch, filters.department, filters.contract, filters.nationality]);
+  }, [debouncedSearch, filters.department, filters.contract, filters.nationality, uiSummaryRevision]);
 
-  const SUMMARY_COLORS = ['#10B981', '#F59E0B', '#34D399', '#FBBF24', '#059669', '#D97706', '#6EE7B7', '#94A3B8'];
+  const SUMMARY_COLORS = ['var(--brand)', 'var(--green)', 'var(--mustard)', 'var(--text-secondary)'];
 
   // 🆕 Le filtrage se fait maintenant côté serveur (voir fetchData) — `employees`
   // contient déjà exactement les résultats de la recherche/des filtres actifs.
@@ -322,6 +317,7 @@ export default function EmployeeListPage() {
       }));
 
       setEmployeeToDelete(null);
+      setUiSummaryRevision(revision => revision + 1);
     } catch (err: any) {
       // 🆕 Event toast custom → pas d'alert() natif
       window.dispatchEvent(new CustomEvent('toast:error', {
@@ -332,10 +328,10 @@ export default function EmployeeListPage() {
     }
   };
 
-  if (isInitialLoading) return <GlobalLoader />;
+  if (isInitialLoading) return <ModulePageSkeleton label="Chargement des employés" />;
 
   return (
-    <div className="space-y-6 min-h-screen pb-20">
+    <ModulePageFrame kind="dashboard" error={uiLoadError}><div className="employee-module-page employee-directory"><div className="space-y-6 min-h-screen pb-20">
 
       {/* 🆕 Modal suppression custom — remplace confirm() */}
       <AnimatePresence>
@@ -350,54 +346,54 @@ export default function EmployeeListPage() {
       </AnimatePresence>
 
       {/* ── HEADER ── */}
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+  <div className="employee-directory-heading">
   <div>
     <h1 className="text-3xl font-bold text-[var(--text)] tracking-tight">Employés</h1>
     <p className="text-[var(--text-muted)] mt-1 flex items-center gap-2">
-      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+
       {totalEmployees} collaborateur{totalEmployees > 1 ? 's' : ''} actif{totalEmployees > 1 ? 's' : ''}
       {isManager && (
-        <span className="ml-2 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold">
+        <span className="ml-2 px-2 py-0.5 bg-[var(--brand-soft)]  text-[var(--employee-ink,var(--text))]  rounded-full text-xs font-bold">
           Votre département uniquement
         </span>
       )}
     </p>
   </div>
 
-  <div className="flex items-center gap-3">
+  <div className="employee-directory-actions">
     {/* 🆕 Raccourci vers le tableau de bord + téléchargement Excel (modèle ORCA) */}
     {!isManager && (
-      <button
+      <Button variant="ghost"
         type="button"
-        onClick={() => document.getElementById('wf-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-        className="px-5 py-2.5 rounded-xl bg-[var(--surface)] text-[var(--text)] font-bold border border-[var(--border)] shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
+        onClick={() => { const uiReportPanel = document.getElementById('wf-dashboard'); if (uiReportPanel instanceof HTMLDetailsElement) uiReportPanel.open = true; uiReportPanel?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); }}
+        className="px-5 py-2.5 rounded-xl bg-[var(--surface)] text-[var(--text)] font-bold border border-[var(--border)] shadow-sm hover:bg-[var(--surface)]  transition-all flex items-center gap-2"
       >
-        <Download size={20} className="text-emerald-500" />
+        <Download size={20} className="text-[var(--employee-ink,var(--text))]" />
         Excel effectif
-      </button>
+      </Button>
     )}
     {/* --- ✅ BOUTON GÉRER LES CONTRATS (Visible uniquement pour RH/Admin) --- */}
     {canCreate && (
-      <Link 
-        href={bp("/contrats")} 
-        className="px-5 py-2.5 rounded-xl bg-[var(--surface)] text-[var(--text)] font-bold border border-[var(--border)] shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center gap-2"
+      <Link
+        href={bp("/contrats")}
+        className="px-5 py-2.5 rounded-xl bg-[var(--surface)] text-[var(--text)] font-bold border border-[var(--border)] shadow-sm hover:bg-[var(--surface)]  transition-all flex items-center gap-2"
       >
-        <FileText size={20} className="text-emerald-500" /> 
+        <FileText size={20} className="text-[var(--employee-ink,var(--text))]" />
         Gérer les contrats
       </Link>
     )}
 
     {/* --- BOUTON AJOUTER --- */}
     {canCreate ? (
-      <Link 
+      <Link
         href={bp("/employes/nouveau")}
-        className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors flex items-center gap-2"
+        className="px-5 py-2.5 rounded-xl bg-[var(--action)] hover:bg-[var(--action)] text-[var(--on-brand)] font-bold transition-colors flex items-center gap-2"
       >
         <Plus size={20} /> Ajouter un employé
       </Link>
     ) : (
-      <div 
-        className="px-5 py-2.5 rounded-xl bg-[var(--surface-2)] text-[var(--text-muted)] font-bold flex items-center gap-2 cursor-not-allowed select-none" 
+      <div
+        className="px-5 py-2.5 rounded-xl bg-[var(--surface-2)] text-[var(--text-muted)] font-bold flex items-center gap-2 cursor-not-allowed select-none"
         title="Seuls les RH et administrateurs peuvent gérer les employés"
       >
         <Lock size={16} /> Ajouter un employé
@@ -407,20 +403,21 @@ export default function EmployeeListPage() {
 </div>
 
       {/* ── BARRE DE FILTRES ── */}
-      <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 bg-[var(--surface)]/90 backdrop-blur-md border-b border-[var(--border)]">
+      <WorkforceOverview summary={summary} loading={summaryLoading} filtered={hasActiveFilters} canOpenDeclaration={canSeeSalary} declarationHref={bp('/cnss-declaration')} />
+      <div className="employee-directory-filters">
         <div className="flex flex-col lg:flex-row gap-4 items-center">
-          <div className="relative flex-1 w-full max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <div className="relative flex-1 w-full max-w-xl"><label htmlFor="employee-search" className="sr-only">Rechercher un employé</label>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
             <input
               type="text"
-              placeholder="Rechercher par nom, poste, matricule..."
+              id="employee-search" placeholder="Rechercher par nom, poste, matricule..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-[var(--text)]"
+              className="w-full pl-10 pr-10 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all text-[var(--text)]"
             />
             {/* 🆕 Petit indicateur discret pendant la recherche/le filtre — ne bloque plus toute la page */}
             {isLoading && !isInitialLoading && (
-              <Loader2 size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-400 animate-spin" />
+              <Loader2 size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--employee-ink,var(--text))] animate-spin" />
             )}
           </div>
           <div className="flex items-end gap-3 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0">
@@ -453,14 +450,14 @@ export default function EmployeeListPage() {
               />
             </div>
             {hasActiveFilters && (
-              <button onClick={resetFilters} className="p-3 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 transition-colors" title="Réinitialiser">
+              <Button variant="ghost" onClick={resetFilters} className="p-3 text-[var(--danger-text)] bg-[var(--danger-soft)]  rounded-xl hover:bg-[var(--danger-soft)] transition-colors" title="Réinitialiser">
                 <X size={18} />
-              </button>
+              </Button>
             )}
             <div className="h-8 w-px bg-[var(--surface-2)] mx-2 hidden lg:block" />
             <div className="flex bg-[var(--surface-2)] p-1 rounded-xl">
-              <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[var(--surface)] text-emerald-500 shadow-sm' : 'text-gray-500'}`}><LayoutGrid size={18} /></button>
-              <button onClick={() => setViewMode('table')} className={`p-2.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-[var(--surface)] text-emerald-500 shadow-sm' : 'text-gray-500'}`}><List size={18} /></button>
+              <Button variant="ghost" aria-label="Vue en dossiers" aria-pressed={viewMode === 'grid'} onClick={() => setViewMode('grid')} className={`p-2.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-[var(--surface)] text-[var(--employee-ink,var(--text))] shadow-sm' : 'text-[var(--text-secondary)]'}`}><LayoutGrid size={18} /></Button>
+              <Button variant="ghost" aria-label="Vue en tableau" aria-pressed={viewMode === 'table'} onClick={() => setViewMode('table')} className={`p-2.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-[var(--surface)] text-[var(--employee-ink,var(--text))] shadow-sm' : 'text-[var(--text-secondary)]'}`}><List size={18} /></Button>
             </div>
           </div>
         </div>
@@ -478,43 +475,44 @@ export default function EmployeeListPage() {
       <AnimatePresence mode="wait">
         {filteredEmployees.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
-              <Search size={48} className="text-gray-300 dark:text-gray-600" />
+            <div className="w-32 h-32 bg-[var(--surface)]  rounded-full flex items-center justify-center mb-6">
+              <Search size={48} className="text-[var(--text-secondary)] " />
             </div>
             <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Aucun employé trouvé</h2>
             <p className="text-[var(--text-muted)] max-w-md mb-6">
               {hasActiveFilters ? 'Aucun résultat pour ces filtres.' : 'Aucun employé dans ce périmètre.'}
             </p>
-            {hasActiveFilters && <button onClick={resetFilters} className="text-emerald-500 font-bold hover:underline">Effacer les filtres</button>}
+            {hasActiveFilters && <Button variant="ghost" onClick={resetFilters} className="text-[var(--employee-ink,var(--text))] font-bold hover:underline">Effacer les filtres</Button>}
           </motion.div>
 
         ) : viewMode === 'grid' ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="employee-directory-cards">
             {filteredEmployees.map(emp => (
-              <div key={emp.id} onClick={() => router.push(`/employes/${emp.id}`)}
-                className="group relative bg-[var(--surface)] rounded-2xl p-6 border border-[var(--border)] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+              <div key={emp.id} onClick={() => router.push(`/employes/${emp.id}`)} role="button" tabIndex={0} onKeyDown={e=>{if(e.target===e.currentTarget&&(e.key==='Enter'||e.key===' ')){e.preventDefault();router.push(`/employes/${emp.id}`);}}}
+                className="employee-directory-person group"
               >
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 z-10">
-                  <button onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}`); }} className="p-2 bg-[var(--surface-2)] rounded-lg hover:text-emerald-500 transition-colors" title="Voir"><Eye size={15} /></button>
-                  {canEdit && <button onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}/edit`); }} className="p-2 bg-[var(--surface-2)] rounded-lg hover:text-emerald-500 transition-colors" title="Modifier"><Pencil size={15} /></button>}
-                  {canDelete && <button onClick={e => requestDelete(e, emp)} className="p-2 bg-[var(--surface-2)] rounded-lg hover:text-red-500 transition-colors" title="Désactiver"><Trash2 size={15} /></button>}
+                <div className="employee-person-actions">
+                  <Button variant="ghost" onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}`); }} className="p-2 bg-[var(--surface-2)] rounded-lg hover:text-[var(--employee-ink,var(--text))] transition-colors" title="Voir"><Eye size={15} /></Button>
+                  {canEdit && <Button variant="ghost" onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}/edit`); }} className="p-2 bg-[var(--surface-2)] rounded-lg hover:text-[var(--employee-ink,var(--text))] transition-colors" title="Modifier"><Pencil size={15} /></Button>}
+                  {canDelete && <Button variant="ghost" onClick={e => requestDelete(e, emp)} className="p-2 bg-[var(--surface-2)] rounded-lg hover:text-[var(--danger-text)] transition-colors" title="Désactiver"><Trash2 size={15} /></Button>}
                 </div>
-                <div className="flex flex-col items-center text-center">
-                  <img src={emp.photoUrl || `https://ui-avatars.com/api/?name=${emp.firstName}+${emp.lastName}&background=random`} alt={emp.firstName} className="w-20 h-20 rounded-full object-cover border-4 border-gray-50 dark:border-gray-700 shadow-md mb-4" />
+                <div className="employee-person-details">
+                  <ProfileAvatar name={`${emp.firstName} ${emp.lastName}`} src={emp.photoUrl} className="employee-person-avatar" />
                   <h3 className="text-lg font-bold text-[var(--text)] mb-1">{emp.firstName} {emp.lastName}</h3>
                   <p className="text-sm text-[var(--text-muted)] mb-3">{emp.position}</p>
-                  <div className="flex gap-2 mb-4">
+                  <div className="employee-person-badges">
                     <StatusBadge status={emp.status || 'ACTIVE'} />
                     <ContractBadge type={emp.contractType} />
+                    {canSeeSalary&&<CnssDeclarationBadge value={emp.cnssEmployeeDeclared}/>}
                   </div>
-                  <div className="w-full pt-4 border-t border-[var(--border)] grid grid-cols-2 gap-2 text-left">
+                  <div className="employee-person-meta">
                     <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Dept.</p>
+                      <p className="text-xs text-[var(--text-secondary)] uppercase font-bold tracking-wider">Dept.</p>
                       <p className="text-sm font-semibold text-[var(--text)] truncate">{emp.department?.name || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Matricule</p>
-                      <p className="text-xs font-mono text-gray-500">{emp.employeeNumber}</p>
+                      <p className="text-xs text-[var(--text-secondary)] uppercase font-bold tracking-wider">Matricule</p>
+                      <p className="text-xs font-mono text-[var(--text-secondary)]">{emp.employeeNumber}</p>
                     </div>
                   </div>
                 </div>
@@ -527,11 +525,12 @@ export default function EmployeeListPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-[var(--surface-2)] border-b border-[var(--border)] text-xs uppercase text-gray-500 font-semibold tracking-wider">
+                  <tr className="bg-[var(--surface-2)] border-b border-[var(--border)] text-xs uppercase text-[var(--text-secondary)] font-semibold tracking-wider">
                     <th className="px-6 py-4">Employé</th>
                     <th className="px-6 py-4">Matricule</th>
                     <th className="px-6 py-4">Poste & Dept</th>
                     <th className="px-6 py-4">Contrat</th>
+                    {canSeeSalary&&<th className="px-6 py-4">Déclaration CNSS</th>}
                     {canSeeSalary && <th className="px-6 py-4">Salaire</th>}
                     <th className="px-6 py-4">Statut</th>
                     <th className="px-6 py-4 text-right">Actions</th>
@@ -540,37 +539,38 @@ export default function EmployeeListPage() {
                 <tbody className="divide-y divide-[var(--border)]">
                   {filteredEmployees.map(emp => (
                     <tr key={emp.id} onClick={() => router.push(`/employes/${emp.id}`)} className="group hover:bg-[var(--surface-2)] transition-colors cursor-pointer">
-                      <td className="px-6 py-4">
+                      <td data-label="Employé" className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img src={emp.photoUrl || `https://ui-avatars.com/api/?name=${emp.firstName}+${emp.lastName}&background=random`} className="w-10 h-10 rounded-full object-cover flex-shrink-0" alt="" />
+                          <ProfileAvatar name={`${emp.firstName} ${emp.lastName}`} src={emp.photoUrl} className="employee-person-avatar" />
                           <div>
-                            <div className="font-bold text-[var(--text)]">{emp.firstName} {emp.lastName}</div>
-                            <div className="text-xs text-gray-500">{emp.email}</div>
+                            <Link href={`/employes/${emp.id}`} className="font-bold text-[var(--text)]">{emp.firstName} {emp.lastName}</Link>
+                            <div className="text-xs text-[var(--text-secondary)]">{emp.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-mono text-sm text-gray-500">{emp.employeeNumber}</td>
-                      <td className="px-6 py-4">
+                      <td data-label="Matricule" className="px-6 py-4 font-mono text-sm text-[var(--text-secondary)]">{emp.employeeNumber}</td>
+                      <td data-label="Poste et département" className="px-6 py-4">
                         <div className="text-sm font-medium text-[var(--text)]">{emp.position}</div>
-                        <div className="text-xs text-gray-500">{emp.department?.name}</div>
+                        <div className="text-xs text-[var(--text-secondary)]">{emp.department?.name}</div>
                       </td>
-                      <td className="px-6 py-4"><ContractBadge type={emp.contractType} /></td>
+                      <td data-label="Contrat" className="px-6 py-4"><ContractBadge type={emp.contractType} /></td>
+                      {canSeeSalary&&<td data-label="Déclaration CNSS" className="px-6 py-4"><CnssDeclarationBadge value={emp.cnssEmployeeDeclared}/></td>}
                       {canSeeSalary && (
-                        <td className="px-6 py-4 group/salary">
+                        <td data-label="Salaire de base" className="px-6 py-4 group/salary">
                           {emp.baseSalary != null ? (
                             <div className="flex items-center gap-1 cursor-help">
                               <span className="text-[var(--text)] font-mono group-hover/salary:hidden">• • • • •</span>
-                              <span className="hidden group-hover/salary:block font-bold text-emerald-600 dark:text-emerald-400">{emp.baseSalary.toLocaleString('fr-FR')} <span className="text-xs">FCFA</span></span>
+                              <span className="hidden group-hover/salary:block font-bold text-[var(--employee-ink,var(--text))] ">{emp.baseSalary.toLocaleString('fr-FR')} <span className="text-xs">FCFA</span></span>
                             </div>
-                          ) : <span className="text-gray-300 dark:text-gray-600 text-xs italic">—</span>}
+                          ) : <span className="text-[var(--text-secondary)]  text-xs italic">—</span>}
                         </td>
                       )}
-                      <td className="px-6 py-4"><StatusBadge status={emp.status || 'ACTIVE'} /></td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}`); }} className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Voir"><Eye size={17} /></button>
-                          {canEdit && <button onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}/edit`); }} className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors" title="Modifier"><Pencil size={17} /></button>}
-                          {canDelete && <button onClick={e => requestDelete(e, emp)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Désactiver"><Trash2 size={17} /></button>}
+                      <td data-label="Statut" className="px-6 py-4"><StatusBadge status={emp.status || 'ACTIVE'} /></td>
+                      <td data-label="Actions" className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}`); }} className="p-2 text-[var(--text-secondary)] hover:text-[var(--employee-ink,var(--text))] hover:bg-[var(--brand-soft)]  rounded-lg transition-colors" title="Voir"><Eye size={17} /></Button>
+                          {canEdit && <Button variant="ghost" onClick={e => { e.stopPropagation(); router.push(`/employes/${emp.id}/edit`); }} className="p-2 text-[var(--text-secondary)] hover:text-[var(--employee-ink,var(--text))] hover:bg-[var(--brand-soft)]  rounded-lg transition-colors" title="Modifier"><Pencil size={17} /></Button>}
+                          {canDelete && <Button variant="ghost" onClick={e => requestDelete(e, emp)} className="p-2 text-[var(--text-secondary)] hover:text-[var(--danger-text)] hover:bg-[var(--danger-soft)]  rounded-lg transition-colors" title="Désactiver"><Trash2 size={17} /></Button>}
                         </div>
                       </td>
                     </tr>
@@ -585,7 +585,7 @@ export default function EmployeeListPage() {
       {/* ── PAGINATION ── */}
       {totalEmployees > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-[var(--border)]">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[var(--text-secondary)]">
             Affichage de{' '}
             <span className="font-bold text-[var(--text)]">{(currentPage - 1) * itemsPerPage + 1}</span>
             {' '}à{' '}
@@ -594,9 +594,9 @@ export default function EmployeeListPage() {
             <span className="font-bold text-[var(--text)]">{totalEmployees}</span> employé{totalEmployees > 1 ? 's' : ''}
           </p>
           <div className="flex items-center gap-2">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={18} /></button>
+            <Button variant="ghost" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronLeft size={18} /></Button>
             <span className="px-4 text-sm font-bold text-[var(--text-muted)]">Page {currentPage} / {totalPages || 1}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages || totalPages === 0} className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronRight size={18} /></button>
+            <Button variant="ghost" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages || totalPages === 0} className="p-2 rounded-lg border border-[var(--border)] hover:bg-[var(--surface-2)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"><ChevronRight size={18} /></Button>
           </div>
         </div>
       )}
@@ -604,42 +604,42 @@ export default function EmployeeListPage() {
 
       {/* 🆕 APERÇU DE L'EFFECTIF — respecte les mêmes filtres/recherche que la liste ci-dessus */}
       {!summaryLoading && summary && summary.total > 0 && (
-        <div className="pt-8 mt-4 border-t border-[var(--border)]">
-          <button
-            onClick={() => setShowAnalytics(v => !v)}
+        <div className="employee-analytics">
+          <Button variant="ghost"
+            aria-expanded={showAnalytics} aria-controls="employee-analytics-content" onClick={() => setShowAnalytics(v => !v)}
             className="w-full flex items-center justify-between gap-2 mb-1 group"
           >
             <div className="flex items-center gap-2">
-              <PieChartIcon size={18} className="text-emerald-500" />
+              <PieChartIcon size={18} className="text-[var(--employee-ink,var(--text))]" />
               <h2 className="text-lg font-bold text-[var(--text)]">Aperçu de l'effectif</h2>
             </div>
             <ChevronDown size={18} className={`transition-transform ${showAnalytics ? 'rotate-180' : ''}`} style={{ color: 'var(--text-muted)' }} />
-          </button>
+          </Button>
           <p className="text-sm text-[var(--text-muted)] mb-5">
             {hasActiveFilters ? `Sur les ${summary.total} employé${summary.total > 1 ? 's' : ''} correspondant à la recherche/aux filtres actifs` : `Sur l'ensemble des ${summary.total} employé${summary.total > 1 ? 's' : ''}`}
           </p>
 
           {showAnalytics && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div id="employee-analytics-content" className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
             {/* Par département */}
             {summary.byDepartment?.length > 0 && (
               <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Building2 size={15} className="text-emerald-500" /> Effectif par département</h3>
+                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Building2 size={15} className="text-[var(--employee-ink,var(--text))]" /> Effectif par département</h3>
                 {summary.byDepartment.length > 1 && (
                   <p className="text-xs text-[var(--text-muted)] mb-3">
-                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byDepartment[0].name}</strong> en tête ({summary.byDepartment[0].count}) —{' '}
-                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byDepartment[summary.byDepartment.length - 1].name}</strong> en retrait ({summary.byDepartment[summary.byDepartment.length - 1].count})
+                    <TrendingUp size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byDepartment[0].name}</strong> en tête ({summary.byDepartment[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byDepartment[summary.byDepartment.length - 1].name}</strong> en retrait ({summary.byDepartment[summary.byDepartment.length - 1].count})
                   </p>
                 )}
                 <div style={{ height: Math.max(180, summary.byDepartment.length * 34) }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart layout="vertical" data={summary.byDepartment} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+
                       <XAxis type="number" hide allowDecimals={false} />
                       <YAxis dataKey="name" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                       <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                      <Bar dataKey="count" name="Employés" radius={[0, 10, 10, 0]} maxBarSize={16}>
                         <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byDepartment.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
@@ -652,21 +652,21 @@ export default function EmployeeListPage() {
             {/* Par type de contrat */}
             {summary.byContractType?.length > 0 && (
               <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Briefcase size={15} className="text-emerald-500" /> Effectif par type de contrat</h3>
+                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Briefcase size={15} className="text-[var(--employee-ink,var(--text))]" /> Effectif par type de contrat</h3>
                 {summary.byContractType.length > 1 && (
                   <p className="text-xs text-[var(--text-muted)] mb-3">
-                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byContractType[0].label}</strong> en tête ({summary.byContractType[0].count}) —{' '}
-                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byContractType[summary.byContractType.length - 1].label}</strong> en retrait ({summary.byContractType[summary.byContractType.length - 1].count})
+                    <TrendingUp size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byContractType[0].label}</strong> en tête ({summary.byContractType[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byContractType[summary.byContractType.length - 1].label}</strong> en retrait ({summary.byContractType[summary.byContractType.length - 1].count})
                   </p>
                 )}
                 <div style={{ height: Math.max(180, summary.byContractType.length * 34) }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart layout="vertical" data={summary.byContractType} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+
                       <XAxis type="number" hide allowDecimals={false} />
                       <YAxis dataKey="label" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                       <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                      <Bar dataKey="count" name="Employés" radius={[0, 10, 10, 0]} maxBarSize={16}>
                         <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byContractType.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
@@ -679,21 +679,21 @@ export default function EmployeeListPage() {
             {/* 🆕 Par nationalité — combien de congolais, gabonais, camerounais, etc. */}
             {summary.byNationality?.length > 0 && (
               <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Globe size={15} className="text-emerald-500" /> Effectif par nationalité</h3>
+                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Globe size={15} className="text-[var(--employee-ink,var(--text))]" /> Effectif par nationalité</h3>
                 {summary.byNationality.length > 1 && (
                   <p className="text-xs text-[var(--text-muted)] mb-3">
-                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byNationality[0].label}</strong> en tête ({summary.byNationality[0].count}) —{' '}
-                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byNationality[summary.byNationality.length - 1].label}</strong> en retrait ({summary.byNationality[summary.byNationality.length - 1].count})
+                    <TrendingUp size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byNationality[0].label}</strong> en tête ({summary.byNationality[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byNationality[summary.byNationality.length - 1].label}</strong> en retrait ({summary.byNationality[summary.byNationality.length - 1].count})
                   </p>
                 )}
                 <div style={{ height: Math.max(180, summary.byNationality.length * 34), maxHeight: 340, overflowY: summary.byNationality.length > 10 ? 'auto' : 'visible' }}>
                   <ResponsiveContainer width="100%" height={Math.max(180, summary.byNationality.length * 34)}>
                     <BarChart layout="vertical" data={summary.byNationality} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+
                       <XAxis type="number" hide allowDecimals={false} />
                       <YAxis dataKey="label" type="category" width={130} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                       <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                      <Bar dataKey="count" name="Employés" radius={[0, 10, 10, 0]} maxBarSize={16}>
                         <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byNationality.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
@@ -705,16 +705,16 @@ export default function EmployeeListPage() {
 
             {/* Par genre */}
             <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Users size={15} className="text-amber-500" /> Répartition par genre</h3>
+              <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Users size={15} className="text-[var(--employee-ink,var(--text))]" /> Répartition par genre</h3>
               <p className="text-xs text-[var(--text-muted)] mb-3">
                 {summary.byGender?.[0]?.count || 0} homme{(summary.byGender?.[0]?.count || 0) > 1 ? 's' : ''} · {summary.byGender?.[1]?.count || 0} femme{(summary.byGender?.[1]?.count || 0) > 1 ? 's' : ''}
               </p>
               <div style={{ height: 200 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={summary.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={50} outerRadius={80} label={{ fill: 'var(--text)', fontSize: 12, fontWeight: 700 }}>
-                      <Cell fill="#10B981" />
-                      <Cell fill="#F59E0B" />
+                    <Pie data={summary.byGender} dataKey="count" nameKey="label" cx="50%" cy="50%" innerRadius={54} outerRadius={80} cornerRadius={8} paddingAngle={5} label={{ fill: 'var(--text)', fontSize: 12, fontWeight: 700 }}>
+                      <Cell fill="var(--brand)" />
+                      <Cell fill="var(--green)" />
                     </Pie>
                     <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                     <Legend formatter={(v: any) => <span style={{ color: 'var(--text)' }}>{v}</span>} />
@@ -726,21 +726,21 @@ export default function EmployeeListPage() {
             {/* Par catégorie/échelon conventionnel */}
             {summary.hasConvention && summary.byCategory?.length > 0 && (
               <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><BadgeCheck size={15} className="text-amber-500" /> Effectif par catégorie / échelon</h3>
+                <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><BadgeCheck size={15} className="text-[var(--employee-ink,var(--text))]" /> Effectif par catégorie / échelon</h3>
                 {summary.byCategory.length > 1 && (
                   <p className="text-xs text-[var(--text-muted)] mb-3">
-                    <TrendingUp size={11} className="inline text-emerald-500 mr-1" /><strong>{summary.byCategory[0].label}</strong> en tête ({summary.byCategory[0].count}) —{' '}
-                    <TrendingDown size={11} className="inline text-amber-500 mr-1" /><strong>{summary.byCategory[summary.byCategory.length - 1].label}</strong> en retrait ({summary.byCategory[summary.byCategory.length - 1].count})
+                    <TrendingUp size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byCategory[0].label}</strong> en tête ({summary.byCategory[0].count}) —{' '}
+                    <TrendingDown size={11} className="inline text-[var(--employee-ink,var(--text))] mr-1" /><strong>{summary.byCategory[summary.byCategory.length - 1].label}</strong> en retrait ({summary.byCategory[summary.byCategory.length - 1].count})
                   </p>
                 )}
                 <div style={{ height: Math.max(180, summary.byCategory.length * 30), maxHeight: 320, overflowY: summary.byCategory.length > 10 ? 'auto' : 'visible' }}>
                   <ResponsiveContainer width="100%" height={Math.max(180, summary.byCategory.length * 30)}>
                     <BarChart layout="vertical" data={summary.byCategory} margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+
                       <XAxis type="number" hide allowDecimals={false} />
                       <YAxis dataKey="label" type="category" width={120} axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
                       <Tooltip itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
-                      <Bar dataKey="count" name="Employés" radius={[0, 8, 8, 0]}>
+                      <Bar dataKey="count" name="Employés" radius={[0, 10, 10, 0]} maxBarSize={16}>
                         <LabelList dataKey="count" position="right" fill="var(--text)" fontSize={12} fontWeight={700} />
                         {summary.byCategory.map((_: any, idx: number) => <Cell key={idx} fill={SUMMARY_COLORS[idx % SUMMARY_COLORS.length]} />)}
                       </Bar>
@@ -757,19 +757,19 @@ export default function EmployeeListPage() {
               const axisMax = Math.ceil(maxSide * 1.15);
               return (
                 <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                  <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Users size={15} className="text-emerald-500" /> Pyramide des âges</h3>
+                  <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Users size={15} className="text-[var(--employee-ink,var(--text))]" /> Pyramide des âges</h3>
                   <p className="text-xs text-[var(--text-muted)] mb-3">Femmes à gauche, hommes à droite — par tranche d'âge</p>
                   <div style={{ height: 240 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={pyramidData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+
                         <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                         <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
-                        <ReferenceLine x={0} stroke="#9CA3AF" />
+                        <ReferenceLine x={0} stroke="var(--text-secondary)" />
                         <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                         <Legend formatter={(v: any) => <span style={{ color: 'var(--text)' }}>{v}</span>} />
-                        <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
-                        <Bar dataKey="male" name="Hommes" fill="#10B981" radius={[0, 8, 8, 0]} />
+                        <Bar dataKey="femaleNeg" name="Femmes" fill="var(--mustard)" radius={[10, 0, 0, 10]} maxBarSize={16} />
+                        <Bar dataKey="male" name="Hommes" fill="var(--green)" radius={[0, 10, 10, 0]} maxBarSize={16} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -784,19 +784,19 @@ export default function EmployeeListPage() {
               const axisMax = Math.ceil(maxSide * 1.15);
               return (
                 <div className="bg-[var(--surface)] p-5 rounded-2xl border border-[var(--border)] shadow-sm">
-                  <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Clock size={15} className="text-amber-500" /> Pyramide de l'ancienneté</h3>
+                  <h3 className="text-sm font-bold text-[var(--text)] mb-1 flex items-center gap-2"><Clock size={15} className="text-[var(--employee-ink,var(--text))]" /> Pyramide de l'ancienneté</h3>
                   <p className="text-xs text-[var(--text-muted)] mb-3">Femmes à gauche, hommes à droite — depuis combien de temps l'effectif est en poste</p>
                   <div style={{ height: 240 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart layout="vertical" data={seniorityData} margin={{ left: 10, right: 20 }} barCategoryGap={10}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+
                         <XAxis type="number" domain={[-axisMax, axisMax]} tickFormatter={(v: number) => String(Math.abs(v))} allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
                         <YAxis dataKey="label" type="category" width={80} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'var(--text)' }} />
-                        <ReferenceLine x={0} stroke="#9CA3AF" />
+                        <ReferenceLine x={0} stroke="var(--text-secondary)" />
                         <Tooltip formatter={(value: any, name: any) => [Math.abs(value), name]} itemStyle={{ color: 'var(--text)' }} labelStyle={{ color: 'var(--text)' }} contentStyle={{ backgroundColor: 'var(--surface)', color: 'var(--text)', borderRadius: '12px', border: '1px solid var(--border)' }} />
                         <Legend formatter={(v: any) => <span style={{ color: 'var(--text)' }}>{v}</span>} />
-                        <Bar dataKey="femaleNeg" name="Femmes" fill="#F59E0B" radius={[8, 0, 0, 8]} />
-                        <Bar dataKey="male" name="Hommes" fill="#10B981" radius={[0, 8, 8, 0]} />
+                        <Bar dataKey="femaleNeg" name="Femmes" fill="var(--mustard)" radius={[10, 0, 0, 10]} maxBarSize={16} />
+                        <Bar dataKey="male" name="Hommes" fill="var(--green)" radius={[0, 10, 10, 0]} maxBarSize={16} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -811,14 +811,14 @@ export default function EmployeeListPage() {
       {/* 🆕 TABLEAU DE BORD EFFECTIF (modèle ORCA) — mêmes représentations que l'onglet dashboard du fichier Excel,
           avec choix de période (mois / plage / année) et téléchargement de l'Excel dynamique */}
       {!isManager && (
-        <div id="wf-dashboard">
+        <details id="wf-dashboard" className="employee-report-disclosure"><summary>Tableau de bord des effectifs et export Excel<span>Choisir une période et préparer le récapitulatif ORCA</span></summary><div className="employee-report-content">
           <WorkforceDashboard
             model="ORCA"
             scope="COMPANY"
             companyId={pmeCompanyId || undefined}
           />
-        </div>
+        </div></details>
       )}
-    </div>
+    </div></div></ModulePageFrame>
   );
 }

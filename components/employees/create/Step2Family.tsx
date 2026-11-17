@@ -1,4 +1,5 @@
 import React from 'react';
+import { CnssDeclarationField } from '@/components/employees/CnssDeclarationField';
 import { Heart, Baby, ShieldCheck, AlertCircle, Check } from 'lucide-react';
 import { FancySelect } from '@/components/ui/FancySelect';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,6 +30,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
 }) => {
   return (
     <div className="space-y-6">
+      <CnssDeclarationField value={formData.cnssEmployeeDeclared} onChange={value=>onSelectChange('cnssEmployeeDeclared',value)} />
 
       {/* Step title */}
       <div>
@@ -73,7 +75,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
                 const val = e.target.value.replace(/\D/g, '');
                 onSelectChange('numberOfChildren', val === '' ? '0' : val);
               }}
-              className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-center font-bold text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+              className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-center font-bold text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
             />
             <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
               Impacte le calcul de l'IRPP via le quotient familial. Plus le nombre d'enfants est élevé, plus l'impôt est réduit.
@@ -100,13 +102,13 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
                   : 'border-[var(--border)] bg-[var(--surface)]'
               }`}>
                 {formData.isSubjectToIrpp && (
-                  <Check size={11} strokeWidth={3} className="text-[var(--bg)]" />
+                  <Check size={11} strokeWidth={1.5} className="text-[var(--bg)]" />
                 )}
               </div>
             </div>
             <div>
-              <p className="text-sm font-bold text-[var(--text)]">Soumis à l'IRPP / ITS</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">Retenue impôt sur le revenu (barème progressif)</p>
+              <p className="text-sm font-bold text-[var(--text)]">Retenue ITS / IRPP en paie</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">Active la retenue d’impôt sur le revenu dans le calcul de paie.</p>
             </div>
           </label>
 
@@ -125,17 +127,18 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
                   : 'border-[var(--border)] bg-[var(--surface)]'
               }`}>
                 {formData.isSubjectToCnss && (
-                  <Check size={11} strokeWidth={3} className="text-[var(--bg)]" />
+                  <Check size={11} strokeWidth={1.5} className="text-[var(--bg)]" />
                 )}
               </div>
             </div>
             <div>
-              <p className="text-sm font-bold text-[var(--text)]">Soumis à la CNSS salariale (4%)</p>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">Cotisation sociale employé</p>
+              <p className="text-sm font-bold text-[var(--text)]">Cotisation CNSS en paie</p>
+              <p className="text-xs text-[var(--text-muted)] mt-0.5">Active la cotisation salariale dans le calcul de paie.</p>
             </div>
           </label>
 
           {/* Séparateur */}
+          <p className="fiscal-setting-note">Ces réglages pilotent les retenues de paie. Ils ne confirment ni une immatriculation CNSS ni le dépôt d’une déclaration CNSS ou fiscale. Renseignez le numéro CNSS dans l’identité pour compléter l’enregistrement.</p>
           <div className="border-t border-[var(--border)] pt-3">
 
             {/* Raison exemption */}
@@ -153,7 +156,7 @@ export const Step2Family: React.FC<Step2FamilyProps> = ({
                   <select
                     value={formData.taxExemptionReason || ''}
                     onChange={(e) => onSelectChange('taxExemptionReason', e.target.value)}
-                    className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                    className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
                   >
                     <option value="">Sélectionner une raison…</option>
                     <option value="Stagiaire académique non rémunéré">Stagiaire académique non rémunéré</option>

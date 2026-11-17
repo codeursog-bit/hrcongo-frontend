@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-17",
+  "scope": [
+    "app/(dashboard)/employes/page.tsx",
+    "app/(dashboard)/employes/nouveau/formulaire/page.tsx",
+    "app/(dashboard)/employes/[id]/page.tsx",
+    "components/employees/SalaryRecap.tsx",
+    "app/(dashboard)/employes/nouveau/page.tsx",
+    "components/employees/ImageUploader.tsx",
+    "components/employees/create/Step1Identity.tsx",
+    "components/employees/create/Step2Family.tsx",
+    "components/employees/create/Step3Contract.tsx",
+    "components/employees/create/Step4Validation.tsx",
+    "components/employees/create/Step5Additional.tsx"
+  ],
+  "reason": "Retour utilisateur : palette coherente, brut/net visibles, nouvelle organisation et creation animee",
+  "invariants": [
+    {
+      "file": "app/(dashboard)/employes/page.tsx",
+      "before": "1a45041c4b7fe81d74c396900308277c940e67dfa4c274969e445ce94a3bab4d",
+      "after": "1a45041c4b7fe81d74c396900308277c940e67dfa4c274969e445ce94a3bab4d"
+    },
+    {
+      "file": "app/(dashboard)/employes/nouveau/formulaire/page.tsx",
+      "before": "000ac8b24ad51f289dd6efaf62294123a4984017e353dffc1a2e6cc8d4908a1d",
+      "after": "000ac8b24ad51f289dd6efaf62294123a4984017e353dffc1a2e6cc8d4908a1d"
+    },
+    {
+      "file": "app/(dashboard)/employes/[id]/page.tsx",
+      "before": "b9ca9e693a9e5c42de8a984a5ef8bd2f13c1aedc1bf83fe239155cac081d6915",
+      "after": "b9ca9e693a9e5c42de8a984a5ef8bd2f13c1aedc1bf83fe239155cac081d6915"
+    },
+    {
+      "file": "components/employees/SalaryRecap.tsx",
+      "before": "30c416a794ee804ec6b373070abe9934b015f7064db45e886baa6ee0483f460c",
+      "after": "30c416a794ee804ec6b373070abe9934b015f7064db45e886baa6ee0483f460c"
+    },
+    {
+      "file": "components/employees/ImageUploader.tsx",
+      "before": "6e7e559d70d7441ca7bf6608dddd53939918cbec29db6e5e6d0ab3bff250b392",
+      "after": "6e7e559d70d7441ca7bf6608dddd53939918cbec29db6e5e6d0ab3bff250b392"
+    },
+    {
+      "file": "components/employees/create/Step1Identity.tsx",
+      "before": "728315cfd6d80d80683f67aa3b24cddcb5e85d7016aa3a4cd3268b3a33328a98",
+      "after": "728315cfd6d80d80683f67aa3b24cddcb5e85d7016aa3a4cd3268b3a33328a98"
+    },
+    {
+      "file": "components/employees/create/Step2Family.tsx",
+      "before": "0eddf6dc82e3c04750536d778a7dc5e34d7780ba2ee0240b8c281cdac01c6654",
+      "after": "0eddf6dc82e3c04750536d778a7dc5e34d7780ba2ee0240b8c281cdac01c6654"
+    },
+    {
+      "file": "components/employees/create/Step3Contract.tsx",
+      "before": "737c48ee84ee9ba31a706e2ae0dde6c35c85098a91ae4ae73dcd85dd7939a0d9",
+      "after": "737c48ee84ee9ba31a706e2ae0dde6c35c85098a91ae4ae73dcd85dd7939a0d9"
+    },
+    {
+      "file": "components/employees/create/Step4Validation.tsx",
+      "before": "6e7e559d70d7441ca7bf6608dddd53939918cbec29db6e5e6d0ab3bff250b392",
+      "after": "6e7e559d70d7441ca7bf6608dddd53939918cbec29db6e5e6d0ab3bff250b392"
+    },
+    {
+      "file": "components/employees/create/Step5Additional.tsx",
+      "before": "c831343413e00998076acda0ec94af953941ce914c7c48529763a583fdcd4ffa",
+      "after": "c831343413e00998076acda0ec94af953941ce914c7c48529763a583fdcd4ffa"
+    }
+  ],
+  "audit": {
+    "palette": [
+      17482,
+      17204
+    ],
+    "hex": [
+      1783,
+      1780
+    ],
+    "gradients": [
+      252,
+      251
+    ],
+    "pulse": [
+      72,
+      69
+    ],
+    "blur": [
+      209,
+      202
+    ]
+  },
+  "feedbackMilliseconds": [
+    2000,
+    650
+  ],
+  "demo": "Montants figes des fixtures de paie existantes uniquement ; previsualisation de prime et nouveaux employes sans fixture toujours reserves au back.",
+  "verification": {
+    "dataEffects": "identiques",
+    "fieldConstraints": "identiques",
+    "protectedDocuments": "identiques",
+    "visual": "Clair/sombre/mobile a valider par utilisateur ; aucun navigateur lance",
+    "types": "npm run check-types -- --incremental false : succes",
+    "employees": "check-employees-module.cjs : succes, dont brut/net serveur et demo, masquage, cinq etapes et double-clic",
+    "contrast": "check-employee-profile-theme.cjs : 242 combinaisons, minimum 4.50:1"
+  }
+}

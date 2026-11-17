@@ -3,6 +3,7 @@
 // ============================================================================
 
 import React from 'react';
+import { cnssDeclarationLabel } from '@/components/employees/CnssDeclarationField';
 import {
   User, Check, Briefcase, Heart, ShieldCheck, MapPin, Phone,
   Mail, Calendar, Building2, Wallet, Baby, AlertCircle, CalendarDays,
@@ -104,7 +105,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
             transition={{ type: 'spring', delay: 0.2, stiffness: 400, damping: 20 }}
             className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[var(--text)] rounded-xl flex items-center justify-center shadow-lg border-2 border-[var(--surface)]"
           >
-            <Check size={13} strokeWidth={3} className="text-[var(--bg)]" />
+            <Check size={13} strokeWidth={1.5} className="text-[var(--bg)]" />
           </motion.div>
         </div>
 
@@ -158,11 +159,11 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
                 ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                 : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
             }`}>
-              <span>IRPP / ITS</span>
+              <span>Retenue ITS / IRPP en paie</span>
               <span className="flex items-center gap-1">
                 {formData.isSubjectToIrpp
-                  ? <><Check size={10} /> Soumis</>
-                  : '— Exempté'}
+                  ? <><Check size={10} /> Activée</>
+                  : '— Désactivée'}
               </span>
             </div>
             <div className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold ${
@@ -170,13 +171,15 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
                 ? 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                 : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
             }`}>
-              <span>CNSS (4%)</span>
+              <span>Cotisation CNSS en paie</span>
               <span className="flex items-center gap-1">
                 {formData.isSubjectToCnss
-                  ? <><Check size={10} /> Soumis</>
-                  : '— Exempté'}
+                  ? <><Check size={10} /> Activée</>
+                  : '— Désactivée'}
               </span>
             </div>
+            <Row label="Déclaration de l’employé à la CNSS" value={cnssDeclarationLabel(formData.cnssEmployeeDeclared)} />
+            <Row label="Numéro CNSS" value={formData.cnssNumber || 'Non renseigné'} />
             {(!formData.isSubjectToIrpp || !formData.isSubjectToCnss) && formData.taxExemptionReason && (
               <div className="px-3 py-2 bg-[var(--surface-2)] rounded-xl text-xs text-[var(--text-muted)] flex items-start gap-1.5">
                 <AlertCircle size={11} className="flex-shrink-0 mt-0.5" />
@@ -196,7 +199,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
           {needsEndDate && formData.contractEndDate && (
             <>
               <Row label="Fin de contrat" value={
-                <span className="text-amber-600 dark:text-amber-400">
+                <span className="text-[var(--employee-ink,var(--text))] ">
                   {format(new Date(formData.contractEndDate), 'd MMM yyyy', { locale: fr })}
                 </span>
               } />
@@ -208,7 +211,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
                 } />
               )}
               <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-[var(--surface-2)] rounded-xl">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--action)]  flex-shrink-0" />
                 <span className="text-[11px] text-[var(--text-muted)] font-medium">Alertes expiration actives</span>
               </div>
             </>
@@ -216,7 +219,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
 
           {formData.contractType === 'CDI' && (
             <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-[var(--surface-2)] rounded-xl">
-              <Check size={11} className="text-emerald-500 flex-shrink-0" />
+              <Check size={11} className="text-[var(--employee-ink,var(--text))] flex-shrink-0" />
               <span className="text-[11px] text-[var(--text-muted)] font-medium">Durée indéterminée</span>
             </div>
           )}
@@ -303,7 +306,7 @@ export const Step4Validation: React.FC<Step4ValidationProps> = ({
           <span className="font-bold text-[var(--text-muted)]">Créer l'employé</span> pour finaliser.
         </p>
         <div className="flex items-center justify-center gap-2 mt-2 text-xs text-[var(--text-muted)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--action)] " />
           Création instantanée · accès généré automatiquement
         </div>
       </motion.div>

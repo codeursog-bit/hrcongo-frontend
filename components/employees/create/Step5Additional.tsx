@@ -31,7 +31,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all ${className}`}
+      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]  transition-all ${className}`}
     />
   );
 }
@@ -96,7 +96,7 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
               onChange={onInputChange}
               placeholder="Ex : Asthme, diabète…"
               rows={2}
-              className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all resize-none"
+              className="w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all resize-none"
             />
           </Field>
 
@@ -196,7 +196,7 @@ export const Step5Additional: React.FC<Step5AdditionalProps> = ({
                       : 'border-[var(--border)] bg-[var(--surface)]'
                   }`}>
                     {formData.hasDrivingLicense && (
-                      <Check size={11} strokeWidth={3} className="text-[var(--bg)]" />
+                      <Check size={11} strokeWidth={1.5} className="text-[var(--bg)]" />
                     )}
                   </div>
                 </div>

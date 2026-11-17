@@ -60,6 +60,13 @@
   :root .employee-profile-page .dossier-compensation .font-mono {font-family:inherit;font-variant-numeric:tabular-nums;}
   :root .employee-profile-page .dossier-compensation p.text-xl {font-size:25px;line-height:1.4;font-weight:600;letter-spacing:-.025em;color:var(--text);}
   :root .employee-profile-page .dossier-compensation .pt-4:first-of-type {padding-top:0;border:0;}
+  :root .employee-profile-page .dossier-base-salary {display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-bottom:16px;}
+  :root .employee-profile-page .dossier-base-salary>p {overflow-wrap:anywhere;}
+  :root .employee-profile-page :is(.dossier-masked-pay,.salary-estimate-totals) {display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:20px;}
+  :root .employee-profile-page :is(.dossier-masked-pay,.salary-estimate-totals) :is(dt,p:first-child) {font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-secondary);}
+  :root .employee-profile-page :is(.dossier-masked-pay dd,.salary-estimate-totals p+p) {font-size:22px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;}
+  :root .employee-profile-page .salary-estimate {background:transparent;border:0;padding:0;border-radius:0;}
+  :root .employee-profile-page .salary-estimate-unavailable>p {margin-top:14px;}
   :root .employee-profile-page .dossier-compensation .dossier-payroll-link {margin-top:14px;padding:0;min-height:40px;color:var(--profile-active-text);}
   :root .employee-profile-page .dossier-access .k-button {padding:0;background:transparent;border:0;display:flex;align-items:center;gap:12px;text-align:left;}
   :root .employee-profile-page .dossier-access .k-button>div:first-child {display:flex;flex:1;min-width:0;}

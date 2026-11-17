@@ -734,7 +734,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           </DossierSection>
           <DossierSection id="dossier-fiscal" title="Cotisations et fiscalité" hint="Retenues activées en paie et motif d’exemption"><div className="bg-[var(--surface-2)] rounded-2xl p-6 profile-inset">
                 <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'profile-outline profile-soft-neutral ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
                     <div className="shrink-0 flex items-center justify-center">
                       <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
                     </div>
@@ -743,7 +743,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                       <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToIrpp ? 'Activée' : 'Désactivée'}</p>
                     </div>
                   </div>
-                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'profile-outline profile-soft-neutral ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
                     <div className="shrink-0 flex items-center justify-center">
                       <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
                     </div>
@@ -859,7 +859,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
           </div></section>
           <section className="dossier-card dossier-compensation"><h2>Rémunération</h2><div className="pt-4 border-t border-[var(--border)]">
                   <p className="text-xs text-[var(--text-secondary)] uppercase font-bold mb-1">Salaire de base</p>
-                  <div className="flex items-center justify-between">
+                  <div className="dossier-base-salary">
                     <p className="text-xl font-bold text-[var(--text)] font-mono">
                       {showSalary ? `${employee.baseSalary?.toLocaleString('fr-FR')} FCFA` : '• • • • • • •'}
                     </p>
@@ -868,6 +868,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     </Button>
                   </div>
                 </div>
+                {!showSalary && <dl className="dossier-masked-pay"><div><dt>Brut mensuel</dt><dd>••••••</dd></div><div><dt>Net mensuel</dt><dd>••••••</dd></div></dl>}
 {/* 🆕 Brut/net estimés — base + primes mensuelles (imposables et
                     indemnités non imposables), avec le détail de chaque retenue
                     (CNSS, ITS, TOL, taxes de l'entreprise comme la CAMU).

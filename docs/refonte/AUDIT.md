@@ -1,17 +1,17 @@
 # AUDIT DE LA REFONTE (généré)
 
-Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus : phase 2 (admin, cabinet), documents imprimables et exports, démos, types. 582 fichiers analysés.
+Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus : phase 2 (admin, cabinet), documents imprimables et exports, démos, types. 583 fichiers analysés.
 
 ## Totaux
 
 | Mesure | Total | Objectif |
 |---|---|---|
-| palette | 17482 | tendre vers 0 (tokens) |
-| hex | 1783 | seulement des constantes de marque ou de graphiques |
+| palette | 17204 | tendre vers 0 (tokens) |
+| hex | 1780 | seulement des constantes de marque ou de graphiques |
 | emojis | 448 | 0 comme icône (réactions et contenus utilisateur autorisés) |
-| dégradés | 252 | 0 |
-| pulse / ping | 72 | 0 |
-| flou / verre | 209 | 0 |
+| dégradés | 251 | 0 |
+| pulse / ping | 69 | 0 |
+| flou / verre | 202 | 0 |
 | ombres colorées | 27 | 0 |
 | texte dégradé | 10 | 0 |
 
@@ -19,10 +19,10 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 
 | Zone | Fichiers | palette | hex | emojis | dégradés | pulse / ping | flou / verre | ombres colorées | texte dégradé |
 |---|---|---|---|---|---|---|---|---|---|
-| dashboard | 173 | 9929 | 434 | 189 | 56 | 29 | 100 | 4 | 4 |
+| dashboard | 173 | 9763 | 431 | 189 | 56 | 28 | 95 | 4 | 4 |
 | portefeuille | 18 | 544 | 19 | 0 | 1 | 14 | 11 | 0 | 0 |
 | pages publiques | 51 | 2438 | 630 | 127 | 121 | 14 | 59 | 17 | 2 |
-| composants, hooks, lib | 278 | 4171 | 692 | 119 | 70 | 15 | 36 | 6 | 4 |
+| composants, hooks, lib | 279 | 4059 | 692 | 119 | 69 | 13 | 34 | 6 | 4 |
 | espace PME | 62 | 400 | 8 | 13 | 4 | 0 | 3 | 0 | 0 |
 
 ## Classes de palette Tailwind à convertir en tokens (top 30)
@@ -179,7 +179,6 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 2 | `app/(dashboard)/pricing/page.tsx` |
 | 2 | `app/auth/accept-invitation/[token]/page.tsx` |
 | 2 | `app/auth/login/page.tsx` |
-| 2 | `components/employees/create/Step4Validation.tsx` |
 | 2 | `components/subscriptions/TrialBadge.tsx` |
 | 1 | `app/(dashboard)/cnss-declaration/page.tsx` |
 | 1 | `app/(dashboard)/conges/page.tsx` |
@@ -187,7 +186,6 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 1 | `app/(dashboard)/contrats/rupture/pse/page.tsx` |
 | 1 | `app/(dashboard)/demandes/page.tsx` |
 | 1 | `app/(dashboard)/documents/page.tsx` |
-| 1 | `app/(dashboard)/employes/page.tsx` |
 | 1 | `app/(dashboard)/materiel/page.tsx` |
 | 1 | `app/(dashboard)/parametres/users/page.tsx` |
 | 1 | `app/(dashboard)/performance/page.tsx` |
@@ -199,6 +197,8 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 1 | `app/(dashboard)/portefeuille/mes-entreprises/page.tsx` |
 | 1 | `app/(dashboard)/portefeuille/paie/liste/page.tsx` |
 | 1 | `app/(dashboard)/portefeuille/paie/page.tsx` |
+| 1 | `app/(dashboard)/portefeuille/presences/page.tsx` |
+| 1 | `app/(dashboard)/portefeuille/prets/page.tsx` |
 
 ## Flou et effets de verre à supprimer (top 30)
 
@@ -212,7 +212,6 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 6 | `app/companies/create/page.tsx` |
 | 5 | `app/(dashboard)/presences/EmployeeView.tsx` |
 | 5 | `app/(dashboard)/presences/pointage/page.tsx` |
-| 4 | `app/(dashboard)/employes/nouveau/formulaire/page.tsx` |
 | 4 | `app/(dashboard)/rapports/analyse-paie/page.tsx` |
 | 3 | `app/(dashboard)/loans/page.tsx` |
 | 3 | `app/(dashboard)/parametres/departements/page.tsx` |
@@ -234,3 +233,4 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | 2 | `app/(dashboard)/portefeuille/conges/page.tsx` |
 | 2 | `app/(dashboard)/portefeuille/prets/page.tsx` |
 | 2 | `app/(dashboard)/pricing/page.tsx` |
+| 2 | `app/(dashboard)/rapports/effectifs/page.tsx` |

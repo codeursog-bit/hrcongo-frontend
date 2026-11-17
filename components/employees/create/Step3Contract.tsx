@@ -97,7 +97,7 @@ function Field({ label, required, hint, children }: {
     <div className="space-y-1.5">
       <label className="flex items-center gap-1 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
         {label}
-        {required && <span className="text-red-400">*</span>}
+        {required && <span className="text-[var(--danger-text)]">*</span>}
       </label>
       {children}
       {hint && <p className="text-[11px] text-[var(--text-muted)]">{hint}</p>}
@@ -109,7 +109,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all ${className}`}
+      className={`w-full px-3.5 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)]  transition-all ${className}`}
     />
   );
 }
@@ -127,7 +127,7 @@ function ContractDurationPreview({ hireDate, endDate, contractType }: {
   const today     = new Date();
   const daysLeft  = differenceInDays(end, today);
   const pct       = Math.min(100, Math.round(((totalDays - Math.max(0, daysLeft)) / totalDays) * 100));
-  const barColor  = daysLeft <= 7 ? 'bg-red-500' : daysLeft <= 30 ? 'bg-amber-500' : daysLeft <= 60 ? 'bg-yellow-500' : 'bg-emerald-500';
+  const barColor  = daysLeft <= 7 ? 'bg-[var(--danger)]' : daysLeft <= 30 ? 'bg-[var(--mustard)]' : daysLeft <= 60 ? 'bg-[var(--mustard)]' : 'bg-[var(--green)]';
 
   return (
     <motion.div
@@ -150,13 +150,13 @@ function ContractDurationPreview({ hireDate, endDate, contractType }: {
         </div>
         <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-1">
           <span>{format(start, 'd MMM yyyy', { locale: fr })}</span>
-          <span className={daysLeft <= 30 ? 'text-amber-500 font-bold' : ''}>
+          <span className={daysLeft <= 30 ? 'text-[var(--warning-text)] font-bold' : ''}>
             {format(end, 'd MMM yyyy', { locale: fr })}
           </span>
         </div>
       </div>
       <p className={`text-xs font-semibold flex items-center gap-1.5 ${
-        daysLeft <= 7 ? 'text-red-500' : daysLeft <= 30 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'
+        daysLeft <= 7 ? 'text-[var(--danger-text)]' : daysLeft <= 30 ? 'text-[var(--warning-text)]' : 'text-[var(--success-text)]'
       }`}>
         <CalendarDays size={11} />
         {daysLeft > 0
@@ -294,8 +294,8 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 placeholder="Choisir un département..."
               />
               {departments.length === 0 ? (
-                <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/50 rounded-xl">
-                  <p className="text-xs text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1.5">
+                <div className="mt-2 p-3 bg-[var(--brand-soft)]  border border-[var(--border)]  rounded-xl">
+                  <p className="text-xs text-[var(--employee-ink,var(--text))]  mb-2 flex items-center gap-1.5">
                     <AlertCircle size={12} /> Aucun département
                   </p>
                   <button type="button" onClick={() => setShowDeptModal(true)}
@@ -305,7 +305,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 </div>
               ) : (
                 <button type="button" onClick={() => setShowDeptModal(true)}
-                  className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 hover:underline">
+                  className="mt-1.5 text-xs text-[var(--employee-ink,var(--text))]  font-semibold flex items-center gap-1 hover:underline">
                   <Plus size={12} /> Créer un département
                 </button>
               )}
@@ -334,7 +334,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               <select
                 value={formData.professionalCategory || ''}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full px-3.5 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                className="w-full px-3.5 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
               >
                 <option value="">Sélectionner le grade…</option>
                 {conventionCategories.map((cat) => (
@@ -422,14 +422,14 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                 {contractMeta?.alertes.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-[var(--border)] space-y-1">
                     {contractMeta.alertes.map((a, i) => (
-                      <p key={i} className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                      <p key={i} className="text-[11px] text-[var(--employee-ink,var(--text))]  flex items-center gap-1.5">
                         <AlertCircle size={10} className="shrink-0" /> {a}
                       </p>
                     ))}
                   </div>
                 )}
                 {formData.contractType === 'CDI' && (
-                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1.5">
+                  <p className="text-[11px] text-[var(--employee-ink,var(--text))]  flex items-center gap-1.5 mt-1.5">
                     <Check size={10} /> Contrat indéterminé — pas de date de fin requise
                   </p>
                 )}
@@ -455,7 +455,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
               >
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
-                    <CalendarDays size={12} /> Date de fin <span className="text-red-400">*</span>
+                    <CalendarDays size={12} /> Date de fin <span className="text-[var(--danger-text)]">*</span>
                   </label>
                   {/* Durée suggérée */}
                   {suggestions.length > 0 && (
@@ -542,7 +542,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                   placeholder="Ou saisir en jours…"
                 />
                 {trialDays > maxTrialDays && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
+                  <p className="text-xs text-[var(--danger-text)] flex items-center gap-1">
                     <AlertCircle size={11} /> Dépasse le maximum légal ({maxTrialDays}j)
                   </p>
                 )}
@@ -586,7 +586,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                   onSelectChange('baseSalary', val);
                 }}
                 placeholder="0"
-                className="w-full pl-3.5 pr-16 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                className="w-full pl-3.5 pr-16 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
               />
               <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                 FCFA
@@ -614,7 +614,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       onSelectChange('openingCumulativeGross', val);
                     }}
                     placeholder="Cumul brut, ex. 1000000"
-                    className="w-full pl-3.5 pr-16 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                    className="w-full pl-3.5 pr-16 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                     FCFA
@@ -631,7 +631,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                       onSelectChange('openingCumulativeMonths', val);
                     }}
                     placeholder="Nb de mois, ex. 5"
-                    className="w-full pl-3.5 pr-14 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                    className="w-full pl-3.5 pr-14 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm font-bold text-[var(--text)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--focus)] focus:border-[var(--border)] transition-all"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--text-muted)]">
                     mois
@@ -714,11 +714,11 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
                     </div>
                     <div className="flex justify-between text-[var(--text-muted)]">
                       <span>BNC retenu ({bncTaux * 100}%)</span>
-                      <span className="font-bold text-red-500">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
+                      <span className="font-bold text-[var(--danger-text)]">− {bncMontant.toLocaleString('fr-FR')} FCFA</span>
                     </div>
                     <div className="flex justify-between border-t border-[var(--border)] pt-2">
                       <span className="font-bold text-[var(--text-muted)]">Net versé</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{bncNet.toLocaleString('fr-FR')} FCFA</span>
+                      <span className="font-bold text-[var(--employee-ink,var(--text))] ">{bncNet.toLocaleString('fr-FR')} FCFA</span>
                     </div>
                     <p className="text-[10px] text-[var(--text-muted)] pt-0.5">
                       Les {bncMontant.toLocaleString('fr-FR')} FCFA sont à reverser à la DGI avant le 15 du mois.
@@ -842,7 +842,7 @@ export const Step3Contract: React.FC<Step3ContractProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay)]  p-4"
             onClick={() => setShowDeptModal(false)}
           >
             <motion.div

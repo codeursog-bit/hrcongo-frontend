@@ -1,156 +1,29 @@
 'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { User, Upload, FileSpreadsheet, Zap, ChevronRight, CheckCircle2, Clock, Lightbulb } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, FileSpreadsheet, UserPlus } from 'lucide-react';
+import { ModulePageFrame } from '@/components/requests/ModulePageFrame';
 import { useBasePath } from '@/hooks/useBasePath';
+import '@/components/employees/employees.css';
+import '@/components/employees/employee-workspace.css';
 
 export default function NewEmployeePage() {
   const { bp } = useBasePath();
-  return (
-    <div className="w-full flex justify-center items-center min-h-[calc(100vh-100px)] py-8 px-4">
-      <div className="w-full max-w-5xl">
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-            <div className="shrink-0 flex items-center justify-center">
-              <User className="text-emerald-600 dark:text-emerald-400" size={20} strokeWidth={1.5} aria-hidden="true" />
-            </div>
-            <span className="font-bold" style={{ color: 'var(--text)' }}>Nouvel Employé</span>
-          </div>
-          <h1 className="text-4xl font-bold mb-3" style={{ color: 'var(--text)' }}>
-            Comment souhaitez-vous procéder ?
-          </h1>
-          <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
-            Choisissez la méthode la plus adaptée à votre situation
-          </p>
-        </motion.div>
-
-        {/* Cards Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-
-          {/* CARD 1: Import Excel */}
-          <Link href={bp('/employes/import')}>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="group relative rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden h-full"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            >
-              <div className="relative">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="shrink-0 flex items-center justify-center">
-                    <Upload className="text-[var(--text-secondary)]" size={20} strokeWidth={1.5} aria-hidden="true" />
-                  </div>
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
-                    <Zap size={11} /> Rapide
-                  </span>
-                </div>
-
-                <h2 className="text-xl font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  Import Excel
-                  <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-emerald-500" size={20} />
-                </h2>
-
-                <p className="mb-6 leading-relaxed text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Vous avez déjà une liste dans Excel ? Importez plusieurs employés en quelques clics avec notre assistant intelligent.
-                </p>
-
-                <ul className="space-y-2.5 mb-6">
-                  {[
-                    'Importez 10, 50, 100+ employés simultanément',
-                    'Détection automatique des colonnes',
-                    'Validation des données avant import',
-                  ].map((text) => (
-                    <li key={text} className="flex items-start gap-2.5 text-sm" style={{ color: 'var(--text-muted)' }}>
-                      <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{text}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                  <span>Commencer l'import</span>
-                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </motion.div>
-          </Link>
-
-          {/* CARD 2: Création Manuelle */}
-          <Link href={bp('/employes/nouveau/formulaire')}>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="group relative rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden h-full"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            >
-              <div className="relative">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="shrink-0 flex items-center justify-center">
-                    <User className="text-[var(--text-secondary)]" size={20} strokeWidth={1.5} aria-hidden="true" />
-                  </div>
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                    <CheckCircle2 size={11} /> Complet
-                  </span>
-                </div>
-
-                <h2 className="text-xl font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  Création Manuelle
-                  <ChevronRight className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-amber-500" size={20} />
-                </h2>
-
-                <p className="mb-6 leading-relaxed text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Créez un dossier RH complet avec notre formulaire guidé en plusieurs étapes simples. Idéal pour un ou quelques employés.
-                </p>
-
-                <ul className="space-y-2.5 mb-6">
-                  {[
-                    'Formulaire guidé en plusieurs étapes intuitives',
-                    'Tous les détails administratifs et contractuels',
-                    'Upload de photo et validation finale',
-                  ].map((text) => (
-                    <li key={text} className="flex items-start gap-2.5 text-sm" style={{ color: 'var(--text-muted)' }}>
-                      <CheckCircle2 size={16} className="text-amber-500 shrink-0 mt-0.5" />
-                      <span>{text}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
-                  <span>Créer manuellement</span>
-                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </motion.div>
-          </Link>
-
-        </div>
-
-        {/* Help Text */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mt-8"
-        >
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full" style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-            <Lightbulb size={16} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              Vous pourrez toujours modifier ou compléter les informations plus tard
-            </p>
-          </div>
-        </motion.div>
-
-      </div>
+  return <ModulePageFrame kind="list"><div className="employee-module-page employee-method-page">
+    <Link href={bp('/employes')} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] mb-6"><ArrowLeft size={16} strokeWidth={1.5} />Retour aux employés</Link>
+    <header className="employee-method-heading"><h1>Ajouter des employés</h1><p>Un recrutement à intégrer ou une équipe entière à reprendre ? Choisissez votre point de départ.</p></header>
+    <div className="employee-method-options">
+      <article><UserPlus size={24} strokeWidth={1.5} className="text-[var(--employee-ink,var(--text))]" /><h2>Créer un dossier</h2>
+        <p>Pour un nouvel employé, renseignez les informations au fil d’un parcours guidé.</p>
+        <ol><li>Identité et coordonnées</li><li>Famille, contrat et rémunération</li><li>Vérification avant la création</li></ol>
+        <Link href={bp('/employes/nouveau/formulaire')} className="employee-method-primary">Commencer le dossier<ArrowRight size={16} strokeWidth={1.5} /></Link>
+      </article>
+      <article><FileSpreadsheet size={24} strokeWidth={1.5} className="text-[var(--text-secondary)]" /><h2>Importer une équipe</h2>
+        <p>Vous disposez d’un fichier Excel ? Retrouvez l’assistant d’import, la correspondance des colonnes et la vérification des données.</p>
+        <p className="employee-method-note">Adapté à la reprise de plusieurs dossiers à la fois.</p>
+        <Link href={bp('/employes/import')} className="mt-6">Choisir un fichier Excel<ArrowRight size={16} strokeWidth={1.5} /></Link>
+      </article>
     </div>
-  );
+    <p className="employee-method-note">Les informations du dossier pourront être complétées ou modifiées après la création.</p>
+  </div></ModulePageFrame>;
 }
