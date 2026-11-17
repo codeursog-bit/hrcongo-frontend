@@ -50,5 +50,12 @@
     "tests": "employees and 242 contrast combinations passed",
     "types": "controle complet reussi ; etats UI verifies par SSR",
     "picking": "compact until template selection; no unused preview or attribution"
+  },
+  "selectDialogCorrection": {
+    "reason": "Body portal behind native dialog top layer",
+    "fix": "Owning dialog portal; local option scrolling; resize tracking; Escape scoped to menu",
+    "tests": "controlled DOM geometry and employee suite passed",
+    "types": "npm run check-types -- --incremental false : succes",
+    "visual": "not browser verified"
   }
 }
