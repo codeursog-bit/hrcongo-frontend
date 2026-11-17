@@ -1,0 +1,127 @@
+@media screen {
+  :root .employee-profile-page.employee-dossier {width:100%;max-width:1240px;margin:0 auto;display:grid;gap:24px;padding-bottom:32px;min-width:0;}
+  :root .employee-profile-page [hidden] {display:none!important;}
+  :root .employee-profile-page .dossier-back {display:inline-flex;align-items:center;gap:8px;justify-self:start;min-height:32px;font-size:13px;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-header {display:flex;align-items:center;justify-content:space-between;gap:24px;}
+  :root .employee-profile-page .dossier-identity {display:flex;gap:16px;align-items:center;min-width:0;}
+  :root .employee-profile-page .dossier-identity>div {min-width:0;}
+  :root .employee-profile-page .dossier-avatar {width:64px;height:64px;border-radius:16px;box-shadow:none;font-size:24px;line-height:1;flex:none;background:var(--profile-brand-soft);color:var(--profile-active-text);}
+  :root .employee-profile-page .dossier-header h1 {font-size:clamp(24px,2.8vw,30px);font-weight:600;letter-spacing:-.035em;line-height:1.25;margin:0;color:var(--text);overflow-wrap:anywhere;}
+  :root .employee-profile-page .dossier-role {margin-top:6px;font-size:14px;line-height:1.6;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-role span+span::before {content:'·';margin:0 8px;}
+  :root .employee-profile-page .dossier-header-actions {display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;flex-shrink:0;}
+  :root .employee-profile-page .dossier-header-actions .k-button {height:44px;padding:10px 16px;gap:8px;font-size:13px;font-weight:600;white-space:nowrap;}
+  :root .employee-profile-page .dossier-header-actions .k-button-primary {background:var(--brand);color:var(--on-brand-surface,var(--profile-on-status));}
+  :root .employee-profile-page .dossier-actions-menu {position:relative;}
+  :root .employee-profile-page .dossier-actions-menu:not([open])>.dossier-actions-panel,
+  :root .employee-profile-page .dossier-section:not([open])>.dossier-section-content {display:none;}
+  :root .employee-profile-page .dossier-actions-menu>summary {display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 14px;background:var(--surface-2);color:var(--text);border-radius:var(--radius-control);font-size:13px;font-weight:500;cursor:pointer;list-style:none;}
+  :root .employee-profile-page summary::-webkit-details-marker {display:none;}
+  :root .employee-profile-page .dossier-actions-panel {position:absolute;right:0;top:calc(100% + 8px);z-index:40;width:240px;max-width:calc(100vw - 40px);padding:8px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow-pop);display:grid;gap:4px;}
+  :root .employee-profile-page .dossier-actions-panel :is(a,button) {display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:44px;padding:10px 12px;border-radius:10px;text-align:left;font-size:13px;font-weight:500;color:var(--text);}
+  :root .employee-profile-page .dossier-actions-panel .dossier-danger {color:var(--danger-text);}
+  :root .employee-profile-page .dossier-summary {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;padding:20px 24px;border-radius:var(--radius-card);background:var(--surface);box-shadow:var(--shadow-card);}
+  :root .employee-profile-page .dossier-summary dt {font-size:12px;line-height:1.5;color:var(--text-secondary);margin-bottom:6px;}
+  :root .employee-profile-page .dossier-summary dd {font-size:15px;font-weight:600;line-height:1.5;color:var(--text);margin:0;overflow-wrap:anywhere;}
+  :root .employee-profile-page .dossier-summary dd>span {display:block;margin-top:6px;width:fit-content;}
+  :root .employee-profile-page .dossier-tabs {display:flex;gap:24px;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid var(--border);}
+  :root .employee-profile-page .dossier-tabs .k-button {position:relative;flex-shrink:0;padding:12px 0;min-height:48px;border-radius:0;background:transparent;font-size:13px;font-weight:500;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-tabs .k-button[aria-selected=true] {color:var(--text);font-weight:600;}
+  :root .employee-profile-page .dossier-tabs .k-button[aria-selected=true]::after {content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--brand);}
+  :root .employee-profile-page .dossier-tabs .k-button:hover {color:var(--text);background:transparent;}
+  :root .employee-profile-page .dossier-panel {min-width:0;outline-offset:5px;}
+  :root .employee-profile-page .dossier-workspace {display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;align-items:start;}
+  :root .employee-profile-page .dossier-paper {min-width:0;background:var(--surface);border-radius:var(--radius-card);padding:4px 24px;box-shadow:var(--shadow-card);}
+  :root .employee-profile-page .dossier-section {scroll-margin-top:24px;}
+  :root .employee-profile-page .dossier-section+.dossier-section {border-top:1px solid var(--border);}
+  :root .employee-profile-page .dossier-section>summary {list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0;cursor:pointer;}
+  :root .employee-profile-page .dossier-section>summary>svg {flex:none;color:var(--text-secondary);transition:transform .18s ease;}
+  :root .employee-profile-page .dossier-section[open]>summary>svg {transform:rotate(180deg);}
+  :root .employee-profile-page .dossier-section h2 {margin:0;font-size:15px;font-weight:600;line-height:1.5;color:var(--text);}
+  :root .employee-profile-page .dossier-section-hint {display:block;margin-top:5px;font-size:12px;line-height:1.6;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-section-content {padding-bottom:24px;font-size:13px;line-height:1.6;min-width:0;}
+  :root .employee-profile-page .dossier-section-content :is(.profile-inset,.profile-card) {background:transparent;box-shadow:none;border:0;border-radius:0;padding:0;}
+  :root .employee-profile-page .dossier-section-content :is(.profile-inset,.profile-card)>div {min-width:0;}
+  :root .employee-profile-page .dossier-section-content :is(p,span).font-medium {font-size:13px;line-height:1.7;font-weight:500;overflow-wrap:anywhere;}
+  :root .employee-profile-page .dossier-field-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 28px;}
+  :root .employee-profile-page .dossier-field-grid>:not(div) {grid-column:1/-1;}
+  :root .employee-profile-page .dossier-field-grid>div:is(.pt-3,.pt-4) {grid-column:1/-1;}
+  :root .employee-profile-page .dossier-section-content svg[width="11"] {display:none;}
+  :root .employee-profile-page .dossier-aside {display:grid;gap:16px;min-width:0;}
+  :root .employee-profile-page .dossier-card {padding:22px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);min-width:0;}
+  :root .employee-profile-page .dossier-card>h2 {margin:0 0 16px;font-size:14px;font-weight:600;color:var(--text);}
+  :root .employee-profile-page .dossier-card p {font-size:12px;line-height:1.7;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-card .k-badge {margin-bottom:12px;font-size:11px;}
+  :root .employee-profile-page .dossier-card .k-button {font-size:12px;gap:7px;}
+  :root .employee-profile-page .dossier-contact {display:grid;gap:12px;}
+  :root .employee-profile-page .dossier-contact a {font-size:13px;line-height:1.6;color:var(--text);overflow-wrap:anywhere;text-decoration:underline;text-underline-offset:4px;}
+  :root .employee-profile-page .dossier-compensation :is(.profile-inset,.profile-card) {background:transparent;box-shadow:none;padding:0;}
+  :root .employee-profile-page .dossier-compensation .uppercase {text-transform:none;}
+  :root .employee-profile-page .dossier-compensation .font-mono {font-family:inherit;font-variant-numeric:tabular-nums;}
+  :root .employee-profile-page .dossier-compensation p.text-xl {font-size:25px;line-height:1.4;font-weight:600;letter-spacing:-.025em;color:var(--text);}
+  :root .employee-profile-page .dossier-compensation .pt-4:first-of-type {padding-top:0;border:0;}
+  :root .employee-profile-page .dossier-compensation .dossier-payroll-link {margin-top:14px;padding:0;min-height:40px;color:var(--profile-active-text);}
+  :root .employee-profile-page .dossier-access .k-button {padding:0;background:transparent;border:0;display:flex;align-items:center;gap:12px;text-align:left;}
+  :root .employee-profile-page .dossier-access .k-button>div:first-child {display:flex;flex:1;min-width:0;}
+  :root .employee-profile-page .dossier-access .k-button>div:first-child>div:first-child {display:none;}
+  :root .employee-profile-page .dossier-access .k-button>div:first-child>div.text-left {flex:1;min-width:0;}
+  :root .employee-profile-page .dossier-access .k-button>div:first-child>div.text-left span:first-child {font-size:12px;font-weight:500;}
+  :root .employee-profile-page .dossier-access .k-button>div:first-child>div.text-left span:last-child {font-size:11px;margin-top:4px;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-cnss-form {margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
+  :root .employee-profile-page .dossier-cnss-form>section {padding:18px;background:var(--surface-2);box-shadow:none;border-radius:var(--radius-control);}
+  :root .employee-profile-page .dossier-cnss-form select {background:var(--surface);}
+  :root .employee-profile-page .dossier-cnss-form .k-button {background:var(--surface);color:var(--text);}
+  :root .employee-profile-page .dossier-document-list,:root .employee-profile-page .dossier-payroll-list,:root .employee-profile-page .dossier-leave-list {display:grid;gap:10px;}
+  :root .employee-profile-page :is(.dossier-document-row,.dossier-payroll-row,.dossier-leave-row) {display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;background:var(--surface);box-shadow:var(--shadow-card);border-radius:var(--radius-control);min-width:0;}
+  :root .employee-profile-page .dossier-document-row {justify-content:flex-start;}
+  :root .employee-profile-page .dossier-document-row>div {min-width:0;}
+  :root .employee-profile-page .dossier-file-icon {flex:none;color:var(--text-secondary);}
+  :root .employee-profile-page .dossier-document-row p {font-size:13px;font-weight:500;}
+  :root .employee-profile-page .dossier-document-row p+p {font-size:12px;color:var(--text-secondary);font-weight:400;margin-top:4px;}
+  :root .employee-profile-page .dossier-period {min-width:44px;display:grid;gap:4px;text-align:center;color:var(--text-secondary);font-size:12px;font-variant-numeric:tabular-nums;}
+  :root .employee-profile-page .dossier-payroll-row p.font-bold {font-size:14px;font-weight:600;text-transform:capitalize;}
+  :root .employee-profile-page .dossier-payroll-row p+p {margin-top:4px;}
+  :root .employee-profile-page .dossier-asset-list {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+  :root .employee-profile-page .dossier-asset-card {padding:22px;background:var(--surface);border-radius:var(--radius-card);box-shadow:var(--shadow-card);min-width:0;}
+  :root .employee-profile-page .dossier-asset-card dl dt {text-transform:none;letter-spacing:normal;font-size:11px;font-weight:400;}
+  :root .employee-profile-page .dossier-asset-card p.font-bold {font-size:15px;font-weight:600;}
+  :root .employee-profile-page .dossier-loading {display:grid;gap:14px;}
+  :root .employee-profile-page .dossier-loading .k-skeleton {height:72px;}
+  :root .employee-profile-page :is(summary,a,button):focus-visible {outline:2px solid var(--focus);outline-offset:4px;}
+}
+@media screen and (max-width:1000px) {
+  :root .employee-profile-page .dossier-header {align-items:flex-start;}
+  :root .employee-profile-page .dossier-header-actions {max-width:360px;}
+  :root .employee-profile-page .dossier-workspace {grid-template-columns:minmax(0,1fr) 280px;gap:18px;}
+  :root .employee-profile-page .dossier-asset-list {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media screen and (max-width:760px) {
+  :root .employee-profile-page.employee-dossier {gap:20px;}
+  :root .employee-profile-page .dossier-header {display:grid;gap:18px;}
+  :root .employee-profile-page .dossier-header-actions {max-width:none;justify-content:flex-start;}
+  :root .employee-profile-page .dossier-header-actions .k-button-primary {flex:1;}
+  :root .employee-profile-page .dossier-header-actions .k-button {padding:10px 12px;}
+  :root .employee-profile-page .dossier-avatar {width:56px;height:56px;font-size:20px;}
+  :root .employee-profile-page .dossier-summary {grid-template-columns:repeat(2,minmax(0,1fr));padding:18px;gap:20px;}
+  :root .employee-profile-page .dossier-workspace {grid-template-columns:minmax(0,1fr);}
+  :root .employee-profile-page .dossier-aside {grid-template-columns:repeat(2,minmax(0,1fr));}
+  :root .employee-profile-page .dossier-paper {padding:0 20px;}
+  :root .employee-profile-page .dossier-tabs {gap:22px;}
+  :root .employee-profile-page :is(.dossier-document-row,.dossier-payroll-row,.dossier-leave-row) {padding:18px;}
+}
+@media screen and (max-width:480px) {
+  :root .employee-profile-page .dossier-header-actions {gap:7px;}
+  :root .employee-profile-page .dossier-header-actions .k-button {font-size:12px;}
+  :root .employee-profile-page .dossier-actions-menu>summary {font-size:12px;padding:10px;}
+  :root .employee-profile-page .dossier-actions-menu>summary {width:44px;padding:10px;}
+  :root .employee-profile-page .dossier-actions-menu>summary>span {display:none;}
+  :root .employee-profile-page .dossier-field-grid {grid-template-columns:minmax(0,1fr);}
+  :root .employee-profile-page .dossier-aside {grid-template-columns:minmax(0,1fr);}
+  :root .employee-profile-page .dossier-section-content .grid {grid-template-columns:minmax(0,1fr);}
+  :root .employee-profile-page .dossier-section-content .col-span-2 {grid-column:auto;}
+  :root .employee-profile-page .dossier-payroll-row,:root .employee-profile-page .dossier-leave-row {flex-wrap:wrap;}
+  :root .employee-profile-page .dossier-asset-list {grid-template-columns:minmax(0,1fr);}
+}
+@media screen and (prefers-reduced-motion:reduce) {
+  :root .employee-profile-page .dossier-section>summary>svg {transition:none;}
+}

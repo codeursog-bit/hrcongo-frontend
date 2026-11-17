@@ -1,6 +1,10 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),ts=require('typescript'),postcss=require('postcss');
 const root=path.resolve(__dirname,'..'),css=postcss.parse(fs.readFileSync(path.join(root,'components/employees/employee-profile.css'),'utf8'));
 const source=fs.readFileSync(path.join(root,'app/(dashboard)/employes/[id]/page.tsx'),'utf8');
+const dossierCss=postcss.parse(fs.readFileSync(path.join(root,'components/employees/employee-dossier.css'),'utf8'));
+dossierCss.walkDecls(d=>assert.ok(!/#[\da-f]{3,8}\b|rgba?\(\s*\d/i.test(d.value),'hardcoded dossier CSS color '+d.toString()));
+dossierCss.walkRules(r=>assert.ok(r.selector.includes('.employee-profile-page'),'unscoped dossier rule'));
+for(const n of dossierCss.nodes)if(n.type!=='comment')assert.ok(n.type==='atrule'&&n.name==='media'&&n.params.startsWith('screen'),'dossier styles must remain screen-only');
 assert.ok(!/\b(?:bg|text|border|ring|shadow)-(?:emerald|amber|red|gray|sky|slate|yellow)-\d/.test(source));
 assert.ok(!/ui-avatars\.com|text-\$\{|bg-\$\{/.test(source));
 for(const name of new Set(source.match(/(?<![\w-])profile-[\w-]+/g)))assert.ok(css.toString().includes('.'+name),name+' missing CSS');

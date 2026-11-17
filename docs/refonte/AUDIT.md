@@ -1,6 +1,6 @@
 # AUDIT DE LA REFONTE (généré)
 
-Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus : phase 2 (admin, cabinet), documents imprimables et exports, démos, types. 581 fichiers analysés.
+Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus : phase 2 (admin, cabinet), documents imprimables et exports, démos, types. 582 fichiers analysés.
 
 ## Totaux
 
@@ -22,7 +22,7 @@ Généré le 2026-11-17 par `scripts/audit-refonte.mjs` (lecture seule). Exclus 
 | dashboard | 173 | 9929 | 434 | 189 | 56 | 29 | 100 | 4 | 4 |
 | portefeuille | 18 | 544 | 19 | 0 | 1 | 14 | 11 | 0 | 0 |
 | pages publiques | 51 | 2438 | 630 | 127 | 121 | 14 | 59 | 17 | 2 |
-| composants, hooks, lib | 277 | 4171 | 692 | 119 | 70 | 15 | 36 | 6 | 4 |
+| composants, hooks, lib | 278 | 4171 | 692 | 119 | 70 | 15 | 36 | 6 | 4 |
 | espace PME | 62 | 400 | 8 | 13 | 4 | 0 | 3 | 0 | 0 |
 
 ## Classes de palette Tailwind à convertir en tokens (top 30)

@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-17",
+  "reason": "User rejected cosmetic-only changes and requested a genuine layout and UX redesign.",
+  "scope": [
+    "app/(dashboard)/employes/[id]/page.tsx",
+    "components/employees/EmployeeDossier.tsx",
+    "components/employees/employee-dossier.css"
+  ],
+  "changes": {
+    "header": "compact identity, named edit/PDF actions, secondary actions in a keyboard-accessible disclosure",
+    "sections": "six native disclosure groups instead of the long always-open two-column form",
+    "cnss": "editable form moved inside the administrative section, with visible status and reveal control",
+    "draft": "info panel retained across tabs; CNSS local state retained, salary recap only mounted in info as before",
+    "tabs": "same five data tabs, now keyboard navigable; document/payroll/leave rows and asset cards reorganized"
+  },
+  "counts": {
+    "editActions": [
+      2,
+      1
+    ],
+    "primeLinks": [
+      2,
+      1
+    ],
+    "deactivateEntries": [
+      2,
+      1
+    ],
+    "employeeFields": [
+      58,
+      58
+    ],
+    "avatarCssPixels": [
+      128,
+      64
+    ]
+  },
+  "invariants": {
+    "pdfHandlerBefore": "74180fe87fa1d3c2c52486908bf6e01cb5f4a9e5e19e553efd36050a9fceced3",
+    "pdfHandlerAfter": "74180fe87fa1d3c2c52486908bf6e01cb5f4a9e5e19e553efd36050a9fceced3",
+    "dataEffectDependencies": [
+      "[]",
+      "[params.id]",
+      "[activeTab, employee]"
+    ],
+    "apiAndCalculations": "employee regression checks preserved API, rights, calculations and payloads"
+  },
+  "audit": {
+    "paletteBefore": 17482,
+    "paletteAfter": 17482,
+    "hex": 1783,
+    "emojis": 448,
+    "gradients": 252
+  },
+  "verification": {
+    "types": "passed",
+    "employees": "passed",
+    "keyboard": "arrow/Home/End and CNSS reveal with reduced motion checked",
+    "theme": "242 combinations, minimum checked text contrast 4.50:1",
+    "visual": "not verified in browser; user review required"
+  }
+}

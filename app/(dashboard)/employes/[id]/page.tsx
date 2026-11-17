@@ -1,13 +1,21 @@
 'use client';
+import { ModulePageFrame, ModulePageSkeleton } from '@/components/requests/ModulePageFrame';
+import { Button, EmptyState, Skeleton } from '@/components/design-system/primitives';
+import '@/components/employees/employees.css';
+import { CnssDeclarationBadge, CnssRegistrationEditor } from '@/components/employees/CnssDeclarationField';
 
+
+import { Modal } from '@/components/design-system/feedback';
 import React, { useState, useEffect } from 'react';
 import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 import '@/components/employees/employee-profile.css';
+import '@/components/employees/employee-dossier.css';
+import { DossierActions, DossierSection, DossierReveal, DossierTabList } from '@/components/employees/EmployeeDossier';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, Edit, FileText, Trash2, Clock, Wallet, Calendar, 
-  CheckCircle, Mail, Phone, MapPin, Building2, User, Download, 
+import {
+  ArrowLeft, Edit, FileText, Trash2, Clock, Wallet, Calendar,
+  CheckCircle, Mail, Phone, MapPin, Building2, User, Download,
   AlertCircle, Printer, Eye, EyeOff,
   Briefcase, BadgeCheck, X,
   Laptop, Plus, Loader2, Shield, Award, Smartphone, Monitor, Package,
@@ -51,6 +59,7 @@ interface EmployeeDetail {
   department: { name: string };
   nationalIdNumber: string;
   cnssNumber: string;
+  cnssEmployeeDeclared?: boolean|null;
   photoUrl: string;
   isSubjectToIrpp: boolean;
   isSubjectToCnss: boolean;
@@ -215,6 +224,8 @@ function ContractCountdown({ contractType, hireDate, contractEndDate }: {
 }
 
 export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
+  const [uiLoadError, setUiLoadError] = useState('');
+  const [uiTabError,setUiTabError]=useState('');
   const router = useRouter();
   const { bp } = useBasePath();
   const [activeTab, setActiveTab] = useState<TabType>('info');
@@ -269,6 +280,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         } catch {}
       } catch (e) {
         console.error('Error fetching employee', e);
+        setUiLoadError('Le dossier de cet employé n’a pas pu être chargé.');
       } finally {
         setIsLoading(false);
       }
@@ -281,6 +293,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
     const fetchTabData = async () => {
       setTabLoading(true);
       setTabData(null);
+      setUiTabError('');
       try {
         let data;
         if (activeTab === 'docs')     data = await api.get(`/documents/employee/${employee.id}`);
@@ -290,6 +303,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
         setTabData(data);
       } catch (e) {
         console.error(e);
+        setUiTabError('Les informations de cette rubrique n’ont pas pu être chargées.');
       } finally {
         setTabLoading(false);
       }
@@ -457,22 +471,188 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   };
 
   if (isLoading || !employee) return (
-    <KonzaLoader variant="page" />
+    uiLoadError ? <ModulePageFrame kind="detail" error={uiLoadError}><Link href={bp('/employes')}>Revenir aux employés</Link></ModulePageFrame> : <ModulePageSkeleton label="Chargement des employés" />
   );
 
-  const renderTabContent = () => {
-    if (activeTab === 'info') {
-      return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Colonne gauche */}
-          <div className="lg:col-span-2 space-y-8">
-
-            {/* Informations personnelles */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <User size={20} className="profile-ink-neutral" /> Informations Personnelles
-              </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 profile-inset">
+  const renderTabContent = (uiInfoOnly=false) => {
+    if (uiInfoOnly || activeTab === 'info') {
+      return <div className="dossier-workspace">
+        <div className="dossier-paper">
+          <DossierSection id="dossier-contrat" title="Contrat et emploi" hint="Contrat, dates, période d’essai et mode de paiement">
+            <div className="dossier-field-grid"><div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Date d'embauche</p>
+                  <p className="font-medium text-[var(--text)]">{new Date(employee.hireDate).toLocaleDateString('fr-FR')}</p>
+                  <p className="text-xs profile-ink-neutral mt-0.5">Ancienneté : {getAnciennete()}</p>
+                </div>
+<div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Type de contrat</p>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold ${
+                    employee.contractType === 'CDI'         ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'CDD'         ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'STAGE'       ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'CONSULTANT'  ? 'profile-soft-neutral profile-ink-neutral ' :
+                    employee.contractType === 'PRESTATAIRE' ? 'profile-soft-neutral profile-ink-neutral ' :
+                    'profile-soft-neutral profile-ink-neutral '
+                  }`}>
+                    <Briefcase size={16} strokeWidth={1.5} aria-hidden="true" />
+                    {employee.contractType === 'CDI' ? 'CDI' :
+                     employee.contractType === 'CDD' ? 'CDD' :
+                     employee.contractType === 'STAGE' ? 'Stage' :
+                     employee.contractType === 'CONSULTANT' ? 'Consultant' :
+                     employee.contractType === 'PRESTATAIRE' ? 'Prestataire' :
+                     employee.contractType === 'INTERIM' ? 'Intérim' :
+                     employee.contractType}
+                  </span>
+                </div>
+<div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Poste occupé</p>
+                  <p className="font-medium text-[var(--text)]">{employee.position}</p>
+                </div>
+<div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Département</p>
+                  <p className="font-medium text-[var(--text)]">{employee.department?.name}</p>
+                </div>
+<div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Mode de paiement</p>
+                  <p className="font-medium text-[var(--text)]">
+                    {employee.paymentMethod === 'CASH' ? 'Espèces' : employee.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Mobile Money'}
+                  </p>
+                </div>
+{employee.paymentMethod === 'BANK_TRANSFER' && (
+                  <>
+                    <div>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Banque</p>
+                      <p className="font-medium text-[var(--text)]">{employee.bankName || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">N° de compte</p>
+                      <p className="font-medium text-[var(--text)] font-mono">{employee.bankAccountNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
+                    </div>
+                  </>
+                )}
+{employee.paymentMethod === 'MOBILE_MONEY' && (
+                  <>
+                    <div>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">Opérateur Mobile Money</p>
+                      <p className="font-medium text-[var(--text)]">{employee.mobileMoneyOperator || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--text-secondary)] mb-1">N° Mobile Money</p>
+                      <p className="font-medium text-[var(--text)] font-mono">{employee.mobileMoneyNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
+                    </div>
+                  </>
+                )}
+{/* 🆕 Durée contrat pour CDD/STAGE/INTERIM/CONSULTANT */}
+<ContractCountdown
+                  contractType={employee.contractType}
+                  hireDate={employee.hireDate}
+                  contractEndDate={employee.contractEndDate}
+                />
+{/* CDI — badge durée indéterminée */}
+{employee.contractType === 'CDI' && (
+                  <div className="pt-3 border-t border-[var(--border)]">
+                    <div className="flex items-center gap-2 p-2 profile-soft-neutral rounded-lg profile-inset">
+                      <CheckCircle size={13} className="profile-ink-neutral" />
+                      <span className="text-xs profile-ink-neutral font-semibold">CDI — Durée indéterminée</span>
+                    </div>
+                  </div>
+                )}
+{/* Période d'essai */}
+{/* ✅ "employee.trialPeriodDays && ..." affichait un "0"
+                    littéral quand trialPeriodDays valait 0 (JSX rend 0 tel
+                    quel). "?? 0" gère aussi le cas null/undefined (TS strict)
+                    sans réintroduire ce risque : le résultat de ">" est
+                    toujours un booléen, jamais rendu comme 0. */}
+{(employee.trialPeriodDays ?? 0) > 0 && (
+                  <div className="pt-3 border-t border-[var(--border)]">
+                    <p className="text-xs text-[var(--text-secondary)] mb-2 flex items-center gap-1.5">
+                      <Clock size={11} /> Période d'essai
+                    </p>
+                    {employee.trialStatus === 'IN_PROGRESS' && employee.trialEndDate && (
+                      <div className="p-3 profile-soft-warning rounded-xl profile-inset">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold profile-ink-warning "><Clock size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Essai en cours</span>
+                          <span className="text-xs profile-ink-warning font-semibold">
+                            {Math.max(0, Math.ceil((new Date(employee.trialEndDate).getTime() - Date.now()) / 86400000))} jours restants
+                          </span>
+                        </div>
+                        <p className="text-xs profile-ink-warning ">
+                          Fin le {new Date(employee.trialEndDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </p>
+                        <p className="text-xs profile-ink-warning mt-1">Rupture sans préavis ni indemnités possible.</p>
+                      </div>
+                    )}
+                    {employee.trialStatus === 'CONFIRMED' && (
+                      <div className="flex items-center gap-2 p-2 profile-soft-success rounded-lg profile-inset">
+                        <CheckCircle size={13} className="profile-ink-success" />
+                        <span className="text-xs profile-ink-success font-semibold">
+                          Essai confirmé {employee.trialConfirmedAt ? `— le ${new Date(employee.trialConfirmedAt).toLocaleDateString('fr-FR')}` : ''}
+                        </span>
+                      </div>
+                    )}
+                    {employee.trialStatus === 'EXPIRED' && (
+                      <div className="flex items-center gap-2 p-2 profile-soft-warning rounded-lg profile-inset">
+                        <AlertCircle size={13} className="profile-ink-warning" />
+                        <span className="text-xs profile-ink-warning font-semibold">
+                          Essai expiré — à régulariser (confirmation ou rupture)
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+{/* BNC — Consultant / Prestataire */}
+{BNC_CONTRACTS.includes(employee.contractType) && (
+                  <div className="pt-3 border-t border-[var(--border)]">
+                    <p className="text-xs text-[var(--text-secondary)] mb-2">Régime fiscal BNC</p>
+                    <div className="p-3 profile-soft-neutral rounded-xl space-y-1 profile-inset">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs profile-ink-neutral ">Résidence</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${employee.isResident !== false ? 'profile-soft-neutral profile-ink-neutral ' : 'profile-soft-neutral profile-ink-neutral '}`}>
+                          {employee.isResident !== false ? 'Résident' : 'Non-résident'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs profile-ink-neutral ">Taux BNC</span>
+                        <span className="text-xs font-black profile-ink-primary ">
+                          {employee.isResident !== false ? '10%' : '20%'}
+                        </span>
+                      </div>
+                      {employee.nationality && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs profile-ink-neutral ">Nationalité</span>
+                          <span className="text-xs font-semibold profile-ink-primary ">{employee.nationality}</span>
+                        </div>
+                      )}
+                      <p className="text-[11px] profile-ink-neutral pt-1">
+                        <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Pas de bulletin — FACTURE HT. BNC reversé DGI avant le 15.
+                      </p>
+                    </div>
+                  </div>
+                )}
+{/* INTERIM — info agence */}
+{employee.contractType === 'INTERIM' && (
+                  <div className="pt-3 border-t border-[var(--border)]">
+                    <div className="p-3 profile-soft-neutral rounded-xl profile-inset">
+                      <p className="text-xs font-bold profile-ink-neutral mb-1"><Briefcase size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Intérimaire</p>
+                      <p className="text-xs profile-ink-neutral ">
+                        Salarié de l'agence d'intérim. Aucun bulletin généré côté entreprise. Suivi de mission uniquement.
+                      </p>
+                    </div>
+                  </div>
+                )}
+{/* STAGE — info convention */}
+{employee.contractType === 'STAGE' && (
+                  <div className="pt-3 border-t border-[var(--border)]">
+                    <div className="p-3 profile-soft-neutral rounded-xl profile-inset">
+                      <p className="text-xs font-bold profile-ink-neutral mb-1"><GraduationCap size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Stage</p>
+                      <p className="text-xs profile-ink-neutral ">
+                        Gratification. CNSS patronale AT 2,25% uniquement. ITS seulement si gratification &gt; SMIG (50 400 FCFA).
+                      </p>
+                    </div>
+                  </div>
+                )}</div>
+          </DossierSection>
+          <DossierSection id="dossier-identite" title="Identité et coordonnées" hint="État civil, coordonnées et situation familiale"><div className="bg-[var(--surface-2)] rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 profile-inset">
                 <div>
                   <p className="text-xs text-[var(--text-secondary)] mb-1">Nom complet</p>
                   <p className="font-medium text-[var(--text)]">{employee.firstName} {employee.lastName}</p>
@@ -525,15 +705,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     </div>
                   </>
                 )}
-              </div>
-            </section>
-
-            {/* Documents administratifs */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <BookOpen size={20} className="profile-ink-neutral" /> Documents Administratifs
-              </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4 profile-inset">
+              </div></DossierSection>
+          <DossierSection id="dossier-administratif" title="Identifiants et déclaration CNSS" hint="Pièce d’identité, numéro CNSS, déclaration et identifiants fiscaux">
+            <div className="bg-[var(--surface-2)] rounded-2xl p-6 grid grid-cols-1 md:grid-cols-2 gap-4 profile-inset">
                 <div className="p-4 bg-[var(--surface)] rounded-xl profile-card">
                   <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Hash size={11} /> N° CNI / Passeport</p>
                   <p className="font-semibold font-mono text-[var(--text)]">{employee.nationalIdNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans font-normal">Non renseigné</span>}</p>
@@ -541,16 +715,79 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 <div className="p-4 bg-[var(--surface)] rounded-xl profile-card">
                   <p className="text-xs text-[var(--text-secondary)] mb-1 flex items-center gap-1"><Shield size={11} /> N° CNSS</p>
                   <p className="font-semibold font-mono text-[var(--text)]">{employee.cnssNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans font-normal">Non renseigné</span>}</p>
+                  {['ADMIN','HR_MANAGER','SUPER_ADMIN'].includes(userRole)&&<div className="mt-2"><CnssDeclarationBadge value={employee.cnssEmployeeDeclared}/></div>}
                 </div>
               </div>
-            </section>
-
-            {/* 🆕 Informations complémentaires (Fiche ORCA) */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <HeartPulse size={20} className="profile-ink-neutral" /> Informations Complémentaires
-              </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-5 profile-inset">
+            <div className="dossier-field-grid mt-6"><div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">N° Fiscal</p>
+                  <p className="font-medium text-[var(--text)] font-mono">{employee.taxNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
+                </div>
+<div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">NIU</p>
+                  <p className="font-medium text-[var(--text)] font-mono">{employee.niu || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
+                </div>
+<div>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">Zone (transport / TOL)</p>
+                  <p className="font-medium text-[var(--text)]">{employee.tolZone === 'PERIPHERIE' ? 'Périphérie' : 'Ville'}</p>
+                </div></div>
+            <div className="dossier-cnss-form">{['ADMIN','HR_MANAGER','SUPER_ADMIN'].includes(userRole)&&<CnssRegistrationEditor employeeId={employee.id} companyId={employee.companyId} value={employee.cnssEmployeeDeclared} onSaved={value=>setEmployee(prev=>prev?{...prev,cnssEmployeeDeclared:value}:prev)}/>}</div>
+          </DossierSection>
+          <DossierSection id="dossier-fiscal" title="Cotisations et fiscalité" hint="Retenues activées en paie et motif d’exemption"><div className="bg-[var(--surface-2)] rounded-2xl p-6 profile-inset">
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+                    <div className="shrink-0 flex items-center justify-center">
+                      <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[var(--text)]">Retenue ITS / IRPP en paie</p>
+                      <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToIrpp ? 'Activée' : 'Désactivée'}</p>
+                    </div>
+                  </div>
+                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
+                    <div className="shrink-0 flex items-center justify-center">
+                      <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-[var(--text)]">Cotisation CNSS en paie</p>
+                      <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToCnss ? 'Activée' : 'Désactivée'}</p>
+                    </div>
+                  </div>
+                </div>
+                {employee.taxExemptionReason && (
+                  <div className="p-3 profile-soft-warning rounded-lg profile-inset">
+                    <p className="text-xs profile-ink-warning flex items-start gap-2">
+                      <AlertCircle size={12} className="mt-0.5 shrink-0" />
+                      <span><strong>Raison d'exemption :</strong> {employee.taxExemptionReason}</span>
+                    </p>
+                  </div>
+                )}
+              </div></DossierSection>
+          {(companyConvention || employee.professionalCategory) && <DossierSection id="dossier-classification" title="Classification professionnelle" hint="Convention collective, catégorie et échelon"><div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-3 profile-inset">
+                  {companyConvention && (
+                    <div className="flex items-center justify-between p-4 profile-soft-neutral rounded-xl profile-inset">
+                      <div>
+                        <p className="text-xs profile-ink-neutral mb-0.5">Convention Collective</p>
+                        <p className="font-bold profile-ink-primary ">{companyConvention}</p>
+                      </div>
+                      <BookOpen size={20} className="profile-ink-neutral" />
+                    </div>
+                  )}
+                  {employee.professionalCategory && (
+                    <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl profile-card">
+                      <div>
+                        <p className="text-xs text-[var(--text-secondary)] mb-0.5">Catégorie Professionnelle</p>
+                        <p className="font-bold font-mono text-[var(--text)]">{employee.professionalCategory}</p>
+                      </div>
+                      {employee.echelon && (
+                        <div className="text-right">
+                          <p className="text-xs text-[var(--text-secondary)] mb-0.5">Échelon</p>
+                          <p className="font-bold profile-ink-neutral ">{employee.echelon}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div></DossierSection>}
+          <DossierSection id="dossier-complements" title="Informations complémentaires" hint="Santé, contact d’urgence, filiation et informations pratiques"><div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-5 profile-inset">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
                   <div>
                     <p className="text-xs text-[var(--text-secondary)] mb-1">Groupe sanguin</p>
@@ -613,293 +850,25 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     </div>
                   </div>
                 )}
-              </div>
-            </section>
-
-            {/* Convention collective */}
-            {(companyConvention || employee.professionalCategory) && (
-              <section>
-                <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                  <Award size={20} className="profile-ink-neutral" /> Classification Conventionnelle
-                </h3>
-                <div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-3 profile-inset">
-                  {companyConvention && (
-                    <div className="flex items-center justify-between p-4 profile-soft-neutral rounded-xl profile-inset">
-                      <div>
-                        <p className="text-xs profile-ink-neutral mb-0.5">Convention Collective</p>
-                        <p className="font-bold profile-ink-primary ">{companyConvention}</p>
-                      </div>
-                      <BookOpen size={20} className="profile-ink-neutral" />
-                    </div>
-                  )}
-                  {employee.professionalCategory && (
-                    <div className="flex items-center justify-between p-4 bg-[var(--surface)] rounded-xl profile-card">
-                      <div>
-                        <p className="text-xs text-[var(--text-secondary)] mb-0.5">Catégorie Professionnelle</p>
-                        <p className="font-bold font-mono text-[var(--text)]">{employee.professionalCategory}</p>
-                      </div>
-                      {employee.echelon && (
-                        <div className="text-right">
-                          <p className="text-xs text-[var(--text-secondary)] mb-0.5">Échelon</p>
-                          <p className="font-bold profile-ink-neutral ">{employee.echelon}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
-
-            {/* Régime fiscal */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Shield size={20} className="profile-ink-neutral" /> Régime Fiscal
-              </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 profile-inset">
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToIrpp ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
-                    <div className="shrink-0 flex items-center justify-center">
-                      <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-[var(--text)]">IRPP / ITS</p>
-                      <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToIrpp ? 'Soumis' : 'Exempté'}</p>
-                    </div>
-                  </div>
-                  <div className={`p-4 rounded-xl border-2 flex items-center gap-3 ${employee.isSubjectToCnss ? 'profile-outline profile-soft-success ' : 'border-[var(--border)] bg-[var(--surface)]'}`}>
-                    <div className="shrink-0 flex items-center justify-center">
-                      <CheckCircle size={16} className="text-[var(--text-secondary)]" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-[var(--text)]">CNSS (4%)</p>
-                      <p className="text-xs text-[var(--text-secondary)]">{employee.isSubjectToCnss ? 'Soumis' : 'Exempté'}</p>
-                    </div>
-                  </div>
-                </div>
-                {employee.taxExemptionReason && (
-                  <div className="p-3 profile-soft-warning rounded-lg profile-inset">
-                    <p className="text-xs profile-ink-warning flex items-start gap-2">
-                      <AlertCircle size={12} className="mt-0.5 shrink-0" />
-                      <span><strong>Raison d'exemption :</strong> {employee.taxExemptionReason}</span>
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
-          </div>
-
-          {/* Colonne droite */}
-          <div className="space-y-6">
-            {/* EMPLOI — 🆕 avec durée contrat */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Briefcase size={20} className="profile-ink-neutral" /> Emploi
-              </h3>
-              <div className="bg-[var(--surface-2)] rounded-2xl p-6 space-y-4 profile-inset">
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Date d'embauche</p>
-                  <p className="font-medium text-[var(--text)]">{new Date(employee.hireDate).toLocaleDateString('fr-FR')}</p>
-                  <p className="text-xs profile-ink-neutral mt-0.5">Ancienneté : {getAnciennete()}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Type de contrat</p>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-bold ${
-                    employee.contractType === 'CDI'         ? 'profile-soft-neutral profile-ink-neutral ' :
-                    employee.contractType === 'CDD'         ? 'profile-soft-neutral profile-ink-neutral ' :
-                    employee.contractType === 'STAGE'       ? 'profile-soft-neutral profile-ink-neutral ' :
-                    employee.contractType === 'CONSULTANT'  ? 'profile-soft-neutral profile-ink-neutral ' :
-                    employee.contractType === 'PRESTATAIRE' ? 'profile-soft-neutral profile-ink-neutral ' :
-                    'profile-soft-neutral profile-ink-neutral '
-                  }`}>
-                    <Briefcase size={16} strokeWidth={1.5} aria-hidden="true" />
-                    {employee.contractType === 'CDI' ? 'CDI' :
-                     employee.contractType === 'CDD' ? 'CDD' :
-                     employee.contractType === 'STAGE' ? 'Stage' :
-                     employee.contractType === 'CONSULTANT' ? 'Consultant' :
-                     employee.contractType === 'PRESTATAIRE' ? 'Prestataire' :
-                     employee.contractType === 'INTERIM' ? 'Intérim' :
-                     employee.contractType}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Poste occupé</p>
-                  <p className="font-medium text-[var(--text)]">{employee.position}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Département</p>
-                  <p className="font-medium text-[var(--text)]">{employee.department?.name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Mode de paiement</p>
-                  <p className="font-medium text-[var(--text)]">
-                    {employee.paymentMethod === 'CASH' ? 'Espèces' : employee.paymentMethod === 'BANK_TRANSFER' ? 'Virement bancaire' : 'Mobile Money'}
-                  </p>
-                </div>
-                {employee.paymentMethod === 'BANK_TRANSFER' && (
-                  <>
-                    <div>
-                      <p className="text-xs text-[var(--text-secondary)] mb-1">Banque</p>
-                      <p className="font-medium text-[var(--text)]">{employee.bankName || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[var(--text-secondary)] mb-1">N° de compte</p>
-                      <p className="font-medium text-[var(--text)] font-mono">{employee.bankAccountNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
-                    </div>
-                  </>
-                )}
-                {employee.paymentMethod === 'MOBILE_MONEY' && (
-                  <>
-                    <div>
-                      <p className="text-xs text-[var(--text-secondary)] mb-1">Opérateur Mobile Money</p>
-                      <p className="font-medium text-[var(--text)]">{employee.mobileMoneyOperator || <span className="text-[var(--text-secondary)] italic text-sm">Non renseigné</span>}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[var(--text-secondary)] mb-1">N° Mobile Money</p>
-                      <p className="font-medium text-[var(--text)] font-mono">{employee.mobileMoneyNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
-                    </div>
-                  </>
-                )}
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">N° Fiscal</p>
-                  <p className="font-medium text-[var(--text)] font-mono">{employee.taxNumber || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">NIU</p>
-                  <p className="font-medium text-[var(--text)] font-mono">{employee.niu || <span className="text-[var(--text-secondary)] italic text-sm font-sans">Non renseigné</span>}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Zone (transport / TOL)</p>
-                  <p className="font-medium text-[var(--text)]">{employee.tolZone === 'PERIPHERIE' ? 'Périphérie' : 'Ville'}</p>
-                </div>
-
-                {/* 🆕 Durée contrat pour CDD/STAGE/INTERIM/CONSULTANT */}
-                <ContractCountdown
-                  contractType={employee.contractType}
-                  hireDate={employee.hireDate}
-                  contractEndDate={employee.contractEndDate}
-                />
-
-                {/* CDI — badge durée indéterminée */}
-                {employee.contractType === 'CDI' && (
-                  <div className="pt-3 border-t border-[var(--border)]">
-                    <div className="flex items-center gap-2 p-2 profile-soft-neutral rounded-lg profile-inset">
-                      <CheckCircle size={13} className="profile-ink-neutral" />
-                      <span className="text-xs profile-ink-neutral font-semibold">CDI — Durée indéterminée</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Période d'essai */}
-                {/* ✅ "employee.trialPeriodDays && ..." affichait un "0"
-                    littéral quand trialPeriodDays valait 0 (JSX rend 0 tel
-                    quel). "?? 0" gère aussi le cas null/undefined (TS strict)
-                    sans réintroduire ce risque : le résultat de ">" est
-                    toujours un booléen, jamais rendu comme 0. */}
-                {(employee.trialPeriodDays ?? 0) > 0 && (
-                  <div className="pt-3 border-t border-[var(--border)]">
-                    <p className="text-xs text-[var(--text-secondary)] mb-2 flex items-center gap-1.5">
-                      <Clock size={11} /> Période d'essai
-                    </p>
-                    {employee.trialStatus === 'IN_PROGRESS' && employee.trialEndDate && (
-                      <div className="p-3 profile-soft-warning rounded-xl profile-inset">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold profile-ink-warning "><Clock size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Essai en cours</span>
-                          <span className="text-xs profile-ink-warning font-semibold">
-                            {Math.max(0, Math.ceil((new Date(employee.trialEndDate).getTime() - Date.now()) / 86400000))} jours restants
-                          </span>
-                        </div>
-                        <p className="text-xs profile-ink-warning ">
-                          Fin le {new Date(employee.trialEndDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                        </p>
-                        <p className="text-xs profile-ink-warning mt-1">Rupture sans préavis ni indemnités possible.</p>
-                      </div>
-                    )}
-                    {employee.trialStatus === 'CONFIRMED' && (
-                      <div className="flex items-center gap-2 p-2 profile-soft-success rounded-lg profile-inset">
-                        <CheckCircle size={13} className="profile-ink-success" />
-                        <span className="text-xs profile-ink-success font-semibold">
-                          Essai confirmé {employee.trialConfirmedAt ? `— le ${new Date(employee.trialConfirmedAt).toLocaleDateString('fr-FR')}` : ''}
-                        </span>
-                      </div>
-                    )}
-                    {employee.trialStatus === 'EXPIRED' && (
-                      <div className="flex items-center gap-2 p-2 profile-soft-warning rounded-lg profile-inset">
-                        <AlertCircle size={13} className="profile-ink-warning" />
-                        <span className="text-xs profile-ink-warning font-semibold">
-                          Essai expiré — à régulariser (confirmation ou rupture)
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* BNC — Consultant / Prestataire */}
-                {BNC_CONTRACTS.includes(employee.contractType) && (
-                  <div className="pt-3 border-t border-[var(--border)]">
-                    <p className="text-xs text-[var(--text-secondary)] mb-2">Régime fiscal BNC</p>
-                    <div className="p-3 profile-soft-neutral rounded-xl space-y-1 profile-inset">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs profile-ink-neutral ">Résidence</span>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${employee.isResident !== false ? 'profile-soft-neutral profile-ink-neutral ' : 'profile-soft-neutral profile-ink-neutral '}`}>
-                          {employee.isResident !== false ? 'Résident' : 'Non-résident'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs profile-ink-neutral ">Taux BNC</span>
-                        <span className="text-xs font-black profile-ink-primary ">
-                          {employee.isResident !== false ? '10%' : '20%'}
-                        </span>
-                      </div>
-                      {employee.nationality && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs profile-ink-neutral ">Nationalité</span>
-                          <span className="text-xs font-semibold profile-ink-primary ">{employee.nationality}</span>
-                        </div>
-                      )}
-                      <p className="text-[11px] profile-ink-neutral pt-1">
-                        <AlertTriangle size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Pas de bulletin — FACTURE HT. BNC reversé DGI avant le 15.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* INTERIM — info agence */}
-                {employee.contractType === 'INTERIM' && (
-                  <div className="pt-3 border-t border-[var(--border)]">
-                    <div className="p-3 profile-soft-neutral rounded-xl profile-inset">
-                      <p className="text-xs font-bold profile-ink-neutral mb-1"><Briefcase size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Intérimaire</p>
-                      <p className="text-xs profile-ink-neutral ">
-                        Salarié de l'agence d'intérim. Aucun bulletin généré côté entreprise. Suivi de mission uniquement.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* STAGE — info convention */}
-                {employee.contractType === 'STAGE' && (
-                  <div className="pt-3 border-t border-[var(--border)]">
-                    <div className="p-3 profile-soft-neutral rounded-xl profile-inset">
-                      <p className="text-xs font-bold profile-ink-neutral mb-1"><GraduationCap size={16} strokeWidth={1.5} aria-hidden="true" className="inline shrink-0 align-text-bottom mr-1" /> Stage</p>
-                      <p className="text-xs profile-ink-neutral ">
-                        Gratification. CNSS patronale AT 2,25% uniquement. ITS seulement si gratification &gt; SMIG (50 400 FCFA).
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-4 border-t border-[var(--border)]">
+              </div></DossierSection>
+        </div>
+        <aside className="dossier-aside" aria-label="Résumé du dossier">
+          <section className="dossier-card"><h2>Contact</h2><div className="dossier-contact">
+            {employee.email ? <a href={`mailto:${employee.email}`}>{employee.email}</a> : <p>Email non renseigné</p>}
+            {employee.phone ? <a href={`tel:${employee.phone}`}>{employee.phone}</a> : <p>Téléphone non renseigné</p>}
+          </div></section>
+          <section className="dossier-card dossier-compensation"><h2>Rémunération</h2><div className="pt-4 border-t border-[var(--border)]">
                   <p className="text-xs text-[var(--text-secondary)] uppercase font-bold mb-1">Salaire de base</p>
                   <div className="flex items-center justify-between">
                     <p className="text-xl font-bold text-[var(--text)] font-mono">
                       {showSalary ? `${employee.baseSalary?.toLocaleString('fr-FR')} FCFA` : '• • • • • • •'}
                     </p>
-                    <button onClick={() => setShowSalary(!showSalary)} className="text-[var(--text-secondary)] profile-hover-ink-brand transition-colors p-1">
-                      {showSalary ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                    <Button variant="ghost" onClick={() => setShowSalary(!showSalary)} aria-label={showSalary ? "Masquer les montants" : "Afficher les montants"} aria-pressed={showSalary} className="text-[var(--text-secondary)] profile-hover-ink-brand transition-colors p-1">
+                      {showSalary ? <EyeOff size={18} /> : <Eye size={18} />}<span>{showSalary ? "Masquer" : "Afficher"}</span>
+                    </Button>
                   </div>
                 </div>
-
-                {/* 🆕 Brut/net estimés — base + primes mensuelles (imposables et
+{/* 🆕 Brut/net estimés — base + primes mensuelles (imposables et
                     indemnités non imposables), avec le détail de chaque retenue
                     (CNSS, ITS, TOL, taxes de l'entreprise comme la CAMU).
                     Exclut volontairement le 13e mois, toute prime à mois ciblé
@@ -908,7 +877,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     "Estimé" et pas "contractuel" : ça varie d'un mois à
                     l'autre selon les primes actives ce mois-là. Respecte le
                     même masquage que le salaire de base. */}
-                {showSalary && employee.baseSalary != null && (
+{activeTab === 'info' && showSalary && employee.baseSalary != null && (
                   <div className="pt-4 border-t border-[var(--border)]">
                     <SalaryRecap
                       employeeId={employee.id}
@@ -917,13 +886,12 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                     />
                   </div>
                 )}
-
-                {/* ✅ Cumul brut avant Konza RH — affiché seulement s'il a été
+{/* ✅ Cumul brut avant Konza RH — affiché seulement s'il a été
                     renseigné. Rappel explicite de son usage : sert au calcul
                     de l'indemnité de congé payé tant que l'historique de paie
                     réel dans l'app est encore court (voir leaves-indemnity.service.ts,
                     méthode AVERAGE_12M). */}
-                {(employee as any).openingCumulativeGross != null && (
+{(employee as any).openingCumulativeGross != null && (
                   <div className="pt-4 border-t border-[var(--border)]">
                     <p className="text-xs text-[var(--text-secondary)] uppercase font-bold mb-1">Cumul brut avant Konza RH</p>
                     <p className="text-xl font-bold text-[var(--text)] font-mono">
@@ -935,53 +903,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                       Cumul des bruts du cycle de congé en cours avant l&apos;arrivée sur Konza RH. Utilisé pour l&apos;indemnité de congé tant que l&apos;historique réel est court — se remet à zéro tout seul au prochain cycle.
                     </p>
                   </div>
-                )}
-              </div>
-            </section>
-
-            {/* Actions rapides */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--text)] mb-4 flex items-center gap-2">
-                <Star size={20} className="profile-ink-neutral" /> Actions Rapides
-              </h3>
-              <div className="space-y-2">
-                <Link href={bp(`/employes/${params.id}/primes`)}
-                  className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="shrink-0 flex items-center justify-center">
-                      <Gift size={16} className="profile-ink-brand" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                    <span className="font-bold text-sm text-[var(--text)]">Gérer les primes</span>
-                  </div>
-                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
-                </Link>
-                <Link href={`/employes/${params.id}/edit`}
-                  className="flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="shrink-0 flex items-center justify-center">
-                      <Edit size={16} className="profile-ink-brand" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                    <span className="font-bold text-sm text-[var(--text)]">Modifier le dossier</span>
-                  </div>
-                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
-                </Link>
-                <button
-                  onClick={handleDownloadFiche}
-                  disabled={isGeneratingFiche}
-                  className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group disabled:opacity-60"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 profile-soft-brand rounded-lg flex items-center justify-center">
-                      {isGeneratingFiche ? <Loader2 size={16} className="profile-ink-brand animate-spin" /> : <FileText size={16} className="profile-ink-brand" />}
-                    </div>
-                    <span className="font-bold text-sm text-[var(--text)]">
-                      {isGeneratingFiche ? 'Génération…' : 'Fiche de renseignement (PDF)'}
-                    </span>
-                  </div>
-                  <Download size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
-                </button>
-                <button
-                  onClick={handleToggleSelfService}
+                )}<Button variant="ghost" className="dossier-payroll-link" onClick={() => setActiveTab('paie')}>Consulter les bulletins<ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" /></Button></section>
+          <section className="dossier-card"><h2>Déclaration CNSS</h2><CnssDeclarationBadge value={employee.cnssEmployeeDeclared}/><p>Statut administratif, indépendant du numéro CNSS et des cotisations de paie.</p>{['ADMIN','HR_MANAGER','SUPER_ADMIN'].includes(userRole)&&<DossierReveal target="dossier-administratif">Mettre à jour le statut<ChevronRight size={16} strokeWidth={1.5} aria-hidden="true" /></DossierReveal>}</section>
+          <section className="dossier-card dossier-access"><h2>Accès au profil</h2><Button variant="ghost"
+                  onClick={handleToggleSelfService} role="switch" aria-checked={!!employee?.selfServiceEnabled}
                   disabled={isTogglingSelfService}
                   className={`w-full flex items-center justify-between p-4 border rounded-xl transition-all group disabled:opacity-60 ${
                     employee?.selfServiceEnabled
@@ -1005,57 +930,26 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   <div className={`shrink-0 relative w-11 h-6 rounded-full transition-colors ${employee?.selfServiceEnabled ? 'profile-fill-brand' : 'bg-[var(--border)]'}`}>
                     <span className={`absolute top-0.5 left-0.5 w-5 h-5 profile-surface rounded-full shadow transform transition-transform ${employee?.selfServiceEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
-                </button>
-                <button onClick={() => setActiveTab('paie')}
-                  className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-brand transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="shrink-0 flex items-center justify-center">
-                      <TrendingUp size={16} className="profile-ink-brand" strokeWidth={1.5} aria-hidden="true" />
-                    </div>
-                    <span className="font-bold text-sm text-[var(--text)]">Historique de paie</span>
-                  </div>
-                  <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-brand transition-colors" />
-                </button>
-                {canDelete && (
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="w-full flex items-center justify-between p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl profile-hover-outline profile-hover-soft-danger transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="shrink-0 flex items-center justify-center">
-                        <Trash2 size={16} className="profile-ink-danger" strokeWidth={1.5} aria-hidden="true" />
-                      </div>
-                      <span className="font-bold text-sm profile-ink-danger ">Supprimer l'employé</span>
-                    </div>
-                    <ChevronRight size={16} className="profile-ink-neutral profile-group-hover-ink-danger transition-colors" />
-                  </button>
-                )}
-              </div>
-            </section>
-          </div>
-        </div>
-      );
+                </Button></section>
+        </aside>
+      </div>;
     }
 
-    if (tabLoading) return <KonzaLoader variant="page" />;
-    if (!tabData || tabData.length === 0) return (
-      <div className="py-20 text-center">
-        <AlertCircle size={28} className="text-[var(--text-secondary)] mx-auto mb-3" />
-        <p className="text-[var(--text-secondary)] font-medium">Aucune donnée disponible</p>
-      </div>
-    );
+    if (tabLoading) return <div className="dossier-loading" role="status" aria-label="Chargement de la rubrique"><Skeleton/><Skeleton/><Skeleton/></div>;
+    if(uiTabError)return <EmptyState title="Cette rubrique ne peut pas être chargée" action={<Button variant="secondary" onClick={()=>window.location.reload()}>Recharger le dossier</Button>}>{uiTabError}</EmptyState>;
+    if (!tabData || tabData.length === 0) return <EmptyState title={activeTab==='docs'?'Aucun document dans ce dossier':activeTab==='paie'?'Aucun bulletin pour le moment':activeTab==='conges'?'Aucun congé dans ce dossier':'Aucun matériel attribué'}>{activeTab==='docs'?'Les documents rattachés à cet employé apparaîtront ici.':activeTab==='paie'?'Les bulletins disponibles seront regroupés ici.':activeTab==='conges'?'Les congés de cet employé apparaîtront ici.':'Les équipements confiés à cet employé apparaîtront ici.'}</EmptyState>;
 
     if (activeTab === 'docs') {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="dossier-document-list">
           {tabData.map((doc: any) => (
-            <div key={doc.id} className="p-4 rounded-xl flex items-center gap-3 bg-[var(--surface)] hover: transition-all profile-card">
-              <div className="p-3 profile-soft-neutral profile-ink-neutral rounded-lg profile-inset"><FileText size={20} /></div>
+            <div key={doc.id} className="dossier-document-row">
+              <div className="dossier-file-icon"><FileText size={20} /></div>
               <div className="flex-1 overflow-hidden">
                 <p className="font-bold truncate text-[var(--text)]">{doc.name}</p>
                 <p className="text-xs text-[var(--text-secondary)]">{doc.type}</p>
               </div>
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={() => handleDownloadDoc(doc)}
                 disabled={downloadingDocId === doc.id}
@@ -1063,7 +957,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 className="p-2 rounded-lg text-[var(--text-secondary)] profile-hover-ink-brand profile-hover-soft-brand transition-colors disabled:opacity-60"
               >
                 {downloadingDocId === doc.id ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -1072,17 +966,17 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
 
     if (activeTab === 'paie') {
       return (
-        <div className="space-y-3">
+        <div className="dossier-payroll-list">
           {tabData.map((p: any) => (
             <Link href={bp(`/paie/${p.id}`)} key={p.id}>
-              <div className="flex justify-between items-center p-4 bg-[var(--surface)] rounded-xl hover:bg-[var(--surface-2)] profile-hover-outline transition-all cursor-pointer group profile-card">
+              <div className="dossier-payroll-row">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 profile-fill-brand profile-on-fill rounded-xl flex flex-col items-center justify-center font-bold text-xs shadow-lg profile-shadow">
+                  <div className="dossier-period">
                     <span className="leading-none">{String(p.month).padStart(2, '0')}</span>
                     <span className="leading-none text-[10px]">{p.year?.toString().slice(2)}</span>
                   </div>
                   <div>
-                    <p className="font-bold text-[var(--text)]">Bulletin de Paie</p>
+                    <p className="font-bold text-[var(--text)]">{new Date(p.year,p.month-1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</p>
                     <p className="text-xs text-[var(--text-secondary)]">Net versé : <strong className="profile-ink-brand ">{p.netSalary?.toLocaleString('fr-FR')} FCFA</strong></p>
                   </div>
                 </div>
@@ -1101,9 +995,9 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
 
     if (activeTab === 'conges') {
       return (
-        <div className="space-y-3">
+        <div className="dossier-leave-list">
           {tabData.map((l: any) => (
-            <div key={l.id} className="flex justify-between items-center p-4 bg-[var(--surface)] rounded-xl profile-card">
+            <div key={l.id} className="dossier-leave-row">
               <div className="flex items-center gap-4">
                 <div className="shrink-0 flex items-center justify-center">
                   <Calendar size={16} strokeWidth={1.5} aria-hidden="true" />
@@ -1153,13 +1047,13 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="dossier-asset-list">
             {tabData.map((a: any) => {
               const Icon = assetIcon(a.category);
               const st = ASSET_STATUS[a.status] || ASSET_STATUS.IN_USE;
               return (
-                <div key={a.id} className="group relative overflow-hidden p-5 rounded-2xl bg-[var(--surface)] hover: hover:-translate-y-0.5 profile-hover-outline transition-all profile-card">
-                  <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full profile-soft-neutral profile-group-hover-soft-neutral transition-colors" />
+                <div key={a.id} className="dossier-asset-card">
+
                   <div className="relative flex items-start gap-4">
                     <div className="shrink-0 flex items-center justify-center">
                       <Icon size={20} strokeWidth={1.5} aria-hidden="true" />
@@ -1197,31 +1091,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
   };
 
   return (
-    <div className="employee-profile-page max-w-7xl mx-auto pb-20 space-y-6">
-
-      {/* MODAL SUPPRESSION */}
+    <ModulePageFrame kind="detail"><div className="employee-module-page"><div className="employee-profile-page employee-dossier">
       <AnimatePresence>
         {showDeleteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => !isDeleting && setShowDeleteModal(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.92, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="relative bg-[var(--surface)] rounded-2xl p-8 shadow-xl max-w-md w-full border profile-outline z-10 overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-40 h-40 profile-soft-danger rounded-bl-full -mr-10 -mt-10 pointer-events-none" />
-              {!isDeleting && (
-                <button onClick={() => setShowDeleteModal(false)}
-                  className="absolute top-4 right-4 p-2 text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] rounded-xl transition-colors z-10">
-                  <X size={18} />
-                </button>
-              )}
+          <Modal open title="Désactiver cet employé ?" onClose={() => !isDeleting && setShowDeleteModal(false)}>
               <div className="relative flex justify-center mb-5">
                 <div className="w-20 h-20 profile-soft-danger rounded-full flex items-center justify-center">
                   <div className="shrink-0 flex items-center justify-center">
@@ -1229,7 +1102,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                   </div>
                 </div>
               </div>
-              <h2 className="text-xl font-bold text-center text-[var(--text)] mb-1">Supprimer cet employé ?</h2>
+
               <p className="text-center text-[var(--text-secondary)] text-sm mb-1">Vous êtes sur le point de désactiver le dossier de</p>
               <p className="text-center font-extrabold text-[var(--text)] text-lg mb-5">{employee.firstName} {employee.lastName}</p>
               <div className="profile-soft-danger rounded-2xl p-4 mb-6 profile-inset">
@@ -1251,52 +1124,30 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                 </ul>
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setShowDeleteModal(false)} disabled={isDeleting}
+                <Button variant="ghost" onClick={() => setShowDeleteModal(false)} disabled={isDeleting}
                   className="flex-1 px-4 py-3 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] font-bold hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50">
                   Annuler
-                </button>
-                <button onClick={handleDelete} disabled={isDeleting}
+                </Button>
+                <Button variant="ghost" onClick={handleDelete} disabled={isDeleting}
                   className="flex-1 px-4 py-3 rounded-xl profile-soft-danger profile-hover-soft-danger profile-ink-danger font-bold transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-lg profile-shadow">
                   {isDeleting ? <><Loader2 size={16} className="animate-spin" />Suppression...</> : <><Trash2 size={16} />Supprimer</>}
-                </button>
+                </Button>
               </div>
-            </motion.div>
-          </div>
+            </Modal>
         )}
       </AnimatePresence>
-
-      <Link href={bp('/employes')} className="inline-flex items-center text-sm text-[var(--text-secondary)] profile-hover-ink-brand transition-colors">
-        <ArrowLeft size={16} className="mr-2" /> Retour à la liste
-      </Link>
-
-      {/* HEADER */}
-      <div className="bg-[var(--surface)] rounded-2xl p-6 md:p-8 relative overflow-hidden profile-card">
-        <div className="absolute top-0 right-0 w-64 h-64 profile-soft-neutral rounded-bl-full -mr-16 -mt-16 pointer-events-none" />
-        <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
-          <div className="relative shrink-0">
-            <ProfileAvatar src={employee.photoUrl} name={`${employee.firstName} ${employee.lastName}`} className="profile-avatar w-32 h-32 rounded-2xl object-cover shadow-lg" />
-            <div className="absolute -bottom-2 -right-2 w-7 h-7 profile-fill-success rounded-full border-2 profile-outline flex items-center justify-center">
-              <CheckCircle size={14} className="profile-on-fill" />
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-[var(--text)]">{employee.firstName} {employee.lastName}</h1>
-                <p className="text-lg text-[var(--text-secondary)] font-medium flex items-center gap-2 flex-wrap mt-1">
-                  <span>{employee.position}</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--border)]" />
-                  <span className="profile-ink-neutral ">{employee.department?.name}</span>
-                </p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  <span className="px-3 py-1 rounded-lg bg-[var(--surface-2)] text-sm font-mono text-[var(--text-secondary)] border border-[var(--border)]">
-                    {employee.employeeNumber}
-                  </span>
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-sm profile-ink-neutral border border-[var(--border)]">
-                    <Briefcase size={14} /> {employee.contractType}
-                  </span>
-                  {/* 🆕 Badge jours restants dans le header si contrat temporaire */}
-                  {TEMP_CONTRACTS.includes(employee.contractType) && employee.contractEndDate && (() => {
+      <Link href={bp('/employes')} className="dossier-back"><ArrowLeft size={16} strokeWidth={1.5} aria-hidden="true" />Employés</Link>
+      <header className="dossier-header">
+        <div className="dossier-identity"><ProfileAvatar src={employee.photoUrl} name={`${employee.firstName} ${employee.lastName}`} className="dossier-avatar"/><div><h1>{employee.firstName} {employee.lastName}</h1><p className="dossier-role"><span>{employee.position}</span>{employee.department?.name&&<span>{employee.department.name}</span>}</p></div></div>
+        <div className="dossier-header-actions">
+          <Button variant="primary" onClick={() => router.push(bp(`/employes/${params.id}/edit`))}><Edit size={16} strokeWidth={1.5} aria-hidden="true" />Modifier le dossier</Button>
+          <Button variant="secondary" onClick={handleDownloadFiche} disabled={isGeneratingFiche} loading={isGeneratingFiche}>{!isGeneratingFiche&&<Download size={16} strokeWidth={1.5} aria-hidden="true" />}{isGeneratingFiche?'Préparation…':'Fiche PDF'}</Button>
+          <DossierActions><Link href={bp(`/employes/${params.id}/primes`)}><Gift size={16} strokeWidth={1.5} aria-hidden="true"/>Gérer les primes</Link>{canDelete&&<Button variant="ghost" className="dossier-danger" onClick={() => setShowDeleteModal(true)}><Trash2 size={16} strokeWidth={1.5} aria-hidden="true"/>Désactiver le dossier</Button>}</DossierActions>
+        </div>
+      </header>
+      <dl className="dossier-summary">
+        <div><dt>Matricule</dt><dd>{employee.employeeNumber}</dd></div>
+        <div><dt>Contrat</dt><dd>{employee.contractType}{TEMP_CONTRACTS.includes(employee.contractType) && employee.contractEndDate && (() => {
                     const daysLeft = differenceInDays(new Date(employee.contractEndDate), new Date());
                     if (daysLeft < 0) return (
                       <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--surface-2)] text-[var(--text-secondary)] text-sm font-bold border border-[var(--border)]">
@@ -1313,72 +1164,19 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
                       </span>
                     );
                     return null;
-                  })()}
-                  {companyConvention && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg profile-soft-neutral text-sm font-bold profile-ink-neutral border profile-outline ">
-                      <BookOpen size={13} /> {companyConvention}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Link href={bp(`/employes/${params.id}/primes`)}
-                  className="p-2.5 rounded-xl profile-soft-brand profile-ink-brand profile-hover-soft-brand transition-colors border profile-outline "
-                  title="Gérer les primes">
-                  <Gift size={20} />
-                </Link>
-                <button onClick={() => router.push(bp(`/employes/${params.id}/edit`))}
-                  className="p-2.5 rounded-xl profile-soft-brand profile-ink-brand profile-hover-soft-brand transition-colors border profile-outline "
-                  title="Modifier">
-                  <Edit size={20} />
-                </button>
-                {canDelete && (
-                  <button onClick={() => setShowDeleteModal(true)}
-                    className="p-2.5 rounded-xl profile-soft-danger profile-ink-danger profile-hover-soft-danger transition-colors border profile-outline "
-                    title="Supprimer l'employé">
-                    <Trash2 size={20} />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* TABS */}
-      <div className="bg-[var(--surface)] rounded-2xl overflow-hidden profile-card">
-        <div className="flex overflow-x-auto no-scrollbar border-b border-[var(--border)]">
-          {[
-            { id: 'info',     label: 'Informations' },
-            { id: 'docs',     label: 'Documents' },
-            { id: 'paie',     label: 'Historique Paie' },
-            { id: 'conges',   label: 'Congés' },
-            { id: 'materiel', label: 'Matériel' },
-          ].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as TabType)}
-              className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all relative ${
-                activeTab === tab.id
-                  ? 'profile-ink-brand profile-soft-brand '
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text)]'
-              }`}
-            >
-              {tab.label}
-              {activeTab === tab.id && (
-                <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 profile-fill-brand" />
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="p-6 md:p-8 min-h-[400px]">
-          <AnimatePresence mode="wait">
-            <motion.div key={activeTab}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}>
-              {renderTabContent()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-    </div>
+                  })()}</dd></div>
+        <div><dt>Dans l’entreprise depuis</dt><dd>{new Date(employee.hireDate).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</dd></div>
+        <div><dt>Ancienneté</dt><dd>{getAnciennete()}</dd></div>
+      </dl>
+      <DossierTabList>{[
+        {id:'info',label:'Vue d’ensemble'},
+        {id:'docs',label:'Documents'},
+        {id:'paie',label:'Paie et bulletins'},
+        {id:'conges',label:'Congés'},
+        {id:'materiel',label:'Matériel'},
+      ].map(tab=><Button variant="ghost" key={tab.id} id={`dossier-tab-${tab.id}`} role="tab" aria-selected={activeTab===tab.id} aria-controls={`dossier-panel-${tab.id}`} tabIndex={activeTab===tab.id?0:-1} onClick={() => setActiveTab(tab.id as TabType)}>{tab.label}</Button>)}</DossierTabList>
+      <section role="tabpanel" id="dossier-panel-info" aria-labelledby="dossier-tab-info" hidden={activeTab!=='info'} tabIndex={0} className="dossier-panel">{renderTabContent(true)}</section>
+      {activeTab!=='info'&&<section role="tabpanel" id={`dossier-panel-${activeTab}`} aria-labelledby={`dossier-tab-${activeTab}`} tabIndex={0} className="dossier-panel">{renderTabContent()}</section>}
+    </div></div></ModulePageFrame>
   );
 }
